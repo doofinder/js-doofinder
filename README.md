@@ -1,4 +1,4 @@
-nodeDoofinder
+js-doofinder
 =============
 
 Doofinder NodeJS Client
