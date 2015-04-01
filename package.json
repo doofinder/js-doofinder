@@ -1,0 +1,38 @@
+{
+  "name": "js-doofinder",
+  "version": "1.0.0",
+  "description": "Javascript Client for Doofinder Search API",
+  "main": "lib/doofinder.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "chai": "^2.2.0",
+    "grunt": "^0.4.5",
+    "grunt-mocha-test": "^0.12.7",
+    "grunt-contrib-coffee": "^0.13.0",
+    "coffee": "^1.0.0",
+    "request": "^2.54.0",
+    "http": "^0.0.0"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.9.1",
+    "mocha": "^2.2.1"
+  },
+  "scripts": {
+    "test": "grunt"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doofinder/js-doofinder.git"
+  },
+  "keywords": [
+    "doofinder"
+  ],
+  "author": "Kike Coslado",
+  "license": "(BSD-2-Clause) Beerware",
+  "bugs": {
+    "url": "https://github.com/doofinder/js-doofinder/issues"
+  },
+  "homepage": "https://github.com/doofinder/js-doofinder"
+}
