@@ -1,6 +1,7 @@
 ###
-# Doofinder NodeJS Client
-# Author: Kike Coslado
+# js-doofinder
+# author: @ecoslado
+# 2015 04 01
 ###
 
 http = require "http"
@@ -12,7 +13,7 @@ http = require "http"
 # and returns a json object to a callback function
 ###
 
-class DfClient
+class Doofinder
 
   ###
   DfClient constructor
@@ -73,4 +74,4 @@ class DfClient
     req.end()
 
 # Module exports
-module.exports = DfClient
+module.exports = Doofinder
