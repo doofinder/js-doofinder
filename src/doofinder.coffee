@@ -8,13 +8,12 @@ http = require "http"
 
 ###
 # DfClient
-# This class is import with the module
+# This class is imported with module
 # requirement. Implements the search request
 # and returns a json object to a callback function
 ###
 
 class Doofinder
-
   ###
   DfClient constructor
 
@@ -22,7 +21,14 @@ class Doofinder
   @param {String} api_key
   @api public
   ###
-  constructor: (@hashid, api_key, url, port) ->
+  constructor: (@hashid, api_key, url, port, rpp) ->
+    @version = "4"
+    @rpp = 10
+    @page = 1
+    @transformer = "dflayer"
+    @params_preffix = "dfParam_"
+    @params = {}
+    
     if api_key
       [ zone, @api_key ] = api_key.split '-'
       @url = zone + "-search.doofinder.com"
@@ -32,28 +38,30 @@ class Doofinder
 
     if port
       @port = port
+
+    if rpp
+      @rpp = rpp
   
   ###
-  Method responsible of searching.
+  search
 
-  @param {String} query
-  @param {Object} extra_headers
-  @param {Object} extra_args
+  Method responsible of executing call.
+
   @param {Function} callback (err, res)
   @api public
   ###
-  search: (query, extra_headers, extra_args, callback) ->
-    # Preparing request variables
-  	options = 
-      host: @url
-      path: "/4/search?hashid=#{ @hashid }&query=#{ query }"
-
-    if not extra_headers
-      extra_headers = {}
-
-    extra_headers["API Token"] = @api_key
-    options.headers = extra_headers
+  search: (callback) ->
+    headers = {}
+    headers["API Token"] = @api_key
+    query_string = "hashid=#{@hashid}"
     
+    # Preparing request variables
+    options = 
+      host: @url
+      port: @port
+      path: "/#{@version}/search?#{query_string}"
+      headers: headers
+
     if @port
       options.port = @port
 
@@ -64,7 +72,10 @@ class Doofinder
         return callback res.statusCode, null
       else 
         res.on 'data', (chunk) ->
-          return callback null, chunk
+          res_json = JSON.parse(chunk)
+          @total_results = res_json.total
+          @results = res_json.results
+          return callback null, res_json
 
         res.on 'error', (err) ->
           return callback err, null
@@ -72,6 +83,46 @@ class Doofinder
     # Here is where request is done and executed process_response
     req = http.request options, process_response
     req.end()
+
+  ###
+  add_filter
+
+  This method adds a filter to query
+  @param {String} filter_key
+  @param {Array} filter_values
+  @api public
+  ###
+  add_filter: (filter_key, filter_values) ->
+    @params[filter_name] = filter_values
+
+  ###
+  add_term
+
+  This method adds a term to a filter.
+  If filter does not exists, the method
+  creates it
+  @param {String} filter_key
+  @param {String} term
+  @api public
+  ###
+  add_term: (filter_key, term) ->
+    if not @params[filter_key]
+      @params[filter_key] = []
+    @params[filter_key].push(term)
+
+  ###
+  add_range
+  
+  This method adds a range filter
+  @param {String} filter_key
+  @param {int} from
+  @param {int} to
+  @api public
+  ###
+  add_range: (filter_key, from, to) ->
+    @params[filter_key] =
+      from: from
+      to: to
 
 # Module exports
 module.exports = Doofinder

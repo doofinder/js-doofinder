@@ -20,6 +20,6 @@ describe 'doofinder', ->
 
 	client = new Doofinder mock.hashid, mock.api_key, mock.url, mock.port
 
-	client.search mock.query, {}, {}, (err, res) ->
-		res.should.be.null
+	client.search (err, res) ->
+		err.should.be.null
 		res.should.be.not.null
