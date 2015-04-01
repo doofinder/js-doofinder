@@ -8,17 +8,16 @@ This module is a NodeJS wrapper for `Doofinder Search API 4`
 
 Installation
 ------------
-TODO
+`npm install js-doofinder`
 
 Usage
 -----
-
 ```coffeescript
 
-DfClient = require "./dfclient"
+Doofinder = require "js-doofinder"
 
-client = new DfClient "5886462410a02639acc5054bc464ec18", # hashid 
-					  "eu1-dafdsafadsffsffafdasfsasd" # api key
+dfClient = new Doofinder "5886462410a02639acc5054bc464ec18", # hashid 
+					     "eu1-dafdsafadsffsffafdasfsasd" # api key
 
 # Adding some extra arguments to querystring
 extra_args =
@@ -34,6 +33,6 @@ callback = (err, res) ->
       console.log 'ERROR: ' + err
 
 # Performing the API call
-client.search "iphone", extra_headers, extra_args, callback
+dfClient.search "iphone", extra_headers, extra_args, callback
 
 ```

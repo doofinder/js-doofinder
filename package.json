@@ -30,7 +30,7 @@
     "doofinder"
   ],
   "author": "Kike Coslado",
-  "license": "(BSD-2-Clause) Beerware",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/doofinder/js-doofinder/issues"
   },
