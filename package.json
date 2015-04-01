@@ -12,7 +12,6 @@
     "grunt-mocha-test": "^0.12.7",
     "grunt-contrib-coffee": "^0.13.0",
     "coffee": "^1.0.0",
-    "request": "^2.54.0",
     "http": "^0.0.0"
   },
   "devDependencies": {
