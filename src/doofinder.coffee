@@ -23,14 +23,12 @@ class Doofinder
   ###
   constructor: (@hashid, api_key, rpp) ->
     @version = "4"
-    
     @params =
       query: ""
-      filters: {}
       rpp: 10
       page: 1
       transformer: "dflayer"
-      params_preffix: "dfParam_"
+    @filters = {}
     
     if api_key
       [ zone, @api_key ] = api_key.split '-'
@@ -52,16 +50,14 @@ class Doofinder
     headers["API Token"] = @api_key
     
     query_string = @make_querystring()
+    console.log query_string
     
     # Preparing request variables
     options = 
       host: @url
-      port: @port
       path: "/#{@version}/search?#{query_string}"
       headers: headers
 
-    if @port
-      options.port = @port
 
     # Callback function will be passed as argument to search
     # and will be returned with response body
@@ -70,9 +66,12 @@ class Doofinder
         return callback res.statusCode, null
       
       else 
+        data = ""
         res.on 'data', (chunk) ->
-          res_json = JSON.parse(chunk)
-          return callback null, res_json
+          data += chunk
+        
+        res.on 'end', () ->
+          return callback null, data
 
         res.on 'error', (err) ->
           return callback err, null
@@ -96,11 +95,11 @@ class Doofinder
 
   This method adds a filter to query
   @param {String} filter_key
-  @param {Array} filter_values
+  @param {Array|Object} filter_values
   @api public
   ###
   add_filter: (filter_key, filter_values) ->
-    @params.filters[filter_key] = filter_values
+    @filters[filter_key] = filter_values
 
   ###
   add_term
@@ -113,9 +112,9 @@ class Doofinder
   @api public
   ###
   add_filter_term: (filter_key, term) ->
-    if not @params.filters[filter_key]
-      @params.filters[filter_key] = []
-    @params.filters[filter_key].push(term)
+    if not @filters[filter_key]
+      @filters[filter_key] = []
+    @filters[filter_key].push(term)
 
   ###
   add_range
@@ -127,7 +126,7 @@ class Doofinder
   @api public
   ###
   add_filter_range: (filter_key, from, to) ->
-    @params.filters[filter_key] =
+    @filters[filter_key] =
       from: from
       to: to
 
@@ -141,13 +140,15 @@ class Doofinder
   @api private
   ###
   make_querystring: () ->
-
-    # Adding hashid and paginator params
+    # Adding hashid
     querystring = "hashid=#{@hashid}"
-    querystring += "&rpp=#{@params.rpp}"
-    querystring += "&page=#{@params.page}"
-
-    for key, value of @params.filters
+    
+    # Adding params
+    for key, value of @params
+      querystring += "&#{key}=#{value}"
+    
+    # Adding filters
+    for key, value of @filters
       # Range filters
       if value.constructor == Object and value['from'] and value['to']
         querystring += "&filter[#{key}][gte]=#{value['from']}"
@@ -155,7 +156,7 @@ class Doofinder
       
       # Terms filters
       if value.constructor == Array
-        for elem of value
+        for elem in value
           querystring += "&filter[#{key}]=#{elem}"
 
     return encodeURI querystring 
