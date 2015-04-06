@@ -15,32 +15,29 @@ http = require "http"
 
 class Doofinder
   ###
-  DfClient constructor
+  Doofinder constructor
 
   @param {String} hashid
   @param {String} api_key
   @api public
   ###
-  constructor: (@hashid, api_key, url, port, rpp) ->
+  constructor: (@hashid, api_key, rpp) ->
     @version = "4"
-    @rpp = 10
-    @page = 1
-    @transformer = "dflayer"
-    @params_preffix = "dfParam_"
-    @params = {}
+    
+    @params =
+      query: ""
+      filters: {}
+      rpp: 10
+      page: 1
+      transformer: "dflayer"
+      params_preffix: "dfParam_"
     
     if api_key
       [ zone, @api_key ] = api_key.split '-'
       @url = zone + "-search.doofinder.com"
 
-    if url
-      @url = url
-
-    if port
-      @port = port
-
     if rpp
-      @rpp = rpp
+      @params.rpp = rpp
   
   ###
   search
@@ -53,7 +50,8 @@ class Doofinder
   search: (callback) ->
     headers = {}
     headers["API Token"] = @api_key
-    query_string = "hashid=#{@hashid}"
+    
+    query_string = @make_querystring()
     
     # Preparing request variables
     options = 
@@ -68,13 +66,12 @@ class Doofinder
     # Callback function will be passed as argument to search
     # and will be returned with response body
     process_response = (res) ->
-      if res.statusCode > 400
+      if res.statusCode >= 400
         return callback res.statusCode, null
+      
       else 
         res.on 'data', (chunk) ->
           res_json = JSON.parse(chunk)
-          @total_results = res_json.total
-          @results = res_json.results
           return callback null, res_json
 
         res.on 'error', (err) ->
@@ -85,6 +82,16 @@ class Doofinder
     req.end()
 
   ###
+  add_query
+
+  This method adds a query
+  @param {String} query
+  @api public
+  ###
+  add_query: (term) ->
+    @params.query = term
+
+  ###
   add_filter
 
   This method adds a filter to query
@@ -93,7 +100,7 @@ class Doofinder
   @api public
   ###
   add_filter: (filter_key, filter_values) ->
-    @params[filter_name] = filter_values
+    @params.filters[filter_key] = filter_values
 
   ###
   add_term
@@ -105,10 +112,10 @@ class Doofinder
   @param {String} term
   @api public
   ###
-  add_term: (filter_key, term) ->
-    if not @params[filter_key]
-      @params[filter_key] = []
-    @params[filter_key].push(term)
+  add_filter_term: (filter_key, term) ->
+    if not @params.filters[filter_key]
+      @params.filters[filter_key] = []
+    @params.filters[filter_key].push(term)
 
   ###
   add_range
@@ -119,10 +126,40 @@ class Doofinder
   @param {int} to
   @api public
   ###
-  add_range: (filter_key, from, to) ->
-    @params[filter_key] =
+  add_filter_range: (filter_key, from, to) ->
+    @params.filters[filter_key] =
       from: from
       to: to
+
+  ###
+  make_querystring
+
+  This method prepare returns a
+  querystring for request
+
+  @returns {String} querystring
+  @api private
+  ###
+  make_querystring: () ->
+    querystring = "hashid=#{@hashid}"
+    querystring += "&rpp=#{@params.rpp}"
+    querystring += "&page=#{@params.page}"
+
+    console.log JSON.stringify(@params.filters)
+
+    for key, value of @params.filters
+      console.log key
+      # Range filters
+      if value.constructor == Object and value['from'] and value['to']
+        querystring += "&filter[#{key}][gte]=#{value['from']}"
+        querystring += "&filter[#{key}][lt]=#{value['to']}"
+      
+      # Terms filters
+      if value.constructor == Array
+        for elem in value
+          querystring += "@filter[#{key}]=#{elem}"
+
+    return querystring 
 
 # Module exports
 module.exports = Doofinder
