@@ -141,14 +141,13 @@ class Doofinder
   @api private
   ###
   make_querystring: () ->
+
+    # Adding hashid and paginator params
     querystring = "hashid=#{@hashid}"
     querystring += "&rpp=#{@params.rpp}"
     querystring += "&page=#{@params.page}"
 
-    console.log JSON.stringify(@params.filters)
-
     for key, value of @params.filters
-      console.log key
       # Range filters
       if value.constructor == Object and value['from'] and value['to']
         querystring += "&filter[#{key}][gte]=#{value['from']}"
@@ -156,10 +155,10 @@ class Doofinder
       
       # Terms filters
       if value.constructor == Array
-        for elem in value
-          querystring += "@filter[#{key}]=#{elem}"
+        for elem of value
+          querystring += "&filter[#{key}]=#{elem}"
 
-    return querystring 
+    return encodeURI querystring 
 
 # Module exports
 module.exports = Doofinder
