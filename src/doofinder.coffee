@@ -71,7 +71,7 @@ class Doofinder
           data += chunk
         
         res.on 'end', () ->
-          return callback null, data
+          return callback null, JSON.parse(data)
 
         res.on 'error', (err) ->
           return callback err, null
