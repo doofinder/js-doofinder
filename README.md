@@ -31,11 +31,11 @@ Add some filters
 dfClient.add_filter("category", ["pants", "skirts"])
 
 # Adding a term
-dfClient.add_filter_term("category", ["t-shirts"])
+dfClient.add_filter_term("category", "t-shirts")
 # filter terms will be: pants, skirts and t-shirts
 
 # Adding a range_filter
-dfClient.add_filter_rage("price", 20, 500)
+dfClient.add_filter_range("price", 20, 500)
 # prices from 20 to 500 monetary units
 
 # Managing response and errors
