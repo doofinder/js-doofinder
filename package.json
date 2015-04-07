@@ -1,7 +1,7 @@
 {
-  "name": "js-doofinder",
-  "version": "1.0.0",
-  "description": "Javascript Client for Doofinder Search API",
+  "name": "doofinder",
+  "version": "0.0.1",
+  "description": "Javascript Client for Doofinder Search API - Beta",
   "main": "lib/doofinder.js",
   "directories": {
     "test": "test"
