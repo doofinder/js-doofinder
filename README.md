@@ -14,7 +14,7 @@ Usage
 -----
 ```coffeescript
 
-Doofinder = require "js-doofinder"
+Doofinder = require "doofinder"
 
 dfClient = new Doofinder "5886462410a02639acc5054bc464ec18", # hashid 
                          "eu1-dafdsafadsffsffafdasfsasd" # api key
