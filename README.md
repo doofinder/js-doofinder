@@ -23,7 +23,7 @@ dfClient = new Doofinder "5886462410a02639acc5054bc464ec18", # hashid
 Add query terms
 ```coffeescript
 
-dfClient.add_query("ipad")
+dfClient.set_query("ipad")
 ```
 Add some filters
 ```coffeescript

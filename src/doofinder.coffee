@@ -102,14 +102,24 @@ class Doofinder
     @params.query_name = query_name
 
   ###
-  set_query_name
+  set_page
 
   This method set page
   @param {int} page
   @api public
   ###
-  set_page: (term) ->
+  set_page: (page) ->
     @params.page = page
+
+  ###
+  set_transformer
+
+  This method set transformer
+  @param {String} transformer
+  @api public
+  ###
+  set_transformer: (transformer) ->
+    @params.transformer = transformer
 
   ###
   add_filter
