@@ -81,14 +81,35 @@ class Doofinder
     req.end()
 
   ###
-  add_query
+  set_query
 
-  This method adds a query
+  This method set query terms
   @param {String} query
   @api public
   ###
-  add_query: (term) ->
+  set_query: (term) ->
     @params.query = term
+
+
+  ###
+  set_query_name
+
+  This method set query_name
+  @param {String} query_name
+  @api public
+  ###
+  set_query_name: (query_name) ->
+    @params.query_name = query_name
+
+  ###
+  set_query_name
+
+  This method set page
+  @param {int} page
+  @api public
+  ###
+  set_page: (term) ->
+    @params.page = page
 
   ###
   add_filter
@@ -133,8 +154,9 @@ class Doofinder
   ###
   make_querystring
 
-  This method prepare returns a
-  querystring for request
+  This method returns a
+  querystring for adding
+  to Search API request.
 
   @returns {String} querystring
   @api private
