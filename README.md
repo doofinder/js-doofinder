@@ -8,7 +8,7 @@ This module is a NodeJS wrapper for `Doofinder Search API 4`
 
 Installation
 ------------
-`npm install js-doofinder`
+`npm install doofinder`
 
 Usage
 -----
