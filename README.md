@@ -17,7 +17,7 @@ Usage
 Doofinder = require "js-doofinder"
 
 dfClient = new Doofinder "5886462410a02639acc5054bc464ec18", # hashid 
-					     "eu1-dafdsafadsffsffafdasfsasd" # api key
+                         "eu1-dafdsafadsffsffafdasfsasd" # api key
 
 ```
 Add query terms
