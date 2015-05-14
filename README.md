@@ -8,13 +8,13 @@ This module is a NodeJS wrapper for `Doofinder Search API 4`
 
 Installation
 ------------
-`npm install js-doofinder`
+`npm install doofinder`
 
 Usage
 -----
 ```coffeescript
 
-Doofinder = require "js-doofinder"
+Doofinder = require "doofinder"
 
 dfClient = new Doofinder "5886462410a02639acc5054bc464ec18", # hashid 
                          "eu1-dafdsafadsffsffafdasfsasd" # api key
