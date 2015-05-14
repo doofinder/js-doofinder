@@ -21,7 +21,7 @@ class Doofinder
   @param {String} api_key
   @api public
   ###
-  constructor: (@hashid, api_key, rpp) ->
+  constructor: (@hashid, api_key, rpp, local) ->
     @version = "4"
     @params =
       query: ""
@@ -36,21 +36,41 @@ class Doofinder
 
     if rpp
       @params.rpp = rpp
+
+    if local
+      @url = "localhost:8881"
   
   ###
   search
 
   Method responsible of executing call.
+  
+  @param {Object} params
+    i.e.:
+
+      query: "value of the query"
+      page: 2
+      rpp: 25
+      filters:
+        brand: ["nike", "adidas"]
+        color: ["blue"]
+        price:
+          from: 40
+          to: 150
 
   @param {Function} callback (err, res)
   @api public
   ###
-  search: (callback) ->
+  search: (params, callback) ->
     headers = {}
-    headers["API Token"] = @api_key
-    
+    for param_key, param_value of params
+      if param_key == "filters"
+        for filter_key, filter_terms of param_value
+          @add_filter(filter_key, filter_terms)
+      else
+        @add_param(param_key, param_value)
+
     query_string = @make_querystring()
-    console.log query_string
     
     # Preparing request variables
     options = 
@@ -81,45 +101,16 @@ class Doofinder
     req.end()
 
   ###
-  set_query
+  set_param
 
-  This method set query terms
-  @param {String} query
+  This method set simple params
+  @param {String} name of the param
+  @value {mixed} value of the param
   @api public
   ###
-  set_query: (term) ->
-    @params.query = term
 
-
-  ###
-  set_query_name
-
-  This method set query_name
-  @param {String} query_name
-  @api public
-  ###
-  set_query_name: (query_name) ->
-    @params.query_name = query_name
-
-  ###
-  set_page
-
-  This method set page
-  @param {int} page
-  @api public
-  ###
-  set_page: (page) ->
-    @params.page = page
-
-  ###
-  set_transformer
-
-  This method set transformer
-  @param {String} transformer
-  @api public
-  ###
-  set_transformer: (transformer) ->
-    @params.transformer = transformer
+  add_param: (param, value) ->
+    @params[param] = value
 
   ###
   add_filter
@@ -131,35 +122,6 @@ class Doofinder
   ###
   add_filter: (filter_key, filter_values) ->
     @filters[filter_key] = filter_values
-
-  ###
-  add_term
-
-  This method adds a term to a filter.
-  If filter does not exists, the method
-  creates it
-  @param {String} filter_key
-  @param {String} term
-  @api public
-  ###
-  add_filter_term: (filter_key, term) ->
-    if not @filters[filter_key]
-      @filters[filter_key] = []
-    @filters[filter_key].push(term)
-
-  ###
-  add_range
-  
-  This method adds a range filter
-  @param {String} filter_key
-  @param {int} from
-  @param {int} to
-  @api public
-  ###
-  add_filter_range: (filter_key, from, to) ->
-    @filters[filter_key] =
-      from: from
-      to: to
 
   ###
   make_querystring
