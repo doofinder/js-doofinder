@@ -30,7 +30,7 @@ params =
   transform: "dflayer"
   # Add some filters
   filters:
-    category: ["pants", "skirts"]
+    category: ["Fundas iPad", "Accesorios iPad"]
     price:
       from: 20
       to: 500
@@ -44,9 +44,41 @@ callback = (err, res) ->
 dfClient.search params, callback
 ```
 
-You'll the response as follows:
+You'll get the response as follows. Note that you'll obtain both results and facets to continue filtering:
 
 ```coffeescript
-RESPONSE: {"query_counter":1,"results_per_page":10,"page":1,"total":0,"query":"ipad","hashid":"6a96504dc173514cab1e0198af92e6e9","max_score":null,"results":[],"filter":{"terms":{"category":["pants","skirts"]}},"query_name":"phonetic_text"}
+RESPONSE: {
+  "query_counter":1,
+  "results_per_page":10,
+  "page":1,
+  "total":116,
+  "query":"ipad",
+  "hashid":"6a96504dc173514cab1e0198af92e6e9",
+  "max_score":0.75163203,
+  "results":[
+    {"body":"Cómodo dock para el <em>iPad</em> con el que además de poder cargarlo y sincronizarlo con tu ordenador podrás",
+    "dfid":"6a96504dc173514cab1e0198af92e6e9@product@823ca8137de2ee1e08aabbd0bf7dabf7",
+    "image":"http://images.k-tuin.com/res/product200/resource_166376.jpg",
+    "id":"APXAI003",
+    "header":"Apple Dock para iPad","href":"http://www.k-tuin.com/app/catalog.do?action=ShowProductDetail&productId=9531&ref=doofinder",
+    "type":"product",
+    "price":"29.00"}, ...
+    
+  "facets":{
+    "categories":{
+      "_type":"terms",
+      "missing":0,
+      "total":235,
+      "other":0,
+      "terms":[{"term":"Fundas iPad","count":85},
+               {"term":"Accesorios iPad","count":31},
+               {"term":"Entretenimiento iPhone","count":25},
+               {"term":"Comprar un iPad","count":25},
+               {"term":"Altavoces","count":19},
+               {"term":"Auriculares","count":10},
+               {"term":"Accesorios iPhone","count":10},
+               {"term":"Outlet","count":6},
+               {"term":"Accesorios Mac","count":5},
+               ...
 ```
 
