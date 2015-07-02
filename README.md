@@ -17,33 +17,68 @@ Usage
 Doofinder = require "doofinder"
 
 dfClient = new Doofinder "5886462410a02639acc5054bc464ec18", # hashid 
-                         "eu1-dafdsafadsffsffafdasfsasd" # api key
+                         "eu1-dafdsafadsffsffafdasfsasd", # api key
+                         10 # results per page
 
 ```
-Add query terms
+Add query terms and extra params.
 ```coffeescript
-
-dfClient.set_query("ipad")
-```
-Add some filters
-```coffeescript
-# Some terms
-dfClient.add_filter("category", ["pants", "skirts"])
-
-# Adding a term
-dfClient.add_filter_term("category", "t-shirts")
-# filter terms will be: pants, skirts and t-shirts
-
-# Adding a range_filter
-dfClient.add_filter_range("price", 20, 500)
-# prices from 20 to 500 monetary units
-
-# Managing response and errors
+params = 
+  # Set query terms
+  query: "ipad"
+  # Set the result transformer
+  transform: "dflayer"
+  # Add some filters
+  filters:
+    category: ["Fundas iPad", "Accesorios iPad"]
+    price:
+      from: 20
+      to: 500
+      
+# Callback to manage response and errors
 callback = (err, res) ->
-      console.log 'RESPONSE: ' + res
+      console.log 'RESPONSE: ' + JSON.stringify(res)
       console.log 'ERROR: ' + err
 
-# Performing the API call
-dfClient.search callback
-
+# Perform the API call
+dfClient.search params, callback
 ```
+
+You'll get the response as follows. Note that you'll obtain both results and facets to continue filtering:
+
+```coffeescript
+RESPONSE: {
+  "query_counter":1,
+  "results_per_page":10,
+  "page":1,
+  "total":116,
+  "query":"ipad",
+  "hashid":"6a96504dc173514cab1e0198af92e6e9",
+  "max_score":0.75163203,
+  "results":[
+    {"body":"Cómodo dock para el <em>iPad</em> con el que además de poder cargarlo y sincronizarlo con tu ordenador podrás",
+    "dfid":"6a96504dc173514cab1e0198af92e6e9@product@823ca8137de2ee1e08aabbd0bf7dabf7",
+    "image":"http://images.k-tuin.com/res/product200/resource_166376.jpg",
+    "id":"APXAI003",
+    "header":"Apple Dock para iPad","href":"http://www.k-tuin.com/app/catalog.do?action=ShowProductDetail&productId=9531&ref=doofinder",
+    "type":"product",
+    "price":"29.00"}, ...
+    
+  "facets":{
+    "categories":{
+      "_type":"terms",
+      "missing":0,
+      "total":235,
+      "other":0,
+      "terms":[{"term":"Fundas iPad","count":85},
+               {"term":"Accesorios iPad","count":31},
+               {"term":"Entretenimiento iPhone","count":25},
+               {"term":"Comprar un iPad","count":25},
+               {"term":"Altavoces","count":19},
+               {"term":"Auriculares","count":10},
+               {"term":"Accesorios iPhone","count":10},
+               {"term":"Outlet","count":6},
+               {"term":"Accesorios Mac","count":5},
+               ...
+```
+
