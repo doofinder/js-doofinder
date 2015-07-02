@@ -21,24 +21,19 @@ class Doofinder
   @param {String} api_key
   @api public
   ###
-  constructor: (@hashid, api_key, rpp, local) ->
+  constructor: (@hashid, api_key, localhost, localport) ->
     @version = "4"
-    @params =
-      query: ""
-      rpp: 10
-      page: 1
-      transformer: "dflayer"
+    @params = {}
     @filters = {}
     
     if api_key
       [ zone, @api_key ] = api_key.split '-'
       @url = zone + "-search.doofinder.com"
 
-    if rpp
-      @params.rpp = rpp
-
-    if local
-      @url = "localhost:8881"
+    # Only for dev
+    if localhost and localport
+      @localhost = localhost
+      @localport = localport
   
   ###
   search
@@ -63,6 +58,8 @@ class Doofinder
   ###
   search: (params, callback) ->
     headers = {}
+    @params = {}
+    @filters = {}
     for param_key, param_value of params
       if param_key == "filters"
         for filter_key, filter_terms of param_value
@@ -78,6 +75,9 @@ class Doofinder
       path: "/#{@version}/search?#{query_string}"
       headers: headers
 
+    if @localhost and @localport
+      options.host = @localhost
+      options.port = @localport
 
     # Callback function will be passed as argument to search
     # and will be returned with response body
