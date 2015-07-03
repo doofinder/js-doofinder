@@ -18,16 +18,18 @@ Doofinder = require "doofinder"
 
 dfClient = new Doofinder "5886462410a02639acc5054bc464ec18", # hashid 
                          "eu1-dafdsafadsffsffafdasfsasd", # api key
-                         10 # results per page
 
 ```
-Add query terms and extra params.
+Add query terms and extra params. You can add every available parameter in [Doofinder Search API] (http://doofinder.com/en/developer/search-api). You can also add some filters
+under the `filters` key:
 ```coffeescript
 params = 
   # Set query terms
   query: "ipad"
-  # Set the result transformer
-  transform: "dflayer"
+  # Set the number of results per page
+  rpp: 10
+  # Set the page number
+  page: 2
   # Add some filters
   filters:
     category: ["Fundas iPad", "Accesorios iPad"]
@@ -35,13 +37,10 @@ params =
       from: 20
       to: 500
       
-# Callback to manage response and errors
-callback = (err, res) ->
-      console.log 'RESPONSE: ' + JSON.stringify(res)
-      console.log 'ERROR: ' + err
-
 # Perform the API call
-dfClient.search params, callback
+dfClient.search params, (err, res) ->
+  console.log 'RESPONSE: ' + JSON.stringify(res)
+  console.log 'ERROR: ' + err
 ```
 
 You'll get the response as follows. Note that you'll obtain both results and facets to continue filtering:
