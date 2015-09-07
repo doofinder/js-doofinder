@@ -65,7 +65,8 @@ class Doofinder
         for filter_key, filter_terms of param_value
           @add_filter(filter_key, filter_terms)
       else
-        @add_param(param_key, param_value)
+        if param_value
+          @add_param(param_key, param_value)
 
     query_string = @make_querystring()
     
