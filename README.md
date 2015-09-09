@@ -15,8 +15,8 @@ Usage
 Instanciate a client object:
 ```javascript
 
-Doofinder = require("doofinder");
-dfClient = new Doofinder ("5886462410a02639acc5054bc464ec18", # hashid 
+var Doofinder = require("doofinder");
+var dfClient = new Doofinder ("5886462410a02639acc5054bc464ec18", # hashid 
                          "eu1-dafdsafadsffsffafdasfsasd"); # api key
 ```
 Your client is ready to perform a search call. Just call it with your 
