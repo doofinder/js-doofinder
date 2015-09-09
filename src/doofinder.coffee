@@ -35,6 +35,7 @@ class Doofinder
       @localhost = localhost
       @localport = localport
   
+  
   ###
   search
 
@@ -56,14 +57,45 @@ class Doofinder
   @param {Function} callback (err, res)
   @api public
   ###
-  search: (params, callback) ->
+  search: (query, arg1, arg2) ->
+    
+    # Managing different ways of 
+    # calling search
+
+    # dfClient.search(query, callback)
+    if arg1 and arg1.constructor == Function
+      callback = arg1
+      params = {}
+
+    # dfClient.search(query, params, callback)
+    else if arg1 and arg2 and arg1.constructor == Object
+      callback = arg2
+      params = arg1
+
+    # Wrong call  
+    else
+      throw new Error "A callback is required."
+    
+    # Set default params
+    params.page ?= 1
+    params.rpp ?= 10
+
+    # Add query to params
+    params.query = query
+
     headers = {}
     @params = {}
     @filters = {}
+    @sort = []
+
     for param_key, param_value of params
       if param_key == "filters"
         for filter_key, filter_terms of param_value
           @add_filter(filter_key, filter_terms)
+      
+      else if param_key == "sort"
+        @set_sort(param_value)
+      
       else
         if param_value
           @add_param(param_key, param_value)
@@ -102,7 +134,7 @@ class Doofinder
     req.end()
 
   ###
-  set_param
+  add_param
 
   This method set simple params
   @param {String} name of the param
@@ -123,6 +155,18 @@ class Doofinder
   ###
   add_filter: (filter_key, filter_values) ->
     @filters[filter_key] = filter_values
+
+  ###
+  set_sort
+
+  This method adds sort to object 
+  from an object or an array
+
+  @param {Array|Object} sort
+  ###
+  set_sort: (sort) ->
+    @sort = sort
+
 
   ###
   make_querystring
@@ -153,7 +197,18 @@ class Doofinder
       if value.constructor == Array
         for elem in value
           querystring += "&filter[#{key}]=#{elem}"
+    
+    # Adding sort options
+    if @sort and @sort.constructor == Array
+        for key, value of @sort
+          for facet, term of value
+            querystring += "&sort[#{key}][#{facet}]=#{term}"
 
+    else if @sort and @sort.constructor == Object
+      for key, value of @sort
+        querystring += "&sort[#{key}]=#{value}"
+
+    console.log encodeURI querystring
     return encodeURI querystring 
 
 # Module exports
