@@ -21,21 +21,42 @@ class Doofinder
   @param {String} api_key
   @api public
   ###
-  constructor: (@hashid, api_key, localhost, localport) ->
+  constructor: (@hashid, zone, api_key, address) ->
     @version = "4"
     @params = {}
     @filters = {}
-    
-    if api_key
-      [ zone, @api_key ] = api_key.split '-'
-      @url = zone + "-search.doofinder.com"
+    @url ?= address 
+    @url ?= zone + "-search.doofinder.com"
+    @api_key ?= api_key
+  
+  ###   
+  sanitizeQuery
+  very crude check for bad intentioned queries
+     
+  checks if words are longer than 55 chars and the whole query is longer than 255 chars
+  @param string query
+  @return string query if it's ok, empty space if not
+  ###
+  _sanitizeQuery: (query, callback) ->
+    max_word_length = 55
+    max_query_length = 255
+    query = query.replace(/ +/g, ' ').replace(/^ +| +$/g, '') # query.trim() is ECMAScript5
+      
+    if query.length > max_query_length
+      return callback ''
+        
+    long_word = false
 
-    # Only for dev
-    if localhost and localport
-      @localhost = localhost
-      @localport = localport
-  
-  
+    for i, x of query.split(' ')
+      if x.length > max_word_length
+        long_word = true
+        return callback false
+
+    if long_word
+      query = ''
+    return callback query
+
+
   ###
   search
 
@@ -81,7 +102,8 @@ class Doofinder
     params.rpp ?= 10
 
     # Add query to params
-    params.query = query
+    @_sanitizeQuery query, (res) ->
+      params.query = res
 
     headers = {}
     @params = {}
@@ -208,7 +230,6 @@ class Doofinder
       for key, value of @sort
         querystring += "&sort[#{key}]=#{value}"
 
-    console.log encodeURI querystring
     return encodeURI querystring 
 
 # Module exports
