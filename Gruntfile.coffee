@@ -9,12 +9,8 @@ module.exports = (grunt) ->
         reporter: 'nyan'
       src: ['test/tests.coffee']
 
-    browserify:
-      standalone:
-        src: ['lib/doofinder.js'] 
-        dest: 'dist/doofinder.standalone.js'
-      options:
-        standalone: 'Doofinder' 
+    exec:
+      cmd: 'browserify --standalone Doofinder lib/doofinder.js > dist/doofinder.standalone.js'
 
     uglify:
       dist:
@@ -23,8 +19,8 @@ module.exports = (grunt) ->
 
   grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks 'grunt-mocha-test'
-  grunt.loadNpmTasks 'grunt-browserify'
+  grunt.loadNpmTasks 'grunt-exec'
   grunt.loadNpmTasks 'grunt-contrib-uglify'
 
   grunt.registerTask 'default', ['coffee', 'mochaTest']
-  grunt.registerTask 'build_for_client', ['uglify']
+  grunt.registerTask 'build_for_client', ['exec', 'uglify']
