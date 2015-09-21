@@ -1,25 +1,39 @@
-js-doofinder
-=============
+# js-doofinder
 
 Doofinder Javascript Client
 
 This module is a javascript wrapper for `Doofinder Search API 4`
 
 
-Installation
-------------
+## Installation
+### npm
 `npm install doofinder`
 
-Usage
------
-Instanciate a client object:
+### Downloadable client-side javascript
+https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.min.js
+
+
+## Usage
+- If you are developing a server side application (NodeJS), you can import it via require.
 ```javascript
 
 var Doofinder = require("doofinder");
-var dfClient = new Doofinder ("5886462410a02639acc5054bc464ec18", # hashid 
-                         "eu1-dafdsafadsffsffafdasfsasd"); # api key
 ```
-Your client is ready to perform a search call. Just call it with your 
+- If you want use it in the client side. You can download doofinder.min.js file and link it
+wherever you are going to use the client.
+
+- Next step is instantiate the client.
+
+```javascript
+var dfClient = new Doofinder ("5886462410a02639acc5054bc464ec18", // hashid 
+                              "eu1", // zone
+                              "3ciof3dknveji385fnk33f010ffe0a"); // API Key (optional)
+                             // NEVER add API Key on the client side !!!
+```
+<sup>You will never add the API Key when you are developing in the client side. Requests will be enabled for
+hosts allowed in CORS configuration. </sup>
+
+- Your client is ready to perform a search call. Just call it with your 
 callback.
 ```javascript
 dfClient.search("ipad", function(err, res){
@@ -27,7 +41,7 @@ dfClient.search("ipad", function(err, res){
   console.log('ERROR: ' + err);
   });
 ```
-You'll get the first page with the first 10 results.
+- You'll get the first page with the first 10 results.
 ```javascript
 RESPONSE: {
   "query_counter":1,
@@ -63,7 +77,7 @@ RESPONSE: {
                {"term":"Accesorios Mac","count":5},
                ...
 ```
-Add some extra params. You can add every available parameter in [Doofinder Search API] (http://doofinder.com/en/developer/search-api). You can also add some filters
+- Add some extra params. You can add every available parameter in [Doofinder Search API] (http://doofinder.com/en/developer/search-api). You can also add some filters
 under the `filters` key:
 
 ```javascript
@@ -90,7 +104,7 @@ dfClient.search("ipad", params, function(err, res){
   
 ```
 
-You'll get the response as follows. Note that you'll obtain both results and facets to continue filtering:
+- You'll get the response as follows. Note that you'll obtain both results and facets to continue filtering:
 
 ```javascript
 RESPONSE: {
