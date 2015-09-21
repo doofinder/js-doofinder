@@ -25,10 +25,10 @@ wherever you are going to use the client.
 - Next step is instantiate the client.
 
 ```javascript
-var dfClient = new Doofinder ("5886462410a02639acc5054bc464ec18", # hashid 
-                              "eu1", #zone
-                              "3ciof3dknveji385fnk33f010ffe0a"); # API Key (optional)
-                              # Never add API Key in client-side !!!
+var dfClient = new Doofinder ("5886462410a02639acc5054bc464ec18", // hashid 
+                              "eu1", // zone
+                              "3ciof3dknveji385fnk33f010ffe0a"); // API Key (optional)
+                             // NEVER add API Key on the client side !!!
 ```
 <sup>You will never add the API Key when you are developing in the client side. Requests will be enabled for
 hosts allowed in CORS configuration. </sup>
