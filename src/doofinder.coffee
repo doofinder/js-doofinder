@@ -119,7 +119,7 @@ class Doofinder
         @set_sort(param_value)
       
       else
-        if param_value
+        if param_value or param_value == false
           @add_param(param_key, param_value)
 
     query_string = @make_querystring()
