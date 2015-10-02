@@ -30,7 +30,7 @@ class Doofinder
     @api_key ?= api_key
   
   ###   
-  sanitizeQuery
+  _sanitizeQuery
   very crude check for bad intentioned queries
      
   checks if words are longer than 55 chars and the whole query is longer than 255 chars
@@ -40,20 +40,18 @@ class Doofinder
   _sanitizeQuery: (query, callback) ->
     max_word_length = 55
     max_query_length = 255
+    if query == null or not query.constructor == String
+      throw Error "Query must be a String"
+
     query = query.replace(/ +/g, ' ').replace(/^ +| +$/g, '') # query.trim() is ECMAScript5
       
     if query.length > max_query_length
-      return callback ''
-        
-    long_word = false
+      throw Error "Maximum query length exceeded: #{max_query_length}."
 
     for i, x of query.split(' ')
       if x.length > max_word_length
-        long_word = true
-        return callback false
+        throw Error "Maximum word length exceeded: #{max_word_length}."
 
-    if long_word
-      query = ''
     return callback query
 
 
@@ -102,58 +100,54 @@ class Doofinder
     params.rpp ?= 10
 
     # Add query to params
+    _this = @
     @_sanitizeQuery query, (res) ->
       params.query = res
+      headers = {}
+      _this.params = {}
+      _this.filters = {}
+      _this.sort = []
 
-    headers = {}
-    @params = {}
-    @filters = {}
-    @sort = []
-
-    for param_key, param_value of params
-      if param_key == "filters"
-        for filter_key, filter_terms of param_value
-          @add_filter(filter_key, filter_terms)
-      
-      else if param_key == "sort"
-        @set_sort(param_value)
-      
-      else
-        if param_value or param_value == false
-          @add_param(param_key, param_value)
-
-    query_string = @make_querystring()
-    
-    # Preparing request variables
-    options = 
-      host: @url
-      path: "/#{@version}/search?#{query_string}"
-      headers: headers
-
-    if @localhost and @localport
-      options.host = @localhost
-      options.port = @localport
-
-    # Callback function will be passed as argument to search
-    # and will be returned with response body
-    process_response = (res) ->
-      if res.statusCode >= 400
-        return callback res.statusCode, null
-      
-      else 
-        data = ""
-        res.on 'data', (chunk) ->
-          data += chunk
+      for param_key, param_value of params
+        if param_key == "filters"
+          for filter_key, filter_terms of param_value
+            _this.add_filter(filter_key, filter_terms)
         
-        res.on 'end', () ->
-          return callback null, JSON.parse(data)
+        else if param_key == "sort"
+          _this.set_sort(param_value)
+        
+        else
+          _this.add_param(param_key, param_value)
 
-        res.on 'error', (err) ->
-          return callback err, null
+      query_string = _this.make_querystring()
+      
+      # Preparing request variables
+      options = 
+        host: _this.url
+        path: "/#{_this.version}/search?#{query_string}"
+        headers: headers
 
-    # Here is where request is done and executed process_response
-    req = http.request options, process_response
-    req.end()
+
+      # Callback function will be passed as argument to search
+      # and will be returned with response body
+      process_response = (res) ->
+        if res.statusCode >= 400
+          return callback res.statusCode, null
+        
+        else 
+          data = ""
+          res.on 'data', (chunk) ->
+            data += chunk
+          
+          res.on 'end', () ->
+            return callback null, JSON.parse(data)
+
+          res.on 'error', (err) ->
+            return callback err, null
+
+      # Here is where request is done and executed process_response
+      req = http.request options, process_response
+      req.end()
 
   ###
   add_param
@@ -165,7 +159,10 @@ class Doofinder
   ###
 
   add_param: (param, value) ->
-    @params[param] = value
+    if value != null
+      @params[param] = value
+    else
+      @params[param] = ""  
 
   ###
   add_filter
