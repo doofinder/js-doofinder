@@ -28,9 +28,14 @@
     @param {String} api_key
     @api public
      */
-    function Doofinder(hashid, zone, api_key, address) {
+    function Doofinder(hashid, zone, api_key, version, address) {
       this.hashid = hashid;
-      this.version = "4";
+      if (this.version == null) {
+        this.version = version;
+      }
+      if (this.version == null) {
+        this.version = 5;
+      }
       this.params = {};
       this.filters = {};
       if (this.url == null) {
@@ -46,7 +51,7 @@
 
 
     /*   
-    sanitizeQuery
+    _sanitizeQuery
     very crude check for bad intentioned queries
        
     checks if words are longer than 55 chars and the whole query is longer than 255 chars
@@ -55,24 +60,22 @@
      */
 
     Doofinder.prototype._sanitizeQuery = function(query, callback) {
-      var i, long_word, max_query_length, max_word_length, ref, x;
+      var i, max_query_length, max_word_length, ref, x;
       max_word_length = 55;
       max_query_length = 255;
+      if (query === null || !query.constructor === String) {
+        throw Error("Query must be a String");
+      }
       query = query.replace(/ +/g, ' ').replace(/^ +| +$/g, '');
       if (query.length > max_query_length) {
-        return callback('');
+        throw Error("Maximum query length exceeded: " + max_query_length + ".");
       }
-      long_word = false;
       ref = query.split(' ');
       for (i in ref) {
         x = ref[i];
         if (x.length > max_word_length) {
-          long_word = true;
-          return callback(false);
+          throw Error("Maximum word length exceeded: " + max_word_length + ".");
         }
-      }
-      if (long_word) {
-        query = '';
       }
       return callback(query);
     };
@@ -101,7 +104,7 @@
      */
 
     Doofinder.prototype.search = function(query, arg1, arg2) {
-      var callback, filter_key, filter_terms, headers, options, param_key, param_value, params, process_response, query_string, req;
+      var _this, callback, params;
       if (arg1 && arg1.constructor === Function) {
         callback = arg1;
         params = {};
@@ -117,57 +120,53 @@
       if (params.rpp == null) {
         params.rpp = 10;
       }
-      this._sanitizeQuery(query, function(res) {
-        return params.query = res;
+      _this = this;
+      return this._sanitizeQuery(query, function(res) {
+        var filter_key, filter_terms, headers, options, param_key, param_value, process_response, query_string, req;
+        params.query = res;
+        headers = {};
+        _this.params = {};
+        _this.filters = {};
+        _this.sort = [];
+        for (param_key in params) {
+          param_value = params[param_key];
+          if (param_key === "filters") {
+            for (filter_key in param_value) {
+              filter_terms = param_value[filter_key];
+              _this.add_filter(filter_key, filter_terms);
+            }
+          } else if (param_key === "sort") {
+            _this.set_sort(param_value);
+          } else {
+            _this.add_param(param_key, param_value);
+          }
+        }
+        query_string = _this.make_querystring();
+        options = {
+          host: _this.url,
+          path: "/" + _this.version + "/search?" + query_string,
+          headers: headers
+        };
+        process_response = function(res) {
+          var data;
+          if (res.statusCode >= 400) {
+            return callback(res.statusCode, null);
+          } else {
+            data = "";
+            res.on('data', function(chunk) {
+              return data += chunk;
+            });
+            res.on('end', function() {
+              return callback(null, JSON.parse(data));
+            });
+            return res.on('error', function(err) {
+              return callback(err, null);
+            });
+          }
+        };
+        req = http.request(options, process_response);
+        return req.end();
       });
-      headers = {};
-      this.params = {};
-      this.filters = {};
-      this.sort = [];
-      for (param_key in params) {
-        param_value = params[param_key];
-        if (param_key === "filters") {
-          for (filter_key in param_value) {
-            filter_terms = param_value[filter_key];
-            this.add_filter(filter_key, filter_terms);
-          }
-        } else if (param_key === "sort") {
-          this.set_sort(param_value);
-        } else {
-          if (param_value) {
-            this.add_param(param_key, param_value);
-          }
-        }
-      }
-      query_string = this.make_querystring();
-      options = {
-        host: this.url,
-        path: "/" + this.version + "/search?" + query_string,
-        headers: headers
-      };
-      if (this.localhost && this.localport) {
-        options.host = this.localhost;
-        options.port = this.localport;
-      }
-      process_response = function(res) {
-        var data;
-        if (res.statusCode >= 400) {
-          return callback(res.statusCode, null);
-        } else {
-          data = "";
-          res.on('data', function(chunk) {
-            return data += chunk;
-          });
-          res.on('end', function() {
-            return callback(null, JSON.parse(data));
-          });
-          return res.on('error', function(err) {
-            return callback(err, null);
-          });
-        }
-      };
-      req = http.request(options, process_response);
-      return req.end();
     };
 
 
@@ -181,7 +180,11 @@
      */
 
     Doofinder.prototype.add_param = function(param, value) {
-      return this.params[param] = value;
+      if (value !== null) {
+        return this.params[param] = value;
+      } else {
+        return this.params[param] = "";
+      }
     };
 
 

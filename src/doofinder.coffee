@@ -19,15 +19,26 @@ class Doofinder
 
   @param {String} hashid
   @param {String} api_key
+  @param {String} version
+  @param {String} address
   @api public
   ###
-  constructor: (@hashid, zone, api_key, address) ->
-    @version = "4"
+  constructor: (@hashid, api_key, version, address) ->
+    @version ?= version
+    @version ?= 5
     @params = {}
     @filters = {}
-    @url ?= address 
+    @url ?= address
+    # API Key can be two ways:
+    # zone-APIKey
+    # zone
+    # We check if there is a -
+    zone_api_key = api_key.split('-');
+    zone = zone_api_key[0];
+    if zone_api_key.length > 1
+      @api_key = zone_api_key[1];
+
     @url ?= zone + "-search.doofinder.com"
-    @api_key ?= api_key
   
   ###   
   _sanitizeQuery
