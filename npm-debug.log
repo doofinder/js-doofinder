@@ -1,0 +1,109 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'node', '/usr/local/bin/npm', 'publish' ]
+2 info using npm@2.5.1
+3 info using node@v0.12.0
+4 verbose node symlink /usr/local/bin/node
+5 verbose publish [ '.' ]
+6 silly cache add args [ '.', null ]
+7 verbose cache add spec .
+8 silly cache add parsed spec { raw: '.',
+8 silly cache add   scope: null,
+8 silly cache add   name: null,
+8 silly cache add   rawSpec: '.',
+8 silly cache add   spec: '/Users/kike/workspace/doofinder/js-doofinder',
+8 silly cache add   type: 'directory' }
+9 verbose addLocalDirectory /Users/kike/.npm/doofinder/0.3.0/package.tgz not in flight; packing
+10 verbose tar pack [ '/Users/kike/.npm/doofinder/0.3.0/package.tgz',
+10 verbose tar pack   '/Users/kike/workspace/doofinder/js-doofinder' ]
+11 verbose tarball /Users/kike/.npm/doofinder/0.3.0/package.tgz
+12 verbose folder /Users/kike/workspace/doofinder/js-doofinder
+13 info prepublish doofinder@0.3.0
+14 verbose addLocalTarball adding from inside cache /Users/kike/.npm/doofinder/0.3.0/package.tgz
+15 silly cache afterAdd doofinder@0.3.0
+16 verbose afterAdd /Users/kike/.npm/doofinder/0.3.0/package/package.json not in flight; writing
+17 verbose afterAdd /Users/kike/.npm/doofinder/0.3.0/package/package.json written
+18 silly publish { name: 'doofinder',
+18 silly publish   version: '0.3.0',
+18 silly publish   description: 'Javascript Library for Doofinder Search API',
+18 silly publish   main: 'lib/doofinder.js',
+18 silly publish   directories: { test: 'test' },
+18 silly publish   dependencies:
+18 silly publish    { chai: '^2.2.0',
+18 silly publish      coffee: '^1.0.0',
+18 silly publish      grunt: '^0.4.5',
+18 silly publish      'grunt-browserify': '^4.0.1',
+18 silly publish      'grunt-contrib-coffee': '^0.13.0',
+18 silly publish      'grunt-contrib-uglify': '^0.9.2',
+18 silly publish      'grunt-exec': '^0.4.6',
+18 silly publish      'grunt-mocha-test': '^0.12.7',
+18 silly publish      handlebars: '^4.0.4',
+18 silly publish      http: '^0.0.0',
+18 silly publish      jquery: '^2.1.4' },
+18 silly publish   devDependencies:
+18 silly publish    { 'coffee-script': '^1.9.1',
+18 silly publish      'grunt-versioner': '^0.1.10',
+18 silly publish      mocha: '^2.2.1' },
+18 silly publish   scripts: { test: 'grunt' },
+18 silly publish   repository:
+18 silly publish    { type: 'git',
+18 silly publish      url: 'https://github.com/doofinder/js-doofinder.git' },
+18 silly publish   keywords: [ 'doofinder' ],
+18 silly publish   author: { name: 'Kike Coslado' },
+18 silly publish   license: 'MIT',
+18 silly publish   bugs: { url: 'https://github.com/doofinder/js-doofinder/issues' },
+18 silly publish   homepage: 'https://github.com/doofinder/js-doofinder',
+18 silly publish   readme: '# JS-Doofinder\n\nDoofinder Javascript Library\n\nThis module is a javascript wrapper for `Doofinder Search API v5`. \n\n\n## Installation\n### npm\n`npm install doofinder`\n\n### Downloadable minified javascript file\nhttps://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.min.js\n\n## What is out the box\n* A simple client for retrieving data.\n* A display manager for shaping the data, by using [Handlebars] (http://handlebars.com) templates.\n* A controller that orchestrate client and displayer to make it work.\n* A set of JQuery events that will be triggered when data is ready and you would use wherever you want.\n\n\n## Simple usage. Just the client (server and client side):\n\n* If you are developing a server side application with [nodeJS] (https://nodejs.org) or you are using [browserify] (http://browserify.org/), [webpack](https://webpack.github.io/) or something like that, you can import it via require.\n```javascript\nvar doofinder = require("doofinder");\n```\n* If you want use it as a static asset at the client side. You can download doofinder.min.js file and link it\nwherever you are going to use the library.\n```html\n<script src="path/to/your/javascript/doofinder.min.js"></script>\n```\n\n### Client instantiation (server):\n\nThe arguments to instantiate it are:\n\n  * Required\n    * **hashid `String`:** this is your searchengine unique identifier.\n    * **API Key `String`:** the zone where the SearchEngine you are requesting is (eu1 for EU, us1 for US) and your API Key, separated by "-".\n\n  * Optional\n    * **datatypes `Array`:** if you want restrict the searches to a set of datatypes of the SearchEngine. If you don\'t set this option, all datatypes will be taken.\n\n\n```javascript\nvar client = new doofinder.Client (\n    "5886462410a02639acc5054bc464ec18", \n    "eu1-3ciof3dknveji385fnk33f010ffe0a",\n    ["product", "recipes"]\n    );\n                             \n```\n\n\n:warning:  **Don\'t use your API Key when you are programming at the client side. Look at the next epigraph.**\n\n### Client instantiation (browser):\n\nThe arguments to instantiate it are:\n\n  * Required\n    * **hashid `String`:** this is your searchengine unique identifier.\n    * **zone `String`:** the zone where the SearchEngine you are requesting is (eu1 for EU, us1 for US).\n\n\n\n  * Optional\n    * **datatypes `Array`:** if you want restrict the searches to a set of datatypes of the SearchEngine. If you don\'t set this option, all datatypes will be taken.\n\n\n```javascript\nvar client = new doofinder.Client (\n    "5886462410a02639acc5054bc464ec18", \n    "eu1",\n    ["product", "recipes"]\n    );\n                             \n```\n\n\n### Client Methods:\n\n#### **search**\nThis method performs a Search API call and retrieves the data. The data will be received by a callback function.\n\n**__Arguments:__**\n\n* **Required:**\n  * **query `String`:** the terms you are searching for.\n  * **callback `Function`:** the function which receives the API Search response.\n\n* **Optional:**\n    * **params `Object`:** an Object that brings all the rest of extra params for the search. Some of the keys you can use are:\n      * page: number of the page you are asking for.\n      * rpp: results per page.\n      * filters: an embedded object with the terms and ranges you are filtering.\n\n      You can also add all the options available in [Doofinder Search API] (http://doofinder.com/en/developer/search-api).\n\n- **Example:**\n\n    For the next search call.\n\n```javascript\nclient.search("ipad", function(err, res){\n  console.log(\'RESPONSE: \' + JSON.stringify(res));\n  console.log(\'ERROR: \' + err);\n  });\n```\n\nYou\'ll get the first page with the first 10 results.\n\n```javascript\nRESPONSE: {\n  "query_counter":1,\n  "results_per_page":10,\n  "page":1,\n  "total":116,\n  "query":"ipad",\n  "hashid":"6a96504dc173514cab1e0198af92e6e9",\n  "max_score":0.75163203,\n  "results":[\n    {"body":"Cómodo dock para el <em>iPad</em> con el que además de poder cargarlo y sincronizarlo con tu ordenador podrás",\n    "dfid":"6a96504dc173514cab1e0198af92e6e9@product@823ca8137de2ee1e08aabbd0bf7dabf7",\n    "image":"http://images.mystore.com/res/product200/resource_166376.jpg",\n    "id":"APXAI003",\n    "header":"Apple Dock para iPad","href":"http://www.mystore.com/app/catalog.do?action=ShowProductDetail&productId=9531&ref=doofinder",\n    "type":"product",\n    "price":"29.00"}, ...\n    \n  "facets":{\n    "categories":{\n      "_type":"terms",\n      "missing":0,\n      "total":235,\n      "other":0,\n      "terms":[{"term":"Fundas iPad","count":85},\n               {"term":"Accesorios iPad","count":31},\n               {"term":"Entretenimiento iPhone","count":25},\n               {"term":"Comprar un iPad","count":25},\n               {"term":"Altavoces","count":19},\n               {"term":"Auriculares","count":10},\n               {"term":"Accesorios iPhone","count":10},\n               {"term":"Outlet","count":6},\n               {"term":"Accesorios Mac","count":5},\n               ...\n```\n\nAdd some extra params. \n\n```javascript\nparams = {\n  # Set the number of results per page\n  rpp: 20,\n  # Set the page number\n  page: 2,\n  # Add some filters\n  filters:{\n    category: ["Fundas iPad", "Accesorios iPad"],\n    price:{\n      from: 20,\n      to: 500\n    }\n  }\n}\n```\n\nPerform the API call.\n\n```javascript    \nclient.search("ipad", params, function(err, res){\n  console.log(\'RESPONSE: \' + JSON.stringify(res));\n  console.log(\'ERROR: \' + err);\n}\n  \n```\n\nYou\'ll get the response as follows. Note that you\'ll obtain both results and facets to continue filtering:\n\n```javascript\nRESPONSE: {\n  "query_counter":3,\n  "results_per_page":20,\n  "page":2,\n  "total":116,\n  "query":"ipad",\n  "hashid":"6a96504dc173514cab1e0198af92e6e9",\n  "max_score":0.75163203,\n  "results":[\n    {"body":"KTICFP12 Funda acolchada para proteger tu iPad con la portada del periódico. La funda imita perfectamente a un auténtico periódico.",\n    "dfid":"6a96504dc173514cab1e0198af92e6e9@product@823ca8137de2ee1e08aabbd0bf7dabf7",\n    "image":"http://images.xxx.com/res/product20/resource_156576.jpg",\n    "id":"APXAI003",\n    "header":"Funda iPad","href":"http://www.xxx.com/app/catalog.do?action=ShowProductDetail&productId=9531&ref=doofinder",\n    "type":"product",\n    "price":"29.00"}, ...\n    \n  "facets":{\n    "categories":{\n      "_type":"terms",\n      "missing":0,\n      "total":235,\n      "other":0,\n      "terms":[{"term":"Fundas iPad","count":85},\n               {"term":"Accesorios iPad","count":31},\n               {"term":"Entretenimiento iPhone","count":25},\n               {"term":"Comprar un iPad","count":25},\n               {"term":"Altavoces","count":19},\n               {"term":"Auriculares","count":10},\n               {"term":"Accesorios iPhone","count":10},\n               {"term":"Outlet","count":6},\n               {"term":"Accesorios Mac","count":5},\n               ...\n```\n\n\n## Complete Library Usage (just for client side):\n\nYou can also use the Displayer and Controller classes in order to manage the way you show the results. To use the whole thing we\'ll instantiate a ```Client```, one or more than one Displayer, and then we\'ll pass them to the ```Controller```.\n\n- The ```Displayer``` will take a DOM node and a Handlebars template. The goal of this class is shaping the results by the template an insert them in the DOM. There will be two ways to display the data: by appending them or by replacing them.\n\n- The ```Controller``` will receive a ```Client``` and a set of ```Displayer```. ```Controller``` could also receive initial params, that will be in every search the ```Client``` will perform.\n\nOnce you have instantiated the controller, you can use its methods which will perform the search call, will paint the results and will trigger some events you can use from your view. \n\n### Displayer instantiation:\n\nThe arguments to instantiate it are:\n\n* Required\n\n  * **container `String`:** a DOM node CSS selector. \n  * **template `String | Function`:** a [Handlebars] (http://handlebars.com) template to shape the way the results will be shown. This template could be a String with the template or a precompiled template.\n       \n\n* Optional\n  * **options `Object`:**\n    * **append `Boolean`:** \n          \n    * **urlParams `Object`:** this is an object whose elements will be added as a querystring. This option will be used in a special [Handlebars] (http://handlebars.com) template tag. So if you have `urlParams: {foo: "bar"}` in your settings and `{{#url-params}}{{url}}{{/url-params}}` in your template th url will be shown as `http://your_url?foo=bar`\n\n    * **currency `Object`:** this is an object you can use to model how the prices will be shown. You will be able to use the `{{#formatCurrency}}{{price}}{{/df_formatCurrency}}`. The keys you have to fill in are:\n      * **symbol:** this is the symbol you want to use for your currency, it can be either an utf-8 symbol, like \'€\' or the html escaped sequence, like \'&euro;\'\n      * **decimal:** The symbol used to separate the decimal part of the price. Usually \',\' or \'.\'.\n      * **thousand:** The symbol used to separate thousands in the price. Usually \'.\' or \',\'.\n      * **precision:** How many decimals you want your price to have\n      * **format:** Where to put the currency symbol in relation with the price value. It is a format string: ("%s %v") where %s is changed by the currency symbol and %v is changed by the price value. Say you have a price of 13 euros. Then if format is: "%s%v" the price would be shown as €13.\n\n    * **translations `Object`:** an object with some strings you would like to replace by others. This is interesting for those ResultsDisplayers that share template. A string must be in a `{{translate}}` tag.  So if you have `translations: {"foo": "bar"}` in your settings and `{{translate}}foo{{/translate}}` in your template, this will be shown as `bar`.\n          \n    * **helpers `Object`:** you can add custom Handlebars helpers. You can get more information about Handlebars expressions [here] (http://handlebarsjs.com/expressions.html).\n\n  ```javascript\nvar displayer = new doofinder.Displayer(\n      "#myDivId",\n      "{{#each results}}<h1>title</h1>{{/each}}",\n      {\n        currency: {\n          symbol: \'&euro;\',\n          decimal: \',\',\n          thousand: \'.\',\n          format: \'%v %s (VAT included)\'\n        },\n        urlParams: {\n          "ref-id": 233,\n          utm_source: "doofinder"\n        },\n        translations: {\n          "Price": "Precio"\n        }\n      }\n);\n\n  ```\n\n\n### Displayer methods:\n\n#### **on**\nThis method will assign a callback to an event that will be triggered for the `container`. Note that to call this method it\'s necessary to be in the context of Controller.\n\n**__Arguments:__**\n\n* **Required:**\n  * **event `String`:** a String with the event name. Described in the table above.\n  * **callback `Function`:** the function which handles the event. It receives some params described in the table above.\n\nEvent Name | Callback Arguments | Description\n---------- | ------------------ | -----------\ndf:new_query   | <ul><li>event(Object): information about the event.</li><li>params(Object): the object will be send as params to the Search API.</li></ul> | This event is triggered when a new query term.\ndf:next_page | <ul><li>event(Object): information about the event.</li><li>params(Object): the Search API response</li></ul> | This event is triggered when a next page is requested.\ndf:get_page | <ul><li>event(Object): information about the event.</li><li>params(Object): the Search API response</li></ul> | This event is triggered when a page is requested.\ndf:results_received | <ul><li>event(Object): information about the event.</li><li>res(Object): the Search API response</li></ul> | This event is triggered when new results are received from Search API.\n\n* **Example:**\n\n```javascript\ndisplayer.on("df:results_received", function(event, res){\n   console.log(res.total + "RESULTS FOUND"); \n});\n```\n\n### Controller instantiation:\n\nThe arguments to instantiate it are:\n\n* Required\n\n  * **client `doofinder.Client`:** the object we use to perform the queries. \n  * **displayers `doofinder.Displayer | Array(doofinder.Displayer)`:**  where and how the results are shown.\n       \n\n* Optional\n  * **initialParams `Object`:** an `Object` with params fixed for every search you will perform. This can be every param you can use in the `Client.search` method. You can also set fixed filters under the key `filters`.\n\n```javascript\nvar client = new doofinder.Client (\n    "5886462410a02639acc5054bc464ec18", \n    "eu1",\n    ["product", "recipes"]\n);\n\nvar displayer = new doofinder.Displayer (\n      "#myDivId",\n      "{{#each results}}<h1>title</h1>{{/each}}",\n      {\n        currency: {\n          symbol: \'&euro;\',\n          decimal: \',\',\n          thousand: \'.\',\n          format: \'%v %s (VAT included)\'\n        },\n        urlParams: {\n          ref: 233\n        },\n        translations: {\n          "Price": "Precio"\n        }\n      }\n);\n\nvar controller = new doofinder.Controller (\n    client,\n    displayer,\n    {\n      rpp: 10,\n      filters: {\n          brand: ["Adidas", "Nike"]\n      }\n    }\n);\n\n```\n\n### Controller methods:\n\n#### **search:**\nThis method will perform a search API Call and will show the results as you have defined in the displayers. This will trigger the df:new_query and df:new_results events for every displayer container.\n\n**__Arguments:__**\n\n* **Required:**\n  * **query `String`:** a String with the event name. Described in the table above.\n\n* **Optional:** \n  * **params `Object`:** params will be passed to the client.\n\n#### **nextPage:**\nThis method will show the next page for the current search state.\n\n#### **getPage:**\nThis method will show a page for the current search state.\n\n**__Arguments:__**\n\n* **Required:**\n  * **page `Number`:** the number of the page you want to show.\n\n',
+18 silly publish   readmeFilename: 'README.md',
+18 silly publish   gitHead: '9fe1ffe073ce2ed2d87e88e743671855545ba177',
+18 silly publish   _id: 'doofinder@0.3.0',
+18 silly publish   _shasum: 'a83a44697d50f0288922ecc360c146a4f55b4a5c',
+18 silly publish   _from: '.' }
+19 silly mapToRegistry name doofinder
+20 silly mapToRegistry using default registry
+21 silly mapToRegistry registry https://registry.npmjs.org/
+22 silly mapToRegistry uri https://registry.npmjs.org/doofinder
+23 verbose publish registryBase https://registry.npmjs.org/
+24 silly publish uploading /Users/kike/.npm/doofinder/0.3.0/package.tgz
+25 verbose request uri https://registry.npmjs.org/doofinder
+26 verbose request sending authorization for write operation
+27 info attempt registry request try #1 at 16:56:00
+28 verbose request using bearer token for auth
+29 verbose request id 86ae1affede724d5
+30 http request PUT https://registry.npmjs.org/doofinder
+31 http 403 https://registry.npmjs.org/doofinder
+32 verbose headers { 'content-type': 'application/json',
+32 verbose headers   'cache-control': 'max-age=60',
+32 verbose headers   'content-length': '95',
+32 verbose headers   'accept-ranges': 'bytes',
+32 verbose headers   date: 'Thu, 12 Nov 2015 15:56:03 GMT',
+32 verbose headers   via: '1.1 varnish',
+32 verbose headers   connection: 'keep-alive',
+32 verbose headers   'x-served-by': 'cache-fra1237-FRA',
+32 verbose headers   'x-cache': 'MISS',
+32 verbose headers   'x-cache-hits': '0',
+32 verbose headers   'x-timer': 'S1447343761.235202,VS0,VE2511' }
+33 verbose request invalidating /Users/kike/.npm/registry.npmjs.org/doofinder on PUT
+34 error publish Failed PUT 403
+35 verbose stack Error: "You cannot publish over the previously published version 0.3.0." : doofinder
+35 verbose stack     at CachingRegistryClient.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:254:14)
+35 verbose stack     at Request._callback (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:178:14)
+35 verbose stack     at Request.self.callback (/usr/local/lib/node_modules/npm/node_modules/request/request.js:344:22)
+35 verbose stack     at Request.emit (events.js:110:17)
+35 verbose stack     at Request.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/request.js:1239:14)
+35 verbose stack     at Request.emit (events.js:129:20)
+35 verbose stack     at IncomingMessage.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/request.js:1187:12)
+35 verbose stack     at IncomingMessage.emit (events.js:129:20)
+35 verbose stack     at _stream_readable.js:908:16
+35 verbose stack     at process._tickCallback (node.js:355:11)
+36 verbose statusCode 403
+37 verbose pkgid doofinder
+38 verbose cwd /Users/kike/workspace/doofinder/js-doofinder
+39 error Darwin 14.0.0
+40 error argv "node" "/usr/local/bin/npm" "publish"
+41 error node v0.12.0
+42 error npm  v2.5.1
+43 error code E403
+44 error "You cannot publish over the previously published version 0.3.0." : doofinder
+45 error If you need help, you may report this error at:
+45 error     <http://github.com/npm/npm/issues>
+46 verbose exit [ 1, true ]
