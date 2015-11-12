@@ -1,7 +1,7 @@
 {
   "name": "doofinder",
-  "version": "0.2.6",
-  "description": "Javascript Client for Doofinder Search API - Beta",
+  "version": "0.2.7",
+  "description": "Javascript Library for Doofinder Search API",
   "main": "lib/doofinder.js",
   "directories": {
     "test": "test"
@@ -15,7 +15,8 @@
     "grunt-contrib-uglify": "^0.9.2",
     "grunt-exec": "^0.4.6",
     "grunt-mocha-test": "^0.12.7",
-    "http": "^0.0.0"
+    "http": "^0.0.0",
+    "jquery": "^2.1.4"
   },
   "devDependencies": {
     "coffee-script": "^1.9.1",

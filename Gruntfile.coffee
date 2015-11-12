@@ -3,7 +3,11 @@ module.exports = (grunt) ->
     coffee:
       compile:
         files:
-          'lib/doofinder.js': ['src/*.coffee']
+          'lib/client.js': ['src/client.coffee']
+          'lib/controller.js': ['src/controller.coffee']
+          'lib/displayer.js': ['src/displayer.coffee']
+          'lib/doofinder.js': ['src/doofinder.coffee']
+          'lib/helpers.js': ['src/helpers.coffee']
     mochaTest:
       options:
         reporter: 'nyan'
