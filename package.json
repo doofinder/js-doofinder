@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "coffee-script": "^1.9.1",
+    "grunt-versioner": "^0.1.10",
     "mocha": "^2.2.1"
   },
   "scripts": {

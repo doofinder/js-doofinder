@@ -17,42 +17,80 @@ addHelpers = require("./helpers").addHelpers
 class Displayer
 
   ###
-  ResultsDisplayer constructor
+  constructor
+
   @param {String} container
   @param {String|Function} template
   @param {Object} extraOptions 
+  @api public
   ###
-  constructor = (container, template, extraOptions) ->
-  	@container = jqDf(extraOptions.container)
+  constructor: (container, template, extraOptions) ->
+  	@container = jqDf(container)
   	@handlebars = require("handlebars")
   	addHelpers @handlebars,
   	  extraOptions.currency,
   	  extraOptions.templeteFunctions
   	  extraOptions.language,
   	  extraOptions.customStrings
-
-    if template instanceof String
+    
+    if template.constructor == String
   	  @template = @handlebars.compile(template)
-  	else if template instanceof Function
+  	
+    else if template instanceof Function
   	  @template = template
-  	else
+  	
+    else
   	  throw Error "The provided template is not the right type. String or rendered handlebars expected."
 
     @showMode = extraOptions.showMode
     @showMode ?= "append"
 
-    @bind "df:new_results", (res, showMode) -> 
-      html = @template(res)
-      showMode = showMode || @showMode
-      if showMode == "append"
-        @container.append html
-      else
-        @container.html html
+  ###
+  append
 
-  bind = (event, callback) ->
+  Appends results to the older in container
+  @param {Object} res
+  @api public
+  ###  
+  append: (res) ->
+    html = @template res
+    showMode = showMode || @showMode
+    jqDf(@container).append html
+  
+  ###
+  replace
+
+  Replaces the older results in container with
+  the given
+
+  @param {Object} res
+  @api public
+  ###  
+  replace: (res) ->
+    html = @template res
+    showMode = showMode || @showMode
+    jqDf(@container).html html
+
+  ###
+  bind
+
+  Method to add and event listener
+  @param {String} event
+  @param {Function} callback
+  @api public
+  ###
+  bind: (event, callback) ->
     @container.on(event, callback)
 
-  trigger = (event, params) -> 
+  ###
+  trigger
+
+  Method to trigger an event
+  @param {String} event
+  @param {Array} params
+  @api public
+  ###
+  trigger: (event, params) -> 
     @container.trigger(event, params)
 
 module.exports = Displayer

@@ -66,7 +66,7 @@ addHelpers = (Handlebars, parameters, currency, extraFunctions, language, custom
         translations[key]['en']
   
   for key of helpers
-    Handlebars.registerHelper key, hbHelpers[key]
+    Handlebars.registerHelper key, helpers[key]
   
   if extraFunctions
     for key of extraFunctions

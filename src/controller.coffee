@@ -3,63 +3,132 @@
 ###
 
 jqDf = require('jquery')
+
+###
+Controller
   
+This class uses the client to
+to retrieve the data and the displayers
+to paint them.
+###  
 class Controller
-  constructor = (client, results_displayers, params) ->
+  ###
+  Controller constructor
+  
+  @param {doofinder.Client} client
+  @param {doofinder.Displayer | Array} displayers
+  @param {Object} initialParams
+  @api public
+  ###
+  constructor: (client, displayers, @initialParams) ->
     @client = client
-    if resultsDisplayers instanceof Array
-      @resultsDisplayers = resultsDisplayers
+    if displayers instanceof Array
+      @displayers = displayers
     else
-      @resultsDisplayers = [ resultsDisplayers ]
-    # Initial params and filters for queries.
-    @predefinedParams = params or {}
-    @predefinedFilters = filters or {}
+      @displayers = [ displayers ]
+    
     # Initial status
     @status =
-      filters: filters or {}
-      params: params or {}
+      params: @initialParams or {}
       query: ''
-      currentPage: 1
+      currentPage: 0
       firstQueryTriggered: false
-      lastPageReached: false
   
+  ###
+  __triggerAll
+  this function triggers an event
+  for every resultDisplayer
+  
+  @param {String} event: the event name
+  @param {Array} params: the params will be passed
+    to the listeners
+  @api private
+  ###
   __triggerAll: (event, params) ->
-    for results_displayer of @results_displayers
-      results_displayer.trigger(event, params)
+    for displayer in @displayers
+      displayer.trigger(event, params)
 
-  __query: (event) ->
+  ###
+  __search
+  this method invokes Client's search method for
+  retrieving the data and use Displayer's replace or 
+  append to show them.
+  
+  @param {String} event: the event name
+  @param {Array} params: the params will be passed
+    to the listeners
+  @api private
+  ###
+  __search: (replace) ->
     query = @status.query
-    params = jqDf.extend(true, @status.params, filters: @status.filters or {})
+    params = @status.params or {}
     params.page = @status.currentPage
     self = this
     lastPageReached = true
     @client.search query, params, (err, res) ->
+      self.__triggerAll "df:results_received", [res]
+      for displayer in self.displayers
+        if replace
+          displayer.replace res
+        else
+          displayer.append res
+      # I check if I reached the last page.    
       if res.results.length < self.status.params.rpp
         self.status.lastPageReached = lastPageReached
-      @__triggerAll event, [res]
-    
-  query: (query) ->
+  
+  ### 
+  __search wrappers
+  ###
+
+  ###
+  search
+  
+  Takes a new query, initializes status and performs
+  a search
+
+  @param {String} query: the query term
+  @api public
+  ###
+  search: (query) ->
     if query
       @status.query = query
-    @status.filters = @predefinedFilters
-    @status.params = @predefinedParams
+    if not @status
+      @status = {}  
+    @status.params = @initialParams
     @status.currentPage = 1
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
     self = this
-    for key of self.resultsDisplayers
-      self.resultsDisplayers[key].triggerAll 'df:new_query'
-    @__query "df:new_query"
+    @__search(true)
 
-  nextPage: ->
-    if @status.firstQueryTriggered and !@status.lastPageReached
+  ###
+  nextPage
+  
+  Increments the currentPage and performs a search. Takes
+  the next page results and shows them.
+
+  @api public
+  ###
+  nextPage: (replace = false) ->
+    if @status.firstQueryTriggered and @status.currentPage > 0
       @status.currentPage++
       self = this
-      @__query "df:next_page"
+      @__search(replace)
+
+  ###
+  getPage
+  
+  Set the currentPage with a given value and performs a search.
+  Takes a given page and shows the results.
+
+  @param {Number} page: the page you are retrieving
+  @api public
+  ###
 
   getPage: (page) ->
-    @status.currentPage = page
-    self = this
-    @__query "df:get_page"
+    if @status.firstQueryTriggered and @status.currentPage > 0
+      @status.currentPage = page
+      self = this
+      @__search(true)
 
 module.exports = Controller

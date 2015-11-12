@@ -1,4 +1,4 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Doofinder = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.doofinder = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 
 /*
 client.coffee
@@ -297,87 +297,174 @@ author: @ecoslado
 
   jqDf = require('jquery');
 
+
+  /*
+  Controller
+    
+  This class uses the client to
+  to retrieve the data and the displayers
+  to paint them.
+   */
+
   Controller = (function() {
-    var constructor;
 
-    function Controller() {}
-
-    constructor = function(client, results_displayers, params) {
+    /*
+    Controller constructor
+    
+    @param {doofinder.Client} client
+    @param {doofinder.Displayer | Array} displayers
+    @param {Object} initialParams
+    @api public
+     */
+    function Controller(client, displayers, initialParams) {
+      this.initialParams = initialParams;
       this.client = client;
-      if (resultsDisplayers instanceof Array) {
-        this.resultsDisplayers = resultsDisplayers;
+      if (displayers instanceof Array) {
+        this.displayers = displayers;
       } else {
-        this.resultsDisplayers = [resultsDisplayers];
+        this.displayers = [displayers];
       }
-      this.predefinedParams = params || {};
-      this.predefinedFilters = filters || {};
-      return this.status = {
-        filters: filters || {},
-        params: params || {},
+      this.status = {
+        params: this.initialParams || {},
         query: '',
-        currentPage: 1,
-        firstQueryTriggered: false,
-        lastPageReached: false
+        currentPage: 0,
+        firstQueryTriggered: false
       };
-    };
+    }
+
+
+    /*
+    __triggerAll
+    this function triggers an event
+    for every resultDisplayer
+    
+    @param {String} event: the event name
+    @param {Array} params: the params will be passed
+      to the listeners
+    @api private
+     */
 
     Controller.prototype.__triggerAll = function(event, params) {
-      var results, results_displayer;
+      var displayer, i, len, ref, results;
+      ref = this.displayers;
       results = [];
-      for (results_displayer in this.results_displayers) {
-        results.push(results_displayer.trigger(event, params));
+      for (i = 0, len = ref.length; i < len; i++) {
+        displayer = ref[i];
+        results.push(displayer.trigger(event, params));
       }
       return results;
     };
 
-    Controller.prototype.__query = function(event) {
+
+    /*
+    __search
+    this method invokes Client's search method for
+    retrieving the data and use Displayer's replace or 
+    append to show them.
+    
+    @param {String} event: the event name
+    @param {Array} params: the params will be passed
+      to the listeners
+    @api private
+     */
+
+    Controller.prototype.__search = function(replace) {
       var lastPageReached, params, query, self;
       query = this.status.query;
-      params = jqDf.extend(true, this.status.params, {
-        filters: this.status.filters || {}
-      });
+      params = this.status.params || {};
       params.page = this.status.currentPage;
       self = this;
       lastPageReached = true;
       return this.client.search(query, params, function(err, res) {
-        if (res.results.length < self.status.params.rpp) {
-          self.status.lastPageReached = lastPageReached;
+        var displayer, i, len, ref;
+        self.__triggerAll("df:results_received", [res]);
+        ref = self.displayers;
+        for (i = 0, len = ref.length; i < len; i++) {
+          displayer = ref[i];
+          if (replace) {
+            displayer.replace(res);
+          } else {
+            displayer.append(res);
+          }
         }
-        return this.__triggerAll(event, [res]);
+        if (res.results.length < self.status.params.rpp) {
+          return self.status.lastPageReached = lastPageReached;
+        }
       });
     };
 
-    Controller.prototype.query = function(query) {
-      var key, self;
+
+    /* 
+    __search wrappers
+     */
+
+
+    /*
+    search
+    
+    Takes a new query, initializes status and performs
+    a search
+    
+    @param {String} query: the query term
+    @api public
+     */
+
+    Controller.prototype.search = function(query) {
+      var self;
       if (query) {
         this.status.query = query;
       }
-      this.status.filters = this.predefinedFilters;
-      this.status.params = this.predefinedParams;
+      if (!this.status) {
+        this.status = {};
+      }
+      this.status.params = this.initialParams;
       this.status.currentPage = 1;
       this.status.firstQueryTriggered = true;
       this.status.lastPageReached = false;
       self = this;
-      for (key in self.resultsDisplayers) {
-        self.resultsDisplayers[key].triggerAll('df:new_query');
-      }
-      return this.__query("df:new_query");
+      return this.__search(true);
     };
 
-    Controller.prototype.nextPage = function() {
+
+    /*
+    nextPage
+    
+    Increments the currentPage and performs a search. Takes
+    the next page results and shows them.
+    
+    @api public
+     */
+
+    Controller.prototype.nextPage = function(replace) {
       var self;
-      if (this.status.firstQueryTriggered && !this.status.lastPageReached) {
+      if (replace == null) {
+        replace = false;
+      }
+      if (this.status.firstQueryTriggered && this.status.currentPage > 0) {
         this.status.currentPage++;
         self = this;
-        return this.__query("df:next_page");
+        return this.__search(replace);
       }
     };
+
+
+    /*
+    getPage
+    
+    Set the currentPage with a given value and performs a search.
+    Takes a given page and shows the results.
+    
+    @param {Number} page: the page you are retrieving
+    @api public
+     */
 
     Controller.prototype.getPage = function(page) {
       var self;
-      this.status.currentPage = page;
-      self = this;
-      return this.__query("df:get_page");
+      if (this.status.firstQueryTriggered && this.status.currentPage > 0) {
+        this.status.currentPage = page;
+        self = this;
+        return this.__search(true);
+      }
     };
 
     return Controller;
@@ -414,20 +501,18 @@ shaped by template
   Displayer = (function() {
 
     /*
-    ResultsDisplayer constructor
+    constructor
+    
     @param {String} container
     @param {String|Function} template
-    @param {Object} extraOptions
+    @param {Object} extraOptions 
+    @api public
      */
-    var bind, constructor, trigger;
-
-    function Displayer() {}
-
-    constructor = function(container, template, extraOptions) {
-      this.container = jqDf(extraOptions.container);
+    function Displayer(container, template, extraOptions) {
+      this.container = jqDf(container);
       this.handlebars = require("handlebars");
       addHelpers(this.handlebars, extraOptions.currency, extraOptions.templeteFunctions, extraOptions.language, extraOptions.customStrings);
-      if (template instanceof String) {
+      if (template.constructor === String) {
         this.template = this.handlebars.compile(template);
       } else if (template instanceof Function) {
         this.template = template;
@@ -438,23 +523,67 @@ shaped by template
       if (this.showMode == null) {
         this.showMode = "append";
       }
-      return this.bind("df:new_results", function(res, showMode) {
-        var html;
-        html = this.template(res);
-        showMode = showMode || this.showMode;
-        if (showMode === "append") {
-          return this.container.append(html);
-        } else {
-          return this.container.html(html);
-        }
-      });
+    }
+
+
+    /*
+    append
+    
+    Appends results to the older in container
+    @param {Object} res
+    @api public
+     */
+
+    Displayer.prototype.append = function(res) {
+      var html, showMode;
+      html = this.template(res);
+      showMode = showMode || this.showMode;
+      return jqDf(this.container).append(html);
     };
 
-    bind = function(event, callback) {
+
+    /*
+    replace
+    
+    Replaces the older results in container with
+    the given
+    
+    @param {Object} res
+    @api public
+     */
+
+    Displayer.prototype.replace = function(res) {
+      var html, showMode;
+      html = this.template(res);
+      showMode = showMode || this.showMode;
+      return jqDf(this.container).html(html);
+    };
+
+
+    /*
+    bind
+    
+    Method to add and event listener
+    @param {String} event
+    @param {Function} callback
+    @api public
+     */
+
+    Displayer.prototype.bind = function(event, callback) {
       return this.container.on(event, callback);
     };
 
-    trigger = function(event, params) {
+
+    /*
+    trigger
+    
+    Method to trigger an event
+    @param {String} event
+    @param {Array} params
+    @api public
+     */
+
+    Displayer.prototype.trigger = function(event, params) {
       return this.container.trigger(event, params);
     };
 
@@ -560,7 +689,7 @@ shaped by template
       }
     };
     for (key in helpers) {
-      Handlebars.registerHelper(key, hbHelpers[key]);
+      Handlebars.registerHelper(key, helpers[key]);
     }
     if (extraFunctions) {
       results = [];
