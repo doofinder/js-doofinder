@@ -39,7 +39,6 @@ module.exports = (grunt) ->
         readmeText: 'Current Version: '
         pushTo: 'origin'
         branch: 'master'
-        npm: true
         mode: 'production'
 
       default:
