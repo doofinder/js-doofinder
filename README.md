@@ -14,7 +14,7 @@ https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.m
 
 ## What is out the box
 * A simple client for retrieving data.
-* A display manager for shaping the data, by using [Handlebars] (http://handlebars.com) templates.
+* A display manager for shaping the data, by using [Handlebars] (http://handlebarsjs.com) templates.
 * A controller that orchestrate client and displayer to make it work.
 * A set of JQuery events that will be triggered when data is ready and you would use wherever you want.
 
