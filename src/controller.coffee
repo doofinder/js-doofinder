@@ -110,7 +110,7 @@ class Controller
   ###
   nextPage: (replace = false) ->
     @__triggerAll "df:next_page"
-    if @status.firstQueryTriggered and @status.currentPage > 0
+    if @status.firstQueryTriggered and @status.currentPage > 0 and not @status.lastPageReached
       @status.currentPage++
       @__search(replace)
 

@@ -33,7 +33,7 @@ class Client
     # zone-APIKey
     # zone
     # We check if there is a -
-    if zoneApiKey
+    if apiKey
       zoneApiKey = apiKey.split('-');
       zone = zoneApiKey[0];
       if zoneApiKey.length > 1

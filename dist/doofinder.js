@@ -44,7 +44,7 @@ author: @ecoslado
       if (this.url == null) {
         this.url = address;
       }
-      if (zoneApiKey) {
+      if (apiKey) {
         zoneApiKey = apiKey.split('-');
         zone = zoneApiKey[0];
         if (zoneApiKey.length > 1) {
@@ -437,7 +437,7 @@ to paint them.
         replace = false;
       }
       this.__triggerAll("df:next_page");
-      if (this.status.firstQueryTriggered && this.status.currentPage > 0) {
+      if (this.status.firstQueryTriggered && this.status.currentPage > 0 && !this.status.lastPageReached) {
         this.status.currentPage++;
         return this.__search(replace);
       }
@@ -602,7 +602,7 @@ shaped by template
 },{"./helpers":5,"handlebars":35,"tiny-emitter":48}],4:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "0.4.0",
+    version: "0.4.1",
     Client: require("./client"),
     Displayer: require("./displayer"),
     Controller: require("./controller")
