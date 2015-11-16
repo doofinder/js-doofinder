@@ -1,6 +1,6 @@
 {
   "name": "doofinder",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Javascript Library for Doofinder Search API",
   "main": "lib/doofinder.js",
   "directories": {
@@ -17,7 +17,7 @@
     "grunt-mocha-test": "^0.12.7",
     "handlebars": "^4.0.4",
     "http": "^0.0.0",
-    "jquery": "^2.1.4"
+    "tiny-emitter": "^1.0.1"
   },
   "devDependencies": {
     "coffee-script": "^1.9.1",

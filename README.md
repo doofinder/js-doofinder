@@ -9,6 +9,9 @@ This module is a javascript wrapper for `Doofinder Search API v5`.
 ### npm
 `npm install doofinder`
 
+### bower
+`bower install doofinder`
+
 ### Downloadable minified javascript file
 https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.min.js
 
@@ -16,10 +19,11 @@ https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.m
 * A simple client for retrieving data.
 * A display manager for shaping the data, by using [Handlebars] (http://handlebars.com) templates.
 * A controller that orchestrate client and displayer to make it work.
-* A set of JQuery events that will be triggered when data is ready and you would use wherever you want.
+* A set of events that will be triggered when data is ready and you would use wherever you want.
 
 
-## Simple usage. Just the client (server and client side):
+
+## Simple usage. Just the client:
 
 * If you are developing a server side application with [nodeJS] (https://nodejs.org) or you are using [browserify] (http://browserify.org/), [webpack](https://webpack.github.io/) or something like that, you can import it via require.
 ```javascript

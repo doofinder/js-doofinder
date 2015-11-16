@@ -2,8 +2,6 @@
 # Created by Kike Coslado on 26/10/15.
 ###
 
-jqDf = require('jquery')
-
 ###
 Controller
   
@@ -66,7 +64,7 @@ class Controller
     self = this
     lastPageReached = true
     @client.search query, params, (err, res) ->
-      self.__triggerAll "df:results_received", [res]
+      self.__triggerAll "df:results_received", res
       for displayer in self.displayers
         if replace
           displayer.replace res

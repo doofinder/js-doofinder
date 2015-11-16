@@ -1,0 +1,23 @@
+{
+  "name": "doofinder",
+  "description": "Javascript Library for Doofinder Search API",
+  "version": "0.4.0",
+  "main": "dist/doofinder.js",
+  "authors": [
+    "Doofinder"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "doofinder"
+  ],
+  "homepage": "https://github.com/doofinder/js-doofinder",
+  "moduleType": [],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "lib",
+    "src"
+  ]
+}

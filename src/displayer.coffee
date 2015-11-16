@@ -11,8 +11,10 @@ results and paint them in a container
 shaped by template
 ###
 
-jqDf = require("jquery")
+Emitter = require 'tiny-emitter' 
+emitter = new Emitter
 addHelpers = require("./helpers").addHelpers
+document = global.document
 
 class Displayer
 
@@ -25,7 +27,7 @@ class Displayer
   @api public
   ###
   constructor: (container, template, extraOptions = {}) ->
-  	@container = jqDf(container)
+  	@container = container
   	@handlebars = require("handlebars")
   	addHelpers @handlebars, 
       extraOptions.urlParams, 
@@ -42,8 +44,6 @@ class Displayer
     else
   	  throw Error "The provided template is not the right type. String or rendered handlebars expected."
 
-    @showMode = extraOptions.showMode
-    @showMode ?= "append"
 
   ###
   append
@@ -54,9 +54,8 @@ class Displayer
   ###  
   append: (res) ->
     html = @template res
-    showMode = showMode || @showMode
-    jqDf(@container).append html
-  
+    document.querySelector(@container).insertAdjacentHTML('beforeend', html)
+    
   ###
   replace
 
@@ -68,8 +67,7 @@ class Displayer
   ###  
   replace: (res) ->
     html = @template res
-    showMode = showMode || @showMode
-    jqDf(@container).html html
+    document.querySelector(@container).innerHTML = html
 
   ###
   bind
@@ -80,7 +78,7 @@ class Displayer
   @api public
   ###
   bind: (event, callback) ->
-    @container.on(event, callback)
+    emitter.on(event, callback)
 
   ###
   trigger
@@ -91,6 +89,6 @@ class Displayer
   @api public
   ###
   trigger: (event, params) -> 
-    @container.trigger(event, params)
+    emitter.emit(event, params)
 
 module.exports = Displayer
