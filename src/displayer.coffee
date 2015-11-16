@@ -24,14 +24,14 @@ class Displayer
   @param {Object} extraOptions 
   @api public
   ###
-  constructor: (container, template, extraOptions) ->
+  constructor: (container, template, extraOptions = {}) ->
   	@container = jqDf(container)
   	@handlebars = require("handlebars")
-  	addHelpers @handlebars,
-  	  extraOptions.currency,
-  	  extraOptions.templeteFunctions
-  	  extraOptions.language,
-  	  extraOptions.customStrings
+  	addHelpers @handlebars, 
+      extraOptions.urlParams, 
+      extraOptions.currency, 
+      extraOptions.translations, 
+      extraOptions.helpers
     
     if template.constructor == String
   	  @template = @handlebars.compile(template)

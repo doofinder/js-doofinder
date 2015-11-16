@@ -3,7 +3,7 @@
 # 2015 06 30
 ###
 
-addHelpers = (Handlebars, parameters, currency, extraFunctions, language, customStrings) ->
+addHelpers = (Handlebars, parameters, currency, translations, extraHelpers) ->
   
   if !currency
     currency =
@@ -21,7 +21,7 @@ addHelpers = (Handlebars, parameters, currency, extraFunctions, language, custom
   
   helpers = 
     
-    urlParams: (options) ->
+    'url-params': (options) ->
       paramsFinal = options.fn(this)
       if paramsFinal
         paramsArray = []
@@ -40,12 +40,11 @@ addHelpers = (Handlebars, parameters, currency, extraFunctions, language, custom
             paramsFinal = paramsFinal + '?' + params_str
       paramsFinal
     
-    removeProtocol: (options) ->
+    'remove-protocol': (options) ->
       options.fn(this).replace /^https?:/, ''
     
-    formatCurrency: (options) ->
+    'format-currency': (options) ->
       value = parseFloat(options.fn(this))
-      console.log parseFloat(options.fn(this))
       if !value and value != 0
         return ''
       power = 10 ** currency.precision
@@ -56,7 +55,7 @@ addHelpers = (Handlebars, parameters, currency, extraFunctions, language, custom
       number = neg + (if mod then base.substr(0, mod) + currency.thousand else '') + base.substr(mod).replace(/(\d{3})(?=\d)/g, '$1' + currency.thousand) + (if currency.precision then currency.decimal + Math.abs(number).toFixed(currency.precision).split('.')[1] else '')
       currency.format.replace(/%s/g, currency.symbol).replace /%v/g, number
     
-    translate: (options) ->
+    'translate': (options) ->
       key = options.fn(this)
       if customStrings and key in customStrings
         customStrings[key]
@@ -68,8 +67,8 @@ addHelpers = (Handlebars, parameters, currency, extraFunctions, language, custom
   for key of helpers
     Handlebars.registerHelper key, helpers[key]
   
-  if extraFunctions
-    for key of extraFunctions
-      Handlebars.registerHelper key, extraFunctions[key]
+  if extraHelpers
+    for key of extraHelpers
+      Handlebars.registerHelper key, extraHelpers[key]
 
 module.exports = addHelpers: addHelpers

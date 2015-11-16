@@ -20,7 +20,7 @@ class Controller
   @param {Object} initialParams
   @api public
   ###
-  constructor: (client, displayers, @initialParams) ->
+  constructor: (client, displayers, @initialParams = {}) ->
     @client = client
     if displayers instanceof Array
       @displayers = displayers
@@ -72,6 +72,7 @@ class Controller
           displayer.replace res
         else
           displayer.append res
+      
       # I check if I reached the last page.    
       if res.results.length < self.status.params.rpp
         self.status.lastPageReached = lastPageReached
@@ -90,6 +91,7 @@ class Controller
   @api public
   ###
   search: (query) ->
+    @__triggerAll "df:search"
     if query
       @status.query = query
     if not @status
@@ -98,7 +100,6 @@ class Controller
     @status.currentPage = 1
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
-    self = this
     @__search(true)
 
   ###
@@ -110,9 +111,9 @@ class Controller
   @api public
   ###
   nextPage: (replace = false) ->
+    @__triggerAll "df:next_page"
     if @status.firstQueryTriggered and @status.currentPage > 0
       @status.currentPage++
-      self = this
       @__search(replace)
 
   ###
@@ -126,9 +127,13 @@ class Controller
   ###
 
   getPage: (page) ->
+    @__triggerAll "df:get_page"
     if @status.firstQueryTriggered and @status.currentPage > 0
       @status.currentPage = page
       self = this
       @__search(true)
+
+  refresh: () ->
+    @__search(true)
 
 module.exports = Controller

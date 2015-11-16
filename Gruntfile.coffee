@@ -1,7 +1,7 @@
 module.exports = (grunt) ->
   grunt.initConfig
     coffee:
-      compile:
+      release:
         files:
           'lib/client.js': ['src/client.coffee']
           'lib/controller.js': ['src/controller.coffee']
@@ -9,56 +9,41 @@ module.exports = (grunt) ->
           'lib/doofinder.js': ['src/doofinder.coffee']
           'lib/helpers.js': ['src/helpers.coffee']
 
+    browserify:
+      release:
+        src: ['lib/doofinder.js']
+        dest: 'dist/doofinder.bundle.js'
+        options:
+          browserfyOptions:
+            standalone: 'doofinder'
+
     exec:
-      cmd: 'browserify --standalone doofinder lib/doofinder.js > dist/doofinder.standalone.js'
+      release:
+        'browserify lib/doofinder.js --standalone doofinder > dist/doofinder.bundle.js'      
 
     mochaTest:
-      options:
-        reporter: 'nyan'
-      src: ['test/tests.coffee']
-
-    
+      release:
+        options:
+          reporter: 'nyan'
+        src: ['test/tests.coffee']
 
     uglify:
-      dist:
+      release:
         files:
-          'dist/doofinder.min.js': ['dist/doofinder.standalone.js']
+          'dist/doofinder.min.js': ['dist/doofinder.bundle.js']
 
-    versioner:
-      options:
-        bump: true
-        file: 'package.json'
-        gitAdd: true
-        gitCommit: true,
-        gitPush: true,
-        gitTag: true,
-        gitPushTag: true,
-        tagPrefix: 'v'
-        commitMessagePrefix: 'Release: '
-        tagMessagePrefix: 'Version: '
-        readmeText: 'Current Version: '
-        pushTo: 'origin'
-        branch: 'master'
-        mode: 'production'
-
-      default:
-        './package.json': ['./package.json']
-        './README.md': ['./README.md']
-        './dist/doofinder.min.js': ['./dist/doofinder.min.js']
-
-      patch:
+    version:     
+      release:
         options:
-          file: './VERSION'
-
-        src: ['./package.json', './README.md']
-
-
+          prefix: '\\s+version:\\s\"'
+        src: ['./src/doofinder.coffee']
 
   grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks 'grunt-mocha-test'
+  grunt.loadNpmTasks 'grunt-browserify'
   grunt.loadNpmTasks 'grunt-exec'
   grunt.loadNpmTasks 'grunt-contrib-uglify'
-  grunt.loadNpmTasks('grunt-versioner');
+  grunt.loadNpmTasks('grunt-version');
 
   grunt.registerTask 'default', ['coffee', 'mochaTest']
-  grunt.registerTask 'build_for_client', ['exec', 'uglify']
+  grunt.registerTask 'release', ['version:release', 'coffee:release', 'mochaTest:release', 'exec:release', 'uglify:release']

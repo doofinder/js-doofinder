@@ -31,7 +31,7 @@ wherever you are going to use the library.
 <script src="path/to/your/javascript/doofinder.min.js"></script>
 ```
 
-### Client instantiation (server):
+### Client instantiation:
 
 The arguments to instantiate it are:
 
@@ -39,9 +39,9 @@ The arguments to instantiate it are:
     * **hashid `String`:** this is your searchengine unique identifier.
     * **API Key `String`:** the zone where the SearchEngine you are requesting is (eu1 for EU, us1 for US) and your API Key, separated by "-".
 
+
   * Optional
     * **datatypes `Array`:** if you want restrict the searches to a set of datatypes of the SearchEngine. If you don't set this option, all datatypes will be taken.
-
 
 ```javascript
 var client = new doofinder.Client (
@@ -52,22 +52,7 @@ var client = new doofinder.Client (
                              
 ```
 
-
-:warning:  **Don't use your API Key when you are programming at the client side. Look at the next epigraph.**
-
-### Client instantiation (browser):
-
-The arguments to instantiate it are:
-
-  * Required
-    * **hashid `String`:** this is your searchengine unique identifier.
-    * **zone `String`:** the zone where the SearchEngine you are requesting is (eu1 for EU, us1 for US).
-
-
-
-  * Optional
-    * **datatypes `Array`:** if you want restrict the searches to a set of datatypes of the SearchEngine. If you don't set this option, all datatypes will be taken.
-
+:bangbang:  **Don't use your API Key when you are programming at the client side. Just use the zone. Look at the next example.**
 
 ```javascript
 var client = new doofinder.Client (
@@ -215,7 +200,7 @@ RESPONSE: {
 ```
 
 
-## Complete Library Usage (just for client side):
+## Complete Library Usage:
 
 You can also use the Displayer and Controller classes in order to manage the way you show the results. To use the whole thing we'll instantiate a ```Client```, one or more than one Displayer, and then we'll pass them to the ```Controller```.
 
@@ -289,9 +274,9 @@ This method will assign a callback to an event that will be triggered for the `c
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-df:new_query   | <ul><li>event(Object): information about the event.</li><li>params(Object): the object will be send as params to the Search API.</li></ul> | This event is triggered when a new query term.
-df:next_page | <ul><li>event(Object): information about the event.</li><li>params(Object): the Search API response</li></ul> | This event is triggered when a next page is requested.
-df:get_page | <ul><li>event(Object): information about the event.</li><li>params(Object): the Search API response</li></ul> | This event is triggered when a page is requested.
+df:search   | <ul><li>event(Object): information about the event.</li><li>params(Object): the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.search is called.
+df:next_page  | <ul><li>event(Object): information about the event.</li><li>params(Object): the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.nextPage is called.
+df:get_page   | <ul><li>event(Object): information about the event.</li><li>params(Object): the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.getPage is called.
 df:results_received | <ul><li>event(Object): information about the event.</li><li>res(Object): the Search API response</li></ul> | This event is triggered when new results are received from Search API.
 
 * **Example:**
@@ -357,7 +342,7 @@ var controller = new doofinder.Controller (
 ### Controller methods:
 
 #### **search:**
-This method will perform a search API Call and will show the results as you have defined in the displayers. This will trigger the df:new_query and df:new_results events for every displayer container.
+This method will perform a search API Call and will show the results in your containers.
 
 **__Arguments:__**
 
@@ -370,8 +355,13 @@ This method will perform a search API Call and will show the results as you have
 #### **nextPage:**
 This method will show the next page for the current search state.
 
+**__Arguments:__**
+
+* **Optional:** 
+  * **replace `Boolean`:** Set it `true` if you want the newer content replace the older in your containers. This is `false` by default, so the next page will be appended if you do nothing.
+
 #### **getPage:**
-This method will show a page for the current search state.
+This method will show a page for the current search state. This page will replace the current content in your containers.
 
 **__Arguments:__**
 
