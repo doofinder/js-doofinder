@@ -14,7 +14,7 @@ This module is a javascript wrapper for `Doofinder Search API v5`.
 ### Downloadable minified javascript file
 https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.min.js
 
-## What is out the box
+## What is out of the box
 * A simple client for retrieving data.
 * A display manager for shaping the data, using [Handlebars] (http://handlebarsjs.com) templates.
 * A controller that orchestrate client and displayers.
