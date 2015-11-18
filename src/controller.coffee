@@ -57,7 +57,7 @@ class Controller
     to the listeners
   @api private
   ###
-  __search: (replace) ->
+  __search: (next=false) ->
     query = @status.query
     params = @status.params or {}
     params.page = @status.currentPage
@@ -66,10 +66,10 @@ class Controller
     @client.search query, params, (err, res) ->
       self.__triggerAll "df:results_received", res
       for displayer in self.displayers
-        if replace
-          displayer.replace res
+        if next
+          displayer.renderNext res
         else
-          displayer.append res
+          displayer.render res
       
       # I check if I reached the last page.    
       if res.results.length < self.status.params.rpp
@@ -98,7 +98,7 @@ class Controller
     @status.currentPage = 1
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
-    @__search(true)
+    @__search()
 
   ###
   nextPage
@@ -110,9 +110,9 @@ class Controller
   ###
   nextPage: (replace = false) ->
     @__triggerAll "df:next_page"
-    if @status.firstQueryTriggered and @status.currentPage > 0 and not @status.lastPageReached
+    if @status.firstQueryTriggered and @status.currentPage > 0 and not @status.lastPageReached      
       @status.currentPage++
-      @__search(replace)
+      @__search(true)
 
   ###
   getPage
@@ -129,9 +129,9 @@ class Controller
     if @status.firstQueryTriggered and @status.currentPage > 0
       @status.currentPage = page
       self = this
-      @__search(true)
+      @__search()
 
   refresh: () ->
-    @__search(true)
+    @__search()
 
 module.exports = Controller

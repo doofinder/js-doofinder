@@ -1,11 +1,11 @@
 ###
-resultsDisplayer.coffee
+displayer.coffee
 author: @ecoslado
 2015 11 10
 ###
 
 ###
-ResultsDisplayer
+Displayer
 This class receives the search
 results and paint them in a container
 shaped by template
@@ -44,20 +44,8 @@ class Displayer
     else
   	  throw Error "The provided template is not the right type. String or rendered handlebars expected."
 
-
   ###
-  append
-
-  Appends results to the older in container
-  @param {Object} res
-  @api public
-  ###  
-  append: (res) ->
-    html = @template res
-    document.querySelector(@container).insertAdjacentHTML('beforeend', html)
-    
-  ###
-  replace
+  render
 
   Replaces the older results in container with
   the given
@@ -65,10 +53,22 @@ class Displayer
   @param {Object} res
   @api public
   ###  
-  replace: (res) ->
+  render: (res) ->
     html = @template res
     document.querySelector(@container).innerHTML = html
 
+
+  ###
+  renderMore
+
+  Appends results to the older in container
+  @param {Object} res
+  @api public
+  ###  
+  renderNext: (res) ->
+    html = @template res
+    document.querySelector(@container).innerHTML = html
+    
   ###
   bind
 

@@ -226,7 +226,6 @@ The arguments to instantiate it are:
 
 * Optional
   * **options `Object`:**
-    * **append `Boolean`:** 
           
     * **urlParams `Object`:** this is an object whose elements will be added as a querystring. This option will be used in a special [Handlebars] (http://handlebars.com) template tag. So if you have `urlParams: {foo: "bar"}` in your settings and `{{#url-params}}{{url}}{{/url-params}}` in your template th url will be shown as `http://your_url?foo=bar`
 
@@ -267,7 +266,7 @@ var displayer = new doofinder.Displayer(
 
 ### Displayer methods:
 
-#### **on**
+#### **bind**
 This method will assign a callback to an event that will be triggered for the `container`. Note that to call this method it's necessary to be in the context of Controller.
 
 **__Arguments:__**

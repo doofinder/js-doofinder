@@ -8,6 +8,8 @@ module.exports = (grunt) ->
           'lib/displayer.js': ['src/displayer.coffee']
           'lib/doofinder.js': ['src/doofinder.coffee']
           'lib/helpers.js': ['src/helpers.coffee']
+          'lib/resultsdisplayer.js': ['src/resultsdisplayer.coffee']
+          'lib/facetsdisplayer.js': ['src/facetsdisplayer.coffee']
 
     browserify:
       release:
