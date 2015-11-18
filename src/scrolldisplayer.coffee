@@ -27,7 +27,7 @@ class ScrollDisplayer extends Displayer
   render: (res) ->
     html = @template res
     document.querySelector(@container).innerHTML = html
-    @trigger("df:results_rendered")
+    @trigger("df:results_rendered", res)
 
 
   ###
@@ -40,6 +40,6 @@ class ScrollDisplayer extends Displayer
   renderNext: (res) ->
     html = @template res
     document.querySelector(@container).insertAdjacentHTML('beforeend', html)
-    @trigger("df:results_rendered")
+    @trigger("df:results_rendered", res)
 
 module.exports = ScrollDisplayer

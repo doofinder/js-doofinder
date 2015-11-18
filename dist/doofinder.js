@@ -610,7 +610,7 @@ shaped by template
       var html;
       html = this.template(res);
       document.querySelector(this.container).innerHTML = html;
-      return this.trigger("df:results_rendered");
+      return this.trigger("df:results_rendered", res);
     };
 
 
@@ -624,7 +624,7 @@ shaped by template
 
     Displayer.prototype.renderNext = function(res) {
       this.render(res);
-      return this.trigger("df:results_rendered");
+      return this.trigger("df:results_rendered", res);
     };
 
 
@@ -667,7 +667,7 @@ shaped by template
 },{"./helpers":5,"handlebars":37,"tiny-emitter":50}],4:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "0.5.3",
+    version: "0.5.4",
     Client: require("./client"),
     Displayer: require("./displayer"),
     ScrollDisplayer: require("./scrolldisplayer"),
@@ -822,7 +822,7 @@ shaped by template
       var html;
       html = this.template(res);
       document.querySelector(this.container).innerHTML = html;
-      return this.trigger("df:results_rendered");
+      return this.trigger("df:results_rendered", res);
     };
 
 
@@ -838,7 +838,7 @@ shaped by template
       var html;
       html = this.template(res);
       document.querySelector(this.container).insertAdjacentHTML('beforeend', html);
-      return this.trigger("df:results_rendered");
+      return this.trigger("df:results_rendered", res);
     };
 
     return ScrollDisplayer;
@@ -894,7 +894,7 @@ shaped by template
       var html;
       html = this.template(res);
       document.querySelector(this.container).innerHTML = html;
-      return this.trigger("df:results_rendered");
+      return this.trigger("df:results_rendered", res);
     };
 
 
