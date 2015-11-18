@@ -13,7 +13,7 @@ shaped by template
 
 Displayer = require "./displayer"
 
-class ResultsDisplayer extends Displayer
+class ScrollDisplayer extends Displayer
 
   ###
   render
@@ -27,6 +27,7 @@ class ResultsDisplayer extends Displayer
   render: (res) ->
     html = @template res
     document.querySelector(@container).innerHTML = html
+    @trigger("df:results_rendered")
 
 
   ###
@@ -39,5 +40,6 @@ class ResultsDisplayer extends Displayer
   renderNext: (res) ->
     html = @template res
     document.querySelector(@container).insertAdjacentHTML('beforeend', html)
+    @trigger("df:results_rendered")
 
-module.exports = ResultsDisplayer
+module.exports = ScrollDisplayer

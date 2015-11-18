@@ -56,6 +56,7 @@ class Displayer
   render: (res) ->
     html = @template res
     document.querySelector(@container).innerHTML = html
+    @trigger("df:results_rendered")
 
 
   ###
@@ -66,8 +67,8 @@ class Displayer
   @api public
   ###  
   renderNext: (res) ->
-    html = @template res
-    document.querySelector(@container).innerHTML = html
+    @render(res)
+    @trigger("df:results_rendered")
     
   ###
   bind

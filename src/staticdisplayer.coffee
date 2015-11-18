@@ -13,7 +13,7 @@ shaped by template
 
 Displayer = require "./displayer"
 
-class FacetsDisplayer extends Displayer
+class StaticDisplayer extends Displayer
 
   ###
   render
@@ -27,6 +27,7 @@ class FacetsDisplayer extends Displayer
   render: (res) ->
     html = @template res
     document.querySelector(@container).innerHTML = html
+    @trigger("df:results_rendered")
 
 
   ###
@@ -39,4 +40,4 @@ class FacetsDisplayer extends Displayer
   renderNext: (res) ->
     return null
 
-module.exports = FacetsDisplayer
+module.exports = StaticDisplayer

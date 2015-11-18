@@ -1,8 +1,8 @@
 
 module.exports = 
-  version: "0.5.0"	
+  version: "0.5.2"	
   Client: require "./client"
   Displayer: require "./displayer"
-  ResultsDisplayer: require "./resultsdisplayer"
-  FacetsDisplayer: require "./facetsdisplayer"
+  ScrollDisplayer: require "./scrolldisplayer"
+  StaticDisplayer: require "./staticdisplayer"
   Controller: require "./controller"

@@ -547,7 +547,8 @@ shaped by template
     Displayer.prototype.render = function(res) {
       var html;
       html = this.template(res);
-      return document.querySelector(this.container).innerHTML = html;
+      document.querySelector(this.container).innerHTML = html;
+      return this.trigger("df:results_rendered");
     };
 
 
@@ -560,9 +561,8 @@ shaped by template
      */
 
     Displayer.prototype.renderNext = function(res) {
-      var html;
-      html = this.template(res);
-      return document.querySelector(this.container).innerHTML = html;
+      this.render(res);
+      return this.trigger("df:results_rendered");
     };
 
 
@@ -602,88 +602,20 @@ shaped by template
 }).call(this);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./helpers":6,"handlebars":37,"tiny-emitter":50}],4:[function(require,module,exports){
+},{"./helpers":5,"handlebars":37,"tiny-emitter":50}],4:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "0.5.0",
+    version: "0.5.2",
     Client: require("./client"),
     Displayer: require("./displayer"),
-    ResultsDisplayer: require("./resultsdisplayer"),
-    FacetsDisplayer: require("./facetsdisplayer"),
+    ScrollDisplayer: require("./scrolldisplayer"),
+    StaticDisplayer: require("./staticdisplayer"),
     Controller: require("./controller")
   };
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./displayer":3,"./facetsdisplayer":5,"./resultsdisplayer":7}],5:[function(require,module,exports){
-
-/*
-resultsdisplayer.coffee
-author: @ecoslado
-2015 11 10
- */
-
-
-/*
-Displayer
-This class receives the search
-results and paint them in a container
-shaped by template
- */
-
-(function() {
-  var Displayer, FacetsDisplayer,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  Displayer = require("./displayer");
-
-  FacetsDisplayer = (function(superClass) {
-    extend(FacetsDisplayer, superClass);
-
-    function FacetsDisplayer() {
-      return FacetsDisplayer.__super__.constructor.apply(this, arguments);
-    }
-
-
-    /*
-    render
-    
-    Replaces the older results in container with
-    the given
-    
-    @param {Object} res
-    @api public
-     */
-
-    FacetsDisplayer.prototype.render = function(res) {
-      var html;
-      html = this.template(res);
-      return document.querySelector(this.container).innerHTML = html;
-    };
-
-
-    /*
-    renderMore
-    
-    Appends results to the older in container
-    @param {Object} res
-    @api public
-     */
-
-    FacetsDisplayer.prototype.renderNext = function(res) {
-      return null;
-    };
-
-    return FacetsDisplayer;
-
-  })(Displayer);
-
-  module.exports = FacetsDisplayer;
-
-}).call(this);
-
-},{"./displayer":3}],6:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./displayer":3,"./scrolldisplayer":6,"./staticdisplayer":7}],5:[function(require,module,exports){
 
 /*
  * author: @ecoslado
@@ -783,7 +715,7 @@ shaped by template
 
 }).call(this);
 
-},{}],7:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 
 /*
 resultsdisplayer.coffee
@@ -800,17 +732,17 @@ shaped by template
  */
 
 (function() {
-  var Displayer, ResultsDisplayer,
+  var Displayer, ScrollDisplayer,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   Displayer = require("./displayer");
 
-  ResultsDisplayer = (function(superClass) {
-    extend(ResultsDisplayer, superClass);
+  ScrollDisplayer = (function(superClass) {
+    extend(ScrollDisplayer, superClass);
 
-    function ResultsDisplayer() {
-      return ResultsDisplayer.__super__.constructor.apply(this, arguments);
+    function ScrollDisplayer() {
+      return ScrollDisplayer.__super__.constructor.apply(this, arguments);
     }
 
 
@@ -824,10 +756,11 @@ shaped by template
     @api public
      */
 
-    ResultsDisplayer.prototype.render = function(res) {
+    ScrollDisplayer.prototype.render = function(res) {
       var html;
       html = this.template(res);
-      return document.querySelector(this.container).innerHTML = html;
+      document.querySelector(this.container).innerHTML = html;
+      return this.trigger("df:results_rendered");
     };
 
 
@@ -839,17 +772,87 @@ shaped by template
     @api public
      */
 
-    ResultsDisplayer.prototype.renderNext = function(res) {
+    ScrollDisplayer.prototype.renderNext = function(res) {
       var html;
       html = this.template(res);
-      return document.querySelector(this.container).insertAdjacentHTML('beforeend', html);
+      document.querySelector(this.container).insertAdjacentHTML('beforeend', html);
+      return this.trigger("df:results_rendered");
     };
 
-    return ResultsDisplayer;
+    return ScrollDisplayer;
 
   })(Displayer);
 
-  module.exports = ResultsDisplayer;
+  module.exports = ScrollDisplayer;
+
+}).call(this);
+
+},{"./displayer":3}],7:[function(require,module,exports){
+
+/*
+resultsdisplayer.coffee
+author: @ecoslado
+2015 11 10
+ */
+
+
+/*
+Displayer
+This class receives the search
+results and paint them in a container
+shaped by template
+ */
+
+(function() {
+  var Displayer, StaticDisplayer,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  Displayer = require("./displayer");
+
+  StaticDisplayer = (function(superClass) {
+    extend(StaticDisplayer, superClass);
+
+    function StaticDisplayer() {
+      return StaticDisplayer.__super__.constructor.apply(this, arguments);
+    }
+
+
+    /*
+    render
+    
+    Replaces the older results in container with
+    the given
+    
+    @param {Object} res
+    @api public
+     */
+
+    StaticDisplayer.prototype.render = function(res) {
+      var html;
+      html = this.template(res);
+      document.querySelector(this.container).innerHTML = html;
+      return this.trigger("df:results_rendered");
+    };
+
+
+    /*
+    renderMore
+    
+    Appends results to the older in container
+    @param {Object} res
+    @api public
+     */
+
+    StaticDisplayer.prototype.renderNext = function(res) {
+      return null;
+    };
+
+    return StaticDisplayer;
+
+  })(Displayer);
+
+  module.exports = StaticDisplayer;
 
 }).call(this);
 
