@@ -1,7 +1,6 @@
 # JS-Doofinder
 
 Doofinder Javascript Library
-
 This module is a javascript wrapper for `Doofinder Search API v5`. 
 
 
@@ -15,12 +14,11 @@ This module is a javascript wrapper for `Doofinder Search API v5`.
 ### Downloadable minified javascript file
 https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.min.js
 
-## What is out the box
+## What is out of the box
 * A simple client for retrieving data.
-* A display manager for shaping the data, by using [Handlebars] (http://handlebarsjs.com) templates.
-* A controller that orchestrate client and displayer to make it work.
-* A set of events that will be triggered when data is ready and you would use wherever you want.
-
+* A display manager for shaping the data, using [Handlebars] (http://handlebarsjs.com) templates.
+* A controller that orchestrate client and displayers.
+* A set of events that will be triggered when searches are done or when data is ready and you would use wherever you want.
 
 
 ## Simple usage. Just the client:
