@@ -131,7 +131,66 @@ class Controller
       self = this
       @__search()
 
+  ###
+  refresh
+  
+  Makes a search call with the current status.
+
+  @api public
+  ###
+
   refresh: () ->
     @__search()
+
+  ###
+  addFilter
+  
+  Makes a search call adding new filter criteria.
+
+  @param {String} filterType: terms | range
+  @param {String} key: the facet key you are filtering
+  @param {String | Object} value: the filtering criteria
+  @api public
+  ###
+  addFilter: (filterType, key, value) ->
+    if not @status.params.filters
+      @status.params.filters = {}
+
+    if ['terms', 'range'].indexOf(filterType) < 0
+      throw Error 'Filter type not supported. Must be terms or range.'
+    if filterType == 'range'
+      @status.params.filters[key] = value
+    else if filterType == 'terms' and not @status.params.filters[key]
+      @status.params.filters[key] = [value]
+    else
+      @status.params.filters[key].push value 
+
+    @__search()
+  
+  ###
+  removeFilter
+  
+  Makes a search call removing some filter criteria.
+  
+  @param {String} key: the facet key you are filtering
+  @param {String | Object} value: the filtering criteria you are removing
+  @api public
+  ###
+  removeFilter: (key, value) ->
+    if not @status.params.filters and not @status.params.filters[key]
+      # DO NOTHING
+
+    else if @status.params.filters[key].constructor == Object
+      delete @status.params.filters[key]
+
+    else if @status.params.filters[key].constructor == Array and @status.params.filters[key].indexOf(value) >= 0
+      index = @status.params.filters[key].indexOf(value)
+      @status.params.filters[key].pop(index)
+
+    @__search()
+
+
+
+
 
 module.exports = Controller

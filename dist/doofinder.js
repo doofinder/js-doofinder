@@ -467,7 +467,69 @@ to paint them.
       }
     };
 
+
+    /*
+    refresh
+    
+    Makes a search call with the current status.
+    
+    @api public
+     */
+
     Controller.prototype.refresh = function() {
+      return this.__search();
+    };
+
+
+    /*
+    addFilter
+    
+    Makes a search call adding new filter criteria.
+    
+    @param {String} filterType: terms | range
+    @param {String} key: the facet key you are filtering
+    @param {String | Object} value: the filtering criteria
+    @api public
+     */
+
+    Controller.prototype.addFilter = function(filterType, key, value) {
+      if (!this.status.params.filters) {
+        this.status.params.filters = {};
+      }
+      if (['terms', 'range'].indexOf(filterType) < 0) {
+        throw Error('Filter type not supported. Must be terms or range.');
+      }
+      if (filterType === 'range') {
+        this.status.params.filters[key] = value;
+      } else if (filterType === 'terms' && !this.status.params.filters[key]) {
+        this.status.params.filters[key] = [value];
+      } else {
+        this.status.params.filters[key].push(value);
+      }
+      return this.__search();
+    };
+
+
+    /*
+    removeFilter
+    
+    Makes a search call removing some filter criteria.
+    
+    @param {String} key: the facet key you are filtering
+    @param {String | Object} value: the filtering criteria you are removing
+    @api public
+     */
+
+    Controller.prototype.removeFilter = function(key, value) {
+      var index;
+      if (!this.status.params.filters && !this.status.params.filters[key]) {
+
+      } else if (this.status.params.filters[key].constructor === Object) {
+        delete this.status.params.filters[key];
+      } else if (this.status.params.filters[key].constructor === Array && this.status.params.filters[key].indexOf(value) >= 0) {
+        index = this.status.params.filters[key].indexOf(value);
+        this.status.params.filters[key].pop(index);
+      }
       return this.__search();
     };
 
@@ -605,7 +667,7 @@ shaped by template
 },{"./helpers":5,"handlebars":37,"tiny-emitter":50}],4:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "0.5.2",
+    version: "0.5.3",
     Client: require("./client"),
     Displayer: require("./displayer"),
     ScrollDisplayer: require("./scrolldisplayer"),
