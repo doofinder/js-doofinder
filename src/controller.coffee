@@ -2,6 +2,8 @@
 # Created by Kike Coslado on 26/10/15.
 ###
 
+extend = require('./util/extend').extend
+
 ###
 Controller
   
@@ -18,16 +20,19 @@ class Controller
   @param {Object} initialParams
   @api public
   ###
-  constructor: (client, displayers, @initialParams = {}) ->
+  constructor: (client, displayers, initialParams = {}) ->
     @client = client
+    @displayers = []
     if displayers instanceof Array
-      @displayers = displayers
+      for displayer in displayers
+        @addDisplayer(displayer)
     else
-      @displayers = [ displayers ]
+      @addDisplayer(displayers)
     
     # Initial status
+    @initialParams = extend(initialParams, {query_counter: 0})
     @status =
-      params: @initialParams or {}
+      params: @initialParams
       query: ''
       currentPage: 0
       firstQueryTriggered: false
@@ -58,22 +63,29 @@ class Controller
   @api private
   ###
   __search: (next=false) ->
+
+    # To avoid past queries
+    # we'll check the query_counter
+    @status.params.query_counter++
     query = @status.query
-    params = @status.params or {}
+    params = @status.params
     params.page = @status.currentPage
     self = this
     lastPageReached = true
     @client.search query, params, (err, res) ->
       self.__triggerAll "df:results_received", res
-      for displayer in self.displayers
-        if next
-          displayer.renderNext res
-        else
-          displayer.render res
-      
-      # I check if I reached the last page.    
-      if res.results.length < self.status.params.rpp
-        self.status.lastPageReached = lastPageReached
+      # Whe show the results only when query counter
+      # belongs to a the present request
+      if res.query_counter == self.status.params.query_counter
+        for displayer in self.displayers
+          if next
+            displayer.renderNext res
+          else
+            displayer.render res
+        
+        # I check if I reached the last page.    
+        if res.results.length < self.status.params.rpp
+          self.status.lastPageReached = lastPageReached
   
   ### 
   __search wrappers
@@ -88,13 +100,13 @@ class Controller
   @param {String} query: the query term
   @api public
   ###
-  search: (query) ->
+  search: (query, params={}) ->
     @__triggerAll "df:search"
     if query
       @status.query = query
     if not @status
       @status = {}  
-    @status.params = @initialParams
+    @status.params = extend(@initialParams, params)
     @status.currentPage = 1
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
@@ -147,20 +159,20 @@ class Controller
   
   Makes a search call adding new filter criteria.
 
-  @param {String} filterType: terms | range
   @param {String} key: the facet key you are filtering
   @param {String | Object} value: the filtering criteria
   @api public
   ###
-  addFilter: (filterType, key, value) ->
+  addFilter: (key, value) ->
+    if value.constructor != Object or value.constructor != String
+      throw Error "wrong value. Object or String expected, #{value.constructor} given"
+
     if not @status.params.filters
       @status.params.filters = {}
 
-    if ['terms', 'range'].indexOf(filterType) < 0
-      throw Error 'Filter type not supported. Must be terms or range.'
-    if filterType == 'range'
+    if value.constructor == Object
       @status.params.filters[key] = value
-    else if filterType == 'terms' and not @status.params.filters[key]
+    else if not @status.params.filters[key]
       @status.params.filters[key] = [value]
     else
       @status.params.filters[key].push value 
@@ -189,7 +201,19 @@ class Controller
 
     @__search()
 
+  ###
+  addDisplayer
 
+  Adds a new displayer to the controller and reference the 
+  controller from the displayer.
+
+  @param {doofinder.Displayer} displayer: the displayer you are adding.
+  @api public
+  ###
+
+  addDisplayer: (displayer) ->
+    @displayers.push(displayer)
+    displayer.controller = this
 
 
 

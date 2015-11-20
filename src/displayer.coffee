@@ -44,6 +44,11 @@ class Displayer
     else
   	  throw Error "The provided template is not the right type. String or rendered handlebars expected."
 
+  
+  init: () ->
+    $(@container).on 'click', () ->
+      
+
   ###
   render
 

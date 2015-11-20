@@ -16,14 +16,14 @@ https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.m
 
 ## What is out of the box
 * A simple client for retrieving data.
-* A display manager for shaping the data, using [Handlebars] (http://handlebarsjs.com) templates.
+* A display manager for shaping the data, using [Handlebars](http://handlebarsjs.com) templates.
 * A controller that orchestrate client and displayers.
 * A set of events that will be triggered when searches are done or when data is ready and you would use wherever you want.
 
 
 ## Simple usage. Just the client:
 
-* If you are developing a server side application with [nodeJS] (https://nodejs.org) or you are using [browserify] (http://browserify.org/), [webpack](https://webpack.github.io/) or something like that, you can import it via require.
+* If you are developing a server side application with [nodeJS](https://nodejs.org) or you are using [browserify](http://browserify.org/), [webpack](https://webpack.github.io/) or something like that, you can import it via require.
 ```javascript
 var doofinder = require("doofinder");
 ```
@@ -368,4 +368,285 @@ This method will show a page for the current search state. This page will replac
 
 * **Required:**
   * **page `Number`:** the number of the page you want to show.
+
+
+## Example 1: Quick & Dirty - Querying and showing results
+
+In this example we'll write a view that will just show results.
+
+Let's begin by showing a simple HTML template (myview.html):
+
+``` html
+<html lang="en">
+<head>
+<script type="application/javascript" src="path/to/your/js/jquery.min.js"></script>
+<script type="application/javascript" src="path/to/your/js/jquery.typewatch.js"></script>
+<script type="application/javascript" src="path/to/your/js/doofinder.min.js"></script>
+<script type="application/javascript" src="path/to/your/js/myview.js"></script>
+</head>
+<input type="text" id="query" />
+<body>
+<div id="container">
+  </div>
+</div>
+</body>
+```
+Note that we are importing two javascript files:
+- jquery.min.js and jquery.typewatch.js: necessary to manage the search box behavior.
+- doofinder-min.js: contains doofinder namespace with its classes.
+- myview.js: contains specific info about my view and thats the place where we'll instantiate Controller.
+
+Let's add some functionality to our html view:
+
+``` javascript
+(function(doofinder, $, document){
+  
+  var hashid = 'a3fd9dcvga0932el99ds4az';
+  var zone = 'eu1';
+  var container = '#container', // required
+  var template = '{{#each results}}' + // required
+            '<h1>{{header}}</h1>' +
+            '{{/each}}'
+  };
+
+  $(document).ready(function(){ 
+        // Instantiation
+        var client = new doofinder.Client(hashid, zone);
+        var displayer = new doofinder.Displayer(container, template);
+        var controller = new doofinder.Controller(Client, Displayer);
+
+        $('#query').typeWatch({
+          callback: function () {
+            var query = $(this).val();
+            controller.search(query);
+          },
+          wait: 43,
+          captureLength: 3
+        });
+  });
+
+})(doofinder, jQuery, document);
+```
+The options we have filled in:
+
+- hashid: the unique hashid for your search engine.
+- zone: the zone where is your search engine (eu1, us1)
+- container: the CSS selector of our hits container.
+- searchBox: the CSS selector of our query input.
+- template: the Handlebars template that will shape your results.
+
+At the moment, we have a search box where we can write a query and results we'll be shown since the fourth character we type.
+
+## Example 2: A simple paging
+
+In the first example, we wrote a simple view that reacted when a user typed some characters. Although it was cool,
+we only could see a few results (10 per query), what is not so cool.
+
+In this example, we'll implement a simple mechanism to show all the results by pushing a button.
+
+This is the html we'll show:
+
+``` html
+<html lang="en">
+<head>
+<script type="application/javascript" src="path/to/your/js/jquery.min.js"></script>
+<script type="application/javascript" src="path/to/your/js/jquery.typewatch.js"></script>
+<script type="application/javascript" src="path/to/your/js/doofinder.min.js"></script>
+<script type="application/javascript" src="path/to/your/js/myview.js"></script>
+</head>
+<input type="text" id="query" />
+<body>
+<div id="container">
+</div>
+<a id="nextbutton">Next</a>
+</body>
+```
+
+The only thing we added to last example is a link. When this link is clicked, we'll call nextPage controller's method. 
+The javascript will be:
+
+``` javascript
+(fuction(doofinder, $, document){
+  
+  var hashid = 'a3fd9dcvga0932el99ds4az';
+  var zone = 'eu1';
+    
+  var container = '#container';
+  var template = '{{#each results}}' + 
+        '<h1>{{header}}</h1>' +
+        '{{/each}}';
+    
+  $(document).ready(function(){
+    // Instantiation
+    var client = new doofinder.Client(hashid, zone);
+    var displayer = new doofinder.Displayer(container, template);
+    var controller = new doofinder.Controller(client, displayer);
+    
+    $('#query').typeWatch({
+          callback: function () {
+            var query = $(this).val();
+            controller.search(query);
+          },
+          wait: 43,
+          captureLength: 3
+        });
+
+    $('#nextbutton').on("click", function(){
+        controller.nextPage();
+    });
+  });
+
+})(doofinder, jQuery, document);
+```
+
+This is example adds a block where some behavior is specified. When nextButton
+is clicked we'll call to nextPage controller's function, which will perform the
+search API call and.
+
+But there's something wrong. What if a user push next page when no query is done?
+We'll show the second page for an empty query, what makes no much sense. We'll only
+show the nextButton when a query will be written. So we can hide the button via css:
+
+```css
+
+#nextbutton{
+    display: none;
+}
+```
+
+Once you have linked the stylesheet in your html, add some javascript to show the button. 
+In our "custom-behavior block":
+
+```javascript
+
+   $(document).ready(function(){
+    // Instantiation
+    var client = new doofinder.Client(hashid, zone);
+    var displayer = new doofinder.Displayer(container, template);
+    var controller = new doofinder.Controller(client, displayer);
+    var nextButton = $("#nextbutton");
+    
+    $('#query').typeWatch({
+          callback: function () {
+            var query = $(this).val();
+            controller.search(query);
+          },
+          wait: 43,
+          captureLength: 3
+      });
+
+   nextButton.on("click", function(){
+        controller.nextPage();
+      });
+
+   displayer.bind("df:search", function(){
+      nextButton.show();
+    });
+    
+  });
+```
+`df:search` event is triggered by the displayer when someone makes a query. 
+So this way, we can avoid the unexpected situation described before.
+
+
+## Example 3: Scroll paging
+
+In the next example we'll add an infinite scroll paging. We'll add the jquery.dfscroll
+plugin, and we call nextPage in its callback. nextPage will be called when scroll is about to
+reach the bottom.
+
+```html
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="myview.css"/>
+  <script type="application/javascript" src="path/to/your/js/jquery.min.js"></script>
+  <script type="application/javascript" src="path/to/your/js/jquery.typewatch.js"></script>
+  <script type="application/javascript" src="path/to/your/js/jquery.dfscroll.js"></script>
+  <script type="application/javascript" src="doofinder.min.js"></script>
+  <script type="application/javascript" src="myview.js"></script>
+</head>
+  
+<body>
+  <input type="text" id="query" />
+  <div class="wrapper">
+    <div class="container">
+    </div>
+  </div>
+</body>
+``
+And we are going to create the inner scroll via css. 
+
+```css
+#wrapper{
+    position: relative;
+    height: 800px;
+    overflow: auto;
+}
+```
+
+If we visit our page and perform a query, some of the content will be hidden. If
+you move your mouse to the content, you'll be able to move down and up.
+
+Let's add some javascript to trigger next_page event when scroll is down. 
+
+```javascript
+(function(doofinder, $, document){
+ 
+  var hashid = "6a96504dc173514cab1e0198af92e6e9";
+  var zone = "eu1";
+ 
+  var container = "#container"; //required
+        
+  var template = '{{#results}}' + // required
+        '<h1>{{header}}</h1>' +
+        '{{/results}}';
+    
+  
+  
+  $(document).ready(function(){
+    // Instantiation
+    var client = new doofinder.Client(hashid, zone);
+    var displayer = new doofinder.Displayer(container, template);
+    var controller = new doofinder.Controller(client, displayer);
+    // get the DOM components we'll use
+    var container = $(".container");
+    // set scroll behavior
+    // this requires that container overflow
+    // is auto
+    var throttle = function(type, name, obj) {
+          var obj = obj || window;
+          var running = false;
+          var func = function() {
+              if (running) { return; }
+              running = true;
+              setTimeout(function() {
+                  obj.trigger(name);
+                  running = false;
+              }, 250);
+          };
+          obj.on(type, func);
+          obj.trigger(name);
+      };
+
+      throttle('scroll', 'df:scroll', container);
+      // handling scroll event
+      container.on('dfScroll', function () {
+          // New results requested when last item is
+          // near and scroll hasn't visited it.
+          if (container.height() >= (searchEngine.resultsContainer.height() + searchEngine.resultsContainer.position().top))
+          {
+             // triggers next_page event
+             searchEngine.resultsContainer.trigger('df:next_page');
+          }
+      });
+
+    // Go to the top when new query    
+    dfCtrl.searchBox.on('df:new_query', function () {
+        container.animate({scrollTop: 0}, "quick");
+    });
+  });
+  
+})(doofinder, jQuery, document);
+
+```
 

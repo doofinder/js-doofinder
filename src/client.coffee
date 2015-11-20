@@ -224,10 +224,10 @@ class Client
     # Adding filters
     for key, value of @filters
       # Range filters
-      if value.constructor == Object and value['from'] and value['to']
-        querystring += "&filter[#{key}][gte]=#{value['from']}"
-        querystring += "&filter[#{key}][lt]=#{value['to']}"
-      
+      if value.constructor == Object
+        for k, v of value
+          querystring += "&filter[#{key}][#{k}]=#{value}"
+        
       # Terms filters
       if value.constructor == Array
         for elem in value
