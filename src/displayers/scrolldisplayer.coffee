@@ -1,14 +1,15 @@
 ###
-resultsdisplayer.coffee
+scrolldisplayer.coffee
 author: @ecoslado
 2015 11 10
 ###
 
 ###
-Displayer
+ScrollDisplayer
 This class receives the search
 results and paint them in a container
-shaped by template
+shaped by template. When next page is
+received, it append the content.
 ###
 
 Displayer = require "../displayer"

@@ -1,14 +1,15 @@
 ###
-resultsdisplayer.coffee
+staticdisplayer.coffee
 author: @ecoslado
 2015 11 10
 ###
 
 ###
-Displayer
+StaticDisplayer
 This class receives the search
 results and paint them in a container
-shaped by template
+shaped by template. When a new page
+is received, StaticDisplayer do nothing.
 ###
 
 Displayer = require "../displayer"

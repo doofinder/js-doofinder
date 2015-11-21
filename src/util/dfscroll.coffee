@@ -6,12 +6,13 @@ dfScroll = (container, o) ->
     direction: "vertical"
     scrollOffset: 50
 
-  o = extend o, defaultOptions
+  o = extend defaultOptions, o
   container = document.querySelector(container)
   content = container.children[0]	
-  	
+  
+  # Throttle to avoid multiple events
+  # to be triggered.
   throttle = (type, name, obj) ->
-    
     obj = obj || window
     running = false
     func = () ->
@@ -37,10 +38,10 @@ dfScroll = (container, o) ->
   
   # handling scroll event
   handler = () ->
-    # When bottom or right side is about to be reached, callback will be called
+    # Error thrown when direction no properly configured
     if ['horizontal', 'vertical'].indexOf(o.direction) <= -1
       throw Error("Direction is not properly set. It might be 'horizontal' or 'vertical'.")
-
+    # When bottom or right side is about to be reached, callback will be called
     if o.direction == 'vertical' and content.clientHeight - container.clientHeight - container.scrollTop <= o.scrollOffset \
     	or o.direction == "horizontal" and content.clientWidth() - container.clientWidth() - content.scrollLeft <= o.scrollOffset
       o.callback()
