@@ -157,7 +157,7 @@ class Controller
   ###
   addFilter
   
-  Makes a search call adding new filter criteria.
+  Adds new filter criteria.
 
   @param {String} key: the facet key you are filtering
   @param {String | Object} value: the filtering criteria
@@ -176,13 +176,11 @@ class Controller
       @status.params.filters[key] = [value]
     else
       @status.params.filters[key].push value 
-
-    @__search()
   
   ###
   removeFilter
   
-  Makes a search call removing some filter criteria.
+  Removes some filter criteria.
   
   @param {String} key: the facet key you are filtering
   @param {String | Object} value: the filtering criteria you are removing
@@ -198,8 +196,6 @@ class Controller
     else if @status.params.filters[key].constructor == Array and @status.params.filters[key].indexOf(value) >= 0
       index = @status.params.filters[key].indexOf(value)
       @status.params.filters[key].pop(index)
-
-    @__search()
 
   ###
   addDisplayer
@@ -218,7 +214,9 @@ class Controller
   ###
   start
 
-  Executes all displayer's starts. Bind events
+  Executes all displayer's start methods. 
+  These methods bind the events with the callbacks
+  who perform the searches.
 
   @api public
   ###

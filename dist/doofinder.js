@@ -504,7 +504,7 @@ author: @ecoslado
     /*
     addFilter
     
-    Makes a search call adding new filter criteria.
+    Adds new filter criteria.
     
     @param {String} key: the facet key you are filtering
     @param {String | Object} value: the filtering criteria
@@ -519,20 +519,19 @@ author: @ecoslado
         this.status.params.filters = {};
       }
       if (value.constructor === Object) {
-        this.status.params.filters[key] = value;
+        return this.status.params.filters[key] = value;
       } else if (!this.status.params.filters[key]) {
-        this.status.params.filters[key] = [value];
+        return this.status.params.filters[key] = [value];
       } else {
-        this.status.params.filters[key].push(value);
+        return this.status.params.filters[key].push(value);
       }
-      return this.__search();
     };
 
 
     /*
     removeFilter
     
-    Makes a search call removing some filter criteria.
+    Removes some filter criteria.
     
     @param {String} key: the facet key you are filtering
     @param {String | Object} value: the filtering criteria you are removing
@@ -544,12 +543,11 @@ author: @ecoslado
       if (!this.status.params.filters && !this.status.params.filters[key]) {
 
       } else if (this.status.params.filters[key].constructor === Object) {
-        delete this.status.params.filters[key];
+        return delete this.status.params.filters[key];
       } else if (this.status.params.filters[key].constructor === Array && this.status.params.filters[key].indexOf(value) >= 0) {
         index = this.status.params.filters[key].indexOf(value);
-        this.status.params.filters[key].pop(index);
+        return this.status.params.filters[key].pop(index);
       }
-      return this.__search();
     };
 
 
@@ -572,7 +570,9 @@ author: @ecoslado
     /*
     start
     
-    Executes all displayer's starts. Bind events
+    Executes all displayer's start methods. 
+    These methods bind the events with the callbacks
+    who perform the searches.
     
     @api public
      */
@@ -596,7 +596,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./util/extend":12}],3:[function(require,module,exports){
+},{"./util/extend":9}],3:[function(require,module,exports){
 (function (global){
 
 /*
@@ -620,7 +620,7 @@ shaped by template
 
   emitter = new Emitter;
 
-  addHelpers = require("./helpers").addHelpers;
+  addHelpers = require("./util/helpers").addHelpers;
 
   document = global.document;
 
@@ -723,22 +723,304 @@ shaped by template
 }).call(this);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./helpers":5,"handlebars":42,"tiny-emitter":55}],4:[function(require,module,exports){
+},{"./util/helpers":10,"handlebars":42,"tiny-emitter":55}],4:[function(require,module,exports){
+
+/*
+resultsdisplayer.coffee
+author: @ecoslado
+2015 11 10
+ */
+
+
+/*
+Displayer
+This class receives the search
+results and paint them in a container
+shaped by template
+ */
+
+(function() {
+  var Displayer, ScrollDisplayer,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  Displayer = require("../displayer");
+
+  ScrollDisplayer = (function(superClass) {
+    extend(ScrollDisplayer, superClass);
+
+    function ScrollDisplayer() {
+      return ScrollDisplayer.__super__.constructor.apply(this, arguments);
+    }
+
+
+    /*
+    render
+    
+    Replaces the older results in container with
+    the given
+    
+    @param {Object} res
+    @api public
+     */
+
+    ScrollDisplayer.prototype.render = function(res) {
+      var html;
+      html = this.template(res);
+      document.querySelector(this.container).innerHTML = html;
+      return this.trigger("df:results_rendered", res);
+    };
+
+
+    /*
+    renderMore
+    
+    Appends results to the older in container
+    @param {Object} res
+    @api public
+     */
+
+    ScrollDisplayer.prototype.renderNext = function(res) {
+      var html;
+      html = this.template(res);
+      document.querySelector(this.container).insertAdjacentHTML('beforeend', html);
+      return this.trigger("df:results_rendered", res);
+    };
+
+    return ScrollDisplayer;
+
+  })(Displayer);
+
+  module.exports = ScrollDisplayer;
+
+}).call(this);
+
+},{"../displayer":3}],5:[function(require,module,exports){
+
+/*
+resultsdisplayer.coffee
+author: @ecoslado
+2015 11 10
+ */
+
+
+/*
+Displayer
+This class receives the search
+results and paint them in a container
+shaped by template
+ */
+
+(function() {
+  var Displayer, StaticDisplayer,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  Displayer = require("../displayer");
+
+  StaticDisplayer = (function(superClass) {
+    extend(StaticDisplayer, superClass);
+
+    function StaticDisplayer() {
+      return StaticDisplayer.__super__.constructor.apply(this, arguments);
+    }
+
+
+    /*
+    render
+    
+    Replaces the older results in container with
+    the given
+    
+    @param {Object} res
+    @api public
+     */
+
+    StaticDisplayer.prototype.render = function(res) {
+      var html;
+      html = this.template(res);
+      document.querySelector(this.container).innerHTML = html;
+      return this.trigger("df:results_rendered", res);
+    };
+
+
+    /*
+    renderMore
+    
+    Appends results to the older in container
+    @param {Object} res
+    @api public
+     */
+
+    StaticDisplayer.prototype.renderNext = function(res) {
+      return null;
+    };
+
+    return StaticDisplayer;
+
+  })(Displayer);
+
+  module.exports = StaticDisplayer;
+
+}).call(this);
+
+},{"../displayer":3}],6:[function(require,module,exports){
 (function() {
   module.exports = {
     version: "0.5.4",
     Client: require("./client"),
     Displayer: require("./displayer"),
-    ScrollDisplayer: require("./scrolldisplayer"),
-    StaticDisplayer: require("./staticdisplayer"),
-    InfiniteScrollWidget: require("./infinitescrollwidget"),
-    QueryInputWidget: require("./queryinputwidget"),
+    ScrollDisplayer: require("./displayers/scrolldisplayer"),
+    StaticDisplayer: require("./displayers/staticdisplayer"),
+    InfiniteScrollWidget: require("./widgets/infinitescrollwidget"),
+    QueryInputWidget: require("./widgets/queryinputwidget"),
     Controller: require("./controller")
   };
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./displayer":3,"./infinitescrollwidget":6,"./queryinputwidget":7,"./scrolldisplayer":8,"./staticdisplayer":9}],5:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./displayer":3,"./displayers/scrolldisplayer":4,"./displayers/staticdisplayer":5,"./widgets/infinitescrollwidget":11,"./widgets/queryinputwidget":12}],7:[function(require,module,exports){
+(function() {
+  var dfScroll, extend;
+
+  extend = require('./extend').extend;
+
+  dfScroll = function(container, o) {
+    var content, defaultOptions, handler, throttle;
+    defaultOptions = {
+      direction: "vertical",
+      scrollOffset: 50
+    };
+    o = extend(o, defaultOptions);
+    container = document.querySelector(container);
+    content = container.children[0];
+    throttle = function(type, name, obj) {
+      var event, func, running;
+      obj = obj || window;
+      running = false;
+      func = function() {
+        var aux;
+        if (running) {
+          return;
+        }
+        running = true;
+        aux = function() {
+          var event;
+          event = document.createEvent('Event');
+          event.initEvent(name, true, true);
+          obj.dispatchEvent(event);
+          return running = false;
+        };
+        return setTimeout(aux, 250);
+      };
+      obj.addEventListener(type, func);
+      event = document.createEvent('Event');
+      event.initEvent(name, true, true);
+      return obj.dispatchEvent(event);
+    };
+    throttle('scroll', 'df:scroll', container);
+    handler = function() {
+      if (['horizontal', 'vertical'].indexOf(o.direction) <= -1) {
+        throw Error("Direction is not properly set. It might be 'horizontal' or 'vertical'.");
+      }
+      if (o.direction === 'vertical' && content.clientHeight - container.clientHeight - container.scrollTop <= o.scrollOffset || o.direction === "horizontal" && content.clientWidth() - container.clientWidth() - content.scrollLeft <= o.scrollOffset) {
+        return o.callback();
+      }
+    };
+    return container.addEventListener('df:scroll', handler);
+  };
+
+  module.exports = dfScroll;
+
+}).call(this);
+
+},{"./extend":9}],8:[function(require,module,exports){
+(function() {
+  var dfTypeWatch, extend;
+
+  extend = require('./extend').extend;
+
+  dfTypeWatch = function(input, o) {
+    var _supportedInputTypes, checkElement, defaultOptions, options, watchElement;
+    _supportedInputTypes = ['TEXT', 'TEXTAREA', 'PASSWORD', 'TEL', 'SEARCH', 'URL', 'EMAIL', 'DATETIME', 'DATE', 'MONTH', 'WEEK', 'TIME', 'DATETIME-LOCAL', 'NUMBER', 'RANGE'];
+    defaultOptions = {
+      wait: 750,
+      callback: function() {},
+      highlight: true,
+      captureLength: 2,
+      inputTypes: _supportedInputTypes
+    };
+    options = extend(defaultOptions, o);
+    checkElement = function(timer, override) {
+      var value;
+      value = timer.el.value || '';
+      if (value.length >= options.captureLength && value.toUpperCase() !== timer.text || override && value.length >= options.captureLength || value.length === 0 && timer.text) {
+        timer.text = value.toUpperCase();
+        return timer.cb.call(timer.el, value);
+      }
+    };
+    watchElement = function(elem) {
+      var elementType, startWatch, timer, value;
+      elementType = elem.getAttribute('type').toUpperCase();
+      value = elem.value || '';
+      if (options.inputTypes.indexOf(elementType) >= 0) {
+        timer = {
+          timer: null,
+          text: value,
+          cb: options.callback,
+          wait: options.wait,
+          el: elem
+        };
+        startWatch = function(evt) {
+          var evtElementType, overrideBool, timerCallbackFx, timerWait;
+          timerWait = timer.wait;
+          overrideBool = false;
+          evtElementType = this.type.toUpperCase();
+          if (typeof evt.keyCode !== 'undefined' && evt.keyCode === 13 && evtElementType !== 'TEXTAREA' && options.inputTypes.indexOf(evtElementType) >= 0) {
+            timerWait = 1;
+            overrideBool = true;
+          }
+          timerCallbackFx = function() {
+            return checkElement(timer, overrideBool);
+          };
+          clearTimeout(timer.timer);
+          return timer.timer = setTimeout(timerCallbackFx, timerWait);
+        };
+        elem.addEventListener('keydown', startWatch);
+        elem.addEventListener('paste', startWatch);
+        elem.addEventListener('cut', startWatch);
+        elem.addEventListener('input', startWatch);
+        return elem.addEventListener('change', startWatch);
+      }
+    };
+    return watchElement(document.querySelector(input));
+  };
+
+  module.exports = dfTypeWatch;
+
+}).call(this);
+
+},{"./extend":9}],9:[function(require,module,exports){
+(function() {
+  module.exports = {
+    extend: function() {
+      var i, key;
+      i = 1;
+      while (i < arguments.length) {
+        for (key in arguments[i]) {
+          if (arguments[i].hasOwnProperty(key)) {
+            arguments[0][key] = arguments[i][key];
+          }
+        }
+        i++;
+      }
+      return arguments[0];
+    }
+  };
+
+}).call(this);
+
+},{}],10:[function(require,module,exports){
 
 /*
  * author: @ecoslado
@@ -838,7 +1120,7 @@ shaped by template
 
 }).call(this);
 
-},{}],6:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 
 /*
 infinitescrollwidget.coffee
@@ -851,7 +1133,9 @@ author: @ecoslado
 InfiniteScrollWidget
 This class receives the search
 results and paint them in a container
-shaped by template
+shaped by template. Ask for a new page
+when scroll in wrapper reaches the
+bottom
  */
 
 (function() {
@@ -859,9 +1143,9 @@ shaped by template
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  ScrollDisplayer = require("./scrolldisplayer");
+  ScrollDisplayer = require("../displayers/scrolldisplayer");
 
-  dfScroll = require("./util/dfscroll");
+  dfScroll = require("../util/dfscroll");
 
   InfiniteScrollWidget = (function(superClass) {
     extend(InfiniteScrollWidget, superClass);
@@ -894,15 +1178,32 @@ shaped by template
 
 }).call(this);
 
-},{"./scrolldisplayer":8,"./util/dfscroll":10}],7:[function(require,module,exports){
+},{"../displayers/scrolldisplayer":4,"../util/dfscroll":7}],12:[function(require,module,exports){
+
+/*
+queryinputwidget.coffee
+author: @ecoslado
+2015 11 21
+ */
+
 (function() {
   var Displayer, QueryInputWidget, dfTypeWatch,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  dfTypeWatch = require('./util/dftypewatch');
+  dfTypeWatch = require('../util/dftypewatch');
 
-  Displayer = require('./displayer');
+  Displayer = require('../displayer');
+
+
+  /*
+  QueryInputWidget
+  
+  This class gets the query and
+  calls controller's search method.
+  Gets the string from an input when
+  receives more than three characters.
+   */
 
   QueryInputWidget = (function(superClass) {
     extend(QueryInputWidget, superClass);
@@ -937,289 +1238,7 @@ shaped by template
 
 }).call(this);
 
-},{"./displayer":3,"./util/dftypewatch":11}],8:[function(require,module,exports){
-
-/*
-resultsdisplayer.coffee
-author: @ecoslado
-2015 11 10
- */
-
-
-/*
-Displayer
-This class receives the search
-results and paint them in a container
-shaped by template
- */
-
-(function() {
-  var Displayer, ScrollDisplayer,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  Displayer = require("./displayer");
-
-  ScrollDisplayer = (function(superClass) {
-    extend(ScrollDisplayer, superClass);
-
-    function ScrollDisplayer() {
-      return ScrollDisplayer.__super__.constructor.apply(this, arguments);
-    }
-
-
-    /*
-    render
-    
-    Replaces the older results in container with
-    the given
-    
-    @param {Object} res
-    @api public
-     */
-
-    ScrollDisplayer.prototype.render = function(res) {
-      var html;
-      html = this.template(res);
-      document.querySelector(this.container).innerHTML = html;
-      return this.trigger("df:results_rendered", res);
-    };
-
-
-    /*
-    renderMore
-    
-    Appends results to the older in container
-    @param {Object} res
-    @api public
-     */
-
-    ScrollDisplayer.prototype.renderNext = function(res) {
-      var html;
-      html = this.template(res);
-      document.querySelector(this.container).insertAdjacentHTML('beforeend', html);
-      return this.trigger("df:results_rendered", res);
-    };
-
-    return ScrollDisplayer;
-
-  })(Displayer);
-
-  module.exports = ScrollDisplayer;
-
-}).call(this);
-
-},{"./displayer":3}],9:[function(require,module,exports){
-
-/*
-resultsdisplayer.coffee
-author: @ecoslado
-2015 11 10
- */
-
-
-/*
-Displayer
-This class receives the search
-results and paint them in a container
-shaped by template
- */
-
-(function() {
-  var Displayer, StaticDisplayer,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  Displayer = require("./displayer");
-
-  StaticDisplayer = (function(superClass) {
-    extend(StaticDisplayer, superClass);
-
-    function StaticDisplayer() {
-      return StaticDisplayer.__super__.constructor.apply(this, arguments);
-    }
-
-
-    /*
-    render
-    
-    Replaces the older results in container with
-    the given
-    
-    @param {Object} res
-    @api public
-     */
-
-    StaticDisplayer.prototype.render = function(res) {
-      var html;
-      html = this.template(res);
-      document.querySelector(this.container).innerHTML = html;
-      return this.trigger("df:results_rendered", res);
-    };
-
-
-    /*
-    renderMore
-    
-    Appends results to the older in container
-    @param {Object} res
-    @api public
-     */
-
-    StaticDisplayer.prototype.renderNext = function(res) {
-      return null;
-    };
-
-    return StaticDisplayer;
-
-  })(Displayer);
-
-  module.exports = StaticDisplayer;
-
-}).call(this);
-
-},{"./displayer":3}],10:[function(require,module,exports){
-(function() {
-  var dfScroll, extend;
-
-  extend = require('./extend').extend;
-
-  dfScroll = function(container, o) {
-    var content, defaultOptions, handler, throttle;
-    defaultOptions = {
-      direction: "vertical",
-      scrollOffset: 50
-    };
-    o = extend(o, defaultOptions);
-    container = document.querySelector(container);
-    content = container.children[0];
-    throttle = function(type, name, obj) {
-      var event, func, running;
-      obj = obj || window;
-      running = false;
-      func = function() {
-        var aux;
-        if (running) {
-          return;
-        }
-        running = true;
-        aux = function() {
-          var event;
-          event = document.createEvent('Event');
-          event.initEvent(name, true, true);
-          obj.dispatchEvent(event);
-          return running = false;
-        };
-        return setTimeout(aux, 250);
-      };
-      obj.addEventListener(type, func);
-      event = document.createEvent('Event');
-      event.initEvent(name, true, true);
-      return obj.dispatchEvent(event);
-    };
-    throttle('scroll', 'df:scroll', container);
-    handler = function() {
-      if (['horizontal', 'vertical'].indexOf(o.direction) <= -1) {
-        throw Error("Direction is not properly set. It might be 'horizontal' or 'vertical'.");
-      }
-      if (o.direction === 'vertical' && content.clientHeight - container.clientHeight - container.scrollTop <= o.scrollOffset || o.direction === "horizontal" && content.clientWidth() - container.clientWidth() - content.scrollLeft <= o.scrollOffset) {
-        return o.callback();
-      }
-    };
-    return container.addEventListener('df:scroll', handler);
-  };
-
-  module.exports = dfScroll;
-
-}).call(this);
-
-},{"./extend":12}],11:[function(require,module,exports){
-(function() {
-  var dfTypeWatch, extend;
-
-  extend = require('./extend').extend;
-
-  dfTypeWatch = function(input, o) {
-    var _supportedInputTypes, checkElement, defaultOptions, options, watchElement;
-    _supportedInputTypes = ['TEXT', 'TEXTAREA', 'PASSWORD', 'TEL', 'SEARCH', 'URL', 'EMAIL', 'DATETIME', 'DATE', 'MONTH', 'WEEK', 'TIME', 'DATETIME-LOCAL', 'NUMBER', 'RANGE'];
-    defaultOptions = {
-      wait: 750,
-      callback: function() {},
-      highlight: true,
-      captureLength: 2,
-      inputTypes: _supportedInputTypes
-    };
-    options = extend(defaultOptions, o);
-    checkElement = function(timer, override) {
-      var value;
-      value = timer.el.value || '';
-      if (value.length >= options.captureLength && value.toUpperCase() !== timer.text || override && value.length >= options.captureLength || value.length === 0 && timer.text) {
-        timer.text = value.toUpperCase();
-        return timer.cb.call(timer.el, value);
-      }
-    };
-    watchElement = function(elem) {
-      var elementType, startWatch, timer, value;
-      elementType = elem.getAttribute('type').toUpperCase();
-      value = elem.value || '';
-      if (options.inputTypes.indexOf(elementType) >= 0) {
-        timer = {
-          timer: null,
-          text: value,
-          cb: options.callback,
-          wait: options.wait,
-          el: elem
-        };
-        startWatch = function(evt) {
-          var evtElementType, overrideBool, timerCallbackFx, timerWait;
-          timerWait = timer.wait;
-          overrideBool = false;
-          evtElementType = this.type.toUpperCase();
-          if (typeof evt.keyCode !== 'undefined' && evt.keyCode === 13 && evtElementType !== 'TEXTAREA' && options.inputTypes.indexOf(evtElementType) >= 0) {
-            timerWait = 1;
-            overrideBool = true;
-          }
-          timerCallbackFx = function() {
-            return checkElement(timer, overrideBool);
-          };
-          clearTimeout(timer.timer);
-          return timer.timer = setTimeout(timerCallbackFx, timerWait);
-        };
-        elem.addEventListener('keydown', startWatch);
-        elem.addEventListener('paste', startWatch);
-        elem.addEventListener('cut', startWatch);
-        elem.addEventListener('input', startWatch);
-        return elem.addEventListener('change', startWatch);
-      }
-    };
-    return watchElement(document.querySelector(input));
-  };
-
-  module.exports = dfTypeWatch;
-
-}).call(this);
-
-},{"./extend":12}],12:[function(require,module,exports){
-(function() {
-  module.exports = {
-    extend: function() {
-      var i, key;
-      i = 1;
-      while (i < arguments.length) {
-        for (key in arguments[i]) {
-          if (arguments[i].hasOwnProperty(key)) {
-            arguments[0][key] = arguments[i][key];
-          }
-        }
-        i++;
-      }
-      return arguments[0];
-    }
-  };
-
-}).call(this);
-
-},{}],13:[function(require,module,exports){
+},{"../displayer":3,"../util/dftypewatch":8}],13:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -16211,5 +16230,5 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":89,"_process":70,"inherits":67}]},{},[4])(4)
+},{"./support/isBuffer":89,"_process":70,"inherits":67}]},{},[6])(6)
 });

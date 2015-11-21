@@ -11,9 +11,9 @@ results and paint them in a container
 shaped by template
 ###
 
-Displayer = require "./displayer"
+Displayer = require "../displayer"
 
-class StaticDisplayer extends Displayer
+class ScrollDisplayer extends Displayer
 
   ###
   render
@@ -38,6 +38,8 @@ class StaticDisplayer extends Displayer
   @api public
   ###  
   renderNext: (res) ->
-    return null
+    html = @template res
+    document.querySelector(@container).insertAdjacentHTML('beforeend', html)
+    @trigger("df:results_rendered", res)
 
-module.exports = StaticDisplayer
+module.exports = ScrollDisplayer

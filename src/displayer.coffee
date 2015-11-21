@@ -13,7 +13,7 @@ shaped by template
 
 Emitter = require 'tiny-emitter' 
 emitter = new Emitter
-addHelpers = require("./helpers").addHelpers
+addHelpers = require("./util/helpers").addHelpers
 document = global.document
 
 class Displayer
