@@ -6,4 +6,5 @@ module.exports =
   ScrollDisplayer: require "./scrolldisplayer"
   StaticDisplayer: require "./staticdisplayer"
   InfiniteScrollWidget: require "./infinitescrollwidget"
+  QueryInputWidget: require "./queryinputwidget"
   Controller: require "./controller"

@@ -608,25 +608,13 @@ Let's add some javascript to trigger next_page event when scroll is down.
     var client = new doofinder.Client(hashid, zone);
     var displayer = new doofinder.Displayer(container, template);
     var controller = new doofinder.Controller(client, displayer);
+    
     // get the DOM components we'll use
-    var container = $(".container");
+    var wrapper = $("#wrapper");
     // set scroll behavior
     // this requires that container overflow
     // is auto
-    var throttle = function(type, name, obj) {
-          var obj = obj || window;
-          var running = false;
-          var func = function() {
-              if (running) { return; }
-              running = true;
-              setTimeout(function() {
-                  obj.trigger(name);
-                  running = false;
-              }, 250);
-          };
-          obj.on(type, func);
-          obj.trigger(name);
-      };
+    
 
       throttle('scroll', 'df:scroll', container);
       // handling scroll event

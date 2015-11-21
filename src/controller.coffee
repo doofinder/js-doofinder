@@ -215,6 +215,18 @@ class Controller
     @displayers.push(displayer)
     displayer.controller = this
 
+  ###
+  start
+
+  Executes all displayer's starts. Bind events
+
+  @api public
+  ###
+
+  start: () ->
+    for displayer in @displayers
+      displayer.start()
+
 
 
 module.exports = Controller
