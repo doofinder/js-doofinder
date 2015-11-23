@@ -3,7 +3,9 @@ module.exports =
   version: "0.6.1"	
   Client: require "./client"
   Widget: require "./widget"
-  ScrollWidget: require "./widgets/scrollwidget"
-  InfiniteScrollWidget: require "./widgets/infinitescrollwidget"
-  QueryInputWidget: require "./widgets/queryinputwidget"
+  widgets:
+  	Results: require "./widgets/results/results"
+  	ScrollResults: require "./widgets/results/scrollresults"
+  	QueryInput: require "./widgets/queryinput"
+
   Controller: require "./controller"

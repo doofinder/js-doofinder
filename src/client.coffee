@@ -120,6 +120,8 @@ class Client
     @_sanitizeQuery query, (res) ->
       params.query = res
       headers = {}
+      if _this.apiKey
+        headers['api token'] = _this.apiKey
       _this.params = {}
       _this.filters = {}
       _this.sort = []

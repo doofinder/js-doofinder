@@ -23,6 +23,7 @@ class Controller
   constructor: (client, displayers, initialParams = {}) ->
     @client = client
     @displayers = []
+    @__started = false
     if displayers instanceof Array
       for displayer in displayers
         @addDisplayer(displayer)
@@ -210,6 +211,8 @@ class Controller
   addDisplayer: (displayer) ->
     @displayers.push(displayer)
     displayer.controller = this
+    if @__started
+      displayer.start()
 
   ###
   start
@@ -224,7 +227,6 @@ class Controller
   start: () ->
     for displayer in @displayers
       displayer.start()
-
-
+    @__started = true
 
 module.exports = Controller

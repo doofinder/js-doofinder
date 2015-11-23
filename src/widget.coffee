@@ -13,36 +13,10 @@ shaped by template
 
 Emitter = require 'tiny-emitter' 
 emitter = new Emitter
-addHelpers = require("./util/helpers").addHelpers
 
 class Widget
 
-  ###
-  constructor
-
-  @param {String} container
-  @param {String|Function} template
-  @param {Object} extraOptions 
-  @api public
-  ###
-  constructor: (container, template, extraOptions = {}) ->
-  	@container = container
-  	@handlebars = require("handlebars")
-  	addHelpers @handlebars, 
-      extraOptions.urlParams, 
-      extraOptions.currency, 
-      extraOptions.translations, 
-      extraOptions.helpers
-    
-    if template.constructor == String
-  	  @template = @handlebars.compile(template)
-  	
-    else if template instanceof Function
-  	  @template = template
-  	
-    else
-  	  throw Error "The provided template is not the right type. String or rendered handlebars expected."
-
+  
   ###
   start
 
