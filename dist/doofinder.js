@@ -605,7 +605,7 @@ author: @ecoslado
 },{"./util/extend":6}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "0.6.0",
+    version: "0.6.1",
     Client: require("./client"),
     Widget: require("./widget"),
     ScrollWidget: require("./widgets/scrollwidget"),
