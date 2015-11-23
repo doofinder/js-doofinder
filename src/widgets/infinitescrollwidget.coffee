@@ -13,20 +13,58 @@ when scroll in wrapper reaches the
 bottom
 ###
 
-ScrollDisplayer = require "../displayers/scrolldisplayer"
+Widget = require "../widget"
 dfScroll = require "../util/dfscroll"
 
-class InfiniteScrollWidget extends ScrollDisplayer
+class InfiniteScrollWidget extends Widget
 
-	constructor: (@wrapper, container, template, options) ->
-		super(container, template, options)
+  ###
+  constructor
 
-	start: () ->
-		_this = this
-		dfScroll @wrapper, 
-			callback: () -> 
-			  _this.controller.nextPage()
+  just assign wrapper property for scrolling and 
+  calls super constructor.
+  
+  @param {String} wrapper
+  @param {String} container
+  @param {String|Function} template
+  @param {Object} extraOptions 
+  @api public
+  ###
+  constructor: (@wrapper, container, template, options) ->
+    super(container, template, options)
 
-		@bind 'df:search', () -> $(@container).animate({scrollTop: 0}, 'quick')	
+  start: () ->
+    _this = this
+    dfScroll @wrapper, 
+      callback: () -> 
+        _this.controller.nextPage()
+
+    @bind 'df:search', () -> document.querySelector(_this.wrapper).scrollTop = 0
+
+  ###
+  render
+
+  Replaces the older results in container with
+  the given
+
+  @param {Object} res
+  @api public
+  ###  
+  render: (res) ->
+    html = @template res
+    document.querySelector(@container).innerHTML = html
+    @trigger("df:results_rendered", res)
+
+  ###
+  renderNext
+
+  Appends results to the older in container
+  @param {Object} res
+  @api public
+  ###  
+  renderNext: (res) ->
+    html = @template res
+    document.querySelector(@container).insertAdjacentHTML('beforeend', html)
+    @trigger("df:results_rendered", res)  
 
 module.exports = InfiniteScrollWidget

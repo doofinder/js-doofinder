@@ -16,9 +16,10 @@ https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.m
 
 ## What is out of the box
 * A simple client for retrieving data.
-* A display manager for shaping the data, using [Handlebars](http://handlebarsjs.com) templates.
-* A controller that orchestrate client and displayers.
+* Some widgets for shaping the data, using [Handlebars](http://handlebarsjs.com) templates and managing events.
+* A controller that orchestrate client and widgets.
 * A set of events that will be triggered when searches are done or when data is ready and you would use wherever you want.
+
 
 
 ## Simple usage. Just the client:
@@ -206,21 +207,38 @@ RESPONSE: {
 
 You can also use the Displayer and Controller classes in order to manage the way you show the results. To use the whole thing we'll instantiate a ```Client```, one or more than one Displayer, and then we'll pass them to the ```Controller```.
 
-- The ```Displayer``` will take a DOM node and a Handlebars template. The goal of this class is shaping the results by the template an insert them in the DOM. There will be two ways to display the data: by appending them or by replacing them.
+- The ```Widget``` will take a DOM node and a Handlebars template. The goal of this class is shaping the results by the template an insert them in the DOM. We'll offer some standard
+widgets: QueryInputWidget, InfiniteScrollWidget. The developer using the library could write theirs own widgets, by accomplishing the contract, implementing some functions that are
+required for the right behavior.
 
-- The ```Controller``` will receive a ```Client``` and a set of ```Displayer```. ```Controller``` could also receive initial params, that will be in every search the ```Client``` will perform.
+- The ```Controller``` will receive a ```Client``` and a set of ```Widget```. ```Controller``` could also receive initial params, that will be in every search the ```Client``` will perform.
 
 Once you have instantiated the controller, you can use its methods which will perform the search call, will paint the results and will trigger some events you can use from your view. 
 
-### Displayer instantiation:
+### QueryInputWidget instantiation:
+QueryInputWidget abstracts a queryInput where the user will write the search terms. You will pass the selector in the instantiation and the widget will perform the searches to the client.
 
 The arguments to instantiate it are:
 
 * Required
 
-  * **container `String`:** a DOM node CSS selector. 
-  * **template `String | Function`:** a [Handlebars] (http://handlebars.com) template to shape the way the results will be shown. This template could be a String with the template or a precompiled template.
+  * **queryInput `String`:** this is a CSS selector for the queryInput. 
        
+
+```javascript
+var queryInputWidget = new doofinder.QueryInputWidget('#query');
+```
+
+### InfiniteScrollWidget instantiation:
+InfiniteScrollWidget represents to a results container with infinite scroll paging. You will pass the scroll selector, results container selector and a [Handlebars](http://handlebars.com) template.
+
+The arguments to instantiate an InfiniteScrollWidget are:
+
+* Required
+
+  * **wrapper `String`:** this is the scroll element selector. 
+  * **container `String`:** this is the results container selector.
+  * **template `String`:** this is a Handlebars template we'll paint the results with.
 
 * Optional
   * **options `Object`:**
@@ -239,8 +257,9 @@ The arguments to instantiate it are:
     * **helpers `Object`:** you can add custom Handlebars helpers. You can get more information about Handlebars expressions [here] (http://handlebarsjs.com/expressions.html).
 
   ```javascript
-var displayer = new doofinder.Displayer(
-      "#myDivId",
+var resultsWidget = new doofinder.InfiniteScrollWidget(
+      "#wrapper",
+      "#container",
       "{{#each results}}<h1>title</h1>{{/each}}",
       {
         currency: {
@@ -262,7 +281,8 @@ var displayer = new doofinder.Displayer(
   ```
 
 
-### Displayer methods:
+### Widget methods:
+These methods apply to every widget in the library. If you implement your own widgets you have to implement this methods and other we'll talk about the next section.
 
 #### **bind**
 This method will assign a callback to an event that will be triggered for the `container`. Note that to call this method it's necessary to be in the context of Controller.
@@ -283,7 +303,7 @@ df:results_received | <ul><li>event(Object): information about the event.</li><l
 * **Example:**
 
 ```javascript
-displayer.on("df:results_received", function(event, res){
+widget.bind("df:results_received", function(event, res){
    console.log(res.total + "RESULTS FOUND"); 
 });
 ```
@@ -295,7 +315,7 @@ The arguments to instantiate it are:
 * Required
 
   * **client `doofinder.Client`:** the object we use to perform the queries. 
-  * **displayers `doofinder.Displayer | Array(doofinder.Displayer)`:**  where and how the results are shown.
+  * **widgets `doofinder.Widget | Array(doofinder.Widget)`:**  where and how the results are shown.
        
 
 * Optional
@@ -308,7 +328,8 @@ var client = new doofinder.Client (
     ["product", "recipes"]
 );
 
-var displayer = new doofinder.Displayer (
+var queryInputWidget = new doofinder.QueryInputWidget("#query");
+var resultsWidget = new doofinder.InfiniteScrollWidget (
       "#myDivId",
       "{{#each results}}<h1>title</h1>{{/each}}",
       {
@@ -329,7 +350,7 @@ var displayer = new doofinder.Displayer (
 
 var controller = new doofinder.Controller (
     client,
-    displayer,
+    [queryInputWidget, resultsWidget],
     {
       rpp: 10,
       filters: {
@@ -337,6 +358,8 @@ var controller = new doofinder.Controller (
       }
     }
 );
+
+controller.start();
 
 ```
 
@@ -370,7 +393,7 @@ This method will show a page for the current search state. This page will replac
   * **page `Number`:** the number of the page you want to show.
 
 
-## Example 1: Quick & Dirty - Querying and showing results
+## Example 1: A simple results view
 
 In this example we'll write a view that will just show results.
 
@@ -379,262 +402,239 @@ Let's begin by showing a simple HTML template (myview.html):
 ``` html
 <html lang="en">
 <head>
-<script type="application/javascript" src="path/to/your/js/jquery.min.js"></script>
-<script type="application/javascript" src="path/to/your/js/jquery.typewatch.js"></script>
 <script type="application/javascript" src="path/to/your/js/doofinder.min.js"></script>
 <script type="application/javascript" src="path/to/your/js/myview.js"></script>
 </head>
-<input type="text" id="query" />
 <body>
-<div id="container">
-  </div>
-</div>
-</body>
-```
-Note that we are importing two javascript files:
-- jquery.min.js and jquery.typewatch.js: necessary to manage the search box behavior.
-- doofinder-min.js: contains doofinder namespace with its classes.
-- myview.js: contains specific info about my view and thats the place where we'll instantiate Controller.
-
-Let's add some functionality to our html view:
-
-``` javascript
-(function(doofinder, $, document){
-  
-  var hashid = 'a3fd9dcvga0932el99ds4az';
-  var zone = 'eu1';
-  var container = '#container', // required
-  var template = '{{#each results}}' + // required
-            '<h1>{{header}}</h1>' +
-            '{{/each}}'
-  };
-
-  $(document).ready(function(){ 
-        // Instantiation
-        var client = new doofinder.Client(hashid, zone);
-        var displayer = new doofinder.Displayer(container, template);
-        var controller = new doofinder.Controller(Client, Displayer);
-
-        $('#query').typeWatch({
-          callback: function () {
-            var query = $(this).val();
-            controller.search(query);
-          },
-          wait: 43,
-          captureLength: 3
-        });
-  });
-
-})(doofinder, jQuery, document);
-```
-The options we have filled in:
-
-- hashid: the unique hashid for your search engine.
-- zone: the zone where is your search engine (eu1, us1)
-- container: the CSS selector of our hits container.
-- searchBox: the CSS selector of our query input.
-- template: the Handlebars template that will shape your results.
-
-At the moment, we have a search box where we can write a query and results we'll be shown since the fourth character we type.
-
-## Example 2: A simple paging
-
-In the first example, we wrote a simple view that reacted when a user typed some characters. Although it was cool,
-we only could see a few results (10 per query), what is not so cool.
-
-In this example, we'll implement a simple mechanism to show all the results by pushing a button.
-
-This is the html we'll show:
-
-``` html
-<html lang="en">
-<head>
-<script type="application/javascript" src="path/to/your/js/jquery.min.js"></script>
-<script type="application/javascript" src="path/to/your/js/jquery.typewatch.js"></script>
-<script type="application/javascript" src="path/to/your/js/doofinder.min.js"></script>
-<script type="application/javascript" src="path/to/your/js/myview.js"></script>
-</head>
-<input type="text" id="query" />
-<body>
-<div id="container">
-</div>
-<a id="nextbutton">Next</a>
-</body>
-```
-
-The only thing we added to last example is a link. When this link is clicked, we'll call nextPage controller's method. 
-The javascript will be:
-
-``` javascript
-(fuction(doofinder, $, document){
-  
-  var hashid = 'a3fd9dcvga0932el99ds4az';
-  var zone = 'eu1';
-    
-  var container = '#container';
-  var template = '{{#each results}}' + 
-        '<h1>{{header}}</h1>' +
-        '{{/each}}';
-    
-  $(document).ready(function(){
-    // Instantiation
-    var client = new doofinder.Client(hashid, zone);
-    var displayer = new doofinder.Displayer(container, template);
-    var controller = new doofinder.Controller(client, displayer);
-    
-    $('#query').typeWatch({
-          callback: function () {
-            var query = $(this).val();
-            controller.search(query);
-          },
-          wait: 43,
-          captureLength: 3
-        });
-
-    $('#nextbutton').on("click", function(){
-        controller.nextPage();
-    });
-  });
-
-})(doofinder, jQuery, document);
-```
-
-This is example adds a block where some behavior is specified. When nextButton
-is clicked we'll call to nextPage controller's function, which will perform the
-search API call and.
-
-But there's something wrong. What if a user push next page when no query is done?
-We'll show the second page for an empty query, what makes no much sense. We'll only
-show the nextButton when a query will be written. So we can hide the button via css:
-
-```css
-
-#nextbutton{
-    display: none;
-}
-```
-
-Once you have linked the stylesheet in your html, add some javascript to show the button. 
-In our "custom-behavior block":
-
-```javascript
-
-   $(document).ready(function(){
-    // Instantiation
-    var client = new doofinder.Client(hashid, zone);
-    var displayer = new doofinder.Displayer(container, template);
-    var controller = new doofinder.Controller(client, displayer);
-    var nextButton = $("#nextbutton");
-    
-    $('#query').typeWatch({
-          callback: function () {
-            var query = $(this).val();
-            controller.search(query);
-          },
-          wait: 43,
-          captureLength: 3
-      });
-
-   nextButton.on("click", function(){
-        controller.nextPage();
-      });
-
-   displayer.bind("df:search", function(){
-      nextButton.show();
-    });
-    
-  });
-```
-`df:search` event is triggered by the displayer when someone makes a query. 
-So this way, we can avoid the unexpected situation described before.
-
-
-## Example 3: Scroll paging
-
-In the next example we'll add an infinite scroll paging. We'll add the jquery.dfscroll
-plugin, and we call nextPage in its callback. nextPage will be called when scroll is about to
-reach the bottom.
-
-```html
-<html lang="en">
-<head>
-  <link rel="stylesheet" href="myview.css"/>
-  <script type="application/javascript" src="path/to/your/js/jquery.min.js"></script>
-  <script type="application/javascript" src="path/to/your/js/jquery.typewatch.js"></script>
-  <script type="application/javascript" src="path/to/your/js/jquery.dfscroll.js"></script>
-  <script type="application/javascript" src="doofinder.min.js"></script>
-  <script type="application/javascript" src="myview.js"></script>
-</head>
-  
-<body>
-  <input type="text" id="query" />
-  <div class="wrapper">
-    <div class="container">
+  <input type="text" id="query"/>
+  <div id="scroll">
+    <div id="container"></div>
     </div>
   </div>
 </body>
-``
-And we are going to create the inner scroll via css. 
+```
+Note that we are importing two javascript files:
+- doofinder-min.js: contains doofinder namespace with its classes.
+- myview.js: contains specific info about my view and thats the place where we'll instantiate Controller.
+
+We need to create the inner scroll via css.
 
 ```css
-#wrapper{
+#scroll{
     position: relative;
     height: 800px;
     overflow: auto;
 }
 ```
 
-If we visit our page and perform a query, some of the content will be hidden. If
-you move your mouse to the content, you'll be able to move down and up.
+Let's add some functionality to our html view:
 
-Let's add some javascript to trigger next_page event when scroll is down. 
+``` javascript
+(function(doofinder, document){
+  
+  var hashid = 'a3fd9dcvga0932el99ds4az';
+  var zone = 'eu1';
+  var queryInput = '#query';
+  var scrollWrapper = '#scroll';
+  var container = '#container'; // required
+  var template = '{{#each results}}' + // required
+            '<h1>{{header}}</h1>' +
+            '{{/each}}';
+  };
+
+  $(document).ready(function(){ 
+        // Instantiation
+        var client = new doofinder.Client(hashid, zone);
+        var queryInputWidget = new doofinder.QueryInputWidget(queryInput);
+        var resultsWidget = new doofinder.InfiniteScrollWidget(scrollWrapper, container, template);
+        var controller = new doofinder.Controller(Client, [queryInputWidget, resultsWidget]);
+        controller.start();
+
+  });
+
+})(doofinder, document);
+```
+
+
+The options we have filled in:
+
+- hashid: the unique hashid for your search engine.
+- zone: the zone where is your search engine (eu1, us1)
+- queryInput: the CSS selector of our query input.
+- scrollWrapper: the CSS selector for the scroll.
+- container: the CSS selector of our hits container.
+- template: the Handlebars template that will shape your results.
+
+At the moment, we have a search box where we can write a query and results we'll be shown since the fourth character we type.
+
+## Creating your own widgets
+
+To implement a widget that you can add to a controller you must implement the next methods. Note that with your own widgets you must implement
+your own events managing.
+
+#### **start:**
+In this method you will bind the calls to controllers methods. In start you can access to controller methods.
+
+#### **render:**
+This method will receive the search API response and you'll be able to use it for rendering or show. This function will be called by search and getPage controller's methods.
+
+**__Arguments:__**
+
+* **Required:**
+  * **res `Object`:** with the Search API response. An Example of this response:
+  ```javascript
+
+  {
+    "query_counter": 7, 
+    "results_per_page": 20, 
+    "page": 4, 
+    "total": 335, 
+    "query": "skin", 
+    "hashid": "6a96504dc173514cab1e0198af92e6e9", 
+    "max_score": 3.2752259,
+    "results": [{
+        "type": "product",
+        "dfid": "6a96504dc173514cab1e0198af92e6e9@product@b458b8febcef7e8b854ebdd7eda80b96",
+        "dfscore": 1.9850867,
+        "description": "v/a: skins & punks vol. 1 cd",
+        "title": "V/A: Skins & Punks Vol. 1 CD",
+        "mpn": "10433",
+        "brand": "STEP 1 MUSIC",
+        "best_price": 14.16,
+        "availability": "in stock",
+        "image_link": "http://dhb3yazwboecu.cloudfront.net/167/10433m.jpg",
+        "link": "http://www.skinsandpunks.com/step-1-music/va-skins-punks-vol-1-cd",
+        "condition": "new",
+        "g:product_maintype": "STEP 1 MUSIC",
+        "g:product_subtypes": null,
+        "price": "14.16",
+        "id": "18371",
+        "categories": ["STEP 1 MUSIC"],
+        "highlight": {"description": ["v/a: <em>skins</em> & punks vol. 1 cd"]}
+    }],
+    "facets": {
+      "categories": {
+            "_type": "terms", 
+            "terms": [
+              {"term": "CHAPAS MANOLO", "count": 79}, {
+                "term": "MUSICA",
+                "count": 42
+            }, {"term": "VINILO", "count": 41}, {
+                "term": "PUNK / OI!",
+                "count": 39
+            }, {"term": "LP/10", "count": 26}, {
+                "term": "ACCESORIOS",
+                "count": 26
+            }, {"term": "ROPA", "count": 16}, {
+                "term": "STEP 1 MUSIC",
+                "count": 15
+            }
+          ]
+        },
+      "best_price": {
+            "_type": "range", 
+                "ranges": [{
+                "from": 0,
+                "count": 333,
+                "min": 0,
+                "max": 69.9000015258789,
+                "total_count": 333,
+                "total": 3588.360008239746,
+                "mean": 10.775855880599838
+            }]
+        }
+    }
+  }
+
+  ```
+
+#### **renderNext:**
+This method will receive the search API response and you'll be able to use it for rendering or show. It will be called by nextPage controller's method.
+
+**__Arguments:__**
+
+* **Required:**
+  * **res `Object`:** with the Search API response.
+
+## Example 2: A simple widget
+
+You can implement your own widget by implementing the methods described. For this example we have used jQuery and jquery.dfscroll library to implement
+the infinite scroll.
 
 ```javascript
-(function(doofinder, $, document){
- 
-  var hashid = "6a96504dc173514cab1e0198af92e6e9";
-  var zone = "eu1";
- 
-  var container = "#container"; //required
-        
-  var template = '{{#results}}' + // required
-        '<h1>{{header}}</h1>' +
-        '{{/results}}';
-    
-  
-  
-  $(document).ready(function(){
-    // Instantiation
-    var client = new doofinder.Client(hashid, zone);
-    var displayer = new doofinder.Displayer(container, template);
-    var controller = new doofinder.Controller(client, displayer);
-    
-    // get the DOM components we'll use
-    var wrapper = $("#wrapper");
-    // set scroll behavior
-    // this requires that container overflow
-    // is auto
-    
 
-      throttle('scroll', 'df:scroll', container);
-      // handling scroll event
-      container.on('dfScroll', function () {
-          // New results requested when last item is
-          // near and scroll hasn't visited it.
-          if (container.height() >= (searchEngine.resultsContainer.height() + searchEngine.resultsContainer.position().top))
-          {
-             // triggers next_page event
-             searchEngine.resultsContainer.trigger('df:next_page');
-          }
+(function($){
+
+    /*
+    constructor
+    
+    just assign wrapper property for scrolling and 
+    calls super constructor.
+    
+    @param {String} wrapper
+    @param {String} container
+    @param {Function} template: a rendered handlebars template
+    @api public
+     */
+
+    function InfiniteScrollWidget(wrapper, container, template) {
+      this.wrapper = wrapper;
+      this.container = container;
+      this.template = template;
+
+    }
+
+    InfiniteScrollWidget.prototype.start = function() {
+      var _this;
+      _this = this;
+      $(this.wrapper).dfScroll({
+        callback: function() {
+          return _this.controller.nextPage();
+        }
       });
+    };
 
-    // Go to the top when new query    
-    dfCtrl.searchBox.on('df:new_query', function () {
-        container.animate({scrollTop: 0}, "quick");
-    });
-  });
-  
-})(doofinder, jQuery, document);
 
+    /*
+    render
+    
+    Replaces the older results in container with
+    the given
+    
+    @param {Object} res
+    @api public
+     */
+
+    InfiniteScrollWidget.prototype.render = function(res) {
+      var html;
+      html = this.template(res);
+      $(this.container).html = html;
+      
+    };
+
+
+    /*
+    renderNext
+    
+    Appends results to the older in container
+    @param {Object} res
+    @api public
+     */
+
+    InfiniteScrollWidget.prototype.renderNext = function(res) {
+      var html;
+      html = this.template(res);
+      $(this.container).append(html);
+    };
+
+    return InfiniteScrollWidget;
+
+  })(jQuery);
 ```
+
+
+
+
+
+
 

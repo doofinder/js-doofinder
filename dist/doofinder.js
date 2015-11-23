@@ -30,9 +30,10 @@ author: @ecoslado
     @param {String} address
     @api public
      */
-    function Client(hashid, apiKey, version, address) {
+    function Client(hashid, apiKey, version, type, address) {
       var zone, zoneApiKey;
       this.hashid = hashid;
+      this.type = type;
       if (this.version == null) {
         this.version = version;
       }
@@ -240,6 +241,11 @@ author: @ecoslado
     Client.prototype.makeQueryString = function() {
       var elem, facet, j, k, key, len, querystring, ref, ref1, ref2, ref3, term, v, value;
       querystring = "hashid=" + this.hashid;
+      if (this.type && this.type instanceof Array) {
+        querystring += "&type=" + (this.type.join(','));
+      } else if (this.type && this.type.constructor === String) {
+        querystring += "&type=" + this.type;
+      }
       ref = this.params;
       for (key in ref) {
         value = ref[key];
@@ -288,7 +294,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"http":63}],2:[function(require,module,exports){
+},{"http":62}],2:[function(require,module,exports){
 
 /*
  * Created by Kike Coslado on 26/10/15.
@@ -596,282 +602,13 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./util/extend":9}],3:[function(require,module,exports){
-(function (global){
-
-/*
-displayer.coffee
-author: @ecoslado
-2015 11 10
- */
-
-
-/*
-Displayer
-This class receives the search
-results and paint them in a container
-shaped by template
- */
-
-(function() {
-  var Displayer, Emitter, addHelpers, document, emitter;
-
-  Emitter = require('tiny-emitter');
-
-  emitter = new Emitter;
-
-  addHelpers = require("./util/helpers").addHelpers;
-
-  document = global.document;
-
-  Displayer = (function() {
-
-    /*
-    constructor
-    
-    @param {String} container
-    @param {String|Function} template
-    @param {Object} extraOptions 
-    @api public
-     */
-    function Displayer(container, template, extraOptions) {
-      if (extraOptions == null) {
-        extraOptions = {};
-      }
-      this.container = container;
-      this.handlebars = require("handlebars");
-      addHelpers(this.handlebars, extraOptions.urlParams, extraOptions.currency, extraOptions.translations, extraOptions.helpers);
-      if (template.constructor === String) {
-        this.template = this.handlebars.compile(template);
-      } else if (template instanceof Function) {
-        this.template = template;
-      } else {
-        throw Error("The provided template is not the right type. String or rendered handlebars expected.");
-      }
-    }
-
-    Displayer.prototype.init = function() {
-      return $(this.container).on('click', function() {});
-    };
-
-
-    /*
-    render
-    
-    Replaces the older results in container with
-    the given
-    
-    @param {Object} res
-    @api public
-     */
-
-    Displayer.prototype.render = function(res) {
-      var html;
-      html = this.template(res);
-      document.querySelector(this.container).innerHTML = html;
-      return this.trigger("df:results_rendered", res);
-    };
-
-
-    /*
-    renderMore
-    
-    Appends results to the older in container
-    @param {Object} res
-    @api public
-     */
-
-    Displayer.prototype.renderNext = function(res) {
-      this.render(res);
-      return this.trigger("df:results_rendered", res);
-    };
-
-
-    /*
-    bind
-    
-    Method to add and event listener
-    @param {String} event
-    @param {Function} callback
-    @api public
-     */
-
-    Displayer.prototype.bind = function(event, callback) {
-      return emitter.on(event, callback);
-    };
-
-
-    /*
-    trigger
-    
-    Method to trigger an event
-    @param {String} event
-    @param {Array} params
-    @api public
-     */
-
-    Displayer.prototype.trigger = function(event, params) {
-      return emitter.emit(event, params);
-    };
-
-    return Displayer;
-
-  })();
-
-  module.exports = Displayer;
-
-}).call(this);
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./util/helpers":10,"handlebars":42,"tiny-emitter":55}],4:[function(require,module,exports){
-
-/*
-resultsdisplayer.coffee
-author: @ecoslado
-2015 11 10
- */
-
-
-/*
-Displayer
-This class receives the search
-results and paint them in a container
-shaped by template
- */
-
-(function() {
-  var Displayer, ScrollDisplayer,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  Displayer = require("../displayer");
-
-  ScrollDisplayer = (function(superClass) {
-    extend(ScrollDisplayer, superClass);
-
-    function ScrollDisplayer() {
-      return ScrollDisplayer.__super__.constructor.apply(this, arguments);
-    }
-
-
-    /*
-    render
-    
-    Replaces the older results in container with
-    the given
-    
-    @param {Object} res
-    @api public
-     */
-
-    ScrollDisplayer.prototype.render = function(res) {
-      var html;
-      html = this.template(res);
-      document.querySelector(this.container).innerHTML = html;
-      return this.trigger("df:results_rendered", res);
-    };
-
-
-    /*
-    renderMore
-    
-    Appends results to the older in container
-    @param {Object} res
-    @api public
-     */
-
-    ScrollDisplayer.prototype.renderNext = function(res) {
-      var html;
-      html = this.template(res);
-      document.querySelector(this.container).insertAdjacentHTML('beforeend', html);
-      return this.trigger("df:results_rendered", res);
-    };
-
-    return ScrollDisplayer;
-
-  })(Displayer);
-
-  module.exports = ScrollDisplayer;
-
-}).call(this);
-
-},{"../displayer":3}],5:[function(require,module,exports){
-
-/*
-resultsdisplayer.coffee
-author: @ecoslado
-2015 11 10
- */
-
-
-/*
-Displayer
-This class receives the search
-results and paint them in a container
-shaped by template
- */
-
-(function() {
-  var Displayer, StaticDisplayer,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  Displayer = require("../displayer");
-
-  StaticDisplayer = (function(superClass) {
-    extend(StaticDisplayer, superClass);
-
-    function StaticDisplayer() {
-      return StaticDisplayer.__super__.constructor.apply(this, arguments);
-    }
-
-
-    /*
-    render
-    
-    Replaces the older results in container with
-    the given
-    
-    @param {Object} res
-    @api public
-     */
-
-    StaticDisplayer.prototype.render = function(res) {
-      var html;
-      html = this.template(res);
-      document.querySelector(this.container).innerHTML = html;
-      return this.trigger("df:results_rendered", res);
-    };
-
-
-    /*
-    renderMore
-    
-    Appends results to the older in container
-    @param {Object} res
-    @api public
-     */
-
-    StaticDisplayer.prototype.renderNext = function(res) {
-      return null;
-    };
-
-    return StaticDisplayer;
-
-  })(Displayer);
-
-  module.exports = StaticDisplayer;
-
-}).call(this);
-
-},{"../displayer":3}],6:[function(require,module,exports){
+},{"./util/extend":6}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "0.5.4",
+    version: "0.6.0",
     Client: require("./client"),
-    Displayer: require("./displayer"),
-    ScrollDisplayer: require("./displayers/scrolldisplayer"),
-    StaticDisplayer: require("./displayers/staticdisplayer"),
+    Widget: require("./widget"),
+    ScrollWidget: require("./widgets/scrollwidget"),
     InfiniteScrollWidget: require("./widgets/infinitescrollwidget"),
     QueryInputWidget: require("./widgets/queryinputwidget"),
     Controller: require("./controller")
@@ -879,7 +616,7 @@ shaped by template
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./displayer":3,"./displayers/scrolldisplayer":4,"./displayers/staticdisplayer":5,"./widgets/infinitescrollwidget":11,"./widgets/queryinputwidget":12}],7:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./widget":8,"./widgets/infinitescrollwidget":9,"./widgets/queryinputwidget":10,"./widgets/scrollwidget":11}],4:[function(require,module,exports){
 (function() {
   var dfScroll, extend;
 
@@ -891,7 +628,7 @@ shaped by template
       direction: "vertical",
       scrollOffset: 50
     };
-    o = extend(o, defaultOptions);
+    o = extend(defaultOptions, o);
     container = document.querySelector(container);
     content = container.children[0];
     throttle = function(type, name, obj) {
@@ -934,7 +671,7 @@ shaped by template
 
 }).call(this);
 
-},{"./extend":9}],8:[function(require,module,exports){
+},{"./extend":6}],5:[function(require,module,exports){
 (function() {
   var dfTypeWatch, extend;
 
@@ -1000,7 +737,7 @@ shaped by template
 
 }).call(this);
 
-},{"./extend":9}],9:[function(require,module,exports){
+},{"./extend":6}],6:[function(require,module,exports){
 (function() {
   module.exports = {
     extend: function() {
@@ -1020,7 +757,7 @@ shaped by template
 
 }).call(this);
 
-},{}],10:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 
 /*
  * author: @ecoslado
@@ -1120,7 +857,132 @@ shaped by template
 
 }).call(this);
 
-},{}],11:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
+
+/*
+widget.coffee
+author: @ecoslado
+2015 11 10
+ */
+
+
+/*
+Widget
+This class receives the search
+results and paint them in a container
+shaped by template
+ */
+
+(function() {
+  var Emitter, Widget, addHelpers, emitter;
+
+  Emitter = require('tiny-emitter');
+
+  emitter = new Emitter;
+
+  addHelpers = require("./util/helpers").addHelpers;
+
+  Widget = (function() {
+
+    /*
+    constructor
+    
+    @param {String} container
+    @param {String|Function} template
+    @param {Object} extraOptions 
+    @api public
+     */
+    function Widget(container, template, extraOptions) {
+      if (extraOptions == null) {
+        extraOptions = {};
+      }
+      this.container = container;
+      this.handlebars = require("handlebars");
+      addHelpers(this.handlebars, extraOptions.urlParams, extraOptions.currency, extraOptions.translations, extraOptions.helpers);
+      if (template.constructor === String) {
+        this.template = this.handlebars.compile(template);
+      } else if (template instanceof Function) {
+        this.template = template;
+      } else {
+        throw Error("The provided template is not the right type. String or rendered handlebars expected.");
+      }
+    }
+
+
+    /*
+    start
+    
+    This is the function where bind the
+    events to DOM elements. In Widget
+    is dummy. To be overriden.
+     */
+
+    Widget.prototype.start = function() {};
+
+
+    /*
+    render
+    
+    This function will be called when search and
+    getPage function si called in controller.
+    In Widget is dummy. To be overriden.
+    
+    @param {Object} res
+    @api public
+     */
+
+    Widget.prototype.render = function(res) {};
+
+
+    /*
+    renderMore
+    
+    This function will be called when nextPage
+    function si called in controller.
+    In Widget is dummy. To be overriden.
+    @param {Object} res
+    @api public
+     */
+
+    Widget.prototype.renderNext = function(res) {};
+
+
+    /*
+    bind
+    
+    Method to add and event listener
+    @param {String} event
+    @param {Function} callback
+    @api public
+     */
+
+    Widget.prototype.bind = function(event, callback) {
+      return emitter.on(event, callback);
+    };
+
+
+    /*
+    trigger
+    
+    Method to trigger an event
+    @param {String} event
+    @param {Array} params
+    @api public
+     */
+
+    Widget.prototype.trigger = function(event, params) {
+      return emitter.emit(event, params);
+    };
+
+    return Widget;
+
+  })();
+
+  module.exports = Widget;
+
+}).call(this);
+
+},{"./util/helpers":7,"handlebars":41,"tiny-emitter":54}],9:[function(require,module,exports){
 
 /*
 infinitescrollwidget.coffee
@@ -1139,16 +1001,30 @@ bottom
  */
 
 (function() {
-  var InfiniteScrollWidget, ScrollDisplayer, dfScroll,
+  var InfiniteScrollWidget, Widget, dfScroll,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  ScrollDisplayer = require("../displayers/scrolldisplayer");
+  Widget = require("../widget");
 
   dfScroll = require("../util/dfscroll");
 
   InfiniteScrollWidget = (function(superClass) {
     extend(InfiniteScrollWidget, superClass);
+
+
+    /*
+    constructor
+    
+    just assign wrapper property for scrolling and 
+    calls super constructor.
+    
+    @param {String} wrapper
+    @param {String} container
+    @param {String|Function} template
+    @param {Object} extraOptions 
+    @api public
+     */
 
     function InfiniteScrollWidget(wrapper, container, template, options) {
       this.wrapper = wrapper;
@@ -1164,21 +1040,53 @@ bottom
         }
       });
       return this.bind('df:search', function() {
-        return $(this.container).animate({
-          scrollTop: 0
-        }, 'quick');
+        return document.querySelector(_this.wrapper).scrollTop = 0;
       });
+    };
+
+
+    /*
+    render
+    
+    Replaces the older results in container with
+    the given
+    
+    @param {Object} res
+    @api public
+     */
+
+    InfiniteScrollWidget.prototype.render = function(res) {
+      var html;
+      html = this.template(res);
+      document.querySelector(this.container).innerHTML = html;
+      return this.trigger("df:results_rendered", res);
+    };
+
+
+    /*
+    renderNext
+    
+    Appends results to the older in container
+    @param {Object} res
+    @api public
+     */
+
+    InfiniteScrollWidget.prototype.renderNext = function(res) {
+      var html;
+      html = this.template(res);
+      document.querySelector(this.container).insertAdjacentHTML('beforeend', html);
+      return this.trigger("df:results_rendered", res);
     };
 
     return InfiniteScrollWidget;
 
-  })(ScrollDisplayer);
+  })(Widget);
 
   module.exports = InfiniteScrollWidget;
 
 }).call(this);
 
-},{"../displayers/scrolldisplayer":4,"../util/dfscroll":7}],12:[function(require,module,exports){
+},{"../util/dfscroll":4,"../widget":8}],10:[function(require,module,exports){
 
 /*
 queryinputwidget.coffee
@@ -1187,13 +1095,13 @@ author: @ecoslado
  */
 
 (function() {
-  var Displayer, QueryInputWidget, dfTypeWatch,
+  var QueryInputWidget, Widget, dfTypeWatch,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   dfTypeWatch = require('../util/dftypewatch');
 
-  Displayer = require('../displayer');
+  Widget = require('../widget');
 
 
   /*
@@ -1212,10 +1120,6 @@ author: @ecoslado
       this.queryInput = queryInput;
     }
 
-    QueryInputWidget.prototype.render = function(res) {};
-
-    QueryInputWidget.prototype.renderNext = function(res) {};
-
     QueryInputWidget.prototype.start = function() {
       var _this;
       _this = this;
@@ -1232,13 +1136,87 @@ author: @ecoslado
 
     return QueryInputWidget;
 
-  })(Displayer);
+  })(Widget);
 
   module.exports = QueryInputWidget;
 
 }).call(this);
 
-},{"../displayer":3,"../util/dftypewatch":8}],13:[function(require,module,exports){
+},{"../util/dftypewatch":5,"../widget":8}],11:[function(require,module,exports){
+
+/*
+scrollwidget.coffee
+author: @ecoslado
+2015 11 10
+ */
+
+
+/*
+ScrollWidget
+This class receives the search
+results and paint them in a container
+shaped by template.
+ */
+
+(function() {
+  var ScrollWidget, Widget, dfScroll,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  Widget = require("../widget");
+
+  dfScroll = require("../util/dfscroll");
+
+  ScrollWidget = (function(superClass) {
+    extend(ScrollWidget, superClass);
+
+    function ScrollWidget() {
+      return ScrollWidget.__super__.constructor.apply(this, arguments);
+    }
+
+
+    /*
+    render
+    
+    Replaces the older results in container with
+    the given
+    
+    @param {Object} res
+    @api public
+     */
+
+    ScrollWidget.prototype.render = function(res) {
+      var html;
+      html = this.template(res);
+      document.querySelector(this.container).innerHTML = html;
+      return this.trigger("df:results_rendered", res);
+    };
+
+
+    /*
+    renderNext
+    
+    Appends results to the older in container
+    @param {Object} res
+    @api public
+     */
+
+    ScrollWidget.prototype.renderNext = function(res) {
+      var html;
+      html = this.template(res);
+      document.querySelector(this.container).insertAdjacentHTML('beforeend', html);
+      return this.trigger("df:results_rendered", res);
+    };
+
+    return ScrollWidget;
+
+  })(Widget);
+
+  module.exports = ScrollWidget;
+
+}).call(this);
+
+},{"../util/dfscroll":4,"../widget":8}],12:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1305,7 +1283,7 @@ exports['default'] = inst;
 module.exports = exports['default'];
 
 
-},{"./handlebars.runtime":14,"./handlebars/compiler/ast":16,"./handlebars/compiler/base":17,"./handlebars/compiler/compiler":19,"./handlebars/compiler/javascript-compiler":21,"./handlebars/compiler/visitor":24,"./handlebars/no-conflict":38}],14:[function(require,module,exports){
+},{"./handlebars.runtime":13,"./handlebars/compiler/ast":15,"./handlebars/compiler/base":16,"./handlebars/compiler/compiler":18,"./handlebars/compiler/javascript-compiler":20,"./handlebars/compiler/visitor":23,"./handlebars/no-conflict":37}],13:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1374,7 +1352,7 @@ exports['default'] = inst;
 module.exports = exports['default'];
 
 
-},{"./handlebars/base":15,"./handlebars/exception":28,"./handlebars/no-conflict":38,"./handlebars/runtime":39,"./handlebars/safe-string":40,"./handlebars/utils":41}],15:[function(require,module,exports){
+},{"./handlebars/base":14,"./handlebars/exception":27,"./handlebars/no-conflict":37,"./handlebars/runtime":38,"./handlebars/safe-string":39,"./handlebars/utils":40}],14:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1480,7 +1458,7 @@ exports.createFrame = _utils.createFrame;
 exports.logger = _logger2['default'];
 
 
-},{"./decorators":26,"./exception":28,"./helpers":29,"./logger":37,"./utils":41}],16:[function(require,module,exports){
+},{"./decorators":25,"./exception":27,"./helpers":28,"./logger":36,"./utils":40}],15:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1513,7 +1491,7 @@ exports['default'] = AST;
 module.exports = exports['default'];
 
 
-},{}],17:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1563,7 +1541,7 @@ function parse(input, options) {
 }
 
 
-},{"../utils":41,"./helpers":20,"./parser":22,"./whitespace-control":25}],18:[function(require,module,exports){
+},{"../utils":40,"./helpers":19,"./parser":21,"./whitespace-control":24}],17:[function(require,module,exports){
 /* global define */
 'use strict';
 
@@ -1731,7 +1709,7 @@ exports['default'] = CodeGen;
 module.exports = exports['default'];
 
 
-},{"../utils":41,"source-map":43}],19:[function(require,module,exports){
+},{"../utils":40,"source-map":42}],18:[function(require,module,exports){
 /* eslint-disable new-cap */
 
 'use strict';
@@ -2305,7 +2283,7 @@ function transformLiteralToPath(sexpr) {
 }
 
 
-},{"../exception":28,"../utils":41,"./ast":16}],20:[function(require,module,exports){
+},{"../exception":27,"../utils":40,"./ast":15}],19:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2537,7 +2515,7 @@ function preparePartialBlock(open, program, close, locInfo) {
 }
 
 
-},{"../exception":28}],21:[function(require,module,exports){
+},{"../exception":27}],20:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3665,7 +3643,7 @@ exports['default'] = JavaScriptCompiler;
 module.exports = exports['default'];
 
 
-},{"../base":15,"../exception":28,"../utils":41,"./code-gen":18}],22:[function(require,module,exports){
+},{"../base":14,"../exception":27,"../utils":40,"./code-gen":17}],21:[function(require,module,exports){
 /* istanbul ignore next */
 /* Jison generated parser */
 "use strict";
@@ -4405,7 +4383,7 @@ var handlebars = (function () {
 exports['default'] = handlebars;
 
 
-},{}],23:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 /* eslint-disable new-cap */
 'use strict';
 
@@ -4593,7 +4571,7 @@ PrintVisitor.prototype.HashPair = function (pair) {
 /* eslint-enable new-cap */
 
 
-},{"./visitor":24}],24:[function(require,module,exports){
+},{"./visitor":23}],23:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -4735,7 +4713,7 @@ exports['default'] = Visitor;
 module.exports = exports['default'];
 
 
-},{"../exception":28}],25:[function(require,module,exports){
+},{"../exception":27}],24:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -4958,7 +4936,7 @@ exports['default'] = WhitespaceControl;
 module.exports = exports['default'];
 
 
-},{"./visitor":24}],26:[function(require,module,exports){
+},{"./visitor":23}],25:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -4976,7 +4954,7 @@ function registerDefaultDecorators(instance) {
 }
 
 
-},{"./decorators/inline":27}],27:[function(require,module,exports){
+},{"./decorators/inline":26}],26:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5007,7 +4985,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":41}],28:[function(require,module,exports){
+},{"../utils":40}],27:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5049,7 +5027,7 @@ exports['default'] = Exception;
 module.exports = exports['default'];
 
 
-},{}],29:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5097,7 +5075,7 @@ function registerDefaultHelpers(instance) {
 }
 
 
-},{"./helpers/block-helper-missing":30,"./helpers/each":31,"./helpers/helper-missing":32,"./helpers/if":33,"./helpers/log":34,"./helpers/lookup":35,"./helpers/with":36}],30:[function(require,module,exports){
+},{"./helpers/block-helper-missing":29,"./helpers/each":30,"./helpers/helper-missing":31,"./helpers/if":32,"./helpers/log":33,"./helpers/lookup":34,"./helpers/with":35}],29:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5138,7 +5116,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":41}],31:[function(require,module,exports){
+},{"../utils":40}],30:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5234,7 +5212,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../exception":28,"../utils":41}],32:[function(require,module,exports){
+},{"../exception":27,"../utils":40}],31:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5261,7 +5239,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../exception":28}],33:[function(require,module,exports){
+},{"../exception":27}],32:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5292,7 +5270,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":41}],34:[function(require,module,exports){
+},{"../utils":40}],33:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5320,7 +5298,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{}],35:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5334,7 +5312,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{}],36:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5369,7 +5347,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":41}],37:[function(require,module,exports){
+},{"../utils":40}],36:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5418,7 +5396,7 @@ exports['default'] = logger;
 module.exports = exports['default'];
 
 
-},{"./utils":41}],38:[function(require,module,exports){
+},{"./utils":40}],37:[function(require,module,exports){
 (function (global){
 /* global window */
 'use strict';
@@ -5441,7 +5419,7 @@ module.exports = exports['default'];
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],39:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5735,7 +5713,7 @@ function executeDecorators(fn, prog, container, depths, data, blockParams) {
 }
 
 
-},{"./base":15,"./exception":28,"./utils":41}],40:[function(require,module,exports){
+},{"./base":14,"./exception":27,"./utils":40}],39:[function(require,module,exports){
 // Build out our basic SafeString type
 'use strict';
 
@@ -5752,7 +5730,7 @@ exports['default'] = SafeString;
 module.exports = exports['default'];
 
 
-},{}],41:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5878,7 +5856,7 @@ function appendContextPath(contextPath, id) {
 }
 
 
-},{}],42:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 // USAGE:
 // var handlebars = require('handlebars');
 /* eslint-disable no-var */
@@ -5905,7 +5883,7 @@ if (typeof require !== 'undefined' && require.extensions) {
   require.extensions['.hbs'] = extension;
 }
 
-},{"../dist/cjs/handlebars":13,"../dist/cjs/handlebars/compiler/printer":23,"fs":56}],43:[function(require,module,exports){
+},{"../dist/cjs/handlebars":12,"../dist/cjs/handlebars/compiler/printer":22,"fs":55}],42:[function(require,module,exports){
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
@@ -5915,7 +5893,7 @@ exports.SourceMapGenerator = require('./source-map/source-map-generator').Source
 exports.SourceMapConsumer = require('./source-map/source-map-consumer').SourceMapConsumer;
 exports.SourceNode = require('./source-map/source-node').SourceNode;
 
-},{"./source-map/source-map-consumer":50,"./source-map/source-map-generator":51,"./source-map/source-node":52}],44:[function(require,module,exports){
+},{"./source-map/source-map-consumer":49,"./source-map/source-map-generator":50,"./source-map/source-node":51}],43:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -6024,7 +6002,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./util":53,"amdefine":54}],45:[function(require,module,exports){
+},{"./util":52,"amdefine":53}],44:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -6172,7 +6150,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./base64":46,"amdefine":54}],46:[function(require,module,exports){
+},{"./base64":45,"amdefine":53}],45:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -6247,7 +6225,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":54}],47:[function(require,module,exports){
+},{"amdefine":53}],46:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -6366,7 +6344,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":54}],48:[function(require,module,exports){
+},{"amdefine":53}],47:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2014 Mozilla Foundation and contributors
@@ -6454,7 +6432,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./util":53,"amdefine":54}],49:[function(require,module,exports){
+},{"./util":52,"amdefine":53}],48:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -6576,7 +6554,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":54}],50:[function(require,module,exports){
+},{"amdefine":53}],49:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -7655,7 +7633,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./array-set":44,"./base64-vlq":45,"./binary-search":47,"./quick-sort":49,"./util":53,"amdefine":54}],51:[function(require,module,exports){
+},{"./array-set":43,"./base64-vlq":44,"./binary-search":46,"./quick-sort":48,"./util":52,"amdefine":53}],50:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -8056,7 +8034,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./array-set":44,"./base64-vlq":45,"./mapping-list":48,"./util":53,"amdefine":54}],52:[function(require,module,exports){
+},{"./array-set":43,"./base64-vlq":44,"./mapping-list":47,"./util":52,"amdefine":53}],51:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -8472,7 +8450,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./source-map-generator":51,"./util":53,"amdefine":54}],53:[function(require,module,exports){
+},{"./source-map-generator":50,"./util":52,"amdefine":53}],52:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -8844,7 +8822,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":54}],54:[function(require,module,exports){
+},{"amdefine":53}],53:[function(require,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 1.0.0 Copyright (c) 2011-2015, The Dojo Foundation All Rights Reserved.
@@ -9149,7 +9127,7 @@ function amdefine(module, requireFn) {
 module.exports = amdefine;
 
 }).call(this,require('_process'),"/node_modules/handlebars/node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"_process":70,"path":69}],55:[function(require,module,exports){
+},{"_process":69,"path":68}],54:[function(require,module,exports){
 function E () {
 	// Keep this empty so it's easier to inherit from
   // (via https://github.com/lipsmack from https://github.com/scottcorgan/tiny-emitter/issues/3)
@@ -9217,11 +9195,11 @@ E.prototype = {
 
 module.exports = E;
 
-},{}],56:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 
-},{}],57:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],58:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
+arguments[4][55][0].apply(exports,arguments)
+},{"dup":55}],57:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -10554,7 +10532,7 @@ function decodeUtf8Char (str) {
   }
 }
 
-},{"base64-js":59,"ieee754":60,"is-array":61}],59:[function(require,module,exports){
+},{"base64-js":58,"ieee754":59,"is-array":60}],58:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -10680,7 +10658,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],60:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -10766,7 +10744,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],61:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 
 /**
  * isArray
@@ -10801,7 +10779,7 @@ module.exports = isArray || function (val) {
   return !! val && '[object Array]' == str.call(val);
 };
 
-},{}],62:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -11104,7 +11082,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],63:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
@@ -11250,7 +11228,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":64,"events":62,"url":88}],64:[function(require,module,exports){
+},{"./lib/request":63,"events":61,"url":87}],63:[function(require,module,exports){
 var Stream = require('stream');
 var Response = require('./response');
 var Base64 = require('Base64');
@@ -11461,7 +11439,7 @@ var isXHR2Compatible = function (obj) {
     if (typeof FormData !== 'undefined' && obj instanceof FormData) return true;
 };
 
-},{"./response":65,"Base64":66,"inherits":67,"stream":86}],65:[function(require,module,exports){
+},{"./response":64,"Base64":65,"inherits":66,"stream":85}],64:[function(require,module,exports){
 var Stream = require('stream');
 var util = require('util');
 
@@ -11583,7 +11561,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":86,"util":90}],66:[function(require,module,exports){
+},{"stream":85,"util":89}],65:[function(require,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -11645,7 +11623,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],67:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -11670,12 +11648,12 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],68:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],69:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -11903,7 +11881,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":70}],70:[function(require,module,exports){
+},{"_process":69}],69:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -11963,7 +11941,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],71:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -12474,7 +12452,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],72:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -12560,7 +12538,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],73:[function(require,module,exports){
+},{}],72:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -12647,16 +12625,16 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],74:[function(require,module,exports){
+},{}],73:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":72,"./encode":73}],75:[function(require,module,exports){
+},{"./decode":71,"./encode":72}],74:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":76}],76:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":75}],75:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -12749,7 +12727,7 @@ function forEach (xs, f) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_readable":78,"./_stream_writable":80,"_process":70,"core-util-is":81,"inherits":67}],77:[function(require,module,exports){
+},{"./_stream_readable":77,"./_stream_writable":79,"_process":69,"core-util-is":80,"inherits":66}],76:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -12797,7 +12775,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":79,"core-util-is":81,"inherits":67}],78:[function(require,module,exports){
+},{"./_stream_transform":78,"core-util-is":80,"inherits":66}],77:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -13752,7 +13730,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":76,"_process":70,"buffer":58,"core-util-is":81,"events":62,"inherits":67,"isarray":68,"stream":86,"string_decoder/":87,"util":57}],79:[function(require,module,exports){
+},{"./_stream_duplex":75,"_process":69,"buffer":57,"core-util-is":80,"events":61,"inherits":66,"isarray":67,"stream":85,"string_decoder/":86,"util":56}],78:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -13963,7 +13941,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":76,"core-util-is":81,"inherits":67}],80:[function(require,module,exports){
+},{"./_stream_duplex":75,"core-util-is":80,"inherits":66}],79:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -14444,7 +14422,7 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":76,"_process":70,"buffer":58,"core-util-is":81,"inherits":67,"stream":86}],81:[function(require,module,exports){
+},{"./_stream_duplex":75,"_process":69,"buffer":57,"core-util-is":80,"inherits":66,"stream":85}],80:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -14554,10 +14532,10 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":58}],82:[function(require,module,exports){
+},{"buffer":57}],81:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":77}],83:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":76}],82:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = require('stream');
 exports.Readable = exports;
@@ -14566,13 +14544,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":76,"./lib/_stream_passthrough.js":77,"./lib/_stream_readable.js":78,"./lib/_stream_transform.js":79,"./lib/_stream_writable.js":80,"stream":86}],84:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":75,"./lib/_stream_passthrough.js":76,"./lib/_stream_readable.js":77,"./lib/_stream_transform.js":78,"./lib/_stream_writable.js":79,"stream":85}],83:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":79}],85:[function(require,module,exports){
+},{"./lib/_stream_transform.js":78}],84:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":80}],86:[function(require,module,exports){
+},{"./lib/_stream_writable.js":79}],85:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -14701,7 +14679,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":62,"inherits":67,"readable-stream/duplex.js":75,"readable-stream/passthrough.js":82,"readable-stream/readable.js":83,"readable-stream/transform.js":84,"readable-stream/writable.js":85}],87:[function(require,module,exports){
+},{"events":61,"inherits":66,"readable-stream/duplex.js":74,"readable-stream/passthrough.js":81,"readable-stream/readable.js":82,"readable-stream/transform.js":83,"readable-stream/writable.js":84}],86:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -14924,7 +14902,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":58}],88:[function(require,module,exports){
+},{"buffer":57}],87:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -15633,14 +15611,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":71,"querystring":74}],89:[function(require,module,exports){
+},{"punycode":70,"querystring":73}],88:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],90:[function(require,module,exports){
+},{}],89:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -16230,5 +16208,5 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":89,"_process":70,"inherits":67}]},{},[6])(6)
+},{"./support/isBuffer":88,"_process":69,"inherits":66}]},{},[3])(3)
 });

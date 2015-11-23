@@ -4,11 +4,8 @@ author: @ecoslado
 2015 11 21
 ###
 
-
 dfTypeWatch = require '../util/dftypewatch'
-Displayer = require '../displayer'
-
-
+Widget = require '../widget'
 
 ###
 QueryInputWidget
@@ -19,11 +16,9 @@ Gets the string from an input when
 receives more than three characters.
 ###
 
-class QueryInputWidget extends Displayer
+class QueryInputWidget extends Widget
 
   constructor: (@queryInput) ->
-  render: (res) ->
-  renderNext: (res) ->  
   
   start: () ->
     _this = this

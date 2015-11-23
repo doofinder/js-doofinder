@@ -23,7 +23,7 @@ class Client
   @param {String} address
   @api public
   ###
-  constructor: (@hashid, apiKey, version, address) ->
+  constructor: (@hashid, apiKey, version, @type, address) ->
     @version ?= version
     @version ?= 5
     @params = {}
@@ -216,6 +216,12 @@ class Client
   makeQueryString: () ->
     # Adding hashid
     querystring = "hashid=#{@hashid}"
+
+    # Adding types
+    if @type and @type instanceof Array
+      querystring += "&type=#{@type.join(',')}"
+    else if @type and @type.constructor == String
+      querystring += "&type=#{@type}"
     
     # Adding params
     for key, value of @params
