@@ -17,6 +17,8 @@
     "grunt-mocha-test": "^0.12.7",
     "handlebars": "^4.0.4",
     "http": "^0.0.0",
+    "ion-rangeslider":  "git://github.com/doofinder/ion.rangeSlider.git",
+    "jquery": "^2.1.4",
     "tiny-emitter": "^1.0.1"
   },
   "devDependencies": {

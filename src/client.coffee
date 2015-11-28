@@ -234,7 +234,7 @@ class Client
       # Range filters
       if value.constructor == Object
         for k, v of value
-          querystring += "&filter[#{key}][#{k}]=#{value}"
+          querystring += "&filter[#{key}][#{k}]=#{v}"
         
       # Terms filters
       if value.constructor == Array

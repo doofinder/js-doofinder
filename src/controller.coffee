@@ -2,13 +2,13 @@
 # Created by Kike Coslado on 26/10/15.
 ###
 
-extend = require('./util/extend').extend
+$ = require("./util/jquery")
 
 ###
 Controller
   
 This class uses the client to
-to retrieve the data and the displayers
+to retrieve the data and the widgets
 to paint them.
 ###  
 class Controller
@@ -16,22 +16,23 @@ class Controller
   Controller constructor
   
   @param {doofinder.Client} client
-  @param {doofinder.Displayer | Array} displayers
+  @param {doofinder.widget | Array} widgets
   @param {Object} initialParams
   @api public
   ###
-  constructor: (client, displayers, initialParams = {}) ->
+  constructor: (client, widgets, initialParams = {}) ->
     @client = client
-    @displayers = []
+    @widgets = []
     @__started = false
-    if displayers instanceof Array
-      for displayer in displayers
-        @addDisplayer(displayer)
+    if widgets instanceof Array
+      for widget in widgets
+        @addWidget(widget)
+
     else
-      @addDisplayer(displayers)
+      @addWidget(widgets)
     
     # Initial status
-    @initialParams = extend(initialParams, {query_counter: 0})
+    @initialParams = $.extend true, initialParams, {query_counter: 0}
     @status =
       params: @initialParams
       query: ''
@@ -41,7 +42,7 @@ class Controller
   ###
   __triggerAll
   this function triggers an event
-  for every resultDisplayer
+  for every resultwidget
   
   @param {String} event: the event name
   @param {Array} params: the params will be passed
@@ -49,13 +50,13 @@ class Controller
   @api private
   ###
   __triggerAll: (event, params) ->
-    for displayer in @displayers
-      displayer.trigger(event, params)
+    for widget in @widgets
+      widget.trigger(event, params)
 
   ###
   __search
   this method invokes Client's search method for
-  retrieving the data and use Displayer's replace or 
+  retrieving the data and use widget's replace or 
   append to show them.
   
   @param {String} event: the event name
@@ -78,11 +79,11 @@ class Controller
       # Whe show the results only when query counter
       # belongs to a the present request
       if res.query_counter == self.status.params.query_counter
-        for displayer in self.displayers
+        for widget in self.widgets
           if next
-            displayer.renderNext res
+            widget.renderNext res
           else
-            displayer.render res
+            widget.render res
         
         # I check if I reached the last page.    
         if res.results.length < self.status.params.rpp
@@ -107,7 +108,7 @@ class Controller
       @status.query = query
     if not @status
       @status = {}  
-    @status.params = extend(@initialParams, params)
+    @status.params = $.extend true, @initialParams, params
     @status.currentPage = 1
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
@@ -153,6 +154,7 @@ class Controller
   ###
 
   refresh: () ->
+    @__triggerAll "df:search"
     @__search()
 
   ###
@@ -165,12 +167,11 @@ class Controller
   @api public
   ###
   addFilter: (key, value) ->
-    if value.constructor != Object or value.constructor != String
-      throw Error "wrong value. Object or String expected, #{value.constructor} given"
-
+    #if value.constructor != Object and value.constructor != String
+     # throw Error "wrong value. Object or String expected, #{value.constructor} given"
+    @status.currentPage = 1
     if not @status.params.filters
       @status.params.filters = {}
-
     if value.constructor == Object
       @status.params.filters[key] = value
     else if not @status.params.filters[key]
@@ -188,36 +189,40 @@ class Controller
   @api public
   ###
   removeFilter: (key, value) ->
+    @status.currentPage = 1
     if not @status.params.filters and not @status.params.filters[key]
       # DO NOTHING
 
     else if @status.params.filters[key].constructor == Object
       delete @status.params.filters[key]
 
-    else if @status.params.filters[key].constructor == Array and @status.params.filters[key].indexOf(value) >= 0
+    else if @status.params.filters[key].constructor == Array 
       index = @status.params.filters[key].indexOf(value)
-      @status.params.filters[key].pop(index)
+      while index >= 0
+        @status.params.filters[key].pop(index)
+        # Just in case it is repeated
+        index = @status.params.filters[key].indexOf(value)
 
   ###
-  addDisplayer
+  addwidget
 
-  Adds a new displayer to the controller and reference the 
-  controller from the displayer.
+  Adds a new widget to the controller and reference the 
+  controller from the widget.
 
-  @param {doofinder.Displayer} displayer: the displayer you are adding.
+  @param {doofinder.widget} widget: the widget you are adding.
   @api public
   ###
 
-  addDisplayer: (displayer) ->
-    @displayers.push(displayer)
-    displayer.controller = this
+  addWidget: (widget) ->
+    @widgets.push(widget)
+    widget.controller = this
     if @__started
-      displayer.start()
+      widget.start()
 
   ###
   start
 
-  Executes all displayer's start methods. 
+  Executes all widget's start methods. 
   These methods bind the events with the callbacks
   who perform the searches.
 
@@ -225,8 +230,8 @@ class Controller
   ###
 
   start: () ->
-    for displayer in @displayers
-      displayer.start()
+    for widget in @widgets
+      widget.start()
     @__started = true
 
 module.exports = Controller
