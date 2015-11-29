@@ -216,22 +216,6 @@ class Controller
   addWidget: (widget) ->
     @widgets.push(widget)
     widget.controller = this
-    if @__started
-      widget.start()
-
-  ###
-  start
-
-  Executes all widget's start methods. 
-  These methods bind the events with the callbacks
-  who perform the searches.
-
-  @api public
-  ###
-
-  start: () ->
-    for widget in @widgets
-      widget.start()
-    @__started = true
+    widget.start()
 
 module.exports = Controller

@@ -15,9 +15,9 @@ $ = require "jquery"
 
 class TermFacet extends Display
 
-  constructor: (container, template, @name, options) ->
+  constructor: (container, @name, options = {}) ->
     @selected = {}
-    if not template
+    if not options.template
       template = '{{#if @index}}' + 
             '<hr class="df-separator">' +
             '{{/if}}' +
@@ -32,6 +32,8 @@ class TermFacet extends Display
             'class="df-facet__count">{{ count }}</span></a>'+
             '</li>'+
             '{{/each}}'
+    else
+      template = options.template
 
     super(container, template, options)
   

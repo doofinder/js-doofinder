@@ -23,15 +23,17 @@ class Results extends Display
   @param {Object} extraOptions 
   @api public
   ###
-  constructor: (container, template, extraOptions = {}) ->
-  	if not template
+  constructor: (container, options = {}) ->
+  	if not options.template
   	  template = '<ul>{{#each results}}' +
         '<li>{{#each this}}' +
         '<b>{{@key}}</b>:{{this}}<br></li>' +
         '{{/each}}</div>' +
         '{{/each}}' +
         '</ul>'
-  	super(container, template, extraOptions)
+    else
+      template = options.template
+  	super(container, template, options)
 
 
   render: (res) ->

@@ -24,9 +24,10 @@ class QueryInput extends Widget
   Just to set the queryInput
 
   @param {String} queryInput
+  @param {Object} options
   @api public
   ###
-  constructor: (@queryInput) ->
+  constructor: (@queryInput, @options = {}) ->
   
   ###
   start
@@ -37,12 +38,14 @@ class QueryInput extends Widget
   ###
   start: () ->
     _this = this
-    $(@queryInput).typeWatch 
+    options = $.extend true,
       callback: () ->
         query = document.querySelector(_this.queryInput).value
         _this.controller.search(query)
-            
       wait: 43
-      captureLength: 3
+      captureLength: 3,
+      @options
+
+    $(@queryInput).typeWatch options
 
 module.exports = QueryInput

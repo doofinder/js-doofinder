@@ -579,30 +579,7 @@ author: @ecoslado
     Controller.prototype.addWidget = function(widget) {
       this.widgets.push(widget);
       widget.controller = this;
-      if (this.__started) {
-        return widget.start();
-      }
-    };
-
-
-    /*
-    start
-    
-    Executes all widget's start methods. 
-    These methods bind the events with the callbacks
-    who perform the searches.
-    
-    @api public
-     */
-
-    Controller.prototype.start = function() {
-      var i, len, ref, widget;
-      ref = this.widgets;
-      for (i = 0, len = ref.length; i < len; i++) {
-        widget = ref[i];
-        widget.start();
-      }
-      return this.__started = true;
+      return widget.start();
     };
 
     return Controller;
@@ -1131,10 +1108,13 @@ them. Manages the filtering.
   RangeFacet = (function(superClass) {
     extend(RangeFacet, superClass);
 
-    function RangeFacet(container, template, name, options) {
+    function RangeFacet(container, name, options) {
+      var template;
       this.name = name;
-      if (!template) {
+      if (!options.template) {
         template = '<div class="df-panel df-widget" data-facet="key">' + '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>' + '<div class="df-panel__content">' + '<input class="df-facet" type="text" name="{{name}}" value=""' + 'data-facet="range" data-key="{{name}}">' + '</div>' + '</div>';
+      } else {
+        template = options.template;
       }
       RangeFacet.__super__.constructor.call(this, container, template, options);
     }
@@ -1218,11 +1198,17 @@ paint them. Manages the filtering.
   TermFacet = (function(superClass) {
     extend(TermFacet, superClass);
 
-    function TermFacet(container, template, name, options) {
+    function TermFacet(container, name, options) {
+      var template;
       this.name = name;
+      if (options == null) {
+        options = {};
+      }
       this.selected = {};
-      if (!template) {
+      if (!options.template) {
         template = '{{#if @index}}' + '<hr class="df-separator">' + '{{/if}}' + '<div class="df-facets">' + '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>' + '<div class="df-facets__content">' + '<ul>' + '{{#each terms}}' + '<li>' + '<a href="#" class="df-facet {{#if selected}}df-facet--active{{/if}}" data-facet="{{../name}}"' + 'data-value="{{ term }}">{{ term }} <span' + 'class="df-facet__count">{{ count }}</span></a>' + '</li>' + '{{/each}}';
+      } else {
+        template = options.template;
       }
       TermFacet.__super__.constructor.call(this, container, template, options);
     }
@@ -1322,11 +1308,13 @@ author: @ecoslado
     Just to set the queryInput
     
     @param {String} queryInput
+    @param {Object} options
     @api public
      */
 
-    function QueryInput(queryInput) {
+    function QueryInput(queryInput, options1) {
       this.queryInput = queryInput;
+      this.options = options1 != null ? options1 : {};
     }
 
 
@@ -1339,9 +1327,9 @@ author: @ecoslado
      */
 
     QueryInput.prototype.start = function() {
-      var _this;
+      var _this, options;
       _this = this;
-      return $(this.queryInput).typeWatch({
+      options = $.extend(true, {
         callback: function() {
           var query;
           query = document.querySelector(_this.queryInput).value;
@@ -1349,7 +1337,8 @@ author: @ecoslado
         },
         wait: 43,
         captureLength: 3
-      });
+      }, this.options);
+      return $(this.queryInput).typeWatch(options);
     };
 
     return QueryInput;
@@ -1397,14 +1386,17 @@ replaces the current content.
     @api public
      */
 
-    function Results(container, template, extraOptions) {
-      if (extraOptions == null) {
-        extraOptions = {};
+    function Results(container, options) {
+      var template;
+      if (options == null) {
+        options = {};
       }
-      if (!template) {
+      if (!options.template) {
         template = '<ul>{{#each results}}' + '<li>{{#each this}}' + '<b>{{@key}}</b>:{{this}}<br></li>' + '{{/each}}</div>' + '{{/each}}' + '</ul>';
+      } else {
+        template = options.template;
       }
-      Results.__super__.constructor.call(this, container, template, extraOptions);
+      Results.__super__.constructor.call(this, container, template, options);
     }
 
     Results.prototype.render = function(res) {
@@ -1462,14 +1454,17 @@ replaces the current content.
     @api public
      */
 
-    function ScrollResults(container, template, extraOptions) {
-      if (extraOptions == null) {
-        extraOptions = {};
+    function ScrollResults(container, options) {
+      var template;
+      if (options == null) {
+        options = {};
       }
-      if (!template) {
+      if (!options.template) {
         template = '<ul>{{#each results}}' + '<li>{{#each this}}' + '<b>{{@key}}</b>:{{this}}<br></li>' + '{{/each}}</div>' + '{{/each}}' + '</ul>';
+      } else {
+        template = options.template;
       }
-      ScrollResults.__super__.constructor.call(this, container, template, extraOptions);
+      ScrollResults.__super__.constructor.call(this, container, template, options);
     }
 
     ScrollResults.prototype.render = function(res) {
