@@ -190,7 +190,7 @@ wait | `Number` | milliseconds that the widget waits to check the input content 
 captureLength | `Number` | number of Requireds typed when first search is performed
 
 
-### widgets.results.Results
+### widgets.Results
 This widget shows the results in a DOM node. When a new search or filter is done or a new page is requested the new content will replace the older.
 
 #### constructor
@@ -209,7 +209,7 @@ templateVars | `Object` | Extra info you want to render in the template.
 
 
 
-### widgets.results.ScrollResults
+### widgets.ScrollResults
 
 This widget render the results in an DOM node with an inner scroll.
 

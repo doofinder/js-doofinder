@@ -57,8 +57,8 @@ class Display extends Widget
   @api public
   ###  
   render: (res) ->
-    context = $.extend()
-    html = @template res
+    context = $.extend(true, res, @extraContext || {})
+    html = @template context
     try
       $(@container).html html
     catch 
