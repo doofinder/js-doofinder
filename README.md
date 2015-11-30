@@ -79,7 +79,7 @@ Let's add some functionality to our html view:
     // Instantiation
     var client = new doofinder.Client(hashid, zone);
     var queryInputWidget = new doofinder.widgets.QueryInput(queryInput);
-    var resultsWidget = new doofinder.widgets.ScrollResults(
+    var resultsWidget = new doofinder.widgets.results.ScrollResults(
         scrollWrapper, 
         container
         );
@@ -87,7 +87,7 @@ Let's add some functionality to our html view:
         Client, 
         [queryInputWidget, resultsWidget]
         );
-    controller.start();
+    
 
   });
 
