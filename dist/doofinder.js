@@ -717,7 +717,9 @@ author: @ecoslado
 module.exports = (function($){
    'use strict';
     $.dfScroll = function(container, o){
-        $(container).css("position", "relative");
+        container.css("position", "relative");
+        var content = container.children().first();
+        content.css('overflow', 'hidden');
         // Avoids multiple scroll triggers
         var throttle = function (type, name, obj) {
             var obj = obj || window;
@@ -730,22 +732,22 @@ module.exports = (function($){
                 setTimeout(function () {
                     obj.trigger(name);
                     running = false;
-                }, 250);
+                }, 300);
             };
             obj.on(type, func);
             obj.trigger(name);
         };
         throttle('scroll', 'df:scroll', $(container));
         // Set default options
-        o = $.extend(true, o, $.dfScroll.defaultOptions);
+        o = $.extend(true, $.dfScroll.defaultOptions, o);
+
         // handling scroll event
         container.on('df:scroll', function () {
-            var content = container.children().first();
             //When bottom or right side is about to be reached, callback will be called
             if (['horizontal', 'vertical'].indexOf(o.direction) <= -1){
                 throw Error("Direction is not properly set. It might be 'horizontal' or 'vertical'.")
             }
-
+            
             if ((o.direction == "vertical" &&
                     content.height() - container.height() + content.position().top <= o.scrollOffset) ||
                 (o.direction == "horizontal" &&
@@ -1052,8 +1054,8 @@ replaces the current content.
 
     Display.prototype.render = function(res) {
       var context, html;
-      context = $.extend();
-      html = this.template(res);
+      context = $.extend(true, res, this.extraContext || {});
+      html = this.template(context);
       try {
         return $(this.container).html(html);
       } catch (_error) {
@@ -1536,12 +1538,16 @@ bottom
       var container, scrollWrapperElement;
       this.scrollWrapper = scrollWrapper;
       scrollWrapperElement = $(this.scrollWrapper);
+      this.scrollOptions = options.scrollOptions;
       if (scrollWrapperElement.children().length && !scrollWrapperElement.children().first().attr("id")) {
         scrollWrapperElement.children().first().attr("id", "df-scroll__container");
       } else {
         $(this.scrollWrapper).prepend('<div id="df-scroll__container"></div>');
       }
       container = "#" + (scrollWrapperElement.children().first().attr('id'));
+      if (options.container) {
+        container = options.container;
+      }
       ScrollDisplay.__super__.constructor.call(this, container, template, options);
     }
 
@@ -1554,13 +1560,14 @@ bottom
      */
 
     ScrollDisplay.prototype.start = function() {
-      var _this;
+      var _this, options;
       _this = this;
-      $(this.scrollWrapper).dfScroll({
+      options = $.extend(true, {
         callback: function() {
           return _this.controller.nextPage();
         }
-      });
+      }, this.scrollOptions || {});
+      $(this.scrollWrapper).dfScroll(options);
       return this.bind('df:search', function() {
         return $(_this.scrollWrapper).animate({
           scrollTop: 0

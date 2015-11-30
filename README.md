@@ -101,7 +101,7 @@ Controller is the class that manages client and widgets. Allows you to make diff
   -------- | -------- |---- | ---------------------
   client   | Yes | `doofinder.Client` | The Search API wrapper
   widgets  | Yes | `doofinder.Widget` `Array(doofinder.Widget)` | The widgets for interacting and painting results
-  initialParams | No | `Object` | An object with params that will passed to the client for every search. You can use here all the parameters defined in [Doofinder Search API](http://doofinder.com/en/developer/search-api).
+  searchParameters | No | `Object` | An object with params that will passed to the client for every search. You can use here all the parameters defined in [Doofinder Search API](http://doofinder.com/en/developer/search-api).
 
 #### search
 This method make a query to the Search API and render the results.
@@ -227,7 +227,7 @@ Option | Type | Description
 template | `String` | Template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template.
 
-### widgets.facets.TermFacet
+### widgets.TermFacet
 
 This widget render a term facet in a list of terms. 
 
@@ -236,6 +236,7 @@ This widget render a term facet in a list of terms.
 Argument | Required | Type | Description 
 -------- | --------- | ---- | ---------------------
 container |  Yes | `String` | Results container CSS selector.
+name | Yes | `String`| The facet key.
 options |  No | `Object` | Options to configure the input.
 
 The options to configure the widget are:
@@ -245,7 +246,7 @@ Option | Type | Description
 template | `String` | Template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template.
 
-### widgets.facets.RangeFacet
+### widgets.RangeFacet
 
 This widget render a range facet in a slider. To show it properly is necessary some
 CSS. You can add this stylesheet: 
@@ -257,6 +258,7 @@ https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.c
 Argument | Required | Type | Description 
 -------- | --------- | ---- | ---------------------
 container |  Yes | `String` | Results container CSS selector.
+name | Yes | `String`| The facet key.
 options |  No | `Object` | Options to configure the input.
 
 The options to configure the widget are:

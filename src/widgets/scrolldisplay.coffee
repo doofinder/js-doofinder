@@ -31,6 +31,7 @@ class ScrollDisplay extends Display
   ###
   constructor: (@scrollWrapper, template, options) ->
     scrollWrapperElement = $(@scrollWrapper)
+    @scrollOptions = options.scrollOptions
 
     if scrollWrapperElement.children().length and not scrollWrapperElement.children().first().attr "id"
         scrollWrapperElement.children().first().attr "id", "df-scroll__container"
@@ -40,6 +41,10 @@ class ScrollDisplay extends Display
       $(@scrollWrapper).prepend '<div id="df-scroll__container"></div>'
         
     container = "##{scrollWrapperElement.children().first().attr('id')}"
+    
+    # Overrides container by defined
+    if options.container
+      container = options.container
     super(container, template, options)
 
   ###
@@ -50,9 +55,11 @@ class ScrollDisplay extends Display
   ###
   start: () ->
     _this = this
-    $(@scrollWrapper).dfScroll
-      callback: () -> 
-        _this.controller.nextPage()
+    options = $.extend true,
+      callback: () -> _this.controller.nextPage(),
+      @scrollOptions || {}
+    
+    $(@scrollWrapper).dfScroll options
 
     @bind('df:search', () -> $(_this.scrollWrapper).animate({scrollTop: 0}, "quick"))
 

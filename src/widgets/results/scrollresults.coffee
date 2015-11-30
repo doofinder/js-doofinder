@@ -24,8 +24,8 @@ class ScrollResults extends ScrollDisplay
   @api public
   ###
   constructor: (container, options = {}) ->
-  	if not options.template
-  	  template = '<ul>{{#each results}}' +
+    if not options.template
+      template = '<ul>{{#each results}}' +
         '<li>{{#each this}}' +
         '<b>{{@key}}</b>:{{this}}<br>' +
         '{{/each}}</li>' +
@@ -34,7 +34,7 @@ class ScrollResults extends ScrollDisplay
     else
       template = options.template
 
-  	super(container, template, options)
+    super(container, template, options)
 
   render: (res) ->
     super(res)
