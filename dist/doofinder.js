@@ -593,7 +593,7 @@ author: @ecoslado
 },{"./util/jquery":6}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "0.6.1",
+    version: "0.7.0",
     Client: _dereq_("./client"),
     Widget: _dereq_("./widget"),
     Controller: _dereq_("./controller"),
