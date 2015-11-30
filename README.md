@@ -25,6 +25,11 @@ Is a library that allow you to make requests to Doofinder Search Engines and sho
 ### Downloadable minified javascript file
 https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.min.js
 
+### CSS
+We offer some simple CSS. You can download it in the link
+https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.css
+
+
 ## Quick Start
 
 In this example we'll write a view that will just show results.
@@ -113,6 +118,7 @@ Controller is the class that manages client and widgets. Allows you to make diff
   initialParams | optional | `Object` | An object with params that will passed to the client for every search. You can use here all the parameters defined in [Doofinder Search API](http://doofinder.com/en/developer/search-api).
 
 #### search
+This method make a query to the Search API and render the results.
 
   Argument | Character | Type | Description 
   -------- | --------- | ---- | ---------------------
@@ -120,11 +126,11 @@ Controller is the class that manages client and widgets. Allows you to make diff
   params   | optional  | `Object` | An object with search parameters. You can use here all the parameters defined in [Doofinder Search API](http://doofinder.com/en/developer/search-api).
 
 #### nextPage
-Ask for the next page, so increment the current and send the response to all widget's renderNext methods.
+Ask for the next page, so increment the current and send the response to all widgets to render it.
 
 
 #### getPage
-Ask for a page. Then pass the response to all widget's render methods.
+Ask for a page. Then pass the response to all widgets to render it.
 
   Argument | Character | Type | Description 
   -------- | --------- | ---- | ---------------------
@@ -147,7 +153,7 @@ Removes a filter from the currently applied.
   value | required |`String` `Object` | The filter to remove. This can be a `String`, if the facet is a term facet or an `Object` if it's a range.
 
 #### refresh
-Makes a search with the current filter status. Then, it calls to every widget's render method.
+Makes a search with the current filter status. Then, it calls to every widgets to render it.
 
 #### addWidget
 Adds a widget to the controller after the instantiation.
@@ -219,6 +225,8 @@ extraContext | `Object` | Extra info you want to render in the template.
 
 ### widgets.results.ScrollResults
 
+This widget render the results in an DOM node with an inner scroll.
+
 #### constructor
 
 Argument | Character | Type | Description 
@@ -235,6 +243,8 @@ extraContext | `Object` | Extra info you want to render in the template.
 
 ### widgets.facets.TermFacet
 
+This widget render a term facet in a list of terms. 
+
 #### constructor
 
 Argument | Character | Type | Description 
@@ -250,6 +260,11 @@ template | `String` | Template to shape the results.
 extraContext | `Object` | Extra info you want to render in the template.
 
 ### widgets.facets.RangeFacet
+
+This widget render a range facet in a slider. To show it properly is necessary some
+CSS. You can add this stylesheet: 
+
+https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.css
 
 #### constructor
 
