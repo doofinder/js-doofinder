@@ -1028,7 +1028,7 @@ replaces the current content.
       }
       this.container = container;
       this.handlebars = _dereq_("handlebars");
-      this.extraContext = options.extraContext;
+      this.extraContext = options.templateVars;
       addHelpers(this.handlebars, options.urlParams, options.currency, options.translations, options.helpers);
       if (template.constructor === String) {
         this.template = this.handlebars.compile(template);
@@ -1111,6 +1111,9 @@ them. Manages the filtering.
     function RangeFacet(container, name, options) {
       var template;
       this.name = name;
+      if (options == null) {
+        options = {};
+      }
       if (!options.template) {
         template = '<div class="df-panel df-widget" data-facet="key">' + '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>' + '<div class="df-panel__content">' + '<input class="df-facet" type="text" name="{{name}}" value=""' + 'data-facet="range" data-key="{{name}}">' + '</div>' + '</div>';
       } else {
@@ -1249,7 +1252,7 @@ paint them. Manages the filtering.
           term.selected = 0;
         }
       }
-      context = context = $.extend(true, {
+      context = $.extend(true, {
         name: this.name,
         terms: res.facets[this.name].terms
       }, this.extraContext || {});
@@ -1532,10 +1535,8 @@ bottom
       var container, scrollWrapperElement;
       this.scrollWrapper = scrollWrapper;
       scrollWrapperElement = $(this.scrollWrapper);
-      if (scrollWrapperElement.children() && scrollWrapperElement.children().first()) {
-        if (!scrollWrapperElement.children().first().attr("id")) {
-          scrollWrapperElement.children().first().attr("id", "df-scroll__container");
-        }
+      if (scrollWrapperElement.children().length && !scrollWrapperElement.children().first().attr("id")) {
+        scrollWrapperElement.children().first().attr("id", "df-scroll__container");
       } else {
         $(this.scrollWrapper).prepend('<div id="df-scroll__container"></div>');
       }

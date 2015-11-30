@@ -71,7 +71,7 @@ class TermFacet extends Display
       else
         term.selected = 0
       
-    context = context = $.extend true, 
+    context = $.extend true, 
       name: @name 
       terms: res.facets[@name].terms, 
       @extraContext || {}

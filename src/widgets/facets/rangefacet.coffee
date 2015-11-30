@@ -15,7 +15,7 @@ $ = jQuery = require("../../util/jquery")
 
 class RangeFacet extends Display
 
-  constructor: (container, @name, options) ->
+  constructor: (container, @name, options = {}) ->
     if not options.template
       template = '<div class="df-panel df-widget" data-facet="key">' +
         '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>'+

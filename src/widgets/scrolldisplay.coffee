@@ -31,16 +31,14 @@ class ScrollDisplay extends Display
   ###
   constructor: (@scrollWrapper, template, options) ->
     scrollWrapperElement = $(@scrollWrapper)
-    
-    if scrollWrapperElement.children() and scrollWrapperElement.children().first()
-      if not scrollWrapperElement.children().first().attr "id"
+
+    if scrollWrapperElement.children().length and not scrollWrapperElement.children().first().attr "id"
         scrollWrapperElement.children().first().attr "id", "df-scroll__container"
 
     else
       # Just in case the inner element in the scroll is not given
       $(@scrollWrapper).prepend '<div id="df-scroll__container"></div>'
         
-
     container = "##{scrollWrapperElement.children().first().attr('id')}"
     super(container, template, options)
 

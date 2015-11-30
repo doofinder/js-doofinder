@@ -30,7 +30,7 @@ class Display extends Widget
   constructor: (container, template, options = {}) ->
     @container = container
     @handlebars = require("handlebars")
-    @extraContext = options.extraContext
+    @extraContext = options.templateVars
     addHelpers @handlebars, 
       options.urlParams, 
       options.currency, 
