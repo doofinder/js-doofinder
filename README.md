@@ -67,8 +67,6 @@ Let's begin by showing a simple HTML template (myview.html):
 <body>
   <input type="text" id="query"/>
   <div id="scroll">
-    <div id="container"></div>
-    </div>
   </div>
 </body>
 ```

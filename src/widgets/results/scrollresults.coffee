@@ -27,8 +27,8 @@ class ScrollResults extends ScrollDisplay
   	if not options.template
   	  template = '<ul>{{#each results}}' +
         '<li>{{#each this}}' +
-        '<b>{{@key}}</b>:{{this}}<br></li>' +
-        '{{/each}}</div>' +
+        '<b>{{@key}}</b>:{{this}}<br>' +
+        '{{/each}}</li>' +
         '{{/each}}' +
         '</ul>'
     else

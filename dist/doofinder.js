@@ -1051,7 +1051,8 @@ replaces the current content.
      */
 
     Display.prototype.render = function(res) {
-      var html;
+      var context, html;
+      context = $.extend();
       html = this.template(res);
       try {
         return $(this.container).html(html);
@@ -1463,7 +1464,7 @@ replaces the current content.
         options = {};
       }
       if (!options.template) {
-        template = '<ul>{{#each results}}' + '<li>{{#each this}}' + '<b>{{@key}}</b>:{{this}}<br></li>' + '{{/each}}</div>' + '{{/each}}' + '</ul>';
+        template = '<ul>{{#each results}}' + '<li>{{#each this}}' + '<b>{{@key}}</b>:{{this}}<br>' + '{{/each}}</li>' + '{{/each}}' + '</ul>';
       } else {
         template = options.template;
       }
