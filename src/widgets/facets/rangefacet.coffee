@@ -21,7 +21,7 @@ class RangeFacet extends Display
         '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>'+
         '<div class="df-panel__content">' +
         '<input class="df-facet" type="text" name="{{name}}" value=""' +
-        'data-facet="range" data-key="{{name}}">'+
+        'data-facet="{{name}}">'+
         '</div>'+
         '</div>'
     else
@@ -66,7 +66,7 @@ class RangeFacet extends Display
     if res and res.filter and res.filter.range and res.filter.range[@name] and parseInt(res.filter.range[@name].lt)
       range.to = parseInt(res.filter.range[@name].lt, 10)
 
-    facet = $("input[data-key='#{@name}']")
+    facet = $("input[data-facet='#{@name}']")
     facet.ionRangeSlider(range)
     
 

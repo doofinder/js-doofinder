@@ -23,7 +23,6 @@ class Controller
   constructor: (client, widgets, initialParams = {}) ->
     @client = client
     @widgets = []
-    @__started = false
     if widgets instanceof Array
       for widget in widgets
         @addWidget(widget)
@@ -38,6 +37,7 @@ class Controller
       query: ''
       currentPage: 0
       firstQueryTriggered: false
+      lastPageReached: false
   
   ###
   __triggerAll
@@ -72,22 +72,21 @@ class Controller
     query = @status.query
     params = @status.params
     params.page = @status.currentPage
-    self = this
-    lastPageReached = true
+    _this = this
     @client.search query, params, (err, res) ->
-      self.__triggerAll "df:results_received", res
+      _this.__triggerAll "df:results_received", res
       # Whe show the results only when query counter
       # belongs to a the present request
-      if res.query_counter == self.status.params.query_counter
-        for widget in self.widgets
+      if res.query_counter == _this.status.params.query_counter
+        for widget in _this.widgets
           if next
             widget.renderNext res
           else
             widget.render res
         
         # I check if I reached the last page.    
-        if res.results.length < self.status.params.rpp
-          self.status.lastPageReached = lastPageReached
+        if res.results.length < _this.status.params.rpp
+          _this.status.lastPageReached = true
   
   ### 
   __search wrappers
@@ -106,8 +105,7 @@ class Controller
     @__triggerAll "df:search"
     if query
       @status.query = query
-    if not @status
-      @status = {}  
+    
     @status.params = $.extend true, @initialParams, params
     @status.currentPage = 1
     @status.firstQueryTriggered = true
@@ -124,8 +122,11 @@ class Controller
   ###
   nextPage: (replace = false) ->
     @__triggerAll "df:next_page"
+    console.log "LLEGA"
+    console.log @status.firstQueryTriggered, @status.currentPage, @status.lastPageReached
     if @status.firstQueryTriggered and @status.currentPage > 0 and not @status.lastPageReached      
       @status.currentPage++
+      console.log 'PASA'
       @__search(true)
 
   ###
@@ -216,6 +217,7 @@ class Controller
   addWidget: (widget) ->
     @widgets.push(widget)
     widget.controller = this
+    console.log "START WIDGETS"
     widget.start()
 
 module.exports = Controller

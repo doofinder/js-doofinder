@@ -334,7 +334,6 @@ author: @ecoslado
       }
       this.client = client;
       this.widgets = [];
-      this.__started = false;
       if (widgets instanceof Array) {
         for (i = 0, len = widgets.length; i < len; i++) {
           widget = widgets[i];
@@ -350,7 +349,8 @@ author: @ecoslado
         params: this.initialParams,
         query: '',
         currentPage: 0,
-        firstQueryTriggered: false
+        firstQueryTriggered: false,
+        lastPageReached: false
       };
     }
 
@@ -391,7 +391,7 @@ author: @ecoslado
      */
 
     Controller.prototype.__search = function(next) {
-      var lastPageReached, params, query, self;
+      var _this, params, query;
       if (next == null) {
         next = false;
       }
@@ -399,13 +399,12 @@ author: @ecoslado
       query = this.status.query;
       params = this.status.params;
       params.page = this.status.currentPage;
-      self = this;
-      lastPageReached = true;
+      _this = this;
       return this.client.search(query, params, function(err, res) {
         var i, len, ref, widget;
-        self.__triggerAll("df:results_received", res);
-        if (res.query_counter === self.status.params.query_counter) {
-          ref = self.widgets;
+        _this.__triggerAll("df:results_received", res);
+        if (res.query_counter === _this.status.params.query_counter) {
+          ref = _this.widgets;
           for (i = 0, len = ref.length; i < len; i++) {
             widget = ref[i];
             if (next) {
@@ -414,8 +413,8 @@ author: @ecoslado
               widget.render(res);
             }
           }
-          if (res.results.length < self.status.params.rpp) {
-            return self.status.lastPageReached = lastPageReached;
+          if (res.results.length < _this.status.params.rpp) {
+            return _this.status.lastPageReached = true;
           }
         }
       });
@@ -445,9 +444,6 @@ author: @ecoslado
       if (query) {
         this.status.query = query;
       }
-      if (!this.status) {
-        this.status = {};
-      }
       this.status.params = $.extend(true, this.initialParams, params);
       this.status.currentPage = 1;
       this.status.firstQueryTriggered = true;
@@ -470,8 +466,11 @@ author: @ecoslado
         replace = false;
       }
       this.__triggerAll("df:next_page");
+      console.log("LLEGA");
+      console.log(this.status.firstQueryTriggered, this.status.currentPage, this.status.lastPageReached);
       if (this.status.firstQueryTriggered && this.status.currentPage > 0 && !this.status.lastPageReached) {
         this.status.currentPage++;
+        console.log('PASA');
         return this.__search(true);
       }
     };
@@ -579,6 +578,7 @@ author: @ecoslado
     Controller.prototype.addWidget = function(widget) {
       this.widgets.push(widget);
       widget.controller = this;
+      console.log("START WIDGETS");
       return widget.start();
     };
 
@@ -717,6 +717,7 @@ author: @ecoslado
 module.exports = (function($){
    'use strict';
     $.dfScroll = function(container, o){
+        console.log(container);
         container.css("position", "relative");
         var content = container.children().first();
         content.css('overflow', 'hidden');
@@ -732,7 +733,7 @@ module.exports = (function($){
                 setTimeout(function () {
                     obj.trigger(name);
                     running = false;
-                }, 300);
+                }, 100);
             };
             obj.on(type, func);
             obj.trigger(name);
@@ -752,7 +753,7 @@ module.exports = (function($){
                     content.height() - container.height() + content.position().top <= o.scrollOffset) ||
                 (o.direction == "horizontal" &&
                     content.width() - container.width() + content.position().left <= o.scrollOffset))
-            {
+            {   console.log(o.callback);
                 o.callback();
             }
 
@@ -1118,7 +1119,7 @@ them. Manages the filtering.
         options = {};
       }
       if (!options.template) {
-        template = '<div class="df-panel df-widget" data-facet="key">' + '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>' + '<div class="df-panel__content">' + '<input class="df-facet" type="text" name="{{name}}" value=""' + 'data-facet="range" data-key="{{name}}">' + '</div>' + '</div>';
+        template = '<div class="df-panel df-widget" data-facet="key">' + '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>' + '<div class="df-panel__content">' + '<input class="df-facet" type="text" name="{{name}}" value=""' + 'data-facet="{{name}}">' + '</div>' + '</div>';
       } else {
         template = options.template;
       }
@@ -1163,7 +1164,7 @@ them. Manages the filtering.
       if (res && res.filter && res.filter.range && res.filter.range[this.name] && parseInt(res.filter.range[this.name].lt)) {
         range.to = parseInt(res.filter.range[this.name].lt, 10);
       }
-      facet = $("input[data-key='" + this.name + "']");
+      facet = $("input[data-facet='" + this.name + "']");
       return facet.ionRangeSlider(range);
     };
 
@@ -1339,7 +1340,7 @@ author: @ecoslado
         callback: function() {
           var query;
           query = document.querySelector(_this.queryInput).value;
-          return _this.controller.search(query);
+          return _this.controller.search.call(_this.controller, query);
         },
         wait: 43,
         captureLength: 3
@@ -1541,7 +1542,7 @@ bottom
       this.scrollOptions = options.scrollOptions;
       if (scrollWrapperElement.children().length && !scrollWrapperElement.children().first().attr("id")) {
         scrollWrapperElement.children().first().attr("id", "df-scroll__container");
-      } else {
+      } else if (!scrollWrapperElement.children().length) {
         $(this.scrollWrapper).prepend('<div id="df-scroll__container"></div>');
       }
       container = "#" + (scrollWrapperElement.children().first().attr('id'));
@@ -1564,7 +1565,7 @@ bottom
       _this = this;
       options = $.extend(true, {
         callback: function() {
-          return _this.controller.nextPage();
+          return _this.controller.nextPage.call(_this.controller);
         }
       }, this.scrollOptions || {});
       $(this.scrollWrapper).dfScroll(options);
@@ -1586,12 +1587,9 @@ bottom
 
     ScrollDisplay.prototype.renderNext = function(res) {
       var html;
+      console.log("RENDERNEXT SCROLL DISPLAY");
       html = this.template(res);
-      try {
-        return $(this.container).append(html);
-      } catch (_error) {
-        throw Error("widget.ResultsScroll: Error while rendering. " + "The container you are trying to access does not already exist.");
-      }
+      return $(this.container).append(html);
     };
 
     return ScrollDisplay;

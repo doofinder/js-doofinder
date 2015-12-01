@@ -36,7 +36,7 @@ class ScrollDisplay extends Display
     if scrollWrapperElement.children().length and not scrollWrapperElement.children().first().attr "id"
         scrollWrapperElement.children().first().attr "id", "df-scroll__container"
 
-    else
+    else if not scrollWrapperElement.children().length 
       # Just in case the inner element in the scroll is not given
       $(@scrollWrapper).prepend '<div id="df-scroll__container"></div>'
         
@@ -56,9 +56,9 @@ class ScrollDisplay extends Display
   start: () ->
     _this = this
     options = $.extend true,
-      callback: () -> _this.controller.nextPage(),
+      callback: () -> _this.controller.nextPage.call(_this.controller),
       @scrollOptions || {}
-    
+
     $(@scrollWrapper).dfScroll options
 
     @bind('df:search', () -> $(_this.scrollWrapper).animate({scrollTop: 0}, "quick"))
@@ -72,13 +72,9 @@ class ScrollDisplay extends Display
   @api public
   ###  
   renderNext: (res) ->
+    console.log "RENDERNEXT SCROLL DISPLAY"
     html = @template res
-    try
-      $(@container).append html
-    catch
-      throw Error "widget.ResultsScroll: Error while rendering. " + 
-        "The container you are trying to access does not already exist."
+    $(@container).append html
     
-
 
 module.exports = ScrollDisplay
