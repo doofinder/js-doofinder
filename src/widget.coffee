@@ -12,11 +12,13 @@ shaped by template
 ###
 
 Emitter = require 'tiny-emitter' 
-emitter = new Emitter
 
 class Widget
 
   
+  constructor: () ->
+  	@emitter = new Emitter
+
   ###
   init
 
@@ -59,7 +61,7 @@ class Widget
   @api public
   ###
   bind: (event, callback) ->
-    emitter.on(event, callback)
+    @emitter.on(event, callback)
 
   ###
   trigger
@@ -70,6 +72,6 @@ class Widget
   @api public
   ###
   trigger: (event, params) -> 
-    emitter.emit(event, params)
+    @emitter.emit(event, params)
 
 module.exports = Widget

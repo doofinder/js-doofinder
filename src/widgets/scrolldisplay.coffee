@@ -14,6 +14,7 @@ bottom
 ###
 
 Display = require "./display"
+dfScroll = require "../util/dfscroll"
 $ = require "../util/jquery"
 
 class ScrollDisplay extends Display
@@ -60,9 +61,9 @@ class ScrollDisplay extends Display
       callback: () -> _this.controller.nextPage.call(_this.controller),
       @scrollOptions || {}
 
-    $(@scrollWrapper).dfScroll options
+    dfScroll @scrollWrapper, options
 
-    @bind('df:search', () -> $(_this.scrollWrapper).animate({scrollTop: 0}, "quick"))
+    # @bind('df:search', () -> $(_this.scrollWrapper).animate({scrollTop: 0}, "quick"))
 
 
   ###

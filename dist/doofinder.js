@@ -297,7 +297,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"http":21}],2:[function(_dereq_,module,exports){
+},{"http":23}],2:[function(_dereq_,module,exports){
 
 /*
  * Created by Kike Coslado on 26/10/15.
@@ -586,7 +586,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./util/jquery":6}],3:[function(_dereq_,module,exports){
+},{"./util/jquery":8}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
     version: "0.7.0",
@@ -605,7 +605,82 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./util/jquery":6,"./widget":8,"./widgets/facets/rangefacet":10,"./widgets/facets/termfacet":11,"./widgets/queryinput":12,"./widgets/results/results":13,"./widgets/results/scrollresults":14}],4:[function(_dereq_,module,exports){
+},{"./client":1,"./controller":2,"./util/jquery":8,"./widget":10,"./widgets/facets/rangefacet":12,"./widgets/facets/termfacet":13,"./widgets/queryinput":14,"./widgets/results/results":15,"./widgets/results/scrollresults":16}],4:[function(_dereq_,module,exports){
+(function() {
+  var dfScroll, extend;
+
+  extend = _dereq_('./extend').extend;
+
+  dfScroll = function(container, o) {
+    var content, defaultOptions, handler, throttle;
+    defaultOptions = {
+      direction: "vertical",
+      scrollOffset: 50
+    };
+    o = extend(defaultOptions, o);
+    container = document.querySelector(container);
+    content = container.children[0];
+    throttle = function(type, name, obj) {
+      var event, func, running;
+      obj = obj || window;
+      running = false;
+      func = function() {
+        var aux;
+        if (running) {
+          return;
+        }
+        running = true;
+        aux = function() {
+          var event;
+          event = document.createEvent('Event');
+          event.initEvent(name, true, true);
+          obj.dispatchEvent(event);
+          return running = false;
+        };
+        return setTimeout(aux, 250);
+      };
+      obj.addEventListener(type, func);
+      event = document.createEvent('Event');
+      event.initEvent(name, true, true);
+      return obj.dispatchEvent(event);
+    };
+    throttle('scroll', 'df:scroll', container);
+    handler = function() {
+      if (['horizontal', 'vertical'].indexOf(o.direction) <= -1) {
+        throw Error("Direction is not properly set. It might be 'horizontal' or 'vertical'.");
+      }
+      if (o.direction === 'vertical' && content.clientHeight - container.clientHeight - container.scrollTop <= o.scrollOffset || o.direction === "horizontal" && content.clientWidth() - container.clientWidth() - content.scrollLeft <= o.scrollOffset) {
+        return o.callback();
+      }
+    };
+    return container.addEventListener('df:scroll', handler);
+  };
+
+  module.exports = dfScroll;
+
+}).call(this);
+
+},{"./extend":5}],5:[function(_dereq_,module,exports){
+(function() {
+  module.exports = {
+    extend: function() {
+      var i, key;
+      i = 1;
+      while (i < arguments.length) {
+        for (key in arguments[i]) {
+          if (arguments[i].hasOwnProperty(key)) {
+            arguments[0][key] = arguments[i][key];
+          }
+        }
+        i++;
+      }
+      return arguments[0];
+    }
+  };
+
+}).call(this);
+
+},{}],6:[function(_dereq_,module,exports){
 
 /*
  * author: @ecoslado
@@ -705,69 +780,81 @@ author: @ecoslado
 
 }).call(this);
 
-},{}],5:[function(_dereq_,module,exports){
+},{}],7:[function(_dereq_,module,exports){
 /**
  * Created by Kike Coslado on 16/11/15.
  */
 
 module.exports = (function($){
    'use strict';
-    $.dfScroll = function(container, o){
-        console.log(container);
-        container.css("position", "relative");
-        var content = container.children().first();
-        content.css('overflow', 'hidden');
-        // Avoids multiple scroll triggers
-        var throttle = function (type, name, obj) {
-            var obj = obj || window;
-            var running = false;
-            var func = function () {
-                if (running) {
-                    return;
-                }
-                running = true;
-                setTimeout(function () {
-                    obj.trigger(name);
-                    running = false;
-                }, 100);
-            };
-            obj.on(type, func);
-            obj.trigger(name);
-        };
-        throttle('scroll', 'df:scroll', $(container));
-        // Set default options
-        o = $.extend(true, $.dfScroll.defaultOptions, o);
+    function Plugin(element, options) {
+    	this.$el = $(element);
+    	this._name = 'dfScroll';
+    	this.$el.css("position", "relative");
+        this.$content = this.$el.children().first();
+        this.$content.css('overflow', 'hidden');
+    	this.options = $.extend(
+    		true, 
+    		{
+    			scrollOffset: 50,
+        		direction: 'vertical'
+    		}, options || {});
+    	this.init();
+    }
 
-        // handling scroll event
-        container.on('df:scroll', function () {
-            //When bottom or right side is about to be reached, callback will be called
-            if (['horizontal', 'vertical'].indexOf(o.direction) <= -1){
-                throw Error("Direction is not properly set. It might be 'horizontal' or 'vertical'.")
-            }
-            
-            if ((o.direction == "vertical" &&
-                    content.height() - container.height() + content.position().top <= o.scrollOffset) ||
-                (o.direction == "horizontal" &&
-                    content.width() - container.width() + content.position().left <= o.scrollOffset))
-            {   console.log(o.callback);
-                o.callback();
-            }
 
-        });
-    };
+    Plugin.prototype = {
+    	init: function(){
+    		// Avoids multiple scroll triggers
+	        var throttle = function (type, name, obj) {
+	            var obj = obj || window;
+	            var running = false;
+	            var func = function () {
+	                if (running) {
+	                    return;
+	                }
+	                running = true;
+	                setTimeout(function () {
+	                    obj.trigger(name);
+	                    running = false;
+	                }, 5);
+	            };
+	            obj.on(type, func);
+	            obj.trigger(name);
+	        };
+	        throttle('scroll', 'df:scroll', this.$el);
 
-    $.dfScroll.defaultOptions = {
-        scrollOffset: 50,
-        direction: 'vertical'
+	        // handling scroll event
+	        self = this;
+	        this.$el.on('df:scroll', function () {
+	        	var container = self.$el;
+	        	var content = self.$content;
+	            //When bottom or right side is about to be reached, callback will be called
+	            if (['horizontal', 'vertical'].indexOf(self.options.direction) <= -1){
+	                throw Error("Direction is not properly set. It might be 'horizontal' or 'vertical'.")
+	            }
+	            
+	            if ((self.options.direction == "vertical" &&
+	                    content.height() - container.height() + content.position().top <= self.options.scrollOffset) ||
+	                (self.options.direction == "horizontal" &&
+	                    content.width() - container.width() + content.position().left <= self.options.scrollOffset)){ 
+	                self.options.callback();
+	            }
+
+	        });
+
+       }
     };
 
     $.fn.dfScroll = function (o) {
+
         return this.each(function(){
-            (new $.dfScroll($(this), o));
+        	var $this = $(this), data = $this.data('dfScroll');
+    		if (!data) $this.data('dfScroll', (data = new Plugin($(this), o)));
         });
     }
 });
-},{}],6:[function(_dereq_,module,exports){
+},{}],8:[function(_dereq_,module,exports){
 (function() {
   var jQuery;
 
@@ -783,7 +870,7 @@ module.exports = (function($){
 
 }).call(this);
 
-},{"./jquery.dfscroll":5,"./jquery.typewatch":7,"ion-rangeslider":85,"jquery":86}],7:[function(_dereq_,module,exports){
+},{"./jquery.dfscroll":7,"./jquery.typewatch":9,"ion-rangeslider":87,"jquery":88}],9:[function(_dereq_,module,exports){
 /*
 *	TypeWatch 2.2.2
 *
@@ -880,7 +967,7 @@ module.exports = (function($) {
 
 	};
 });
-},{}],8:[function(_dereq_,module,exports){
+},{}],10:[function(_dereq_,module,exports){
 
 /*
 widget.coffee
@@ -897,14 +984,14 @@ shaped by template
  */
 
 (function() {
-  var Emitter, Widget, emitter;
+  var Emitter, Widget;
 
   Emitter = _dereq_('tiny-emitter');
 
-  emitter = new Emitter;
-
   Widget = (function() {
-    function Widget() {}
+    function Widget() {
+      this.emitter = new Emitter;
+    }
 
 
     /*
@@ -957,7 +1044,7 @@ shaped by template
      */
 
     Widget.prototype.bind = function(event, callback) {
-      return emitter.on(event, callback);
+      return this.emitter.on(event, callback);
     };
 
 
@@ -971,7 +1058,7 @@ shaped by template
      */
 
     Widget.prototype.trigger = function(event, params) {
-      return emitter.emit(event, params);
+      return this.emitter.emit(event, params);
     };
 
     return Widget;
@@ -982,7 +1069,7 @@ shaped by template
 
 }).call(this);
 
-},{"tiny-emitter":87}],9:[function(_dereq_,module,exports){
+},{"tiny-emitter":89}],11:[function(_dereq_,module,exports){
 
 /*
 display.coffee
@@ -1038,6 +1125,7 @@ replaces the current content.
       } else {
         throw Error("The provided template is not the right type." + " String or rendered handlebars expected.");
       }
+      Display.__super__.constructor.call(this);
     }
 
 
@@ -1083,7 +1171,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../util/helpers":4,"../util/jquery":6,"../widget":8,"handlebars":72}],10:[function(_dereq_,module,exports){
+},{"../util/helpers":6,"../util/jquery":8,"../widget":10,"handlebars":74}],12:[function(_dereq_,module,exports){
 
 /*
 rangefacet.coffee
@@ -1176,7 +1264,7 @@ them. Manages the filtering.
 
 }).call(this);
 
-},{"../../util/jquery":6,"../display":9}],11:[function(_dereq_,module,exports){
+},{"../../util/jquery":8,"../display":11}],13:[function(_dereq_,module,exports){
 
 /*
 termfacet.coffee
@@ -1277,7 +1365,7 @@ paint them. Manages the filtering.
 
 }).call(this);
 
-},{"../display":9,"jquery":86}],12:[function(_dereq_,module,exports){
+},{"../display":11,"jquery":88}],14:[function(_dereq_,module,exports){
 
 /*
 queryinput.coffee
@@ -1321,6 +1409,7 @@ author: @ecoslado
     function QueryInput(queryInput, options1) {
       this.queryInput = queryInput;
       this.options = options1 != null ? options1 : {};
+      QueryInput.__super__.constructor.call(this);
     }
 
 
@@ -1360,7 +1449,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../util/jquery":6,"../widget":8}],13:[function(_dereq_,module,exports){
+},{"../util/jquery":8,"../widget":10}],15:[function(_dereq_,module,exports){
 
 /*
 display.coffee
@@ -1428,7 +1517,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../display":9}],14:[function(_dereq_,module,exports){
+},{"../display":11}],16:[function(_dereq_,module,exports){
 
 /*
 scrollresults.coffee
@@ -1496,7 +1585,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../scrolldisplay":15}],15:[function(_dereq_,module,exports){
+},{"../scrolldisplay":17}],17:[function(_dereq_,module,exports){
 
 /*
 scrolldisplay.coffee
@@ -1515,11 +1604,13 @@ bottom
  */
 
 (function() {
-  var $, Display, ScrollDisplay,
+  var $, Display, ScrollDisplay, dfScroll,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   Display = _dereq_("./display");
+
+  dfScroll = _dereq_("../util/dfscroll");
 
   $ = _dereq_("../util/jquery");
 
@@ -1573,12 +1664,7 @@ bottom
           return _this.controller.nextPage.call(_this.controller);
         }
       }, this.scrollOptions || {});
-      $(this.scrollWrapper).dfScroll(options);
-      return this.bind('df:search', function() {
-        return $(_this.scrollWrapper).animate({
-          scrollTop: 0
-        }, "quick");
-      });
+      return dfScroll(this.scrollWrapper, options);
     };
 
 
@@ -1605,9 +1691,9 @@ bottom
 
 }).call(this);
 
-},{"../util/jquery":6,"./display":9}],16:[function(_dereq_,module,exports){
+},{"../util/dfscroll":4,"../util/jquery":8,"./display":11}],18:[function(_dereq_,module,exports){
 
-},{}],17:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -2718,7 +2804,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":18,"ieee754":19}],18:[function(_dereq_,module,exports){
+},{"base64-js":20,"ieee754":21}],20:[function(_dereq_,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -2844,7 +2930,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],19:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -2930,7 +3016,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],20:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3233,7 +3319,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],21:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 var http = module.exports;
 var EventEmitter = _dereq_('events').EventEmitter;
 var Request = _dereq_('./lib/request');
@@ -3372,7 +3458,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":22,"events":20,"url":40}],22:[function(_dereq_,module,exports){
+},{"./lib/request":24,"events":22,"url":42}],24:[function(_dereq_,module,exports){
 var Stream = _dereq_('stream');
 var Response = _dereq_('./response');
 var Base64 = _dereq_('Base64');
@@ -3563,7 +3649,7 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":23,"Base64":24,"inherits":25,"stream":33}],23:[function(_dereq_,module,exports){
+},{"./response":25,"Base64":26,"inherits":27,"stream":35}],25:[function(_dereq_,module,exports){
 var Stream = _dereq_('stream');
 var util = _dereq_('util');
 
@@ -3685,7 +3771,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":33,"util":42}],24:[function(_dereq_,module,exports){
+},{"stream":35,"util":44}],26:[function(_dereq_,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -3747,7 +3833,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],25:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -3772,7 +3858,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],26:[function(_dereq_,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -4000,7 +4086,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,_dereq_("FWaASH"))
-},{"FWaASH":27}],27:[function(_dereq_,module,exports){
+},{"FWaASH":29}],29:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -4065,7 +4151,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],28:[function(_dereq_,module,exports){
+},{}],30:[function(_dereq_,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -4576,7 +4662,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],29:[function(_dereq_,module,exports){
+},{}],31:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4662,7 +4748,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],30:[function(_dereq_,module,exports){
+},{}],32:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4749,13 +4835,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],31:[function(_dereq_,module,exports){
+},{}],33:[function(_dereq_,module,exports){
 'use strict';
 
 exports.decode = exports.parse = _dereq_('./decode');
 exports.encode = exports.stringify = _dereq_('./encode');
 
-},{"./decode":29,"./encode":30}],32:[function(_dereq_,module,exports){
+},{"./decode":31,"./encode":32}],34:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4829,7 +4915,7 @@ function onend() {
   });
 }
 
-},{"./readable.js":36,"./writable.js":38,"inherits":25,"process/browser.js":34}],33:[function(_dereq_,module,exports){
+},{"./readable.js":38,"./writable.js":40,"inherits":27,"process/browser.js":36}],35:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4958,7 +5044,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"./duplex.js":32,"./passthrough.js":35,"./readable.js":36,"./transform.js":37,"./writable.js":38,"events":20,"inherits":25}],34:[function(_dereq_,module,exports){
+},{"./duplex.js":34,"./passthrough.js":37,"./readable.js":38,"./transform.js":39,"./writable.js":40,"events":22,"inherits":27}],36:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -5013,7 +5099,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],35:[function(_dereq_,module,exports){
+},{}],37:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -5056,7 +5142,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./transform.js":37,"inherits":25}],36:[function(_dereq_,module,exports){
+},{"./transform.js":39,"inherits":27}],38:[function(_dereq_,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -5993,7 +6079,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,_dereq_("FWaASH"))
-},{"./index.js":33,"FWaASH":27,"buffer":17,"events":20,"inherits":25,"process/browser.js":34,"string_decoder":39}],37:[function(_dereq_,module,exports){
+},{"./index.js":35,"FWaASH":29,"buffer":19,"events":22,"inherits":27,"process/browser.js":36,"string_decoder":41}],39:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -6199,7 +6285,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./duplex.js":32,"inherits":25}],38:[function(_dereq_,module,exports){
+},{"./duplex.js":34,"inherits":27}],40:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -6587,7 +6673,7 @@ function endWritable(stream, state, cb) {
   state.ended = true;
 }
 
-},{"./index.js":33,"buffer":17,"inherits":25,"process/browser.js":34}],39:[function(_dereq_,module,exports){
+},{"./index.js":35,"buffer":19,"inherits":27,"process/browser.js":36}],41:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -6780,7 +6866,7 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":17}],40:[function(_dereq_,module,exports){
+},{"buffer":19}],42:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7489,14 +7575,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":28,"querystring":31}],41:[function(_dereq_,module,exports){
+},{"punycode":30,"querystring":33}],43:[function(_dereq_,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],42:[function(_dereq_,module,exports){
+},{}],44:[function(_dereq_,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -8086,7 +8172,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,_dereq_("FWaASH"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":41,"FWaASH":27,"inherits":25}],43:[function(_dereq_,module,exports){
+},{"./support/isBuffer":43,"FWaASH":29,"inherits":27}],45:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -8153,7 +8239,7 @@ exports['default'] = inst;
 module.exports = exports['default'];
 
 
-},{"./handlebars.runtime":44,"./handlebars/compiler/ast":46,"./handlebars/compiler/base":47,"./handlebars/compiler/compiler":49,"./handlebars/compiler/javascript-compiler":51,"./handlebars/compiler/visitor":54,"./handlebars/no-conflict":68}],44:[function(_dereq_,module,exports){
+},{"./handlebars.runtime":46,"./handlebars/compiler/ast":48,"./handlebars/compiler/base":49,"./handlebars/compiler/compiler":51,"./handlebars/compiler/javascript-compiler":53,"./handlebars/compiler/visitor":56,"./handlebars/no-conflict":70}],46:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -8221,7 +8307,7 @@ exports['default'] = inst;
 module.exports = exports['default'];
 
 
-},{"./handlebars/base":45,"./handlebars/exception":58,"./handlebars/no-conflict":68,"./handlebars/runtime":69,"./handlebars/safe-string":70,"./handlebars/utils":71}],45:[function(_dereq_,module,exports){
+},{"./handlebars/base":47,"./handlebars/exception":60,"./handlebars/no-conflict":70,"./handlebars/runtime":71,"./handlebars/safe-string":72,"./handlebars/utils":73}],47:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -8327,7 +8413,7 @@ exports.createFrame = _utils.createFrame;
 exports.logger = _logger2['default'];
 
 
-},{"./decorators":56,"./exception":58,"./helpers":59,"./logger":67,"./utils":71}],46:[function(_dereq_,module,exports){
+},{"./decorators":58,"./exception":60,"./helpers":61,"./logger":69,"./utils":73}],48:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -8360,7 +8446,7 @@ exports['default'] = AST;
 module.exports = exports['default'];
 
 
-},{}],47:[function(_dereq_,module,exports){
+},{}],49:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -8410,7 +8496,7 @@ function parse(input, options) {
 }
 
 
-},{"../utils":71,"./helpers":50,"./parser":52,"./whitespace-control":55}],48:[function(_dereq_,module,exports){
+},{"../utils":73,"./helpers":52,"./parser":54,"./whitespace-control":57}],50:[function(_dereq_,module,exports){
 /* global define */
 'use strict';
 
@@ -8578,7 +8664,7 @@ exports['default'] = CodeGen;
 module.exports = exports['default'];
 
 
-},{"../utils":71,"source-map":73}],49:[function(_dereq_,module,exports){
+},{"../utils":73,"source-map":75}],51:[function(_dereq_,module,exports){
 /* eslint-disable new-cap */
 
 'use strict';
@@ -9152,7 +9238,7 @@ function transformLiteralToPath(sexpr) {
 }
 
 
-},{"../exception":58,"../utils":71,"./ast":46}],50:[function(_dereq_,module,exports){
+},{"../exception":60,"../utils":73,"./ast":48}],52:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -9384,7 +9470,7 @@ function preparePartialBlock(open, program, close, locInfo) {
 }
 
 
-},{"../exception":58}],51:[function(_dereq_,module,exports){
+},{"../exception":60}],53:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10512,7 +10598,7 @@ exports['default'] = JavaScriptCompiler;
 module.exports = exports['default'];
 
 
-},{"../base":45,"../exception":58,"../utils":71,"./code-gen":48}],52:[function(_dereq_,module,exports){
+},{"../base":47,"../exception":60,"../utils":73,"./code-gen":50}],54:[function(_dereq_,module,exports){
 /* istanbul ignore next */
 /* Jison generated parser */
 "use strict";
@@ -11252,7 +11338,7 @@ var handlebars = (function () {
 exports['default'] = handlebars;
 
 
-},{}],53:[function(_dereq_,module,exports){
+},{}],55:[function(_dereq_,module,exports){
 /* eslint-disable new-cap */
 'use strict';
 
@@ -11440,7 +11526,7 @@ PrintVisitor.prototype.HashPair = function (pair) {
 /* eslint-enable new-cap */
 
 
-},{"./visitor":54}],54:[function(_dereq_,module,exports){
+},{"./visitor":56}],56:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -11582,7 +11668,7 @@ exports['default'] = Visitor;
 module.exports = exports['default'];
 
 
-},{"../exception":58}],55:[function(_dereq_,module,exports){
+},{"../exception":60}],57:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -11805,7 +11891,7 @@ exports['default'] = WhitespaceControl;
 module.exports = exports['default'];
 
 
-},{"./visitor":54}],56:[function(_dereq_,module,exports){
+},{"./visitor":56}],58:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -11823,7 +11909,7 @@ function registerDefaultDecorators(instance) {
 }
 
 
-},{"./decorators/inline":57}],57:[function(_dereq_,module,exports){
+},{"./decorators/inline":59}],59:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -11854,7 +11940,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":71}],58:[function(_dereq_,module,exports){
+},{"../utils":73}],60:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -11896,7 +11982,7 @@ exports['default'] = Exception;
 module.exports = exports['default'];
 
 
-},{}],59:[function(_dereq_,module,exports){
+},{}],61:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -11944,7 +12030,7 @@ function registerDefaultHelpers(instance) {
 }
 
 
-},{"./helpers/block-helper-missing":60,"./helpers/each":61,"./helpers/helper-missing":62,"./helpers/if":63,"./helpers/log":64,"./helpers/lookup":65,"./helpers/with":66}],60:[function(_dereq_,module,exports){
+},{"./helpers/block-helper-missing":62,"./helpers/each":63,"./helpers/helper-missing":64,"./helpers/if":65,"./helpers/log":66,"./helpers/lookup":67,"./helpers/with":68}],62:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -11985,7 +12071,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":71}],61:[function(_dereq_,module,exports){
+},{"../utils":73}],63:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -12081,7 +12167,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../exception":58,"../utils":71}],62:[function(_dereq_,module,exports){
+},{"../exception":60,"../utils":73}],64:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -12108,7 +12194,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../exception":58}],63:[function(_dereq_,module,exports){
+},{"../exception":60}],65:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -12139,7 +12225,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":71}],64:[function(_dereq_,module,exports){
+},{"../utils":73}],66:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -12167,7 +12253,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{}],65:[function(_dereq_,module,exports){
+},{}],67:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -12181,7 +12267,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{}],66:[function(_dereq_,module,exports){
+},{}],68:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -12216,7 +12302,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":71}],67:[function(_dereq_,module,exports){
+},{"../utils":73}],69:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -12265,7 +12351,7 @@ exports['default'] = logger;
 module.exports = exports['default'];
 
 
-},{"./utils":71}],68:[function(_dereq_,module,exports){
+},{"./utils":73}],70:[function(_dereq_,module,exports){
 (function (global){
 /* global window */
 'use strict';
@@ -12289,7 +12375,7 @@ module.exports = exports['default'];
 
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],69:[function(_dereq_,module,exports){
+},{}],71:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -12583,7 +12669,7 @@ function executeDecorators(fn, prog, container, depths, data, blockParams) {
 }
 
 
-},{"./base":45,"./exception":58,"./utils":71}],70:[function(_dereq_,module,exports){
+},{"./base":47,"./exception":60,"./utils":73}],72:[function(_dereq_,module,exports){
 // Build out our basic SafeString type
 'use strict';
 
@@ -12600,7 +12686,7 @@ exports['default'] = SafeString;
 module.exports = exports['default'];
 
 
-},{}],71:[function(_dereq_,module,exports){
+},{}],73:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -12726,7 +12812,7 @@ function appendContextPath(contextPath, id) {
 }
 
 
-},{}],72:[function(_dereq_,module,exports){
+},{}],74:[function(_dereq_,module,exports){
 // USAGE:
 // var handlebars = require('handlebars');
 /* eslint-disable no-var */
@@ -12753,7 +12839,7 @@ if (typeof _dereq_ !== 'undefined' && _dereq_.extensions) {
   _dereq_.extensions['.hbs'] = extension;
 }
 
-},{"../dist/cjs/handlebars":43,"../dist/cjs/handlebars/compiler/printer":53,"fs":16}],73:[function(_dereq_,module,exports){
+},{"../dist/cjs/handlebars":45,"../dist/cjs/handlebars/compiler/printer":55,"fs":18}],75:[function(_dereq_,module,exports){
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
@@ -12763,7 +12849,7 @@ exports.SourceMapGenerator = _dereq_('./source-map/source-map-generator').Source
 exports.SourceMapConsumer = _dereq_('./source-map/source-map-consumer').SourceMapConsumer;
 exports.SourceNode = _dereq_('./source-map/source-node').SourceNode;
 
-},{"./source-map/source-map-consumer":80,"./source-map/source-map-generator":81,"./source-map/source-node":82}],74:[function(_dereq_,module,exports){
+},{"./source-map/source-map-consumer":82,"./source-map/source-map-generator":83,"./source-map/source-node":84}],76:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -12872,7 +12958,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./util":83,"amdefine":84}],75:[function(_dereq_,module,exports){
+},{"./util":85,"amdefine":86}],77:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -13020,7 +13106,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./base64":76,"amdefine":84}],76:[function(_dereq_,module,exports){
+},{"./base64":78,"amdefine":86}],78:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -13095,7 +13181,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":84}],77:[function(_dereq_,module,exports){
+},{"amdefine":86}],79:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -13214,7 +13300,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":84}],78:[function(_dereq_,module,exports){
+},{"amdefine":86}],80:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2014 Mozilla Foundation and contributors
@@ -13302,7 +13388,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./util":83,"amdefine":84}],79:[function(_dereq_,module,exports){
+},{"./util":85,"amdefine":86}],81:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -13424,7 +13510,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":84}],80:[function(_dereq_,module,exports){
+},{"amdefine":86}],82:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -14503,7 +14589,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":74,"./base64-vlq":75,"./binary-search":77,"./quick-sort":79,"./util":83,"amdefine":84}],81:[function(_dereq_,module,exports){
+},{"./array-set":76,"./base64-vlq":77,"./binary-search":79,"./quick-sort":81,"./util":85,"amdefine":86}],83:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -14904,7 +14990,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":74,"./base64-vlq":75,"./mapping-list":78,"./util":83,"amdefine":84}],82:[function(_dereq_,module,exports){
+},{"./array-set":76,"./base64-vlq":77,"./mapping-list":80,"./util":85,"amdefine":86}],84:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -15320,7 +15406,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./source-map-generator":81,"./util":83,"amdefine":84}],83:[function(_dereq_,module,exports){
+},{"./source-map-generator":83,"./util":85,"amdefine":86}],85:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -15692,7 +15778,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":84}],84:[function(_dereq_,module,exports){
+},{"amdefine":86}],86:[function(_dereq_,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 1.0.0 Copyright (c) 2011-2015, The Dojo Foundation All Rights Reserved.
@@ -15997,7 +16083,7 @@ function amdefine(module, requireFn) {
 module.exports = amdefine;
 
 }).call(this,_dereq_("FWaASH"),"/../node_modules/handlebars/node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"FWaASH":27,"path":26}],85:[function(_dereq_,module,exports){
+},{"FWaASH":29,"path":28}],87:[function(_dereq_,module,exports){
 // Ion.RangeSlider
 // version 2.1.2 Build: 350
 // © Denis Ineshin, 2015
@@ -18306,7 +18392,7 @@ module.exports = (function ($, document, window, navigator, undefined) {
 
 });
 
-},{}],86:[function(_dereq_,module,exports){
+},{}],88:[function(_dereq_,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.4
  * http://jquery.com/
@@ -27518,7 +27604,7 @@ return jQuery;
 
 }));
 
-},{}],87:[function(_dereq_,module,exports){
+},{}],89:[function(_dereq_,module,exports){
 function E () {
 	// Keep this empty so it's easier to inherit from
   // (via https://github.com/lipsmack from https://github.com/scottcorgan/tiny-emitter/issues/3)
