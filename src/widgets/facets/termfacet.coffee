@@ -40,7 +40,7 @@ class TermFacet extends Display
   init: (controller) ->
     super(controller)
     _this = this
-    $(@container).on 'click', "[data-facet='#{@name}']", (e) ->
+    $(@container).on 'click', "a[data-facet='#{@name}']", (e) ->
         e.preventDefault()
         termFacet = $(e.toElement)
         value = termFacet.data "value" 

@@ -74,7 +74,6 @@ class ScrollDisplay extends Display
   @api public
   ###  
   renderNext: (res) ->
-    console.log "RENDERNEXT SCROLL DISPLAY"
     html = @template res
     $(@container).append html
     
