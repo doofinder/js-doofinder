@@ -36,12 +36,17 @@ class QueryInput extends Widget
   events to DOM elements.
   @api public
   ###
-  start: () ->
+  init: (controller) ->
+    if @controller
+      @controller.push controller
+    else
+      @controller = [controller]
+
     _this = this
     options = $.extend true,
       callback: () ->
-        query = document.querySelector(_this.queryInput).value
-        _this.controller.search.call(_this.controller, query)
+        query = $(_this.queryInput).val()
+        controller.search.call(controller, query)
       wait: 43
       captureLength: 3,
       @options

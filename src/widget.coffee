@@ -18,13 +18,14 @@ class Widget
 
   
   ###
-  start
+  init
 
   This is the function where bind the
   events to DOM elements. In Widget
   is dummy. To be overriden.
   ###
-  start: () ->
+  init: (controller) ->
+    @controller = controller
       
   ###
   render

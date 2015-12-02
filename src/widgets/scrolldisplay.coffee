@@ -53,7 +53,8 @@ class ScrollDisplay extends Display
   This is the function where bind the
   events to DOM elements.
   ###
-  start: () ->
+  init: (controller) ->
+    @controller = controller
     _this = this
     options = $.extend true,
       callback: () -> _this.controller.nextPage.call(_this.controller),

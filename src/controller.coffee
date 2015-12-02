@@ -122,11 +122,9 @@ class Controller
   ###
   nextPage: (replace = false) ->
     @__triggerAll "df:next_page"
-    console.log "LLEGA"
     console.log @status.firstQueryTriggered, @status.currentPage, @status.lastPageReached
     if @status.firstQueryTriggered and @status.currentPage > 0 and not @status.lastPageReached      
       @status.currentPage++
-      console.log 'PASA'
       @__search(true)
 
   ###
@@ -216,8 +214,6 @@ class Controller
 
   addWidget: (widget) ->
     @widgets.push(widget)
-    widget.controller = this
-    console.log "START WIDGETS"
-    widget.start()
+    widget.init(this)
 
 module.exports = Controller

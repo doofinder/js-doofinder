@@ -466,11 +466,9 @@ author: @ecoslado
         replace = false;
       }
       this.__triggerAll("df:next_page");
-      console.log("LLEGA");
       console.log(this.status.firstQueryTriggered, this.status.currentPage, this.status.lastPageReached);
       if (this.status.firstQueryTriggered && this.status.currentPage > 0 && !this.status.lastPageReached) {
         this.status.currentPage++;
-        console.log('PASA');
         return this.__search(true);
       }
     };
@@ -577,9 +575,7 @@ author: @ecoslado
 
     Controller.prototype.addWidget = function(widget) {
       this.widgets.push(widget);
-      widget.controller = this;
-      console.log("START WIDGETS");
-      return widget.start();
+      return widget.init(this);
     };
 
     return Controller;
@@ -912,14 +908,16 @@ shaped by template
 
 
     /*
-    start
+    init
     
     This is the function where bind the
     events to DOM elements. In Widget
     is dummy. To be overriden.
      */
 
-    Widget.prototype.start = function() {};
+    Widget.prototype.init = function(controller) {
+      return this.controller = controller;
+    };
 
 
     /*
@@ -1220,8 +1218,9 @@ paint them. Manages the filtering.
       TermFacet.__super__.constructor.call(this, container, template, options);
     }
 
-    TermFacet.prototype.start = function() {
+    TermFacet.prototype.init = function(controller) {
       var _this;
+      TermFacet.__super__.init.call(this, controller);
       _this = this;
       return $(this.container).on('click', "[data-facet='" + this.name + "']", function(e) {
         var key, termFacet, value;
@@ -1333,14 +1332,19 @@ author: @ecoslado
     @api public
      */
 
-    QueryInput.prototype.start = function() {
+    QueryInput.prototype.init = function(controller) {
       var _this, options;
+      if (this.controller) {
+        this.controller.push(controller);
+      } else {
+        this.controller = [controller];
+      }
       _this = this;
       options = $.extend(true, {
         callback: function() {
           var query;
-          query = document.querySelector(_this.queryInput).value;
-          return _this.controller.search.call(_this.controller, query);
+          query = $(_this.queryInput).val();
+          return controller.search.call(controller, query);
         },
         wait: 43,
         captureLength: 3
@@ -1560,8 +1564,9 @@ bottom
     events to DOM elements.
      */
 
-    ScrollDisplay.prototype.start = function() {
+    ScrollDisplay.prototype.init = function(controller) {
       var _this, options;
+      this.controller = controller;
       _this = this;
       options = $.extend(true, {
         callback: function() {

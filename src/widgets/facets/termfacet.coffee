@@ -37,7 +37,8 @@ class TermFacet extends Display
 
     super(container, template, options)
   
-  start: () ->
+  init: (controller) ->
+    super(controller)
     _this = this
     $(@container).on 'click', "[data-facet='#{@name}']", (e) ->
         e.preventDefault()
