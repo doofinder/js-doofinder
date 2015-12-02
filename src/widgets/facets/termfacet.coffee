@@ -40,6 +40,10 @@ class TermFacet extends Display
   init: (controller) ->
     super(controller)
     _this = this
+    
+    @bind "df:search", (params) -> 	
+      _this.selected = {}
+
     $(@container).on 'click', "a[data-facet='#{@name}']", (e) ->
         e.preventDefault()
         termFacet = $(e.toElement)

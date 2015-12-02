@@ -153,7 +153,7 @@ class Controller
   ###
 
   refresh: () ->
-    @__triggerAll "df:search"
+    @__triggerAll "df:refresh"
     @__search()
 
   ###

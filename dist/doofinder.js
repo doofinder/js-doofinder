@@ -504,7 +504,7 @@ author: @ecoslado
      */
 
     Controller.prototype.refresh = function() {
-      this.__triggerAll("df:search");
+      this.__triggerAll("df:refresh");
       return this.__search();
     };
 
@@ -1311,6 +1311,9 @@ paint them. Manages the filtering.
       var _this;
       TermFacet.__super__.init.call(this, controller);
       _this = this;
+      this.bind("df:search", function(params) {
+        return _this.selected = {};
+      });
       return $(this.container).on('click', "a[data-facet='" + this.name + "']", function(e) {
         var key, termFacet, value;
         e.preventDefault();
