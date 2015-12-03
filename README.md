@@ -1,5 +1,5 @@
 # jsDoofinder (In progress)
-Is a library that allow you to make requests to Doofinder Search Engines and show the results in your website. You'll be able to retrieve and shape your data easily with it.
+This library allows you to make requests to [Doofinder](http://www.doofinder.com) Search Engines and show the results in your website. You'll be able to retrieve and shape your data easily with it.
 
 ## Summary
 
@@ -43,21 +43,23 @@ Let's begin by showing a simple HTML template (myview.html):
 <script type="application/javascript" src="path/to/your/js/doofinder.min.js"></script>
 <script>
 (function(doofinder, document){
-
-  $(document).ready(function(){ 
-    // Instantiation
-    var client = new doofinder.Client('a3fd9dcvga0932el99ds4az', 'eu1');
+  $(document).ready(function(){
+    // Use here your Search Engine hashid and doofinder zone
+    var client = new doofinder.Client('97be6c1016163d7e9bceedb5d9bbc032', 'eu1');
+    // #query is the DOM selector that points to the search box
     var queryInputWidget = new doofinder.widgets.QueryInput('#query');
+    // #scroll is where we'll display the results
     var resultsWidget = new doofinder.widgets.ScrollResults('#scroll');
+    // The controller to rule them all
     var controller = new doofinder.Controller(
-        client, 
+        client,
         [queryInputWidget, resultsWidget]
-        );
+    );
   });
 })(doofinder, document);
 </script>
 <style>
-	#scroll{
+#scroll{
     position: relative;
     height: 800px;
     overflow: auto;
@@ -77,8 +79,8 @@ Note that we are importing two javascript files:
 We need to create the inner scroll via css.
 
 The options we have filled in for the Client:
-* hashid: the unique hashid for your search engine.
-* zone: the zone where is your search engine (eu1, us1).
+* hashid: the unique hashid of your search engine.
+* zone: the zone where your search engine is located (eu1, us1, ...).
 
 For the QueryInput widget:
 * queryInput selector: the CSS selector of our query input.
@@ -86,9 +88,9 @@ For the QueryInput widget:
 For the ScrollResults widget:
 * scroll selector: the CSS selector for the scroll wrapper.
 
-Note that Doofinder Search API is protected with CORS, so you must enable the host you are requesting from. You can do this from your Doofinder Administration Panel > Configuration > TODO(@ecoslado) This feature in Admin Panel.
+**WARNING**: Note that Doofinder Search API is protected with CORS, so you must enable the host you are requesting from. You can do this from your Doofinder Administration Panel > Configuration > TODO(@ecoslado) This feature in Admin Panel.
 
-At the moment, we have a search box where we can write a query and results we'll be shown since the fourth character we type and the results in a scroll who asks for the next page when last element is reached.
+With all this in place you'll have a search box where you can write a query and the results will be shown. Scrolling into the layer you'll see more results.
 
 ## Classes
 
@@ -97,66 +99,65 @@ Controller is the class that manages client and widgets. Allows you to make diff
 
 #### constructor
 
-  Argument | Required | Type | Description 
+  Argument | Required | Type | Description
   -------- | -------- |---- | ---------------------
   client   | Yes | `doofinder.Client` | The Search API wrapper
-  widgets  | Yes | `doofinder.Widget` `Array(doofinder.Widget)` | The widgets for interacting and painting results
+  widgets  | Yes | `doofinder.Widget` `Array(doofinder.Widget)` | Array of widgets for interacting and rendering the results
   searchParameters | No | `Object` | An object with params that will passed to the client for every search. You can use here all the parameters defined in [Doofinder Search API](http://doofinder.com/en/developer/search-api).
 
 #### search
-This method make a query to the Search API and render the results.
+This method makes a query to the Search API and renders the results into the widgets.
 
-  Argument | Required | Type | Description 
+  Argument | Required | Type | Description
   -------- | -------- | ---- | ---------------------
   query    | Yes  | `String` | The query terms.
   params   | No  | `Object` | An object with search parameters. You can use here all the parameters defined in [Doofinder Search API](http://doofinder.com/en/developer/search-api).
 
 #### nextPage
-Ask for the next page, so increment the current and send the response to all widgets to render it.
-
+Asks for the next page of the previous search done, and sends the response to all widgets to render it.
 
 #### getPage
-Ask for a page. Then pass the response to all widgets to render it.
+Asks for a concrete page. Then pass the response to all widgets to render it.
 
-  Argument | Required  | Type | Description 
+  Argument | Required  | Type | Description
   -------- | -------- | ---- | ---------------------
   page     | Yes  | `Number` | The page requested
 
 #### addFilter
-Adds a filter to the currently applied.
-  
-  Argument | Required | Type | Description 
+Adds a filter to the currently applied in the search.
+
+  Argument | Required | Type | Description
   -------- | -------- | ---- | ---------------------
   facet  | Yes | `String` | The name of the facet.
-  value | Yes |`String` `Object` | The filter to add. This can be a `String`, if the facet is a term facet or an `Object` if it's a range.
+  value | Yes |`String` `Object` | The value the facet should have. This can be a `String`, if the facet is a term facet or an `Object` if it's a range.
 
 #### removeFilter
 Removes a filter from the currently applied.
 
-  Argument | Required | Type | Description 
+  Argument | Required | Type | Description
   -------- | -------- | ---- | ---------------------
   facet | Yes | `String` | The name of the facet.
-  value | Yes |`String` `Object` | The filter to remove. This can be a `String`, if the facet is a term facet or an `Object` if it's a range.
+  value | Yes |`String` `Object` | The value of the facet. This can be a `String`, if the facet is a term facet or an `Object` if it's a range.
 
 #### refresh
-Makes a search with the current filter status. Then, it calls to every widgets to render it.
+Makes a search with the current filter status. Then, it calls to every widget to render the results.
 
 #### addWidget
 Adds a widget to the controller after the instantiation.
- 
- Argument | Required | Type | Description 
+
+ Argument | Required | Type | Description
  -------- | --------- |---- | ---------------------
   widget |  Yes |`doofinder.Widget` | The widget to add.
 
 
 
 ### Widget
-Widget is just a contract to accomplish for every widget we'll describe next. Once you have injected the wigdets to the controller. 
+Widgets are visual elements that take part into the search. They can be search inputs, places where display the results, places to put the facets, etc.
 
 #### bind
-This method adds callback to an event triggered for the widget. Events are triggered for every widget when a query is going to be done or when results are received or when they are rendered in a widget.
+This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
 
-Argument | Required | Type | Description 
+Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
 event |  Yes | `String` | The query terms.
 callback | Yes | `Function` | The function which receives the API Search response.
@@ -173,11 +174,11 @@ df:results_rendered | <ul><li>resObject`: the Search API response</li></ul> | Th
 
 
 ### widgets.QueryInput
-This widget triggers searches when a user types on it. 
+This widget triggers searches when a user types on it.
 
 #### constructor
 
-Argument | Required | Type | Description 
+Argument | Required | Type | Description
 -------- | --------- | ---- | ---------------------
 selector |  Yes | `String` | Input CSS selector.
 options |  No | `Object` | Options to configure the input.
@@ -195,7 +196,7 @@ This widget shows the results in a DOM node. When a new search or filter is done
 
 #### constructor
 
-Argument | Required | Type | Description 
+Argument | Required | Type | Description
 -------- | --------- | ---- | ---------------------
 container |  Yes | `String` | Results container CSS selector.
 options |  No | `Object` | Options to configure the input.
@@ -215,7 +216,7 @@ This widget render the results in an DOM node with an inner scroll.
 
 #### constructor
 
-Argument | Required | Type | Description 
+Argument | Required | Type | Description
 -------- | --------- | ---- | ---------------------
 container |  Yes | `String` | Results container CSS selector.
 options |  No | `Object` | Options to configure the input.
@@ -229,11 +230,11 @@ templateVars | `Object` | Extra info you want to render in the template.
 
 ### widgets.TermFacet
 
-This widget render a term facet in a list of terms. 
+This widget render a term facet in a list of terms.
 
 #### constructor
 
-Argument | Required | Type | Description 
+Argument | Required | Type | Description
 -------- | --------- | ---- | ---------------------
 container |  Yes | `String` | Results container CSS selector.
 name | Yes | `String`| The facet key.
@@ -249,13 +250,13 @@ templateVars | `Object` | Extra info you want to render in the template.
 ### widgets.RangeFacet
 
 This widget render a range facet in a slider. To show it properly is necessary some
-CSS. You can add this stylesheet: 
+CSS. You can add this stylesheet:
 
 https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.css
 
 #### constructor
 
-Argument | Required | Type | Description 
+Argument | Required | Type | Description
 -------- | --------- | ---- | ---------------------
 container |  Yes | `String` | Results container CSS selector.
 name | Yes | `String`| The facet key.
@@ -271,7 +272,7 @@ templateVars | `Object` | Extra info you want to render in the template.
 ### Client
 
 #### constructor
-Argument | Required | Type | Description 
+Argument | Required | Type | Description
 -------- | --------- | ---- | ---------------------
 hashid   | Yes  | `String` | The unique search engine identifier.
 API Key  | Yes  | `String` | The secret key to authenticate the request.
@@ -280,12 +281,8 @@ types | No  | `Array` | An array of datatypes to restrict the queries to them.
 #### search
 This method performs a Search API call and retrieves the data. The data will be received by a callback function.
 
- Argument | Required | Type | Description 
+ Argument | Required | Type | Description
  -------- | --------- |---- | ---------------------
  query |  Yes | `String` | The query terms.
  params |  No | `Object` | The query terms.
  callback | Yes | `Function` | The function which receives the API Search response.
-
-
-
- 
