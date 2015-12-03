@@ -170,7 +170,7 @@ df:search   | <ul><li>params`Object`: the object will be send as params to the S
 df:next_page  | <ul><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.nextPage is called.
 df:get_page   | <ul><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.getPage is called.
 df:results_received | <ul><li>res`Object`: the Search API response</li></ul> | This event is triggered when new results are received from Search API.
-df:results_rendered | <ul><li>resObject`: the Search API response</li></ul> | This event is triggered when the results are rendered in the widget.
+df:results_rendered | <ul><li>res`Object`: the Search API response</li></ul> | This event is triggered when the results are rendered in the widget.
 
 
 ### widgets.QueryInput
