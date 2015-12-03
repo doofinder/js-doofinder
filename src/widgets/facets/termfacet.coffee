@@ -4,15 +4,14 @@ author: @ecoslado
 2015 11 10
 ###
 
+Display = require "../display"
+$ = require "jquery"
+
 ###
 TermFacet
 This class receives a facet terms and
 paint them. Manages the filtering.
 ###
-
-Display = require "../display"
-$ = require "jquery"
-
 class TermFacet extends Display
 
   constructor: (container, @name, options = {}) ->

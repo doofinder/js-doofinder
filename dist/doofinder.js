@@ -178,7 +178,7 @@ author: @ecoslado
             });
           }
         };
-        req = http.request(options, processResponse);
+        req = http.request(options, _this.__processResponse(callback));
         return req.end();
       });
     };
@@ -289,6 +289,98 @@ author: @ecoslado
       return encodeURI(querystring);
     };
 
+
+    /*
+    This method calls to /hit
+    service for accounting the
+    hits in a product
+    
+    @param {String} dfid
+    @param {String} query
+    @param {Function} callback
+    @api public
+     */
+
+    Client.prototype.hit = function(dfid, query, callback) {
+      var headers, options, req;
+      if (query == null) {
+        query = "";
+      }
+      if (callback == null) {
+        callback = function(err, res) {};
+      }
+      headers = {};
+      if (this.apiKey) {
+        headers['api token'] = _this.apiKey;
+      }
+      options = {
+        host: this.url,
+        path: "/" + this.version + "/hit/" + this.hashid + "/" + dfid + "/" + (encodeURIComponent(query)) + "?random=" + (new Date().getTime()),
+        headers: headers
+      };
+      req = http.request(options, this.__processResponse(callback));
+      return req.end();
+    };
+
+
+    /*
+    This method calls to /hit
+    service for accounting the
+    hits in a product
+    
+    @param {String} dfid
+    @param {String} query
+    @param {Function} callback
+    @api public
+     */
+
+    Client.prototype.options = function(callback) {
+      var headers, options, req;
+      if (callback == null) {
+        callback = function(err, res) {};
+      }
+      headers = {};
+      if (this.apiKey) {
+        headers['api token'] = _this.apiKey;
+      }
+      options = {
+        host: this.url,
+        path: "/" + this.version + "/options/" + this.hashid,
+        headers: headers
+      };
+      req = http.request(options, this.__processResponse(callback));
+      return req.end();
+    };
+
+
+    /*
+    Callback function will be passed as argument to search
+    and will be returned with response body
+    
+    @param {Object} res: the response
+    @api private
+     */
+
+    Client.prototype.__processResponse = function(callback) {
+      return function(res) {
+        var data;
+        if (res.statusCode >= 400) {
+          return callback(res.statusCode, null);
+        } else {
+          data = "";
+          res.on('data', function(chunk) {
+            return data += chunk;
+          });
+          res.on('end', function() {
+            return callback(null, JSON.parse(data));
+          });
+          return res.on('error', function(err) {
+            return callback(err, null);
+          });
+        }
+      };
+    };
+
     return Client;
 
   })();
@@ -339,7 +431,7 @@ author: @ecoslado
           widget = widgets[i];
           this.addWidget(widget);
         }
-      } else {
+      } else if (widgets) {
         this.addWidget(widgets);
       }
       this.initialParams = $.extend(true, initialParams, {
@@ -466,7 +558,6 @@ author: @ecoslado
         replace = false;
       }
       this.__triggerAll("df:next_page");
-      console.log(this.status.firstQueryTriggered, this.status.currentPage, this.status.lastPageReached);
       if (this.status.firstQueryTriggered && this.status.currentPage > 0 && !this.status.lastPageReached) {
         this.status.currentPage++;
         return this.__search(true);
@@ -576,6 +667,64 @@ author: @ecoslado
     Controller.prototype.addWidget = function(widget) {
       this.widgets.push(widget);
       return widget.init(this);
+    };
+
+
+    /*
+    hit
+    
+    Increment the hit counter when a product is clicked.
+    
+    @param {String} dfid: the unique identifier present in the search result
+    @param {Function} callback
+     */
+
+    Controller.prototype.hit = function(dfid, callback) {
+      return this.client.hit(dfid, this.status.query, callback);
+    };
+
+
+    /*
+    options
+    
+    Retrieves the SearchEngine options
+    
+    @param {Function} callback
+     */
+
+    Controller.prototype.options = function(callback) {
+      return this.client.options(callback);
+    };
+
+
+    /*
+    sendToGA
+    
+    Send the a command to Google Analytics
+    
+    @param {Object} gaCommand: the command for GA 
+    	eventCategory: "xxx" 
+    	eventLabel: "xxx" 
+    	eventAction: "xxx"
+     */
+
+    Controller.prototype.sendToGA = function(gaCommand) {
+      var ga, trackerName;
+      if (window._gaq && window._gaq.push) {
+        window._gaq.push(['_trackEvent', gaCommand['eventCategory'], gaCommand['eventAction'], gaCommand['eventLabel']]);
+        if (gaCommand['eventAction'].indexOf('search') === 0) {
+          window._gaq.push(['_trackPageview', '/doofinder/search/' + options.hashid + '?query=' + gaCommand['eventLabel']]);
+        } else {
+          ga = window[window.GoogleAnalyticsObject] || window.ga;
+        }
+        if (ga && ga.getAll) {
+          trackerName = ga.getAll()[0].get('name');
+          ga(trackerName + '.send', 'event', gaCommand);
+          if (gaCommand['eventAction'].indexOf('search') === 0) {
+            return ga(trackerName + '.send', 'pageview', '/doofinder/search/' + options.hashid + '?query=' + gaCommand['eventLabel']);
+          }
+        }
+      }
     };
 
     return Controller;
@@ -1273,13 +1422,6 @@ author: @ecoslado
 2015 11 10
  */
 
-
-/*
-TermFacet
-This class receives a facet terms and
-paint them. Manages the filtering.
- */
-
 (function() {
   var $, Display, TermFacet,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -1288,6 +1430,13 @@ paint them. Manages the filtering.
   Display = _dereq_("../display");
 
   $ = _dereq_("jquery");
+
+
+  /*
+  TermFacet
+  This class receives a facet terms and
+  paint them. Manages the filtering.
+   */
 
   TermFacet = (function(superClass) {
     extend(TermFacet, superClass);
@@ -1496,7 +1645,7 @@ replaces the current content.
         options = {};
       }
       if (!options.template) {
-        template = '<ul>{{#each results}}' + '<li>{{#each this}}' + '<b>{{@key}}</b>:{{this}}<br></li>' + '{{/each}}</div>' + '{{/each}}' + '</ul>';
+        template = '<ul>{{#each results}}' + '            <li>{{#each this}}' + '               <b>{{@key}}</b>:{{this}}<br></li>' + '               {{/each}}</div>' + '            {{/each}}' + '         </ul>';
       } else {
         template = options.template;
       }
@@ -1564,17 +1713,39 @@ replaces the current content.
         options = {};
       }
       if (!options.template) {
-        template = '<ul>{{#each results}}' + '<li>{{#each this}}' + '<b>{{@key}}</b>:{{this}}<br>' + '{{/each}}</li>' + '{{/each}}' + '</ul>';
+        template = '<ul>{{#each results}}' + '             <li>{{#each this}}' + '               <b>{{@key}}</b>:{{this}}<br>' + '                 {{/each}}' + '            </li>' + '             {{/each}}' + '        </ul>';
       } else {
         template = options.template;
       }
       ScrollResults.__super__.constructor.call(this, container, template, options);
     }
 
+
+    /*
+    render
+    
+    just inherits render method and triggers
+    df:results_rendered
+    
+    @param {Object} res
+    @api public
+     */
+
     ScrollResults.prototype.render = function(res) {
       ScrollResults.__super__.render.call(this, res);
       return this.trigger("df:results_rendered", res);
     };
+
+
+    /*
+    renderNext
+    
+    just inherits render method and triggers
+    df:results_rendered
+    
+    @param {Object} res
+    @api public
+     */
 
     ScrollResults.prototype.renderNext = function(res) {
       ScrollResults.__super__.renderNext.call(this, res);
@@ -1668,7 +1839,10 @@ bottom
           return _this.controller.nextPage.call(_this.controller);
         }
       }, this.scrollOptions || {});
-      return dfScroll(this.scrollWrapper, options);
+      dfScroll(this.scrollWrapper, options);
+      return this.bind('df:search', function() {
+        return $(_this.scrollWrapper).scrollTop(0);
+      });
     };
 
 

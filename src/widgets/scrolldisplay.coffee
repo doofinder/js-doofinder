@@ -63,7 +63,7 @@ class ScrollDisplay extends Display
 
     dfScroll @scrollWrapper, options
 
-    # @bind('df:search', () -> $(_this.scrollWrapper).animate({scrollTop: 0}, "quick"))
+    @bind 'df:search', () -> $(_this.scrollWrapper).scrollTop(0)
 
 
   ###

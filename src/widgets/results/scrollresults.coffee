@@ -26,20 +26,39 @@ class ScrollResults extends ScrollDisplay
   constructor: (container, options = {}) ->
     if not options.template
       template = '<ul>{{#each results}}' +
-        '<li>{{#each this}}' +
-        '<b>{{@key}}</b>:{{this}}<br>' +
-        '{{/each}}</li>' +
-        '{{/each}}' +
-        '</ul>'
+        '             <li>{{#each this}}' +
+        '               <b>{{@key}}</b>:{{this}}<br>' +
+        '                 {{/each}}' + 
+        '            </li>' +
+        '             {{/each}}' +
+        '        </ul>'
     else
       template = options.template
 
     super(container, template, options)
 
+  ###
+  render
+
+  just inherits render method and triggers
+  df:results_rendered
+
+  @param {Object} res
+  @api public
+  ###
   render: (res) ->
     super(res)
     @trigger("df:results_rendered", res)
 
+  ###
+  renderNext
+
+  just inherits render method and triggers
+  df:results_rendered
+
+  @param {Object} res
+  @api public
+  ###
   renderNext: (res) ->
     super(res)
     @trigger("df:results_rendered", res)

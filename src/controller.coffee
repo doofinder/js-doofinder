@@ -27,7 +27,7 @@ class Controller
       for widget in widgets
         @addWidget(widget)
 
-    else
+    else if widgets
       @addWidget(widgets)
     
     # Initial status
@@ -122,7 +122,6 @@ class Controller
   ###
   nextPage: (replace = false) ->
     @__triggerAll "df:next_page"
-    console.log @status.firstQueryTriggered, @status.currentPage, @status.lastPageReached
     if @status.firstQueryTriggered and @status.currentPage > 0 and not @status.lastPageReached      
       @status.currentPage++
       @__search(true)
@@ -215,5 +214,56 @@ class Controller
   addWidget: (widget) ->
     @widgets.push(widget)
     widget.init(this)
+
+  ###
+  hit
+
+  Increment the hit counter when a product is clicked.
+
+  @param {String} dfid: the unique identifier present in the search result
+  @param {Function} callback
+  ###
+  hit: (dfid, callback) ->
+  	@client.hit dfid, @status.query, callback
+
+
+  ###
+  options
+
+  Retrieves the SearchEngine options
+
+  @param {Function} callback
+  ###
+  options: (callback) ->
+    @client.options callback
+
+  ###
+  sendToGA
+  
+  Send the a command to Google Analytics
+
+  @param {Object} gaCommand: the command for GA 
+  	eventCategory: "xxx" 
+  	eventLabel: "xxx" 
+  	eventAction: "xxx"
+  ###
+  sendToGA: (gaCommand) ->
+	  if window._gaq and window._gaq.push
+	    # Classic Analytics
+	    window._gaq.push ['_trackEvent', gaCommand['eventCategory'],
+	      gaCommand['eventAction'],
+	      gaCommand['eventLabel']]
+
+	    if gaCommand['eventAction'].indexOf('search') == 0  # also send pageview to count on search analytics
+	      window._gaq.push(['_trackPageview', '/doofinder/search/' + options.hashid + '?query=' + gaCommand['eventLabel']])
+	    else
+	    # Universal Analytics
+	      ga = (window[window.GoogleAnalyticsObject] || window.ga);
+	    if (ga and ga.getAll)
+	    # http://stackoverflow.com/q/28765806/316414
+	      trackerName = ga.getAll()[0].get('name');
+	      ga(trackerName + '.send', 'event', gaCommand);
+	      if gaCommand['eventAction'].indexOf('search') == 0  # also send pageview to count on search analytics
+	        ga(trackerName + '.send', 'pageview', '/doofinder/search/' + options.hashid + '?query=' + gaCommand['eventLabel'])
 
 module.exports = Controller

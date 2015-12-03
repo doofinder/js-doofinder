@@ -26,11 +26,11 @@ class Results extends Display
   constructor: (container, options = {}) ->
   	if not options.template
   	  template = '<ul>{{#each results}}' +
-        '<li>{{#each this}}' +
-        '<b>{{@key}}</b>:{{this}}<br></li>' +
-        '{{/each}}</div>' +
-        '{{/each}}' +
-        '</ul>'
+        '            <li>{{#each this}}' +
+        '               <b>{{@key}}</b>:{{this}}<br></li>' +
+        '               {{/each}}</div>' +
+        '            {{/each}}' +
+        '         </ul>'
     else
       template = options.template
   	super(container, template, options)

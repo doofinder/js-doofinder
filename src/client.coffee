@@ -164,7 +164,7 @@ class Client
             return callback err, null
 
       # Here is where request is done and executed processResponse
-      req = http.request options, processResponse
+      req = http.request options, _this.__processResponse(callback)
       req.end()
 
   ###
@@ -251,7 +251,76 @@ class Client
       for key, value of @sort
         querystring += "&sort[#{key}]=#{value}"
 
-    return encodeURI querystring 
+    return encodeURI querystring
+  
+  ###
+  This method calls to /hit
+  service for accounting the
+  hits in a product
+
+  @param {String} dfid
+  @param {String} query
+  @param {Function} callback
+  @api public
+  ###
+  hit: (dfid, query = "", callback = (err, res) ->) ->
+    headers = {}
+    if @apiKey
+        headers['api token'] = _this.apiKey
+    options = 
+        host: @url
+        path: "/#{@version}/hit/#{@hashid}/#{dfid}/#{encodeURIComponent(query)}?random=#{new Date().getTime()}"
+        headers: headers
+
+    # Here is where request is done and executed processResponse
+    req = http.request options, @__processResponse(callback)
+    req.end()
+  
+  ###
+  This method calls to /hit
+  service for accounting the
+  hits in a product
+
+  @param {String} dfid
+  @param {String} query
+  @param {Function} callback
+  @api public
+  ###
+  options: (callback = (err, res) ->) ->
+    headers = {}
+    if @apiKey
+        headers['api token'] = _this.apiKey
+    options = 
+        host: @url
+        path: "/#{@version}/options/#{@hashid}"
+        headers: headers
+
+    # Here is where request is done and executed processResponse
+    req = http.request options, @__processResponse(callback)
+    req.end()
+
+  ###
+  Callback function will be passed as argument to search
+  and will be returned with response body
+
+  @param {Object} res: the response
+  @api private
+  ###
+  __processResponse: (callback) ->
+    (res) ->
+      if res.statusCode >= 400
+        return callback res.statusCode, null
+        
+      else 
+        data = ""
+        res.on 'data', (chunk) ->
+          data += chunk
+          
+        res.on 'end', () ->
+          return callback null, JSON.parse(data)
+
+        res.on 'error', (err) ->
+          return callback err, null
 
 # Module exports
 module.exports = Client
