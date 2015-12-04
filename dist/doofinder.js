@@ -1299,7 +1299,8 @@ replaces the current content.
       context = $.extend(true, res, this.extraContext || {});
       html = this.template(context);
       try {
-        return $(this.container).html(html);
+        $(this.container).html(html);
+        return this.trigger('df:rendered', [res]);
       } catch (_error) {
         throw Error("widget.Results: Error while rendering." + " The container you are trying to access does not already exist.");
       }
@@ -1406,7 +1407,8 @@ them. Manages the filtering.
         range.to = parseInt(res.filter.range[this.name].lt, 10);
       }
       facet = $("input[data-facet='" + this.name + "']");
-      return facet.ionRangeSlider(range);
+      facet.ionRangeSlider(range);
+      return this.trigger('df:rendered', [res]);
     };
 
     RangeFacet.prototype.renderNext = function() {};
@@ -1506,7 +1508,8 @@ author: @ecoslado
         terms: res.facets[this.name].terms
       }, this.extraContext || {});
       html = this.template(context);
-      return $(this.container).html(html);
+      $(this.container).html(html);
+      return this.trigger('df:rendered', [res]);
     };
 
     TermFacet.prototype.renderNext = function() {};
@@ -1653,16 +1656,6 @@ replaces the current content.
       Results.__super__.constructor.call(this, container, template, options);
     }
 
-    Results.prototype.render = function(res) {
-      Results.__super__.render.call(this, res);
-      return this.trigger("df:results_rendered", res);
-    };
-
-    Results.prototype.renderNext = function(res) {
-      Results.__super__.renderNext.call(this, res);
-      return this.trigger("df:results_rendered", res);
-    };
-
     return Results;
 
   })(Display);
@@ -1752,7 +1745,7 @@ replaces the current content.
 
     ScrollResults.prototype.render = function(res) {
       ScrollResults.__super__.render.call(this, res);
-      return this.trigger("df:results_rendered", res);
+      return this.trigger("df:rendered", res);
     };
 
 
@@ -1768,7 +1761,7 @@ replaces the current content.
 
     ScrollResults.prototype.renderNext = function(res) {
       ScrollResults.__super__.renderNext.call(this, res);
-      return this.trigger("df:results_rendered", res);
+      return this.trigger("df:rendered", res);
     };
 
     return ScrollResults;

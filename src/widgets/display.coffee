@@ -62,6 +62,7 @@ class Display extends Widget
     html = @template context
     try
       $(@container).html html
+      @trigger('df:rendered', [res])
     catch 
       throw Error "widget.Results: Error while rendering." + 
         " The container you are trying to access does not already exist."

@@ -149,13 +149,8 @@ Adds a widget to the controller after the instantiation.
  -------- | --------- |---- | ---------------------
   widget |  Yes |`doofinder.Widget` | The widget to add.
 
-
-
-### Widget
-Widgets are visual elements that take part into the search. They can be search inputs, places where display the results, places to put the facets, etc.
-
 #### bind
-This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
+This method adds a callback to an event triggered from the controller. Events are triggered from the controller when a query is going to be done or when results are received.
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
@@ -164,13 +159,19 @@ callback | Yes | `Function` | The function which receives the API Search respons
 
 The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
 
+
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-df:search   | <ul><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.search is called.
-df:next_page  | <ul><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.nextPage is called.
-df:get_page   | <ul><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.getPage is called.
-df:results_received | <ul><li>res`Object`: the Search API response</li></ul> | This event is triggered when new results are received from Search API.
-df:results_rendered | <ul><li>res`Object`: the Search API response</li></ul> | This event is triggered when the results are rendered in the widget.
+df:search   | <ul><li>event`Object`: object with the event information.</li><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.search is called.
+df:next_page  | <ul><li>event`Object`: object with the event information.</li><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.nextPage is called.
+df:get_page   | <ul><li>event`Object`: object with the event information.</li><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.getPage is called.
+df:results_received | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: the Search API response</li></ul> | This event is triggered when new results are received from Search API.
+
+
+
+### Widget
+Widgets are visual elements that take part into the search. They can be search inputs, places where display the results, places to put the facets, etc.
+The events you can bind in widget depend on the widget you are instantiating. Above we'll describe all the available widget and theirs correponding events. 
 
 
 ### widgets.QueryInput
@@ -190,6 +191,13 @@ Option | Type | Description
 wait | `Number` | milliseconds that the widget waits to check the input content length.
 captureLength | `Number` | number of Requireds typed when first search is performed
 
+#### bind
+This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The query terms.
+callback | Yes | `Function` | The function which receives the API Search response.
 
 ### widgets.Results
 This widget shows the results in a DOM node. When a new search or filter is done or a new page is requested the new content will replace the older.
@@ -208,7 +216,19 @@ Option | Type | Description
 template | `String` | Template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template.
 
+#### bind
+This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
 
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The query terms.
+callback | Yes | `Function` | The function which receives the API Search response.
+
+The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
+
+Event Name | Callback Arguments | Description
+---------- | ------------------ | -----------
+df:rendered   | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
 
 ### widgets.ScrollResults
 
@@ -228,6 +248,21 @@ Option | Type | Description
 template | `String` | Template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template.
 
+#### bind
+This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The query terms.
+callback | Yes | `Function` | The function which receives the API Search response.
+
+The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
+
+Event Name | Callback Arguments | Description
+---------- | ------------------ | -----------
+df:rendered   | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
+df:hit   | <ul><li>event`Object`: object with the event information.</li><li>dfid`String`: Doofinder Item Identifier. Useful to make the controller.hit call.</li><li>url`String`: The url associated to the item. Useful to make the controller.sendToGA call.</li></ul> | This event is triggered when a result link is clicked.
+
 ### widgets.TermFacet
 
 This widget render a term facet in a list of terms.
@@ -246,6 +281,20 @@ Option | Type | Description
 ------ |  ---- |  --------------
 template | `String` | Template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template.
+
+#### bind
+This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The query terms.
+callback | Yes | `Function` | The function which receives the API Search response.
+
+The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
+
+Event Name | Callback Arguments | Description
+---------- | ------------------ | -----------
+df:rendered   | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the facet is rendered.
 
 ### widgets.RangeFacet
 
@@ -268,6 +317,20 @@ Option | Type | Description
 ------ |  ---- |  --------------
 template | `String` | Template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template.
+
+#### bind
+This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The query terms.
+callback | Yes | `Function` | The function which receives the API Search response.
+
+The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
+
+Event Name | Callback Arguments | Description
+---------- | ------------------ | -----------
+df:rendered   | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the facet is rendered.
 
 ### Client
 

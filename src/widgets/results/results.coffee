@@ -36,12 +36,5 @@ class Results extends Display
   	super(container, template, options)
 
 
-  render: (res) ->
-    super(res)
-    @trigger("df:results_rendered", res)
-
-  renderNext: (res) ->
-    super(res)
-    @trigger("df:results_rendered", res)
 
 module.exports = Results

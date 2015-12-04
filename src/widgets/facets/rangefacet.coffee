@@ -68,6 +68,7 @@ class RangeFacet extends Display
 
     facet = $("input[data-facet='#{@name}']")
     facet.ionRangeSlider(range)
+    @trigger('df:rendered', [res])
     
 
   renderNext: () ->

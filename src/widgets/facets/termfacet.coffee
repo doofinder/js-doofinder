@@ -82,6 +82,7 @@ class TermFacet extends Display
 
     html = @template(context)
     $(@container).html html
+    @trigger('df:rendered', [res])
 
   renderNext: () ->
 

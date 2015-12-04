@@ -60,7 +60,7 @@ class ScrollResults extends ScrollDisplay
   ###
   render: (res) ->
     super(res)
-    @trigger("df:results_rendered", res)
+    @trigger("df:rendered", res)
 
   ###
   renderNext
@@ -73,6 +73,6 @@ class ScrollResults extends ScrollDisplay
   ###
   renderNext: (res) ->
     super(res)
-    @trigger("df:results_rendered", res)
+    @trigger("df:rendered", res)
 
 module.exports = ScrollResults
