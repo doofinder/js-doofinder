@@ -2,7 +2,7 @@
 # Created by Kike Coslado on 26/10/15.
 ###
 
-$ = require("./util/jquery")
+$ = require "./util/jquery"
 
 ###
 Controller
@@ -38,20 +38,6 @@ class Controller
       currentPage: 0
       firstQueryTriggered: false
       lastPageReached: false
-  
-  ###
-  __triggerAll
-  this function triggers an event
-  for every resultwidget
-  
-  @param {String} event: the event name
-  @param {Array} params: the params will be passed
-    to the listeners
-  @api private
-  ###
-  __triggerAll: (event, params) ->
-    for widget in @widgets
-      widget.trigger(event, params)
 
   ###
   __search
@@ -74,7 +60,7 @@ class Controller
     params.page = @status.currentPage
     _this = this
     @client.search query, params, (err, res) ->
-      _this.__triggerAll "df:results_received", res
+      _this.trigger "df:results_received", [res]
       # Whe show the results only when query counter
       # belongs to a the present request
       if res.query_counter == _this.status.params.query_counter
@@ -102,7 +88,7 @@ class Controller
   @api public
   ###
   search: (query, params={}) ->
-    @__triggerAll "df:search"
+    @trigger "df:search"
     if query
       @status.query = query
     
@@ -121,7 +107,7 @@ class Controller
   @api public
   ###
   nextPage: (replace = false) ->
-    @__triggerAll "df:next_page"
+    @trigger "df:next_page"
     if @status.firstQueryTriggered and @status.currentPage > 0 and not @status.lastPageReached      
       @status.currentPage++
       @__search(true)
@@ -137,7 +123,7 @@ class Controller
   ###
 
   getPage: (page) ->
-    @__triggerAll "df:get_page"
+    @trigger "df:get_page"
     if @status.firstQueryTriggered and @status.currentPage > 0
       @status.currentPage = page
       self = this
@@ -152,7 +138,7 @@ class Controller
   ###
 
   refresh: () ->
-    @__triggerAll "df:refresh"
+    @trigger "df:refresh"
     @__search()
 
   ###
@@ -265,5 +251,27 @@ class Controller
 	      ga(trackerName + '.send', 'event', gaCommand);
 	      if gaCommand['eventAction'].indexOf('search') == 0  # also send pageview to count on search analytics
 	        ga(trackerName + '.send', 'pageview', '/doofinder/search/' + options.hashid + '?query=' + gaCommand['eventLabel'])
+
+  ###
+  bind
+
+  Method to add and event listener
+  @param {String} event
+  @param {Function} callback
+  @api public
+  ###
+  bind: (event, callback) ->
+    $(this).on(event, callback)
+
+  ###
+  trigger
+
+  Method to trigger an event
+  @param {String} event
+  @param {Array} params
+  @api public
+  ###
+  trigger: (event, params) -> 
+    $(this).trigger(event, params)
 
 module.exports = Controller

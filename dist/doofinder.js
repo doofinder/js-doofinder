@@ -448,29 +448,6 @@ author: @ecoslado
 
 
     /*
-    __triggerAll
-    this function triggers an event
-    for every resultwidget
-    
-    @param {String} event: the event name
-    @param {Array} params: the params will be passed
-      to the listeners
-    @api private
-     */
-
-    Controller.prototype.__triggerAll = function(event, params) {
-      var i, len, ref, results, widget;
-      ref = this.widgets;
-      results = [];
-      for (i = 0, len = ref.length; i < len; i++) {
-        widget = ref[i];
-        results.push(widget.trigger(event, params));
-      }
-      return results;
-    };
-
-
-    /*
     __search
     this method invokes Client's search method for
     retrieving the data and use widget's replace or 
@@ -494,7 +471,7 @@ author: @ecoslado
       _this = this;
       return this.client.search(query, params, function(err, res) {
         var i, len, ref, widget;
-        _this.__triggerAll("df:results_received", res);
+        _this.trigger("df:results_received", [res]);
         if (res.query_counter === _this.status.params.query_counter) {
           ref = _this.widgets;
           for (i = 0, len = ref.length; i < len; i++) {
@@ -532,7 +509,7 @@ author: @ecoslado
       if (params == null) {
         params = {};
       }
-      this.__triggerAll("df:search");
+      this.trigger("df:search");
       if (query) {
         this.status.query = query;
       }
@@ -557,7 +534,7 @@ author: @ecoslado
       if (replace == null) {
         replace = false;
       }
-      this.__triggerAll("df:next_page");
+      this.trigger("df:next_page");
       if (this.status.firstQueryTriggered && this.status.currentPage > 0 && !this.status.lastPageReached) {
         this.status.currentPage++;
         return this.__search(true);
@@ -577,7 +554,7 @@ author: @ecoslado
 
     Controller.prototype.getPage = function(page) {
       var self;
-      this.__triggerAll("df:get_page");
+      this.trigger("df:get_page");
       if (this.status.firstQueryTriggered && this.status.currentPage > 0) {
         this.status.currentPage = page;
         self = this;
@@ -595,7 +572,7 @@ author: @ecoslado
      */
 
     Controller.prototype.refresh = function() {
-      this.__triggerAll("df:refresh");
+      this.trigger("df:refresh");
       return this.__search();
     };
 
@@ -725,6 +702,34 @@ author: @ecoslado
           }
         }
       }
+    };
+
+
+    /*
+    bind
+    
+    Method to add and event listener
+    @param {String} event
+    @param {Function} callback
+    @api public
+     */
+
+    Controller.prototype.bind = function(event, callback) {
+      return $(this).on(event, callback);
+    };
+
+
+    /*
+    trigger
+    
+    Method to trigger an event
+    @param {String} event
+    @param {Array} params
+    @api public
+     */
+
+    Controller.prototype.trigger = function(event, params) {
+      return $(this).trigger(event, params);
     };
 
     return Controller;
@@ -1134,13 +1139,13 @@ shaped by template
  */
 
 (function() {
-  var Emitter, Widget;
+  var $, Widget;
 
-  Emitter = _dereq_('tiny-emitter');
+  $ = _dereq_("./util/jquery");
 
   Widget = (function() {
-    function Widget() {
-      this.emitter = new Emitter;
+    function Widget(selector) {
+      this.emitter = $(selector);
     }
 
 
@@ -1208,7 +1213,7 @@ shaped by template
      */
 
     Widget.prototype.trigger = function(event, params) {
-      return this.emitter.emit(event, params);
+      return this.emitter.trigger(event, params);
     };
 
     return Widget;
@@ -1219,7 +1224,7 @@ shaped by template
 
 }).call(this);
 
-},{"tiny-emitter":131}],11:[function(_dereq_,module,exports){
+},{"./util/jquery":8}],11:[function(_dereq_,module,exports){
 
 /*
 display.coffee
@@ -1275,7 +1280,7 @@ replaces the current content.
       } else {
         throw Error("The provided template is not the right type." + " String or rendered handlebars expected.");
       }
-      Display.__super__.constructor.call(this);
+      Display.__super__.constructor.call(this, container);
     }
 
 
@@ -1501,11 +1506,7 @@ author: @ecoslado
         terms: res.facets[this.name].terms
       }, this.extraContext || {});
       html = this.template(context);
-      try {
-        return document.querySelector(this.container).innerHTML = html;
-      } catch (_error) {
-        throw Error(("widget.TermFacet[" + this.name + "]: Error while rendering.") + " The container you are trying to access does not already exist.");
-      }
+      return $(this.container).html(html);
     };
 
     TermFacet.prototype.renderNext = function() {};
@@ -1562,7 +1563,7 @@ author: @ecoslado
     function QueryInput(queryInput, options1) {
       this.queryInput = queryInput;
       this.options = options1 != null ? options1 : {};
-      QueryInput.__super__.constructor.call(this);
+      QueryInput.__super__.constructor.call(this, this.queryInput);
     }
 
 
@@ -1688,11 +1689,13 @@ replaces the current content.
  */
 
 (function() {
-  var ScrollDisplay, ScrollResults,
+  var $, ScrollDisplay, ScrollResults,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   ScrollDisplay = _dereq_('../scrolldisplay');
+
+  $ = _dereq_('../../util/jquery');
 
   ScrollResults = (function(superClass) {
     extend(ScrollResults, superClass);
@@ -1719,6 +1722,22 @@ replaces the current content.
       }
       ScrollResults.__super__.constructor.call(this, container, template, options);
     }
+
+
+    /*
+    init
+    
+    @api public
+     */
+
+    ScrollResults.prototype.init = function(controller) {
+      var _this;
+      _this = this;
+      $(this.container).on('click', 'a[data-df-hitcounter]', function(e) {
+        return _this.trigger('df:hit', [$(this).data('dfHitcounter'), $(this).attr('href')]);
+      });
+      return ScrollResults.__super__.init.call(this, controller);
+    };
 
 
     /*
@@ -1760,7 +1779,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../scrolldisplay":17}],17:[function(_dereq_,module,exports){
+},{"../../util/jquery":8,"../scrolldisplay":17}],17:[function(_dereq_,module,exports){
 
 /*
 scrolldisplay.coffee
@@ -1832,7 +1851,6 @@ bottom
 
     ScrollDisplay.prototype.init = function(controller) {
       var _this, options;
-      this.controller = controller;
       _this = this;
       options = $.extend(true, {
         callback: function() {
@@ -1840,9 +1858,10 @@ bottom
         }
       }, this.scrollOptions || {});
       dfScroll(this.scrollWrapper, options);
-      return this.bind('df:search', function() {
+      this.bind('df:search', function() {
         return $(_this.scrollWrapper).scrollTop(0);
       });
+      return ScrollDisplay.__super__.init.call(this, controller);
     };
 
 
@@ -28167,74 +28186,6 @@ if ( typeof noGlobal === strundefined ) {
 return jQuery;
 
 }));
-
-},{}],131:[function(_dereq_,module,exports){
-function E () {
-	// Keep this empty so it's easier to inherit from
-  // (via https://github.com/lipsmack from https://github.com/scottcorgan/tiny-emitter/issues/3)
-}
-
-E.prototype = {
-	on: function (name, callback, ctx) {
-    var e = this.e || (this.e = {});
-
-    (e[name] || (e[name] = [])).push({
-      fn: callback,
-      ctx: ctx
-    });
-
-    return this;
-  },
-
-  once: function (name, callback, ctx) {
-    var self = this;
-    function listener () {
-      self.off(name, listener);
-      callback.apply(ctx, arguments);
-    };
-
-    listener._ = callback
-    return this.on(name, listener, ctx);
-  },
-
-  emit: function (name) {
-    var data = [].slice.call(arguments, 1);
-    var evtArr = ((this.e || (this.e = {}))[name] || []).slice();
-    var i = 0;
-    var len = evtArr.length;
-
-    for (i; i < len; i++) {
-      evtArr[i].fn.apply(evtArr[i].ctx, data);
-    }
-
-    return this;
-  },
-
-  off: function (name, callback) {
-    var e = this.e || (this.e = {});
-    var evts = e[name];
-    var liveEvents = [];
-
-    if (evts && callback) {
-      for (var i = 0, len = evts.length; i < len; i++) {
-        if (evts[i].fn !== callback && evts[i].fn._ !== callback)
-          liveEvents.push(evts[i]);
-      }
-    }
-
-    // Remove event from queue to prevent memory leak
-    // Suggested by https://github.com/lazd
-    // Ref: https://github.com/scottcorgan/tiny-emitter/commit/c6ebfaa9bc973b33d110a84a307742b7cf94c953#commitcomment-5024910
-
-    (liveEvents.length)
-      ? e[name] = liveEvents
-      : delete e[name];
-
-    return this;
-  }
-};
-
-module.exports = E;
 
 },{}]},{},[3])
 (3)

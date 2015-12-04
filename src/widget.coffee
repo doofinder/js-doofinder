@@ -11,13 +11,13 @@ results and paint them in a container
 shaped by template
 ###
 
-Emitter = require 'tiny-emitter' 
+$ = require "./util/jquery"
 
 class Widget
 
   
-  constructor: () ->
-  	@emitter = new Emitter
+  constructor: (selector) ->
+    @emitter = $(selector)
 
   ###
   init
@@ -72,6 +72,6 @@ class Widget
   @api public
   ###
   trigger: (event, params) -> 
-    @emitter.emit(event, params)
+    @emitter.trigger(event, params)
 
 module.exports = Widget

@@ -46,7 +46,7 @@ class Display extends Widget
     else
       throw Error "The provided template is not the right type." +
         " String or rendered handlebars expected."
-    super()
+    super(container)
 
   ###
   render

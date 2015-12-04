@@ -46,6 +46,7 @@ class ScrollDisplay extends Display
     # Overrides container by defined
     if options.container
       container = options.container
+
     super(container, template, options)
 
   ###
@@ -55,7 +56,6 @@ class ScrollDisplay extends Display
   events to DOM elements.
   ###
   init: (controller) ->
-    @controller = controller
     _this = this
     options = $.extend true,
       callback: () -> _this.controller.nextPage.call(_this.controller),
@@ -64,6 +64,7 @@ class ScrollDisplay extends Display
     dfScroll @scrollWrapper, options
 
     @bind 'df:search', () -> $(_this.scrollWrapper).scrollTop(0)
+    super(controller)
 
 
   ###

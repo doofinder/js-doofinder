@@ -81,11 +81,7 @@ class TermFacet extends Display
       @extraContext || {}
 
     html = @template(context)
-    try
-      document.querySelector(@container).innerHTML = html
-    catch 
-      throw Error "widget.TermFacet[#{@name}]: Error while rendering." + 
-        " The container you are trying to access does not already exist."
+    $(@container).html html
 
   renderNext: () ->
 

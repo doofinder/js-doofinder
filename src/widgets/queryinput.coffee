@@ -28,7 +28,7 @@ class QueryInput extends Widget
   @api public
   ###
   constructor: (@queryInput, @options = {}) ->
-  	super()
+  	super(@queryInput)
   
   ###
   start

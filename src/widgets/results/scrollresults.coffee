@@ -13,6 +13,7 @@ replaces the current content.
 ###
 
 ScrollDisplay = require '../scrolldisplay'
+$ = require '../../util/jquery'
 
 class ScrollResults extends ScrollDisplay
   ###
@@ -36,6 +37,17 @@ class ScrollResults extends ScrollDisplay
       template = options.template
 
     super(container, template, options)
+
+  ###
+  init
+
+  @api public
+  ###  
+  init: (controller) ->
+    _this = this
+    $(@container).on 'click', 'a[data-df-hitcounter]', (e) ->
+      _this.trigger 'df:hit', [$(this).data('dfHitcounter'), $(this).attr('href')]
+    super(controller)
 
   ###
   render
