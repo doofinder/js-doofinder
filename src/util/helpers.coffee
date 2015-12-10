@@ -75,18 +75,18 @@ addHelpers = (Handlebars, parameters, currency, translations, extraHelpers) ->
     'lt': (lvalue, rvalue, options) ->
       if arguments.length < 3
         throw new Error '2 parameters are required for helper.'
-      if lvalue >= rvalue
-        return options.inverse(this)
-      else
+      if lvalue < rvalue
         return options.fn(this)
+      else
+        return options.inverse(this)
     
-    'gte': (lvalue, rvalue, options) ->
+    'gt': (lvalue, rvalue, options) ->
       if arguments.length < 3
         throw new Error '2 parameters are required for helper.'
-      if lvalue < rvalue
-        return options.inverse(this)
-      else
+      if lvalue > rvalue
         return options.fn(this)
+      else
+        return options.inverse(this)
   
   for key of helpers
     Handlebars.registerHelper key, helpers[key]
