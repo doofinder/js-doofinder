@@ -743,7 +743,7 @@ author: @ecoslado
 },{"./util/jquery":8}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "0.7.0",
+    version: "0.8.0",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("Handlebars"),
     Widget: _dereq_("./widget"),
@@ -1855,9 +1855,9 @@ bottom
       if (scrollWrapperElement.children().length && !scrollWrapperElement.children().first().attr("id")) {
         scrollWrapperElement.children().first().attr("id", "df-scroll__container");
       } else if (!scrollWrapperElement.children().length) {
-        $(this.scrollWrapper).prepend('<div id="df-scroll__container"></div>');
+        $(this.scrollWrapper).prepend('<div></div>');
       }
-      container = "#" + (scrollWrapperElement.children().first().attr('id'));
+      container = scrollWrapperElement.children().first();
       if (options.container) {
         container = options.container;
       }
