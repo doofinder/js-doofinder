@@ -62,9 +62,9 @@ class ScrollDisplay extends Display
       @scrollOptions || {}
 
     dfScroll @scrollWrapper, options
-
-    @bind 'df:search', () -> $(_this.scrollWrapper).scrollTop(0)
+    
     super(controller)
+    @controller.bind 'df:search', () -> $(_this.scrollWrapper).scrollTop(0)
 
 
   ###

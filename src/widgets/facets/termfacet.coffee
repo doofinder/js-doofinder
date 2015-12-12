@@ -40,9 +40,11 @@ class TermFacet extends Display
     super(controller)
     _this = this
     
+    # Clean selected  terms when new search
     @bind "df:search", (params) -> 	
       _this.selected = {}
 
+    # The filtering by click
     $(@container).on 'click', "a[data-facet='#{@name}']", (e) ->
         e.preventDefault()
         termFacet = $(e.toElement)
@@ -59,6 +61,20 @@ class TermFacet extends Display
         
         _this.controller.refresh()
 
+    # Removes filters not present in results.
+    @controller.bind "df:results_received", (event, res) ->
+      terms = res.facets[_this.name].terms
+      for term, selected of _this.selected
+        if selected and not _this._termInResults(term, terms)
+          _this.selected[term] = 0
+          _this.controller.removeFilter _this.name, term 
+
+  _termInResults: (term, terms) ->
+    for elem in terms
+      if term == elem.term
+        return true
+    return false
+
   render: (res) ->
     # Throws errors if prerrequisites are not
     # accomplished.
@@ -67,22 +83,25 @@ class TermFacet extends Display
     else if not res.facets[@name].terms
       throw Error "Error in TermFacet: #{@name} facet is not a term facet."
 
-    # To make access to selected easier
-    # we add it to each term  
-    for term in res.facets[@name].terms
-      if @selected[term.term]
-        term.selected = 1
-      else
-        term.selected = 0
-      
-    context = $.extend true, 
-      name: @name 
-      terms: res.facets[@name].terms, 
-      @extraContext || {}
+    if res.results
+      # To make access to selected easier
+      # we add it to each term  
+      for term in res.facets[@name].terms
+        if @selected[term.term]
+          term.selected = 1
+        else
+          term.selected = 0
+        
+      context = $.extend true, 
+        name: @name 
+        terms: res.facets[@name].terms, 
+        @extraContext || {}
 
-    html = @template(context)
-    $(@container).html html
-    @trigger('df:rendered', [res])
+      html = @template(context)
+      $(@container).html html
+      @trigger('df:rendered', [res])
+    else
+      $(@container).html ''
 
   renderNext: () ->
 

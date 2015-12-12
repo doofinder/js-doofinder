@@ -13,7 +13,8 @@ QueryInput
 This class gets the query and
 calls controller's search method.
 Gets the string from an input when
-receives more than three characters.
+receives more than given number of
+characters (3 by default).
 ###
 
 class QueryInput extends Widget

@@ -8,6 +8,7 @@ module.exports =
     Results: require "./widgets/results/results"
     ScrollResults: require "./widgets/results/scrollresults"
     QueryInput: require "./widgets/queryinput"
+    QueryInputMobile: require "./widgets/queryinputmobile"
     TermFacet: require "./widgets/facets/termfacet"
     RangeFacet: require "./widgets/facets/rangefacet"
   jQuery: require "./util/jquery"

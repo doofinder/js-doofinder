@@ -139,6 +139,7 @@ class Controller
 
   refresh: () ->
     @trigger "df:refresh"
+    @status.currentPage = 1
     @__search()
 
   ###
@@ -182,8 +183,9 @@ class Controller
 
     else if @status.params.filters[key].constructor == Array 
       index = @status.params.filters[key].indexOf(value)
+      
       while index >= 0
-        @status.params.filters[key].pop(index)
+        @status.params.filters[key].splice(index, 1)
         # Just in case it is repeated
         index = @status.params.filters[key].indexOf(value)
 
