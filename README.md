@@ -223,7 +223,8 @@ The options to configure the widget are:
 Option | Type | Description
 ------ |  ---- |  --------------
 template | `String` | [Handlebars](http://handlebarsjs.com) template to shape the results.
-templateVars | `Object` | Extra info you want to render in the template.
+templateVars | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
+templateFunctions | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
 
 #### bind
 This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
@@ -255,7 +256,8 @@ The options to configure the widget are:
 Option | Type | Description
 ------ |  ---- |  --------------
 template | `String` | [Handlebars](http://handlebarsjs.com) template to shape the results.
-templateVars | `Object` | Extra info you want to render in the template.
+templateVars | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
+templateFunctions | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
 
 There is some CSS you have to add to your container in order to make the inner scroll to work properly:
 
@@ -300,7 +302,8 @@ The options to configure the widget are:
 Option | Type | Description
 ------ |  ---- |  --------------
 template | `String` | [Handlebars](http://handlebarsjs.com) template to shape the results.
-templateVars | `Object` | Extra info you want to render in the template.
+templateVars | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
+templateFunctions | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
 
 #### bind
 This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
@@ -336,7 +339,8 @@ The options to configure the widget are:
 Option | Type | Description
 ------ |  ---- |  --------------
 template | `String` | [Handlebars](http://handlebarsjs.com) template to shape the results.
-templateVars | `Object` | Extra info you want to render in the template.
+templateVars | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
+templateFunctions | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
 
 #### bind
 This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
