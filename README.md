@@ -241,7 +241,7 @@ df:rendered   | <ul><li>event`Object`: object with the event information.</li><l
 
 ### widgets.ScrollResults
 
-This widget render the results in an DOM node with an inner scroll.
+This widget render the results in an DOM node with an inner scroll. So the next page will be requested when scroll reaches the bottom.
 
 #### constructor
 
@@ -256,6 +256,17 @@ Option | Type | Description
 ------ |  ---- |  --------------
 template | `String` | [Handlebars](http://handlebarsjs.com) template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template.
+
+There is some CSS you have to add to your container in order to make the inner scroll to work properly:
+
+```css
+#container {
+  height: 800px;
+  position: relative;
+  overflow: auto;
+}
+```
+In the example above `#container` could be your scroll container selector and the height can be set to the value you prefer.
 
 #### bind
 This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
