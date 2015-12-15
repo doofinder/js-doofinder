@@ -396,7 +396,8 @@ author: @ecoslado
  */
 
 (function() {
-  var $, Controller;
+  var $, Controller,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   $ = _dereq_("./util/jquery");
 
@@ -437,13 +438,7 @@ author: @ecoslado
       this.initialParams = $.extend(true, initialParams, {
         query_counter: 0
       });
-      this.status = {
-        params: this.initialParams,
-        query: '',
-        currentPage: 0,
-        firstQueryTriggered: false,
-        lastPageReached: false
-      };
+      this.reset();
     }
 
 
@@ -464,7 +459,6 @@ author: @ecoslado
       if (next == null) {
         next = false;
       }
-      console.log(this.statusQueryString());
       this.status.params.query_counter++;
       query = this.status.query;
       params = this.status.params;
@@ -601,6 +595,56 @@ author: @ecoslado
       } else {
         return this.status.params.filters[key].push(value);
       }
+    };
+
+
+    /*
+    addParam
+    
+    Adds new filter criteria.
+    
+    @param {String} key: the facet key you are filtering
+    @param {String | Number} value: the filtering criteria
+    @api public
+     */
+
+    Controller.prototype.addParam = function(key, value) {
+      return this.status.params[key] = value;
+    };
+
+
+    /*
+    clearParam
+    
+    Adds new filter criteria.
+    
+    @param {String} key: the facet key you are filtering
+    @api public
+     */
+
+    Controller.prototype.clearParam = function(key) {
+      if (indexOf.call(this.status.params, key) >= 0) {
+        return delete this.status.params[key];
+      }
+    };
+
+
+    /*
+    reset
+    
+    Reset the params to the initial state.
+    
+    @api public
+     */
+
+    Controller.prototype.reset = function() {
+      return this.status = {
+        params: this.initialParams,
+        query: '',
+        currentPage: 0,
+        firstQueryTriggered: false,
+        lastPageReached: false
+      };
     };
 
 
@@ -1364,7 +1408,7 @@ replaces the current content.
       this.container = container;
       this.handlebars = _dereq_("handlebars");
       this.extraContext = options.templateVars;
-      addHelpers(this.handlebars, options.urlParams, options.currency, options.translations, options.helpers);
+      addHelpers(this.handlebars, options.urlParams, options.currency, options.translations, options.templateFunctions);
       if (template.constructor === String) {
         this.template = this.handlebars.compile(template);
       } else if (template instanceof Function) {
@@ -1569,7 +1613,7 @@ author: @ecoslado
       $(this.container).on('click', "a[data-facet='" + this.name + "']", function(e) {
         var key, termFacet, value;
         e.preventDefault();
-        termFacet = $(e.toElement);
+        termFacet = $(this);
         value = termFacet.data("value");
         key = termFacet.data("facet");
         if (_this.selected[value]) {

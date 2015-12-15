@@ -35,7 +35,7 @@ class Display extends Widget
       options.urlParams, 
       options.currency, 
       options.translations, 
-      options.helpers
+      options.templateFunctions
     
     if template.constructor == String
       @template = @handlebars.compile(template)

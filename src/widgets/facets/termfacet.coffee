@@ -47,7 +47,7 @@ class TermFacet extends Display
     # The filtering by click
     $(@container).on 'click', "a[data-facet='#{@name}']", (e) ->
         e.preventDefault()
-        termFacet = $(e.toElement)
+        termFacet = $(this)
         value = termFacet.data "value" 
         key = termFacet.data "facet"
 

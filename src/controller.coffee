@@ -32,12 +32,7 @@ class Controller
     
     # Initial status
     @initialParams = $.extend true, initialParams, {query_counter: 0}
-    @status =
-      params: @initialParams
-      query: ''
-      currentPage: 0
-      firstQueryTriggered: false
-      lastPageReached: false
+    @reset()
 
   ###
   __search
@@ -54,7 +49,6 @@ class Controller
 
     # To avoid past queries
     # we'll check the query_counter
-    console.log @statusQueryString()
     @status.params.query_counter++
     query = @status.query
     params = @status.params
@@ -163,7 +157,47 @@ class Controller
     else if not @status.params.filters[key]
       @status.params.filters[key] = [value]
     else
-      @status.params.filters[key].push value 
+      @status.params.filters[key].push value
+
+  ###
+  addParam
+  
+  Adds new filter criteria.
+
+  @param {String} key: the facet key you are filtering
+  @param {String | Number} value: the filtering criteria
+  @api public
+  ###
+  addParam: (key, value) -> 
+    @status.params[key] = value
+
+
+  ###
+  clearParam
+  
+  Adds new filter criteria.
+
+  @param {String} key: the facet key you are filtering
+  @api public
+  ###
+  clearParam: (key) ->
+    if key in @status.params 
+      delete @status.params[key]
+
+  ###
+  reset
+  
+  Reset the params to the initial state.
+
+  @api public
+  ###
+  reset: () ->
+    @status =
+      params: @initialParams
+      query: ''
+      currentPage: 0
+      firstQueryTriggered: false
+      lastPageReached: false
   
   ###
   removeFilter
