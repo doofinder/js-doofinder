@@ -464,6 +464,7 @@ author: @ecoslado
       if (next == null) {
         next = false;
       }
+      console.log(this.statusQueryString());
       this.status.params.query_counter++;
       query = this.status.query;
       params = this.status.params;
@@ -681,9 +682,9 @@ author: @ecoslado
     Send the a command to Google Analytics
     
     @param {Object} gaCommand: the command for GA 
-    	eventCategory: "xxx" 
-    	eventLabel: "xxx" 
-    	eventAction: "xxx"
+      eventCategory: "xxx" 
+      eventLabel: "xxx" 
+      eventAction: "xxx"
      */
 
     Controller.prototype.sendToGA = function(gaCommand) {
@@ -731,6 +732,66 @@ author: @ecoslado
 
     Controller.prototype.trigger = function(event, params) {
       return $(this).trigger(event, params);
+    };
+
+    Controller.prototype.serialize = function(obj, prefix) {
+      var k, p, str, v;
+      str = [];
+      for (p in obj) {
+        v = obj[p];
+        if (v) {
+          k = prefix ? prefix + "[" + p + "]" : p;
+          str.push(typeof v === "object" ? this.serialize(v, k) : encodeURIComponent(k) + "=" + encodeURIComponent(v));
+        }
+      }
+      return str.join("&");
+    };
+
+    Controller.prototype.queryStringToJSON = function(queryString) {
+      var pairs, result;
+      pairs = queryString.replace("#search/", "").split('&');
+      result = {};
+      pairs.forEach(function(pair) {
+        var i, key, keys, keysArray, len, partial;
+        pair = pair.split('=');
+        keys = decodeURIComponent(pair[0]);
+        keysArray = keys.replace(/\]/g, "").split("[");
+        partial = result;
+        for (i = 0, len = keysArray.length; i < len; i++) {
+          key = keysArray[i];
+          if (parseInt(key)) {
+            if (!partial) {
+              partial = [""];
+            }
+            partial = partial[parseInt(key)];
+          } else {
+            if (!partial) {
+              partial = {};
+              partial[key] = {};
+            }
+            partial = partial[key];
+          }
+          console.log(result);
+        }
+        return partial = decodeURIComponent(pair[1] || '');
+      });
+      return JSON.parse(JSON.stringify(result));
+    };
+
+
+    /*
+    statusQueryString
+    
+    Method to represent current status
+    with a queryString
+     */
+
+    Controller.prototype.statusQueryString = function() {
+      return "#search/" + this.serialize(this.status.params, "");
+    };
+
+    Controller.prototype.setStatus = function(queryString) {
+      return console.log(this.queryStringToJSON(queryString));
     };
 
     return Controller;

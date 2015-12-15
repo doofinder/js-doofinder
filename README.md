@@ -14,6 +14,10 @@ This library allows you to make requests to [Doofinder](http://www.doofinder.com
 		* [TermFacet](#widgetstermfacet)
 		* [RangeFacet](#widgetsrangefacet)
 	* [Client](#client)
+* [Examples](#examples)
+  * [Example 1: Create a simple template to show results.](#example-1-create-a-simple-template-to-show-results)
+  * [Example 2: Adding extra info to our template.](#example-2-adding-extra-info-to-our-template)
+  * [Example 3: Create a custom template function.](#example-3-create-a-custom-template-function)
 
 ## Installation
 ### npm
@@ -167,7 +171,12 @@ df:next_page  | <ul><li>event`Object`: object with the event information.</li><l
 df:get_page   | <ul><li>event`Object`: object with the event information.</li><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.getPage is called.
 df:results_received | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: the Search API response</li></ul> | This event is triggered when new results are received from Search API.
 
+#### hit
+Sends a request to the Search API in order to account the hits for a product.
 
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+dfid |  Yes | `String` | Unique product identifier.
 
 ### Widget
 Widgets are visual elements that take part into the search. They can be search inputs, places where display the results, places to put the facets, etc.
@@ -213,7 +222,7 @@ The options to configure the widget are:
 
 Option | Type | Description
 ------ |  ---- |  --------------
-template | `String` | Template to shape the results.
+template | `String` | [Handlebars](http://handlebarsjs.com) template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template.
 
 #### bind
@@ -245,7 +254,7 @@ The options to configure the widget are:
 
 Option | Type | Description
 ------ |  ---- |  --------------
-template | `String` | Template to shape the results.
+template | `String` | [Handlebars](http://handlebarsjs.com) template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template.
 
 #### bind
@@ -279,7 +288,7 @@ The options to configure the widget are:
 
 Option | Type | Description
 ------ |  ---- |  --------------
-template | `String` | Template to shape the results.
+template | `String` | [Handlebars](http://handlebarsjs.com) template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template.
 
 #### bind
@@ -315,7 +324,7 @@ The options to configure the widget are:
 
 Option | Type | Description
 ------ |  ---- |  --------------
-template | `String` | Template to shape the results.
+template | `String` | [Handlebars](http://handlebarsjs.com) template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template.
 
 #### bind
@@ -349,3 +358,146 @@ This method performs a Search API call and retrieves the data. The data will be 
  query |  Yes | `String` | The query terms.
  params |  No | `Object` | The query terms.
  callback | Yes | `Function` | The function which receives the API Search response.
+
+
+## Examples
+
+### Example 1: Create a simple template to show results.
+
+In the [Quick Start](#quick-start) example we composed a simple view using the Doofinder Library. Let's see how to shape the results by a Handlebars template.
+
+```javascript
+ 
+var resultsTemplate = '{{#each results}}' +
+  ' <div>'+
+  '   <div>' +
+  '     <a href="{{href}}">'+
+  '       <img src="{{image}}" alt="{{header}}">'+
+  '     </a>'+
+  '     <div>'+
+  '       <a target="_blank" data-df-hitcounter="{{dfid}}" href="{{href}}">'+
+  '         <div>{{header}}</div>' +
+  '         <div>{{body}}</div>' +
+  '         <div>' +
+  '          <span>{{#format-currency}}{{price}}{{/format-currency}}</span>' +
+  '         </div>'+
+  '       </a>' +
+  '    </div>' +
+  '  </div>' +
+  '</div>' +
+  '{{/each}}';
+
+var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {template: resultsTemplate});
+
+```
+
+Let's have a look to the template:
+
+- We used `{{#each results}}` as a loop where we iterated through the items.
+- We used `{{field_name}}` tags to print the content of a field.
+- We used `{{#if filed_name}}` to check the presence of a field.
+- We used `{{#format-currency}}` helper to print the price with the coin symbol and formatted.
+- Note that we use a data attribute to show the dfid. You can use this to send it with the [Controller.hit](#hit) method.
+
+### Example 2: Adding extra info to our template.
+
+Maybe you want to add more information to your template dynamically. Imagine you want to show prices lower that a given number, i.e. 100.
+You can add this variable to the template scope by the option templateVars.
+
+```javascript
+var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {
+  template: resultsTemplate,
+  templateVars: {
+    maxPrice: 100
+    }
+  });
+```
+
+So you can modify your template in order to show just the prices lower than `maxPrice`.
+
+```javascript
+ 
+var resultsTemplate = '{{#each results}}' +
+  ' <div>'+
+  '   <div>' +
+  '     <a href="{{href}}">'+
+  '       <img src="{{image}}" alt="{{header}}">'+
+  '     </a>'+
+  '     <div>'+
+  '       <a target="_blank" data-df-hitcounter="{{dfid}}" href="{{href}}">'+
+  '         <div>{{header}}</div>' +
+  '         <div>{{body}}</div>' +
+  '         {{#lt price ../maxPrice}}'
+  '         <div>' +
+  '          <span>{{#format-currency}}{{price}}{{/format-currency}}</span>' +
+  '         </div>' +
+  '         {{/lt}}' +
+  '       </a>' +
+  '    </div>' +
+  '  </div>' +
+  '</div>' +
+  '{{/each}}';
+
+var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {
+  template: resultsTemplate,
+  templateVars: {
+    maxPrice: 100
+    }
+  });
+```
+And we have used the `{{#lt}}` helper to compare the `price` with the `maxPrice`. Note that we have written `../maxPrice` instead of `maxPrice`. This is because we are in the loop and we must access to a variable out of `results` array. For more information about Handlebars templates, [click here](http://handlebarsjs.com/).
+
+### Example 3: Create a custom template function.
+
+Template functions are called helpers in [Handlebars](http://handlebarsjs.com/). You can create and add custom helpers to your template by using the `templateFunctions` option. We'll create a helper that convert a text in bold.
+
+```javascript
+
+{
+  templateFunctions: {
+    bold: function(options){
+      return "<b>" + options.fn(this) + "</b>"
+    }
+}
+
+```
+This helper will take the text in the tag and will wrapper it with the `<b>` tag. Note that `options.fn(this)` returns the text wrapped by the helper.
+
+We'll use the helper for showing the header and instantiate the widget.
+
+```javascript
+var resultsTemplate = '{{#each results}}' +
+  ' <div>'+
+  '   <div>' +
+  '     <a href="{{href}}">'+
+  '       <img src="{{image}}" alt="{{header}}">'+
+  '     </a>'+
+  '     <div>'+
+  '       <a target="_blank" data-df-hitcounter="{{dfid}}" href="{{href}}">'+
+  '         <div>{{#bold}}{{header}}{{/bold}}</div>' +
+  '         <div>{{body}}</div>' +
+  '         <div>' +
+  '          <span>{{#format-currency}}{{price}}{{/format-currency}}</span>' +
+  '         </div>'+
+  '       </a>' +
+  '    </div>' +
+  '  </div>' +
+  '</div>' +
+  '{{/each}}';
+
+var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {
+  template: resultsTemplate,
+  templateFunctions: {
+    bold: function(options){
+        return "<b>" + options.fn(this) + "</b>"
+      }
+    }
+  });
+
+```
+
+
+
+
+
+

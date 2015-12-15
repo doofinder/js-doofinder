@@ -54,6 +54,7 @@ class Controller
 
     # To avoid past queries
     # we'll check the query_counter
+    console.log @statusQueryString()
     @status.params.query_counter++
     query = @status.query
     params = @status.params
@@ -212,7 +213,7 @@ class Controller
   @param {Function} callback
   ###
   hit: (dfid, callback) ->
-  	@client.hit dfid, @status.query, callback
+    @client.hit dfid, @status.query, callback
 
 
   ###
@@ -231,28 +232,28 @@ class Controller
   Send the a command to Google Analytics
 
   @param {Object} gaCommand: the command for GA 
-  	eventCategory: "xxx" 
-  	eventLabel: "xxx" 
-  	eventAction: "xxx"
+    eventCategory: "xxx" 
+    eventLabel: "xxx" 
+    eventAction: "xxx"
   ###
   sendToGA: (gaCommand) ->
-	  if window._gaq and window._gaq.push
-	    # Classic Analytics
-	    window._gaq.push ['_trackEvent', gaCommand['eventCategory'],
-	      gaCommand['eventAction'],
-	      gaCommand['eventLabel']]
+    if window._gaq and window._gaq.push
+      # Classic Analytics
+      window._gaq.push ['_trackEvent', gaCommand['eventCategory'],
+        gaCommand['eventAction'],
+        gaCommand['eventLabel']]
 
-	    if gaCommand['eventAction'].indexOf('search') == 0  # also send pageview to count on search analytics
-	      window._gaq.push(['_trackPageview', '/doofinder/search/' + options.hashid + '?query=' + gaCommand['eventLabel']])
-	    else
-	    # Universal Analytics
-	      ga = (window[window.GoogleAnalyticsObject] || window.ga);
-	    if (ga and ga.getAll)
-	    # http://stackoverflow.com/q/28765806/316414
-	      trackerName = ga.getAll()[0].get('name');
-	      ga(trackerName + '.send', 'event', gaCommand);
-	      if gaCommand['eventAction'].indexOf('search') == 0  # also send pageview to count on search analytics
-	        ga(trackerName + '.send', 'pageview', '/doofinder/search/' + options.hashid + '?query=' + gaCommand['eventLabel'])
+      if gaCommand['eventAction'].indexOf('search') == 0  # also send pageview to count on search analytics
+        window._gaq.push(['_trackPageview', '/doofinder/search/' + options.hashid + '?query=' + gaCommand['eventLabel']])
+      else
+      # Universal Analytics
+        ga = (window[window.GoogleAnalyticsObject] || window.ga);
+      if (ga and ga.getAll)
+      # http://stackoverflow.com/q/28765806/316414
+        trackerName = ga.getAll()[0].get('name');
+        ga(trackerName + '.send', 'event', gaCommand);
+        if gaCommand['eventAction'].indexOf('search') == 0  # also send pageview to count on search analytics
+          ga(trackerName + '.send', 'pageview', '/doofinder/search/' + options.hashid + '?query=' + gaCommand['eventLabel'])
 
   ###
   bind
@@ -275,5 +276,60 @@ class Controller
   ###
   trigger: (event, params) -> 
     $(this).trigger(event, params)
+
+  
+
+  serialize: (obj, prefix) ->
+    str = []
+    for  p,v of obj
+      if (v) 
+        k = if prefix then prefix + "[" + p + "]" else p
+        str.push(if typeof v == "object" then @serialize(v, k) else encodeURIComponent(k) + "=" + encodeURIComponent(v))
+      
+    return str.join("&")
+
+  queryStringToJSON: (queryString) ->          
+    pairs = queryString.replace("#search/", "").split('&')
+    result = {}
+    pairs.forEach (pair) ->
+        pair = pair.split('=')
+        keys = decodeURIComponent(pair[0])
+        keysArray = keys.replace(/\]/g, "").split("[")
+        partial = result
+        for key in keysArray
+          if parseInt key 
+            if not partial
+              partial = [""]
+            partial = partial[parseInt key]
+          
+          else 
+            if not partial
+              partial = {}
+              partial[key] = {}
+            partial = partial[key]
+
+          console.log result
+
+        partial = decodeURIComponent(pair[1] || '')
+    
+    return JSON.parse JSON.stringify result
+
+
+  ###
+  statusQueryString
+
+  Method to represent current status
+  with a queryString
+  ###
+  statusQueryString: () ->
+    return "#search/" + @serialize(@status.params, "")
+
+
+  setStatus: (queryString) ->
+    console.log @queryStringToJSON queryString
+
+
+
+
 
 module.exports = Controller
