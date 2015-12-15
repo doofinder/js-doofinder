@@ -18,7 +18,8 @@
     "handlebars": "^4.0.4",
     "http": "^0.0.0",
     "ion-rangeslider": "git://github.com/doofinder/ion.rangeSlider.git",
-    "jquery": "^2.1.4"
+    "jquery": "^2.1.4",
+    "qs": "^4.0.0"
   },
   "devDependencies": {
     "coffee-script": "^1.9.1",

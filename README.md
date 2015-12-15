@@ -258,6 +258,7 @@ Option | Type | Description
 template | `String` | [Handlebars](http://handlebarsjs.com) template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
 templateFunctions | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
+scrollOffset | `Number` | Distance in pixels to the bottom in scroll when next page is requested. Default 50.
 
 There is some CSS you have to add to your container in order to make the inner scroll to work properly:
 

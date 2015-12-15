@@ -15,7 +15,7 @@ paint them. Manages the filtering.
 class TermFacet extends Display
 
   constructor: (container, @name, options = {}) ->
-    @selected = {}
+
     if not options.template
       template = '{{#if @index}}' + 
             '<hr class="df-separator">' +
@@ -41,7 +41,7 @@ class TermFacet extends Display
     _this = this
     
     # Clean selected  terms when new search
-    @bind "df:search", (params) -> 	
+    @bind "df:search", (params) ->  
       _this.selected = {}
 
     # The filtering by click
@@ -53,11 +53,9 @@ class TermFacet extends Display
 
         if _this.selected[value]
             _this.controller.removeFilter key, value
-            _this.selected[value] = 0
         
         else
             _this.controller.addFilter key, value
-            _this.selected[value] = 1
         
         _this.controller.refresh()
 
@@ -82,12 +80,18 @@ class TermFacet extends Display
       throw Error "Error in TermFacet: #{@name} facet is not configured."
     else if not res.facets[@name].terms
       throw Error "Error in TermFacet: #{@name} facet is not a term facet."
+    
+    selected = {}
+    
+    if res.filter and res.filter.terms and res.filter.terms[@name]
+      for term in res.filter.terms[@name]
+        selected[term] = 1
 
     if res.results
       # To make access to selected easier
       # we add it to each term  
       for term in res.facets[@name].terms
-        if @selected[term.term]
+        if selected[term.term]
           term.selected = 1
         else
           term.selected = 0

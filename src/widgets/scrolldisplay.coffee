@@ -32,7 +32,7 @@ class ScrollDisplay extends Display
   ###
   constructor: (@scrollWrapper, template, options) ->
     scrollWrapperElement = $(@scrollWrapper)
-    @scrollOptions = options.scrollOptions
+    @scrollOffset = options.scrollOffset
 
     if scrollWrapperElement.children().length and not scrollWrapperElement.children().first().attr "id"
         scrollWrapperElement.children().first().attr "id", "df-scroll__container"
@@ -59,7 +59,7 @@ class ScrollDisplay extends Display
     _this = this
     options = $.extend true,
       callback: () -> _this.controller.nextPage.call(_this.controller),
-      @scrollOptions || {}
+      if @scrollOffset then scrollOffset: @scrollOffset else {}
 
     dfScroll @scrollWrapper, options
     

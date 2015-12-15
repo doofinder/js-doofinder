@@ -3,6 +3,7 @@
 ###
 
 $ = require "./util/jquery"
+qs = require "qs"
 
 ###
 Controller
@@ -313,41 +314,19 @@ class Controller
 
   
 
-  serialize: (obj, prefix) ->
-    str = []
-    for  p,v of obj
-      if (v) 
-        k = if prefix then prefix + "[" + p + "]" else p
-        str.push(if typeof v == "object" then @serialize(v, k) else encodeURIComponent(k) + "=" + encodeURIComponent(v))
-      
-    return str.join("&")
+  ###
+  setStatusFromString
 
-  queryStringToJSON: (queryString) ->          
-    pairs = queryString.replace("#search/", "").split('&')
-    result = {}
-    pairs.forEach (pair) ->
-        pair = pair.split('=')
-        keys = decodeURIComponent(pair[0])
-        keysArray = keys.replace(/\]/g, "").split("[")
-        partial = result
-        for key in keysArray
-          if parseInt key 
-            if not partial
-              partial = [""]
-            partial = partial[parseInt key]
-          
-          else 
-            if not partial
-              partial = {}
-              partial[key] = {}
-            partial = partial[key]
-
-          console.log result
-
-        partial = decodeURIComponent(pair[1] || '')
-    
-    return JSON.parse JSON.stringify result
-
+  Fills in the status from queryString
+  and searches.
+  ###
+  setStatusFromString: (queryString) ->          
+    params = qs.parse(queryString.replace("#search/", ""))
+    @status.firstQueryTriggered = true
+    @status.currentPage = params.page
+    @status.query = params.query
+    @status.params = params
+    @refresh()
 
   ###
   statusQueryString
@@ -356,14 +335,7 @@ class Controller
   with a queryString
   ###
   statusQueryString: () ->
-    return "#search/" + @serialize(@status.params, "")
-
-
-  setStatus: (queryString) ->
-    console.log @queryStringToJSON queryString
-
-
-
+    return "#search/" + qs.stringify @status.params
 
 
 module.exports = Controller
