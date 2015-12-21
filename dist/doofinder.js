@@ -419,13 +419,13 @@ author: @ecoslado
     
     @param {doofinder.Client} client
     @param {doofinder.widget | Array} widgets
-    @param {Object} initialParams
+    @param {Object} searchParams
     @api public
      */
-    function Controller(client, widgets, initialParams) {
+    function Controller(client, widgets, searchParams) {
       var i, len, widget;
-      if (initialParams == null) {
-        initialParams = {};
+      if (searchParams == null) {
+        searchParams = {};
       }
       this.client = client;
       this.widgets = [];
@@ -437,7 +437,7 @@ author: @ecoslado
       } else if (widgets) {
         this.addWidget(widgets);
       }
-      this.initialParams = $.extend(true, initialParams, {
+      this.searchParams = $.extend(true, searchParams, {
         query_counter: 0
       });
       this.reset();
@@ -467,21 +467,23 @@ author: @ecoslado
       params.page = this.status.currentPage;
       _this = this;
       return this.client.search(query, params, function(err, res) {
-        var i, len, ref, widget;
+        var i, len, ref, results, widget;
+        if (res.results.length < _this.status.params.rpp) {
+          _this.status.lastPageReached = true;
+        }
         _this.trigger("df:results_received", [res]);
         if (res.query_counter === _this.status.params.query_counter) {
           ref = _this.widgets;
+          results = [];
           for (i = 0, len = ref.length; i < len; i++) {
             widget = ref[i];
             if (next) {
-              widget.renderNext(res);
+              results.push(widget.renderNext(res));
             } else {
-              widget.render(res);
+              results.push(widget.render(res));
             }
           }
-          if (res.results.length < _this.status.params.rpp) {
-            return _this.status.lastPageReached = true;
-          }
+          return results;
         }
       });
     };
@@ -506,14 +508,14 @@ author: @ecoslado
       if (params == null) {
         params = {};
       }
-      this.trigger("df:search");
       if (query) {
         this.status.query = query;
       }
-      this.status.params = $.extend(true, this.initialParams, params);
+      this.status.params = $.extend(true, this.searchParams, params);
       this.status.currentPage = 1;
       this.status.firstQueryTriggered = true;
       this.status.lastPageReached = false;
+      this.trigger("df:search", [this.status.params]);
       return this.__search();
     };
 
@@ -569,8 +571,10 @@ author: @ecoslado
      */
 
     Controller.prototype.refresh = function() {
-      this.trigger("df:refresh");
+      this.trigger("df:refresh", [this.status.params]);
       this.status.currentPage = 1;
+      this.status.firstQueryTriggered = true;
+      this.status.lastPageReached = false;
       return this.__search();
     };
 
@@ -641,7 +645,7 @@ author: @ecoslado
 
     Controller.prototype.reset = function() {
       return this.status = {
-        params: this.initialParams,
+        params: this.searchParams,
         query: '',
         currentPage: 0,
         firstQueryTriggered: false,
@@ -676,6 +680,21 @@ author: @ecoslado
         }
         return results;
       }
+    };
+
+
+    /*
+    setSearchParam
+    
+    Removes some filter criteria.
+    
+    @param {String} key: the param key
+    @param {Mixed} value: the value
+    @api public
+     */
+
+    Controller.prototype.setSearchParam = function(key, value) {
+      return this.searchParams[key] = value;
     };
 
 
@@ -789,13 +808,12 @@ author: @ecoslado
      */
 
     Controller.prototype.setStatusFromString = function(queryString) {
-      var params;
-      params = qs.parse(queryString.replace("#search/", ""));
+      this.status = qs.parse(queryString.replace("#search/", ""));
       this.status.firstQueryTriggered = true;
-      this.status.currentPage = params.page;
-      this.status.query = params.query;
-      this.status.params = params;
-      return this.refresh();
+      this.status.lastPageReached = false;
+      this.status.currentPage = 1;
+      this.refresh();
+      return this.status.query;
     };
 
 
@@ -807,7 +825,7 @@ author: @ecoslado
      */
 
     Controller.prototype.statusQueryString = function() {
-      return "#search/" + qs.stringify(this.status.params);
+      return "#search/" + qs.stringify(this.status);
     };
 
     return Controller;
@@ -821,7 +839,7 @@ author: @ecoslado
 },{"./util/jquery":8,"qs":131}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "0.8.0",
+    version: "0.10.0",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("Handlebars"),
     Widget: _dereq_("./widget"),
@@ -848,7 +866,7 @@ author: @ecoslado
     var content, defaultOptions, handler, throttle;
     defaultOptions = {
       direction: "vertical",
-      scrollOffset: 50
+      scrollOffset: 100
     };
     o = extend(defaultOptions, o);
     container = document.querySelector(container);
@@ -1023,6 +1041,17 @@ author: @ecoslado
         } else {
           return options.inverse(this);
         }
+      },
+      'times': function(n, block) {
+        var accum, i, j, ref;
+        accum = '';
+        for (i = j = 1, ref = n; 1 <= ref ? j <= ref : j >= ref; i = 1 <= ref ? ++j : --j) {
+          accum += block.fn(i);
+        }
+        return accum;
+      },
+      'module': function(a, b, options) {
+        return parseInt(a) % parseInt(b);
       }
     };
     for (key in helpers) {
@@ -1407,10 +1436,9 @@ replaces the current content.
       context = $.extend(true, res, this.extraContext || {});
       html = this.template(context);
       try {
-        $(this.container).html(html);
-        return this.trigger('df:rendered', [res]);
+        return $(this.container).html(html);
       } catch (_error) {
-        throw Error("widget.Results: Error while rendering." + " The container you are trying to access does not already exist.");
+        throw Error("widget.Display: Error while rendering." + " The container you are trying to access does not already exist.");
       }
     };
 
@@ -1425,6 +1453,35 @@ replaces the current content.
 
     Display.prototype.renderNext = function(res) {
       return this.render(res);
+    };
+
+
+    /*
+    clean
+    
+    Cleans the container content.
+    @api public
+     */
+
+    Display.prototype.clean = function() {
+      return $(this.container).html("");
+    };
+
+
+    /*
+    addExtraContext
+    
+    Allows adding context dynamically.
+    @param {String} key
+    @param {Mixed} value
+    @api public
+     */
+
+    Display.prototype.addExtraContext = function(key, value) {
+      if (this.extraContext === void 0) {
+        this.extraContext = {};
+      }
+      return this.extraContext[key] = value;
     };
 
     module.exports = Display;
@@ -1566,6 +1623,7 @@ author: @ecoslado
       if (options == null) {
         options = {};
       }
+      this.selected = {};
       if (!options.template) {
         template = '{{#if @index}}' + '<hr class="df-separator">' + '{{/if}}' + '<div class="df-facets">' + '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>' + '<div class="df-facets__content">' + '<ul>' + '{{#each terms}}' + '<li>' + '<a href="#" class="df-facet {{#if selected}}df-facet--active{{/if}}" data-facet="{{../name}}"' + 'data-value="{{ term }}">{{ term }} <span' + 'class="df-facet__count">{{ count }}</span></a>' + '</li>' + '{{/each}}';
       } else {
@@ -1624,31 +1682,34 @@ author: @ecoslado
     };
 
     TermFacet.prototype.render = function(res) {
-      var context, html, i, j, len, len1, ref, ref1, selected, term;
+      var context, html, i, j, len, len1, ref, ref1, term, totalSelected;
       if (!res.facets || !res.facets[this.name]) {
         throw Error("Error in TermFacet: " + this.name + " facet is not configured.");
       } else if (!res.facets[this.name].terms) {
         throw Error("Error in TermFacet: " + this.name + " facet is not a term facet.");
       }
-      selected = {};
+      this.selected = {};
+      totalSelected = 0;
       if (res.filter && res.filter.terms && res.filter.terms[this.name]) {
         ref = res.filter.terms[this.name];
         for (i = 0, len = ref.length; i < len; i++) {
           term = ref[i];
-          selected[term] = 1;
+          this.selected[term] = 1;
+          totalSelected += 1;
         }
       }
       if (res.results) {
         ref1 = res.facets[this.name].terms;
         for (j = 0, len1 = ref1.length; j < len1; j++) {
           term = ref1[j];
-          if (selected[term.term]) {
+          if (this.selected[term.term]) {
             term.selected = 1;
           } else {
             term.selected = 0;
           }
         }
         context = $.extend(true, {
+          total_selected: totalSelected,
           name: this.name,
           terms: res.facets[this.name].terms
         }, this.extraContext || {});
@@ -1739,6 +1800,7 @@ author: @ecoslado
         callback: function() {
           var query;
           query = $(_this.queryInput).val();
+          controller.reset();
           return controller.search.call(controller, query);
         },
         wait: 43,
@@ -1874,11 +1936,11 @@ replaces the current content.
 
     ScrollResults.prototype.init = function(controller) {
       var _this;
+      ScrollResults.__super__.init.call(this, controller);
       _this = this;
-      $(this.container).on('click', 'a[data-df-hitcounter]', function(e) {
+      return $(this.container).on('click', 'a[data-df-hitcounter]', function(e) {
         return _this.trigger('df:hit', [$(this).data('dfHitcounter'), $(this).attr('href')]);
       });
-      return ScrollResults.__super__.init.call(this, controller);
     };
 
 
@@ -1893,6 +1955,8 @@ replaces the current content.
      */
 
     ScrollResults.prototype.render = function(res) {
+      var context;
+      context = $.extend(true, res, this.extraContext || {});
       ScrollResults.__super__.render.call(this, res);
       return this.trigger("df:rendered", res);
     };
@@ -1909,6 +1973,8 @@ replaces the current content.
      */
 
     ScrollResults.prototype.renderNext = function(res) {
+      var context;
+      context = $.extend(true, res, this.extraContext || {});
       ScrollResults.__super__.renderNext.call(this, res);
       return this.trigger("df:rendered", res);
     };
@@ -1994,6 +2060,7 @@ bottom
     ScrollDisplay.prototype.init = function(controller) {
       var _this, options;
       _this = this;
+      ScrollDisplay.__super__.init.call(this, controller);
       options = $.extend(true, {
         callback: function() {
           return _this.controller.nextPage.call(_this.controller);
@@ -2002,8 +2069,7 @@ bottom
         scrollOffset: this.scrollOffset
       } : {});
       dfScroll(this.scrollWrapper, options);
-      ScrollDisplay.__super__.init.call(this, controller);
-      return this.controller.bind('df:search', function() {
+      return this.controller.bind('df:search df:refresh', function(params) {
         return $(_this.scrollWrapper).scrollTop(0);
       });
     };
@@ -2021,6 +2087,18 @@ bottom
       var html;
       html = this.template(res);
       return $(this.container).append(html);
+    };
+
+
+    /*
+    clean
+    
+    Cleans the container content.
+    @api public
+     */
+
+    ScrollDisplay.prototype.clean = function() {
+      return $(this.container).html("");
     };
 
     return ScrollDisplay;

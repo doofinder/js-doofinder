@@ -4,7 +4,7 @@ dfScroll = (container, o) ->
 
   defaultOptions = 
     direction: "vertical"
-    scrollOffset: 50
+    scrollOffset: 100
 
   o = extend defaultOptions, o
   
@@ -42,7 +42,7 @@ dfScroll = (container, o) ->
     # Error thrown when direction no properly configured
     if ['horizontal', 'vertical'].indexOf(o.direction) <= -1
       throw Error("Direction is not properly set. It might be 'horizontal' or 'vertical'.")
-
+    
     # When bottom or right side is about to be reached, callback will be called
     if o.direction == 'vertical' and content.clientHeight - container.clientHeight - container.scrollTop <= o.scrollOffset \
     	or o.direction == "horizontal" and content.clientWidth() - container.clientWidth() - content.scrollLeft <= o.scrollOffset

@@ -62,11 +62,9 @@ class Display extends Widget
     html = @template context
     try
       $(@container).html html
-      @trigger('df:rendered', [res])
     catch 
-      throw Error "widget.Results: Error while rendering." + 
+      throw Error "widget.Display: Error while rendering." + 
         " The container you are trying to access does not already exist."
-    
     
 
   ###
@@ -78,5 +76,27 @@ class Display extends Widget
   ###  
   renderNext: (res) ->
     @render(res)
+
+  ###
+  clean
+
+  Cleans the container content.
+  @api public
+  ###
+  clean: () ->
+    $(@container).html ""
+
+  ###
+  addExtraContext
+
+  Allows adding context dynamically.
+  @param {String} key
+  @param {Mixed} value
+  @api public
+  ###
+  addExtraContext: (key, value) ->
+    if @extraContext == undefined
+      @extraContext = {}
+    @extraContext[key] = value
 
   module.exports = Display

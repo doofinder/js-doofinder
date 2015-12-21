@@ -57,14 +57,16 @@ class ScrollDisplay extends Display
   ###
   init: (controller) ->
     _this = this
+    super(controller)
     options = $.extend true,
       callback: () -> _this.controller.nextPage.call(_this.controller),
       if @scrollOffset then scrollOffset: @scrollOffset else {}
 
     dfScroll @scrollWrapper, options
     
-    super(controller)
-    @controller.bind 'df:search', () -> $(_this.scrollWrapper).scrollTop(0)
+    
+    @controller.bind 'df:search df:refresh', (params) -> 
+      $(_this.scrollWrapper).scrollTop(0)
 
 
   ###
@@ -77,6 +79,15 @@ class ScrollDisplay extends Display
   renderNext: (res) ->
     html = @template res
     $(@container).append html
+
+  ###
+  clean
+
+  Cleans the container content.
+  @api public
+  ###
+  clean: () ->
+    $(@container).html ""
     
 
 module.exports = ScrollDisplay

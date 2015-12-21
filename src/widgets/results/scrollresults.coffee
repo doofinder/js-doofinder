@@ -35,7 +35,6 @@ class ScrollResults extends ScrollDisplay
         '        </ul>'
     else
       template = options.template
-
     super(container, template, options)
 
   ###
@@ -44,10 +43,11 @@ class ScrollResults extends ScrollDisplay
   @api public
   ###  
   init: (controller) ->
+    super(controller)
     _this = this
     $(@container).on 'click', 'a[data-df-hitcounter]', (e) ->
       _this.trigger 'df:hit', [$(this).data('dfHitcounter'), $(this).attr('href')]
-    super(controller)
+    
 
   ###
   render
@@ -59,6 +59,9 @@ class ScrollResults extends ScrollDisplay
   @api public
   ###
   render: (res) ->
+    context = $.extend true, 
+      res, 
+      @extraContext || {}
     super(res)
     @trigger("df:rendered", res)
 
@@ -72,6 +75,9 @@ class ScrollResults extends ScrollDisplay
   @api public
   ###
   renderNext: (res) ->
+    context = $.extend true, 
+      res, 
+      @extraContext || {}
     super(res)
     @trigger("df:rendered", res)
 

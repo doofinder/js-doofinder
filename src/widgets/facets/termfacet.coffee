@@ -15,7 +15,7 @@ paint them. Manages the filtering.
 class TermFacet extends Display
 
   constructor: (container, @name, options = {}) ->
-
+    @selected = {}
     if not options.template
       template = '{{#if @index}}' + 
             '<hr class="df-separator">' +
@@ -81,22 +81,24 @@ class TermFacet extends Display
     else if not res.facets[@name].terms
       throw Error "Error in TermFacet: #{@name} facet is not a term facet."
     
-    selected = {}
-    
+    @selected = {}
+    totalSelected = 0
     if res.filter and res.filter.terms and res.filter.terms[@name]
       for term in res.filter.terms[@name]
-        selected[term] = 1
+        @selected[term] = 1
+        totalSelected += 1
 
     if res.results
       # To make access to selected easier
       # we add it to each term  
       for term in res.facets[@name].terms
-        if selected[term.term]
+        if @selected[term.term]
           term.selected = 1
         else
           term.selected = 0
         
-      context = $.extend true, 
+      context = $.extend true,
+        total_selected: totalSelected 
         name: @name 
         terms: res.facets[@name].terms, 
         @extraContext || {}

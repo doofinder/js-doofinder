@@ -18,10 +18,10 @@ class Controller
   
   @param {doofinder.Client} client
   @param {doofinder.widget | Array} widgets
-  @param {Object} initialParams
+  @param {Object} searchParams
   @api public
   ###
-  constructor: (client, widgets, initialParams = {}) ->
+  constructor: (client, widgets, searchParams = {}) ->
     @client = client
     @widgets = []
     if widgets instanceof Array
@@ -32,7 +32,7 @@ class Controller
       @addWidget(widgets)
     
     # Initial status
-    @initialParams = $.extend true, initialParams, {query_counter: 0}
+    @searchParams = $.extend true, searchParams, {query_counter: 0}
     @reset()
 
   ###
@@ -56,6 +56,9 @@ class Controller
     params.page = @status.currentPage
     _this = this
     @client.search query, params, (err, res) ->
+      # I check if I reached the last page.    
+      if res.results.length < _this.status.params.rpp
+        _this.status.lastPageReached = true
       _this.trigger "df:results_received", [res]
       # Whe show the results only when query counter
       # belongs to a the present request
@@ -66,9 +69,7 @@ class Controller
           else
             widget.render res
         
-        # I check if I reached the last page.    
-        if res.results.length < _this.status.params.rpp
-          _this.status.lastPageReached = true
+        
   
   ### 
   __search wrappers
@@ -84,14 +85,15 @@ class Controller
   @api public
   ###
   search: (query, params={}) ->
-    @trigger "df:search"
+    
     if query
       @status.query = query
     
-    @status.params = $.extend true, @initialParams, params
+    @status.params = $.extend true, @searchParams, params
     @status.currentPage = 1
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
+    @trigger "df:search", [@status.params]
     @__search()
 
   ###
@@ -134,8 +136,10 @@ class Controller
   ###
 
   refresh: () ->
-    @trigger "df:refresh"
+    @trigger "df:refresh", [@status.params]
     @status.currentPage = 1
+    @status.firstQueryTriggered = true
+    @status.lastPageReached = false
     @__search()
 
   ###
@@ -194,7 +198,7 @@ class Controller
   ###
   reset: () ->
     @status =
-      params: @initialParams
+      params: @searchParams
       query: ''
       currentPage: 0
       firstQueryTriggered: false
@@ -224,6 +228,18 @@ class Controller
         @status.params.filters[key].splice(index, 1)
         # Just in case it is repeated
         index = @status.params.filters[key].indexOf(value)
+
+  ###
+  setSearchParam
+  
+  Removes some filter criteria.
+  
+  @param {String} key: the param key
+  @param {Mixed} value: the value
+  @api public
+  ###
+  setSearchParam: (key, value) ->
+    @searchParams[key] = value
 
   ###
   addwidget
@@ -321,12 +337,12 @@ class Controller
   and searches.
   ###
   setStatusFromString: (queryString) ->          
-    params = qs.parse(queryString.replace("#search/", ""))
+    @status = qs.parse(queryString.replace("#search/", ""))
     @status.firstQueryTriggered = true
-    @status.currentPage = params.page
-    @status.query = params.query
-    @status.params = params
+    @status.lastPageReached = false
+    @status.currentPage = 1
     @refresh()
+    return @status.query
 
   ###
   statusQueryString
@@ -335,7 +351,7 @@ class Controller
   with a queryString
   ###
   statusQueryString: () ->
-    return "#search/" + qs.stringify @status.params
+    return "#search/" + qs.stringify @status
 
 
 module.exports = Controller

@@ -48,6 +48,7 @@ class QueryInput extends Widget
     options = $.extend true,
       callback: () ->
         query = $(_this.queryInput).val()
+        controller.reset()
         controller.search.call(controller, query)
       wait: 43
       captureLength: 3,

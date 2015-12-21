@@ -87,6 +87,16 @@ addHelpers = (Handlebars, parameters, currency, translations, extraHelpers) ->
         return options.fn(this)
       else
         return options.inverse(this)
+
+    'times': (n, block) ->
+      accum = ''
+      for i in [1..n]
+          accum += block.fn(i)
+      return accum
+
+    'module': (a, b, options) ->
+      return parseInt(a) % parseInt(b)
+
   
   for key of helpers
     Handlebars.registerHelper key, helpers[key]
