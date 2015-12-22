@@ -365,8 +365,7 @@ This is the class which makes the queries to the Doofinder Search API.
 Argument | Required | Type | Description
 -------- | --------- | ---- | ---------------------
 hashid   | Yes  | `String` | The unique search engine identifier.
-API Key/Zone  | Yes  | `String` | The secret key to authenticate the
-request or the doofinder zone.
+API Key/Zone  | Yes  | `String` | The secret key to authenticate the request or the doofinder zone.
 types | No  | `Array` | An array of datatypes to restrict the queries to them.
 
 **WARNING**: Do not use the API key unless you're coding on the server
