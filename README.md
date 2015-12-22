@@ -359,12 +359,18 @@ df:rendered   | <ul><li>event`Object`: object with the event information.</li><l
 
 ### Client
 
+This is the class which makes the queries to the Doofinder Search API.
+
 #### constructor
 Argument | Required | Type | Description
 -------- | --------- | ---- | ---------------------
 hashid   | Yes  | `String` | The unique search engine identifier.
-API Key  | Yes  | `String` | The secret key to authenticate the request.
+API Key/Zone  | Yes  | `String` | The secret key to authenticate the
+request or the doofinder zone.
 types | No  | `Array` | An array of datatypes to restrict the queries to them.
+
+**WARNING**: Do not use the API key unless you're coding on the server
+side, if you don't put the API key just put the doofinder zone instead.
 
 #### search
 This method performs a Search API call and retrieves the data. The data will be received by a callback function.
@@ -409,11 +415,11 @@ var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {template: re
 
 Let's have a look to the template:
 
-- We used `{{#each results}}` as a loop where we iterated through the items.
+- We used `{{#each results}}` to iterate through the items.
 - We used `{{field_name}}` tags to print the content of a field.
 - We used `{{#if filed_name}}` to check the presence of a field.
 - We used `{{#format-currency}}` helper to print the price with the coin symbol and formatted.
-- Note that we use a data attribute to show the dfid. You can use this to send it with the [Controller.hit](#hit) method.
+- Note that we use a data attribute (data-df-hitcounter) to show the dfid. You can use this to send it with the [Controller.hit](#hit) method.
 
 ### Example 2: Adding extra info to our template.
 
