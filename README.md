@@ -80,7 +80,7 @@ Note that we are importing two javascript files:
 - jquery.min.js: we use it to make sure that everything is being done when the document is ready.
 - doofinder.min.js: contains doofinder namespace with its classes.
 
-We need to create the inner scroll via css.
+We need to create the inner scroll via css. We get it setting the sroll wrapper's height and overflow as you can see above. It is also necessary set the position to "relative" in order to calculate the scroll position to ask for the next page.
 
 The options we have filled in for the Client:
 * hashid: the unique hashid of your search engine.
@@ -158,7 +158,7 @@ This method adds a callback to an event triggered from the controller. Events ar
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
-event |  Yes | `String` | The query terms.
+event |  Yes | `String` | The event name.
 callback | Yes | `Function` | The function which receives the API Search response.
 
 The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
@@ -170,6 +170,14 @@ df:search   | <ul><li>event`Object`: object with the event information.</li><li>
 df:next_page  | <ul><li>event`Object`: object with the event information.</li><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.nextPage is called.
 df:get_page   | <ul><li>event`Object`: object with the event information.</li><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.getPage is called.
 df:results_received | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: the Search API response</li></ul> | This event is triggered when new results are received from Search API.
+
+As an example, we'll print in the console the total results in the `df:results_received` event.
+
+```javascript
+controller.bind('df:results_received', function(event, res){
+   console.log(res.total);
+});
+```
 
 #### hit
 Sends a request to the Search API in order to account the hits for a product.
@@ -205,7 +213,7 @@ This method adds a callback to an event triggered from the widget. Events are tr
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
-event |  Yes | `String` | The query terms.
+event |  Yes | `String` | The event name
 callback | Yes | `Function` | The function which receives the API Search response.
 
 ### widgets.Results
@@ -276,7 +284,7 @@ This method adds a callback to an event triggered from the widget. Events are tr
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
-event |  Yes | `String` | The query terms.
+event |  Yes | `String` | The event name.
 callback | Yes | `Function` | The function which receives the API Search response.
 
 The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
@@ -311,7 +319,7 @@ This method adds a callback to an event triggered from the widget. Events are tr
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
-event |  Yes | `String` | The query terms.
+event |  Yes | `String` | The event name.
 callback | Yes | `Function` | The function which receives the API Search response.
 
 The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
@@ -348,7 +356,7 @@ This method adds a callback to an event triggered from the widget. Events are tr
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
-event |  Yes | `String` | The query terms.
+event |  Yes | `String` | The event name.
 callback | Yes | `Function` | The function which receives the API Search response.
 
 The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
