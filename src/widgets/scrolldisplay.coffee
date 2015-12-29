@@ -34,10 +34,7 @@ class ScrollDisplay extends Display
     scrollWrapperElement = $(@scrollWrapper)
     @scrollOffset = options.scrollOffset
 
-    if scrollWrapperElement.children().length and not scrollWrapperElement.children().first().attr "id"
-        scrollWrapperElement.children().first().attr "id", "df-scroll__container"
-
-    else if not scrollWrapperElement.children().length 
+    if not scrollWrapperElement.children().length 
       # Just in case the inner element in the scroll is not given
       $(@scrollWrapper).prepend '<div></div>'
         
@@ -63,7 +60,6 @@ class ScrollDisplay extends Display
       if @scrollOffset then scrollOffset: @scrollOffset else {}
 
     dfScroll @scrollWrapper, options
-    
     
     @controller.bind 'df:search df:refresh', (params) -> 
       $(_this.scrollWrapper).scrollTop(0)

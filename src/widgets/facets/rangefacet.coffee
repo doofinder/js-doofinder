@@ -26,6 +26,7 @@ class RangeFacet extends Display
         '</div>'
     else
       template = options.template
+    @sliderOptions = options.sliderOptions
     super(container, template, options)
       
 
@@ -38,7 +39,7 @@ class RangeFacet extends Display
       throw Error "Error in RangeFacet: #{@name} facet is not a range facet."
 
     _this = this
-    if res.results
+    if res.total > 0
       context = $.extend true, 
         name: @name, 
         @extraContext || {}
@@ -59,7 +60,10 @@ class RangeFacet extends Display
         onFinish: (data) ->
           _this.controller.addFilter(_this.name, {'lt': data.to, 'gte': data.from})
           _this.controller.refresh()
-    
+
+      range = $.extend true,
+        range,
+        _this.sliderOptions || {}
 
       if res and res.filter and res.filter.range and res.filter.range[@name] and parseInt(res.filter.range[@name].gte)
         range.from = parseInt(res.filter.range[@name].gte, 10)  

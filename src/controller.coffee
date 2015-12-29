@@ -51,11 +51,10 @@ class Controller
     # To avoid past queries
     # we'll check the query_counter
     @status.params.query_counter++
-    query = @status.query
     params = @status.params
     params.page = @status.currentPage
     _this = this
-    @client.search query, params, (err, res) ->
+    @client.search params.query, params, (err, res) ->
       # I check if I reached the last page.    
       if res.results.length < _this.status.params.rpp
         _this.status.lastPageReached = true
@@ -87,7 +86,7 @@ class Controller
   search: (query, params={}) ->
     
     if query
-      @status.query = query
+      @status.params.query = query
     
     @status.params = $.extend true, @searchParams, params
     @status.currentPage = 1
@@ -105,8 +104,8 @@ class Controller
   @api public
   ###
   nextPage: (replace = false) ->
-    @trigger "df:next_page"
-    if @status.firstQueryTriggered and @status.currentPage > 0 and not @status.lastPageReached      
+    if @status.firstQueryTriggered and @status.currentPage > 0 and not @status.lastPageReached   
+      @trigger "df:next_page"   
       @status.currentPage++
       @__search(true)
 
@@ -199,10 +198,12 @@ class Controller
   reset: () ->
     @status =
       params: @searchParams
-      query: ''
       currentPage: 0
       firstQueryTriggered: false
       lastPageReached: false
+
+    if @searchParams.query
+      @status.params.query = ''
   
   ###
   removeFilter
@@ -264,7 +265,7 @@ class Controller
   @param {Function} callback
   ###
   hit: (dfid, callback) ->
-    @client.hit dfid, @status.query, callback
+    @client.hit dfid, @status.params.query, callback
 
 
   ###
@@ -340,9 +341,10 @@ class Controller
     @status = qs.parse(queryString.replace("#search/", ""))
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
+    @status.params.query_counter = 15
     @status.currentPage = 1
     @refresh()
-    return @status.query
+    return @status.params.query
 
   ###
   statusQueryString

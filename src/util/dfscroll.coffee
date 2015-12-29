@@ -28,7 +28,7 @@ dfScroll = (container, o) ->
         obj.dispatchEvent event
         running = false
 
-      setTimeout aux, 250
+      setTimeout aux, 500
             
     obj.addEventListener type, func
     event = document.createEvent 'Event'

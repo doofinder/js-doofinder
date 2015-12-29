@@ -389,7 +389,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"http":65}],2:[function(_dereq_,module,exports){
+},{"http":67}],2:[function(_dereq_,module,exports){
 
 /*
  * Created by Kike Coslado on 26/10/15.
@@ -457,16 +457,15 @@ author: @ecoslado
      */
 
     Controller.prototype.__search = function(next) {
-      var _this, params, query;
+      var _this, params;
       if (next == null) {
         next = false;
       }
       this.status.params.query_counter++;
-      query = this.status.query;
       params = this.status.params;
       params.page = this.status.currentPage;
       _this = this;
-      return this.client.search(query, params, function(err, res) {
+      return this.client.search(params.query, params, function(err, res) {
         var i, len, ref, results, widget;
         if (res.results.length < _this.status.params.rpp) {
           _this.status.lastPageReached = true;
@@ -509,7 +508,7 @@ author: @ecoslado
         params = {};
       }
       if (query) {
-        this.status.query = query;
+        this.status.params.query = query;
       }
       this.status.params = $.extend(true, this.searchParams, params);
       this.status.currentPage = 1;
@@ -533,8 +532,8 @@ author: @ecoslado
       if (replace == null) {
         replace = false;
       }
-      this.trigger("df:next_page");
       if (this.status.firstQueryTriggered && this.status.currentPage > 0 && !this.status.lastPageReached) {
+        this.trigger("df:next_page");
         this.status.currentPage++;
         return this.__search(true);
       }
@@ -644,13 +643,15 @@ author: @ecoslado
      */
 
     Controller.prototype.reset = function() {
-      return this.status = {
+      this.status = {
         params: this.searchParams,
-        query: '',
         currentPage: 0,
         firstQueryTriggered: false,
         lastPageReached: false
       };
+      if (this.searchParams.query) {
+        return this.status.params.query = '';
+      }
     };
 
 
@@ -724,7 +725,7 @@ author: @ecoslado
      */
 
     Controller.prototype.hit = function(dfid, callback) {
-      return this.client.hit(dfid, this.status.query, callback);
+      return this.client.hit(dfid, this.status.params.query, callback);
     };
 
 
@@ -811,9 +812,10 @@ author: @ecoslado
       this.status = qs.parse(queryString.replace("#search/", ""));
       this.status.firstQueryTriggered = true;
       this.status.lastPageReached = false;
+      this.status.params.query_counter = 15;
       this.status.currentPage = 1;
       this.refresh();
-      return this.status.query;
+      return this.status.params.query;
     };
 
 
@@ -836,7 +838,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./util/jquery":8,"qs":131}],3:[function(_dereq_,module,exports){
+},{"./util/jquery":8,"qs":133}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
     version: "0.10.0",
@@ -847,6 +849,7 @@ author: @ecoslado
     widgets: {
       Results: _dereq_("./widgets/results/results"),
       ScrollResults: _dereq_("./widgets/results/scrollresults"),
+      WindowScrollResults: _dereq_("./widgets/results/windowscrollresults"),
       QueryInput: _dereq_("./widgets/queryinput"),
       TermFacet: _dereq_("./widgets/facets/termfacet"),
       RangeFacet: _dereq_("./widgets/facets/rangefacet")
@@ -856,7 +859,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./util/jquery":8,"./widget":10,"./widgets/facets/rangefacet":12,"./widgets/facets/termfacet":13,"./widgets/queryinput":14,"./widgets/results/results":15,"./widgets/results/scrollresults":16,"Handlebars":47}],4:[function(_dereq_,module,exports){
+},{"./client":1,"./controller":2,"./util/jquery":8,"./widget":10,"./widgets/facets/rangefacet":12,"./widgets/facets/termfacet":13,"./widgets/queryinput":14,"./widgets/results/results":15,"./widgets/results/scrollresults":16,"./widgets/results/windowscrollresults":17,"Handlebars":49}],4:[function(_dereq_,module,exports){
 (function() {
   var dfScroll, extend;
 
@@ -888,7 +891,7 @@ author: @ecoslado
           obj.dispatchEvent(event);
           return running = false;
         };
-        return setTimeout(aux, 250);
+        return setTimeout(aux, 500);
       };
       obj.addEventListener(type, func);
       event = document.createEvent('Event');
@@ -911,7 +914,52 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./extend":5}],5:[function(_dereq_,module,exports){
+},{"./extend":6}],5:[function(_dereq_,module,exports){
+(function() {
+  var $, dfWindowScroll;
+
+  $ = _dereq_('./jquery');
+
+  dfWindowScroll = function(o) {
+    var container, defaultOptions, handler, throttle;
+    defaultOptions = {
+      scrollOffset: 100
+    };
+    o = $.extend(true, defaultOptions, o || {});
+    container = $(window);
+    throttle = function(type, name, obj) {
+      var func, running;
+      obj = obj || window;
+      running = false;
+      func = function() {
+        var aux;
+        if (running) {
+          return;
+        }
+        running = true;
+        aux = function() {
+          obj.trigger(name);
+          return running = false;
+        };
+        return setTimeout(aux, 250);
+      };
+      obj.on(type, func);
+      return obj.trigger(name);
+    };
+    throttle('scroll', 'df:scroll', container);
+    handler = function() {
+      if (container.scrollTop() + container.height() >= $(document).height() - o.scrollOffset) {
+        return o.callback();
+      }
+    };
+    return container.on('df:scroll', handler);
+  };
+
+  module.exports = dfWindowScroll;
+
+}).call(this);
+
+},{"./jquery":8}],6:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
     extend: function() {
@@ -931,7 +979,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{}],6:[function(_dereq_,module,exports){
+},{}],7:[function(_dereq_,module,exports){
 
 /*
  * author: @ecoslado
@@ -1004,12 +1052,10 @@ author: @ecoslado
       'translate': function(options) {
         var key;
         key = options.fn(this);
-        if (customStrings && indexOf.call(customStrings, key) >= 0) {
-          return customStrings[key];
-        } else if (indexOf.call(translations, key) >= 0 && indexOf.call(translations[key], language) >= 0) {
-          return translations[key][language];
+        if (translations && indexOf.call(translations, key) >= 0) {
+          return translations[key];
         } else {
-          return translations[key]['en'];
+          return key;
         }
       },
       'eq': function(lvalue, rvalue, options) {
@@ -1072,80 +1118,6 @@ author: @ecoslado
 
 }).call(this);
 
-},{}],7:[function(_dereq_,module,exports){
-/**
- * Created by Kike Coslado on 16/11/15.
- */
-
-module.exports = (function($){
-   'use strict';
-    function Plugin(element, options) {
-    	this.$el = $(element);
-    	this._name = 'dfScroll';
-    	this.$el.css("position", "relative");
-        this.$content = this.$el.children().first();
-        this.$content.css('overflow', 'hidden');
-    	this.options = $.extend(
-    		true, 
-    		{
-    			scrollOffset: 50,
-        		direction: 'vertical'
-    		}, options || {});
-    	this.init();
-    }
-
-
-    Plugin.prototype = {
-    	init: function(){
-    		// Avoids multiple scroll triggers
-	        var throttle = function (type, name, obj) {
-	            var obj = obj || window;
-	            var running = false;
-	            var func = function () {
-	                if (running) {
-	                    return;
-	                }
-	                running = true;
-	                setTimeout(function () {
-	                    obj.trigger(name);
-	                    running = false;
-	                }, 5);
-	            };
-	            obj.on(type, func);
-	            obj.trigger(name);
-	        };
-	        throttle('scroll', 'df:scroll', this.$el);
-
-	        // handling scroll event
-	        self = this;
-	        this.$el.on('df:scroll', function () {
-	        	var container = self.$el;
-	        	var content = self.$content;
-	            //When bottom or right side is about to be reached, callback will be called
-	            if (['horizontal', 'vertical'].indexOf(self.options.direction) <= -1){
-	                throw Error("Direction is not properly set. It might be 'horizontal' or 'vertical'.")
-	            }
-	            
-	            if ((self.options.direction == "vertical" &&
-	                    content.height() - container.height() + content.position().top <= self.options.scrollOffset) ||
-	                (self.options.direction == "horizontal" &&
-	                    content.width() - container.width() + content.position().left <= self.options.scrollOffset)){ 
-	                self.options.callback();
-	            }
-
-	        });
-
-       }
-    };
-
-    $.fn.dfScroll = function (o) {
-
-        return this.each(function(){
-        	var $this = $(this), data = $this.data('dfScroll');
-    		if (!data) $this.data('dfScroll', (data = new Plugin($(this), o)));
-        });
-    }
-});
 },{}],8:[function(_dereq_,module,exports){
 (function() {
   var jQuery;
@@ -1156,13 +1128,11 @@ module.exports = (function($){
 
   _dereq_("./jquery.typewatch")(jQuery);
 
-  _dereq_("./jquery.dfscroll")(jQuery);
-
   module.exports = jQuery;
 
 }).call(this);
 
-},{"./jquery.dfscroll":7,"./jquery.typewatch":9,"ion-rangeslider":129,"jquery":130}],9:[function(_dereq_,module,exports){
+},{"./jquery.typewatch":9,"ion-rangeslider":131,"jquery":132}],9:[function(_dereq_,module,exports){
 /*
 *	TypeWatch 2.2.2
 *
@@ -1492,7 +1462,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../util/helpers":6,"../util/jquery":8,"../widget":10,"handlebars":116}],12:[function(_dereq_,module,exports){
+},{"../util/helpers":7,"../util/jquery":8,"../widget":10,"handlebars":118}],12:[function(_dereq_,module,exports){
 
 /*
 rangefacet.coffee
@@ -1530,6 +1500,7 @@ them. Manages the filtering.
       } else {
         template = options.template;
       }
+      this.sliderOptions = options.sliderOptions;
       RangeFacet.__super__.constructor.call(this, container, template, options);
     }
 
@@ -1541,7 +1512,7 @@ them. Manages the filtering.
         throw Error("Error in RangeFacet: " + this.name + " facet is not a range facet.");
       }
       _this = this;
-      if (res.results) {
+      if (res.total > 0) {
         context = $.extend(true, {
           name: this.name
         }, this.extraContext || {});
@@ -1566,6 +1537,7 @@ them. Manages the filtering.
             return _this.controller.refresh();
           }
         };
+        range = $.extend(true, range, _this.sliderOptions || {});
         if (res && res.filter && res.filter.range && res.filter.range[this.name] && parseInt(res.filter.range[this.name].gte)) {
           range.from = parseInt(res.filter.range[this.name].gte, 10);
         }
@@ -1731,7 +1703,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../display":11,"jquery":130}],14:[function(_dereq_,module,exports){
+},{"../display":11,"jquery":132}],14:[function(_dereq_,module,exports){
 
 /*
 queryinput.coffee
@@ -1987,7 +1959,115 @@ replaces the current content.
 
 }).call(this);
 
-},{"../../util/jquery":8,"../scrolldisplay":17}],17:[function(_dereq_,module,exports){
+},{"../../util/jquery":8,"../scrolldisplay":18}],17:[function(_dereq_,module,exports){
+
+/*
+windowscrollresults.coffee
+author: @ecoslado
+2015 11 10
+ */
+
+
+/*
+WindowScrollResults
+ */
+
+(function() {
+  var $, WindowScrollDisplay, WindowScrollResults,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  WindowScrollDisplay = _dereq_('../windowscrolldisplay');
+
+  $ = _dereq_('../../util/jquery');
+
+  WindowScrollResults = (function(superClass) {
+    extend(WindowScrollResults, superClass);
+
+
+    /*
+    constructor
+    
+    @param {String} container
+    @param {String|Function} template
+    @param {Object} extraOptions 
+    @api public
+     */
+
+    function WindowScrollResults(container, options) {
+      var template;
+      if (options == null) {
+        options = {};
+      }
+      if (!options.template) {
+        template = '<ul>{{#each results}}' + '             <li>{{#each this}}' + '               <b>{{@key}}</b>:{{this}}<br>' + '                 {{/each}}' + '            </li>' + '             {{/each}}' + '        </ul>';
+      } else {
+        template = options.template;
+      }
+      WindowScrollResults.__super__.constructor.call(this, container, template, options);
+    }
+
+
+    /*
+    init
+    
+    @api public
+     */
+
+    WindowScrollResults.prototype.init = function(controller) {
+      var _this;
+      WindowScrollResults.__super__.init.call(this, controller);
+      _this = this;
+      return $(this.container).on('click', 'a[data-df-hitcounter]', function(e) {
+        return _this.trigger('df:hit', [$(this).data('dfHitcounter'), $(this).attr('href')]);
+      });
+    };
+
+
+    /*
+    render
+    
+    just inherits render method and triggers
+    df:results_rendered
+    
+    @param {Object} res
+    @api public
+     */
+
+    WindowScrollResults.prototype.render = function(res) {
+      var context;
+      context = $.extend(true, res, this.extraContext || {});
+      WindowScrollResults.__super__.render.call(this, res);
+      return this.trigger("df:rendered", res);
+    };
+
+
+    /*
+    renderNext
+    
+    just inherits render method and triggers
+    df:results_rendered
+    
+    @param {Object} res
+    @api public
+     */
+
+    WindowScrollResults.prototype.renderNext = function(res) {
+      var context;
+      context = $.extend(true, res, this.extraContext || {});
+      WindowScrollResults.__super__.renderNext.call(this, res);
+      return this.trigger("df:rendered", res);
+    };
+
+    return WindowScrollResults;
+
+  })(WindowScrollDisplay);
+
+  module.exports = WindowScrollResults;
+
+}).call(this);
+
+},{"../../util/jquery":8,"../windowscrolldisplay":19}],18:[function(_dereq_,module,exports){
 
 /*
 scrolldisplay.coffee
@@ -2037,9 +2117,7 @@ bottom
       this.scrollWrapper = scrollWrapper;
       scrollWrapperElement = $(this.scrollWrapper);
       this.scrollOffset = options.scrollOffset;
-      if (scrollWrapperElement.children().length && !scrollWrapperElement.children().first().attr("id")) {
-        scrollWrapperElement.children().first().attr("id", "df-scroll__container");
-      } else if (!scrollWrapperElement.children().length) {
+      if (!scrollWrapperElement.children().length) {
         $(this.scrollWrapper).prepend('<div></div>');
       }
       container = scrollWrapperElement.children().first();
@@ -2109,7 +2187,117 @@ bottom
 
 }).call(this);
 
-},{"../util/dfscroll":4,"../util/jquery":8,"./display":11}],18:[function(_dereq_,module,exports){
+},{"../util/dfscroll":4,"../util/jquery":8,"./display":11}],19:[function(_dereq_,module,exports){
+
+/*
+windowscrolldisplay.coffee
+author: @ecoslado
+2015 11 10
+ */
+
+
+/*
+WindowScrollDisplay
+This class receives the search
+results and paint them in a container
+shaped by template. Ask for a new page
+when scroll in wrapper reaches the
+bottom
+ */
+
+(function() {
+  var $, Display, WindowScrollDisplay, dfWindowScroll,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  Display = _dereq_("./display");
+
+  dfWindowScroll = _dereq_("../util/dfwindowscroll");
+
+  $ = _dereq_("../util/jquery");
+
+  WindowScrollDisplay = (function(superClass) {
+    extend(WindowScrollDisplay, superClass);
+
+
+    /*
+    constructor
+    
+    just assign wrapper property for scrolling and 
+    calls super constructor.
+    
+    @param {String} scrollWrapper
+    @param {String|Function} template
+    @param {Object} extraOptions 
+    @api public
+     */
+
+    function WindowScrollDisplay(container, template, options) {
+      this.scrollOffset = options.scrollOffset;
+      WindowScrollDisplay.__super__.constructor.call(this, container, template, options);
+    }
+
+
+    /*
+    start
+    
+    This is the function where bind the
+    events to DOM elements.
+     */
+
+    WindowScrollDisplay.prototype.init = function(controller) {
+      var _this, options;
+      WindowScrollDisplay.__super__.init.call(this, controller);
+      _this = this;
+      options = $.extend(true, {
+        callback: function() {
+          return _this.controller.nextPage.call(_this.controller);
+        }
+      }, this.scrollOffset ? {
+        scrollOffset: this.scrollOffset
+      } : {});
+      dfWindowScroll(options);
+      return this.controller.bind('df:search df:refresh', function(params) {
+        return $(window).scrollTop(0);
+      });
+    };
+
+
+    /*
+    renderNext
+    
+    Appends results to the older in container
+    @param {Object} res
+    @api public
+     */
+
+    WindowScrollDisplay.prototype.renderNext = function(res) {
+      var html;
+      html = this.template(res);
+      return $(this.container).append(html);
+    };
+
+
+    /*
+    clean
+    
+    Cleans the container content.
+    @api public
+     */
+
+    WindowScrollDisplay.prototype.clean = function() {
+      return $(this.container).html("");
+    };
+
+    return WindowScrollDisplay;
+
+  })(Display);
+
+  module.exports = WindowScrollDisplay;
+
+}).call(this);
+
+},{"../util/dfwindowscroll":5,"../util/jquery":8,"./display":11}],20:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2176,7 +2364,7 @@ exports['default'] = inst;
 module.exports = exports['default'];
 
 
-},{"./handlebars.runtime":19,"./handlebars/compiler/ast":21,"./handlebars/compiler/base":22,"./handlebars/compiler/compiler":24,"./handlebars/compiler/javascript-compiler":26,"./handlebars/compiler/visitor":29,"./handlebars/no-conflict":43}],19:[function(_dereq_,module,exports){
+},{"./handlebars.runtime":21,"./handlebars/compiler/ast":23,"./handlebars/compiler/base":24,"./handlebars/compiler/compiler":26,"./handlebars/compiler/javascript-compiler":28,"./handlebars/compiler/visitor":31,"./handlebars/no-conflict":45}],21:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2244,7 +2432,7 @@ exports['default'] = inst;
 module.exports = exports['default'];
 
 
-},{"./handlebars/base":20,"./handlebars/exception":33,"./handlebars/no-conflict":43,"./handlebars/runtime":44,"./handlebars/safe-string":45,"./handlebars/utils":46}],20:[function(_dereq_,module,exports){
+},{"./handlebars/base":22,"./handlebars/exception":35,"./handlebars/no-conflict":45,"./handlebars/runtime":46,"./handlebars/safe-string":47,"./handlebars/utils":48}],22:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2350,7 +2538,7 @@ exports.createFrame = _utils.createFrame;
 exports.logger = _logger2['default'];
 
 
-},{"./decorators":31,"./exception":33,"./helpers":34,"./logger":42,"./utils":46}],21:[function(_dereq_,module,exports){
+},{"./decorators":33,"./exception":35,"./helpers":36,"./logger":44,"./utils":48}],23:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2383,7 +2571,7 @@ exports['default'] = AST;
 module.exports = exports['default'];
 
 
-},{}],22:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2433,7 +2621,7 @@ function parse(input, options) {
 }
 
 
-},{"../utils":46,"./helpers":25,"./parser":27,"./whitespace-control":30}],23:[function(_dereq_,module,exports){
+},{"../utils":48,"./helpers":27,"./parser":29,"./whitespace-control":32}],25:[function(_dereq_,module,exports){
 /* global define */
 'use strict';
 
@@ -2601,7 +2789,7 @@ exports['default'] = CodeGen;
 module.exports = exports['default'];
 
 
-},{"../utils":46,"source-map":48}],24:[function(_dereq_,module,exports){
+},{"../utils":48,"source-map":50}],26:[function(_dereq_,module,exports){
 /* eslint-disable new-cap */
 
 'use strict';
@@ -3175,7 +3363,7 @@ function transformLiteralToPath(sexpr) {
 }
 
 
-},{"../exception":33,"../utils":46,"./ast":21}],25:[function(_dereq_,module,exports){
+},{"../exception":35,"../utils":48,"./ast":23}],27:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3407,7 +3595,7 @@ function preparePartialBlock(open, program, close, locInfo) {
 }
 
 
-},{"../exception":33}],26:[function(_dereq_,module,exports){
+},{"../exception":35}],28:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -4535,7 +4723,7 @@ exports['default'] = JavaScriptCompiler;
 module.exports = exports['default'];
 
 
-},{"../base":20,"../exception":33,"../utils":46,"./code-gen":23}],27:[function(_dereq_,module,exports){
+},{"../base":22,"../exception":35,"../utils":48,"./code-gen":25}],29:[function(_dereq_,module,exports){
 /* istanbul ignore next */
 /* Jison generated parser */
 "use strict";
@@ -5275,7 +5463,7 @@ var handlebars = (function () {
 exports['default'] = handlebars;
 
 
-},{}],28:[function(_dereq_,module,exports){
+},{}],30:[function(_dereq_,module,exports){
 /* eslint-disable new-cap */
 'use strict';
 
@@ -5463,7 +5651,7 @@ PrintVisitor.prototype.HashPair = function (pair) {
 /* eslint-enable new-cap */
 
 
-},{"./visitor":29}],29:[function(_dereq_,module,exports){
+},{"./visitor":31}],31:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5605,7 +5793,7 @@ exports['default'] = Visitor;
 module.exports = exports['default'];
 
 
-},{"../exception":33}],30:[function(_dereq_,module,exports){
+},{"../exception":35}],32:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5828,7 +6016,7 @@ exports['default'] = WhitespaceControl;
 module.exports = exports['default'];
 
 
-},{"./visitor":29}],31:[function(_dereq_,module,exports){
+},{"./visitor":31}],33:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5846,7 +6034,7 @@ function registerDefaultDecorators(instance) {
 }
 
 
-},{"./decorators/inline":32}],32:[function(_dereq_,module,exports){
+},{"./decorators/inline":34}],34:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5877,7 +6065,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":46}],33:[function(_dereq_,module,exports){
+},{"../utils":48}],35:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5919,7 +6107,7 @@ exports['default'] = Exception;
 module.exports = exports['default'];
 
 
-},{}],34:[function(_dereq_,module,exports){
+},{}],36:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5967,7 +6155,7 @@ function registerDefaultHelpers(instance) {
 }
 
 
-},{"./helpers/block-helper-missing":35,"./helpers/each":36,"./helpers/helper-missing":37,"./helpers/if":38,"./helpers/log":39,"./helpers/lookup":40,"./helpers/with":41}],35:[function(_dereq_,module,exports){
+},{"./helpers/block-helper-missing":37,"./helpers/each":38,"./helpers/helper-missing":39,"./helpers/if":40,"./helpers/log":41,"./helpers/lookup":42,"./helpers/with":43}],37:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6008,7 +6196,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":46}],36:[function(_dereq_,module,exports){
+},{"../utils":48}],38:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6104,7 +6292,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../exception":33,"../utils":46}],37:[function(_dereq_,module,exports){
+},{"../exception":35,"../utils":48}],39:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6131,7 +6319,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../exception":33}],38:[function(_dereq_,module,exports){
+},{"../exception":35}],40:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6162,7 +6350,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":46}],39:[function(_dereq_,module,exports){
+},{"../utils":48}],41:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6190,7 +6378,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{}],40:[function(_dereq_,module,exports){
+},{}],42:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6204,7 +6392,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{}],41:[function(_dereq_,module,exports){
+},{}],43:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6239,7 +6427,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":46}],42:[function(_dereq_,module,exports){
+},{"../utils":48}],44:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6288,7 +6476,7 @@ exports['default'] = logger;
 module.exports = exports['default'];
 
 
-},{"./utils":46}],43:[function(_dereq_,module,exports){
+},{"./utils":48}],45:[function(_dereq_,module,exports){
 (function (global){
 /* global window */
 'use strict';
@@ -6312,7 +6500,7 @@ module.exports = exports['default'];
 
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],44:[function(_dereq_,module,exports){
+},{}],46:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6606,7 +6794,7 @@ function executeDecorators(fn, prog, container, depths, data, blockParams) {
 }
 
 
-},{"./base":20,"./exception":33,"./utils":46}],45:[function(_dereq_,module,exports){
+},{"./base":22,"./exception":35,"./utils":48}],47:[function(_dereq_,module,exports){
 // Build out our basic SafeString type
 'use strict';
 
@@ -6623,7 +6811,7 @@ exports['default'] = SafeString;
 module.exports = exports['default'];
 
 
-},{}],46:[function(_dereq_,module,exports){
+},{}],48:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6749,7 +6937,7 @@ function appendContextPath(contextPath, id) {
 }
 
 
-},{}],47:[function(_dereq_,module,exports){
+},{}],49:[function(_dereq_,module,exports){
 // USAGE:
 // var handlebars = require('handlebars');
 /* eslint-disable no-var */
@@ -6776,7 +6964,7 @@ if (typeof _dereq_ !== 'undefined' && _dereq_.extensions) {
   _dereq_.extensions['.hbs'] = extension;
 }
 
-},{"../dist/cjs/handlebars":18,"../dist/cjs/handlebars/compiler/printer":28,"fs":60}],48:[function(_dereq_,module,exports){
+},{"../dist/cjs/handlebars":20,"../dist/cjs/handlebars/compiler/printer":30,"fs":62}],50:[function(_dereq_,module,exports){
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
@@ -6786,7 +6974,7 @@ exports.SourceMapGenerator = _dereq_('./source-map/source-map-generator').Source
 exports.SourceMapConsumer = _dereq_('./source-map/source-map-consumer').SourceMapConsumer;
 exports.SourceNode = _dereq_('./source-map/source-node').SourceNode;
 
-},{"./source-map/source-map-consumer":55,"./source-map/source-map-generator":56,"./source-map/source-node":57}],49:[function(_dereq_,module,exports){
+},{"./source-map/source-map-consumer":57,"./source-map/source-map-generator":58,"./source-map/source-node":59}],51:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -6895,7 +7083,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./util":58,"amdefine":59}],50:[function(_dereq_,module,exports){
+},{"./util":60,"amdefine":61}],52:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -7043,7 +7231,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./base64":51,"amdefine":59}],51:[function(_dereq_,module,exports){
+},{"./base64":53,"amdefine":61}],53:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -7118,7 +7306,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":59}],52:[function(_dereq_,module,exports){
+},{"amdefine":61}],54:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -7237,7 +7425,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":59}],53:[function(_dereq_,module,exports){
+},{"amdefine":61}],55:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2014 Mozilla Foundation and contributors
@@ -7325,7 +7513,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./util":58,"amdefine":59}],54:[function(_dereq_,module,exports){
+},{"./util":60,"amdefine":61}],56:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -7447,7 +7635,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":59}],55:[function(_dereq_,module,exports){
+},{"amdefine":61}],57:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -8526,7 +8714,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":49,"./base64-vlq":50,"./binary-search":52,"./quick-sort":54,"./util":58,"amdefine":59}],56:[function(_dereq_,module,exports){
+},{"./array-set":51,"./base64-vlq":52,"./binary-search":54,"./quick-sort":56,"./util":60,"amdefine":61}],58:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -8927,7 +9115,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":49,"./base64-vlq":50,"./mapping-list":53,"./util":58,"amdefine":59}],57:[function(_dereq_,module,exports){
+},{"./array-set":51,"./base64-vlq":52,"./mapping-list":55,"./util":60,"amdefine":61}],59:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -9343,7 +9531,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./source-map-generator":56,"./util":58,"amdefine":59}],58:[function(_dereq_,module,exports){
+},{"./source-map-generator":58,"./util":60,"amdefine":61}],60:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -9715,7 +9903,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":59}],59:[function(_dereq_,module,exports){
+},{"amdefine":61}],61:[function(_dereq_,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 1.0.0 Copyright (c) 2011-2015, The Dojo Foundation All Rights Reserved.
@@ -10020,9 +10208,9 @@ function amdefine(module, requireFn) {
 module.exports = amdefine;
 
 }).call(this,_dereq_("FWaASH"),"/../node_modules/Handlebars/node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"FWaASH":71,"path":70}],60:[function(_dereq_,module,exports){
+},{"FWaASH":73,"path":72}],62:[function(_dereq_,module,exports){
 
-},{}],61:[function(_dereq_,module,exports){
+},{}],63:[function(_dereq_,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -11133,7 +11321,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":62,"ieee754":63}],62:[function(_dereq_,module,exports){
+},{"base64-js":64,"ieee754":65}],64:[function(_dereq_,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -11259,7 +11447,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],63:[function(_dereq_,module,exports){
+},{}],65:[function(_dereq_,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -11345,7 +11533,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],64:[function(_dereq_,module,exports){
+},{}],66:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -11648,7 +11836,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],65:[function(_dereq_,module,exports){
+},{}],67:[function(_dereq_,module,exports){
 var http = module.exports;
 var EventEmitter = _dereq_('events').EventEmitter;
 var Request = _dereq_('./lib/request');
@@ -11787,7 +11975,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":66,"events":64,"url":84}],66:[function(_dereq_,module,exports){
+},{"./lib/request":68,"events":66,"url":86}],68:[function(_dereq_,module,exports){
 var Stream = _dereq_('stream');
 var Response = _dereq_('./response');
 var Base64 = _dereq_('Base64');
@@ -11978,7 +12166,7 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":67,"Base64":68,"inherits":69,"stream":77}],67:[function(_dereq_,module,exports){
+},{"./response":69,"Base64":70,"inherits":71,"stream":79}],69:[function(_dereq_,module,exports){
 var Stream = _dereq_('stream');
 var util = _dereq_('util');
 
@@ -12100,7 +12288,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":77,"util":86}],68:[function(_dereq_,module,exports){
+},{"stream":79,"util":88}],70:[function(_dereq_,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -12162,7 +12350,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],69:[function(_dereq_,module,exports){
+},{}],71:[function(_dereq_,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -12187,7 +12375,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],70:[function(_dereq_,module,exports){
+},{}],72:[function(_dereq_,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -12415,7 +12603,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,_dereq_("FWaASH"))
-},{"FWaASH":71}],71:[function(_dereq_,module,exports){
+},{"FWaASH":73}],73:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -12480,7 +12668,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],72:[function(_dereq_,module,exports){
+},{}],74:[function(_dereq_,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -12991,7 +13179,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],73:[function(_dereq_,module,exports){
+},{}],75:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -13077,7 +13265,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],74:[function(_dereq_,module,exports){
+},{}],76:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -13164,13 +13352,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],75:[function(_dereq_,module,exports){
+},{}],77:[function(_dereq_,module,exports){
 'use strict';
 
 exports.decode = exports.parse = _dereq_('./decode');
 exports.encode = exports.stringify = _dereq_('./encode');
 
-},{"./decode":73,"./encode":74}],76:[function(_dereq_,module,exports){
+},{"./decode":75,"./encode":76}],78:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -13244,7 +13432,7 @@ function onend() {
   });
 }
 
-},{"./readable.js":80,"./writable.js":82,"inherits":69,"process/browser.js":78}],77:[function(_dereq_,module,exports){
+},{"./readable.js":82,"./writable.js":84,"inherits":71,"process/browser.js":80}],79:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -13373,7 +13561,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"./duplex.js":76,"./passthrough.js":79,"./readable.js":80,"./transform.js":81,"./writable.js":82,"events":64,"inherits":69}],78:[function(_dereq_,module,exports){
+},{"./duplex.js":78,"./passthrough.js":81,"./readable.js":82,"./transform.js":83,"./writable.js":84,"events":66,"inherits":71}],80:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -13428,7 +13616,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],79:[function(_dereq_,module,exports){
+},{}],81:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -13471,7 +13659,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./transform.js":81,"inherits":69}],80:[function(_dereq_,module,exports){
+},{"./transform.js":83,"inherits":71}],82:[function(_dereq_,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -14408,7 +14596,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,_dereq_("FWaASH"))
-},{"./index.js":77,"FWaASH":71,"buffer":61,"events":64,"inherits":69,"process/browser.js":78,"string_decoder":83}],81:[function(_dereq_,module,exports){
+},{"./index.js":79,"FWaASH":73,"buffer":63,"events":66,"inherits":71,"process/browser.js":80,"string_decoder":85}],83:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -14614,7 +14802,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./duplex.js":76,"inherits":69}],82:[function(_dereq_,module,exports){
+},{"./duplex.js":78,"inherits":71}],84:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -15002,7 +15190,7 @@ function endWritable(stream, state, cb) {
   state.ended = true;
 }
 
-},{"./index.js":77,"buffer":61,"inherits":69,"process/browser.js":78}],83:[function(_dereq_,module,exports){
+},{"./index.js":79,"buffer":63,"inherits":71,"process/browser.js":80}],85:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -15195,7 +15383,7 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":61}],84:[function(_dereq_,module,exports){
+},{"buffer":63}],86:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -15904,14 +16092,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":72,"querystring":75}],85:[function(_dereq_,module,exports){
+},{"punycode":74,"querystring":77}],87:[function(_dereq_,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],86:[function(_dereq_,module,exports){
+},{}],88:[function(_dereq_,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -16501,89 +16689,89 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,_dereq_("FWaASH"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":85,"FWaASH":71,"inherits":69}],87:[function(_dereq_,module,exports){
-module.exports=_dereq_(18)
-},{"./handlebars.runtime":88,"./handlebars/compiler/ast":90,"./handlebars/compiler/base":91,"./handlebars/compiler/compiler":93,"./handlebars/compiler/javascript-compiler":95,"./handlebars/compiler/visitor":98,"./handlebars/no-conflict":112}],88:[function(_dereq_,module,exports){
-module.exports=_dereq_(19)
-},{"./handlebars/base":89,"./handlebars/exception":102,"./handlebars/no-conflict":112,"./handlebars/runtime":113,"./handlebars/safe-string":114,"./handlebars/utils":115}],89:[function(_dereq_,module,exports){
+},{"./support/isBuffer":87,"FWaASH":73,"inherits":71}],89:[function(_dereq_,module,exports){
 module.exports=_dereq_(20)
-},{"./decorators":100,"./exception":102,"./helpers":103,"./logger":111,"./utils":115}],90:[function(_dereq_,module,exports){
+},{"./handlebars.runtime":90,"./handlebars/compiler/ast":92,"./handlebars/compiler/base":93,"./handlebars/compiler/compiler":95,"./handlebars/compiler/javascript-compiler":97,"./handlebars/compiler/visitor":100,"./handlebars/no-conflict":114}],90:[function(_dereq_,module,exports){
 module.exports=_dereq_(21)
-},{}],91:[function(_dereq_,module,exports){
+},{"./handlebars/base":91,"./handlebars/exception":104,"./handlebars/no-conflict":114,"./handlebars/runtime":115,"./handlebars/safe-string":116,"./handlebars/utils":117}],91:[function(_dereq_,module,exports){
 module.exports=_dereq_(22)
-},{"../utils":115,"./helpers":94,"./parser":96,"./whitespace-control":99}],92:[function(_dereq_,module,exports){
+},{"./decorators":102,"./exception":104,"./helpers":105,"./logger":113,"./utils":117}],92:[function(_dereq_,module,exports){
 module.exports=_dereq_(23)
-},{"../utils":115,"source-map":117}],93:[function(_dereq_,module,exports){
+},{}],93:[function(_dereq_,module,exports){
 module.exports=_dereq_(24)
-},{"../exception":102,"../utils":115,"./ast":90}],94:[function(_dereq_,module,exports){
+},{"../utils":117,"./helpers":96,"./parser":98,"./whitespace-control":101}],94:[function(_dereq_,module,exports){
 module.exports=_dereq_(25)
-},{"../exception":102}],95:[function(_dereq_,module,exports){
+},{"../utils":117,"source-map":119}],95:[function(_dereq_,module,exports){
 module.exports=_dereq_(26)
-},{"../base":89,"../exception":102,"../utils":115,"./code-gen":92}],96:[function(_dereq_,module,exports){
+},{"../exception":104,"../utils":117,"./ast":92}],96:[function(_dereq_,module,exports){
 module.exports=_dereq_(27)
-},{}],97:[function(_dereq_,module,exports){
+},{"../exception":104}],97:[function(_dereq_,module,exports){
 module.exports=_dereq_(28)
-},{"./visitor":98}],98:[function(_dereq_,module,exports){
+},{"../base":91,"../exception":104,"../utils":117,"./code-gen":94}],98:[function(_dereq_,module,exports){
 module.exports=_dereq_(29)
-},{"../exception":102}],99:[function(_dereq_,module,exports){
+},{}],99:[function(_dereq_,module,exports){
 module.exports=_dereq_(30)
-},{"./visitor":98}],100:[function(_dereq_,module,exports){
+},{"./visitor":100}],100:[function(_dereq_,module,exports){
 module.exports=_dereq_(31)
-},{"./decorators/inline":101}],101:[function(_dereq_,module,exports){
+},{"../exception":104}],101:[function(_dereq_,module,exports){
 module.exports=_dereq_(32)
-},{"../utils":115}],102:[function(_dereq_,module,exports){
+},{"./visitor":100}],102:[function(_dereq_,module,exports){
 module.exports=_dereq_(33)
-},{}],103:[function(_dereq_,module,exports){
+},{"./decorators/inline":103}],103:[function(_dereq_,module,exports){
 module.exports=_dereq_(34)
-},{"./helpers/block-helper-missing":104,"./helpers/each":105,"./helpers/helper-missing":106,"./helpers/if":107,"./helpers/log":108,"./helpers/lookup":109,"./helpers/with":110}],104:[function(_dereq_,module,exports){
+},{"../utils":117}],104:[function(_dereq_,module,exports){
 module.exports=_dereq_(35)
-},{"../utils":115}],105:[function(_dereq_,module,exports){
+},{}],105:[function(_dereq_,module,exports){
 module.exports=_dereq_(36)
-},{"../exception":102,"../utils":115}],106:[function(_dereq_,module,exports){
+},{"./helpers/block-helper-missing":106,"./helpers/each":107,"./helpers/helper-missing":108,"./helpers/if":109,"./helpers/log":110,"./helpers/lookup":111,"./helpers/with":112}],106:[function(_dereq_,module,exports){
 module.exports=_dereq_(37)
-},{"../exception":102}],107:[function(_dereq_,module,exports){
+},{"../utils":117}],107:[function(_dereq_,module,exports){
 module.exports=_dereq_(38)
-},{"../utils":115}],108:[function(_dereq_,module,exports){
+},{"../exception":104,"../utils":117}],108:[function(_dereq_,module,exports){
 module.exports=_dereq_(39)
-},{}],109:[function(_dereq_,module,exports){
+},{"../exception":104}],109:[function(_dereq_,module,exports){
 module.exports=_dereq_(40)
-},{}],110:[function(_dereq_,module,exports){
+},{"../utils":117}],110:[function(_dereq_,module,exports){
 module.exports=_dereq_(41)
-},{"../utils":115}],111:[function(_dereq_,module,exports){
+},{}],111:[function(_dereq_,module,exports){
 module.exports=_dereq_(42)
-},{"./utils":115}],112:[function(_dereq_,module,exports){
+},{}],112:[function(_dereq_,module,exports){
 module.exports=_dereq_(43)
-},{}],113:[function(_dereq_,module,exports){
+},{"../utils":117}],113:[function(_dereq_,module,exports){
 module.exports=_dereq_(44)
-},{"./base":89,"./exception":102,"./utils":115}],114:[function(_dereq_,module,exports){
+},{"./utils":117}],114:[function(_dereq_,module,exports){
 module.exports=_dereq_(45)
 },{}],115:[function(_dereq_,module,exports){
 module.exports=_dereq_(46)
-},{}],116:[function(_dereq_,module,exports){
+},{"./base":91,"./exception":104,"./utils":117}],116:[function(_dereq_,module,exports){
 module.exports=_dereq_(47)
-},{"../dist/cjs/handlebars":87,"../dist/cjs/handlebars/compiler/printer":97,"fs":60}],117:[function(_dereq_,module,exports){
-arguments[4][48][0].apply(exports,arguments)
-},{"./source-map/source-map-consumer":124,"./source-map/source-map-generator":125,"./source-map/source-node":126}],118:[function(_dereq_,module,exports){
-arguments[4][49][0].apply(exports,arguments)
-},{"./util":127,"amdefine":128}],119:[function(_dereq_,module,exports){
+},{}],117:[function(_dereq_,module,exports){
+module.exports=_dereq_(48)
+},{}],118:[function(_dereq_,module,exports){
+module.exports=_dereq_(49)
+},{"../dist/cjs/handlebars":89,"../dist/cjs/handlebars/compiler/printer":99,"fs":62}],119:[function(_dereq_,module,exports){
 arguments[4][50][0].apply(exports,arguments)
-},{"./base64":120,"amdefine":128}],120:[function(_dereq_,module,exports){
+},{"./source-map/source-map-consumer":126,"./source-map/source-map-generator":127,"./source-map/source-node":128}],120:[function(_dereq_,module,exports){
 arguments[4][51][0].apply(exports,arguments)
-},{"amdefine":128}],121:[function(_dereq_,module,exports){
+},{"./util":129,"amdefine":130}],121:[function(_dereq_,module,exports){
 arguments[4][52][0].apply(exports,arguments)
-},{"amdefine":128}],122:[function(_dereq_,module,exports){
+},{"./base64":122,"amdefine":130}],122:[function(_dereq_,module,exports){
 arguments[4][53][0].apply(exports,arguments)
-},{"./util":127,"amdefine":128}],123:[function(_dereq_,module,exports){
+},{"amdefine":130}],123:[function(_dereq_,module,exports){
 arguments[4][54][0].apply(exports,arguments)
-},{"amdefine":128}],124:[function(_dereq_,module,exports){
+},{"amdefine":130}],124:[function(_dereq_,module,exports){
 arguments[4][55][0].apply(exports,arguments)
-},{"./array-set":118,"./base64-vlq":119,"./binary-search":121,"./quick-sort":123,"./util":127,"amdefine":128}],125:[function(_dereq_,module,exports){
+},{"./util":129,"amdefine":130}],125:[function(_dereq_,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"./array-set":118,"./base64-vlq":119,"./mapping-list":122,"./util":127,"amdefine":128}],126:[function(_dereq_,module,exports){
+},{"amdefine":130}],126:[function(_dereq_,module,exports){
 arguments[4][57][0].apply(exports,arguments)
-},{"./source-map-generator":125,"./util":127,"amdefine":128}],127:[function(_dereq_,module,exports){
+},{"./array-set":120,"./base64-vlq":121,"./binary-search":123,"./quick-sort":125,"./util":129,"amdefine":130}],127:[function(_dereq_,module,exports){
 arguments[4][58][0].apply(exports,arguments)
-},{"amdefine":128}],128:[function(_dereq_,module,exports){
+},{"./array-set":120,"./base64-vlq":121,"./mapping-list":124,"./util":129,"amdefine":130}],128:[function(_dereq_,module,exports){
+arguments[4][59][0].apply(exports,arguments)
+},{"./source-map-generator":127,"./util":129,"amdefine":130}],129:[function(_dereq_,module,exports){
+arguments[4][60][0].apply(exports,arguments)
+},{"amdefine":130}],130:[function(_dereq_,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 1.0.0 Copyright (c) 2011-2015, The Dojo Foundation All Rights Reserved.
@@ -16888,7 +17076,7 @@ function amdefine(module, requireFn) {
 module.exports = amdefine;
 
 }).call(this,_dereq_("FWaASH"),"/../node_modules/handlebars/node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"FWaASH":71,"path":70}],129:[function(_dereq_,module,exports){
+},{"FWaASH":73,"path":72}],131:[function(_dereq_,module,exports){
 // Ion.RangeSlider
 // version 2.1.2 Build: 350
 // © Denis Ineshin, 2015
@@ -19197,7 +19385,7 @@ module.exports = (function ($, document, window, navigator, undefined) {
 
 });
 
-},{}],130:[function(_dereq_,module,exports){
+},{}],132:[function(_dereq_,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.4
  * http://jquery.com/
@@ -28409,7 +28597,7 @@ return jQuery;
 
 }));
 
-},{}],131:[function(_dereq_,module,exports){
+},{}],133:[function(_dereq_,module,exports){
 // Load modules
 
 var Stringify = _dereq_('./stringify');
@@ -28426,7 +28614,7 @@ module.exports = {
     parse: Parse
 };
 
-},{"./parse":132,"./stringify":133}],132:[function(_dereq_,module,exports){
+},{"./parse":134,"./stringify":135}],134:[function(_dereq_,module,exports){
 // Load modules
 
 var Utils = _dereq_('./utils');
@@ -28614,7 +28802,7 @@ module.exports = function (str, options) {
     return Utils.compact(obj);
 };
 
-},{"./utils":134}],133:[function(_dereq_,module,exports){
+},{"./utils":136}],135:[function(_dereq_,module,exports){
 // Load modules
 
 var Utils = _dereq_('./utils');
@@ -28737,7 +28925,7 @@ module.exports = function (obj, options) {
     return keys.join(delimiter);
 };
 
-},{"./utils":134}],134:[function(_dereq_,module,exports){
+},{"./utils":136}],136:[function(_dereq_,module,exports){
 // Load modules
 
 

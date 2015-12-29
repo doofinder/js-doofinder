@@ -20,7 +20,6 @@ addHelpers = (Handlebars, parameters, currency, translations, extraHelpers) ->
   
   
   helpers = 
-    
     'url-params': (options) ->
       paramsFinal = options.fn(this)
       if paramsFinal
@@ -57,12 +56,10 @@ addHelpers = (Handlebars, parameters, currency, translations, extraHelpers) ->
     
     'translate': (options) ->
       key = options.fn(this)
-      if customStrings and key in customStrings
-        customStrings[key]
-      else if key in translations and language in translations[key]
-        translations[key][language]
+      if translations and key in translations
+        return translations[key]
       else
-        translations[key]['en']
+        return key
 
     'eq': (lvalue, rvalue, options) ->
       if arguments.length < 3
