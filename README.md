@@ -556,7 +556,7 @@ Template functions are called helpers in [Handlebars](http://handlebarsjs.com/).
 ```
 This helper will take the text in the tag and will wrapper it with the `<b>` tag. Note that `options.fn(this)` returns the text wrapped by the helper.
 
-We'll use the helper for showing the header and instantiate the widget.
+We'll use the helper to show the header and instantiate the widget.
 
 ```javascript
 var resultsTemplate = '{{#each results}}' +
