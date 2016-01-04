@@ -389,7 +389,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"http":67}],2:[function(_dereq_,module,exports){
+},{"http":63}],2:[function(_dereq_,module,exports){
 
 /*
  * Created by Kike Coslado on 26/10/15.
@@ -606,7 +606,7 @@ author: @ecoslado
     /*
     addParam
     
-    Adds new filter criteria.
+    Adds new search parameter to the current status.
     
     @param {String} key: the facet key you are filtering
     @param {String | Number} value: the filtering criteria
@@ -621,9 +621,9 @@ author: @ecoslado
     /*
     clearParam
     
-    Adds new filter criteria.
+    Removes search parameter from current status.
     
-    @param {String} key: the facet key you are filtering
+    @param {String} key: the name of the param
     @api public
      */
 
@@ -809,10 +809,13 @@ author: @ecoslado
      */
 
     Controller.prototype.setStatusFromString = function(queryString) {
-      this.status = qs.parse(queryString.replace("#search/", ""));
+      this.status = qs.parse(queryString.replace("#/search/", ""));
       this.status.firstQueryTriggered = true;
       this.status.lastPageReached = false;
-      this.status.params.query_counter = 15;
+      if (!this.status.params) {
+        this.status.params = {};
+      }
+      this.status.params.query_counter = 1;
       this.status.currentPage = 1;
       this.refresh();
       return this.status.params.query;
@@ -827,7 +830,7 @@ author: @ecoslado
      */
 
     Controller.prototype.statusQueryString = function() {
-      return "#search/" + qs.stringify(this.status);
+      return "#/search/" + qs.stringify(this.status);
     };
 
     return Controller;
@@ -838,7 +841,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./util/jquery":8,"qs":133}],3:[function(_dereq_,module,exports){
+},{"./util/jquery":6,"qs":129}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
     version: "0.10.0",
@@ -849,7 +852,6 @@ author: @ecoslado
     widgets: {
       Results: _dereq_("./widgets/results/results"),
       ScrollResults: _dereq_("./widgets/results/scrollresults"),
-      WindowScrollResults: _dereq_("./widgets/results/windowscrollresults"),
       QueryInput: _dereq_("./widgets/queryinput"),
       TermFacet: _dereq_("./widgets/facets/termfacet"),
       RangeFacet: _dereq_("./widgets/facets/rangefacet")
@@ -859,74 +861,31 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./util/jquery":8,"./widget":10,"./widgets/facets/rangefacet":12,"./widgets/facets/termfacet":13,"./widgets/queryinput":14,"./widgets/results/results":15,"./widgets/results/scrollresults":16,"./widgets/results/windowscrollresults":17,"Handlebars":49}],4:[function(_dereq_,module,exports){
+},{"./client":1,"./controller":2,"./util/jquery":6,"./widget":8,"./widgets/facets/rangefacet":10,"./widgets/facets/termfacet":11,"./widgets/queryinput":12,"./widgets/results/results":13,"./widgets/results/scrollresults":14,"Handlebars":45}],4:[function(_dereq_,module,exports){
 (function() {
-  var dfScroll, extend;
-
-  extend = _dereq_('./extend').extend;
-
-  dfScroll = function(container, o) {
-    var content, defaultOptions, handler, throttle;
-    defaultOptions = {
-      direction: "vertical",
-      scrollOffset: 100
-    };
-    o = extend(defaultOptions, o);
-    container = document.querySelector(container);
-    content = container.children[0];
-    throttle = function(type, name, obj) {
-      var event, func, running;
-      obj = obj || window;
-      running = false;
-      func = function() {
-        var aux;
-        if (running) {
-          return;
-        }
-        running = true;
-        aux = function() {
-          var event;
-          event = document.createEvent('Event');
-          event.initEvent(name, true, true);
-          obj.dispatchEvent(event);
-          return running = false;
-        };
-        return setTimeout(aux, 500);
-      };
-      obj.addEventListener(type, func);
-      event = document.createEvent('Event');
-      event.initEvent(name, true, true);
-      return obj.dispatchEvent(event);
-    };
-    throttle('scroll', 'df:scroll', container);
-    handler = function() {
-      if (['horizontal', 'vertical'].indexOf(o.direction) <= -1) {
-        throw Error("Direction is not properly set. It might be 'horizontal' or 'vertical'.");
-      }
-      if (o.direction === 'vertical' && content.clientHeight - container.clientHeight - container.scrollTop <= o.scrollOffset || o.direction === "horizontal" && content.clientWidth() - container.clientWidth() - content.scrollLeft <= o.scrollOffset) {
-        return o.callback();
-      }
-    };
-    return container.addEventListener('df:scroll', handler);
-  };
-
-  module.exports = dfScroll;
-
-}).call(this);
-
-},{"./extend":6}],5:[function(_dereq_,module,exports){
-(function() {
-  var $, dfWindowScroll;
+  var $, dfScroll;
 
   $ = _dereq_('./jquery');
 
-  dfWindowScroll = function(o) {
-    var container, defaultOptions, handler, throttle;
+  dfScroll = function(arg1, arg2) {
+    var container, content, defaultOptions, handler, o, throttle;
+    if (arg2 == null) {
+      arg2 = null;
+    }
+    if (!arg2) {
+      o = arg1;
+      container = $(window);
+      content = $(document);
+    } else {
+      o = arg2;
+      container = $(arg1);
+      content = container.children().first();
+    }
     defaultOptions = {
+      direction: 'vertical',
       scrollOffset: 100
     };
     o = $.extend(true, defaultOptions, o || {});
-    container = $(window);
     throttle = function(type, name, obj) {
       var func, running;
       obj = obj || window;
@@ -948,38 +907,24 @@ author: @ecoslado
     };
     throttle('scroll', 'df:scroll', container);
     handler = function() {
-      if (container.scrollTop() + container.height() >= $(document).height() - o.scrollOffset) {
-        return o.callback();
+      if (o.direction === 'vertical') {
+        if (container.scrollTop() + container.height() >= content.height() - o.scrollOffset) {
+          return o.callback();
+        }
+      } else {
+        if (container.scrollLeft() + container.width() >= content.width() - o.scrollOffset) {
+          return o.callback();
+        }
       }
     };
     return container.on('df:scroll', handler);
   };
 
-  module.exports = dfWindowScroll;
+  module.exports = dfScroll;
 
 }).call(this);
 
-},{"./jquery":8}],6:[function(_dereq_,module,exports){
-(function() {
-  module.exports = {
-    extend: function() {
-      var i, key;
-      i = 1;
-      while (i < arguments.length) {
-        for (key in arguments[i]) {
-          if (arguments[i].hasOwnProperty(key)) {
-            arguments[0][key] = arguments[i][key];
-          }
-        }
-        i++;
-      }
-      return arguments[0];
-    }
-  };
-
-}).call(this);
-
-},{}],7:[function(_dereq_,module,exports){
+},{"./jquery":6}],5:[function(_dereq_,module,exports){
 
 /*
  * author: @ecoslado
@@ -1118,7 +1063,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{}],8:[function(_dereq_,module,exports){
+},{}],6:[function(_dereq_,module,exports){
 (function() {
   var jQuery;
 
@@ -1132,7 +1077,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./jquery.typewatch":9,"ion-rangeslider":131,"jquery":132}],9:[function(_dereq_,module,exports){
+},{"./jquery.typewatch":7,"ion-rangeslider":127,"jquery":128}],7:[function(_dereq_,module,exports){
 /*
 *	TypeWatch 2.2.2
 *
@@ -1229,7 +1174,7 @@ module.exports = (function($) {
 
 	};
 });
-},{}],10:[function(_dereq_,module,exports){
+},{}],8:[function(_dereq_,module,exports){
 
 /*
 widget.coffee
@@ -1331,7 +1276,7 @@ shaped by template
 
 }).call(this);
 
-},{"./util/jquery":8}],11:[function(_dereq_,module,exports){
+},{"./util/jquery":6}],9:[function(_dereq_,module,exports){
 
 /*
 display.coffee
@@ -1462,7 +1407,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../util/helpers":7,"../util/jquery":8,"../widget":10,"handlebars":118}],12:[function(_dereq_,module,exports){
+},{"../util/helpers":5,"../util/jquery":6,"../widget":8,"handlebars":114}],10:[function(_dereq_,module,exports){
 
 /*
 rangefacet.coffee
@@ -1562,7 +1507,7 @@ them. Manages the filtering.
 
 }).call(this);
 
-},{"../../util/jquery":8,"../display":11}],13:[function(_dereq_,module,exports){
+},{"../../util/jquery":6,"../display":9}],11:[function(_dereq_,module,exports){
 
 /*
 termfacet.coffee
@@ -1703,7 +1648,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../display":11,"jquery":132}],14:[function(_dereq_,module,exports){
+},{"../display":9,"jquery":128}],12:[function(_dereq_,module,exports){
 
 /*
 queryinput.coffee
@@ -1789,7 +1734,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../util/jquery":8,"../widget":10}],15:[function(_dereq_,module,exports){
+},{"../util/jquery":6,"../widget":8}],13:[function(_dereq_,module,exports){
 
 /*
 display.coffee
@@ -1847,7 +1792,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../display":11}],16:[function(_dereq_,module,exports){
+},{"../display":9}],14:[function(_dereq_,module,exports){
 
 /*
 scrollresults.coffee
@@ -1959,115 +1904,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../../util/jquery":8,"../scrolldisplay":18}],17:[function(_dereq_,module,exports){
-
-/*
-windowscrollresults.coffee
-author: @ecoslado
-2015 11 10
- */
-
-
-/*
-WindowScrollResults
- */
-
-(function() {
-  var $, WindowScrollDisplay, WindowScrollResults,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  WindowScrollDisplay = _dereq_('../windowscrolldisplay');
-
-  $ = _dereq_('../../util/jquery');
-
-  WindowScrollResults = (function(superClass) {
-    extend(WindowScrollResults, superClass);
-
-
-    /*
-    constructor
-    
-    @param {String} container
-    @param {String|Function} template
-    @param {Object} extraOptions 
-    @api public
-     */
-
-    function WindowScrollResults(container, options) {
-      var template;
-      if (options == null) {
-        options = {};
-      }
-      if (!options.template) {
-        template = '<ul>{{#each results}}' + '             <li>{{#each this}}' + '               <b>{{@key}}</b>:{{this}}<br>' + '                 {{/each}}' + '            </li>' + '             {{/each}}' + '        </ul>';
-      } else {
-        template = options.template;
-      }
-      WindowScrollResults.__super__.constructor.call(this, container, template, options);
-    }
-
-
-    /*
-    init
-    
-    @api public
-     */
-
-    WindowScrollResults.prototype.init = function(controller) {
-      var _this;
-      WindowScrollResults.__super__.init.call(this, controller);
-      _this = this;
-      return $(this.container).on('click', 'a[data-df-hitcounter]', function(e) {
-        return _this.trigger('df:hit', [$(this).data('dfHitcounter'), $(this).attr('href')]);
-      });
-    };
-
-
-    /*
-    render
-    
-    just inherits render method and triggers
-    df:results_rendered
-    
-    @param {Object} res
-    @api public
-     */
-
-    WindowScrollResults.prototype.render = function(res) {
-      var context;
-      context = $.extend(true, res, this.extraContext || {});
-      WindowScrollResults.__super__.render.call(this, res);
-      return this.trigger("df:rendered", res);
-    };
-
-
-    /*
-    renderNext
-    
-    just inherits render method and triggers
-    df:results_rendered
-    
-    @param {Object} res
-    @api public
-     */
-
-    WindowScrollResults.prototype.renderNext = function(res) {
-      var context;
-      context = $.extend(true, res, this.extraContext || {});
-      WindowScrollResults.__super__.renderNext.call(this, res);
-      return this.trigger("df:rendered", res);
-    };
-
-    return WindowScrollResults;
-
-  })(WindowScrollDisplay);
-
-  module.exports = WindowScrollResults;
-
-}).call(this);
-
-},{"../../util/jquery":8,"../windowscrolldisplay":19}],18:[function(_dereq_,module,exports){
+},{"../../util/jquery":6,"../scrolldisplay":15}],15:[function(_dereq_,module,exports){
 
 /*
 scrolldisplay.coffee
@@ -2112,17 +1949,22 @@ bottom
     @api public
      */
 
-    function ScrollDisplay(scrollWrapper, template, options) {
-      var container, scrollWrapperElement;
-      this.scrollWrapper = scrollWrapper;
-      scrollWrapperElement = $(this.scrollWrapper);
-      this.scrollOffset = options.scrollOffset;
-      if (!scrollWrapperElement.children().length) {
-        $(this.scrollWrapper).prepend('<div></div>');
-      }
-      container = scrollWrapperElement.children().first();
-      if (options.container) {
-        container = options.container;
+    function ScrollDisplay(selector, template, options) {
+      var container;
+      if (options.windowScroll) {
+        this.scrollWrapper = $(window);
+        this.windowScroll = true;
+        container = $(selector);
+      } else {
+        this.scrollWrapper = $(selector);
+        this.scrollOffset = options.scrollOffset;
+        if (!this.scrollWrapper.children().length) {
+          this.scrollWrapper.prepend('<div></div>');
+        }
+        container = this.scrollWrapper.children().first();
+        if (options.container) {
+          container = options.container;
+        }
       }
       ScrollDisplay.__super__.constructor.call(this, container, template, options);
     }
@@ -2146,9 +1988,13 @@ bottom
       }, this.scrollOffset ? {
         scrollOffset: this.scrollOffset
       } : {});
-      dfScroll(this.scrollWrapper, options);
+      if (this.windowScroll) {
+        dfScroll(options);
+      } else {
+        dfScroll(this.scrollWrapper, options);
+      }
       return this.controller.bind('df:search df:refresh', function(params) {
-        return $(_this.scrollWrapper).scrollTop(0);
+        return _this.scrollWrapper.scrollTop(0);
       });
     };
 
@@ -2187,117 +2033,7 @@ bottom
 
 }).call(this);
 
-},{"../util/dfscroll":4,"../util/jquery":8,"./display":11}],19:[function(_dereq_,module,exports){
-
-/*
-windowscrolldisplay.coffee
-author: @ecoslado
-2015 11 10
- */
-
-
-/*
-WindowScrollDisplay
-This class receives the search
-results and paint them in a container
-shaped by template. Ask for a new page
-when scroll in wrapper reaches the
-bottom
- */
-
-(function() {
-  var $, Display, WindowScrollDisplay, dfWindowScroll,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  Display = _dereq_("./display");
-
-  dfWindowScroll = _dereq_("../util/dfwindowscroll");
-
-  $ = _dereq_("../util/jquery");
-
-  WindowScrollDisplay = (function(superClass) {
-    extend(WindowScrollDisplay, superClass);
-
-
-    /*
-    constructor
-    
-    just assign wrapper property for scrolling and 
-    calls super constructor.
-    
-    @param {String} scrollWrapper
-    @param {String|Function} template
-    @param {Object} extraOptions 
-    @api public
-     */
-
-    function WindowScrollDisplay(container, template, options) {
-      this.scrollOffset = options.scrollOffset;
-      WindowScrollDisplay.__super__.constructor.call(this, container, template, options);
-    }
-
-
-    /*
-    start
-    
-    This is the function where bind the
-    events to DOM elements.
-     */
-
-    WindowScrollDisplay.prototype.init = function(controller) {
-      var _this, options;
-      WindowScrollDisplay.__super__.init.call(this, controller);
-      _this = this;
-      options = $.extend(true, {
-        callback: function() {
-          return _this.controller.nextPage.call(_this.controller);
-        }
-      }, this.scrollOffset ? {
-        scrollOffset: this.scrollOffset
-      } : {});
-      dfWindowScroll(options);
-      return this.controller.bind('df:search df:refresh', function(params) {
-        return $(window).scrollTop(0);
-      });
-    };
-
-
-    /*
-    renderNext
-    
-    Appends results to the older in container
-    @param {Object} res
-    @api public
-     */
-
-    WindowScrollDisplay.prototype.renderNext = function(res) {
-      var html;
-      html = this.template(res);
-      return $(this.container).append(html);
-    };
-
-
-    /*
-    clean
-    
-    Cleans the container content.
-    @api public
-     */
-
-    WindowScrollDisplay.prototype.clean = function() {
-      return $(this.container).html("");
-    };
-
-    return WindowScrollDisplay;
-
-  })(Display);
-
-  module.exports = WindowScrollDisplay;
-
-}).call(this);
-
-},{"../util/dfwindowscroll":5,"../util/jquery":8,"./display":11}],20:[function(_dereq_,module,exports){
+},{"../util/dfscroll":4,"../util/jquery":6,"./display":9}],16:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2364,7 +2100,7 @@ exports['default'] = inst;
 module.exports = exports['default'];
 
 
-},{"./handlebars.runtime":21,"./handlebars/compiler/ast":23,"./handlebars/compiler/base":24,"./handlebars/compiler/compiler":26,"./handlebars/compiler/javascript-compiler":28,"./handlebars/compiler/visitor":31,"./handlebars/no-conflict":45}],21:[function(_dereq_,module,exports){
+},{"./handlebars.runtime":17,"./handlebars/compiler/ast":19,"./handlebars/compiler/base":20,"./handlebars/compiler/compiler":22,"./handlebars/compiler/javascript-compiler":24,"./handlebars/compiler/visitor":27,"./handlebars/no-conflict":41}],17:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2432,7 +2168,7 @@ exports['default'] = inst;
 module.exports = exports['default'];
 
 
-},{"./handlebars/base":22,"./handlebars/exception":35,"./handlebars/no-conflict":45,"./handlebars/runtime":46,"./handlebars/safe-string":47,"./handlebars/utils":48}],22:[function(_dereq_,module,exports){
+},{"./handlebars/base":18,"./handlebars/exception":31,"./handlebars/no-conflict":41,"./handlebars/runtime":42,"./handlebars/safe-string":43,"./handlebars/utils":44}],18:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2538,7 +2274,7 @@ exports.createFrame = _utils.createFrame;
 exports.logger = _logger2['default'];
 
 
-},{"./decorators":33,"./exception":35,"./helpers":36,"./logger":44,"./utils":48}],23:[function(_dereq_,module,exports){
+},{"./decorators":29,"./exception":31,"./helpers":32,"./logger":40,"./utils":44}],19:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2571,7 +2307,7 @@ exports['default'] = AST;
 module.exports = exports['default'];
 
 
-},{}],24:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2621,7 +2357,7 @@ function parse(input, options) {
 }
 
 
-},{"../utils":48,"./helpers":27,"./parser":29,"./whitespace-control":32}],25:[function(_dereq_,module,exports){
+},{"../utils":44,"./helpers":23,"./parser":25,"./whitespace-control":28}],21:[function(_dereq_,module,exports){
 /* global define */
 'use strict';
 
@@ -2789,7 +2525,7 @@ exports['default'] = CodeGen;
 module.exports = exports['default'];
 
 
-},{"../utils":48,"source-map":50}],26:[function(_dereq_,module,exports){
+},{"../utils":44,"source-map":46}],22:[function(_dereq_,module,exports){
 /* eslint-disable new-cap */
 
 'use strict';
@@ -3363,7 +3099,7 @@ function transformLiteralToPath(sexpr) {
 }
 
 
-},{"../exception":35,"../utils":48,"./ast":23}],27:[function(_dereq_,module,exports){
+},{"../exception":31,"../utils":44,"./ast":19}],23:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3595,7 +3331,7 @@ function preparePartialBlock(open, program, close, locInfo) {
 }
 
 
-},{"../exception":35}],28:[function(_dereq_,module,exports){
+},{"../exception":31}],24:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -4723,7 +4459,7 @@ exports['default'] = JavaScriptCompiler;
 module.exports = exports['default'];
 
 
-},{"../base":22,"../exception":35,"../utils":48,"./code-gen":25}],29:[function(_dereq_,module,exports){
+},{"../base":18,"../exception":31,"../utils":44,"./code-gen":21}],25:[function(_dereq_,module,exports){
 /* istanbul ignore next */
 /* Jison generated parser */
 "use strict";
@@ -5463,7 +5199,7 @@ var handlebars = (function () {
 exports['default'] = handlebars;
 
 
-},{}],30:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 /* eslint-disable new-cap */
 'use strict';
 
@@ -5651,7 +5387,7 @@ PrintVisitor.prototype.HashPair = function (pair) {
 /* eslint-enable new-cap */
 
 
-},{"./visitor":31}],31:[function(_dereq_,module,exports){
+},{"./visitor":27}],27:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -5793,7 +5529,7 @@ exports['default'] = Visitor;
 module.exports = exports['default'];
 
 
-},{"../exception":35}],32:[function(_dereq_,module,exports){
+},{"../exception":31}],28:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6016,7 +5752,7 @@ exports['default'] = WhitespaceControl;
 module.exports = exports['default'];
 
 
-},{"./visitor":31}],33:[function(_dereq_,module,exports){
+},{"./visitor":27}],29:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6034,7 +5770,7 @@ function registerDefaultDecorators(instance) {
 }
 
 
-},{"./decorators/inline":34}],34:[function(_dereq_,module,exports){
+},{"./decorators/inline":30}],30:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6065,7 +5801,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":48}],35:[function(_dereq_,module,exports){
+},{"../utils":44}],31:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6107,7 +5843,7 @@ exports['default'] = Exception;
 module.exports = exports['default'];
 
 
-},{}],36:[function(_dereq_,module,exports){
+},{}],32:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6155,7 +5891,7 @@ function registerDefaultHelpers(instance) {
 }
 
 
-},{"./helpers/block-helper-missing":37,"./helpers/each":38,"./helpers/helper-missing":39,"./helpers/if":40,"./helpers/log":41,"./helpers/lookup":42,"./helpers/with":43}],37:[function(_dereq_,module,exports){
+},{"./helpers/block-helper-missing":33,"./helpers/each":34,"./helpers/helper-missing":35,"./helpers/if":36,"./helpers/log":37,"./helpers/lookup":38,"./helpers/with":39}],33:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6196,7 +5932,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":48}],38:[function(_dereq_,module,exports){
+},{"../utils":44}],34:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6292,7 +6028,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../exception":35,"../utils":48}],39:[function(_dereq_,module,exports){
+},{"../exception":31,"../utils":44}],35:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6319,7 +6055,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../exception":35}],40:[function(_dereq_,module,exports){
+},{"../exception":31}],36:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6350,7 +6086,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":48}],41:[function(_dereq_,module,exports){
+},{"../utils":44}],37:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6378,7 +6114,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{}],42:[function(_dereq_,module,exports){
+},{}],38:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6392,7 +6128,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{}],43:[function(_dereq_,module,exports){
+},{}],39:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6427,7 +6163,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":48}],44:[function(_dereq_,module,exports){
+},{"../utils":44}],40:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6476,7 +6212,7 @@ exports['default'] = logger;
 module.exports = exports['default'];
 
 
-},{"./utils":48}],45:[function(_dereq_,module,exports){
+},{"./utils":44}],41:[function(_dereq_,module,exports){
 (function (global){
 /* global window */
 'use strict';
@@ -6500,7 +6236,7 @@ module.exports = exports['default'];
 
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],46:[function(_dereq_,module,exports){
+},{}],42:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6794,7 +6530,7 @@ function executeDecorators(fn, prog, container, depths, data, blockParams) {
 }
 
 
-},{"./base":22,"./exception":35,"./utils":48}],47:[function(_dereq_,module,exports){
+},{"./base":18,"./exception":31,"./utils":44}],43:[function(_dereq_,module,exports){
 // Build out our basic SafeString type
 'use strict';
 
@@ -6811,7 +6547,7 @@ exports['default'] = SafeString;
 module.exports = exports['default'];
 
 
-},{}],48:[function(_dereq_,module,exports){
+},{}],44:[function(_dereq_,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -6937,7 +6673,7 @@ function appendContextPath(contextPath, id) {
 }
 
 
-},{}],49:[function(_dereq_,module,exports){
+},{}],45:[function(_dereq_,module,exports){
 // USAGE:
 // var handlebars = require('handlebars');
 /* eslint-disable no-var */
@@ -6964,7 +6700,7 @@ if (typeof _dereq_ !== 'undefined' && _dereq_.extensions) {
   _dereq_.extensions['.hbs'] = extension;
 }
 
-},{"../dist/cjs/handlebars":20,"../dist/cjs/handlebars/compiler/printer":30,"fs":62}],50:[function(_dereq_,module,exports){
+},{"../dist/cjs/handlebars":16,"../dist/cjs/handlebars/compiler/printer":26,"fs":58}],46:[function(_dereq_,module,exports){
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
@@ -6974,7 +6710,7 @@ exports.SourceMapGenerator = _dereq_('./source-map/source-map-generator').Source
 exports.SourceMapConsumer = _dereq_('./source-map/source-map-consumer').SourceMapConsumer;
 exports.SourceNode = _dereq_('./source-map/source-node').SourceNode;
 
-},{"./source-map/source-map-consumer":57,"./source-map/source-map-generator":58,"./source-map/source-node":59}],51:[function(_dereq_,module,exports){
+},{"./source-map/source-map-consumer":53,"./source-map/source-map-generator":54,"./source-map/source-node":55}],47:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -7083,7 +6819,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./util":60,"amdefine":61}],52:[function(_dereq_,module,exports){
+},{"./util":56,"amdefine":57}],48:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -7231,7 +6967,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./base64":53,"amdefine":61}],53:[function(_dereq_,module,exports){
+},{"./base64":49,"amdefine":57}],49:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -7306,7 +7042,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":61}],54:[function(_dereq_,module,exports){
+},{"amdefine":57}],50:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -7425,7 +7161,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":61}],55:[function(_dereq_,module,exports){
+},{"amdefine":57}],51:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2014 Mozilla Foundation and contributors
@@ -7513,7 +7249,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./util":60,"amdefine":61}],56:[function(_dereq_,module,exports){
+},{"./util":56,"amdefine":57}],52:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -7635,7 +7371,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":61}],57:[function(_dereq_,module,exports){
+},{"amdefine":57}],53:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -8714,7 +8450,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":51,"./base64-vlq":52,"./binary-search":54,"./quick-sort":56,"./util":60,"amdefine":61}],58:[function(_dereq_,module,exports){
+},{"./array-set":47,"./base64-vlq":48,"./binary-search":50,"./quick-sort":52,"./util":56,"amdefine":57}],54:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -9115,7 +8851,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":51,"./base64-vlq":52,"./mapping-list":55,"./util":60,"amdefine":61}],59:[function(_dereq_,module,exports){
+},{"./array-set":47,"./base64-vlq":48,"./mapping-list":51,"./util":56,"amdefine":57}],55:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -9531,7 +9267,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./source-map-generator":58,"./util":60,"amdefine":61}],60:[function(_dereq_,module,exports){
+},{"./source-map-generator":54,"./util":56,"amdefine":57}],56:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -9903,7 +9639,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":61}],61:[function(_dereq_,module,exports){
+},{"amdefine":57}],57:[function(_dereq_,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 1.0.0 Copyright (c) 2011-2015, The Dojo Foundation All Rights Reserved.
@@ -10208,9 +9944,9 @@ function amdefine(module, requireFn) {
 module.exports = amdefine;
 
 }).call(this,_dereq_("FWaASH"),"/../node_modules/Handlebars/node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"FWaASH":73,"path":72}],62:[function(_dereq_,module,exports){
+},{"FWaASH":69,"path":68}],58:[function(_dereq_,module,exports){
 
-},{}],63:[function(_dereq_,module,exports){
+},{}],59:[function(_dereq_,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -11321,7 +11057,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":64,"ieee754":65}],64:[function(_dereq_,module,exports){
+},{"base64-js":60,"ieee754":61}],60:[function(_dereq_,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -11447,7 +11183,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],65:[function(_dereq_,module,exports){
+},{}],61:[function(_dereq_,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -11533,7 +11269,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],66:[function(_dereq_,module,exports){
+},{}],62:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -11836,7 +11572,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],67:[function(_dereq_,module,exports){
+},{}],63:[function(_dereq_,module,exports){
 var http = module.exports;
 var EventEmitter = _dereq_('events').EventEmitter;
 var Request = _dereq_('./lib/request');
@@ -11975,7 +11711,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":68,"events":66,"url":86}],68:[function(_dereq_,module,exports){
+},{"./lib/request":64,"events":62,"url":82}],64:[function(_dereq_,module,exports){
 var Stream = _dereq_('stream');
 var Response = _dereq_('./response');
 var Base64 = _dereq_('Base64');
@@ -12166,7 +11902,7 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":69,"Base64":70,"inherits":71,"stream":79}],69:[function(_dereq_,module,exports){
+},{"./response":65,"Base64":66,"inherits":67,"stream":75}],65:[function(_dereq_,module,exports){
 var Stream = _dereq_('stream');
 var util = _dereq_('util');
 
@@ -12288,7 +12024,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":79,"util":88}],70:[function(_dereq_,module,exports){
+},{"stream":75,"util":84}],66:[function(_dereq_,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -12350,7 +12086,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],71:[function(_dereq_,module,exports){
+},{}],67:[function(_dereq_,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -12375,7 +12111,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],72:[function(_dereq_,module,exports){
+},{}],68:[function(_dereq_,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -12603,7 +12339,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,_dereq_("FWaASH"))
-},{"FWaASH":73}],73:[function(_dereq_,module,exports){
+},{"FWaASH":69}],69:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -12668,7 +12404,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],74:[function(_dereq_,module,exports){
+},{}],70:[function(_dereq_,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -13179,7 +12915,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],75:[function(_dereq_,module,exports){
+},{}],71:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -13265,7 +13001,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],76:[function(_dereq_,module,exports){
+},{}],72:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -13352,13 +13088,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],77:[function(_dereq_,module,exports){
+},{}],73:[function(_dereq_,module,exports){
 'use strict';
 
 exports.decode = exports.parse = _dereq_('./decode');
 exports.encode = exports.stringify = _dereq_('./encode');
 
-},{"./decode":75,"./encode":76}],78:[function(_dereq_,module,exports){
+},{"./decode":71,"./encode":72}],74:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -13432,7 +13168,7 @@ function onend() {
   });
 }
 
-},{"./readable.js":82,"./writable.js":84,"inherits":71,"process/browser.js":80}],79:[function(_dereq_,module,exports){
+},{"./readable.js":78,"./writable.js":80,"inherits":67,"process/browser.js":76}],75:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -13561,7 +13297,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"./duplex.js":78,"./passthrough.js":81,"./readable.js":82,"./transform.js":83,"./writable.js":84,"events":66,"inherits":71}],80:[function(_dereq_,module,exports){
+},{"./duplex.js":74,"./passthrough.js":77,"./readable.js":78,"./transform.js":79,"./writable.js":80,"events":62,"inherits":67}],76:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -13616,7 +13352,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],81:[function(_dereq_,module,exports){
+},{}],77:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -13659,7 +13395,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./transform.js":83,"inherits":71}],82:[function(_dereq_,module,exports){
+},{"./transform.js":79,"inherits":67}],78:[function(_dereq_,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -14596,7 +14332,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,_dereq_("FWaASH"))
-},{"./index.js":79,"FWaASH":73,"buffer":63,"events":66,"inherits":71,"process/browser.js":80,"string_decoder":85}],83:[function(_dereq_,module,exports){
+},{"./index.js":75,"FWaASH":69,"buffer":59,"events":62,"inherits":67,"process/browser.js":76,"string_decoder":81}],79:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -14802,7 +14538,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./duplex.js":78,"inherits":71}],84:[function(_dereq_,module,exports){
+},{"./duplex.js":74,"inherits":67}],80:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -15190,7 +14926,7 @@ function endWritable(stream, state, cb) {
   state.ended = true;
 }
 
-},{"./index.js":79,"buffer":63,"inherits":71,"process/browser.js":80}],85:[function(_dereq_,module,exports){
+},{"./index.js":75,"buffer":59,"inherits":67,"process/browser.js":76}],81:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -15383,7 +15119,7 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":63}],86:[function(_dereq_,module,exports){
+},{"buffer":59}],82:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -16092,14 +15828,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":74,"querystring":77}],87:[function(_dereq_,module,exports){
+},{"punycode":70,"querystring":73}],83:[function(_dereq_,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],88:[function(_dereq_,module,exports){
+},{}],84:[function(_dereq_,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -16689,89 +16425,89 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,_dereq_("FWaASH"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":87,"FWaASH":73,"inherits":71}],89:[function(_dereq_,module,exports){
+},{"./support/isBuffer":83,"FWaASH":69,"inherits":67}],85:[function(_dereq_,module,exports){
+module.exports=_dereq_(16)
+},{"./handlebars.runtime":86,"./handlebars/compiler/ast":88,"./handlebars/compiler/base":89,"./handlebars/compiler/compiler":91,"./handlebars/compiler/javascript-compiler":93,"./handlebars/compiler/visitor":96,"./handlebars/no-conflict":110}],86:[function(_dereq_,module,exports){
+module.exports=_dereq_(17)
+},{"./handlebars/base":87,"./handlebars/exception":100,"./handlebars/no-conflict":110,"./handlebars/runtime":111,"./handlebars/safe-string":112,"./handlebars/utils":113}],87:[function(_dereq_,module,exports){
+module.exports=_dereq_(18)
+},{"./decorators":98,"./exception":100,"./helpers":101,"./logger":109,"./utils":113}],88:[function(_dereq_,module,exports){
+module.exports=_dereq_(19)
+},{}],89:[function(_dereq_,module,exports){
 module.exports=_dereq_(20)
-},{"./handlebars.runtime":90,"./handlebars/compiler/ast":92,"./handlebars/compiler/base":93,"./handlebars/compiler/compiler":95,"./handlebars/compiler/javascript-compiler":97,"./handlebars/compiler/visitor":100,"./handlebars/no-conflict":114}],90:[function(_dereq_,module,exports){
+},{"../utils":113,"./helpers":92,"./parser":94,"./whitespace-control":97}],90:[function(_dereq_,module,exports){
 module.exports=_dereq_(21)
-},{"./handlebars/base":91,"./handlebars/exception":104,"./handlebars/no-conflict":114,"./handlebars/runtime":115,"./handlebars/safe-string":116,"./handlebars/utils":117}],91:[function(_dereq_,module,exports){
+},{"../utils":113,"source-map":115}],91:[function(_dereq_,module,exports){
 module.exports=_dereq_(22)
-},{"./decorators":102,"./exception":104,"./helpers":105,"./logger":113,"./utils":117}],92:[function(_dereq_,module,exports){
+},{"../exception":100,"../utils":113,"./ast":88}],92:[function(_dereq_,module,exports){
 module.exports=_dereq_(23)
-},{}],93:[function(_dereq_,module,exports){
+},{"../exception":100}],93:[function(_dereq_,module,exports){
 module.exports=_dereq_(24)
-},{"../utils":117,"./helpers":96,"./parser":98,"./whitespace-control":101}],94:[function(_dereq_,module,exports){
+},{"../base":87,"../exception":100,"../utils":113,"./code-gen":90}],94:[function(_dereq_,module,exports){
 module.exports=_dereq_(25)
-},{"../utils":117,"source-map":119}],95:[function(_dereq_,module,exports){
+},{}],95:[function(_dereq_,module,exports){
 module.exports=_dereq_(26)
-},{"../exception":104,"../utils":117,"./ast":92}],96:[function(_dereq_,module,exports){
+},{"./visitor":96}],96:[function(_dereq_,module,exports){
 module.exports=_dereq_(27)
-},{"../exception":104}],97:[function(_dereq_,module,exports){
+},{"../exception":100}],97:[function(_dereq_,module,exports){
 module.exports=_dereq_(28)
-},{"../base":91,"../exception":104,"../utils":117,"./code-gen":94}],98:[function(_dereq_,module,exports){
+},{"./visitor":96}],98:[function(_dereq_,module,exports){
 module.exports=_dereq_(29)
-},{}],99:[function(_dereq_,module,exports){
+},{"./decorators/inline":99}],99:[function(_dereq_,module,exports){
 module.exports=_dereq_(30)
-},{"./visitor":100}],100:[function(_dereq_,module,exports){
+},{"../utils":113}],100:[function(_dereq_,module,exports){
 module.exports=_dereq_(31)
-},{"../exception":104}],101:[function(_dereq_,module,exports){
+},{}],101:[function(_dereq_,module,exports){
 module.exports=_dereq_(32)
-},{"./visitor":100}],102:[function(_dereq_,module,exports){
+},{"./helpers/block-helper-missing":102,"./helpers/each":103,"./helpers/helper-missing":104,"./helpers/if":105,"./helpers/log":106,"./helpers/lookup":107,"./helpers/with":108}],102:[function(_dereq_,module,exports){
 module.exports=_dereq_(33)
-},{"./decorators/inline":103}],103:[function(_dereq_,module,exports){
+},{"../utils":113}],103:[function(_dereq_,module,exports){
 module.exports=_dereq_(34)
-},{"../utils":117}],104:[function(_dereq_,module,exports){
+},{"../exception":100,"../utils":113}],104:[function(_dereq_,module,exports){
 module.exports=_dereq_(35)
-},{}],105:[function(_dereq_,module,exports){
+},{"../exception":100}],105:[function(_dereq_,module,exports){
 module.exports=_dereq_(36)
-},{"./helpers/block-helper-missing":106,"./helpers/each":107,"./helpers/helper-missing":108,"./helpers/if":109,"./helpers/log":110,"./helpers/lookup":111,"./helpers/with":112}],106:[function(_dereq_,module,exports){
+},{"../utils":113}],106:[function(_dereq_,module,exports){
 module.exports=_dereq_(37)
-},{"../utils":117}],107:[function(_dereq_,module,exports){
+},{}],107:[function(_dereq_,module,exports){
 module.exports=_dereq_(38)
-},{"../exception":104,"../utils":117}],108:[function(_dereq_,module,exports){
+},{}],108:[function(_dereq_,module,exports){
 module.exports=_dereq_(39)
-},{"../exception":104}],109:[function(_dereq_,module,exports){
+},{"../utils":113}],109:[function(_dereq_,module,exports){
 module.exports=_dereq_(40)
-},{"../utils":117}],110:[function(_dereq_,module,exports){
+},{"./utils":113}],110:[function(_dereq_,module,exports){
 module.exports=_dereq_(41)
 },{}],111:[function(_dereq_,module,exports){
 module.exports=_dereq_(42)
-},{}],112:[function(_dereq_,module,exports){
+},{"./base":87,"./exception":100,"./utils":113}],112:[function(_dereq_,module,exports){
 module.exports=_dereq_(43)
-},{"../utils":117}],113:[function(_dereq_,module,exports){
+},{}],113:[function(_dereq_,module,exports){
 module.exports=_dereq_(44)
-},{"./utils":117}],114:[function(_dereq_,module,exports){
+},{}],114:[function(_dereq_,module,exports){
 module.exports=_dereq_(45)
-},{}],115:[function(_dereq_,module,exports){
-module.exports=_dereq_(46)
-},{"./base":91,"./exception":104,"./utils":117}],116:[function(_dereq_,module,exports){
-module.exports=_dereq_(47)
-},{}],117:[function(_dereq_,module,exports){
-module.exports=_dereq_(48)
-},{}],118:[function(_dereq_,module,exports){
-module.exports=_dereq_(49)
-},{"../dist/cjs/handlebars":89,"../dist/cjs/handlebars/compiler/printer":99,"fs":62}],119:[function(_dereq_,module,exports){
+},{"../dist/cjs/handlebars":85,"../dist/cjs/handlebars/compiler/printer":95,"fs":58}],115:[function(_dereq_,module,exports){
+arguments[4][46][0].apply(exports,arguments)
+},{"./source-map/source-map-consumer":122,"./source-map/source-map-generator":123,"./source-map/source-node":124}],116:[function(_dereq_,module,exports){
+arguments[4][47][0].apply(exports,arguments)
+},{"./util":125,"amdefine":126}],117:[function(_dereq_,module,exports){
+arguments[4][48][0].apply(exports,arguments)
+},{"./base64":118,"amdefine":126}],118:[function(_dereq_,module,exports){
+arguments[4][49][0].apply(exports,arguments)
+},{"amdefine":126}],119:[function(_dereq_,module,exports){
 arguments[4][50][0].apply(exports,arguments)
-},{"./source-map/source-map-consumer":126,"./source-map/source-map-generator":127,"./source-map/source-node":128}],120:[function(_dereq_,module,exports){
+},{"amdefine":126}],120:[function(_dereq_,module,exports){
 arguments[4][51][0].apply(exports,arguments)
-},{"./util":129,"amdefine":130}],121:[function(_dereq_,module,exports){
+},{"./util":125,"amdefine":126}],121:[function(_dereq_,module,exports){
 arguments[4][52][0].apply(exports,arguments)
-},{"./base64":122,"amdefine":130}],122:[function(_dereq_,module,exports){
+},{"amdefine":126}],122:[function(_dereq_,module,exports){
 arguments[4][53][0].apply(exports,arguments)
-},{"amdefine":130}],123:[function(_dereq_,module,exports){
+},{"./array-set":116,"./base64-vlq":117,"./binary-search":119,"./quick-sort":121,"./util":125,"amdefine":126}],123:[function(_dereq_,module,exports){
 arguments[4][54][0].apply(exports,arguments)
-},{"amdefine":130}],124:[function(_dereq_,module,exports){
+},{"./array-set":116,"./base64-vlq":117,"./mapping-list":120,"./util":125,"amdefine":126}],124:[function(_dereq_,module,exports){
 arguments[4][55][0].apply(exports,arguments)
-},{"./util":129,"amdefine":130}],125:[function(_dereq_,module,exports){
+},{"./source-map-generator":123,"./util":125,"amdefine":126}],125:[function(_dereq_,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"amdefine":130}],126:[function(_dereq_,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"./array-set":120,"./base64-vlq":121,"./binary-search":123,"./quick-sort":125,"./util":129,"amdefine":130}],127:[function(_dereq_,module,exports){
-arguments[4][58][0].apply(exports,arguments)
-},{"./array-set":120,"./base64-vlq":121,"./mapping-list":124,"./util":129,"amdefine":130}],128:[function(_dereq_,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"./source-map-generator":127,"./util":129,"amdefine":130}],129:[function(_dereq_,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"amdefine":130}],130:[function(_dereq_,module,exports){
+},{"amdefine":126}],126:[function(_dereq_,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 1.0.0 Copyright (c) 2011-2015, The Dojo Foundation All Rights Reserved.
@@ -17076,7 +16812,7 @@ function amdefine(module, requireFn) {
 module.exports = amdefine;
 
 }).call(this,_dereq_("FWaASH"),"/../node_modules/handlebars/node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"FWaASH":73,"path":72}],131:[function(_dereq_,module,exports){
+},{"FWaASH":69,"path":68}],127:[function(_dereq_,module,exports){
 // Ion.RangeSlider
 // version 2.1.2 Build: 350
 // © Denis Ineshin, 2015
@@ -19385,7 +19121,7 @@ module.exports = (function ($, document, window, navigator, undefined) {
 
 });
 
-},{}],132:[function(_dereq_,module,exports){
+},{}],128:[function(_dereq_,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.4
  * http://jquery.com/
@@ -28597,7 +28333,7 @@ return jQuery;
 
 }));
 
-},{}],133:[function(_dereq_,module,exports){
+},{}],129:[function(_dereq_,module,exports){
 // Load modules
 
 var Stringify = _dereq_('./stringify');
@@ -28614,7 +28350,7 @@ module.exports = {
     parse: Parse
 };
 
-},{"./parse":134,"./stringify":135}],134:[function(_dereq_,module,exports){
+},{"./parse":130,"./stringify":131}],130:[function(_dereq_,module,exports){
 // Load modules
 
 var Utils = _dereq_('./utils');
@@ -28802,7 +28538,7 @@ module.exports = function (str, options) {
     return Utils.compact(obj);
 };
 
-},{"./utils":136}],135:[function(_dereq_,module,exports){
+},{"./utils":132}],131:[function(_dereq_,module,exports){
 // Load modules
 
 var Utils = _dereq_('./utils');
@@ -28925,7 +28661,7 @@ module.exports = function (obj, options) {
     return keys.join(delimiter);
 };
 
-},{"./utils":136}],136:[function(_dereq_,module,exports){
+},{"./utils":132}],132:[function(_dereq_,module,exports){
 // Load modules
 
 

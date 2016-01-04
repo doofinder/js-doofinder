@@ -166,7 +166,7 @@ class Controller
   ###
   addParam
   
-  Adds new filter criteria.
+  Adds new search parameter to the current status.
 
   @param {String} key: the facet key you are filtering
   @param {String | Number} value: the filtering criteria
@@ -179,9 +179,9 @@ class Controller
   ###
   clearParam
   
-  Adds new filter criteria.
+  Removes search parameter from current status.
 
-  @param {String} key: the facet key you are filtering
+  @param {String} key: the name of the param
   @api public
   ###
   clearParam: (key) ->
@@ -338,10 +338,12 @@ class Controller
   and searches.
   ###
   setStatusFromString: (queryString) ->          
-    @status = qs.parse(queryString.replace("#search/", ""))
+    @status = qs.parse(queryString.replace("#/search/", ""))
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
-    @status.params.query_counter = 15
+    if not @status.params
+      @status.params = {}
+    @status.params.query_counter = 1
     @status.currentPage = 1
     @refresh()
     return @status.params.query
@@ -353,7 +355,7 @@ class Controller
   with a queryString
   ###
   statusQueryString: () ->
-    return "#search/" + qs.stringify @status
+    return "#/search/" + qs.stringify @status
 
 
 module.exports = Controller
