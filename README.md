@@ -142,6 +142,33 @@ Removes a filter from the currently applied.
   -------- | -------- | ---- | ---------------------
   facet | Yes | `String` | The name of the facet.
   value | Yes |`String` `Object` | The value of the facet. This can be a `String`, if the facet is a term facet or an `Object` if it's a range.
+  
+#### addParam
+Adds new search parameter to the current status.
+
+ Argument | Required | Type | Description
+ -------- | -------- | ---- | ---------------------
+ param  | Yes | `String` | The name of the param.
+ value | Yes |`Mixed` | The value of the param. 
+
+#### clearParam
+Removes a parameter from the current status.
+
+Argument | Required | Type | Description
+-------- | -------- | ---- | ---------------------
+param  | Yes | `String` | The name of the param.
+
+#### reset
+Gets the params to the initial state.
+
+#### setSearchParam
+Sets a param for every query.
+
+Argument | Required | Type | Description
+-------- | -------- | ---- | ---------------------
+param  | Yes | `String` | The name of the param.
+value | Yes |`Mixed` | The value of the param. 
+
 
 #### refresh
 Makes a search with the current filter status. Then, it calls to every widget to render the results.
@@ -174,6 +201,7 @@ df:results_received | <ul><li>event`Object`: object with the event information.<
 As an example, we'll print in the console the total results in the `df:results_received` event.
 
 ```javascript
+controller = new doofinder.Controller(client, widgets, options);
 controller.bind('df:results_received', function(event, res){
    console.log(res.total);
 });
@@ -248,6 +276,15 @@ Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
 df:rendered   | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
 
+As an example, we'll print in the console the total results in the `df:rendered` event.
+
+```javascript
+results = new doofinder.widgets.Results(container, options);
+results.bind('df:rendered', function(event, res){
+   console.log(res.total);
+});
+```
+
 ### widgets.ScrollResults
 
 This widget render the results in an DOM node with an inner scroll. So the next page will be requested when scroll reaches the bottom.
@@ -294,6 +331,15 @@ Event Name | Callback Arguments | Description
 df:rendered   | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
 df:hit   | <ul><li>event`Object`: object with the event information.</li><li>dfid`String`: Doofinder Item Identifier. Useful to make the controller.hit call.</li><li>url`String`: The url associated to the item. Useful to make the controller.sendToGA call.</li></ul> | This event is triggered when a result link is clicked.
 
+As an example, we'll print in the console the total results in the `df:rendered` event.
+
+```javascript
+results = new doofinder.widgets.ScrollResults(container, options);
+results.bind('df:rendered', function(event, res){
+   console.log(res.total);
+});
+```
+
 ### widgets.TermFacet
 
 This widget render a term facet in a list of terms.
@@ -327,6 +373,15 @@ The events you can bind in widget are the described above. Note that each event 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
 df:rendered   | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the facet is rendered.
+
+As an example, we'll print in the console the total results in the `df:rendered` event.
+
+```javascript
+facet = new doofinder.widgets.TermFacet(container, options);
+facet.bind('df:rendered', function(event, res){
+   console.log(res.total);
+});
+```
 
 ### widgets.RangeFacet
 
@@ -364,6 +419,15 @@ The events you can bind in widget are the described above. Note that each event 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
 df:rendered   | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the facet is rendered.
+
+As an example, we'll print in the console the total results in the `df:rendered` event.
+
+```javascript
+facet = new doofinder.widgets.RangeFacet(container, options);
+facet.bind('df:rendered', function(event, res){
+   console.log(res.total);
+});
+```
 
 ### Client
 
@@ -492,7 +556,7 @@ Template functions are called helpers in [Handlebars](http://handlebarsjs.com/).
 ```
 This helper will take the text in the tag and will wrapper it with the `<b>` tag. Note that `options.fn(this)` returns the text wrapped by the helper.
 
-We'll use the helper for showing the header and instantiate the widget.
+We'll use the helper to show the header and instantiate the widget.
 
 ```javascript
 var resultsTemplate = '{{#each results}}' +
