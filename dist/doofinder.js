@@ -844,7 +844,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":129}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "0.10.0",
+    version: "0.11.0",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("Handlebars"),
     Widget: _dereq_("./widget"),
