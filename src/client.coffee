@@ -140,10 +140,16 @@ class Client
       queryString = _this.makeQueryString()
       
       # Preparing request variables
+
       options = 
         host: _this.url
         path: "/#{_this.version}/search?#{queryString}"
         headers: headers
+
+      # Just for url with host:port
+      if _this.url.split(':').length > 1
+        options.host = _this.url.split(':')[0]
+        options.port = _this.url.split(':')[1]
 
 
       # Callback function will be passed as argument to search

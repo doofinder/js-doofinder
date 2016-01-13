@@ -1,5 +1,5 @@
 module.exports = 
-  version: "0.15.1"  
+  version: "0.16.0"  
   Client: require "./client"
   Handlebars: require "handlebars"
   Widget: require "./widget"

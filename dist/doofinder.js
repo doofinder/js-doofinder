@@ -161,6 +161,10 @@ author: @ecoslado
           path: "/" + _this.version + "/search?" + queryString,
           headers: headers
         };
+        if (_this.url.split(':').length > 1) {
+          options.host = _this.url.split(':')[0];
+          options.port = _this.url.split(':')[1];
+        }
         processResponse = function(res) {
           var data;
           if (res.statusCode >= 400) {
@@ -856,7 +860,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":87}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "0.15.1",
+    version: "0.16.0",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("handlebars"),
     Widget: _dereq_("./widget"),
@@ -1077,13 +1081,26 @@ author: @ecoslado
 
 },{}],6:[function(_dereq_,module,exports){
 (function() {
-  var jQuery;
+  var document, jQuery, navigator, window;
 
   jQuery = _dereq_("jquery");
 
-  _dereq_("ion-rangeslider")(jQuery, document, window, navigator, void 0);
+  if (!document) {
+    document = null;
+  }
 
-  _dereq_("./jquery.typewatch")(jQuery);
+  if (!window) {
+    window = null;
+  }
+
+  if (!navigator) {
+    navigator = null;
+  }
+
+  if (document && window && navigator) {
+    _dereq_("ion-rangeslider")(jQuery, document, window, navigator, void 0);
+    _dereq_("./jquery.typewatch")(jQuery);
+  }
 
   module.exports = jQuery;
 
