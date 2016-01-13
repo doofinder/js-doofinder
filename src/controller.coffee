@@ -58,6 +58,9 @@ class Controller
       # I check if I reached the last page.    
       if res.results.length < _this.status.params.rpp
         _this.status.lastPageReached = true
+      # I set the query_name till next query
+      _this.status.params.query_name = res.query_name
+      # Triggers results_received
       _this.trigger "df:results_received", [res]
       # Whe show the results only when query counter
       # belongs to a the present request
@@ -86,14 +89,15 @@ class Controller
   search: (query, params={}) ->
     
     if query
+      @status.params = $.extend true, @searchParams, params
       @status.params.query = query
-    
-    @status.params = $.extend true, @searchParams, params
-    @status.currentPage = 1
-    @status.firstQueryTriggered = true
-    @status.lastPageReached = false
-    @trigger "df:search", [@status.params]
-    @__search()
+      @status.params.filters = {}
+      delete @status.params.query_name
+      @status.currentPage = 1
+      @status.firstQueryTriggered = true
+      @status.lastPageReached = false
+      @trigger "df:search", [@status.params]
+      @__search()
 
   ###
   nextPage
@@ -337,12 +341,12 @@ class Controller
   Fills in the status from queryString
   and searches.
   ###
-  setStatusFromString: (queryString) ->          
-    @status = qs.parse(queryString.replace("#/search/", ""))
+  setStatusFromString: (queryString, prefix="#/search/") ->          
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
-    if not @status.params
-      @status.params = {}
+    @status.params = $.extend true,
+      @searchParams,
+      qs.parse(queryString.replace("#{prefix}", "")) || {}
     @status.params.query_counter = 1
     @status.currentPage = 1
     @refresh()
@@ -354,8 +358,17 @@ class Controller
   Method to represent current status
   with a queryString
   ###
-  statusQueryString: () ->
-    return "#/search/" + qs.stringify @status
+  statusQueryString: (prefix="#/search/") ->
+    params = $.extend true,
+      {},
+      @status.params
+
+    delete params.transformer
+    delete params.rpp
+    delete params.query_counter
+    delete params.page
+
+    return "#{prefix}#{qs.stringify(params)}"
 
 
 module.exports = Controller

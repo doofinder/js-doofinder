@@ -56,7 +56,7 @@ addHelpers = (Handlebars, parameters, currency, translations, extraHelpers) ->
     
     'translate': (options) ->
       key = options.fn(this)
-      if translations and key in translations
+      if translations and key of translations
         return translations[key]
       else
         return key

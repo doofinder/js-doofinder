@@ -1,10 +1,11 @@
 module.exports = 
-  version: "0.11.0"  
+  version: "0.15.1"  
   Client: require "./client"
-  Handlebars: require "Handlebars"
+  Handlebars: require "handlebars"
   Widget: require "./widget"
   Controller: require "./controller"
   widgets:
+    Display: require "./widgets/display"
     Results: require "./widgets/results/results"
     ScrollResults: require "./widgets/results/scrollresults"
     QueryInput: require "./widgets/queryinput"
