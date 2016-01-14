@@ -44,11 +44,11 @@ class Client
       @apiKey = ""
 
     @url ?= zone + "-search.doofinder.com"
-  
-  ###   
+
+  ###
   _sanitizeQuery
   very crude check for bad intentioned queries
-     
+
   checks if words are longer than 55 chars and the whole query is longer than 255 chars
   @param string query
   @return string query if it's ok, empty space if not
@@ -60,7 +60,7 @@ class Client
       throw Error "Query must be a String"
 
     query = query.replace(/ +/g, ' ').replace(/^ +| +$/g, '') # query.trim() is ECMAScript5
-      
+
     if query.length > maxQueryLength
       throw Error "Maximum query length exceeded: #{maxQueryLength}."
 
@@ -75,7 +75,7 @@ class Client
   search
 
   Method responsible of executing call.
-  
+
   @param {Object} params
     i.e.:
 
@@ -93,8 +93,8 @@ class Client
   @api public
   ###
   search: (query, arg1, arg2) ->
-    
-    # Managing different ways of 
+
+    # Managing different ways of
     # calling search
 
     # dfClient.search(query, callback)
@@ -107,10 +107,10 @@ class Client
       callback = arg2
       params = arg1
 
-    # Wrong call  
+    # Wrong call
     else
       throw new Error "A callback is required."
-    
+
     # Set default params
     params.page ?= 1
     params.rpp ?= 10
@@ -130,18 +130,18 @@ class Client
         if paramKey == "filters"
           for filterKey, filterTerms of paramValue
             _this.addFilter(filterKey, filterTerms)
-        
+
         else if paramKey == "sort"
           _this.setSort(paramValue)
-        
+
         else
           _this.addParam(paramKey, paramValue)
 
       queryString = _this.makeQueryString()
-      
+
       # Preparing request variables
 
-      options = 
+      options =
         host: _this.url
         path: "/#{_this.version}/search?#{queryString}"
         headers: headers
@@ -157,12 +157,12 @@ class Client
       processResponse = (res) ->
         if res.statusCode >= 400
           return callback res.statusCode, null
-        
-        else 
+
+        else
           data = ""
           res.on 'data', (chunk) ->
             data += chunk
-          
+
           res.on 'end', () ->
             return callback null, JSON.parse(data)
 
@@ -186,7 +186,7 @@ class Client
     if value != null
       @params[param] = value
     else
-      @params[param] = ""  
+      @params[param] = ""
 
   ###
   addFilter
@@ -202,7 +202,7 @@ class Client
   ###
   setSort
 
-  This method adds sort to object 
+  This method adds sort to object
   from an object or an array
 
   @param {Array|Object} sort
@@ -227,26 +227,27 @@ class Client
 
     # Adding types
     if @type and @type instanceof Array
-      querystring += "&type=#{@type.join(',')}"
+      for key, value of @type
+        querystring += "&type=#{value}"
     else if @type and @type.constructor == String
       querystring += "&type=#{@type}"
-    
+
     # Adding params
     for key, value of @params
       querystring += "&#{key}=#{value}"
-    
+
     # Adding filters
     for key, value of @filters
       # Range filters
       if value.constructor == Object
         for k, v of value
           querystring += "&filter[#{key}][#{k}]=#{v}"
-        
+
       # Terms filters
       if value.constructor == Array
         for elem in value
           querystring += "&filter[#{key}]=#{elem}"
-    
+
     # Adding sort options
     if @sort and @sort.constructor == Array
         for key, value of @sort
@@ -258,7 +259,7 @@ class Client
         querystring += "&sort[#{key}]=#{value}"
 
     return encodeURI querystring
-  
+
   ###
   This method calls to /hit
   service for accounting the
@@ -273,7 +274,7 @@ class Client
     headers = {}
     if @apiKey
         headers['api token'] = _this.apiKey
-    options = 
+    options =
         host: @url
         path: "/#{@version}/hit/#{@hashid}/#{dfid}/#{encodeURIComponent(query)}?random=#{new Date().getTime()}"
         headers: headers
@@ -281,7 +282,7 @@ class Client
     # Here is where request is done and executed processResponse
     req = http.request options, @__processResponse(callback)
     req.end()
-  
+
   ###
   This method calls to /hit
   service for accounting the
@@ -296,7 +297,7 @@ class Client
     headers = {}
     if @apiKey
         headers['api token'] = _this.apiKey
-    options = 
+    options =
         host: @url
         path: "/#{@version}/options/#{@hashid}"
         headers: headers
@@ -316,12 +317,12 @@ class Client
     (res) ->
       if res.statusCode >= 400
         return callback res.statusCode, null
-        
-      else 
+
+      else
         data = ""
         res.on 'data', (chunk) ->
           data += chunk
-          
+
         res.on 'end', () ->
           return callback null, JSON.parse(data)
 
