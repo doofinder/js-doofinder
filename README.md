@@ -27,11 +27,11 @@ This library allows you to make requests to [Doofinder](http://www.doofinder.com
 `bower install doofinder`
 
 ### Downloadable minified javascript file
-https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.min.js
+https://cdn.jsdelivr.net/doofinder/latest/doofinder.min.js
 
 ### CSS
 We offer some simple CSS. You can download it in the link
-https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.css
+https://cdn.jsdelivr.net/doofinder/latest/doofinder.css
 
 
 ## Quick Start
