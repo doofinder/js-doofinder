@@ -876,7 +876,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":87}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "0.17.2",
+    version: "0.17.3",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("handlebars"),
     Widget: _dereq_("./widget"),
@@ -1475,7 +1475,7 @@ them. Manages the filtering.
         options = {};
       }
       if (!options.template) {
-        template = '<div class="df-panel df-widget" data-facet="key">' + '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>' + '<div class="df-panel__content">' + '<input class="df-facet" type="text" name="{{name}}" value=""' + 'data-facet="{{name}}">' + '</div>' + '</div>';
+        template = '<div class="df-panel df-widget" data-facet="{{name}}">' + '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>' + '<div class="df-panel__content">' + '<input class="df-facet" type="text" name="{{name}}" value=""' + 'data-facet="{{name}}">' + '</div>' + '</div>';
       } else {
         template = options.template;
       }
