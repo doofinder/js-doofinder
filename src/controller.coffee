@@ -59,7 +59,8 @@ class Controller
       if res.results.length < _this.status.params.rpp
         _this.status.lastPageReached = true
       # I set the query_name till next query
-      _this.status.params.query_name = res.query_name
+      if not _this.searchParams.query_name
+        _this.status.params.query_name = res.query_name
       # Triggers results_received
       _this.trigger "df:results_received", [res]
       # Whe show the results only when query counter
@@ -92,7 +93,8 @@ class Controller
       @status.params = $.extend true, @searchParams, params
       @status.params.query = query
       @status.params.filters = {}
-      delete @status.params.query_name
+      if not @searchParams.query_name
+        delete @status.params.query_name
       @status.currentPage = 1
       @status.firstQueryTriggered = true
       @status.lastPageReached = false

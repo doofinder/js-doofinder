@@ -61,10 +61,10 @@ author: @ecoslado
     }
 
 
-    /*   
+    /*
     _sanitizeQuery
     very crude check for bad intentioned queries
-       
+    
     checks if words are longer than 55 chars and the whole query is longer than 255 chars
     @param string query
     @return string query if it's ok, empty space if not
@@ -223,7 +223,7 @@ author: @ecoslado
     /*
     setSort
     
-    This method adds sort to object 
+    This method adds sort to object
     from an object or an array
     
     @param {Array|Object} sort
@@ -246,21 +246,25 @@ author: @ecoslado
      */
 
     Client.prototype.makeQueryString = function() {
-      var elem, facet, j, k, key, len, querystring, ref, ref1, ref2, ref3, term, v, value;
+      var elem, facet, j, k, key, len, querystring, ref, ref1, ref2, ref3, ref4, term, v, value;
       querystring = "hashid=" + this.hashid;
       if (this.type && this.type instanceof Array) {
-        querystring += "&type=" + (this.type.join(','));
+        ref = this.type;
+        for (key in ref) {
+          value = ref[key];
+          querystring += "&type=" + value;
+        }
       } else if (this.type && this.type.constructor === String) {
         querystring += "&type=" + this.type;
       }
-      ref = this.params;
-      for (key in ref) {
-        value = ref[key];
-        querystring += "&" + key + "=" + value;
-      }
-      ref1 = this.filters;
+      ref1 = this.params;
       for (key in ref1) {
         value = ref1[key];
+        querystring += "&" + key + "=" + value;
+      }
+      ref2 = this.filters;
+      for (key in ref2) {
+        value = ref2[key];
         if (value.constructor === Object) {
           for (k in value) {
             v = value[k];
@@ -275,18 +279,18 @@ author: @ecoslado
         }
       }
       if (this.sort && this.sort.constructor === Array) {
-        ref2 = this.sort;
-        for (key in ref2) {
-          value = ref2[key];
+        ref3 = this.sort;
+        for (key in ref3) {
+          value = ref3[key];
           for (facet in value) {
             term = value[facet];
             querystring += "&sort[" + key + "][" + facet + "]=" + term;
           }
         }
       } else if (this.sort && this.sort.constructor === Object) {
-        ref3 = this.sort;
-        for (key in ref3) {
-          value = ref3[key];
+        ref4 = this.sort;
+        for (key in ref4) {
+          value = ref4[key];
           querystring += "&sort[" + key + "]=" + value;
         }
       }
@@ -322,6 +326,10 @@ author: @ecoslado
         path: "/" + this.version + "/hit/" + this.hashid + "/" + dfid + "/" + (encodeURIComponent(query)) + "?random=" + (new Date().getTime()),
         headers: headers
       };
+      if (this.url.split(':').length > 1) {
+        options.host = this.url.split(':')[0];
+        options.port = this.url.split(':')[1];
+      }
       req = http.request(options, this.__processResponse(callback));
       return req.end();
     };
@@ -352,6 +360,10 @@ author: @ecoslado
         path: "/" + this.version + "/options/" + this.hashid,
         headers: headers
       };
+      if (this.url.split(':').length > 1) {
+        options.host = this.url.split(':')[0];
+        options.port = this.url.split(':')[1];
+      }
       req = http.request(options, this.__processResponse(callback));
       return req.end();
     };
@@ -474,7 +486,9 @@ author: @ecoslado
         if (res.results.length < _this.status.params.rpp) {
           _this.status.lastPageReached = true;
         }
-        _this.status.params.query_name = res.query_name;
+        if (!_this.searchParams.query_name) {
+          _this.status.params.query_name = res.query_name;
+        }
         _this.trigger("df:results_received", [res]);
         if (res.query_counter === _this.status.params.query_counter) {
           ref = _this.widgets;
@@ -516,7 +530,9 @@ author: @ecoslado
         this.status.params = $.extend(true, this.searchParams, params);
         this.status.params.query = query;
         this.status.params.filters = {};
-        delete this.status.params.query_name;
+        if (!this.searchParams.query_name) {
+          delete this.status.params.query_name;
+        }
         this.status.currentPage = 1;
         this.status.firstQueryTriggered = true;
         this.status.lastPageReached = false;
@@ -860,7 +876,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":87}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "0.16.0",
+    version: "0.17.2",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("handlebars"),
     Widget: _dereq_("./widget"),
@@ -1081,26 +1097,13 @@ author: @ecoslado
 
 },{}],6:[function(_dereq_,module,exports){
 (function() {
-  var document, jQuery, navigator, window;
+  var jQuery;
 
   jQuery = _dereq_("jquery");
 
-  if (!document) {
-    document = null;
-  }
+  _dereq_("ion-rangeslider")(jQuery, document, window, navigator, void 0);
 
-  if (!window) {
-    window = null;
-  }
-
-  if (!navigator) {
-    navigator = null;
-  }
-
-  if (document && window && navigator) {
-    _dereq_("ion-rangeslider")(jQuery, document, window, navigator, void 0);
-    _dereq_("./jquery.typewatch")(jQuery);
-  }
+  _dereq_("./jquery.typewatch")(jQuery);
 
   module.exports = jQuery;
 
