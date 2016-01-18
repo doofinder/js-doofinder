@@ -8,6 +8,22 @@ assert = require "assert"
 should = require('chai').should()
 expect = require('chai').expect
 doofinder = require "../lib/doofinder.js"
+request = require('request')
+fake = require('fake-api-server');
+
+startServer =  ->
+  # Server configuration
+  searchs = new fake.Resource("search")
+  .add({
+    name: "Marte Rojo",
+    author: "Kim Stanley Robinson"
+    })
+  .add({
+    name: "Fahrenheit 451",
+    author: "Ray Bradbury"
+  })
+  server = new fake.Server().register(searchs).listen(3000)
+
 
 mock =
   request:
@@ -20,6 +36,7 @@ describe 'doofinder', ->
 
   # Tests the client's stuff
   describe 'client', ->
+    before(startServer)
 
     it 'multiTypeClient', ->
       # Client for two types by constructor (made make multiple type params)
@@ -168,3 +185,16 @@ describe 'doofinder', ->
       query = query1 + ' ' + query2 + ' ' + query3 + ' ' + query4 + ' ' + query5
       foo = () -> client._sanitizeQuery(query, null)
       expect(foo).to.throw 'Maximum word length exceeded: 55.'
+
+    it 'hit', ->
+      a = 1
+
+    it 'search', ->
+      request.get "http://localhost:3000/api/searchs", (err, res, body) ->
+        body.should.be.equal "slkdjflksdjf"
+
+    it 'options', ->
+      a = 1
+
+    it '__processResponse', ->
+      a = 1

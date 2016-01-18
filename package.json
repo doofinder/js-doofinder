@@ -19,7 +19,9 @@
     "http": "^0.0.0",
     "ion-rangeslider": "git://github.com/doofinder/ion.rangeSlider.git",
     "jquery": "^2.1.4",
-    "qs": "^4.0.0"
+    "qs": "^4.0.0",
+    "fake-api-server": "^0.4.0",
+    "request": "^2.67.0"
   },
   "devDependencies": {
     "coffee-script": "^1.9.1",
