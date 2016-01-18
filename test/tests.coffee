@@ -6,6 +6,7 @@
 
 assert = require "assert"
 should = require('chai').should()
+expect = require('chai').expect
 doofinder = require "../lib/doofinder.js"
 
 mock =
@@ -99,6 +100,7 @@ describe 'doofinder', ->
       querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&type=product&type=categoryB'
 
     it 'setSort', ->
+      # Test for setSort. Can be setted object, array and string types.
       client = new doofinder.Client mock.request.hashid, mock.request.api_key
       mockSort =
         Object:
@@ -125,3 +127,44 @@ describe 'doofinder', ->
       client.setSort(mockSort.String)
       querystring = client.makeQueryString()
       querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&sort=price'
+
+    it 'sanitizeQuery', ->
+      # checks if words are longer than 55 chars and the whole query is longer than 255 chars
+      client = new doofinder.Client mock.request.hashid, mock.request.api_keys
+      # checks valid query
+      query = "hello world"
+      sanitized = client._sanitizeQuery query, (query) -> return query
+      sanitized.should.be.equal query
+      # checks 54 characters word
+      query = "123456789012345678901234567890123456789012345678901234"
+      sanitized = client._sanitizeQuery query, (query) -> return query
+      sanitized.should.be.equal query
+      # checks 55 characters word
+      query = "1234567890123456789012345678901234567890123456789012345"
+      sanitized = client._sanitizeQuery query, (query) -> return query
+      sanitized.should.be.equal query
+      # checks 56 characters word
+      query = "12345678901234567890123456789012345678901234567890123456"
+      foo = () -> client._sanitizeQuery(query, null)
+      expect(foo).to.throw 'Maximum word length exceeded: 55.'
+      # checks five words, total 254 characters (whites included)
+      query1 = query2 = query3 = query4 = query5 = "12345678901234567890123456789012345678901234567890"
+      query = query1 + ' ' + query2 + ' ' + query3 + ' ' + query4 + ' ' + query5
+      sanitized = client._sanitizeQuery query, (query) -> return query
+      sanitized.should.be.equal query
+      # checks five words, total 255 characters (whites included)
+      query5 = "123456789012345678901234567890123456789012345678901"
+      query = query1 + ' ' + query2 + ' ' + query3 + ' ' + query4 + ' ' + query5
+      sanitized = client._sanitizeQuery query, (query) -> return query
+      sanitized.should.be.equal query
+      # checks five words, total 256 characters (whites included)
+      query5 = "1234567890123456789012345678901234567890123456789012"
+      query = query1 + ' ' + query2 + ' ' + query3 + ' ' + query4 + ' ' + query5
+      foo = () -> client._sanitizeQuery(query, null)
+      expect(foo).to.throw 'Maximum query length exceeded: 255.'
+      # checks five words, query less than 255 characters (whites included), with one invalid word
+      query1 = query2 = query3 = query4 = query5 = "1234567890"
+      query5 = "12345678901234567890123456789012345678901234567890123456"
+      query = query1 + ' ' + query2 + ' ' + query3 + ' ' + query4 + ' ' + query5
+      foo = () -> client._sanitizeQuery(query, null)
+      expect(foo).to.throw 'Maximum word length exceeded: 55.'
