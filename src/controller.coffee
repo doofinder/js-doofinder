@@ -91,6 +91,7 @@ class Controller
     
     if query
       @status.params = $.extend true, @searchParams, params
+      console.log "STATUS.params ", @status.params
       @status.params.query = query
       @status.params.filters = {}
       if not @searchParams.query_name

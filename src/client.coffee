@@ -110,7 +110,7 @@ class Client
     # Wrong call
     else
       throw new Error "A callback is required."
-
+    
     # Set default params
     params.page ?= 1
     params.rpp ?= 10
@@ -131,8 +131,8 @@ class Client
           for filterKey, filterTerms of paramValue
             _this.addFilter(filterKey, filterTerms)
 
-        else if paramKey == "sort"
-          _this.setSort(paramValue)
+        if paramKey == "sort"
+          _this.sort = paramValue
 
         else
           _this.addParam(paramKey, paramValue)
@@ -249,14 +249,17 @@ class Client
           querystring += "&filter[#{key}]=#{elem}"
 
     # Adding sort options
+    
     if @sort and @sort.constructor == Array
-        for key, value of @sort
-          for facet, term of value
-            querystring += "&sort[#{key}][#{facet}]=#{term}"
+      for value in @sort
+        for facet, term of value
+          querystring += "&sort[#{@sort.indexOf(value)}][#{facet}]=#{term}"
+    
 
     else if @sort and @sort.constructor == Object
       for key, value of @sort
         querystring += "&sort[#{key}]=#{value}"
+    
 
     return encodeURI querystring
 

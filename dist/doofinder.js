@@ -149,8 +149,9 @@ author: @ecoslado
               filterTerms = paramValue[filterKey];
               _this.addFilter(filterKey, filterTerms);
             }
-          } else if (paramKey === "sort") {
-            _this.setSort(paramValue);
+          }
+          if (paramKey === "sort") {
+            _this.sort = paramValue;
           } else {
             _this.addParam(paramKey, paramValue);
           }
@@ -246,7 +247,7 @@ author: @ecoslado
      */
 
     Client.prototype.makeQueryString = function() {
-      var elem, facet, j, k, key, len, querystring, ref, ref1, ref2, ref3, ref4, term, v, value;
+      var elem, facet, j, k, key, l, len, len1, querystring, ref, ref1, ref2, ref3, ref4, term, v, value;
       querystring = "hashid=" + this.hashid;
       if (this.type && this.type instanceof Array) {
         ref = this.type;
@@ -280,11 +281,11 @@ author: @ecoslado
       }
       if (this.sort && this.sort.constructor === Array) {
         ref3 = this.sort;
-        for (key in ref3) {
-          value = ref3[key];
+        for (l = 0, len1 = ref3.length; l < len1; l++) {
+          value = ref3[l];
           for (facet in value) {
             term = value[facet];
-            querystring += "&sort[" + key + "][" + facet + "]=" + term;
+            querystring += "&sort[" + (this.sort.indexOf(value)) + "][" + facet + "]=" + term;
           }
         }
       } else if (this.sort && this.sort.constructor === Object) {
@@ -528,6 +529,7 @@ author: @ecoslado
       }
       if (query) {
         this.status.params = $.extend(true, this.searchParams, params);
+        console.log("STATUS.params ", this.status.params);
         this.status.params.query = query;
         this.status.params.filters = {};
         if (!this.searchParams.query_name) {
@@ -876,7 +878,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":87}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "0.17.3",
+    version: "0.17.5",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("handlebars"),
     Widget: _dereq_("./widget"),
@@ -1101,9 +1103,10 @@ author: @ecoslado
 
   jQuery = _dereq_("jquery");
 
-  _dereq_("ion-rangeslider")(jQuery, document, window, navigator, void 0);
-
-  _dereq_("./jquery.typewatch")(jQuery);
+  if (typeof document !== 'undefined') {
+    _dereq_("ion-rangeslider")(jQuery, document, window, navigator, void 0);
+    _dereq_("./jquery.typewatch")(jQuery);
+  }
 
   module.exports = jQuery;
 

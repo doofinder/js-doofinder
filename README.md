@@ -44,7 +44,7 @@ Let's begin by showing a simple HTML template (myview.html):
 <html lang="en">
 <head>
 <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-<script type="application/javascript" src="path/to/your/js/doofinder.min.js"></script>
+<script type="application/javascript" src="https://cdn.jsdelivr.net/doofinder/latest/doofinder.min.js"></script>
 <script>
 (function(doofinder, document){
   $(document).ready(function(){
