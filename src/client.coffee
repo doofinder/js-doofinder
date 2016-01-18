@@ -254,6 +254,8 @@ class Client
         for key, value of @sort
           for facet, term of value
             querystring += "&sort[#{key}][#{facet}]=#{term}"
+    else if @sort and @sort.constructor == String
+      querystring += "&sort=#{@sort}"
     else if @sort and @sort.constructor == Object
       for key, value of @sort
         querystring += "&sort[#{key}]=#{value}"

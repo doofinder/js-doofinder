@@ -97,3 +97,31 @@ describe 'doofinder', ->
       client.addParam 'type', 'categoryB'
       querystring = client.makeQueryString()
       querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&type=product&type=categoryB'
+
+    it 'setSort', ->
+      client = new doofinder.Client mock.request.hashid, mock.request.api_key
+      mockSort =
+        Object:
+          price: "asc"
+          title: "desc"
+          description: "asc"
+        Array: [("title": "asc"), ("description": "desc")]
+        String: "price"
+
+      # Test sort with array type
+      # sort: [{price: 'asc'}, {brand: 'desc'}] -> sort[0][price]=asc&sort[1][brand]=desc
+      client.setSort(mockSort.Array)
+      querystring = client.makeQueryString()
+      querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&sort%5B0%5D%5Btitle%5D=asc&sort%5B1%5D%5Bdescription%5D=desc'
+
+      # Test sort with object type
+      # sort: {price: 'asc'} -> sort[price]=asc
+      client.setSort(mockSort.Object)
+      querystring = client.makeQueryString()
+      querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&sort%5Bprice%5D=asc&sort%5Btitle%5D=desc&sort%5Bdescription%5D=asc'
+
+      # Test with string type
+      # sort: price -> sort=price
+      client.setSort(mockSort.String)
+      querystring = client.makeQueryString()
+      querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&sort=price'
