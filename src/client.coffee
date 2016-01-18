@@ -249,11 +249,11 @@ class Client
           querystring += "&filter[#{key}]=#{elem}"
 
     # Adding sort options
+    # See http://doofinder.com/en/developer/search-api#sort-parameters
     if @sort and @sort.constructor == Array
         for key, value of @sort
           for facet, term of value
             querystring += "&sort[#{key}][#{facet}]=#{term}"
-
     else if @sort and @sort.constructor == Object
       for key, value of @sort
         querystring += "&sort[#{key}]=#{value}"
