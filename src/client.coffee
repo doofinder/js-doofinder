@@ -246,7 +246,7 @@ class Client
       # Terms filters
       if value.constructor == Array
         for elem in value
-          cleaned = elem.replace(" ", "+")
+          cleaned = elem.replace(/\s/g, "+")
           querystring += "&filter[#{key}]=#{cleaned}"
 
     # Adding sort options
