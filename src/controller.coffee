@@ -92,7 +92,10 @@ class Controller
   search: (query, params={}) ->
     
     if query
-      @status.params = $.extend true, @searchParams, params
+      searchParams = $.extend true,
+        {},
+        @searchParams 
+      @status.params = $.extend true, searchParams, params
       @status.params.query = query
       @status.params.filters = {}
       console.log "INITIAL ", @searchParams
