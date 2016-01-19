@@ -8,22 +8,7 @@ assert = require "assert"
 should = require('chai').should()
 expect = require('chai').expect
 doofinder = require "../lib/doofinder.js"
-request = require('request')
-fake = require('fake-api-server');
-
-startServer =  ->
-  # Server configuration
-  searchs = new fake.Resource("search")
-  .add({
-    name: "Marte Rojo",
-    author: "Kim Stanley Robinson"
-    })
-  .add({
-    name: "Fahrenheit 451",
-    author: "Ray Bradbury"
-  })
-  server = new fake.Server().register(searchs).listen(3000)
-
+nock = require('nock')
 
 mock =
   request:
@@ -36,7 +21,6 @@ describe 'doofinder', ->
 
   # Tests the client's stuff
   describe 'client', ->
-    before(startServer)
 
     it 'multiTypeClient', ->
       # Client for two types by constructor (made make multiple type params)
@@ -189,9 +173,35 @@ describe 'doofinder', ->
     it 'hit', ->
       a = 1
 
-    it 'search', ->
-      request.get "http://localhost:3000/api/searchs", (err, res, body) ->
-        body.should.be.equal "slkdjflksdjf"
+    it 'search with no type', (done) ->
+      response =
+        field: "value"
+      scope = nock('http://localhost:3000').get('/5/search').query({hashid: "ffffffffffffffffffffffffffffffff", page:1, rpp:10, query:""}).reply(200, response)
+      # Response value is not importan, the importan here is the requested URL
+      client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, null, 'localhost:3000'
+      client.search '', (err, res) ->
+        res.should.to.be.deep.equal response
+        done()
+
+    it 'search with type', (done) ->
+      response =
+        field: "value"
+      scope = nock('http://localhost:3000').get('/5/search').query({hashid: "ffffffffffffffffffffffffffffffff", page:1, rpp:10, query:"", type:"product"}).reply(200, response)
+      # Response value is not importan, the importan here is the requested URL
+      client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'localhost:3000'
+      client.search '', (err, res) ->
+        res.should.to.be.deep.equal response
+        done()
+
+    it 'search with type and query', (done) ->
+      response =
+        field: "value"
+      scope = nock('http://localhost:3000').get('/5/search').query({hashid: "ffffffffffffffffffffffffffffffff", page:1, rpp:10, query:"querystring", type:"product"}).reply(200, response)
+      # Response value is not importan, the importan here is the requested URL
+      client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'localhost:3000'
+      client.search 'querystring', (err, res) ->
+        res.should.to.be.deep.equal response
+        done()
 
     it 'options', ->
       a = 1
