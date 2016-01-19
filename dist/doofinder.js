@@ -277,6 +277,7 @@ author: @ecoslado
             elem = value[j];
             cleaned = elem.replace("\s", "+");
             console.log(cleaned);
+            console.log(key);
             querystring += "&filter[" + key + "]=" + cleaned;
           }
         }
@@ -297,6 +298,7 @@ author: @ecoslado
           querystring += "&sort[" + key + "]=" + value;
         }
       }
+      console.log(encodeURI(querystring, encodeURIComponent(querystring)));
       return encodeURI(querystring);
     };
 

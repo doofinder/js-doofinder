@@ -263,7 +263,7 @@ class Client
       for key, value of @sort
         querystring += "&sort[#{key}]=#{value}"
     
-
+    console.log encodeURI querystring, encodeURIComponent querystring
     return encodeURI querystring
 
   ###
