@@ -53,6 +53,7 @@ class Controller
     @status.params.query_counter++
     params = @status.params
     params.page = @status.currentPage
+    console.log params.query_name
     _this = this
     @client.search params.query, params, (err, res) ->
       # I check if I reached the last page.    
