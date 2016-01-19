@@ -350,11 +350,12 @@ class Controller
   setStatusFromString: (queryString, prefix="#/search/") ->          
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
-    console.log "BEFORE ", @searchParams
+    searchParams = $.extend true,
+      {},
+      @searchParams || {}
     @status.params = $.extend true,
-      @searchParams,
+      searchParams,
       qs.parse(queryString.replace("#{prefix}", "")) || {}
-    console.log "AFTER ", @searchParams
     @status.params.query_counter = 1
     @status.currentPage = 1
 

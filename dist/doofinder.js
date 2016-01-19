@@ -836,14 +836,14 @@ author: @ecoslado
      */
 
     Controller.prototype.setStatusFromString = function(queryString, prefix) {
+      var searchParams;
       if (prefix == null) {
         prefix = "#/search/";
       }
       this.status.firstQueryTriggered = true;
       this.status.lastPageReached = false;
-      console.log("BEFORE ", this.searchParams);
-      this.status.params = $.extend(true, this.searchParams, qs.parse(queryString.replace("" + prefix, "")) || {});
-      console.log("AFTER ", this.searchParams);
+      searchParams = $.extend(true, {}, this.searchParams || {});
+      this.status.params = $.extend(true, searchParams, qs.parse(queryString.replace("" + prefix, "")) || {});
       this.status.params.query_counter = 1;
       this.status.currentPage = 1;
       this.refresh();
