@@ -235,6 +235,22 @@ author: @ecoslado
 
 
     /*
+    __escapeChars
+    
+    This method encodes just the chars
+    like &, ?, #. 
+    
+    @param {String} word
+     */
+
+    Client.prototype.__espaceChars = function(word) {
+      word = word.replace(/\&/, "%26");
+      word = word.replace(/\?/, "%3F");
+      return word.replace(/\#/, "%23");
+    };
+
+
+    /*
     makeQueryString
     
     This method returns a
@@ -274,7 +290,7 @@ author: @ecoslado
         if (value.constructor === Array) {
           for (j = 0, len = value.length; j < len; j++) {
             elem = value[j];
-            cleaned = elem.replace('&', '%26');
+            cleaned = this.__escapeChars(elem);
             querystring += encodeURI("&filter[" + key + "]=") + cleaned;
           }
         }
@@ -881,7 +897,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":87}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "0.17.6",
+    version: "0.17.8",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("handlebars"),
     Widget: _dereq_("./widget"),

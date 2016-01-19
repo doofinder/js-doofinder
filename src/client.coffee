@@ -212,6 +212,19 @@ class Client
 
 
   ###
+  __escapeChars
+  
+  This method encodes just the chars
+  like &, ?, #. 
+
+  @param {String} word
+  ###
+  __espaceChars: (word) ->
+    word = word.replace(/\&/, "%26")
+    word = word.replace(/\?/, "%3F")
+    return word.replace(/\#/, "%23")
+
+  ###
   makeQueryString
 
   This method returns a
@@ -247,7 +260,7 @@ class Client
       if value.constructor == Array
         for elem in value
           # Just cleans & character
-          cleaned = elem.replace '&', '%26'
+          cleaned = @__escapeChars(elem)
           querystring += encodeURI("&filter[#{key}]=") + cleaned
 
     # Adding sort options
