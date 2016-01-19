@@ -219,7 +219,7 @@ class Client
 
   @param {String} word
   ###
-  __espaceChars: (word) ->
+  __escapeChars: (word) ->
     word = word.replace(/\&/, "%26")
     word = word.replace(/\?/, "%3F")
     return word.replace(/\#/, "%23")
