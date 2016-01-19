@@ -241,6 +241,7 @@ class Client
       # Range filters
       if value.constructor == Object
         for k, v of value
+          console.log k, v
           querystring += "&filter[#{key}][#{k}]=#{v}"
 
       # Terms filters
