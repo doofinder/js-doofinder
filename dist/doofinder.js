@@ -149,8 +149,7 @@ author: @ecoslado
               filterTerms = paramValue[filterKey];
               _this.addFilter(filterKey, filterTerms);
             }
-          }
-          if (paramKey === "sort") {
+          } else if (paramKey === "sort") {
             _this.sort = paramValue;
           } else {
             _this.addParam(paramKey, paramValue);
@@ -269,7 +268,6 @@ author: @ecoslado
         if (value.constructor === Object) {
           for (k in value) {
             v = value[k];
-            console.log(k, v);
             querystring += "&filter[" + key + "][" + k + "]=" + v;
           }
         }
@@ -277,8 +275,6 @@ author: @ecoslado
           for (j = 0, len = value.length; j < len; j++) {
             elem = value[j];
             cleaned = elem.replace("\s", "+");
-            console.log(cleaned);
-            console.log(key);
             querystring += "&filter[" + key + "]=" + cleaned;
           }
         }

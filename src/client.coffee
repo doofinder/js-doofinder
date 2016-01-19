@@ -131,7 +131,7 @@ class Client
           for filterKey, filterTerms of paramValue
             _this.addFilter(filterKey, filterTerms)
 
-        if paramKey == "sort"
+        else if paramKey == "sort"
           _this.sort = paramValue
 
         else
@@ -241,15 +241,12 @@ class Client
       # Range filters
       if value.constructor == Object
         for k, v of value
-          console.log k, v
           querystring += "&filter[#{key}][#{k}]=#{v}"
 
       # Terms filters
       if value.constructor == Array
         for elem in value
           cleaned = elem.replace("\s", "+")
-          console.log cleaned
-          console.log key
           querystring += "&filter[#{key}]=#{cleaned}"
 
     # Adding sort options
