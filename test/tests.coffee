@@ -199,6 +199,27 @@ describe 'doofinder', ->
         res.should.to.be.deep.equal response
         done()
 
+    it 'search with type query and params (sort type object of: object, array, string)', (done) ->
+      response =
+        field: "value"
+      scope = nock('http://localhost:3000').get('/5/search').query(
+        {
+          hashid: "ffffffffffffffffffffffffffffffff",
+          page:1,
+          rpp:10,
+          query:"querystring",
+          type:"product"
+          sort: mock.sort.Object
+        }).reply(200, response)
+      console.log {sort: mock.sort.Object}
+      console.log {sort: mock.sort.Object}
+      # Response value is not importan, the importan here is the requested URL
+      client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'localhost:3000'
+      client.search 'querystring', {sort: mock.sort.Object}, (err, res) ->
+        res.should.to.be.deep.equal response
+        done()
+
+
     it 'hit', ->
       a = 1
 

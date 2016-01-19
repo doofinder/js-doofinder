@@ -18,8 +18,7 @@
     "http": "^0.0.0",
     "ion-rangeslider": "git://github.com/doofinder/ion.rangeSlider.git",
     "jquery": "^2.1.4",
-    "qs": "^4.0.0",
-    "nock": "^5.2.1"
+    "qs": "^4.0.0"
   },
   "devDependencies": {
     "chai": "^2.2.0",
