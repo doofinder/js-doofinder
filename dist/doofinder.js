@@ -313,7 +313,7 @@ author: @ecoslado
           querystring += encodeURI("&sort[" + key + "]=" + value);
         }
       }
-      return encodeURI(querystring);
+      return querystring;
     };
 
 
@@ -885,6 +885,7 @@ author: @ecoslado
       delete params.rpp;
       delete params.query_counter;
       delete params.page;
+      console.log(params);
       return "" + prefix + (qs.stringify(params));
     };
 
