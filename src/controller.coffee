@@ -32,6 +32,7 @@ class Controller
       @addWidget(widgets)
     
     # Initial status
+    console.log "CONSTR ", searchParams
     @searchParams = $.extend true, searchParams, {query_counter: 0}
     @reset()
 
@@ -94,7 +95,7 @@ class Controller
       @status.params = $.extend true, @searchParams, params
       @status.params.query = query
       @status.params.filters = {}
-      console.log @searchParams
+      console.log "INITIAL ", @searchParams
       if not @searchParams.query_name
         delete @status.params.query_name
         console.log "query-name ", @status.params.query_name 
@@ -148,7 +149,7 @@ class Controller
     @status.currentPage = 1
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
-    console.log @searchParams
+    console.log "INITIAL ", @searchParams
     if not @searchParams.query_name
       delete @status.params.query_name
       console.log "REFRESH ", @status.params.query_name

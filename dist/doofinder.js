@@ -453,6 +453,7 @@ author: @ecoslado
       } else if (widgets) {
         this.addWidget(widgets);
       }
+      console.log("CONSTR ", searchParams);
       this.searchParams = $.extend(true, searchParams, {
         query_counter: 0
       });
@@ -531,7 +532,7 @@ author: @ecoslado
         this.status.params = $.extend(true, this.searchParams, params);
         this.status.params.query = query;
         this.status.params.filters = {};
-        console.log(this.searchParams);
+        console.log("INITIAL ", this.searchParams);
         if (!this.searchParams.query_name) {
           delete this.status.params.query_name;
           console.log("query-name ", this.status.params.query_name);
@@ -600,7 +601,7 @@ author: @ecoslado
       this.status.currentPage = 1;
       this.status.firstQueryTriggered = true;
       this.status.lastPageReached = false;
-      console.log(this.searchParams);
+      console.log("INITIAL ", this.searchParams);
       if (!this.searchParams.query_name) {
         delete this.status.params.query_name;
         console.log("REFRESH ", this.status.params.query_name);
