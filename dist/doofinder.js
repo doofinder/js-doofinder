@@ -246,7 +246,7 @@ author: @ecoslado
      */
 
     Client.prototype.makeQueryString = function() {
-      var cleaned, elem, facet, j, k, key, l, len, len1, querystring, ref, ref1, ref2, ref3, ref4, term, v, value;
+      var elem, facet, j, k, key, l, len, len1, querystring, ref, ref1, ref2, ref3, ref4, term, v, value;
       querystring = "hashid=" + this.hashid;
       if (this.type && this.type instanceof Array) {
         ref = this.type;
@@ -274,9 +274,7 @@ author: @ecoslado
         if (value.constructor === Array) {
           for (j = 0, len = value.length; j < len; j++) {
             elem = value[j];
-            cleaned = elem.replace(/\s/g, "+");
-            cleaned = cleaned.replace(/\&/g, "%26");
-            querystring += "&filter[" + key + "]=" + cleaned;
+            querystring += "&filter[" + key + "]=" + elem;
           }
         }
       }
