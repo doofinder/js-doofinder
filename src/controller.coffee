@@ -352,6 +352,9 @@ class Controller
       qs.parse(queryString.replace("#{prefix}", "")) || {}
     @status.params.query_counter = 1
     @status.currentPage = 1
+    if not @searchParams.query_name
+      delete @status.params.query_name
+
     @refresh()
     return @status.params.query
 

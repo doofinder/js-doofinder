@@ -841,6 +841,9 @@ author: @ecoslado
       this.status.params = $.extend(true, this.searchParams, qs.parse(queryString.replace("" + prefix, "")) || {});
       this.status.params.query_counter = 1;
       this.status.currentPage = 1;
+      if (!this.searchParams.query_name) {
+        delete this.status.params.query_name;
+      }
       this.refresh();
       return this.status.params.query;
     };
