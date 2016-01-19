@@ -601,11 +601,6 @@ author: @ecoslado
       this.status.currentPage = 1;
       this.status.firstQueryTriggered = true;
       this.status.lastPageReached = false;
-      console.log("INITIAL ", this.searchParams);
-      if (!this.searchParams.query_name) {
-        delete this.status.params.query_name;
-        console.log("REFRESH ", this.status.params.query_name);
-      }
       return this.__search();
     };
 
@@ -846,7 +841,9 @@ author: @ecoslado
       }
       this.status.firstQueryTriggered = true;
       this.status.lastPageReached = false;
+      console.log("BEFORE ", this.searchParams);
       this.status.params = $.extend(true, this.searchParams, qs.parse(queryString.replace("" + prefix, "")) || {});
+      console.log("AFTER ", this.searchParams);
       this.status.params.query_counter = 1;
       this.status.currentPage = 1;
       this.refresh();

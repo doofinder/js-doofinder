@@ -149,10 +149,6 @@ class Controller
     @status.currentPage = 1
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
-    console.log "INITIAL ", @searchParams
-    if not @searchParams.query_name
-      delete @status.params.query_name
-      console.log "REFRESH ", @status.params.query_name
     @__search()
 
   ###
@@ -354,9 +350,11 @@ class Controller
   setStatusFromString: (queryString, prefix="#/search/") ->          
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
+    console.log "BEFORE ", @searchParams
     @status.params = $.extend true,
       @searchParams,
       qs.parse(queryString.replace("#{prefix}", "")) || {}
+    console.log "AFTER ", @searchParams
     @status.params.query_counter = 1
     @status.currentPage = 1
 
