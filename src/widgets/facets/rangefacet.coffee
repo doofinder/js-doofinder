@@ -17,7 +17,7 @@ class RangeFacet extends Display
 
   constructor: (container, @name, options = {}) ->
     if not options.template
-      template = '<div class="df-panel df-widget" data-facet="key">' +
+      template = '<div class="df-panel df-widget" data-facet="{{name}}">' +
         '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>'+
         '<div class="df-panel__content">' +
         '<input class="df-facet" type="text" name="{{name}}" value=""' +

@@ -35,19 +35,19 @@ describe 'doofinder', ->
       querystring = client.makeQueryString()
       querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&type=product&type=category'
 
+
     it 'addFilter', ->
       client = new doofinder.Client mock.request.hashid, mock.request.api_key
       mockFilter =
         price:
           from: 20
           to: 50
-
-      # test filter with array value
       client.addFilter "foo", ["bar"]
       client.filters.should.have.keys "foo"
       client.filters.foo.should.have.length 1
       client.filters.foo[0].should.equal "bar"
       querystring = client.makeQueryString()
+
       querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&filter%5Bfoo%5D=bar'
 
       # Add the same filter again must override last filter
@@ -72,7 +72,6 @@ describe 'doofinder', ->
       client.filters.foo.should.have.length 1
       querystring = client.makeQueryString()
       querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&filter%5Bprice%5D%5Bfrom%5D=20&filter%5Bprice%5D%5Bto%5D=50&filter%5Bfoo%5D=bar'
-
 
     it 'addParam', ->
       # Client for product type

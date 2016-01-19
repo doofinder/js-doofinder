@@ -212,6 +212,19 @@ class Client
 
 
   ###
+  __escapeChars
+
+  This method encodes just the chars
+  like &, ?, #.
+
+  @param {String} word
+  ###
+  __escapeChars: (word) ->
+    word = word.replace(/\&/, "%26")
+    word = word.replace(/\?/, "%3F")
+    return word.replace(/\#/, "%23")
+
+  ###
   makeQueryString
 
   This method returns a
@@ -223,45 +236,51 @@ class Client
   ###
   makeQueryString: () ->
     # Adding hashid
-    querystring = "hashid=#{@hashid}"
+    querystring = encodeURI "hashid=#{@hashid}"
 
     # Adding types
     if @type and @type instanceof Array
       for key, value of @type
-        querystring += "&type=#{value}"
+        querystring += encodeURI "&type=#{value}"
+
     else if @type and @type.constructor == String
-      querystring += "&type=#{@type}"
+      querystring += encodeURI "&type=#{@type}"
 
     # Adding params
     for key, value of @params
-      querystring += "&#{key}=#{value}"
+      querystring += encodeURI "&#{key}=#{value}"
 
     # Adding filters
     for key, value of @filters
       # Range filters
       if value.constructor == Object
         for k, v of value
-          querystring += "&filter[#{key}][#{k}]=#{v}"
+          querystring += encodeURI "&filter[#{key}][#{k}]=#{v}"
 
       # Terms filters
       if value.constructor == Array
         for elem in value
-          querystring += "&filter[#{key}]=#{elem}"
+          # Just cleans & character
+          cleaned = @__escapeChars(elem)
+          querystring += encodeURI("&filter[#{key}]=") + cleaned
 
     # Adding sort options
     # See http://doofinder.com/en/developer/search-api#sort-parameters
     if @sort and @sort.constructor == Array
-        for key, value of @sort
-          for facet, term of value
-            querystring += "&sort[#{key}][#{facet}]=#{term}"
+      for value in @sort
+        for facet, term of value
+          querystring += encodeURI "&sort[#{@sort.indexOf(value)}][#{facet}]=#{term}"
+
     else if @sort and @sort.constructor == String
-      querystring += "&sort=#{@sort}"
+      querystring += encodeURI "&sort=#{@sort}"
+
+
     else if @sort and @sort.constructor == Object
       for key, value of @sort
-        querystring += "&sort[#{key}]=#{value}"
+        querystring += encodeURI "&sort[#{key}]=#{value}"
 
     return encodeURI querystring
-
+    
   ###
   This method calls to /hit
   service for accounting the
@@ -280,7 +299,10 @@ class Client
         host: @url
         path: "/#{@version}/hit/#{@hashid}/#{dfid}/#{encodeURIComponent(query)}?random=#{new Date().getTime()}"
         headers: headers
-
+    # Just for url with host:port
+    if @url.split(':').length > 1
+      options.host = @url.split(':')[0]
+      options.port = @url.split(':')[1]
     # Here is where request is done and executed processResponse
     req = http.request options, @__processResponse(callback)
     req.end()
@@ -304,6 +326,10 @@ class Client
         path: "/#{@version}/options/#{@hashid}"
         headers: headers
 
+    # Just for url with host:port
+    if @url.split(':').length > 1
+      options.host = @url.split(':')[0]
+      options.port = @url.split(':')[1]
     # Here is where request is done and executed processResponse
     req = http.request options, @__processResponse(callback)
     req.end()

@@ -59,7 +59,8 @@ class Controller
       if res.results.length < _this.status.params.rpp
         _this.status.lastPageReached = true
       # I set the query_name till next query
-      _this.status.params.query_name = res.query_name
+      if not _this.searchParams.query_name
+        _this.status.params.query_name = res.query_name
       # Triggers results_received
       _this.trigger "df:results_received", [res]
       # Whe show the results only when query counter
@@ -89,10 +90,14 @@ class Controller
   search: (query, params={}) ->
     
     if query
-      @status.params = $.extend true, @searchParams, params
+      searchParams = $.extend true,
+        {},
+        @searchParams 
+      @status.params = $.extend true, searchParams, params
       @status.params.query = query
       @status.params.filters = {}
-      delete @status.params.query_name
+      if not @searchParams.query_name
+        delete @status.params.query_name
       @status.currentPage = 1
       @status.firstQueryTriggered = true
       @status.lastPageReached = false
@@ -302,10 +307,10 @@ class Controller
       if gaCommand['eventAction'].indexOf('search') == 0  # also send pageview to count on search analytics
         window._gaq.push(['_trackPageview', '/doofinder/search/' + options.hashid + '?query=' + gaCommand['eventLabel']])
       else
-      # Universal Analytics
+        # Universal Analytics
         ga = (window[window.GoogleAnalyticsObject] || window.ga);
       if (ga and ga.getAll)
-      # http://stackoverflow.com/q/28765806/316414
+        # http://stackoverflow.com/q/28765806/316414
         trackerName = ga.getAll()[0].get('name');
         ga(trackerName + '.send', 'event', gaCommand);
         if gaCommand['eventAction'].indexOf('search') == 0  # also send pageview to count on search analytics
@@ -344,11 +349,15 @@ class Controller
   setStatusFromString: (queryString, prefix="#/search/") ->          
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
+    searchParams = $.extend true,
+      {},
+      @searchParams || {}
     @status.params = $.extend true,
-      @searchParams,
+      searchParams,
       qs.parse(queryString.replace("#{prefix}", "")) || {}
     @status.params.query_counter = 1
     @status.currentPage = 1
+
     @refresh()
     return @status.params.query
 

@@ -1,13 +1,12 @@
 {
   "name": "doofinder",
-  "version": "0.16.0",
+  "version": "0.17.8",
   "description": "Javascript Library for Doofinder Search API",
   "main": "lib/doofinder.js",
   "directories": {
     "test": "test"
   },
   "dependencies": {
-    "chai": "^2.2.0",
     "coffee": "^1.0.0",
     "grunt": "^0.4.5",
     "grunt-browserify": "^4.0.1",
@@ -23,10 +22,12 @@
     "nock": "^5.2.1"
   },
   "devDependencies": {
+    "chai": "^2.2.0",
     "coffee-script": "^1.9.1",
     "grunt-browserify": "^4.0.1",
     "grunt-version": "^1.0.0",
-    "mocha": "^2.2.1"
+    "mocha": "^2.2.1",
+    "nock": "^5.2.1"
   },
   "scripts": {
     "test": "grunt"
