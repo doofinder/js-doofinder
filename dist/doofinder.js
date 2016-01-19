@@ -531,8 +531,10 @@ author: @ecoslado
         this.status.params = $.extend(true, this.searchParams, params);
         this.status.params.query = query;
         this.status.params.filters = {};
+        console.log(this.searchParams);
         if (!this.searchParams.query_name) {
           delete this.status.params.query_name;
+          console.log("query-name ", this.status.params.query_name);
         }
         this.status.currentPage = 1;
         this.status.firstQueryTriggered = true;
@@ -598,6 +600,11 @@ author: @ecoslado
       this.status.currentPage = 1;
       this.status.firstQueryTriggered = true;
       this.status.lastPageReached = false;
+      console.log(this.searchParams);
+      if (!this.searchParams.query_name) {
+        delete this.status.params.query_name;
+        console.log("REFRESH ", this.status.params.query_name);
+      }
       return this.__search();
     };
 
@@ -841,9 +848,6 @@ author: @ecoslado
       this.status.params = $.extend(true, this.searchParams, qs.parse(queryString.replace("" + prefix, "")) || {});
       this.status.params.query_counter = 1;
       this.status.currentPage = 1;
-      if (!this.searchParams.query_name) {
-        delete this.status.params.query_name;
-      }
       this.refresh();
       return this.status.params.query;
     };

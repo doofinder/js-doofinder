@@ -94,8 +94,10 @@ class Controller
       @status.params = $.extend true, @searchParams, params
       @status.params.query = query
       @status.params.filters = {}
+      console.log @searchParams
       if not @searchParams.query_name
         delete @status.params.query_name
+        console.log "query-name ", @status.params.query_name 
       @status.currentPage = 1
       @status.firstQueryTriggered = true
       @status.lastPageReached = false
@@ -146,6 +148,10 @@ class Controller
     @status.currentPage = 1
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
+    console.log @searchParams
+    if not @searchParams.query_name
+      delete @status.params.query_name
+      console.log "REFRESH ", @status.params.query_name
     @__search()
 
   ###
@@ -352,8 +358,6 @@ class Controller
       qs.parse(queryString.replace("#{prefix}", "")) || {}
     @status.params.query_counter = 1
     @status.currentPage = 1
-    if not @searchParams.query_name
-      delete @status.params.query_name
 
     @refresh()
     return @status.params.query
