@@ -248,6 +248,7 @@ class Client
         for elem in value
           cleaned = elem.replace("\s", "+")
           console.log cleaned
+          console.log key
           querystring += "&filter[#{key}]=#{cleaned}"
 
     # Adding sort options
