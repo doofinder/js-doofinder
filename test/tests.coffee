@@ -15,6 +15,13 @@ mock =
     hashid: "ffffffffffffffffffffffffffffffff"
   api_key: "eu1-384fd8a73c7ff0859a5891f9f4083b1b9727f9c3"
   query: "iphone"
+  sort:
+    Object:
+      price: "asc"
+      title: "desc"
+      description: "asc"
+    Array: [("title": "asc"), ("description": "desc")]
+    String: "price"
 
 # Test doofinder
 describe 'doofinder', ->
@@ -103,29 +110,22 @@ describe 'doofinder', ->
     it 'setSort', ->
       # Test for setSort. Can be setted object, array and string types.
       client = new doofinder.Client mock.request.hashid, mock.request.api_key
-      mockSort =
-        Object:
-          price: "asc"
-          title: "desc"
-          description: "asc"
-        Array: [("title": "asc"), ("description": "desc")]
-        String: "price"
 
       # Test sort with array type
       # sort: [{price: 'asc'}, {brand: 'desc'}] -> sort[0][price]=asc&sort[1][brand]=desc
-      client.setSort(mockSort.Array)
+      client.setSort(mock.sort.Array)
       querystring = client.makeQueryString()
       querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&sort%5B0%5D%5Btitle%5D=asc&sort%5B1%5D%5Bdescription%5D=desc'
 
       # Test sort with object type
       # sort: {price: 'asc'} -> sort[price]=asc
-      client.setSort(mockSort.Object)
+      client.setSort(mock.sort.Object)
       querystring = client.makeQueryString()
       querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&sort%5Bprice%5D=asc&sort%5Btitle%5D=desc&sort%5Bdescription%5D=asc'
 
       # Test with string type
       # sort: price -> sort=price
-      client.setSort(mockSort.String)
+      client.setSort(mock.sort.String)
       querystring = client.makeQueryString()
       querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&sort=price'
 
@@ -170,9 +170,6 @@ describe 'doofinder', ->
       foo = () -> client._sanitizeQuery(query, null)
       expect(foo).to.throw 'Maximum word length exceeded: 55.'
 
-    it 'hit', ->
-      a = 1
-
     it 'search with no type', (done) ->
       response =
         field: "value"
@@ -202,6 +199,9 @@ describe 'doofinder', ->
       client.search 'querystring', (err, res) ->
         res.should.to.be.deep.equal response
         done()
+
+    it 'hit', ->
+      a = 1
 
     it 'options', ->
       a = 1
