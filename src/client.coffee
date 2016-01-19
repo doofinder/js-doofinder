@@ -246,7 +246,7 @@ class Client
       # Terms filters
       if value.constructor == Array
         for elem in value
-          querystring += encodeURI("&filter[#{key}]=") + escape(elem)
+          querystring += encodeURI("&filter[#{key}]=") + elem.replace('&', '%26')
 
     # Adding sort options
     

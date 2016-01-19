@@ -307,10 +307,10 @@ class Controller
       if gaCommand['eventAction'].indexOf('search') == 0  # also send pageview to count on search analytics
         window._gaq.push(['_trackPageview', '/doofinder/search/' + options.hashid + '?query=' + gaCommand['eventLabel']])
       else
-      # Universal Analytics
+        # Universal Analytics
         ga = (window[window.GoogleAnalyticsObject] || window.ga);
       if (ga and ga.getAll)
-      # http://stackoverflow.com/q/28765806/316414
+        # http://stackoverflow.com/q/28765806/316414
         trackerName = ga.getAll()[0].get('name');
         ga(trackerName + '.send', 'event', gaCommand);
         if gaCommand['eventAction'].indexOf('search') == 0  # also send pageview to count on search analytics

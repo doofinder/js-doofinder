@@ -274,7 +274,7 @@ author: @ecoslado
         if (value.constructor === Array) {
           for (j = 0, len = value.length; j < len; j++) {
             elem = value[j];
-            querystring += encodeURI("&filter[" + key + "]=") + escape(elem);
+            querystring += encodeURI("&filter[" + key + "]=") + elem.replace('&', '%26');
           }
         }
       }
