@@ -247,6 +247,7 @@ class Client
       if value.constructor == Array
         for elem in value
           cleaned = elem.replace("\s", "+")
+          console.log cleaned
           querystring += "&filter[#{key}]=#{cleaned}"
 
     # Adding sort options

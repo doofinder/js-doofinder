@@ -276,6 +276,7 @@ author: @ecoslado
           for (j = 0, len = value.length; j < len; j++) {
             elem = value[j];
             cleaned = elem.replace("\s", "+");
+            console.log(cleaned);
             querystring += "&filter[" + key + "]=" + cleaned;
           }
         }
