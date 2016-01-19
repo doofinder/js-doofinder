@@ -274,7 +274,7 @@ author: @ecoslado
         if (value.constructor === Array) {
           for (j = 0, len = value.length; j < len; j++) {
             elem = value[j];
-            querystring += "&filter[" + key + "]=" + elem;
+            querystring += "&filter[" + key + "]=" + (encodeURI(elem));
           }
         }
       }
@@ -294,7 +294,6 @@ author: @ecoslado
           querystring += "&sort[" + key + "]=" + value;
         }
       }
-      console.log(encodeURI(querystring, encodeURIComponent(querystring)));
       return encodeURI(querystring);
     };
 

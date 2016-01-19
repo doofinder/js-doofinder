@@ -246,7 +246,7 @@ class Client
       # Terms filters
       if value.constructor == Array
         for elem in value
-          querystring += "&filter[#{key}]=#{elem}"
+          querystring += "&filter[#{key}]=#{encodeURI elem}"
 
     # Adding sort options
     
@@ -260,7 +260,6 @@ class Client
       for key, value of @sort
         querystring += "&sort[#{key}]=#{value}"
     
-    console.log encodeURI querystring, encodeURIComponent querystring
     return encodeURI querystring
 
   ###
