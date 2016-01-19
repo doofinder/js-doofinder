@@ -223,44 +223,44 @@ class Client
   ###
   makeQueryString: () ->
     # Adding hashid
-    querystring = "hashid=#{@hashid}"
+    querystring = encodeURI "hashid=#{@hashid}"
 
     # Adding types
     if @type and @type instanceof Array
       for key, value of @type
-        querystring += "&type=#{value}"
+        querystring += encodeURI "&type=#{value}"
     else if @type and @type.constructor == String
-      querystring += "&type=#{@type}"
+      querystring += encodeURI "&type=#{@type}"
 
     # Adding params
     for key, value of @params
-      querystring += "&#{key}=#{value}"
+      querystring += encodeURI "&#{key}=#{value}"
 
     # Adding filters
     for key, value of @filters
       # Range filters
       if value.constructor == Object
         for k, v of value
-          querystring += "&filter[#{key}][#{k}]=#{v}"
+          querystring += encodeURI "&filter[#{key}][#{k}]=#{v}"
 
       # Terms filters
       if value.constructor == Array
         for elem in value
-          querystring += "&filter[#{key}]=#{escape elem}"
+          querystring += encodeURI "&filter[#{key}]=" + escape(elem)
 
     # Adding sort options
     
     if @sort and @sort.constructor == Array
       for value in @sort
         for facet, term of value
-          querystring += "&sort[#{@sort.indexOf(value)}][#{facet}]=#{term}"
+          querystring += encodeURI "&sort[#{@sort.indexOf(value)}][#{facet}]=#{term}"
     
 
     else if @sort and @sort.constructor == Object
       for key, value of @sort
-        querystring += "&sort[#{key}]=#{value}"
+        querystring += encodeURI "&sort[#{key}]=#{value}"
     
-    return encodeURI querystring
+    return querystring
 
   ###
   This method calls to /hit
