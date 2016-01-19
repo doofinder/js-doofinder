@@ -32,7 +32,6 @@ class Controller
       @addWidget(widgets)
     
     # Initial status
-    console.log "CONSTR ", searchParams
     @searchParams = $.extend true, searchParams, {query_counter: 0}
     @reset()
 
@@ -54,7 +53,6 @@ class Controller
     @status.params.query_counter++
     params = @status.params
     params.page = @status.currentPage
-    console.log params.query_name
     _this = this
     @client.search params.query, params, (err, res) ->
       # I check if I reached the last page.    
@@ -98,10 +96,8 @@ class Controller
       @status.params = $.extend true, searchParams, params
       @status.params.query = query
       @status.params.filters = {}
-      console.log "INITIAL ", @searchParams
       if not @searchParams.query_name
         delete @status.params.query_name
-        console.log "query-name ", @status.params.query_name 
       @status.currentPage = 1
       @status.firstQueryTriggered = true
       @status.lastPageReached = false

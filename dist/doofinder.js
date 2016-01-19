@@ -453,7 +453,6 @@ author: @ecoslado
       } else if (widgets) {
         this.addWidget(widgets);
       }
-      console.log("CONSTR ", searchParams);
       this.searchParams = $.extend(true, searchParams, {
         query_counter: 0
       });
@@ -481,7 +480,6 @@ author: @ecoslado
       this.status.params.query_counter++;
       params = this.status.params;
       params.page = this.status.currentPage;
-      console.log(params.query_name);
       _this = this;
       return this.client.search(params.query, params, function(err, res) {
         var i, len, ref, results, widget;
@@ -534,10 +532,8 @@ author: @ecoslado
         this.status.params = $.extend(true, searchParams, params);
         this.status.params.query = query;
         this.status.params.filters = {};
-        console.log("INITIAL ", this.searchParams);
         if (!this.searchParams.query_name) {
           delete this.status.params.query_name;
-          console.log("query-name ", this.status.params.query_name);
         }
         this.status.currentPage = 1;
         this.status.firstQueryTriggered = true;
@@ -884,7 +880,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":87}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "0.17.5",
+    version: "0.17.6",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("handlebars"),
     Widget: _dereq_("./widget"),
