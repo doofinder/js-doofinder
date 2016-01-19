@@ -279,8 +279,8 @@ class Client
       for key, value of @sort
         querystring += encodeURI "&sort[#{key}]=#{value}"
 
-    return encodeURI querystring
-    
+    return querystring
+
   ###
   This method calls to /hit
   service for accounting the
