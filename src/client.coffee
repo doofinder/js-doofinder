@@ -4,7 +4,7 @@ author: @ecoslado
 2015 04 01
 ###
 
-http = require "http"
+httpLib = require "http"
 
 ###
 DfClient
@@ -146,6 +146,7 @@ class Client
         path: "/#{_this.version}/search?#{queryString}"
         headers: headers
 
+
       # Just for url with host:port
       if _this.url.split(':').length > 1
         options.host = _this.url.split(':')[0]
@@ -170,7 +171,7 @@ class Client
             return callback err, null
 
       # Here is where request is done and executed processResponse
-      req = http.request options, _this.__processResponse(callback)
+      req = httpLib.request options, _this.__processResponse(callback)
       req.end()
 
   ###
@@ -260,9 +261,10 @@ class Client
       # Terms filters
       if value.constructor == Array
         for elem in value
-          # Just cleans & character
-          cleaned = @__escapeChars(elem)
-          querystring += encodeURI("&filter[#{key}]=") + cleaned
+          # escapeChars encodes &#? characters
+          # those characters that encodeURI doesn't
+          segment = @__escapeChars encodeURI "filter[#{key}]=#{elem}"
+          querystring += "&#{segment}"
 
     # Adding sort options
     # See http://doofinder.com/en/developer/search-api#sort-parameters
@@ -305,7 +307,7 @@ class Client
       options.host = @url.split(':')[0]
       options.port = @url.split(':')[1]
     # Here is where request is done and executed processResponse
-    req = http.request options, @__processResponse(callback)
+    req = httpLib.request options, @__processResponse(callback)
     req.end()
 
   ###
@@ -332,7 +334,7 @@ class Client
       options.host = @url.split(':')[0]
       options.port = @url.split(':')[1]
     # Here is where request is done and executed processResponse
-    req = http.request options, @__processResponse(callback)
+    req = httpLib.request options, @__processResponse(callback)
     req.end()
 
   ###
