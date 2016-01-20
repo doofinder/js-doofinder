@@ -12,23 +12,23 @@ module.exports = (grunt) ->
             dest: 'lib/'
             ext: '.js'
           ]
-        
+
     exec:
       release:
-        'browserify lib/doofinder.js --standalone doofinder > dist/doofinder.js'      
+        'browserify lib/doofinder.js --standalone doofinder > dist/doofinder.js'
 
     mochaTest:
       release:
         options:
           reporter: 'nyan'
-        src: ['test/tests.coffee']
+        src: ['test/tests.coffee', 'test/test_widget.coffee']
 
     uglify:
       release:
         files:
           'dist/doofinder.min.js': ['dist/doofinder.js']
 
-    version:     
+    version:
       library:
         options:
           prefix: '\\s+version:\\s\"'
