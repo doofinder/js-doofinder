@@ -359,7 +359,7 @@ describe 'doofinder', ->
         res.should.to.be.deep.equal response
         done()
 
-    it 'hit', (done) ->
+    it 'options', (done) ->
       response =
         field: "value"
       scope = nock('http://fooserver')
@@ -369,9 +369,3 @@ describe 'doofinder', ->
       client.options (err, res) ->
         res.should.to.be.deep.equal response
         done()
-
-    it 'options', ->
-      a = 1
-
-    it '__processResponse', ->
-      a = 1
