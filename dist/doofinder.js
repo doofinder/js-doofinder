@@ -7,9 +7,9 @@ author: @ecoslado
  */
 
 (function() {
-  var Client, http;
+  var Client, httpLib;
 
-  http = _dereq_("http");
+  httpLib = _dereq_("http");
 
 
   /*
@@ -183,7 +183,7 @@ author: @ecoslado
             });
           }
         };
-        req = http.request(options, _this.__processResponse(callback));
+        req = httpLib.request(options, _this.__processResponse(callback));
         return req.end();
       });
     };
@@ -350,7 +350,7 @@ author: @ecoslado
         options.host = this.url.split(':')[0];
         options.port = this.url.split(':')[1];
       }
-      req = http.request(options, this.__processResponse(callback));
+      req = httpLib.request(options, this.__processResponse(callback));
       return req.end();
     };
 
@@ -384,7 +384,7 @@ author: @ecoslado
         options.host = this.url.split(':')[0];
         options.port = this.url.split(':')[1];
       }
-      req = http.request(options, this.__processResponse(callback));
+      req = httpLib.request(options, this.__processResponse(callback));
       return req.end();
     };
 

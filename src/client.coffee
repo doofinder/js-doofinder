@@ -4,7 +4,7 @@ author: @ecoslado
 2015 04 01
 ###
 
-http = require "http"
+httpLib = require "http"
 
 ###
 DfClient
@@ -172,7 +172,7 @@ class Client
             return callback err, null
 
       # Here is where request is done and executed processResponse
-      req = http.request options, _this.__processResponse(callback)
+      req = httpLib.request options, _this.__processResponse(callback)
       req.end()
 
   ###
@@ -303,7 +303,7 @@ class Client
       options.host = @url.split(':')[0]
       options.port = @url.split(':')[1]
     # Here is where request is done and executed processResponse
-    req = http.request options, @__processResponse(callback)
+    req = httpLib.request options, @__processResponse(callback)
     req.end()
 
   ###
@@ -330,7 +330,7 @@ class Client
       options.host = @url.split(':')[0]
       options.port = @url.split(':')[1]
     # Here is where request is done and executed processResponse
-    req = http.request options, @__processResponse(callback)
+    req = httpLib.request options, @__processResponse(callback)
     req.end()
 
   ###
