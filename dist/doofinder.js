@@ -150,7 +150,7 @@ author: @ecoslado
               _this.addFilter(filterKey, filterTerms);
             }
           } else if (paramKey === "sort") {
-            _this.sort = paramValue;
+            _this.setSort(paramValue);
           } else {
             _this.addParam(paramKey, paramValue);
           }
@@ -238,7 +238,7 @@ author: @ecoslado
     __escapeChars
     
     This method encodes just the chars
-    like &, ?, #. 
+    like &, ?, #.
     
     @param {String} word
      */
@@ -304,6 +304,8 @@ author: @ecoslado
             querystring += encodeURI("&sort[" + (this.sort.indexOf(value)) + "][" + facet + "]=" + term);
           }
         }
+      } else if (this.sort && this.sort.constructor === String) {
+        querystring += encodeURI("&sort=" + this.sort);
       } else if (this.sort && this.sort.constructor === Object) {
         ref4 = this.sort;
         for (key in ref4) {
@@ -336,7 +338,7 @@ author: @ecoslado
       }
       headers = {};
       if (this.apiKey) {
-        headers['api token'] = _this.apiKey;
+        headers['api token'] = this.apiKey;
       }
       options = {
         host: this.url,
@@ -370,7 +372,7 @@ author: @ecoslado
       }
       headers = {};
       if (this.apiKey) {
-        headers['api token'] = _this.apiKey;
+        headers['api token'] = this.apiKey;
       }
       options = {
         host: this.url,
@@ -883,7 +885,6 @@ author: @ecoslado
       delete params.rpp;
       delete params.query_counter;
       delete params.page;
-      console.log(params);
       return "" + prefix + (qs.stringify(params));
     };
 
