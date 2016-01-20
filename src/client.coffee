@@ -293,8 +293,9 @@ class Client
   ###
   hit: (dfid, query = "", callback = (err, res) ->) ->
     headers = {}
+
     if @apiKey
-        headers['api token'] = _this.apiKey
+        headers['api token'] = @apiKey
     options =
         host: @url
         path: "/#{@version}/hit/#{@hashid}/#{dfid}/#{encodeURIComponent(query)}?random=#{new Date().getTime()}"
@@ -320,7 +321,7 @@ class Client
   options: (callback = (err, res) ->) ->
     headers = {}
     if @apiKey
-        headers['api token'] = _this.apiKey
+        headers['api token'] = @apiKey
     options =
         host: @url
         path: "/#{@version}/options/#{@hashid}"
