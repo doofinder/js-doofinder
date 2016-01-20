@@ -110,7 +110,7 @@ class Client
     # Wrong call
     else
       throw new Error "A callback is required."
-    
+
     # Set default params
     params.page ?= 1
     params.rpp ?= 10
@@ -132,7 +132,7 @@ class Client
             _this.addFilter(filterKey, filterTerms)
 
         else if paramKey == "sort"
-          _this.sort = paramValue
+          _this.setSort(paramValue)
 
         else
           _this.addParam(paramKey, paramValue)
@@ -214,9 +214,9 @@ class Client
 
   ###
   __escapeChars
-  
+
   This method encodes just the chars
-  like &, ?, #. 
+  like &, ?, #.
 
   @param {String} word
   ###
@@ -243,6 +243,7 @@ class Client
     if @type and @type instanceof Array
       for key, value of @type
         querystring += encodeURI "&type=#{value}"
+
     else if @type and @type.constructor == String
       querystring += encodeURI "&type=#{@type}"
 
@@ -266,12 +267,15 @@ class Client
           querystring += "&#{segment}"
 
     # Adding sort options
-    
+    # See http://doofinder.com/en/developer/search-api#sort-parameters
     if @sort and @sort.constructor == Array
       for value in @sort
         for facet, term of value
           querystring += encodeURI "&sort[#{@sort.indexOf(value)}][#{facet}]=#{term}"
-    
+
+    else if @sort and @sort.constructor == String
+      querystring += encodeURI "&sort=#{@sort}"
+
 
     else if @sort and @sort.constructor == Object
       for key, value of @sort
@@ -291,8 +295,9 @@ class Client
   ###
   hit: (dfid, query = "", callback = (err, res) ->) ->
     headers = {}
+
     if @apiKey
-        headers['api token'] = _this.apiKey
+        headers['api token'] = @apiKey
     options =
         host: @url
         path: "/#{@version}/hit/#{@hashid}/#{dfid}/#{encodeURIComponent(query)}?random=#{new Date().getTime()}"
@@ -318,7 +323,7 @@ class Client
   options: (callback = (err, res) ->) ->
     headers = {}
     if @apiKey
-        headers['api token'] = _this.apiKey
+        headers['api token'] = @apiKey
     options =
         host: @url
         path: "/#{@version}/options/#{@hashid}"
