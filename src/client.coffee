@@ -261,6 +261,7 @@ class Client
         for elem in value
           # Just cleans & character
           cleaned = @__escapeChars(elem)
+          console.log cleaned
           querystring += encodeURI("&filter[#{key}]=") + cleaned
 
     # Adding sort options

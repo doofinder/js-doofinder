@@ -291,6 +291,7 @@ author: @ecoslado
           for (j = 0, len = value.length; j < len; j++) {
             elem = value[j];
             cleaned = this.__escapeChars(elem);
+            console.log(cleaned);
             querystring += encodeURI("&filter[" + key + "]=") + cleaned;
           }
         }
