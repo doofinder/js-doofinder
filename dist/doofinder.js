@@ -161,7 +161,6 @@ author: @ecoslado
           path: "/" + _this.version + "/search?" + queryString,
           headers: headers
         };
-        console.log("options.path ", options.path);
         if (_this.url.split(':').length > 1) {
           options.host = _this.url.split(':')[0];
           options.port = _this.url.split(':')[1];
@@ -312,7 +311,6 @@ author: @ecoslado
           querystring += encodeURI("&sort[" + key + "]=" + value);
         }
       }
-      console.log(querystring);
       return querystring;
     };
 
@@ -900,7 +898,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":87}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "0.17.8",
+    version: "0.17.9",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("handlebars"),
     Widget: _dereq_("./widget"),

@@ -146,7 +146,6 @@ class Client
         path: "/#{_this.version}/search?#{queryString}"
         headers: headers
 
-      console.log "options.path ", options.path
 
       # Just for url with host:port
       if _this.url.split(':').length > 1
@@ -261,7 +260,8 @@ class Client
       # Terms filters
       if value.constructor == Array
         for elem in value
-          # Just cleans & character
+          # escapeChars encodes &#? characters
+          # those characters that encodeURI doesn't
           segment = @__escapeChars encodeURI "filter[#{key}]=#{elem}"
           querystring += "&#{segment}"
 
@@ -276,7 +276,7 @@ class Client
     else if @sort and @sort.constructor == Object
       for key, value of @sort
         querystring += encodeURI "&sort[#{key}]=#{value}"
-    console.log querystring
+
     return querystring
 
   ###
