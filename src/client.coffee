@@ -262,9 +262,8 @@ class Client
       if value.constructor == Array
         for elem in value
           # Just cleans & character
-          cleaned = @__escapeChars(elem)
-          console.log cleaned
-          querystring += encodeURI("&filter[#{key}]=#{elem}")
+          segment = @__escapeChars encodeURI "filter[#{key}]=#{elem}"
+          querystring += "&#{segment}"
 
     # Adding sort options
     

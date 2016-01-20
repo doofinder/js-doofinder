@@ -263,7 +263,7 @@ author: @ecoslado
      */
 
     Client.prototype.makeQueryString = function() {
-      var cleaned, elem, facet, j, k, key, l, len, len1, querystring, ref, ref1, ref2, ref3, ref4, term, v, value;
+      var elem, facet, j, k, key, l, len, len1, querystring, ref, ref1, ref2, ref3, ref4, segment, term, v, value;
       querystring = encodeURI("hashid=" + this.hashid);
       if (this.type && this.type instanceof Array) {
         ref = this.type;
@@ -291,9 +291,8 @@ author: @ecoslado
         if (value.constructor === Array) {
           for (j = 0, len = value.length; j < len; j++) {
             elem = value[j];
-            cleaned = this.__escapeChars(elem);
-            console.log(cleaned);
-            querystring += encodeURI("&filter[" + key + "]=" + elem);
+            segment = this.__escapeChars(encodeURI("filter[" + key + "]=" + elem));
+            querystring += "&" + segment;
           }
         }
       }
