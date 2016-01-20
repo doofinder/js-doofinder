@@ -13,7 +13,7 @@ nock = require('nock')
 mock =
   request:
     hashid: "ffffffffffffffffffffffffffffffff"
-  api_key: "eu1-384fd8a73c7ff0859a5891f9f4083b1b9727f9c3"
+    api_key: "eu1-384fd8a73c7ff0859a5891f9f4083b1b9727f9c3"
   query: "iphone"
   sort:
     Object:
@@ -28,6 +28,11 @@ mock =
       page: 4
     null:
       rpp: null
+  filters:
+    color: ['blue', 'red']
+    price:
+      gte: 4.36
+      lt: 99
 
 # Test doofinder
 describe 'doofinder', ->
@@ -136,7 +141,7 @@ describe 'doofinder', ->
 
     it 'sanitizeQuery', ->
       # checks if words are longer than 55 chars and the whole query is longer than 255 chars
-      client = new doofinder.Client mock.request.hashid, mock.request.api_keys
+      client = new doofinder.Client mock.request.hashid, mock.request.api_key
       # checks valid query
       query = "hello world"
       sanitized = client._sanitizeQuery query, (query) -> return query
@@ -219,6 +224,7 @@ describe 'doofinder', ->
         res.should.to.be.deep.equal response
         done()
 
+    # SORT PARAMS
     it 'search with type and query', (done) ->
       response =
         field: "value"
@@ -276,6 +282,7 @@ describe 'doofinder', ->
         res.should.to.be.deep.equal response
         done()
 
+    # SINGLE PARAMS
     it 'search with type query and params (param valid of: valid, null)', (done) ->
       response =
         field: "value"
@@ -328,8 +335,40 @@ describe 'doofinder', ->
         res.should.to.be.deep.equal response
         done()
 
-    it 'hit', ->
-      a = 1
+    # FILTER PARAMS
+    it 'search with type query and filters', (done) ->
+      response =
+        field: "value"
+      scope = nock('http://fooserver')
+        .get('/5/search?hashid=ffffffffffffffffffffffffffffffff&type=product&page=1&rpp=10&query=querystring&filter%5Bcolor%5D=blue&filter%5Bcolor%5D=red&filter%5Bprice%5D%5Bgte%5D=4.36&filter%5Bprice%5D%5Blt%5D=99')
+        .reply(200, response)
+      client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
+      client.search 'querystring', {filters: mock.filters}, (err, res) ->
+        res.should.to.be.deep.equal response
+        done()
+
+    it 'hit', (done) ->
+      response =
+        field: "value"
+      scope = nock('http://fooserver')
+        .filteringPath(/random=[^&]*/g, 'random=XXX')
+        .get('/5/hit/ffffffffffffffffffffffffffffffff/666/querystring?random=XXX')
+        .reply(200, response)
+      client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
+      client.hit 666, 'querystring', (err, res) ->
+        res.should.to.be.deep.equal response
+        done()
+
+    it 'hit', (done) ->
+      response =
+        field: "value"
+      scope = nock('http://fooserver')
+        .get('/5/options/ffffffffffffffffffffffffffffffff')
+        .reply(200, response)
+      client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
+      client.options (err, res) ->
+        res.should.to.be.deep.equal response
+        done()
 
     it 'options', ->
       a = 1
