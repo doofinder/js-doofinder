@@ -899,7 +899,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":87}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "0.17.9",
+    version: "0.17.10",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("handlebars"),
     Widget: _dereq_("./widget"),
