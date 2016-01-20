@@ -161,6 +161,7 @@ author: @ecoslado
           path: "/" + _this.version + "/search?" + queryString,
           headers: headers
         };
+        console.log("options.path ", options.path);
         if (_this.url.split(':').length > 1) {
           options.host = _this.url.split(':')[0];
           options.port = _this.url.split(':')[1];
@@ -312,6 +313,7 @@ author: @ecoslado
           querystring += encodeURI("&sort[" + key + "]=" + value);
         }
       }
+      console.log(querystring);
       return querystring;
     };
 

@@ -146,6 +146,8 @@ class Client
         path: "/#{_this.version}/search?#{queryString}"
         headers: headers
 
+      console.log "options.path ", options.path
+
       # Just for url with host:port
       if _this.url.split(':').length > 1
         options.host = _this.url.split(':')[0]
@@ -275,7 +277,7 @@ class Client
     else if @sort and @sort.constructor == Object
       for key, value of @sort
         querystring += encodeURI "&sort[#{key}]=#{value}"
-    
+    console.log querystring
     return querystring
 
   ###
