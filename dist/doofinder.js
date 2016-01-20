@@ -292,7 +292,7 @@ author: @ecoslado
             elem = value[j];
             cleaned = this.__escapeChars(elem);
             console.log(cleaned);
-            querystring += encodeURI("&filter[" + key + "]=") + cleaned;
+            querystring += encodeURI("&filter[" + key + "]=") + decodeURI(cleaned);
           }
         }
       }
