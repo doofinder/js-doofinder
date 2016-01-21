@@ -93,11 +93,9 @@ class Controller
       searchParams = $.extend true,
         {},
         @searchParams
-      console.log searchParams 
       @status.params = $.extend true, searchParams, params
-      console.log @status.params
       @status.params.query = query
-      @status.params.filters = {}
+      @status.params.filters = @searchParams.filters || {}
       if not @searchParams.query_name
         delete @status.params.query_name
       @status.currentPage = 1
