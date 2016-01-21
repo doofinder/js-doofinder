@@ -548,9 +548,7 @@ author: @ecoslado
       }
       if (query) {
         searchParams = $.extend(true, {}, this.searchParams);
-        console.log(this.searchParams);
         this.status.params = $.extend(true, searchParams, params);
-        console.log(this.status.params);
         this.status.params.query = query;
         this.status.params.filters = this.searchParams.filters || {};
         if (!this.searchParams.query_name) {
@@ -901,7 +899,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":87}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "0.17.10",
+    version: "1.0.0",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("handlebars"),
     Widget: _dereq_("./widget"),
