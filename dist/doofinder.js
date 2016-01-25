@@ -1003,23 +1003,22 @@ author: @ecoslado
     }
     if (!parameters) {
       parameters = {
-        queryParameter: '',
-        extraParameters: {}
+        queryParam: '',
+        extraParams: {}
       };
     }
     helpers = {
       'url-params': function(url, query) {
         var i, paramsArray, paramsFinal, params_str;
         paramsFinal = url;
-        console.log(parameters);
         if (paramsFinal) {
           paramsArray = [];
-          if (parameters.queryParameter) {
-            paramsArray.push(parameters.queryParameter + '=' + query);
+          if (parameters.queryParam) {
+            paramsArray.push(parameters.queryParam + '=' + query);
           }
-          if (parameters.extraParameters) {
-            for (i in parameters.extraParameters) {
-              paramsArray.push(i + '=' + parameters.extraParameters[i]);
+          if (parameters.extraParams) {
+            for (i in parameters.extraParams) {
+              paramsArray.push(i + '=' + parameters.extraParams[i]);
             }
           }
           if (paramsArray.length) {

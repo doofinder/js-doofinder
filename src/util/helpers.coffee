@@ -15,23 +15,23 @@ addHelpers = (Handlebars, parameters, currency, translations, extraHelpers) ->
   
   if !parameters
     parameters =
-      queryParameter: ''
-      extraParameters: {}
+      queryParam: ''
+      extraParams: {}
   
   
   helpers = 
     'url-params': (url, query) ->
       paramsFinal = url
-      console.log parameters
+
       if paramsFinal
         paramsArray = []
-        # if addQueryParameter, add it to the list
-        if parameters.queryParameter
-          paramsArray.push parameters.queryParameter + '=' + query
+        # if queryParam, add it to the list
+        if parameters.queryParam
+          paramsArray.push parameters.queryParam + '=' + query
         # if addParameters, add them to the list
-        if parameters.extraParameters
-          for i of parameters.extraParameters
-            paramsArray.push i + '=' + parameters.extraParameters[i]
+        if parameters.extraParams
+          for i of parameters.extraParams
+            paramsArray.push i + '=' + parameters.extraParams[i]
         if paramsArray.length
           params_str = paramsArray.join('&')
           if paramsFinal.match(/\?/)
