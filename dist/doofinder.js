@@ -1008,14 +1008,14 @@ author: @ecoslado
       };
     }
     helpers = {
-      'url-params': function(options) {
+      'url-params': function(url, query) {
         var i, paramsArray, paramsFinal, params_str;
-        paramsFinal = options.fn(this);
+        paramsFinal = url;
         console.log(parameters);
         if (paramsFinal) {
           paramsArray = [];
           if (parameters.queryParameter) {
-            paramsArray.push(parameters.queryParameter + '=' + json.query);
+            paramsArray.push(parameters.queryParameter + '=' + query);
           }
           if (parameters.extraParameters) {
             for (i in parameters.extraParameters) {
