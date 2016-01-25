@@ -557,9 +557,10 @@ author: @ecoslado
         this.status.currentPage = 1;
         this.status.firstQueryTriggered = true;
         this.status.lastPageReached = false;
-        this.trigger("df:search", [this.status.params]);
-        return this.__search();
+        this.__search();
       }
+      console.log("TRIGGER");
+      return this.trigger("df:search", [this.status.params]);
     };
 
 
