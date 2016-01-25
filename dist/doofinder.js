@@ -559,7 +559,6 @@ author: @ecoslado
         this.status.lastPageReached = false;
         this.__search();
       }
-      console.log("TRIGGER");
       return this.trigger("df:search", [this.status.params]);
     };
 
@@ -900,7 +899,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":87}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "1.0.0",
+    version: "1.0.1",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("handlebars"),
     Widget: _dereq_("./widget"),

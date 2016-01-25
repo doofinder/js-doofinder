@@ -102,7 +102,6 @@ class Controller
       @status.firstQueryTriggered = true
       @status.lastPageReached = false
       @__search()
-    console.log "TRIGGER"
     @trigger "df:search", [@status.params]
 
   ###
