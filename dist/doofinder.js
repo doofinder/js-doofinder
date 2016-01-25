@@ -1011,6 +1011,7 @@ author: @ecoslado
       'url-params': function(options) {
         var i, paramsArray, paramsFinal, params_str;
         paramsFinal = options.fn(this);
+        console.log(parameters);
         if (paramsFinal) {
           paramsArray = [];
           if (parameters.queryParameter) {

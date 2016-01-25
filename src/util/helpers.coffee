@@ -22,6 +22,7 @@ addHelpers = (Handlebars, parameters, currency, translations, extraHelpers) ->
   helpers = 
     'url-params': (options) ->
       paramsFinal = options.fn(this)
+      console.log parameters
       if paramsFinal
         paramsArray = []
         # if addQueryParameter, add it to the list
