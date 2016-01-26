@@ -68,7 +68,7 @@ class RangeFacet extends Display
       if res and res.filter and res.filter.range and res.filter.range[@name] and parseInt(res.filter.range[@name].gte)
         range.from = parseInt(res.filter.range[@name].gte, 10)  
               
-      if res and res.filter and res.filter.range and res.filter.range[@name] and parseInt(res.filter.range[@name].lt)
+      if res and res.filter and res.filter.range and res.filter.range[@name] and parseInt(res.filter.range[@name].lte)
         range.to = parseInt(res.filter.range[@name].lte, 10)
 
       facet = $("input[data-facet='#{@name}']")

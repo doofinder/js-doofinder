@@ -1558,7 +1558,7 @@ them. Manages the filtering.
         if (res && res.filter && res.filter.range && res.filter.range[this.name] && parseInt(res.filter.range[this.name].gte)) {
           range.from = parseInt(res.filter.range[this.name].gte, 10);
         }
-        if (res && res.filter && res.filter.range && res.filter.range[this.name] && parseInt(res.filter.range[this.name].lt)) {
+        if (res && res.filter && res.filter.range && res.filter.range[this.name] && parseInt(res.filter.range[this.name].lte)) {
           range.to = parseInt(res.filter.range[this.name].lte, 10);
         }
         facet = $("input[data-facet='" + this.name + "']");
