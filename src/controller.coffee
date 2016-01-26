@@ -95,7 +95,10 @@ class Controller
         @searchParams
       @status.params = $.extend true, searchParams, params
       @status.params.query = query
-      @status.params.filters = @searchParams.filters || {}
+      @status.params.filters = $.extend true,
+        {},
+        @searchParams.filters || {}
+
       if not @searchParams.query_name
         delete @status.params.query_name
       @status.currentPage = 1
@@ -225,19 +228,17 @@ class Controller
   ###
   removeFilter: (key, value) ->
     @status.currentPage = 1
-    if not @status.params.filters and not @status.params.filters[key]
-      # DO NOTHING
+    if @status.params.filters and @status.params.filters[key]
+      if @status.params.filters[key].constructor == Object
+        delete @status.params.filters[key]
 
-    else if @status.params.filters[key].constructor == Object
-      delete @status.params.filters[key]
-
-    else if @status.params.filters[key].constructor == Array 
-      index = @status.params.filters[key].indexOf(value)
-      
-      while index >= 0
-        @status.params.filters[key].splice(index, 1)
-        # Just in case it is repeated
+      else if @status.params.filters[key].constructor == Array 
         index = @status.params.filters[key].indexOf(value)
+      
+        while index >= 0
+          @status.params.filters[key].splice(index, 1)
+          # Just in case it is repeated
+          index = @status.params.filters[key].indexOf(value)
 
     # Removes a predefined filter when it is deselected.
     if @searchParams.filters and @searchParams.filters[key]

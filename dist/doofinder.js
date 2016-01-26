@@ -550,7 +550,7 @@ author: @ecoslado
         searchParams = $.extend(true, {}, this.searchParams);
         this.status.params = $.extend(true, searchParams, params);
         this.status.params.query = query;
-        this.status.params.filters = this.searchParams.filters || {};
+        this.status.params.filters = $.extend(true, {}, this.searchParams.filters || {});
         if (!this.searchParams.query_name) {
           delete this.status.params.query_name;
         }
@@ -712,15 +712,15 @@ author: @ecoslado
     Controller.prototype.removeFilter = function(key, value) {
       var index, results;
       this.status.currentPage = 1;
-      if (!this.status.params.filters && !this.status.params.filters[key]) {
-
-      } else if (this.status.params.filters[key].constructor === Object) {
-        delete this.status.params.filters[key];
-      } else if (this.status.params.filters[key].constructor === Array) {
-        index = this.status.params.filters[key].indexOf(value);
-        while (index >= 0) {
-          this.status.params.filters[key].splice(index, 1);
+      if (this.status.params.filters && this.status.params.filters[key]) {
+        if (this.status.params.filters[key].constructor === Object) {
+          delete this.status.params.filters[key];
+        } else if (this.status.params.filters[key].constructor === Array) {
           index = this.status.params.filters[key].indexOf(value);
+          while (index >= 0) {
+            this.status.params.filters[key].splice(index, 1);
+            index = this.status.params.filters[key].indexOf(value);
+          }
         }
       }
       if (this.searchParams.filters && this.searchParams.filters[key]) {
