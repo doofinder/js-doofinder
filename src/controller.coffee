@@ -170,6 +170,7 @@ class Controller
       @status.params.filters = {}
     if value.constructor == Object
       @status.params.filters[key] = value
+      console.log @status.params.filters[key]
     else if not @status.params.filters[key]
       @status.params.filters[key] = [value]
     else
