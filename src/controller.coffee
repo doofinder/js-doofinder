@@ -239,6 +239,20 @@ class Controller
         # Just in case it is repeated
         index = @status.params.filters[key].indexOf(value)
 
+    # Removes a predefined filter when it is deselected.
+    if @searchParams.filters and @searchParams.filters[key]
+      if @searchParams.filters[key].constructor == Object
+        delete @searchParams.filters[key]
+      
+      else if @searchParams.filters[key].constructor == Array 
+        index = @searchParams.filters[key].indexOf(value)
+
+        while index >= 0
+          @searchParams.filters[key].splice(index, 1)
+          # Just in case it is repeated
+          index = @searchParams.filters[key].indexOf(value)
+
+
   ###
   setSearchParam
   
