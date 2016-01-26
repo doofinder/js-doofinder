@@ -58,7 +58,7 @@ class RangeFacet extends Display
         grid: true
         grid_num: 2
         onFinish: (data) ->
-          _this.controller.addFilter(_this.name, {'lt': data.to, 'gte': data.from})
+          _this.controller.addFilter(_this.name, {'lte': data.to, 'gte': data.from})
           _this.controller.refresh()
 
       range = $.extend true,
@@ -69,7 +69,7 @@ class RangeFacet extends Display
         range.from = parseInt(res.filter.range[@name].gte, 10)  
               
       if res and res.filter and res.filter.range and res.filter.range[@name] and parseInt(res.filter.range[@name].lt)
-        range.to = parseInt(res.filter.range[@name].lt, 10)
+        range.to = parseInt(res.filter.range[@name].lte, 10)
 
       facet = $("input[data-facet='#{@name}']")
       facet.ionRangeSlider(range)

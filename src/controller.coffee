@@ -168,8 +168,14 @@ class Controller
     @status.currentPage = 1
     if not @status.params.filters
       @status.params.filters = {}
+    # Range filters  
     if value.constructor == Object
       @status.params.filters[key] = value
+      # Range predefined filters are removed when
+      # the user interacts
+      if @searchParams.filters and @searchParams.filters[key]
+        delete @searchParams.filters[key]
+    # Term filter
     else if not @status.params.filters[key]
       @status.params.filters[key] = [value]
     else

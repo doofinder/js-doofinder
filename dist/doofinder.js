@@ -638,7 +638,10 @@ author: @ecoslado
         this.status.params.filters = {};
       }
       if (value.constructor === Object) {
-        return this.status.params.filters[key] = value;
+        this.status.params.filters[key] = value;
+        if (this.searchParams.filters && this.searchParams.filters[key]) {
+          return delete this.searchParams.filters[key];
+        }
       } else if (!this.status.params.filters[key]) {
         return this.status.params.filters[key] = [value];
       } else {
@@ -1545,7 +1548,7 @@ them. Manages the filtering.
           grid_num: 2,
           onFinish: function(data) {
             _this.controller.addFilter(_this.name, {
-              'lt': data.to,
+              'lte': data.to,
               'gte': data.from
             });
             return _this.controller.refresh();
@@ -1556,7 +1559,7 @@ them. Manages the filtering.
           range.from = parseInt(res.filter.range[this.name].gte, 10);
         }
         if (res && res.filter && res.filter.range && res.filter.range[this.name] && parseInt(res.filter.range[this.name].lt)) {
-          range.to = parseInt(res.filter.range[this.name].lt, 10);
+          range.to = parseInt(res.filter.range[this.name].lte, 10);
         }
         facet = $("input[data-facet='" + this.name + "']");
         facet.ionRangeSlider(range);
