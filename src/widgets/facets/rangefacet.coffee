@@ -49,9 +49,9 @@ class RangeFacet extends Display
       range = 
         type: "double",
         min: parseInt(res.facets[@name].ranges[0].min, 10)
-        from: parseInt(res.facets[@name].ranges[0].from, 10)
+        from: parseInt(res.facets[@name].ranges[0].min, 10)
         max: parseInt(res.facets[@name].ranges[0].max, 10)
-        to: parseInt(res.facets[@name].ranges[0].to, 10)
+        to: parseInt(res.facets[@name].ranges[0].max, 10)
         force_edges: true
         prettify_enabled: true
         hide_min_max: true
