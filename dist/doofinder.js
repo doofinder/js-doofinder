@@ -1535,9 +1535,9 @@ them. Manages the filtering.
         range = {
           type: "double",
           min: parseInt(res.facets[this.name].ranges[0].min, 10),
-          from: parseInt(res.facets[this.name].ranges[0].min, 10),
+          from: parseInt(res.facets[this.name].ranges[0].from, 10),
           max: parseInt(res.facets[this.name].ranges[0].max, 10),
-          to: parseInt(res.facets[this.name].ranges[0].max, 10),
+          to: parseInt(res.facets[this.name].ranges[0].to, 10),
           force_edges: true,
           prettify_enabled: true,
           hide_min_max: true,
