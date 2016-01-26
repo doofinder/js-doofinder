@@ -33,6 +33,7 @@ class Controller
     
     # Initial status
     @searchParams = $.extend true, searchParams, {query_counter: 0}
+    console.log "SEARCH PARAMS ", @searchParams
     @reset()
 
   ###
@@ -93,6 +94,7 @@ class Controller
       searchParams = $.extend true,
         {},
         @searchParams
+      console.log "SEARCH 1: ", searchParams
       @status.params = $.extend true, searchParams, params
       @status.params.query = query
       @status.params.filters = $.extend true,
@@ -104,6 +106,7 @@ class Controller
       @status.currentPage = 1
       @status.firstQueryTriggered = true
       @status.lastPageReached = false
+      console.log "STATUS: ", @status
       @__search()
     @trigger "df:search", [@status.params]
 

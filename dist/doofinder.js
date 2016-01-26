@@ -475,6 +475,7 @@ author: @ecoslado
       this.searchParams = $.extend(true, searchParams, {
         query_counter: 0
       });
+      console.log("SEARCH PARAMS ", this.searchParams);
       this.reset();
     }
 
@@ -548,6 +549,7 @@ author: @ecoslado
       }
       if (query) {
         searchParams = $.extend(true, {}, this.searchParams);
+        console.log("SEARCH 1: ", searchParams);
         this.status.params = $.extend(true, searchParams, params);
         this.status.params.query = query;
         this.status.params.filters = $.extend(true, {}, this.searchParams.filters || {});
@@ -557,6 +559,7 @@ author: @ecoslado
         this.status.currentPage = 1;
         this.status.firstQueryTriggered = true;
         this.status.lastPageReached = false;
+        console.log("STATUS: ", this.status);
         this.__search();
       }
       return this.trigger("df:search", [this.status.params]);
