@@ -39,7 +39,7 @@ class RangeFacet extends Display
       throw Error "Error in RangeFacet: #{@name} facet is not a range facet."
 
     _this = this
-    if res.total > 0
+    if res.facets[@name].ranges[0].count > 1
       context = $.extend true, 
         name: @name, 
         @extraContext || {}
