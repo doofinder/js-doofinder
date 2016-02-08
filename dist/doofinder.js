@@ -913,7 +913,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":87}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "1.0.4",
+    version: "1.0.5",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("handlebars"),
     Widget: _dereq_("./widget"),
@@ -1529,7 +1529,6 @@ them. Manages the filtering.
         throw Error("Error in RangeFacet: " + this.name + " facet is not a range facet.");
       }
       _this = this;
-      console.log(res.facets[this.name].ranges[0].count);
       if (res.facets[this.name].ranges[0].count > 1) {
         context = $.extend(true, {
           name: this.name
