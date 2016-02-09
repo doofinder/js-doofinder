@@ -51,6 +51,7 @@ class Controller
 
     # To avoid past queries
     # we'll check the query_counter
+    console.log "__search", @status.params.query_counter
     @status.params.query_counter++
     params = @status.params
     params.page = @status.currentPage
@@ -309,35 +310,6 @@ class Controller
   options: (callback) ->
     @client.options callback
 
-  ###
-  sendToGA
-  
-  Send the a command to Google Analytics
-
-  @param {Object} gaCommand: the command for GA 
-    eventCategory: "xxx" 
-    eventLabel: "xxx" 
-    eventAction: "xxx"
-  ###
-  sendToGA: (gaCommand) ->
-    
-    if window._gaq and window._gaq.push
-      # Classic Analytics
-      window._gaq.push ['_trackEvent', gaCommand['eventCategory'],
-        gaCommand['eventAction'],
-        gaCommand['eventLabel']]
-
-      if gaCommand['eventAction'].indexOf('search') == 0  # also send pageview to count on search analytics
-        window._gaq.push(['_trackPageview', '/doofinder/search/' + @hashid + '?query=' + gaCommand['eventLabel']])
-    else
-      # Universal Analytics
-      ga = (window[window.GoogleAnalyticsObject] || window.ga)
-      if (ga and ga.getAll)
-        # http://stackoverflow.com/q/28765806/316414
-        trackerName = ga.getAll()[0].get('name')
-        ga(trackerName + '.send', 'event', gaCommand)
-        if gaCommand['eventAction'].indexOf('search') == 0  # also send pageview to count on search analytics
-          ga(trackerName + '.send', 'pageview', '/doofinder/search/' + @hashid + '?query=' + gaCommand['eventLabel'])
 
   ###
   bind
@@ -378,6 +350,7 @@ class Controller
     @status.params = $.extend true,
       searchParams,
       qs.parse(queryString.replace("#{prefix}", "")) || {}
+    console.log "SET STATUS FROM STRING"  
     @status.params.query_counter = 1
     @status.currentPage = 1
 
@@ -394,11 +367,12 @@ class Controller
     params = $.extend true,
       {},
       @status.params
-
+    console.log "STATUS QUERY STRING"
     delete params.transformer
     delete params.rpp
     delete params.query_counter
     delete params.page
+    console.log @status.params.query_counter
 
 
     return "#{prefix}#{qs.stringify(params)}"

@@ -497,6 +497,7 @@ author: @ecoslado
       if (next == null) {
         next = false;
       }
+      console.log("__search", this.status.params.query_counter);
       this.status.params.query_counter++;
       params = this.status.params;
       params.page = this.status.currentPage;
@@ -802,37 +803,6 @@ author: @ecoslado
 
 
     /*
-    sendToGA
-    
-    Send the a command to Google Analytics
-    
-    @param {Object} gaCommand: the command for GA 
-      eventCategory: "xxx" 
-      eventLabel: "xxx" 
-      eventAction: "xxx"
-     */
-
-    Controller.prototype.sendToGA = function(gaCommand) {
-      var ga, trackerName;
-      if (window._gaq && window._gaq.push) {
-        window._gaq.push(['_trackEvent', gaCommand['eventCategory'], gaCommand['eventAction'], gaCommand['eventLabel']]);
-        if (gaCommand['eventAction'].indexOf('search') === 0) {
-          return window._gaq.push(['_trackPageview', '/doofinder/search/' + this.hashid + '?query=' + gaCommand['eventLabel']]);
-        }
-      } else {
-        ga = window[window.GoogleAnalyticsObject] || window.ga;
-        if (ga && ga.getAll) {
-          trackerName = ga.getAll()[0].get('name');
-          ga(trackerName + '.send', 'event', gaCommand);
-          if (gaCommand['eventAction'].indexOf('search') === 0) {
-            return ga(trackerName + '.send', 'pageview', '/doofinder/search/' + this.hashid + '?query=' + gaCommand['eventLabel']);
-          }
-        }
-      }
-    };
-
-
-    /*
     bind
     
     Method to add and event listener
@@ -876,6 +846,7 @@ author: @ecoslado
       this.status.lastPageReached = false;
       searchParams = $.extend(true, {}, this.searchParams || {});
       this.status.params = $.extend(true, searchParams, qs.parse(queryString.replace("" + prefix, "")) || {});
+      console.log("SET STATUS FROM STRING");
       this.status.params.query_counter = 1;
       this.status.currentPage = 1;
       this.refresh();
@@ -896,10 +867,12 @@ author: @ecoslado
         prefix = "#/search/";
       }
       params = $.extend(true, {}, this.status.params);
+      console.log("STATUS QUERY STRING");
       delete params.transformer;
       delete params.rpp;
       delete params.query_counter;
       delete params.page;
+      console.log(this.status.params.query_counter);
       return "" + prefix + (qs.stringify(params));
     };
 
