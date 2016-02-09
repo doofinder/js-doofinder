@@ -370,7 +370,6 @@ class Controller
     console.log "STATUS QUERY STRING"
     delete params.transformer
     delete params.rpp
-    delete params.query_counter
     delete params.page
     console.log "EN QUERY_STRING", @status.params.query_counter
 
