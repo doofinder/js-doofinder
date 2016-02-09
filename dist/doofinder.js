@@ -816,10 +816,10 @@ author: @ecoslado
       if (window._gaq && window._gaq.push) {
         window._gaq.push(['_trackEvent', gaCommand['eventCategory'], gaCommand['eventAction'], gaCommand['eventLabel']]);
         if (gaCommand['eventAction'].indexOf('search') === 0) {
-          window._gaq.push(['_trackPageview', '/doofinder/search/' + options.hashid + '?query=' + gaCommand['eventLabel']]);
-        } else {
-          ga = window[window.GoogleAnalyticsObject] || window.ga;
+          return window._gaq.push(['_trackPageview', '/doofinder/search/' + options.hashid + '?query=' + gaCommand['eventLabel']]);
         }
+      } else {
+        ga = window[window.GoogleAnalyticsObject] || window.ga;
         if (ga && ga.getAll) {
           trackerName = ga.getAll()[0].get('name');
           ga(trackerName + '.send', 'event', gaCommand);
