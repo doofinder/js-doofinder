@@ -227,13 +227,14 @@ class Controller
   @api public
   ###
   reset: () ->
+    queryCounter = @status.params.query_counter || 1
     @status =
       params: @searchParams
       currentPage: 0
       firstQueryTriggered: false
       lastPageReached: false
 
-    @status.params.query_counter ?= 1
+    @status.params.query_counter = queryCounter
 
     if @searchParams.query
       @status.params.query = ''

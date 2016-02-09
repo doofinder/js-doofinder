@@ -690,16 +690,15 @@ author: @ecoslado
      */
 
     Controller.prototype.reset = function() {
-      var base;
+      var queryCounter;
+      queryCounter = this.status.params.query_counter || 1;
       this.status = {
         params: this.searchParams,
         currentPage: 0,
         firstQueryTriggered: false,
         lastPageReached: false
       };
-      if ((base = this.status.params).query_counter == null) {
-        base.query_counter = 1;
-      }
+      this.status.params.query_counter = queryCounter;
       if (this.searchParams.query) {
         return this.status.params.query = '';
       }
