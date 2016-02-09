@@ -69,6 +69,7 @@ class Controller
       _this.trigger "df:results_received", [res]
       # Whe show the results only when query counter
       # belongs to a the present request
+      console.log "MIDDLE: ", _this.status.params.query_counter
       if res.query_counter == _this.status.params.query_counter
         for widget in _this.widgets
           if next
