@@ -69,14 +69,12 @@ class Controller
       _this.trigger "df:results_received", [res]
       # Whe show the results only when query counter
       # belongs to a the present request
-      console.log "MIDDLE: ", _this.status.params.query_counter
       if res.query_counter == _this.status.params.query_counter
         for widget in _this.widgets
           if next
             widget.renderNext res
           else
             widget.render res
-      console.log "AFTER: ", _this.status.params.query_counter
       
   ### 
   __search wrappers
@@ -93,7 +91,7 @@ class Controller
   ###
   search: (query, params={}) ->
     
-    console.log "PREV: ", @status.params.query_counter
+    console.log "PREV: ", @status.params
     if query
       searchParams = $.extend true,
         {},
