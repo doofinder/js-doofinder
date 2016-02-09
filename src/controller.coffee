@@ -94,7 +94,7 @@ class Controller
       searchParams = $.extend true,
         {},
         @searchParams
-      queryCounter = @status.params.query_counter
+      queryCounter = @status.params.query_counter || 1
       
       # Reset @status.params
       @status.params = $.extend true, searchParams, params

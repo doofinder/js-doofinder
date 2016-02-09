@@ -547,7 +547,7 @@ author: @ecoslado
       }
       if (query) {
         searchParams = $.extend(true, {}, this.searchParams);
-        queryCounter = this.status.params.query_counter;
+        queryCounter = this.status.params.query_counter || 1;
         this.status.params = $.extend(true, searchParams, params);
         this.status.params.query = query;
         this.status.params.filters = $.extend(true, {}, this.searchParams.filters || {});
