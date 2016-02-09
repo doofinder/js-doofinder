@@ -517,7 +517,7 @@ author: @ecoslado
             }
           }
         }
-        console.log("COUNTER: ", this.status.params.query_counter);
+        console.log("COUNTER: ", _this.status.params.query_counter);
         return console.log(this.status.params);
       });
     };
@@ -545,7 +545,6 @@ author: @ecoslado
       }
       if (query) {
         searchParams = $.extend(true, {}, this.searchParams);
-        console.log("PREVIEW: ", this.status.params);
         if (this.status.params.query_counter) {
           queryCounter = this.status.params.query_counter;
         } else {

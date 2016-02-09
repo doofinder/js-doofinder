@@ -51,11 +51,14 @@ class Controller
     # we'll check the query_counter
     console.log @status.params.query_counter
     @status.params.query_counter++
+    
     params = $.extend true,
       {},
       @status.params || {}
+    
     params.page = @status.currentPage
     _this = this
+    
     @client.search params.query, params, (err, res) ->
       # I check if I reached the last page.    
       if res.results.length < _this.status.params.rpp
@@ -73,7 +76,7 @@ class Controller
             widget.renderNext res
           else
             widget.render res
-      console.log "COUNTER: ", @status.params.query_counter
+      console.log "COUNTER: ", _this.status.params.query_counter
       console.log @status.params
         
   
@@ -96,7 +99,6 @@ class Controller
       searchParams = $.extend true,
         {},
         @searchParams
-      console.log "PREVIEW: ", @status.params
 
       if @status.params.query_counter
         queryCounter = @status.params.query_counter
