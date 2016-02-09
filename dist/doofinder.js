@@ -813,6 +813,8 @@ author: @ecoslado
 
     Controller.prototype.sendToGA = function(gaCommand) {
       var ga, trackerName;
+      console.log("GA call");
+      console.log(gaCommand);
       if (window._gaq && window._gaq.push) {
         window._gaq.push(['_trackEvent', gaCommand['eventCategory'], gaCommand['eventAction'], gaCommand['eventLabel']]);
         if (gaCommand['eventAction'].indexOf('search') === 0) {

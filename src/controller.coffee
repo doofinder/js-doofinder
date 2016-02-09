@@ -319,6 +319,8 @@ class Controller
     eventAction: "xxx"
   ###
   sendToGA: (gaCommand) ->
+    console.log "GA call"
+    console.log gaCommand
     if window._gaq and window._gaq.push
       # Classic Analytics
       window._gaq.push ['_trackEvent', gaCommand['eventCategory'],
