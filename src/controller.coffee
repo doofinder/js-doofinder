@@ -34,7 +34,7 @@ class Controller
 
     @status = $.extend true,
       {},
-      searchParams
+      @searchParams
     
     @reset()
 
