@@ -471,7 +471,9 @@ author: @ecoslado
       } else if (widgets) {
         this.addWidget(widgets);
       }
-      this.status = $.extend(true, {}, this.searchParams);
+      this.status = $.extend(true, {}, {
+        params: this.searchParams
+      });
       this.reset();
     }
 
