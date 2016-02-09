@@ -495,6 +495,7 @@ author: @ecoslado
       if (next == null) {
         next = false;
       }
+      console.log(this.status.params.query_counter);
       this.status.params.query_counter++;
       params = this.status.params;
       params.page = this.status.currentPage;

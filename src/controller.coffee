@@ -51,6 +51,7 @@ class Controller
 
     # To avoid past queries
     # we'll check the query_counter
+    console.log @status.params.query_counter
     @status.params.query_counter++
     params = @status.params
     params.page = @status.currentPage
