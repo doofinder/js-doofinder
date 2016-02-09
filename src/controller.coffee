@@ -21,7 +21,7 @@ class Controller
   @param {Object} searchParams
   @api public
   ###
-  constructor: (client, widgets, searchParams = {}) ->
+  constructor: (client, widgets, @searchParams = {}) ->
     @client = client
     @hashid = client.hashid # Publish hashid
     @widgets = []
@@ -32,8 +32,6 @@ class Controller
     else if widgets
       @addWidget(widgets)
     
-    # Initial status
-    @searchParams = searchParams#$.extend true, searchParams, {query_counter: 0}
     @reset()
 
   ###
@@ -95,6 +93,7 @@ class Controller
       searchParams = $.extend true,
         {},
         @searchParams
+      
       if @status.params.query_counter
         queryCounter = @status.params.query_counter
       else
@@ -110,10 +109,12 @@ class Controller
 
       if not @searchParams.query_name
         delete @status.params.query_name
+      
       @status.currentPage = 1
       @status.firstQueryTriggered = true
       @status.lastPageReached = false
       @__search()
+    
     @trigger "df:search", [@status.params]
 
   ###

@@ -457,11 +457,9 @@ author: @ecoslado
     @param {Object} searchParams
     @api public
      */
-    function Controller(client, widgets, searchParams) {
+    function Controller(client, widgets, searchParams1) {
       var i, len, widget;
-      if (searchParams == null) {
-        searchParams = {};
-      }
+      this.searchParams = searchParams1 != null ? searchParams1 : {};
       this.client = client;
       this.hashid = client.hashid;
       this.widgets = [];
@@ -473,7 +471,6 @@ author: @ecoslado
       } else if (widgets) {
         this.addWidget(widgets);
       }
-      this.searchParams = searchParams;
       this.reset();
     }
 
