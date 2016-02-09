@@ -492,13 +492,12 @@ author: @ecoslado
       if (next == null) {
         next = false;
       }
-      console.log(this.status.params.query_counter);
       this.status.params.query_counter++;
       params = $.extend(true, {}, this.status.params || {});
       params.page = this.status.currentPage;
       _this = this;
       return this.client.search(params.query, params, function(err, res) {
-        var i, len, ref, widget;
+        var i, len, ref, results, widget;
         if (res.results.length < _this.status.params.rpp) {
           _this.status.lastPageReached = true;
         }
@@ -508,17 +507,17 @@ author: @ecoslado
         _this.trigger("df:results_received", [res]);
         if (res.query_counter === _this.status.params.query_counter) {
           ref = _this.widgets;
+          results = [];
           for (i = 0, len = ref.length; i < len; i++) {
             widget = ref[i];
             if (next) {
-              widget.renderNext(res);
+              results.push(widget.renderNext(res));
             } else {
-              widget.render(res);
+              results.push(widget.render(res));
             }
           }
+          return results;
         }
-        console.log("COUNTER: ", _this.status.params.query_counter);
-        return console.log(_this.status.params);
       });
     };
 
@@ -543,6 +542,7 @@ author: @ecoslado
       if (params == null) {
         params = {};
       }
+      console.log("PREV: ", this.status.params.query_counter);
       if (query) {
         searchParams = $.extend(true, {}, this.searchParams);
         if (this.status.params.query_counter) {

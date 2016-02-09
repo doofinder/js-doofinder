@@ -49,7 +49,6 @@ class Controller
 
     # To avoid past queries
     # we'll check the query_counter
-    console.log @status.params.query_counter
     @status.params.query_counter++
     
     params = $.extend true,
@@ -76,10 +75,8 @@ class Controller
             widget.renderNext res
           else
             widget.render res
-      console.log "COUNTER: ", _this.status.params.query_counter
-      console.log _this.status.params
-        
-  
+      
+      
   ### 
   __search wrappers
   ###
@@ -95,6 +92,7 @@ class Controller
   ###
   search: (query, params={}) ->
     
+    console.log "PREV: ", @status.params.query_counter
     if query
       searchParams = $.extend true,
         {},
