@@ -98,11 +98,6 @@ class Controller
       searchParams = $.extend true,
         {},
         @searchParams
-
-      if @status.params.query_counter
-        queryCounter = @status.params.query_counter
-      else
-        queryCounter = 1
       
       # Reset @status.params
       @status.params = $.extend true,
@@ -237,6 +232,8 @@ class Controller
       currentPage: 0
       firstQueryTriggered: false
       lastPageReached: false
+
+    @status.params.query_counter ?= 1
 
     if @searchParams.query
       @status.params.query = ''

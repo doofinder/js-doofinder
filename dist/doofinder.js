@@ -539,18 +539,13 @@ author: @ecoslado
      */
 
     Controller.prototype.search = function(query, params) {
-      var queryCounter, searchParams;
+      var searchParams;
       if (params == null) {
         params = {};
       }
       console.log("PREV: ", this.status.params);
       if (query) {
         searchParams = $.extend(true, {}, this.searchParams);
-        if (this.status.params.query_counter) {
-          queryCounter = this.status.params.query_counter;
-        } else {
-          queryCounter = 1;
-        }
         this.status.params = $.extend(true, {}, params);
         this.status.params = $.extend(true, searchParams, params);
         this.status.params.query = query;
@@ -695,12 +690,16 @@ author: @ecoslado
      */
 
     Controller.prototype.reset = function() {
+      var base;
       this.status = {
         params: this.searchParams,
         currentPage: 0,
         firstQueryTriggered: false,
         lastPageReached: false
       };
+      if ((base = this.status.params).query_counter == null) {
+        base.query_counter = 1;
+      }
       if (this.searchParams.query) {
         return this.status.params.query = '';
       }
