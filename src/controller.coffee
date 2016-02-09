@@ -93,7 +93,8 @@ class Controller
       searchParams = $.extend true,
         {},
         @searchParams
-      
+      console.log "PREVIEW: ", @status.params
+
       if @status.params.query_counter
         queryCounter = @status.params.query_counter
       else

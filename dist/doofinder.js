@@ -545,6 +545,7 @@ author: @ecoslado
       }
       if (query) {
         searchParams = $.extend(true, {}, this.searchParams);
+        console.log("PREVIEW: ", this.status.params);
         if (this.status.params.query_counter) {
           queryCounter = this.status.params.query_counter;
         } else {
