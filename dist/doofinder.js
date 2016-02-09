@@ -872,7 +872,7 @@ author: @ecoslado
       delete params.rpp;
       delete params.query_counter;
       delete params.page;
-      console.log(this.status.params.query_counter);
+      console.log("EN QUERY_STRING", this.status.params.query_counter);
       return "" + prefix + (qs.stringify(params));
     };
 

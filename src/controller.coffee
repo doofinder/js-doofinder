@@ -372,7 +372,7 @@ class Controller
     delete params.rpp
     delete params.query_counter
     delete params.page
-    console.log @status.params.query_counter
+    console.log "EN QUERY_STRING", @status.params.query_counter
 
 
     return "#{prefix}#{qs.stringify(params)}"
