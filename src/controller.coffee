@@ -106,6 +106,9 @@ class Controller
         queryCounter = 1
       
       # Reset @status.params
+      @status.params = $.extend true,
+        {},
+        params
       @status.params = $.extend true, searchParams, params
       @status.params.query = query
       @status.params.filters = $.extend true,

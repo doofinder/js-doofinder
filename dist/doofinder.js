@@ -518,7 +518,7 @@ author: @ecoslado
           }
         }
         console.log("COUNTER: ", _this.status.params.query_counter);
-        return console.log(this.status.params);
+        return console.log(_this.status.params);
       });
     };
 
@@ -550,6 +550,7 @@ author: @ecoslado
         } else {
           queryCounter = 1;
         }
+        this.status.params = $.extend(true, {}, params);
         this.status.params = $.extend(true, searchParams, params);
         this.status.params.query = query;
         this.status.params.filters = $.extend(true, {}, this.searchParams.filters || {});
