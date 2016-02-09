@@ -463,6 +463,7 @@ author: @ecoslado
         searchParams = {};
       }
       this.client = client;
+      this.hashid = client.hashid;
       this.widgets = [];
       if (widgets instanceof Array) {
         for (i = 0, len = widgets.length; i < len; i++) {
@@ -818,7 +819,7 @@ author: @ecoslado
       if (window._gaq && window._gaq.push) {
         window._gaq.push(['_trackEvent', gaCommand['eventCategory'], gaCommand['eventAction'], gaCommand['eventLabel']]);
         if (gaCommand['eventAction'].indexOf('search') === 0) {
-          return window._gaq.push(['_trackPageview', '/doofinder/search/' + options.hashid + '?query=' + gaCommand['eventLabel']]);
+          return window._gaq.push(['_trackPageview', '/doofinder/search/' + this.client.hashid + '?query=' + gaCommand['eventLabel']]);
         }
       } else {
         ga = window[window.GoogleAnalyticsObject] || window.ga;
@@ -826,7 +827,7 @@ author: @ecoslado
           trackerName = ga.getAll()[0].get('name');
           ga(trackerName + '.send', 'event', gaCommand);
           if (gaCommand['eventAction'].indexOf('search') === 0) {
-            return ga(trackerName + '.send', 'pageview', '/doofinder/search/' + options.hashid + '?query=' + gaCommand['eventLabel']);
+            return ga(trackerName + '.send', 'pageview', '/doofinder/search/' + this.client.hashid + '?query=' + gaCommand['eventLabel']);
           }
         }
       }
