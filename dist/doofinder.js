@@ -473,9 +473,7 @@ author: @ecoslado
       } else if (widgets) {
         this.addWidget(widgets);
       }
-      this.searchParams = $.extend(true, searchParams, {
-        query_counter: 0
-      });
+      this.searchParams = searchParams;
       this.reset();
     }
 
@@ -497,9 +495,7 @@ author: @ecoslado
       if (next == null) {
         next = false;
       }
-      console.log("__search", this.status.params.query_counter);
       this.status.params.query_counter++;
-      console.log("__search AFTER", this.status.params.query_counter);
       params = this.status.params;
       params.page = this.status.currentPage;
       _this = this;

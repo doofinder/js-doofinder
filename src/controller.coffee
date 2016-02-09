@@ -33,7 +33,7 @@ class Controller
       @addWidget(widgets)
     
     # Initial status
-    @searchParams = $.extend true, searchParams, {query_counter: 0}
+    @searchParams = searchParams#$.extend true, searchParams, {query_counter: 0}
     @reset()
 
   ###
@@ -51,9 +51,7 @@ class Controller
 
     # To avoid past queries
     # we'll check the query_counter
-    console.log "__search", @status.params.query_counter
     @status.params.query_counter++
-    console.log "__search AFTER", @status.params.query_counter
     params = @status.params
     params.page = @status.currentPage
     _this = this
