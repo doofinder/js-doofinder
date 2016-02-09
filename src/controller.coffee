@@ -320,8 +320,7 @@ class Controller
     eventAction: "xxx"
   ###
   sendToGA: (gaCommand) ->
-    console.log "GA call"
-    console.log gaCommand
+    
     if window._gaq and window._gaq.push
       # Classic Analytics
       window._gaq.push ['_trackEvent', gaCommand['eventCategory'],
@@ -329,7 +328,7 @@ class Controller
         gaCommand['eventLabel']]
 
       if gaCommand['eventAction'].indexOf('search') == 0  # also send pageview to count on search analytics
-        window._gaq.push(['_trackPageview', '/doofinder/search/' + @client.hashid + '?query=' + gaCommand['eventLabel']])
+        window._gaq.push(['_trackPageview', '/doofinder/search/' + @hashid + '?query=' + gaCommand['eventLabel']])
     else
       # Universal Analytics
       ga = (window[window.GoogleAnalyticsObject] || window.ga)
@@ -338,7 +337,7 @@ class Controller
         trackerName = ga.getAll()[0].get('name')
         ga(trackerName + '.send', 'event', gaCommand)
         if gaCommand['eventAction'].indexOf('search') == 0  # also send pageview to count on search analytics
-          ga(trackerName + '.send', 'pageview', '/doofinder/search/' + @client.hashid + '?query=' + gaCommand['eventLabel'])
+          ga(trackerName + '.send', 'pageview', '/doofinder/search/' + @hashid + '?query=' + gaCommand['eventLabel'])
 
   ###
   bind

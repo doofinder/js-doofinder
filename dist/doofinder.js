@@ -814,12 +814,10 @@ author: @ecoslado
 
     Controller.prototype.sendToGA = function(gaCommand) {
       var ga, trackerName;
-      console.log("GA call");
-      console.log(gaCommand);
       if (window._gaq && window._gaq.push) {
         window._gaq.push(['_trackEvent', gaCommand['eventCategory'], gaCommand['eventAction'], gaCommand['eventLabel']]);
         if (gaCommand['eventAction'].indexOf('search') === 0) {
-          return window._gaq.push(['_trackPageview', '/doofinder/search/' + this.client.hashid + '?query=' + gaCommand['eventLabel']]);
+          return window._gaq.push(['_trackPageview', '/doofinder/search/' + this.hashid + '?query=' + gaCommand['eventLabel']]);
         }
       } else {
         ga = window[window.GoogleAnalyticsObject] || window.ga;
@@ -827,7 +825,7 @@ author: @ecoslado
           trackerName = ga.getAll()[0].get('name');
           ga(trackerName + '.send', 'event', gaCommand);
           if (gaCommand['eventAction'].indexOf('search') === 0) {
-            return ga(trackerName + '.send', 'pageview', '/doofinder/search/' + this.client.hashid + '?query=' + gaCommand['eventLabel']);
+            return ga(trackerName + '.send', 'pageview', '/doofinder/search/' + this.hashid + '?query=' + gaCommand['eventLabel']);
           }
         }
       }
@@ -916,7 +914,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":87}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "1.0.5",
+    version: "1.0.6",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("handlebars"),
     Widget: _dereq_("./widget"),
