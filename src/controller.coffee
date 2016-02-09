@@ -51,7 +51,9 @@ class Controller
     # we'll check the query_counter
     console.log @status.params.query_counter
     @status.params.query_counter++
-    params = @status.params
+    params = $.extend true,
+      {},
+      @status.params || {}
     params.page = @status.currentPage
     _this = this
     @client.search params.query, params, (err, res) ->
@@ -71,8 +73,8 @@ class Controller
             widget.renderNext res
           else
             widget.render res
-    console.log "COUNTER: ", @status.params.query_counter
-        
+      console.log "COUNTER: ", @status.params.query_counter
+      console.log @status.params
         
   
   ### 
