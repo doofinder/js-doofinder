@@ -541,13 +541,13 @@ author: @ecoslado
      */
 
     Controller.prototype.search = function(query, params) {
-      var searchParams;
+      var queryCounter, searchParams;
       if (params == null) {
         params = {};
       }
-      console.log("PREV: ", this.status.params);
       if (query) {
         searchParams = $.extend(true, {}, this.searchParams);
+        queryCounter = this.status.params.query_counter;
         this.status.params = $.extend(true, {}, params);
         this.status.params = $.extend(true, searchParams, params);
         this.status.params.query = query;

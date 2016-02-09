@@ -95,12 +95,12 @@ class Controller
   ###
   search: (query, params={}) ->
     
-    console.log "PREV: ", @status.params
     if query
       searchParams = $.extend true,
         {},
         @searchParams
-      
+      # Saves current query counter
+      queryCounter = @status.params.query_counter
       # Reset @status.params
       @status.params = $.extend true,
         {},
