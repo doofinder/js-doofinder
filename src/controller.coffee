@@ -53,6 +53,7 @@ class Controller
     # we'll check the query_counter
     console.log "__search", @status.params.query_counter
     @status.params.query_counter++
+    console.log "__search AFTER", @status.params.query_counter
     params = @status.params
     params.page = @status.currentPage
     _this = this
@@ -95,11 +96,15 @@ class Controller
       searchParams = $.extend true,
         {},
         @searchParams
+      queryCounter = @status.params.query_counter
+      
+      # Reset @status.params
       @status.params = $.extend true, searchParams, params
       @status.params.query = query
       @status.params.filters = $.extend true,
         {},
         @searchParams.filters || {}
+      @status.params.query_counter = queryCounter
 
       if not @searchParams.query_name
         delete @status.params.query_name
@@ -350,7 +355,6 @@ class Controller
     @status.params = $.extend true,
       searchParams,
       qs.parse(queryString.replace("#{prefix}", "")) || {}
-    console.log "SET STATUS FROM STRING"  
     @status.params.query_counter = 1
     @status.currentPage = 1
 
@@ -370,8 +374,8 @@ class Controller
     console.log "STATUS QUERY STRING"
     delete params.transformer
     delete params.rpp
+    delete params.query_counter
     delete params.page
-    console.log "EN QUERY_STRING", @status.params.query_counter
 
 
     return "#{prefix}#{qs.stringify(params)}"
