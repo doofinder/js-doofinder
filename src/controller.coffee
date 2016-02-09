@@ -71,6 +71,7 @@ class Controller
             widget.renderNext res
           else
             widget.render res
+    console.log "COUNTER: ", @status.params.query_counter
         
         
   

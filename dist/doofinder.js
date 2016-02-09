@@ -497,7 +497,7 @@ author: @ecoslado
       params = this.status.params;
       params.page = this.status.currentPage;
       _this = this;
-      return this.client.search(params.query, params, function(err, res) {
+      this.client.search(params.query, params, function(err, res) {
         var i, len, ref, results, widget;
         if (res.results.length < _this.status.params.rpp) {
           _this.status.lastPageReached = true;
@@ -520,6 +520,7 @@ author: @ecoslado
           return results;
         }
       });
+      return console.log("COUNTER: ", this.status.params.query_counter);
     };
 
 
