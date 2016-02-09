@@ -471,7 +471,7 @@ author: @ecoslado
       } else if (widgets) {
         this.addWidget(widgets);
       }
-      console.log("constructor");
+      this.status = $.extend(true, {}, searchParams);
       this.reset();
     }
 

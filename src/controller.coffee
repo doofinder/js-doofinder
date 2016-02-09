@@ -32,7 +32,9 @@ class Controller
     else if widgets
       @addWidget(widgets)
 
-    console.log "constructor"
+    @status = $.extend true,
+      {},
+      searchParams
     
     @reset()
 
