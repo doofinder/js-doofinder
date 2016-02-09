@@ -869,7 +869,6 @@ author: @ecoslado
         prefix = "#/search/";
       }
       params = $.extend(true, {}, this.status.params);
-      console.log("STATUS QUERY STRING");
       delete params.transformer;
       delete params.rpp;
       delete params.query_counter;
@@ -888,7 +887,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":87}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "1.0.6",
+    version: "1.0.7",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("handlebars"),
     Widget: _dereq_("./widget"),

@@ -382,7 +382,7 @@ class Controller
     params = $.extend true,
       {},
       @status.params
-    console.log "STATUS QUERY STRING"
+
     delete params.transformer
     delete params.rpp
     delete params.query_counter
