@@ -497,7 +497,7 @@ author: @ecoslado
       params.page = this.status.currentPage;
       _this = this;
       return this.client.search(params.query, params, function(err, res) {
-        var i, len, ref, results, widget;
+        var i, len, ref, widget;
         if (res.results.length < _this.status.params.rpp) {
           _this.status.lastPageReached = true;
         }
@@ -507,17 +507,16 @@ author: @ecoslado
         _this.trigger("df:results_received", [res]);
         if (res.query_counter === _this.status.params.query_counter) {
           ref = _this.widgets;
-          results = [];
           for (i = 0, len = ref.length; i < len; i++) {
             widget = ref[i];
             if (next) {
-              results.push(widget.renderNext(res));
+              widget.renderNext(res);
             } else {
-              results.push(widget.render(res));
+              widget.render(res);
             }
           }
-          return results;
         }
+        return console.log("AFTER: ", _this.status.params.query_counter);
       });
     };
 

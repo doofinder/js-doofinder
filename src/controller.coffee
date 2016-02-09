@@ -75,7 +75,7 @@ class Controller
             widget.renderNext res
           else
             widget.render res
-      
+      console.log "AFTER: ", _this.status.params.query_counter
       
   ### 
   __search wrappers
