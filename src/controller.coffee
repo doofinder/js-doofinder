@@ -31,6 +31,8 @@ class Controller
 
     else if widgets
       @addWidget(widgets)
+
+    console.log "constructor"
     
     @reset()
 
