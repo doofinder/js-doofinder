@@ -35,10 +35,23 @@ mock =
       lt: 99
 
 # Test doofinder
-describe 'doofinder', ->
+describe 'client', ->
 
   # Tests the client's stuff
-  describe 'client', ->
+  describe 'search', ->
+
+    before () ->
+      scope = nock('http://fooserver')
+      .persist()
+      .get('/5/search')
+      .query(true)
+      .reply((uri, requestBody)->
+        querypart = uri.split('?')[1]
+        { path: uri, headers: this.req.headers, parameters:querypart.split('&') }
+      )
+
+    after () ->
+      nock.cleanAll
 
     it 'multiTypeClient', ->
       # Client for two types by constructor (made make multiple type params)
@@ -180,15 +193,6 @@ describe 'doofinder', ->
       foo = () -> client._sanitizeQuery(query, null)
       expect(foo).to.throw 'Maximum word length exceeded: 55.'
 
-    scope = nock('http://fooserver')
-      .persist()
-      .get('/5/search')
-      .query(true)
-      .reply((uri, requestBody)->
-        querypart = uri.split('?')[1]
-        { path: uri, headers: this.req.headers, parameters:querypart.split('&') }
-      )
-
     it 'search with no type', (done) ->
 
       client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, null, 'fooserver'
@@ -260,17 +264,22 @@ describe 'doofinder', ->
         res.parameters.should.contain 'query=querystring', 'filter%5Bcolor%5D=blue', 'filter%5Bcolor%5D=red', 'filter%5Bprice%5D%5Bgte%5D=4.36', 'filter%5Bprice%5D%5Blt%5D=99'
         done()
 
-    it 'hit', (done) ->
+  describe 'hit', ->
+
+    it 'basic hit with query', (done) ->
       response =
         field: "value"
       scope = nock('http://fooserver')
-        .filteringPath(/random=[^&]*/g, 'random=XXX')
-        .get('/5/hit/ffffffffffffffffffffffffffffffff/666/querystring?random=XXX')
-        .reply(200, response)
+      .filteringPath(/random=[^&]*/g, 'random=XXX')
+      .get('/5/hit/ffffffffffffffffffffffffffffffff/666/querystring?random=XXX')
+      .reply(200, response)
+
       client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
       client.hit 666, 'querystring', (err, res) ->
         res.should.to.be.deep.equal response
         done()
+
+  describe 'options', ->
 
     it 'options', (done) ->
       response =
