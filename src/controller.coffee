@@ -162,11 +162,12 @@ class Controller
   ###
 
   refresh: () ->
-    @trigger "df:refresh", [@status.params]
-    @status.currentPage = 1
-    @status.firstQueryTriggered = true
-    @status.lastPageReached = false
-    @__search()
+    if @status.params.query
+      @trigger "df:refresh", [@status.params]
+      @status.currentPage = 1
+      @status.firstQueryTriggered = true
+      @status.lastPageReached = false
+      @__search()
 
   ###
   addFilter

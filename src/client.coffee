@@ -56,7 +56,10 @@ class Client
   _sanitizeQuery: (query, callback) ->
     maxWordLength = 55
     maxQueryLength = 255
-    if query == null or not query.constructor == String
+    if typeof(query) == "undefined"
+      throw Error "Query must be a defined"
+
+    if query == null or query.constructor != String
       throw Error "Query must be a String"
 
     query = query.replace(/ +/g, ' ').replace(/^ +| +$/g, '') # query.trim() is ECMAScript5
@@ -117,8 +120,9 @@ class Client
 
     # Add query to params
     _this = @
-    @_sanitizeQuery query, (res) ->
-      params.query = res
+
+    @_sanitizeQuery query, (cleaned) ->
+      params.query = cleaned
       headers = {}
       if _this.apiKey
         headers['api token'] = _this.apiKey
@@ -151,24 +155,6 @@ class Client
       if _this.url.split(':').length > 1
         options.host = _this.url.split(':')[0]
         options.port = _this.url.split(':')[1]
-
-
-      # Callback function will be passed as argument to search
-      # and will be returned with response body
-      processResponse = (res) ->
-        if res.statusCode >= 400
-          return callback res.statusCode, null
-
-        else
-          data = ""
-          res.on 'data', (chunk) ->
-            data += chunk
-
-          res.on 'end', () ->
-            return callback null, JSON.parse(data)
-
-          res.on 'error', (err) ->
-            return callback err, null
 
       # Here is where request is done and executed processResponse
       req = httpLib.request options, _this.__processResponse(callback)

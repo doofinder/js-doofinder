@@ -74,7 +74,10 @@ author: @ecoslado
       var i, maxQueryLength, maxWordLength, ref, x;
       maxWordLength = 55;
       maxQueryLength = 255;
-      if (query === null || !query.constructor === String) {
+      if (typeof query === "undefined") {
+        throw Error("Query must be a defined");
+      }
+      if (query === null || query.constructor !== String) {
         throw Error("Query must be a String");
       }
       query = query.replace(/ +/g, ' ').replace(/^ +| +$/g, '');
@@ -132,9 +135,9 @@ author: @ecoslado
         params.rpp = 10;
       }
       _this = this;
-      return this._sanitizeQuery(query, function(res) {
-        var filterKey, filterTerms, headers, options, paramKey, paramValue, processResponse, queryString, req;
-        params.query = res;
+      return this._sanitizeQuery(query, function(cleaned) {
+        var filterKey, filterTerms, headers, options, paramKey, paramValue, queryString, req;
+        params.query = cleaned;
         headers = {};
         if (_this.apiKey) {
           headers['api token'] = _this.apiKey;
@@ -165,23 +168,6 @@ author: @ecoslado
           options.host = _this.url.split(':')[0];
           options.port = _this.url.split(':')[1];
         }
-        processResponse = function(res) {
-          var data;
-          if (res.statusCode >= 400) {
-            return callback(res.statusCode, null);
-          } else {
-            data = "";
-            res.on('data', function(chunk) {
-              return data += chunk;
-            });
-            res.on('end', function() {
-              return callback(null, JSON.parse(data));
-            });
-            return res.on('error', function(err) {
-              return callback(err, null);
-            });
-          }
-        };
         req = httpLib.request(options, _this.__processResponse(callback));
         return req.end();
       });
@@ -616,11 +602,13 @@ author: @ecoslado
      */
 
     Controller.prototype.refresh = function() {
-      this.trigger("df:refresh", [this.status.params]);
-      this.status.currentPage = 1;
-      this.status.firstQueryTriggered = true;
-      this.status.lastPageReached = false;
-      return this.__search();
+      if (this.status.params.query) {
+        this.trigger("df:refresh", [this.status.params]);
+        this.status.currentPage = 1;
+        this.status.firstQueryTriggered = true;
+        this.status.lastPageReached = false;
+        return this.__search();
+      }
     };
 
 
@@ -887,7 +875,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":87}],3:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    version: "1.0.7",
+    version: "1.0.8",
     Client: _dereq_("./client"),
     Handlebars: _dereq_("handlebars"),
     Widget: _dereq_("./widget"),
