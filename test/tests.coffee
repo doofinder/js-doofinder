@@ -180,171 +180,84 @@ describe 'doofinder', ->
       foo = () -> client._sanitizeQuery(query, null)
       expect(foo).to.throw 'Maximum word length exceeded: 55.'
 
+    scope = nock('http://fooserver')
+      .persist()
+      .get('/5/search')
+      .query(true)
+      .reply((uri, requestBody)->
+        querypart = uri.split('?')[1]
+        { path: uri, headers: this.req.headers, parameters:querypart.split('&') }
+      )
+
     it 'search with no type', (done) ->
-      response =
-        field: "value"
-      scope = nock('http://fooserver')
-        .get('/5/search')
-        .query({
-          hashid: "ffffffffffffffffffffffffffffffff",
-          page:1,
-          rpp:10,
-          query:""})
-        .reply(200, response)
+
       client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, null, 'fooserver'
       client.search '', (err, res) ->
-        res.should.to.be.deep.equal response
+        res.parameters.should.contain 'query=', 'page=1', 'rpp=10'
+        res.parameters.should.have.length 4
         done()
 
     it 'search with type', (done) ->
-      response =
-        field: "value"
-      scope = nock('http://fooserver')
-        .get('/5/search')
-        .query({
-          hashid: "ffffffffffffffffffffffffffffffff",
-          page:1,
-          rpp:10,
-          query:"",
-          type:"product"})
-        .reply(200, response)
       client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
       client.search '', (err, res) ->
-        res.should.to.be.deep.equal response
+        res.parameters.should.contain 'query=', 'type=product'
         done()
 
     it 'search with multi-type', (done) ->
-      response =
-        field: "value"
-      scope = nock('http://fooserver')
-        .get('/5/search?hashid=ffffffffffffffffffffffffffffffff&type=product&type=category&page=1&rpp=10&query=')
-        .reply(200, response)
       client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, ['product', 'category'], 'fooserver'
       client.search '', (err, res) ->
-        res.should.to.be.deep.equal response
+        res.parameters.should.contain 'type=category', 'type=product'
         done()
 
     # SORT PARAMS
     it 'search with type and query', (done) ->
-      response =
-        field: "value"
-      scope = nock('http://fooserver')
-      .get('/5/search')
-      .query({
-        hashid: "ffffffffffffffffffffffffffffffff",
-        page:1,
-        rpp:10,
-        query:"querystring",
-        type:"product"})
-      .reply(200, response)
       client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
       client.search 'querystring', (err, res) ->
-        res.should.to.be.deep.equal response
+        res.parameters.should.contain 'query=querystring', 'type=product'
         done()
 
     it 'search with type query and params (sort type object of: object, array, string)', (done) ->
-      response =
-        field: "value"
-      scope = nock('http://fooserver')
-        .get('/5/search?hashid=ffffffffffffffffffffffffffffffff&type=product&page=1&rpp=10&query=querystring&sort%5Bprice%5D=asc&sort%5Btitle%5D=desc&sort%5Bdescription%5D=asc')
-        .reply(200, response)
       client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
       client.search 'querystring', {sort: mock.sort.Object}, (err, res) ->
-        res.should.to.be.deep.equal response
+        res.parameters.should.contain 'query=querystring', 'sort%5Bprice%5D=asc', 'sort%5Btitle%5D=desc', 'sort%5Bdescription%5D=asc', 'type=product'
         done()
 
     it 'search with type query and params (sort type array of: object, array, string)', (done) ->
-      response =
-        field: "value"
-      scope = nock('http://fooserver')
-        .get('/5/search?hashid=ffffffffffffffffffffffffffffffff&type=product&page=1&rpp=10&query=querystring&sort%5B0%5D%5Btitle%5D=asc&sort%5B1%5D%5Bdescription%5D=desc')
-        .reply(200, response)
       client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
       client.search 'querystring', {sort: mock.sort.Array}, (err, res) ->
-        res.should.to.be.deep.equal response
+        res.parameters.should.contain 'type=product', 'query=querystring', 'sort%5B0%5D%5Btitle%5D=asc', 'sort%5B1%5D%5Bdescription%5D=desc'
         done()
 
     it 'search with type query and params (sort type string of: object, array, string)', (done) ->
-      response =
-        field: "value"
-      scope = nock('http://fooserver')
-        .get('/5/search')
-        .query({
-            hashid: "ffffffffffffffffffffffffffffffff",
-            type: "product",
-            page: 1,
-            rpp: 10,
-            query: "querystring",
-            sort: "price"})
-        .reply(200, response)
       client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
       client.search 'querystring', {sort: mock.sort.String}, (err, res) ->
-        res.should.to.be.deep.equal response
+        res.parameters.should.contain 'sort=price', 'query=querystring', 'type=product'
         done()
 
     # SINGLE PARAMS
     it 'search with type query and params (param valid of: valid, null)', (done) ->
-      response =
-        field: "value"
-      scope = nock('http://fooserver')
-        .get('/5/search')
-        .query({
-            hashid: "ffffffffffffffffffffffffffffffff",
-            type: "product",
-            page: 4,
-            rpp: 30,
-            query: "querystring"})
-        .reply(200, response)
       client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
       client.search 'querystring', mock.params.valid, (err, res) ->
-        res.should.to.be.deep.equal response
+        res.parameters.should.contain 'query=querystring', 'rpp=30', 'page=4', 'type=product'
         done()
 
     it 'search with type query and params (param null of: valid, null)', (done) ->
-      response =
-        field: "value"
-      scope = nock('http://fooserver')
-        .get('/5/search')
-        .query({
-            hashid: "ffffffffffffffffffffffffffffffff",
-            type: "product",
-            page: 1,
-            rpp: 10,
-            query: "querystring"})
-        .reply(200, response)
       client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
       client.search 'querystring', mock.params.null, (err, res) ->
-        res.should.to.be.deep.equal response
+        res.parameters.should.contain 'type=product', 'query=querystring'
         done()
 
     it 'search with type query and params and one sort of type string', (done) ->
-      response =
-        field: "value"
-      scope = nock('http://fooserver')
-        .get('/5/search')
-        .query({
-            hashid: "ffffffffffffffffffffffffffffffff",
-            type: "product",
-            page: 4,
-            rpp: 30,
-            sort: "price",
-            query: "querystring"})
-        .reply(200, response)
       client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
       client.search 'querystring', {rpp: mock.params.valid.rpp, page: mock.params.valid.page, sort: mock.sort.String}, (err, res) ->
-        res.should.to.be.deep.equal response
+        res.parameters.should.contain 'type=product', 'page=4', 'rpp=30', 'sort=price', 'query=querystring'
         done()
 
     # FILTER PARAMS
     it 'search with type query and filters', (done) ->
-      response =
-        field: "value"
-      scope = nock('http://fooserver')
-        .get('/5/search?hashid=ffffffffffffffffffffffffffffffff&type=product&page=1&rpp=10&query=querystring&filter%5Bcolor%5D=blue&filter%5Bcolor%5D=red&filter%5Bprice%5D%5Bgte%5D=4.36&filter%5Bprice%5D%5Blt%5D=99')
-        .reply(200, response)
       client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
       client.search 'querystring', {filters: mock.filters}, (err, res) ->
-        res.should.to.be.deep.equal response
+        res.parameters.should.contain 'query=querystring', 'filter%5Bcolor%5D=blue', 'filter%5Bcolor%5D=red', 'filter%5Bprice%5D%5Bgte%5D=4.36', 'filter%5Bprice%5D%5Blt%5D=99'
         done()
 
     it 'hit', (done) ->
