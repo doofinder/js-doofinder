@@ -35,10 +35,10 @@ mock =
       lt: 99
 
 # Test doofinder
-describe 'doofinder client', ->
+describe 'doofinder client\'s ', ->
 
   # Tests the client's stuff
-  context 'makeQueryString can ', ->
+  context 'makeQueryString method can ', ->
 
     it 'handle several types', ->
       # Client for two types by constructor (made make multiple type params)
@@ -137,7 +137,7 @@ describe 'doofinder client', ->
       querystring = client.makeQueryString()
       querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&sort=price'
 
-  context 'sanitizeQuery can ', ->
+  context 'sanitizeQuery method can ', ->
 
     before () ->
       @client = new doofinder.Client mock.request.hashid, mock.request.api_key
@@ -255,7 +255,7 @@ describe 'doofinder client', ->
 
     describe 'hit', ->
 
-      it 'basic hit with query', (done) ->
+      it 'sends dfid, hashid and query parameters', (done) ->
         response =
           field: "value"
         scope = nock('http://fooserver')
@@ -270,7 +270,7 @@ describe 'doofinder client', ->
 
     describe 'options', ->
 
-      it 'options', (done) ->
+      it 'hits the right url', (done) ->
         response =
           field: "value"
         scope = nock('http://fooserver')
