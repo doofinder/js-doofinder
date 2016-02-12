@@ -21,7 +21,7 @@ module.exports = (grunt) ->
       release:
         options:
           reporter: 'nyan'
-        src: ['test/test_client.coffee']
+        src: ['test/test_*.coffee']
 
     uglify:
       release:
