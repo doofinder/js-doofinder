@@ -84,7 +84,13 @@ class ScrollDisplay extends Display
   @api public
   ###  
   renderNext: (res) ->
-    html = @template res
+    context = $.extend(true, res, @extraContext || {})
+    addHelpers context, 
+      options.urlParams, 
+      options.currency, 
+      options.translations, 
+      options.templateFunctions
+    html = @mustache.render @template, context
     $(@container).append html
 
   ###

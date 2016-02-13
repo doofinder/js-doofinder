@@ -7,10 +7,10 @@
     "test": "test"
   },
   "dependencies": {
-    "handlebars": "^4.0.4",
     "http": "^0.0.0",
     "ion-rangeslider": "git://github.com/doofinder/ion.rangeSlider.git",
     "jquery": "^2.1.4",
+    "mustache": "^2.2.1",
     "qs": "^4.0.0"
   },
   "devDependencies": {
@@ -23,7 +23,6 @@
     "grunt-mocha-test": "^0.12.7",
     "chai": "^2.2.0",
     "coffee-script": "^1.9.1",
-    "grunt-browserify": "^4.0.1",
     "grunt-version": "^1.0.0",
     "mocha": "^2.2.1",
     "nock": "^5.2.1"

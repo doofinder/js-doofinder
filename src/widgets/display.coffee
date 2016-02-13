@@ -27,25 +27,11 @@ class Display extends Widget
   @param {Object} options 
   @api public
   ###
-  constructor: (container, template, options = {}) ->
+  constructor: (container, @template, options = {}) ->
     @container = container
-    @handlebars = require("handlebars")
+    @mustache = require("mustache")
     @extraContext = options.templateVars
-    addHelpers @handlebars, 
-      options.urlParams, 
-      options.currency, 
-      options.translations, 
-      options.templateFunctions
     
-    if template.constructor == String
-      @template = @handlebars.compile(template)
-    
-    else if template instanceof Function
-      @template = template
-    
-    else
-      throw Error "The provided template is not the right type." +
-        " String or rendered handlebars expected."
     super(container)
 
   ###
@@ -59,7 +45,12 @@ class Display extends Widget
   ###  
   render: (res) ->
     context = $.extend(true, res, @extraContext || {})
-    html = @template context
+    addHelpers context, 
+      options.urlParams, 
+      options.currency, 
+      options.translations, 
+      options.templateFunctions
+    html = @mustache.render @template, context
     try
       $(@container).html html
       @trigger("df:rendered", [res])
