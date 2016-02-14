@@ -17,6 +17,14 @@ module.exports = (grunt) ->
       release:
         'browserify lib/doofinder.js --standalone doofinder > dist/doofinder.js'      
 
+    browserify:
+      default:
+        src: ['lib/doofinder.js']
+        dest: 'dist/doofinder.js'
+        options:
+          browserifyOptions:
+            standalone: 'doofinder'
+
     mochaTest:
       release:
         options:
@@ -42,7 +50,8 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-mocha-test'
   grunt.loadNpmTasks 'grunt-exec'
   grunt.loadNpmTasks 'grunt-contrib-uglify'
+  grunt.loadNpmTasks 'grunt-browserify'
   grunt.loadNpmTasks('grunt-version');
 
   grunt.registerTask 'default', ['coffee', 'mochaTest']
-  grunt.registerTask 'release', ['version:library', 'version:bower', 'coffee:release', 'exec:release', 'uglify:release']
+  grunt.registerTask 'release', ['version:library', 'version:bower', 'coffee:release', 'browserify', 'uglify:release']
