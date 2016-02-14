@@ -13,10 +13,6 @@ module.exports = (grunt) ->
             ext: '.js'
           ]
         
-    exec:
-      release:
-        'browserify lib/doofinder.js --standalone doofinder > dist/doofinder.js'      
-
     browserify:
       default:
         src: ['lib/doofinder.js']
