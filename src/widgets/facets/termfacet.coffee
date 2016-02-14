@@ -17,7 +17,7 @@ class TermFacet extends Display
   constructor: (container, @name, options = {}) ->
     @selected = {}
     if not options.template
-      template = '{{#if @index}}' + 
+      template = '{{#if @index}}' +
             '<hr class="df-separator">' +
             '{{/if}}' +
             '<div class="df-facets">'+
@@ -35,28 +35,28 @@ class TermFacet extends Display
       template = options.template
 
     super(container, template, options)
-  
+
   init: (controller) ->
     super(controller)
     _this = this
-    
+
     # Clean selected  terms when new search
-    @bind "df:search", (params) ->  
+    @controller.bind "df:search", (params) ->
       _this.selected = {}
 
     # The filtering by click
     $(@container).on 'click', "a[data-facet='#{@name}']", (e) ->
         e.preventDefault()
         termFacet = $(this)
-        value = termFacet.data "value" 
+        value = termFacet.data "value"
         key = termFacet.data "facet"
 
         if _this.selected[value]
             _this.controller.removeFilter key, value
-        
+
         else
             _this.controller.addFilter key, value
-        
+
         _this.controller.refresh()
 
     # Removes filters not present in results.
@@ -65,7 +65,7 @@ class TermFacet extends Display
       for term, selected of _this.selected
         if selected and not _this._termInResults(term, terms)
           _this.selected[term] = 0
-          _this.controller.removeFilter _this.name, term 
+          _this.controller.removeFilter _this.name, term
 
   _termInResults: (term, terms) ->
     for elem in terms
@@ -80,7 +80,7 @@ class TermFacet extends Display
       throw Error "Error in TermFacet: #{@name} facet is not configured."
     else if not res.facets[@name].terms
       throw Error "Error in TermFacet: #{@name} facet is not a term facet."
-    
+
     @selected = {}
     totalSelected = 0
     if res.filter and res.filter.terms and res.filter.terms[@name]
@@ -90,17 +90,17 @@ class TermFacet extends Display
 
     if res.results
       # To make access to selected easier
-      # we add it to each term  
+      # we add it to each term
       for term in res.facets[@name].terms
         if @selected[term.term]
           term.selected = 1
         else
           term.selected = 0
-        
+
       context = $.extend true,
-        total_selected: totalSelected 
-        name: @name 
-        terms: res.facets[@name].terms, 
+        total_selected: totalSelected
+        name: @name
+        terms: res.facets[@name].terms,
         @extraContext || {}
 
       html = @template(context)
