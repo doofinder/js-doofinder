@@ -1341,6 +1341,7 @@ replaces the current content.
     Display.prototype.render = function(res) {
       var context, html;
       context = $.extend(true, res, this.extraContext || {});
+      context.is_first = true;
       this.addHelpers(context);
       html = this.mustache.render(this.template, context);
       $(this.container).html(html);
@@ -1357,7 +1358,12 @@ replaces the current content.
      */
 
     Display.prototype.renderNext = function(res) {
-      this.render(res);
+      var context, html;
+      context = $.extend(true, res, this.extraContext || {});
+      context.is_first = false;
+      this.addHelpers(context);
+      html = this.mustache.render(this.template, context);
+      $(this.container).html(html);
       return this.trigger("df:rendered", [res]);
     };
 
@@ -1869,8 +1875,6 @@ replaces the current content.
      */
 
     ScrollResults.prototype.render = function(res) {
-      var context;
-      context = $.extend(true, res, this.extraContext || {});
       ScrollResults.__super__.render.call(this, res);
       return this.trigger("df:rendered", res);
     };
@@ -2005,6 +2009,7 @@ bottom
     ScrollDisplay.prototype.renderNext = function(res) {
       var context, html;
       context = $.extend(true, res, this.extraContext || {});
+      context.is_first = false;
       this.addHelpers(context);
       html = this.mustache.render(this.template, context);
       return $(this.container).append(html);

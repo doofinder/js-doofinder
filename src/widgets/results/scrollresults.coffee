@@ -53,10 +53,6 @@ class ScrollResults extends ScrollDisplay
   @api public
   ###
   render: (res) ->
-    context = $.extend true, 
-      res, 
-      @extraContext || {}
-
     super(res)
     @trigger("df:rendered", res)
 

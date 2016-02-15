@@ -85,6 +85,7 @@ class ScrollDisplay extends Display
   ###  
   renderNext: (res) ->
     context = $.extend(true, res, @extraContext || {})
+    context.is_first = false
     @addHelpers context
     html = @mustache.render @template, context
     $(@container).append html

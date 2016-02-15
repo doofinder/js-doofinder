@@ -51,6 +51,7 @@ class Display extends Widget
   ###  
   render: (res) ->
     context = $.extend(true, res, @extraContext || {})
+    context.is_first = true
     @addHelpers context
     html = @mustache.render @template, context
     $(@container).html html
@@ -66,7 +67,11 @@ class Display extends Widget
   @api public
   ###  
   renderNext: (res) ->
-    @render(res)
+    context = $.extend(true, res, @extraContext || {})
+    context.is_first = false
+    @addHelpers context
+    html = @mustache.render @template, context
+    $(@container).html html
     @trigger("df:rendered", [res])
 
   ###
