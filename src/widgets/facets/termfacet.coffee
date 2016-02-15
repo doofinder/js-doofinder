@@ -83,9 +83,11 @@ class TermFacet extends Display
     
     @selected = {}
     totalSelected = 0
+    anySelected = false
     if res.filter and res.filter.terms and res.filter.terms[@name]
       for term in res.filter.terms[@name]
         @selected[term] = 1
+        anySelected = true
         totalSelected += 1
 
     if res.results
@@ -100,6 +102,7 @@ class TermFacet extends Display
           term.selected = 0
         
       context = $.extend true,
+        any_selected: anySelected
         total_selected: totalSelected 
         name: @name 
         terms: res.facets[@name].terms, 

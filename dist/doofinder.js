@@ -1594,7 +1594,7 @@ author: @ecoslado
     };
 
     TermFacet.prototype.render = function(res) {
-      var context, html, i, key, len, ref, ref1, term, totalSelected;
+      var anySelected, context, html, i, key, len, ref, ref1, term, totalSelected;
       if (!res.facets || !res.facets[this.name]) {
         throw Error("Error in TermFacet: " + this.name + " facet is not configured.");
       } else if (!res.facets[this.name].terms) {
@@ -1602,11 +1602,13 @@ author: @ecoslado
       }
       this.selected = {};
       totalSelected = 0;
+      anySelected = false;
       if (res.filter && res.filter.terms && res.filter.terms[this.name]) {
         ref = res.filter.terms[this.name];
         for (i = 0, len = ref.length; i < len; i++) {
           term = ref[i];
           this.selected[term] = 1;
+          anySelected = true;
           totalSelected += 1;
         }
       }
@@ -1623,6 +1625,7 @@ author: @ecoslado
           }
         }
         context = $.extend(true, {
+          any_selected: anySelected,
           total_selected: totalSelected,
           name: this.name,
           terms: res.facets[this.name].terms
