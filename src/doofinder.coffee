@@ -1,7 +1,7 @@
 module.exports = 
   version: "1.0.8"  
   Client: require "./client"
-  Handlebars: require "mustache"
+  Mustache: require "mustache"
   Widget: require "./widget"
   Controller: require "./controller"
   widgets:

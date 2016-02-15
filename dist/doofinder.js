@@ -877,7 +877,7 @@ author: @ecoslado
   module.exports = {
     version: "1.0.8",
     Client: require("./client"),
-    Handlebars: require("mustache"),
+    Mustache: require("mustache"),
     Widget: require("./widget"),
     Controller: require("./controller"),
     widgets: {
@@ -1594,7 +1594,7 @@ author: @ecoslado
     };
 
     TermFacet.prototype.render = function(res) {
-      var context, html, i, j, len, len1, ref, ref1, term, totalSelected;
+      var context, html, i, key, len, ref, ref1, term, totalSelected;
       if (!res.facets || !res.facets[this.name]) {
         throw Error("Error in TermFacet: " + this.name + " facet is not configured.");
       } else if (!res.facets[this.name].terms) {
@@ -1612,8 +1612,9 @@ author: @ecoslado
       }
       if (res.results) {
         ref1 = res.facets[this.name].terms;
-        for (j = 0, len1 = ref1.length; j < len1; j++) {
-          term = ref1[j];
+        for (key in ref1) {
+          term = ref1[key];
+          term.key = key;
           if (this.selected[term.term]) {
             term.selected = 1;
           } else {
@@ -1625,7 +1626,8 @@ author: @ecoslado
           name: this.name,
           terms: res.facets[this.name].terms
         }, this.extraContext || {});
-        html = this.template(context);
+        this.addHelpers(context);
+        html = this.mustache(this.template, context);
         $(this.container).html(html);
         return this.trigger('df:rendered', [res]);
       } else {
