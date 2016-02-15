@@ -91,7 +91,8 @@ class TermFacet extends Display
     if res.results
       # To make access to selected easier
       # we add it to each term  
-      for term in res.facets[@name].terms
+      for key, term of res.facets[@name].terms
+        term.key = key
         if @selected[term.term]
           term.selected = 1
         else
@@ -103,7 +104,8 @@ class TermFacet extends Display
         terms: res.facets[@name].terms, 
         @extraContext || {}
 
-      html = @template(context)
+      @addHelpers(context)
+      html = @mustache(@template, context)
       $(@container).html html
       @trigger('df:rendered', [res])
     else

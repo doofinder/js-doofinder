@@ -23,8 +23,8 @@ addHelpers = (context, parameters, currency, translations, extraHelpers) ->
   
   helpers = 
     'url-params': () ->
-      (url, render) ->
-        paramsFinal = url
+      (text, render) ->
+        paramsFinal = render(text)
 
         if paramsFinal
           paramsArray = []
@@ -44,11 +44,13 @@ addHelpers = (context, parameters, currency, translations, extraHelpers) ->
         paramsFinal
     
     'remove-protocol': () ->
-      (url, render) ->
+      (text, render) ->
+        url = render(text)
         url.replace /^https?:/, ''
     
     'format-currency': () ->
-      (price, render) ->
+      (text, render) ->
+        price = render(text)
         value = parseFloat(price)
         if !value and value != 0
           return ''
@@ -67,33 +69,6 @@ addHelpers = (context, parameters, currency, translations, extraHelpers) ->
           return translations[key]
         else
           return key
-
-    'eq': () ->
-      (lvalue, rvalue, options) ->
-        if arguments.length < 3
-          throw new Error '2 parameters are required for helper.'
-        if lvalue != rvalue
-          return options.inverse(this)
-        else
-          return options.fn(this)
-    
-    'lt': () ->
-      (lvalue, rvalue, options) ->
-        if arguments.length < 3
-          throw new Error '2 parameters are required for helper.'
-        if lvalue < rvalue
-          return options.fn(this)
-        else
-          return options.inverse(this)
-    
-    'gt': () ->
-      (lvalue, rvalue, options) ->
-        if arguments.length < 3
-          throw new Error '2 parameters are required for helper.'
-        if lvalue > rvalue
-          return options.fn(this)
-        else
-          return options.inverse(this)
 
 
   $.extend helpers,

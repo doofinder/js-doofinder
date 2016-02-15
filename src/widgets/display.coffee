@@ -27,10 +27,16 @@ class Display extends Widget
   @param {Object} options 
   @api public
   ###
-  constructor: (container, @template, @options = {}) ->
+  constructor: (container, @template, options = {}) ->
     @container = container
     @mustache = require("mustache")
-    @extraContext = @options.templateVars
+    @extraContext = options.templateVars
+    @addHelpers = (context) ->
+      addHelpers context, 
+        options.urlParams, 
+        options.currency, 
+        options.translations, 
+        options.templateFunctions
     
     super(container)
 
@@ -45,11 +51,7 @@ class Display extends Widget
   ###  
   render: (res) ->
     context = $.extend(true, res, @extraContext || {})
-    addHelpers context, 
-      @options.urlParams, 
-      @options.currency, 
-      @options.translations, 
-      @options.templateFunctions
+    @addHelpers context
     html = @mustache.render @template, context
     try
       $(@container).html html
