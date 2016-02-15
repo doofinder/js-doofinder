@@ -25,11 +25,10 @@ class Results extends Display
   ###
   constructor: (container, options = {}) ->
   	if not options.template
-  	  template = '<ul>{{#each results}}' +
-        '            <li>{{#each this}}' +
-        '               <b>{{@key}}</b>:{{this}}<br></li>' +
-        '               {{/each}}</div>' +
-        '            {{/each}}' +
+  	  template = '<ul>{{#results}}' +
+        '            <li>' +
+        '               <b>{{title}}</b>:{{description}}<br></li>' +
+        '            {{/results}}' +
         '         </ul>'
     else
       template = options.template

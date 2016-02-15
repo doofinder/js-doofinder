@@ -258,7 +258,7 @@ The options to configure the widget are:
 
 Option | Type | Description
 ------ |  ---- |  --------------
-template | `String` | [Handlebars](http://handlebarsjs.com) template to shape the results.
+template | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
 templateFunctions | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
 
@@ -300,7 +300,7 @@ The options to configure the widget are:
 
 Option | Type | Description
 ------ |  ---- |  --------------
-template | `String` | [Handlebars](http://handlebarsjs.com) template to shape the results.
+template | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
 templateFunctions | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
 scrollOffset | `Number` | Distance in pixels to the bottom in scroll when next page is requested. Default 50.
@@ -356,7 +356,7 @@ The options to configure the widget are:
 
 Option | Type | Description
 ------ |  ---- |  --------------
-template | `String` | [Handlebars](http://handlebarsjs.com) template to shape the results.
+template | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
 templateFunctions | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
 
@@ -402,7 +402,7 @@ The options to configure the widget are:
 
 Option | Type | Description
 ------ |  ---- |  --------------
-template | `String` | [Handlebars](http://handlebarsjs.com) template to shape the results.
+template | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
 templateFunctions | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
 
@@ -457,11 +457,11 @@ This method performs a Search API call and retrieves the data. The data will be 
 
 ### Example 1: Create a simple template to show results.
 
-In the [Quick Start](#quick-start) example we composed a simple view using the Doofinder Library. Let's see how to shape the results by a Handlebars template.
+In the [Quick Start](#quick-start) example we composed a simple view using the Doofinder Library. Let's see how to shape the results by a Mustache template.
 
 ```javascript
  
-var resultsTemplate = '{{#each results}}' +
+var resultsTemplate = '{{#results}}' +
   ' <div>'+
   '   <div>' +
   '     <a href="{{href}}">'+
@@ -478,7 +478,7 @@ var resultsTemplate = '{{#each results}}' +
   '    </div>' +
   '  </div>' +
   '</div>' +
-  '{{/each}}';
+  '{{/results}}';
 
 var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {template: resultsTemplate});
 
@@ -486,31 +486,30 @@ var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {template: re
 
 Let's have a look to the template:
 
-- We used `{{#each results}}` to iterate through the items.
+- We used `{{#results}}` to iterate through the items.
 - We used `{{field_name}}` tags to print the content of a field.
-- We used `{{#if filed_name}}` to check the presence of a field.
+- We used `{{#field_name}}` to check the presence of a field.
 - We used `{{#format-currency}}` helper to print the price with the coin symbol and formatted.
 - Note that we use a data attribute (data-df-hitcounter) to show the dfid. You can use this to send it with the [Controller.hit](#hit) method.
 
 ### Example 2: Adding extra info to our template.
 
-Maybe you want to add more information to your template dynamically. Imagine you want to show prices lower that a given number, i.e. 100.
-You can add this variable to the template scope by the option templateVars.
+Maybe you have some items with no header and you want to show a standard one, just in case.
 
 ```javascript
 var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {
   template: resultsTemplate,
   templateVars: {
-    maxPrice: 100
+    standardTitle: "My title"
     }
   });
 ```
 
-So you can modify your template in order to show just the prices lower than `maxPrice`.
+So you can modify your template in order to show a standard title if there's no header supplied by the item.
 
 ```javascript
  
-var resultsTemplate = '{{#each results}}' +
+var resultsTemplate = '{{#results}}' +
   ' <div>'+
   '   <div>' +
   '     <a href="{{href}}">'+
@@ -518,48 +517,49 @@ var resultsTemplate = '{{#each results}}' +
   '     </a>'+
   '     <div>'+
   '       <a target="_blank" data-df-hitcounter="{{dfid}}" href="{{href}}">'+
+  '         {{#header}}' +
   '         <div>{{header}}</div>' +
+  '         {{/header}}' +
+  '         {{^header}}' +
+  '         <div>{{standardTitle}}</div>' +
+  '         {{/header}}' +
   '         <div>{{body}}</div>' +
-  '         {{#lt price ../maxPrice}}'
-  '         <div>' +
-  '          <span>{{#format-currency}}{{price}}{{/format-currency}}</span>' +
-  '         </div>' +
-  '         {{/lt}}' +
   '       </a>' +
   '    </div>' +
   '  </div>' +
   '</div>' +
-  '{{/each}}';
+  '{{/results}}';
 
 var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {
   template: resultsTemplate,
   templateVars: {
-    maxPrice: 100
+    standardTitle: "My title"
     }
   });
 ```
-And we have used the `{{#lt}}` helper to compare the `price` with the `maxPrice`. Note that we have written `../maxPrice` instead of `maxPrice`. This is because we are in the loop and we must access to a variable out of `results` array. For more information about Handlebars templates, [click here](http://handlebarsjs.com/).
 
 ### Example 3: Create a custom template function.
 
-Template functions are called helpers in [Handlebars](http://handlebarsjs.com/). You can create and add custom helpers to your template by using the `templateFunctions` option. We'll create a helper that convert a text in bold.
+Template functions are called helpers in [Mustache](http://mustache.github.io/). You can create and add custom helpers to your template by using the `templateFunctions` option. We'll create a helper that convert a text in bold.
 
 ```javascript
 
 {
   templateFunctions: {
-    bold: function(options){
-      return "<b>" + options.fn(this) + "</b>"
+    bold: function(){
+      function(text, render){
+        return "<b>" + render(text) + "</b>"
+      }
     }
 }
 
 ```
-This helper will take the text in the tag and will wrapper it with the `<b>` tag. Note that `options.fn(this)` returns the text wrapped by the helper.
+This helper will take the text in the tag and will wrapper it with the `<b>` tag. Note that `render(text)` returns the text wrapped by the helper.
 
 We'll use the helper to show the header and instantiate the widget.
 
 ```javascript
-var resultsTemplate = '{{#each results}}' +
+var resultsTemplate = '{{#results}}' +
   ' <div>'+
   '   <div>' +
   '     <a href="{{href}}">'+
@@ -576,16 +576,18 @@ var resultsTemplate = '{{#each results}}' +
   '    </div>' +
   '  </div>' +
   '</div>' +
-  '{{/each}}';
+  '{{/results}}';
 
 var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {
   template: resultsTemplate,
   templateFunctions: {
-    bold: function(options){
-        return "<b>" + options.fn(this) + "</b>"
+    bold: function(){
+      return function(text, render){
+        return "<b>" + render(text) + "</b>"
       }
-    }
-  });
+    }   
+  }
+});
 
 ```
 
