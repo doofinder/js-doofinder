@@ -53,12 +53,9 @@ class Display extends Widget
     context = $.extend(true, res, @extraContext || {})
     @addHelpers context
     html = @mustache.render @template, context
-    try
-      $(@container).html html
-      @trigger("df:rendered", [res])
-    catch 
-      throw Error "widget.Display: Error while rendering." + 
-        " The container #{@container} you are trying to access does not already exist."
+    $(@container).html html
+    @trigger("df:rendered", [res])
+    
     
 
   ###
