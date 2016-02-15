@@ -58,7 +58,7 @@ class Display extends Widget
       @trigger("df:rendered", [res])
     catch 
       throw Error "widget.Display: Error while rendering." + 
-        " The container you are trying to access does not already exist."
+        " The container #{@container} you are trying to access does not already exist."
     
 
   ###
