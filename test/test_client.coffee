@@ -196,6 +196,8 @@ describe 'doofinder client\'s ', ->
       after () ->
         nock.cleanAll
 
+
+
       it 'with no type does not send type parameter', (done) ->
 
         client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, null, 'fooserver'
@@ -270,13 +272,28 @@ describe 'doofinder client\'s ', ->
 
     describe 'options', ->
 
-      it 'hits the right url', (done) ->
-        response =
-          field: "value"
+      before ()->
         scope = nock('http://fooserver')
-          .get('/5/options/ffffffffffffffffffffffffffffffff')
-          .reply(200, response)
-        client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
-        client.options (err, res) ->
-          res.should.to.be.deep.equal response
+        .persist()
+        .get('/5/options/ffffffffffffffffffffffffffffffff')
+        .reply((uri, requestBody) ->
+          querypart = uri.split('?')[1]
+          { path: uri, headers: this.req.headers, parameters: if querypart? then querypart.split('&') else []}
+          )
+
+        @client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
+
+      after () ->
+        nock.cleanAll
+
+      it 'sends the api token header', (done) ->
+
+        @client.options (err, res) ->
+          res.headers.should.have.keys 'api token', 'host'
+          res.headers['api token'].should.be.equal mock.request.api_key.split('-')[1]
+          done()
+
+      it 'hits the right url', (done) ->
+        @client.options (err, res) ->
+          res.path.should.contain 'options'
           done()

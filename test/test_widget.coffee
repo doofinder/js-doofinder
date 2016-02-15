@@ -18,14 +18,20 @@ mock =
   selector: "#query"
 
 # Test doofinder
-describe 'doofinder', ->
+describe 'doofinder widgets: ', ->
 
   # Tests the widget's stuff
-  describe 'queryInput widget', ->
+  describe 'the results widget', ->
 
-    it 'bind and trigger', ->
-      widget = new doofinder.Widget mock.selector
-      widget.bind 'test_event', (eventType, params) ->
-        params.should.be.deep.equal {testKey: 'testValue'}
+    before () ->
+      @client = new doofinder.Client mock.request.hashid, mock.request.api_key
+#      @controller = new doofinder.Controller @client
+
+
+#    it 'bind and trigger', (done) ->
+#      widget = new doofinder.Widget mock.selector
+#      widget.bind 'test_event', (eventType, params) ->
+#        params.should.be.deep.equal {testKey: 'testValue'}
+#        done()
       
-      widget.trigger 'test_event', {testKey: 'testValue'}
+#      widget.trigger 'test_event', {testKey: 'testValue'}
