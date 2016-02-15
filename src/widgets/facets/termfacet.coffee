@@ -105,7 +105,7 @@ class TermFacet extends Display
         @extraContext || {}
 
       @addHelpers(context)
-      html = @mustache(@template, context)
+      html = @mustache.render(@template, context)
       $(@container).html html
       @trigger('df:rendered', [res])
     else

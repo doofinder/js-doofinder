@@ -1627,7 +1627,7 @@ author: @ecoslado
           terms: res.facets[this.name].terms
         }, this.extraContext || {});
         this.addHelpers(context);
-        html = this.mustache(this.template, context);
+        html = this.mustache.render(this.template, context);
         $(this.container).html(html);
         return this.trigger('df:rendered', [res]);
       } else {
