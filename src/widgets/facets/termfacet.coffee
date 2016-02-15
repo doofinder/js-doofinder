@@ -26,7 +26,7 @@ class TermFacet extends Display
             '<ul>'+
             '{{#each terms}}'+
             '<li>'+
-            '<a href="#" class="df-facet {{#if selected}}df-facet--active{{/if}}" data-facet="{{../name}}"'+
+            '<a href="#" class="df-facet {{#if selected}}df-facet--active{{/if}}" data-facet="{{name}}"'+
             'data-value="{{ term }}">{{ term }} <span'+
             'class="df-facet__count">{{ count }}</span></a>'+
             '</li>'+
@@ -93,6 +93,7 @@ class TermFacet extends Display
       # we add it to each term  
       for key, term of res.facets[@name].terms
         term.key = key
+        term.name = @name
         if @selected[term.term]
           term.selected = 1
         else
