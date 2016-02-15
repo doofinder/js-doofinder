@@ -1348,12 +1348,10 @@ replaces the current content.
 
     function Display(container, template, options) {
       this.template = template;
-      if (options == null) {
-        options = {};
-      }
+      this.options = options != null ? options : {};
       this.container = container;
       this.mustache = _dereq_("mustache");
-      this.extraContext = options.templateVars;
+      this.extraContext = this.options.templateVars;
       Display.__super__.constructor.call(this, container);
     }
 
@@ -1371,7 +1369,7 @@ replaces the current content.
     Display.prototype.render = function(res) {
       var context, html;
       context = $.extend(true, res, this.extraContext || {});
-      addHelpers(context, options.urlParams, options.currency, options.translations, options.templateFunctions);
+      addHelpers(context, this.options.urlParams, this.options.currency, this.options.translations, this.options.templateFunctions);
       html = this.mustache.render(this.template, context);
       try {
         $(this.container).html(html);
@@ -1802,7 +1800,7 @@ replaces the current content.
         options = {};
       }
       if (!options.template) {
-        template = '<ul>{{#each results}}' + '            <li>{{#each this}}' + '               <b>{{@key}}</b>:{{this}}<br></li>' + '               {{/each}}</div>' + '            {{/each}}' + '         </ul>';
+        template = '<ul>{{#results}}' + '            <li>' + '               <b>{{title}}</b>:{{description}}<br></li>' + '            {{/results}}' + '         </ul>';
       } else {
         template = options.template;
       }
@@ -1862,7 +1860,7 @@ replaces the current content.
         options = {};
       }
       if (!options.template) {
-        template = '<ul>{{#each results}}' + '             <li>{{#each this}}' + '               <b>{{@key}}</b>:{{this}}<br>' + '                 {{/each}}' + '            </li>' + '             {{/each}}' + '        </ul>';
+        template = '<ul>{{#results}}{{@index}}<li><b>{{title}}</b>:{{description}}<br></li>{{/results}}</ul>';
       } else {
         template = options.template;
       }
@@ -2035,7 +2033,7 @@ bottom
     ScrollDisplay.prototype.renderNext = function(res) {
       var context, html;
       context = $.extend(true, res, this.extraContext || {});
-      addHelpers(context, options.urlParams, options.currency, options.translations, options.templateFunctions);
+      addHelpers(context, this.options.urlParams, this.options.currency, this.options.translations, this.options.templateFunctions);
       html = this.mustache.render(this.template, context);
       return $(this.container).append(html);
     };

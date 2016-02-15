@@ -26,13 +26,7 @@ class ScrollResults extends ScrollDisplay
   ###
   constructor: (container, options = {}) ->
     if not options.template
-      template = '<ul>{{#each results}}' +
-        '             <li>{{#each this}}' +
-        '               <b>{{@key}}</b>:{{this}}<br>' +
-        '                 {{/each}}' + 
-        '            </li>' +
-        '             {{/each}}' +
-        '        </ul>'
+      template = '<ul>{{#results}}{{@index}}<li><b>{{title}}</b>:{{description}}<br></li>{{/results}}</ul>'
     else
       template = options.template
     super(container, template, options)
@@ -62,6 +56,7 @@ class ScrollResults extends ScrollDisplay
     context = $.extend true, 
       res, 
       @extraContext || {}
+
     super(res)
     @trigger("df:rendered", res)
 
