@@ -875,7 +875,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":59}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "1.0.8",
+    version: "2.0.0",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
