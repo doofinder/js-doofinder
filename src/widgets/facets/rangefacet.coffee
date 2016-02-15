@@ -45,7 +45,7 @@ class RangeFacet extends Display
         name: @name, 
         @extraContext || {}
 
-      html = @template(context)
+      html = @mustache.render(@template, context)
       $(@container).html html
       range = 
         type: "double",

@@ -1456,7 +1456,7 @@ them. Manages the filtering.
         context = $.extend(true, {
           name: this.name
         }, this.extraContext || {});
-        html = this.template(context);
+        html = this.mustache.render(this.template, context);
         $(this.container).html(html);
         range = {
           type: "double",
