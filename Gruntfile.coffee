@@ -18,6 +18,7 @@ module.exports = (grunt) ->
         src: ['lib/doofinder.js']
         dest: 'dist/doofinder.js'
         options:
+          exclude: ['jsdom']
           browserifyOptions:
             standalone: 'doofinder'
 
