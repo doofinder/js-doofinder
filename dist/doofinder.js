@@ -1060,20 +1060,28 @@ author: @ecoslado
 
 },{"./jquery":6}],6:[function(require,module,exports){
 (function() {
-  var jQuery;
+  var document, jQuery, navigator, window;
 
   jQuery = require("jquery");
 
-  if (typeof document !== 'undefined') {
-    require("ion-rangeslider")(jQuery, document, window, navigator, void 0);
-    require("./jquery.typewatch")(jQuery);
+  if (typeof document === 'undefined') {
+    document = require("jsdom").jsdom('<input id="query"></input>');
+    window = document.defaultView;
+    navigator = window.navigator = {};
+    navigator.userAgent = 'Nasty Navigator';
+    navigator.appVersion = '0.0.1';
+    jQuery = jQuery(window);
   }
+
+  require("ion-rangeslider")(jQuery, document, window, navigator, void 0);
+
+  require("./jquery.typewatch")(jQuery);
 
   module.exports = jQuery;
 
 }).call(this);
 
-},{"./jquery.typewatch":7,"ion-rangeslider":56,"jquery":57}],7:[function(require,module,exports){
+},{"./jquery.typewatch":7,"ion-rangeslider":56,"jquery":57,"jsdom":undefined}],7:[function(require,module,exports){
 /*
 *	TypeWatch 2.2.2
 *
@@ -1550,7 +1558,7 @@ author: @ecoslado
       var _this;
       TermFacet.__super__.init.call(this, controller);
       _this = this;
-      this.bind("df:search", function(params) {
+      this.controller.bind("df:search", function(params) {
         return _this.selected = {};
       });
       $(this.container).on('click', "a[data-facet='" + this.name + "']", function(e) {
@@ -2047,6 +2055,8 @@ bottom
  */
 /* eslint-disable no-proto */
 
+'use strict'
+
 var base64 = require('base64-js')
 var ieee754 = require('ieee754')
 var isArray = require('isarray')
@@ -2129,8 +2139,10 @@ function Buffer (arg) {
     return new Buffer(arg)
   }
 
-  this.length = 0
-  this.parent = undefined
+  if (!Buffer.TYPED_ARRAY_SUPPORT) {
+    this.length = 0
+    this.parent = undefined
+  }
 
   // Common case.
   if (typeof arg === 'number') {
@@ -2261,6 +2273,10 @@ function fromJsonObject (that, object) {
 if (Buffer.TYPED_ARRAY_SUPPORT) {
   Buffer.prototype.__proto__ = Uint8Array.prototype
   Buffer.__proto__ = Uint8Array
+} else {
+  // pre-set for values that may exist in the future
+  Buffer.prototype.length = undefined
+  Buffer.prototype.parent = undefined
 }
 
 function allocate (that, length) {
@@ -2410,10 +2426,6 @@ function byteLength (string, encoding) {
   }
 }
 Buffer.byteLength = byteLength
-
-// pre-set for values that may exist in the future
-Buffer.prototype.length = undefined
-Buffer.prototype.parent = undefined
 
 function slowToString (encoding, start, end) {
   var loweredCase = false
@@ -21965,7 +21977,7 @@ internals.stringify = function (obj, prefix, generateArrayPrefix, strictNullHand
     var objKeys = Array.isArray(filter) ? filter : Object.keys(obj);
     for (var i = 0, il = objKeys.length; i < il; ++i) {
         var key = objKeys[i];
-        console.log(obj);
+
         if (Array.isArray(obj)) {
             values = values.concat(internals.stringify(obj[key], generateArrayPrefix(prefix, key), generateArrayPrefix, strictNullHandling, filter));
         }
