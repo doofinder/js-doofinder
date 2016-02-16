@@ -25,13 +25,13 @@ describe 'doofinder widgets: ', ->
 
     before () ->
       @client = new doofinder.Client mock.request.hashid, mock.request.api_key
-#      @controller = new doofinder.Controller @client
+      @controller = new doofinder.Controller @client
 
 
-#    it 'bind and trigger', (done) ->
-#      widget = new doofinder.Widget mock.selector
-#      widget.bind 'test_event', (eventType, params) ->
-#        params.should.be.deep.equal {testKey: 'testValue'}
-#        done()
-      
-#      widget.trigger 'test_event', {testKey: 'testValue'}
+    it 'bind and trigger', (done) ->
+      widget = new doofinder.Widget mock.selector
+      widget.bind 'test_event', (eventType, params) ->
+        params.should.be.deep.equal {testKey: 'testValue'}
+        done()
+     
+      widget.trigger 'test_event', {testKey: 'testValue'}
