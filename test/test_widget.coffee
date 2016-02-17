@@ -38,22 +38,50 @@ describe 'doofinder widgets: ', ->
   describe 'the queryInput widget', ->
 
     before () ->
+      @$ = doofinder.jQuery
+
+    beforeEach () ->
       @client = new doofinder.Client mock.request.hashid, mock.request.api_key
-      @controller = new doofinder.Controller @client
+
+    afterEach () ->
+      delete @client
+      delete @controller
 
     it 'trigger a search on third character', (done) ->
-      qw = new doofinder.widgets.QueryInput '#query'
-      @controller.addWidget(qw)
-      _searchCall = @controller.search
+      queryInput = @$ '#query'
+      queryInputWidget = new doofinder.widgets.QueryInput '#query'
+      controller = new doofinder.Controller @client
+      controller.addWidget queryInputWidget
       searchCalled = false
-      @controller.search = (query) ->
+      controller.search = (query) ->
+        searchCalled = true
         query.length.should.be.equal 3
         done()
 
       # two characters, nothing happens
-      doofinder.jQuery('#query').val('ch')
-
+      queryInput.val 'ch'
+      queryInput.trigger 'keydown'
       searchCalled.should.be.equal false
       # three characters, search is triggered
-      doofinder.jQuery('#query').val("cha")
-      doofinder.jQuery('#query').trigger('keydown')
+      queryInput.val 'cha'
+      queryInput.trigger 'keydown'
+
+    it 'customize # of characters needed to trigger search', (done) ->
+      @$('#query').remove()
+      @$('body').append('<input type="text" id="query"></input>')
+      queryInput = @$('#query')
+      queryInputWidget = new doofinder.widgets.QueryInput '#query', captureLength: 4
+      controller2 = new doofinder.Controller @client
+      controller2.addWidget queryInputWidget
+      searchCalled = false
+      controller2.search = (query) ->
+        searchCalled = true
+        query.length.should.be.equal 4
+        done()
+      # 3 characters, nothing happens
+      queryInput.val 'cha'
+      queryInput.trigger 'keydown'
+      searchCalled.should.be.equal false
+      # 4 characters, search is triggered
+      queryInput.val 'chai'
+      queryInput.trigger 'keydown'
