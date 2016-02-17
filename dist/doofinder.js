@@ -1060,28 +1060,20 @@ author: @ecoslado
 
 },{"./jquery":6}],6:[function(require,module,exports){
 (function() {
-  var document, jQuery, navigator, window;
+  var jQuery;
 
   jQuery = require("jquery");
 
-  if (typeof document === 'undefined') {
-    document = require("jsdom").jsdom('<input id="query"></input>');
-    window = document.defaultView;
-    navigator = window.navigator = {};
-    navigator.userAgent = 'Nasty Navigator';
-    navigator.appVersion = '0.0.1';
-    jQuery = jQuery(window);
+  if (typeof document !== 'undefined') {
+    require("ion-rangeslider")(jQuery, document, window, navigator, void 0);
+    require("./jquery.typewatch")(jQuery);
   }
-
-  require("ion-rangeslider")(jQuery, document, window, navigator, void 0);
-
-  require("./jquery.typewatch")(jQuery);
 
   module.exports = jQuery;
 
 }).call(this);
 
-},{"./jquery.typewatch":7,"ion-rangeslider":56,"jquery":57,"jsdom":undefined}],7:[function(require,module,exports){
+},{"./jquery.typewatch":7,"ion-rangeslider":56,"jquery":57}],7:[function(require,module,exports){
 /*
 *	TypeWatch 2.2.2
 *

@@ -7,7 +7,6 @@
 assert = require "assert"
 should = require('chai').should()
 expect = require('chai').expect
-doofinder = require "../lib/doofinder.js"
 nock = require('nock')
 
 mock =
@@ -36,6 +35,14 @@ mock =
 
 # Test doofinder
 describe 'doofinder client\'s ', ->
+
+  before () ->
+    global.document = require("jsdom").jsdom('<input id="query"></input>')
+    global.window = document.defaultView
+    global.navigator = window.navigator = {}
+    navigator.userAgent = 'Nasty Navigator' # kudos to @jesusenlanet: great Name!
+    navigator.appVersion = '0.0.1'
+    global.doofinder = require "../lib/doofinder.js"
 
   # Tests the client's stuff
   context 'makeQueryString method can ', ->
