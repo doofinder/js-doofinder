@@ -12,7 +12,6 @@ mock =
   request:
     hashid: "ffffffffffffffffffffffffffffffff"
     api_key: "eu1-384fd8a73c7ff0859a5891f9f4083b1b9727f9c3"
-  selector: "#query"
 
 # Test doofinder
 describe 'doofinder widgets: ', ->
@@ -23,13 +22,17 @@ describe 'doofinder widgets: ', ->
     global.navigator = window.navigator = {}
     navigator.userAgent = 'Nasty Navigator' # kudos to @jesusenlanet: great Name!
     navigator.appVersion = '0.0.1'
-    @doofinder = require "../lib/doofinder.js"
-    @client = new @doofinder.Client mock.request.hashid, mock.request.api_key
+    global.doofinder = require "../lib/doofinder.js"
+    @client = new doofinder.Client mock.request.hashid, mock.request.api_key
+
+  afterEach () ->
+    delete global.document
+    delete global.doofinder
 
   context 'any widget ' , ->
 
     it 'can bind and trigger', (done) ->
-      widget = new @doofinder.Widget mock.selector
+      widget = new doofinder.Widget '#query'
       widget.bind 'test_event', (eventType, params) ->
         params.should.be.deep.equal {testKey: 'testValue'}
         done()
@@ -40,15 +43,15 @@ describe 'doofinder widgets: ', ->
   context 'the queryInput widget', ->
 
     beforeEach () ->
-      $ = @doofinder.jQuery
+      $ = doofinder.jQuery
       # reset the query input, to get rid of callbacks
       $('#query').remove()
       $('body').append('<input type="text" id="query"></input>')
       @queryInput = $('#query')
 
     it 'triggers a search on third character', (done) ->
-      queryInputWidget = new @doofinder.widgets.QueryInput '#query'
-      controller = new @doofinder.Controller @client
+      queryInputWidget = new doofinder.widgets.QueryInput '#query'
+      controller = new doofinder.Controller @client
       controller.addWidget queryInputWidget
       searchCalled = false
       controller.search = (query) ->
@@ -65,11 +68,11 @@ describe 'doofinder widgets: ', ->
       @queryInput.trigger 'keydown'
 
     it 'customize # of characters needed to trigger search', (done) ->
-      queryInputWidget = new @doofinder.widgets.QueryInput '#query', captureLength: 4
-      controller2 = new @doofinder.Controller @client
-      controller2.addWidget queryInputWidget
+      queryInputWidget = new doofinder.widgets.QueryInput '#query', captureLength: 4
+      controller = new doofinder.Controller @client
+      controller.addWidget queryInputWidget
       searchCalled = false
-      controller2.search = (query) ->
+      controller.search = (query) ->
         searchCalled = true
         query.length.should.be.equal 4
         done()

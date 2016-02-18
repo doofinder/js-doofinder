@@ -44,6 +44,11 @@ describe 'doofinder client\'s ', ->
     navigator.appVersion = '0.0.1'
     global.doofinder = require "../lib/doofinder.js"
 
+  after () ->
+    delete global.document
+    delete global.doofinder
+
+
   # Tests the client's stuff
   context 'makeQueryString method can ', ->
 
