@@ -149,21 +149,31 @@ describe 'doofinder widgets: ', ->
       @queryEl.trigger 'keydown' # search!
 
     it 'replaces search results', (done) ->
+      # set up a second virtal response on the queue
+      scope = nock('http://fooserver')
+        .get('/5/search')
+        .query(true)
+        .reply((uri, requestBody)->
+          query_counter = /query_counter=(\d+)/.exec(uri)[1]
+          fake_results.query_counter = parseInt query_counter
+          # remove last result
+          fake_results.results.pop
+          fake_results
+        )
       resultsContainer = @resultsContainer
       queryEl = @queryEl
       @controller.addWidget @resultsWidget
+      self = this
       resultsContainer.one 'DOMSubtreeModified', () ->
-        # we just inserted fake_div
-        resultsContainer.find('#fake_div').length.should.be.equal 1
-        # after inserting fake_div, que do a search
-        queryEl.val 'sill'
-        queryEl.trigger 'keydown'
+        resultsContainer.find('li').length.should.be.equal 2
+        # after first search, get second page. previous content gets overwritten
+        self.controller.nextPage()
         resultsContainer.one 'DOMSubtreeModified', () ->
-          resultsContainer.find('#fake_div').length.should.be.equal 0
-          resultsContainer.find('li').length.should.be.equal 2
+          resultsContainer.find('li').length.should.be.equal 1
         done()
-      # insert fake div and start the whole thing
-      resultsContainer.append '<div id="fake_div">fake</div>'
+      # search and start the whole thing
+      queryEl.val 'sill'
+      queryEl.trigger 'keydown'
 
     it 'accepts custom templates, vars and functions', (done) ->
       # we add another results widget with alternate template
