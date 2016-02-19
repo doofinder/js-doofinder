@@ -129,13 +129,14 @@ describe 'doofinder widgets: ', ->
       client = new doofinder.Client mock.request.hashid, mock.request.api_key,5,null,'fooserver'
       queryInputWidget = new doofinder.widgets.QueryInput '#query'
       @resultsWidget = new doofinder.widgets.Results '#results'
-      controller = new doofinder.Controller client, [queryInputWidget, @resultsWidget]
+      @controller = new doofinder.Controller client, [queryInputWidget]
       # the els in questionr
       @resultsContainer = @$ '#results'
       @queryEl = @$ '#query'
 
     it 'display search results and triggers df:rendered', (done) ->
       resultsContainer = @resultsContainer
+      @controller.addWidget @resultsWidget
       # DOM event comes first
       resultsContainer.one 'DOMSubtreeModified', () ->
         resultsContainer.find('li').length.should.be.equal 2
@@ -147,10 +148,10 @@ describe 'doofinder widgets: ', ->
       @queryEl.val 'xill'
       @queryEl.trigger 'keydown' # search!
 
-
     it 'replaces search results', (done) ->
       resultsContainer = @resultsContainer
       queryEl = @queryEl
+      @controller.addWidget @resultsWidget
       resultsContainer.one 'DOMSubtreeModified', () ->
         # we just inserted fake_div
         resultsContainer.find('#fake_div').length.should.be.equal 1
@@ -161,6 +162,23 @@ describe 'doofinder widgets: ', ->
           resultsContainer.find('#fake_div').length.should.be.equal 0
           resultsContainer.find('li').length.should.be.equal 2
         done()
-
-      # insert fake div
+      # insert fake div and start the whole thing
       resultsContainer.append '<div id="fake_div">fake</div>'
+
+    it 'accepts custom templates', (done) ->
+      # we add another results widget with alternate template
+      @$('body').append('<div id="alt_results"></div>')
+      template = '<ul>{{#results}}' +
+        '            <li class="custom_template">' +
+        '               <b>{{title}}</b>:{{description}}<br></li>' +
+        '            {{/results}}' +
+        '         </ul>'
+      altResultsWidget = new doofinder.widgets.Results '#alt_results', template: template
+      @controller.addWidget altResultsWidget
+      self = this
+      @$('#alt_results').on 'DOMNodeInserted', () ->
+        self.$('#alt_results').find('li.custom_template').length.should.be.equal 2
+        done()
+
+      @queryEl.val 'zill'
+      @queryEl.trigger 'keydown'
