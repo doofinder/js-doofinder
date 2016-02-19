@@ -1,4 +1,4 @@
-# jsDoofinder (In progress)
+# jsDoofinder
 This library allows you to make requests to [Doofinder](http://www.doofinder.com) Search Engines and show the results in your website. You'll be able to retrieve and shape your data easily with it.
 
 ## Summary
