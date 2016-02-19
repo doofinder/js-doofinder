@@ -7,7 +7,7 @@
 assert = require "assert"
 should = require('chai').should()
 expect = require('chai').expect
-nock = require('nock')
+nock = require 'nock'
 
 mock =
   request:
