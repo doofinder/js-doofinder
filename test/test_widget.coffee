@@ -50,7 +50,7 @@ describe 'doofinder widgets: ', ->
     navigator.userAgent = 'Nasty Navigator' # kudos to @jesusenlanet: great Name!
     navigator.appVersion = '0.0.1'
     global.doofinder = require "../lib/doofinder.js"
-    @client = new doofinder.Client mock.request.hashid, mock.request.api_key
+
 
   afterEach () ->
     delete global.document
@@ -74,6 +74,7 @@ describe 'doofinder widgets: ', ->
       # reset the query input, to get rid of callbacks
       $('body').empty().append('<input type="text" id="query"></input>')
       @queryInput = $('#query')
+      @client = new doofinder.Client mock.request.hashid, mock.request.api_key
 
     it 'triggers a search on third character', (done) ->
       queryInputWidget = new doofinder.widgets.QueryInput '#query'
@@ -112,9 +113,8 @@ describe 'doofinder widgets: ', ->
 
   context 'the results widget', ->
 
-    before () ->
+    beforeEach () ->
       scope = nock('http://fooserver')
-        .persist()
         .get('/5/search')
         .query(true)
         .reply((uri, requestBody)->
@@ -122,41 +122,34 @@ describe 'doofinder widgets: ', ->
           fake_results.query_counter = parseInt query_counter
           fake_results
         )
-
-    beforeEach () ->
       @$ = doofinder.jQuery
       # reset the query input, to get rid of callbacks
       @$('body').empty().append('<input type="text" id="query"></input><div id="results"></div>')
-
-
-    it 'display search results', (done) ->
+      # set up doofinder controller
       client = new doofinder.Client mock.request.hashid, mock.request.api_key,5,null,'fooserver'
       queryInputWidget = new doofinder.widgets.QueryInput '#query'
       resultsWidget = new doofinder.widgets.Results '#results'
       controller = new doofinder.Controller client
       controller.addWidget queryInputWidget
       controller.addWidget resultsWidget
-      resultsContainer = @$ '#results'
-      queryEl = @$ '#query'
+      # the els in questionr
+      @resultsContainer = @$ '#results'
+      @queryEl = @$ '#query'
+
+    it 'display search results', (done) ->
       # when results are received, we check they're the "fake results"
+      resultsContainer = @resultsContainer
       resultsContainer.one 'DOMSubtreeModified', () ->
         resultsContainer.find('li').length.should.be.equal 2
         resultsContainer.find('li b')[0].innerHTML.should.contain "Aironet"
         done()
-      @$('#query').val 'xill'
+      @queryEl.val 'xill'
       # search!
-      @$('#query').trigger 'keydown'
+      @queryEl.trigger 'keydown'
 
     it 'replaces search results', (done) ->
-      client = new doofinder.Client mock.request.hashid, mock.request.api_key,5,null,'fooserver'
-      queryInputWidget = new doofinder.widgets.QueryInput '#query'
-      resultsWidget = new doofinder.widgets.Results '#results'
-      controller = new doofinder.Controller client
-      controller.addWidget queryInputWidget
-      controller.addWidget resultsWidget
-      resultsContainer = @$ '#results'
-      queryEl = @$ '#query'
-
+      resultsContainer = @resultsContainer
+      queryEl = @queryEl
       resultsContainer.one 'DOMSubtreeModified', () ->
         # we just inserted fake_div
         resultsContainer.find('#fake_div').length.should.be.equal 1
