@@ -191,3 +191,42 @@ describe 'doofinder widgets: ', ->
 
       @queryEl.val 'zill'
       @queryEl.trigger 'keydown'
+
+  context 'the scroll results widget', ->
+
+    beforeEach () ->
+      scope = nock('http://fooserver')
+        .get('/5/search')
+        .query(true)
+        .reply((uri, requestBody)->
+          query_counter = /query_counter=(\d+)/.exec(uri)[1]
+          fake_results.query_counter = parseInt query_counter
+          fake_results
+        )
+      @$ = doofinder.jQuery
+      # reset the query input, to get rid of callbacks
+      @$('body').empty().append('<input type="text" id="query"></input><div id="scroll"></div>')
+      # set up doofinder controller
+      client = new doofinder.Client mock.request.hashid, mock.request.api_key,5,null,'fooserver'
+      queryInputWidget = new doofinder.widgets.QueryInput '#query'
+      @scrollWidget = new doofinder.widgets.ScrollResults '#scroll'
+      @controller = new doofinder.Controller client, [queryInputWidget]
+      # the els in questionr
+      @scrollContainer = @$ '#scroll'
+      @queryEl = @$ '#query'
+
+    it 'display search results and triggers df:rendered', (done) ->
+      scrollContainer = @scrollContainer
+      @controller.addWidget @scrollWidget
+      # DOM event comes first
+      scrollContainer.one 'DOMSubtreeModified', () ->
+        scrollContainer.find('li').length.should.be.equal 2
+        scrollContainer.find('li b')[0].innerHTML.should.contain "Aironet"
+        done()
+      # df:rendered event comes second
+      # TEMPORARY COMMENTED UNTIL fix-double-df:triggering branch is merged
+#      @resultsWidget.bind 'df:rendered', (event, res) ->
+#        res.results.length.should.be.equal 2
+#        done()
+      @queryEl.val 'xill'
+      @queryEl.trigger 'keydown' # search!
