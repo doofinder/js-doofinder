@@ -139,12 +139,34 @@ describe 'doofinder widgets: ', ->
       resultsContainer = @$ '#results'
       queryEl = @$ '#query'
       # when results are received, we check they're the "fake results"
-      resultsContainer.on 'DOMSubtreeModified', () ->
-        resultsEl = document.querySelector "#results"
+      resultsContainer.one 'DOMSubtreeModified', () ->
         resultsContainer.find('li').length.should.be.equal 2
         resultsContainer.find('li b')[0].innerHTML.should.contain "Aironet"
         done()
-
-      @$('#query').val 'sill'
+      @$('#query').val 'xill'
       # search!
       @$('#query').trigger 'keydown'
+
+    it 'replaces search results', (done) ->
+      client = new doofinder.Client mock.request.hashid, mock.request.api_key,5,null,'fooserver'
+      queryInputWidget = new doofinder.widgets.QueryInput '#query'
+      resultsWidget = new doofinder.widgets.Results '#results'
+      controller = new doofinder.Controller client
+      controller.addWidget queryInputWidget
+      controller.addWidget resultsWidget
+      resultsContainer = @$ '#results'
+      queryEl = @$ '#query'
+
+      resultsContainer.one 'DOMSubtreeModified', () ->
+        # we just inserted fake_div
+        resultsContainer.find('#fake_div').length.should.be.equal 1
+        # after inserting fake_div, que do a search
+        queryEl.val 'sill'
+        queryEl.trigger 'keydown'
+        resultsContainer.one 'DOMSubtreeModified', () ->
+          resultsContainer.find('#fake_div').length.should.be.equal 0
+          resultsContainer.find('li').length.should.be.equal 2
+        done()
+
+      # insert fake div
+      resultsContainer.append '<div id="fake_div">fake</div>'
