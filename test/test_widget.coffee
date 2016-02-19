@@ -128,24 +128,29 @@ describe 'doofinder widgets: ', ->
       # set up doofinder controller
       client = new doofinder.Client mock.request.hashid, mock.request.api_key,5,null,'fooserver'
       queryInputWidget = new doofinder.widgets.QueryInput '#query'
-      resultsWidget = new doofinder.widgets.Results '#results'
+      @resultsWidget = new doofinder.widgets.Results '#results'
       controller = new doofinder.Controller client
       controller.addWidget queryInputWidget
-      controller.addWidget resultsWidget
+      controller.addWidget @resultsWidget
       # the els in questionr
       @resultsContainer = @$ '#results'
       @queryEl = @$ '#query'
 
-    it 'display search results', (done) ->
+    it 'display search results and triggers df:rendered', (done) ->
       # when results are received, we check they're the "fake results"
       resultsContainer = @resultsContainer
+      # DOM event is first
       resultsContainer.one 'DOMSubtreeModified', () ->
         resultsContainer.find('li').length.should.be.equal 2
         resultsContainer.find('li b')[0].innerHTML.should.contain "Aironet"
+      # df:rendered event is second
+      @resultsWidget.bind 'df:rendered', (event, res) ->
+        res.results.length.should.be.equal 2
         done()
       @queryEl.val 'xill'
       # search!
       @queryEl.trigger 'keydown'
+
 
     it 'replaces search results', (done) ->
       resultsContainer = @resultsContainer
