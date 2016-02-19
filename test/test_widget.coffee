@@ -165,19 +165,28 @@ describe 'doofinder widgets: ', ->
       # insert fake div and start the whole thing
       resultsContainer.append '<div id="fake_div">fake</div>'
 
-    it 'accepts custom templates', (done) ->
+    it 'accepts custom templates, vars and functions', (done) ->
       # we add another results widget with alternate template
       @$('body').append('<div id="alt_results"></div>')
       template = '<ul>{{#results}}' +
-        '            <li class="custom_template">' +
-        '               <b>{{title}}</b>:{{description}}<br></li>' +
+        '            <li class="{{class_name}}">' +
+        '               {{#bold}}{{title}}{{/bold}}:{{description}}<br></li>' +
         '            {{/results}}' +
         '         </ul>'
-      altResultsWidget = new doofinder.widgets.Results '#alt_results', template: template
+      altResultsWidget = new doofinder.widgets.Results '#alt_results',
+        template: template,
+        templateVars:
+          class_name: 'custom_template'
+        templateFunctions:
+          bold: () ->
+            (text, render) ->
+              '<b class="custom">' + render(text) + '</b>'
+
       @controller.addWidget altResultsWidget
       self = this
       @$('#alt_results').on 'DOMNodeInserted', () ->
         self.$('#alt_results').find('li.custom_template').length.should.be.equal 2
+        self.$('#alt_results').find('li b.custom').length.should.be.equal 2
         done()
 
       @queryEl.val 'zill'
