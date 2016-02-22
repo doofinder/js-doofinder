@@ -875,7 +875,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":59}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "2.0.0",
+    version: "2.0.1",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1861,38 +1861,6 @@ replaces the current content.
       return $(this.container).on('click', 'a[data-df-hitcounter]', function(e) {
         return _this.trigger('df:hit', [$(this).data('dfHitcounter'), $(this).attr('href')]);
       });
-    };
-
-
-    /*
-    render
-    
-    just inherits render method and triggers
-    df:results_rendered
-    
-    @param {Object} res
-    @api public
-     */
-
-    ScrollResults.prototype.render = function(res) {
-      ScrollResults.__super__.render.call(this, res);
-      return this.trigger("df:rendered", res);
-    };
-
-
-    /*
-    renderNext
-    
-    just inherits render method and triggers
-    df:results_rendered
-    
-    @param {Object} res
-    @api public
-     */
-
-    ScrollResults.prototype.renderNext = function(res) {
-      ScrollResults.__super__.renderNext.call(this, res);
-      return this.trigger("df:rendered", res);
     };
 
     return ScrollResults;

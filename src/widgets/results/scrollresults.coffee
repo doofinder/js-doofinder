@@ -43,30 +43,4 @@ class ScrollResults extends ScrollDisplay
       _this.trigger 'df:hit', [$(this).data('dfHitcounter'), $(this).attr('href')]
     
 
-  ###
-  render
-
-  just inherits render method and triggers
-  df:results_rendered
-
-  @param {Object} res
-  @api public
-  ###
-  render: (res) ->
-    super(res)
-    @trigger("df:rendered", res)
-
-  ###
-  renderNext
-
-  just inherits render method and triggers
-  df:results_rendered
-
-  @param {Object} res
-  @api public
-  ###
-  renderNext: (res) ->
-    super(res)
-    @trigger("df:rendered", res)
-
 module.exports = ScrollResults

@@ -1,4 +1,4 @@
-# jsDoofinder (In progress)
+# jsDoofinder
 This library allows you to make requests to [Doofinder](http://www.doofinder.com) Search Engines and show the results in your website. You'll be able to retrieve and shape your data easily with it.
 
 ## Summary
@@ -464,13 +464,13 @@ In the [Quick Start](#quick-start) example we composed a simple view using the D
 var resultsTemplate = '{{#results}}' +
   ' <div>'+
   '   <div>' +
-  '     <a href="{{href}}">'+
-  '       <img src="{{image}}" alt="{{header}}">'+
+  '     <a href="{{link}}">'+
+  '       <img src="{{image_link}}" alt="{{title}}">'+
   '     </a>'+
   '     <div>'+
-  '       <a target="_blank" data-df-hitcounter="{{dfid}}" href="{{href}}">'+
-  '         <div>{{header}}</div>' +
-  '         <div>{{body}}</div>' +
+  '       <a target="_blank" data-df-hitcounter="{{dfid}}" href="{{link}}">'+
+  '         <div>{{title}}</div>' +
+  '         <div>{{description}}</div>' +
   '         <div>' +
   '          <span>{{#format-currency}}{{price}}{{/format-currency}}</span>' +
   '         </div>'+
@@ -512,18 +512,18 @@ So you can modify your template in order to show a standard title if there's no 
 var resultsTemplate = '{{#results}}' +
   ' <div>'+
   '   <div>' +
-  '     <a href="{{href}}">'+
-  '       <img src="{{image}}" alt="{{header}}">'+
+  '     <a href="{{link}}">'+
+  '       <img src="{{image_link}}" alt="{{title}}">'+
   '     </a>'+
   '     <div>'+
-  '       <a target="_blank" data-df-hitcounter="{{dfid}}" href="{{href}}">'+
-  '         {{#header}}' +
-  '         <div>{{header}}</div>' +
-  '         {{/header}}' +
-  '         {{^header}}' +
+  '       <a target="_blank" data-df-hitcounter="{{dfid}}" href="{{link}}">'+
+  '         {{#title}}' +
+  '         <div>{{title}}</div>' +
+  '         {{/title}}' +
+  '         {{^title}}' +
   '         <div>{{standardTitle}}</div>' +
-  '         {{/header}}' +
-  '         <div>{{body}}</div>' +
+  '         {{/title}}' +
+  '         <div>{{description}}</div>' +
   '       </a>' +
   '    </div>' +
   '  </div>' +
@@ -562,13 +562,13 @@ We'll use the helper to show the header and instantiate the widget.
 var resultsTemplate = '{{#results}}' +
   ' <div>'+
   '   <div>' +
-  '     <a href="{{href}}">'+
-  '       <img src="{{image}}" alt="{{header}}">'+
+  '     <a href="{{link}}">'+
+  '       <img src="{{image_link}}" alt="{{link}}">'+
   '     </a>'+
   '     <div>'+
-  '       <a target="_blank" data-df-hitcounter="{{dfid}}" href="{{href}}">'+
-  '         <div>{{#bold}}{{header}}{{/bold}}</div>' +
-  '         <div>{{body}}</div>' +
+  '       <a target="_blank" data-df-hitcounter="{{dfid}}" href="{{link}}">'+
+  '         <div>{{#bold}}{{title}}{{/bold}}</div>' +
+  '         <div>{{description}}</div>' +
   '         <div>' +
   '          <span>{{#format-currency}}{{price}}{{/format-currency}}</span>' +
   '         </div>'+
