@@ -232,12 +232,11 @@ describe 'doofinder widgets: ', ->
       scrollContainer.one 'DOMSubtreeModified', () ->
         scrollContainer.find('li').length.should.be.equal 2
         scrollContainer.find('li b')[0].innerHTML.should.contain "Aironet"
-        done()
       # df:rendered event comes second
       # TEMPORARY COMMENTED UNTIL fix-double-df:triggering branch is merged
-#      @resultsWidget.bind 'df:rendered', (event, res) ->
-#        res.results.length.should.be.equal 2
-#        done()
+      @scrollWidget.bind 'df:rendered', (event, res) ->
+        res.results.length.should.be.equal 2
+        done()
       @queryEl.val 'xill'
       @queryEl.trigger 'keydown' # search!
 
