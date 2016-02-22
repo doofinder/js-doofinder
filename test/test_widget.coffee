@@ -240,3 +240,33 @@ describe 'doofinder widgets: ', ->
 #        done()
       @queryEl.val 'xill'
       @queryEl.trigger 'keydown' # search!
+
+    it 'appends second page search results', (done) ->
+      # set up a second virtal response on the queue
+      scope = nock('http://fooserver')
+        .get('/5/search')
+        .query(true)
+        .reply((uri, requestBody)->
+          query_counter = /query_counter=(\d+)/.exec(uri)[1]
+          fake_results.query_counter = parseInt query_counter
+          # remove last result
+          fake_results.results.pop()
+          fake_results
+        )
+      scrollContainer = @scrollContainer
+      @controller.addWidget @scrollWidget
+      queryEl = @queryEl
+      self = this
+
+      scrollContainer.one 'DOMSubtreeModified', () -> # first nsearch
+        scrollContainer.find('li').length.should.be.equal 2
+        # after first search, get second page. previous content gets overwritten
+        scrollContainer.one 'DOMSubtreeModified', () ->
+          # now it's three (new results are appended)
+          scrollContainer.find('li').length.should.be.equal 3
+          done()
+        self.controller.nextPage()
+
+      # search and start the whole thing
+      queryEl.val 'sill'
+      queryEl.trigger 'keydown'
