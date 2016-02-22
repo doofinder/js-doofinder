@@ -195,19 +195,14 @@ describe 'doofinder client\'s ', ->
 
     context 'search', ->
 
-      before () ->
+      beforeEach () ->
         scope = nock('http://fooserver')
-        .persist()
         .get('/5/search')
         .query(true)
         .reply((uri, requestBody)->
           querypart = uri.split('?')[1]
           { path: uri, headers: this.req.headers, parameters:querypart.split('&') }
         )
-
-      after () ->
-        nock.cleanAll
-
 
 
       it 'with no type does not send type parameter', (done) ->

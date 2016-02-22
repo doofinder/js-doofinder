@@ -94,7 +94,6 @@ class Controller
   @api public
   ###
   search: (query, params={}) ->
-    
     if query
       searchParams = $.extend true,
         {},
