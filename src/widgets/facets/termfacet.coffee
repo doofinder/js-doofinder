@@ -17,20 +17,20 @@ class TermFacet extends Display
   constructor: (container, @name, options = {}) ->
     @selected = {}
     if not options.template
-      template = '{{#if @index}}' +
+      template = '{{#@index}}' +
             '<hr class="df-separator">' +
-            '{{/if}}' +
+            '{{/@index}}' +
             '<div class="df-facets">'+
             '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>'+
             '<div class="df-facets__content">'+
             '<ul>'+
-            '{{#each terms}}'+
+            '{{#terms}}'+
             '<li>'+
-            '<a href="#" class="df-facet {{#if selected}}df-facet--active{{/if}}" data-facet="{{name}}"'+
+            '<a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}" data-facet="{{name}}"'+
             'data-value="{{ term }}">{{ term }} <span'+
             'class="df-facet__count">{{ count }}</span></a>'+
             '</li>'+
-            '{{/each}}'
+            '{{/terms}}'
     else
       template = options.template
 
@@ -84,6 +84,7 @@ class TermFacet extends Display
     @selected = {}
     totalSelected = 0
     anySelected = false
+
     if res.filter and res.filter.terms and res.filter.terms[@name]
       for term in res.filter.terms[@name]
         @selected[term] = 1

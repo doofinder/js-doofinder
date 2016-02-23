@@ -15,29 +15,64 @@ mock =
     api_key: "eu1-384fd8a73c7ff0859a5891f9f4083b1b9727f9c3"
 
 fake_results =
-  query_counter: 1,
-  results_per_page: 12,
-  page: 1,
-  total: 31,
-  query: "some query",
-  hashid: mock.request.hashid,
-  max_score: 1.3,
+  query_counter: 1
+  results_per_page: 12
+  page: 1
+  total: 31
+  query: "some query"
+  hashid: mock.request.hashid
+  max_score: 1.3
   results: [
-    {
-      description: "Antena. 5.2 dBi. omnidireccional…",
-      dfid: "523093f0ded16148dc005362",
-      title: "Cisco Aironet Pillar Mount Diversity Omnidirectional Antenna",
-      url: "http://www.example.com/product_description.html",
-      image_url: "http://www.example.com/images/product_image.jpg",
-      type: "product",
-      id: "ID1"
-    },
-    {
-      description: "Teclado. USB. España…",
-      dfid: "523093f0ded16148dc0053xx",
-    }
+    description: "Antena. 5.2 dBi. omnidireccional…"
+    dfid: "523093f0ded16148dc005362"
+    title: "Cisco Aironet Pillar Mount Diversity Omnidirectional Antenna"
+    url: "http://www.example.com/product_description.html"
+    image_url: "http://www.example.com/images/product_image.jpg"
+    type: "product"
+    id: "ID1"
+  ,
+    description: "Teclado. USB. España…"
+    dfid: "523093f0ded16148dc0053xx"
   ],
   query_name: "fuzzy"
+  facets:
+    best_price:
+      _type: "range"
+      ranges: [
+        from: 0
+        count: 24
+        min: 8.5
+        max: 225
+        total_count: 24
+        total: 1855.57
+        mean: 77.32
+      ]
+
+    color:
+      _type: "terms"
+      missing: 16
+      total: 10
+      other: 0
+      terms: [
+        term: "Azul"
+        count: 3
+      ,
+        term: "Rojo"
+        count: 1
+      ]
+
+    categories:
+      _type: "terms"
+      missing: 0
+      total: 50
+      other: 0
+      terms: [
+        term: "Sillas de paseo"
+        count: 6
+      ,
+        term: "Seguridad en el hogar"
+        count: 5
+      ]   
 
 
 # Test doofinder
@@ -308,3 +343,36 @@ describe 'doofinder widgets: ', ->
       # start the process
       queryEl.val 'zill'
       queryEl.trigger 'keydown'
+
+  context ' termfacet widget ' , ->
+
+    beforeEach () ->
+      scope = nock('http://fooserver')
+      .get('/5/search')
+      .query(true)
+      .reply((uri, requestBody)->
+        query_counter = /query_counter=(\d+)/.exec(uri)[1]
+        fake_results.query_counter = parseInt query_counter
+        fake_results)
+      
+      @$ = doofinder.jQuery
+      # reset html
+      @$('body').empty().append '<input type="text" id="query"></input><div id="fcontainer"></div><div id="results"></div>'
+      @queryEl = @$ '#query'
+      client = new doofinder.Client mock.request.hashid, mock.request.api_key,5,null,'fooserver'
+      queryInputWidget = new doofinder.widgets.QueryInput '#query'
+      @controller = new doofinder.Controller client, [queryInputWidget]
+
+    it 'display all facet terms returned in the response', (done) ->
+      termFacetWidget = new doofinder.widgets.TermFacet '#fcontainer', 'color'
+      @controller.addWidget termFacetWidget
+      facetContainer = @$ '#fcontainer'
+
+      facetContainer.on 'DOMNodeInserted', ()->
+        # two color terms 
+        facetContainer.find('a.df-facet').length.should.be.equal 2
+        done()
+                
+      @queryEl.val 'pill'
+      @queryEl.trigger 'keydown'
+      
