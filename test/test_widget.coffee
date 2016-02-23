@@ -269,3 +269,36 @@ describe 'doofinder widgets: ', ->
       # search and start the whole thing
       queryEl.val 'sill'
       queryEl.trigger 'keydown'
+
+    it ' calls nextPage when df:scroll is triggered', (done)->
+      scrollContainer = @scrollContainer
+      scrollContainer.css position: 'relative', height: '800px', overflow: 'auto'
+      content = scrollContainer.find('div').first()
+      content.css height: '1200px'
+      controller = @controller
+      controller.addWidget @scrollWidget
+      queryEl = @queryEl
+      self = this
+      _nextPage = controller.nextPage
+      nextPageCalled = false
+
+      controller.nextPage = () ->
+        nextPageCalled = true
+        controller.nextPage = _nextPage
+        done()
+
+      scrollContainer.one 'df:scroll', ()->
+        # first time this is called, scroll is on top. no nextPage called
+        nextPageCalled.should.be.false
+        # now we move the scroll
+        scrollContainer.scrollTop 400
+        # and trigger df:scroll again. this time, nextPage should be called
+        scrollContainer.trigger 'df:scroll'
+
+      scrollContainer.on 'DOMSubtreeModified', ()->
+        # scroll is on top, no nextPage should be called after this
+        scrollContainer.trigger 'df:scroll'
+
+      # start the process
+      queryEl.val 'zill'
+      queryEl.trigger 'keydown'
