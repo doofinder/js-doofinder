@@ -219,7 +219,7 @@ describe 'doofinder widgets: ', ->
       # set up doofinder controller
       client = new doofinder.Client mock.request.hashid, mock.request.api_key,5,null,'fooserver'
       queryInputWidget = new doofinder.widgets.QueryInput '#query'
-      @scrollWidget = new doofinder.widgets.ScrollResults '#scroll'
+      @scrollWidget = new doofinder.widgets.ScrollResults '#scroll', scrollOffset: 95
       @controller = new doofinder.Controller client, [queryInputWidget]
       # the els in questionr
       @scrollContainer = @$ '#scroll'
@@ -233,7 +233,6 @@ describe 'doofinder widgets: ', ->
         scrollContainer.find('li').length.should.be.equal 2
         scrollContainer.find('li b')[0].innerHTML.should.contain "Aironet"
       # df:rendered event comes second
-      # TEMPORARY COMMENTED UNTIL fix-double-df:triggering branch is merged
       @scrollWidget.bind 'df:rendered', (event, res) ->
         res.results.length.should.be.equal 2
         done()
@@ -270,7 +269,7 @@ describe 'doofinder widgets: ', ->
       queryEl.val 'sill'
       queryEl.trigger 'keydown'
 
-    it ' calls nextPage when df:scroll is triggered', (done)->
+    it ' calls nextPage when df:scroll is triggered with custom offset', (done)->
       scrollContainer = @scrollContainer
       scrollContainer.css position: 'relative', height: '800px', overflow: 'auto'
       content = scrollContainer.find('div').first()
@@ -288,12 +287,19 @@ describe 'doofinder widgets: ', ->
         done()
 
       scrollContainer.one 'df:scroll', ()->
-        # first time this is called, scroll is on top. no nextPage called
+        # df:scroll is after nextPage, if it happened
+        # no nextPage called
         nextPageCalled.should.be.false
-        # now we move the scroll
-        scrollContainer.scrollTop 400
+        # now we move the scroll to the "nextPage" limit
+        scrollContainer.scrollTop 305
         # and trigger df:scroll again. this time, nextPage should be called
         scrollContainer.trigger 'df:scroll'
+
+      # set scrollbar one pixel below the limit
+      scrollContainer.scrollTop 304
+      # and trigger the event
+      scrollContainer.trigger 'df:scroll'
+
 
       scrollContainer.on 'DOMSubtreeModified', ()->
         # scroll is on top, no nextPage should be called after this
