@@ -92,7 +92,9 @@ For the QueryInput widget:
 For the ScrollResults widget:
 * scroll selector: the CSS selector for the scroll wrapper.
 
-**WARNING**: Note that Doofinder Search API is protected with CORS, so you must enable the host you are requesting from. You can do this from your Doofinder Administration Panel > Configuration > TODO(@ecoslado) This feature in Admin Panel.
+**WARNING**: Note that Doofinder Search API is protected with CORS, so
+you must enable the host you are requesting from. You can do this from
+your Doofinder Administration Panel > Configuration > Allowed Domains.
 
 With all this in place you'll have a search box where you can write a query and the results will be shown. Scrolling into the layer you'll see more results.
 
