@@ -426,31 +426,59 @@ describe 'doofinder widgets: ', ->
         dup_results = JSON.parse JSON.stringify fake_results
         dup_results.filter = terms: color: ['Azul']
         dup_results)
-
+      # setup widgets and stuff
       termFacetWidget = new doofinder.widgets.TermFacet '#fcontainer', 'color'
       @controller.addWidget termFacetWidget
       facetContainer = @$ '#fcontainer'
       self = this
+      ## get ready for first response
       facetContainer.one 'DOMNodeInserted', ()->
         # filter should be empty
         self.controller.status.params.filters.should.be.empty
-        # get ready for next search.
+        ## get ready for first refresh (with a filter)
         facetContainer.one 'DOMNodeInserted', ()->
           # filter should be present
           self.controller.status.params.filters.should.have.keys 'color'
-          # get ready for refresh
+          # get ready for second refresh (without a filter)
           _refresh  = self.controller.refresh
           self.controller.refresh = () ->
             # filter should be empty
             self.controller.status.params.filters.color.should.be.empty
-            # and we're done
             self.controller.refresh = _refresh
             done()
-          # click on a selected term -- remove filter
+          # after second (filtered) response, click on a selected term -- remove filter
           facetContainer.find('a[data-facet="color"][data-value="Azul"]').trigger 'click'
 
-        # now we click on a facet. add filter
+        # after first (unfiltered) response, click on a facet. add filter
         facetContainer.find('a[data-facet="color"][data-value="Azul"]').trigger 'click'
 
       @queryEl.val 'lill'
+      # ask for the first response
+      @queryEl.trigger 'keydown'
+
+    it 'renders custom templates', (done) ->
+      template = '<div class="df-facets custom {{customVar}}">'+
+            '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>'+
+            '<div class="df-facets__content">'+
+            '<ul>'+
+            '{{#terms}}'+
+            '<li>'+
+            '<a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}" data-facet="{{name}}"'+
+            'data-value="{{ term }}">{{ term }} <span'+
+            'class="df-facet__count">{{ count }}</span></a>'+
+            '</li>'+
+            '{{/terms}}'
+      # setup widgets and stuff
+      termFacetWidget = new doofinder.widgets.TermFacet '#fcontainer', 'color', template: template, templateVars: customVar: 'customValue'
+      @controller.addWidget termFacetWidget
+      facetContainer = @$ '#fcontainer'
+
+      facetContainer.one 'DOMNodeInserted', ()->
+        # custom template should be rendered
+        facetContainer.find('div.custom').length.should.eql 1
+        # with custom vars
+        facetContainer.find('div.customValue').length.should.eql 1
+        done()
+
+      @queryEl.val 'xixx'
       @queryEl.trigger 'keydown'
