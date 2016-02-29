@@ -72,7 +72,7 @@ fake_results =
       ,
         term: "Seguridad en el hogar"
         count: 5
-      ]   
+      ]
 
 
 # Test doofinder
@@ -192,8 +192,9 @@ describe 'doofinder widgets: ', ->
           query_counter = /query_counter=(\d+)/.exec(uri)[1]
           fake_results.query_counter = parseInt query_counter
           # remove last result
-          fake_results.results.pop
-          fake_results
+          dup_results = JSON.parse JSON.stringify fake_results
+          dup_results.results.pop
+          dup_results
         )
       resultsContainer = @resultsContainer
       queryEl = @queryEl
@@ -283,8 +284,9 @@ describe 'doofinder widgets: ', ->
           query_counter = /query_counter=(\d+)/.exec(uri)[1]
           fake_results.query_counter = parseInt query_counter
           # remove last result
-          fake_results.results.pop()
-          fake_results
+          dup_results = JSON.parse JSON.stringify fake_results
+          dup_results.results.pop()
+          dup_results
         )
       scrollContainer = @scrollContainer
       @controller.addWidget @scrollWidget
@@ -354,7 +356,7 @@ describe 'doofinder widgets: ', ->
         query_counter = /query_counter=(\d+)/.exec(uri)[1]
         fake_results.query_counter = parseInt query_counter
         fake_results)
-      
+
       @$ = doofinder.jQuery
       # reset html
       @$('body').empty().append '<input type="text" id="query"></input><div id="fcontainer"></div><div id="results"></div>'
@@ -369,10 +371,47 @@ describe 'doofinder widgets: ', ->
       facetContainer = @$ '#fcontainer'
 
       facetContainer.on 'DOMNodeInserted', ()->
-        # two color terms 
+        # two color terms
         facetContainer.find('a.df-facet').length.should.be.equal 2
         done()
-                
+
       @queryEl.val 'pill'
       @queryEl.trigger 'keydown'
-      
+
+    it 'triggers the df:rendered event' , (done)->
+      termFacetWidget = new doofinder.widgets.TermFacet '#fcontainer', 'color'
+      @controller.addWidget termFacetWidget
+      facetContainer = @$ '#fcontainer'
+
+      termFacetWidget.bind 'df:rendered', (event, results) ->
+        results.results.length.should.be.equal 2
+        done()
+
+      @queryEl.val 'lill'
+      @queryEl.trigger 'keydown'
+
+    it 'add filter on click', (done) ->
+      termFacetWidget = new doofinder.widgets.TermFacet '#fcontainer', 'color'
+      @controller.addWidget termFacetWidget
+      facetContainer = @$ '#fcontainer'
+      self = this
+      facetContainer.one 'DOMNodeInserted', ()->
+        # filter should be empty
+        self.controller.status.params.filters.should.be.empty
+        # get ready for next search.
+        _refresh  = self.controller.refresh
+        self.controller.refresh = () ->
+          # filter should be added
+          self.controller.status.params.filters.should.have.keys 'color'
+          self.controller.status.params.filters.color.should.be.an.Array
+          self.controller.status.params.filters.color.should.eql ['Azul']
+          # and we're done
+          self.controller.refresh = _refresh
+          done()
+
+        # now we click on a facet
+        facetContainer.find('a[data-facet="color"][data-value="Azul"]').trigger('click')
+
+
+      @queryEl.val 'lill'
+      @queryEl.trigger 'keydown'
