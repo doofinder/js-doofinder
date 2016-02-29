@@ -412,6 +412,45 @@ describe 'doofinder widgets: ', ->
         # now we click on a facet
         facetContainer.find('a[data-facet="color"][data-value="Azul"]').trigger('click')
 
+      @queryEl.val 'lill'
+      @queryEl.trigger 'keydown'
+
+    it 'remove filter on click', (done) ->
+      # setup second server response -- with filter info
+      scope = nock('http://fooserver')
+      .get('/5/search')
+      .query(true)
+      .reply((uri, requestBody)->
+        query_counter = /query_counter=(\d+)/.exec(uri)[1]
+        fake_results.query_counter = parseInt query_counter
+        dup_results = JSON.parse JSON.stringify fake_results
+        dup_results.filter = terms: color: ['Azul']
+        dup_results)
+
+      termFacetWidget = new doofinder.widgets.TermFacet '#fcontainer', 'color'
+      @controller.addWidget termFacetWidget
+      facetContainer = @$ '#fcontainer'
+      self = this
+      facetContainer.one 'DOMNodeInserted', ()->
+        # filter should be empty
+        self.controller.status.params.filters.should.be.empty
+        # get ready for next search.
+        facetContainer.one 'DOMNodeInserted', ()->
+          # filter should be present
+          self.controller.status.params.filters.should.have.keys 'color'
+          # get ready for refresh
+          _refresh  = self.controller.refresh
+          self.controller.refresh = () ->
+            # filter should be empty
+            self.controller.status.params.filters.color.should.be.empty
+            # and we're done
+            self.controller.refresh = _refresh
+            done()
+          # click on a selected term -- remove filter
+          facetContainer.find('a[data-facet="color"][data-value="Azul"]').trigger 'click'
+
+        # now we click on a facet. add filter
+        facetContainer.find('a[data-facet="color"][data-value="Azul"]').trigger 'click'
 
       @queryEl.val 'lill'
       @queryEl.trigger 'keydown'
