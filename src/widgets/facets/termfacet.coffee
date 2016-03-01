@@ -56,7 +56,6 @@ class TermFacet extends Display
 
         else
             _this.controller.addFilter key, value
-
         _this.controller.refresh()
 
     # Removes filters not present in results.
