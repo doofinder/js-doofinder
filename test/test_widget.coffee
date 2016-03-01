@@ -482,3 +482,36 @@ describe 'doofinder widgets: ', ->
 
       @queryEl.val 'xixx'
       @queryEl.trigger 'keydown'
+
+  context 'rangefacet widget ', ->
+
+    beforeEach () ->
+      scope = nock('http://fooserver')
+      .get('/5/search')
+      .query(true)
+      .reply((uri, requestBody)->
+        query_counter = /query_counter=(\d+)/.exec(uri)[1]
+        fake_results.query_counter = parseInt query_counter
+        fake_results)
+
+      @$ = doofinder.jQuery
+      # reset html
+      @$('body').empty().append '<input type="text" id="query"></input><div id="fcontainer"></div><div id="results"></div>'
+      @queryEl = @$ '#query'
+      client = new doofinder.Client mock.request.hashid, mock.request.api_key,5,null,'fooserver'
+      queryInputWidget = new doofinder.widgets.QueryInput '#query'
+      @controller = new doofinder.Controller client, [queryInputWidget]
+
+    it 'display ranges returned in the response and triggers df:rendered', (done) ->
+      rangeFacetWidget = new doofinder.widgets.RangeFacet '#fcontainer', 'best_price'
+      @controller.addWidget rangeFacetWidget
+      facetContainer = @$ '#fcontainer'
+      counter = 0
+      rangeFacetWidget.bind 'df:rendered', (res)->
+        facetContainer.find('span.js-grid-text-0').first().text().should.be.eql '8'
+        facetContainer.find('span.js-grid-text-1').first().text().should.be.eql '117'
+        facetContainer.find('span.js-grid-text-2').first().text().should.be.eql '225'
+        done()
+
+      @queryEl.val 'pill'
+      @queryEl.trigger 'keydown' ###
