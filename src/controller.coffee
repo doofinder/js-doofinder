@@ -108,7 +108,8 @@ class Controller
       @status.params.query = query
       @status.params.filters = $.extend true,
         {},
-        @searchParams.filters || {}
+        @searchParams.filters || {},
+        params.filters
       @status.params.query_counter = queryCounter
 
       if not @searchParams.query_name
