@@ -103,6 +103,12 @@ describe 'doofinder controller: ', ->
 
   context 'search method ' , ->
 
+    beforeEach ()->
+      client_mock =
+        search: ()->
+        hit: ()->
+        hashid: mock.request.hashid
+
     it 'df:search is triggered', (done) ->
       controller = new doofinder.Controller client_mock, [widget_mock]
       controller.bind 'df:search', (ev, params) ->
@@ -115,34 +121,47 @@ describe 'doofinder controller: ', ->
         query.should.be.equal 'silla'
         params.should.have.keys 'query_counter', 'query', 'filters', 'page'
         done()
-        
+
       controller = new doofinder.Controller client_mock, [widget_mock]
       controller.search 'silla'
 
-    it 'when adding or removing terms filters, filters params change', (done) ->
+    it 'when adding terms filters, filters params change', (done) ->
+      # we need to make a search first in order to "refresh" it with
+      # applied filters
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      # make 1 search to refresh later
+      controller.search 'silla'
+      # prepare for refresh
       client_mock.search = (query, params, cb) ->
         params.filters.color.should.be.eql ['Azul', 'Rojo']
         params.filters.brand.should.be.eql ['Nike']
-        # now we remove one filter
-        controller.removeFilter 'color', 'Rojo'
-        # prepare callback to test it
-        client_mock.search = (query, params, cb) ->
-          params.filters.should.have.keys 'color', 'brand'
-          params.filters.color.should.be.eql ['Azul']
-          # ane yet again, remove
-          controller.removeFilter 'color', 'Azul'
-          controller.removeFilter 'brand', 'Nike'
-          client_mock.search = (query, params, cb) ->
-            params.filters.color.should.be.empty
-            params.filters.brand.should.be.empty
-            done()
-          controller.search 'silla' # search wigh color: [], brand: []
-          
-        controller.search 'silla' # search with color: ['Rojo'], brand: ['Nike']
-        
-      controller = new doofinder.Controller client_mock, [widget_mock]
+        done()
+
       controller.addFilter 'color', 'Azul'
       controller.addFilter 'brand', 'Nike'
-      controller.addFilter 'color', 'Rojo'      
-      controller.search 'silla' # search wigh color: ['Azul', 'Rojo'] and brand: ['Nike']
+      controller.addFilter 'color', 'Rojo'
 
+      controller.refresh() # search wigh color: ['Azul', 'Rojo'] and brand: ['Nike']
+
+
+    it 'when removing terms filters, filters params change', (done) ->
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      # make 1 search to refresh later
+      controller.search 'silla'
+      # add some filters
+      controller.addFilter 'color', 'Azul'
+      controller.addFilter 'brand', 'Nike'
+      controller.addFilter 'color', 'Rojo'
+      # refresh. we're not testing anything yet
+      controller.refresh()
+      # now remove some
+      controller.removeFilter 'color', 'Azul'
+      controller.removeFilter 'brand', 'Nike'
+      # those filters should be removed
+      client_mock.search = (query, params, cb) ->
+        params.filters.should.have.keys 'color', 'brand'
+        params.filters.color.should.be.eql ['Rojo']
+        params.filters.brand.should.be.empty
+        done()
+      # go!
+      controller.refresh()
