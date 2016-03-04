@@ -125,6 +125,28 @@ describe 'doofinder controller: ', ->
       controller = new doofinder.Controller client_mock, [widget_mock]
       controller.search 'silla'
 
+    ### IN DOC STATES THAT 'EVERY SEARCH PARAM' CAN BE USED IN SEARCH METHOD
+      # 'filters' are search params, but are not allowe
+      # either fix the doc or fix the source code
+    it 'extra search params can be added in search', (done)->
+      client_mock.search = (query, params, cb)->
+        params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp'
+        params.rpp.should.be.equal 23
+        params.filters.color.should.eql ['Rojo']
+        done()
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      controller.search 'silla', rpp: 23, filters: color: ['Rojo']
+    ###
+
+    it 'extra search params can be added in constructor', (done)->
+      client_mock.search = (query, params)->
+        params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp'
+        params.rpp.should.be.equal 11
+        params.filters.color.should.eql ['Azul']
+        done()
+      controller = new doofinder.Controller client_mock, [widget_mock], {rpp: 11, filters: {color: ['Azul']}}
+      controller.search 'silla'
+
     it 'when adding terms filters, filters params change', (done) ->
       # we need to make a search first in order to "refresh" it with
       # applied filters
@@ -164,4 +186,25 @@ describe 'doofinder controller: ', ->
         params.filters.brand.should.be.empty
         done()
       # go!
+      controller.refresh()
+
+    it 'when adding range filters, filters params change', (done) ->
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      controller.search 'silla'
+      client_mock.search = (query, params, cb) ->
+        params.filters.price.should.be.eql gt: 10
+        done()
+      controller.addFilter 'price', gt: 10
+      controller.refresh()
+
+    it 'when removing range filters, filters params change', (done) ->
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      controller.search 'silla'
+      controller.addFilter 'price', gt: 10
+      controller.refresh()
+      controller.removeFilter 'price', lte: 5
+      client_mock.search = (query, params, cb) ->
+        console.log params
+        params.filters.should.be.empty
+        done()
       controller.refresh()
