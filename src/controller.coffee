@@ -34,7 +34,7 @@ class Controller
 
     @status = $.extend true,
       {},
-      params: @searchParams
+      params: $.extend true, {}, @searchParams
     
     @reset()
 
@@ -231,7 +231,7 @@ class Controller
   reset: () ->
     queryCounter = @status.params.query_counter || 1
     @status =
-      params: @searchParams
+      params: $.extend true, {}, @searchParams
       currentPage: 0
       firstQueryTriggered: false
       lastPageReached: false
