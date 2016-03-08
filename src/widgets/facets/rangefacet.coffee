@@ -6,7 +6,7 @@ author: @ecoslado
 
 ###
 RangeFacet
-This class receives a facet ranges and paint 
+This class receives a facet ranges and paint
 them. Manages the filtering.
 ###
 
@@ -28,31 +28,30 @@ class RangeFacet extends Display
       template = options.template
     @sliderOptions = options.sliderOptions
     super(container, template, options)
-      
+
 
   render: (res) ->
     # Throws errors if prerrequisites are not
     # accomplished.
     if not res.facets or not res.facets[@name]
       throw Error "Error in RangeFacet: #{@name} facet is not configured."
-    else if not res.facets[@name].ranges
+    else if not res.facets[@name].range
       throw Error "Error in RangeFacet: #{@name} facet is not a range facet."
 
     _this = this
-    
-    if res.facets[@name].ranges[0].count > 1
-      context = $.extend true, 
-        name: @name, 
+    if res.total > 0
+      context = $.extend true,
+        name: @name,
         @extraContext || {}
 
       html = @mustache.render(@template, context)
       $(@container).html html
-      range = 
+      range =
         type: "double",
-        min: parseInt(res.facets[@name].ranges[0].min, 10)
-        from: parseInt(res.facets[@name].ranges[0].min, 10)
-        max: parseInt(res.facets[@name].ranges[0].max, 10)
-        to: parseInt(res.facets[@name].ranges[0].max, 10)
+        min: parseInt(res.facets[@name].range.buckets[0].stats.min, 10)
+        from: parseInt(res.facets[@name].range.buckets[0].stats.min, 10)
+        max: parseInt(res.facets[@name].range.buckets[0].stats.max, 10)
+        to: parseInt(res.facets[@name].range.buckets[0].stats.max, 10)
         force_edges: true
         prettify_enabled: true
         hide_min_max: true
@@ -67,8 +66,8 @@ class RangeFacet extends Display
         _this.sliderOptions || {}
 
       if res and res.filter and res.filter.range and res.filter.range[@name] and parseInt(res.filter.range[@name].gte)
-        range.from = parseInt(res.filter.range[@name].gte, 10)  
-              
+        range.from = parseInt(res.filter.range[@name].gte, 10)
+
       if res and res.filter and res.filter.range and res.filter.range[@name] and parseInt(res.filter.range[@name].lte)
         range.to = parseInt(res.filter.range[@name].lte, 10)
 
@@ -78,7 +77,7 @@ class RangeFacet extends Display
 
     else
       $(@container).html ""
-    
+
 
   renderNext: () ->
 

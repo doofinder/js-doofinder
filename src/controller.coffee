@@ -305,6 +305,14 @@ class Controller
     widget.init(this)
 
   ###
+  session
+
+  Sends a session register to session logs.
+  ###
+  session: (callback) ->
+    @client.session(callback)
+
+  ###
   hit
 
   Increment the hit counter when a product is clicked.

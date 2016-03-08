@@ -27,8 +27,8 @@ class TermFacet extends Display
             '{{#terms}}'+
             '<li>'+
             '<a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}" data-facet="{{name}}"'+
-            'data-value="{{ term }}">{{ term }} <span'+
-            'class="df-facet__count">{{ count }}</span></a>'+
+            'data-value="{{ key }}">{{ term }} <span'+
+            'class="df-facet__count">{{ doc_count }}</span></a>'+
             '</li>'+
             '{{/terms}}'
     else
@@ -60,15 +60,15 @@ class TermFacet extends Display
 
     # Removes filters not present in results.
     @controller.bind "df:results_received", (event, res) ->
-      terms = res.facets[_this.name].terms
+      terms = res.facets[_this.name].terms.buckets
       for term, selected of _this.selected
         if selected and not _this._termInResults(term, terms)
-          _this.selected[term] = 0
+          _this.selected[term.key] = 0
           _this.controller.removeFilter _this.name, term
 
   _termInResults: (term, terms) ->
     for elem in terms
-      if term == elem.term
+      if term == elem.key
         return true
     return false
 
@@ -77,13 +77,12 @@ class TermFacet extends Display
     # accomplished.
     if not res.facets or not res.facets[@name]
       throw Error "Error in TermFacet: #{@name} facet is not configured."
-    else if not res.facets[@name].terms
+    else if not res.facets[@name].terms.buckets
       throw Error "Error in TermFacet: #{@name} facet is not a term facet."
 
     @selected = {}
     totalSelected = 0
     anySelected = false
-
     if res.filter and res.filter.terms and res.filter.terms[@name]
       for term in res.filter.terms[@name]
         @selected[term] = 1
@@ -92,21 +91,21 @@ class TermFacet extends Display
 
     if res.results
       # To make access to selected easier
-      # we add it to each term  
-      for key, term of res.facets[@name].terms
-        term.key = key
+      # we add it to each term
+      for index, term of res.facets[@name].terms.buckets
+        term.index = index
         term.name = @name
 
-        if @selected[term.term]
+        if @selected[term.key]
           term.selected = 1
         else
           term.selected = 0
 
       context = $.extend true,
         any_selected: anySelected
-        total_selected: totalSelected 
-        name: @name 
-        terms: res.facets[@name].terms, 
+        total_selected: totalSelected
+        name: @name
+        terms: res.facets[@name].terms.buckets,
         @extraContext || {}
 
       @addHelpers(context)

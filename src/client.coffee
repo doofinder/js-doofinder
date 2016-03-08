@@ -34,10 +34,10 @@ class Client
     # zone
     # We check if there is a -
     if apiKey
-      zoneApiKey = apiKey.split('-');
-      zone = zoneApiKey[0];
+      zoneApiKey = apiKey.split('-')
+      zone = zoneApiKey[0]
       if zoneApiKey.length > 1
-        @apiKey = zoneApiKey[1];
+        @apiKey = zoneApiKey[1]
 
     else
       zone = ""
@@ -268,6 +268,33 @@ class Client
         querystring += encodeURI "&sort[#{key}]=#{value}"
 
     return querystring
+
+  
+
+
+  ###
+  This method calls to /session
+  service for accounting the
+  sessions in a searchengine
+
+  @api public
+  ###
+  session: (callback=->) ->
+    headers = {}
+
+    if @apiKey
+        headers['api token'] = @apiKey
+    options =
+        host: @url
+        path: "/#{@version}/session/#{@hashid}/"
+        headers: headers
+    # Just for url with host:port
+    if @url.split(':').length > 1
+      options.host = @url.split(':')[0]
+      options.port = @url.split(':')[1]
+    # Here is where request is done and executed processResponse
+    req = httpLib.request options, @__processResponse(callback)
+    req.end()
 
   ###
   This method calls to /hit

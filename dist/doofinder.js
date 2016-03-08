@@ -304,6 +304,37 @@ author: @ecoslado
 
 
     /*
+    This method calls to /session
+    service for accounting the
+    sessions in a searchengine
+    
+    @api public
+     */
+
+    Client.prototype.session = function(callback) {
+      var headers, options, req;
+      if (callback == null) {
+        callback = function() {};
+      }
+      headers = {};
+      if (this.apiKey) {
+        headers['api token'] = this.apiKey;
+      }
+      options = {
+        host: this.url,
+        path: "/" + this.version + "/session/" + this.hashid + "/",
+        headers: headers
+      };
+      if (this.url.split(':').length > 1) {
+        options.host = this.url.split(':')[0];
+        options.port = this.url.split(':')[1];
+      }
+      req = httpLib.request(options, this.__processResponse(callback));
+      return req.end();
+    };
+
+
+    /*
     This method calls to /hit
     service for accounting the
     hits in a product
@@ -767,6 +798,17 @@ author: @ecoslado
 
 
     /*
+    session
+    
+    Sends a session register to session logs.
+     */
+
+    Controller.prototype.session = function(callback) {
+      return this.client.session(callback);
+    };
+
+
+    /*
     hit
     
     Increment the hit counter when a product is clicked.
@@ -875,7 +917,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":59}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "2.0.2",
+    version: "3.0.0",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1415,7 +1457,7 @@ author: @ecoslado
 
 /*
 RangeFacet
-This class receives a facet ranges and paint 
+This class receives a facet ranges and paint
 them. Manages the filtering.
  */
 
@@ -1450,11 +1492,11 @@ them. Manages the filtering.
       var _this, context, facet, html, range;
       if (!res.facets || !res.facets[this.name]) {
         throw Error("Error in RangeFacet: " + this.name + " facet is not configured.");
-      } else if (!res.facets[this.name].ranges) {
+      } else if (!res.facets[this.name].range) {
         throw Error("Error in RangeFacet: " + this.name + " facet is not a range facet.");
       }
       _this = this;
-      if (res.facets[this.name].ranges[0].count > 1) {
+      if (res.total > 0) {
         context = $.extend(true, {
           name: this.name
         }, this.extraContext || {});
@@ -1462,10 +1504,10 @@ them. Manages the filtering.
         $(this.container).html(html);
         range = {
           type: "double",
-          min: parseInt(res.facets[this.name].ranges[0].min, 10),
-          from: parseInt(res.facets[this.name].ranges[0].min, 10),
-          max: parseInt(res.facets[this.name].ranges[0].max, 10),
-          to: parseInt(res.facets[this.name].ranges[0].max, 10),
+          min: parseInt(res.facets[this.name].range.buckets[0].stats.min, 10),
+          from: parseInt(res.facets[this.name].range.buckets[0].stats.min, 10),
+          max: parseInt(res.facets[this.name].range.buckets[0].stats.max, 10),
+          to: parseInt(res.facets[this.name].range.buckets[0].stats.max, 10),
           force_edges: true,
           prettify_enabled: true,
           hide_min_max: true,
@@ -1539,7 +1581,7 @@ author: @ecoslado
       }
       this.selected = {};
       if (!options.template) {
-        template = '{{#@index}}' + '<hr class="df-separator">' + '{{/@index}}' + '<div class="df-facets">' + '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>' + '<div class="df-facets__content">' + '<ul>' + '{{#terms}}' + '<li>' + '<a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}" data-facet="{{name}}"' + 'data-value="{{ term }}">{{ term }} <span' + 'class="df-facet__count">{{ count }}</span></a>' + '</li>' + '{{/terms}}';
+        template = '{{#@index}}' + '<hr class="df-separator">' + '{{/@index}}' + '<div class="df-facets">' + '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>' + '<div class="df-facets__content">' + '<ul>' + '{{#terms}}' + '<li>' + '<a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}" data-facet="{{name}}"' + 'data-value="{{ key }}">{{ term }} <span' + 'class="df-facet__count">{{ doc_count }}</span></a>' + '</li>' + '{{/terms}}';
       } else {
         template = options.template;
       }
@@ -1568,13 +1610,13 @@ author: @ecoslado
       });
       return this.controller.bind("df:results_received", function(event, res) {
         var ref, results, selected, term, terms;
-        terms = res.facets[_this.name].terms;
+        terms = res.facets[_this.name].terms.buckets;
         ref = _this.selected;
         results = [];
         for (term in ref) {
           selected = ref[term];
           if (selected && !_this._termInResults(term, terms)) {
-            _this.selected[term] = 0;
+            _this.selected[term.key] = 0;
             results.push(_this.controller.removeFilter(_this.name, term));
           } else {
             results.push(void 0);
@@ -1588,7 +1630,7 @@ author: @ecoslado
       var elem, i, len;
       for (i = 0, len = terms.length; i < len; i++) {
         elem = terms[i];
-        if (term === elem.term) {
+        if (term === elem.key) {
           return true;
         }
       }
@@ -1596,10 +1638,10 @@ author: @ecoslado
     };
 
     TermFacet.prototype.render = function(res) {
-      var anySelected, context, html, i, key, len, ref, ref1, term, totalSelected;
+      var anySelected, context, html, i, index, len, ref, ref1, term, totalSelected;
       if (!res.facets || !res.facets[this.name]) {
         throw Error("Error in TermFacet: " + this.name + " facet is not configured.");
-      } else if (!res.facets[this.name].terms) {
+      } else if (!res.facets[this.name].terms.buckets) {
         throw Error("Error in TermFacet: " + this.name + " facet is not a term facet.");
       }
       this.selected = {};
@@ -1615,12 +1657,12 @@ author: @ecoslado
         }
       }
       if (res.results) {
-        ref1 = res.facets[this.name].terms;
-        for (key in ref1) {
-          term = ref1[key];
-          term.key = key;
+        ref1 = res.facets[this.name].terms.buckets;
+        for (index in ref1) {
+          term = ref1[index];
+          term.index = index;
           term.name = this.name;
-          if (this.selected[term.term]) {
+          if (this.selected[term.key]) {
             term.selected = 1;
           } else {
             term.selected = 0;
@@ -1630,7 +1672,7 @@ author: @ecoslado
           any_selected: anySelected,
           total_selected: totalSelected,
           name: this.name,
-          terms: res.facets[this.name].terms
+          terms: res.facets[this.name].terms.buckets
         }, this.extraContext || {});
         this.addHelpers(context);
         html = this.mustache.render(this.template, context);
@@ -2015,8 +2057,6 @@ bottom
  */
 /* eslint-disable no-proto */
 
-'use strict'
-
 var base64 = require('base64-js')
 var ieee754 = require('ieee754')
 var isArray = require('isarray')
@@ -2099,10 +2139,8 @@ function Buffer (arg) {
     return new Buffer(arg)
   }
 
-  if (!Buffer.TYPED_ARRAY_SUPPORT) {
-    this.length = 0
-    this.parent = undefined
-  }
+  this.length = 0
+  this.parent = undefined
 
   // Common case.
   if (typeof arg === 'number') {
@@ -2233,10 +2271,6 @@ function fromJsonObject (that, object) {
 if (Buffer.TYPED_ARRAY_SUPPORT) {
   Buffer.prototype.__proto__ = Uint8Array.prototype
   Buffer.__proto__ = Uint8Array
-} else {
-  // pre-set for values that may exist in the future
-  Buffer.prototype.length = undefined
-  Buffer.prototype.parent = undefined
 }
 
 function allocate (that, length) {
@@ -2386,6 +2420,10 @@ function byteLength (string, encoding) {
   }
 }
 Buffer.byteLength = byteLength
+
+// pre-set for values that may exist in the future
+Buffer.prototype.length = undefined
+Buffer.prototype.parent = undefined
 
 function slowToString (encoding, start, end) {
   var loweredCase = false
@@ -21937,7 +21975,7 @@ internals.stringify = function (obj, prefix, generateArrayPrefix, strictNullHand
     var objKeys = Array.isArray(filter) ? filter : Object.keys(obj);
     for (var i = 0, il = objKeys.length; i < il; ++i) {
         var key = objKeys[i];
-
+        console.log(obj);
         if (Array.isArray(obj)) {
             values = values.concat(internals.stringify(obj[key], generateArrayPrefix(prefix, key), generateArrayPrefix, strictNullHandling, filter));
         }
