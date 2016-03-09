@@ -204,7 +204,6 @@ describe 'doofinder controller: ', ->
       controller.refresh()
       controller.removeFilter 'price', lte: 5
       client_mock.search = (query, params, cb) ->
-        console.log params
         params.filters.should.be.empty
         done()
       controller.refresh()

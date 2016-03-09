@@ -38,41 +38,52 @@ fake_results =
   facets:
     best_price:
       _type: "range"
-      ranges: [
-        from: 0
-        count: 24
-        min: 8.5
-        max: 225
-        total_count: 24
-        total: 1855.57
-        mean: 77.32
-      ]
+      range:
+        buckets: [
+          key: "0.0-*"
+          stats:
+            from: 0
+            count: 24
+            min: 8.5
+            max: 225
+            total_count: 24
+            total: 1855.57
+            mean: 77.32
+        ]
 
     color:
       _type: "terms"
-      missing: 16
-      total: 10
+      missing: 
+        doc_count: 16
+      doc_count: 10
       other: 0
-      terms: [
-        term: "Azul"
-        count: 3
-      ,
-        term: "Rojo"
-        count: 1
-      ]
+      terms: 
+        buckets: [
+          term: "Azul"
+          count: 3
+        ,
+          term: "Rojo"
+          count: 1
+        ]
+      total: 
+        value: 1
 
     categories:
       _type: "terms"
-      missing: 0
-      total: 50
+      missing: 
+        doc_count: 0
+      doc_count: 50
       other: 0
-      terms: [
-        term: "Sillas de paseo"
-        count: 6
-      ,
-        term: "Seguridad en el hogar"
-        count: 5
-      ]
+      terms: 
+        buckets: [
+          term: "Sillas de paseo"
+          count: 6
+        ,
+          term: "Seguridad en el hogar"
+          count: 5
+        ]
+      total:
+        value: 50
 
 
 # Test doofinder
@@ -398,6 +409,7 @@ describe 'doofinder widgets: ', ->
       facetContainer.one 'DOMNodeInserted', ()->
         # filter should be empty
         self.controller.status.params.filters.should.be.empty
+
         # get ready for next search.
         _refresh  = self.controller.refresh
         self.controller.refresh = () ->
@@ -461,13 +473,13 @@ describe 'doofinder widgets: ', ->
             '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>'+
             '<div class="df-facets__content">'+
             '<ul>'+
-            '{{#terms}}'+
+            '{{#terms.length}}'+
             '<li>'+
             '<a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}" data-facet="{{name}}"'+
-            'data-value="{{ term }}">{{ term }} <span'+
-            'class="df-facet__count">{{ count }}</span></a>'+
+            'data-value="{{ key }}">{{ key }} <span'+
+            'class="df-facet__count">{{ doc_count }}</span></a>'+
             '</li>'+
-            '{{/terms}}'
+            '{{/terms.length}}'
       # setup widgets and stuff
       termFacetWidget = new doofinder.widgets.TermFacet '#fcontainer', 'color', template: template, templateVars: customVar: 'customValue'
       @controller.addWidget termFacetWidget

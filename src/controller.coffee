@@ -62,7 +62,7 @@ class Controller
     params.page = @status.currentPage
     _this = this
     
-    @client.search params.query, params, (err, res) ->
+    @client.search params.query, params, (err, res) -> 
       # I check if I reached the last page.    
       if res.results.length < _this.status.params.rpp
         _this.status.lastPageReached = true
