@@ -489,7 +489,7 @@ author: @ecoslado
         this.addWidget(widgets);
       }
       this.status = $.extend(true, {}, {
-        params: this.searchParams
+        params: $.extend(true, {}, this.searchParams)
       });
       this.reset();
     }
@@ -568,7 +568,7 @@ author: @ecoslado
         this.status.params = $.extend(true, {}, params);
         this.status.params = $.extend(true, searchParams, params);
         this.status.params.query = query;
-        this.status.params.filters = $.extend(true, {}, this.searchParams.filters || {});
+        this.status.params.filters = $.extend(true, {}, this.searchParams.filters || {}, params.filters);
         this.status.params.query_counter = queryCounter;
         if (!this.searchParams.query_name) {
           delete this.status.params.query_name;
@@ -714,7 +714,7 @@ author: @ecoslado
       var queryCounter;
       queryCounter = this.status.params.query_counter || 1;
       this.status = {
-        params: this.searchParams,
+        params: $.extend(true, {}, this.searchParams),
         currentPage: 0,
         firstQueryTriggered: false,
         lastPageReached: false
