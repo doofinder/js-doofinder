@@ -269,33 +269,6 @@ class Client
 
     return querystring
 
-  
-
-
-  ###
-  This method calls to /session
-  service for accounting the
-  sessions in a searchengine
-
-  @api public
-  ###
-  session: (callback=->) ->
-    headers = {}
-
-    if @apiKey
-        headers['api token'] = @apiKey
-    options =
-        host: @url
-        path: "/#{@version}/session/#{@hashid}/"
-        headers: headers
-    # Just for url with host:port
-    if @url.split(':').length > 1
-      options.host = @url.split(':')[0]
-      options.port = @url.split(':')[1]
-    # Here is where request is done and executed processResponse
-    req = httpLib.request options, @__processResponse(callback)
-    req.end()
-
   ###
   This method calls to /hit
   service for accounting the
@@ -306,14 +279,20 @@ class Client
   @param {Function} callback
   @api public
   ###
-  hit: (dfid, query = "", callback = (err, res) ->) ->
+  hit: (sessionId, eventType, dfid="", query = "", callback = (err, res) ->) ->
     headers = {}
 
     if @apiKey
         headers['api token'] = @apiKey
+    path =  "/#{@version}/hit/#{sessionId}/#{eventType}/#{@hashid}"
+    if dfid != ""
+      path += "/#{dfid}"
+    if query != ""
+      path += "/#{encodeURIComponent(query)}"
+
     options =
         host: @url
-        path: "/#{@version}/hit/#{@hashid}/#{dfid}/#{encodeURIComponent(query)}?random=#{new Date().getTime()}"
+        path: "#{path}?random=#{new Date().getTime()}"
         headers: headers
     # Just for url with host:port
     if @url.split(':').length > 1

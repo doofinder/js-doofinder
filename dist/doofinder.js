@@ -304,37 +304,6 @@ author: @ecoslado
 
 
     /*
-    This method calls to /session
-    service for accounting the
-    sessions in a searchengine
-    
-    @api public
-     */
-
-    Client.prototype.session = function(callback) {
-      var headers, options, req;
-      if (callback == null) {
-        callback = function() {};
-      }
-      headers = {};
-      if (this.apiKey) {
-        headers['api token'] = this.apiKey;
-      }
-      options = {
-        host: this.url,
-        path: "/" + this.version + "/session/" + this.hashid + "/",
-        headers: headers
-      };
-      if (this.url.split(':').length > 1) {
-        options.host = this.url.split(':')[0];
-        options.port = this.url.split(':')[1];
-      }
-      req = httpLib.request(options, this.__processResponse(callback));
-      return req.end();
-    };
-
-
-    /*
     This method calls to /hit
     service for accounting the
     hits in a product
@@ -345,8 +314,11 @@ author: @ecoslado
     @api public
      */
 
-    Client.prototype.hit = function(dfid, query, callback) {
-      var headers, options, req;
+    Client.prototype.hit = function(sessionId, eventType, dfid, query, callback) {
+      var headers, options, path, req;
+      if (dfid == null) {
+        dfid = "";
+      }
       if (query == null) {
         query = "";
       }
@@ -357,9 +329,16 @@ author: @ecoslado
       if (this.apiKey) {
         headers['api token'] = this.apiKey;
       }
+      path = "/" + this.version + "/hit/" + sessionId + "/" + eventType + "/" + this.hashid;
+      if (dfid !== "") {
+        path += "/" + dfid;
+      }
+      if (query !== "") {
+        path += "/" + (encodeURIComponent(query));
+      }
       options = {
         host: this.url,
-        path: "/" + this.version + "/hit/" + this.hashid + "/" + dfid + "/" + (encodeURIComponent(query)) + "?random=" + (new Date().getTime()),
+        path: path + "?random=" + (new Date().getTime()),
         headers: headers
       };
       if (this.url.split(':').length > 1) {
@@ -798,17 +777,6 @@ author: @ecoslado
 
 
     /*
-    session
-    
-    Sends a session register to session logs.
-     */
-
-    Controller.prototype.session = function(callback) {
-      return this.client.session(callback);
-    };
-
-
-    /*
     hit
     
     Increment the hit counter when a product is clicked.
@@ -817,8 +785,14 @@ author: @ecoslado
     @param {Function} callback
      */
 
-    Controller.prototype.hit = function(dfid, callback) {
-      return this.client.hit(dfid, this.status.params.query, callback);
+    Controller.prototype.hit = function(sessionId, type, dfid, callback) {
+      if (dfid == null) {
+        dfid = "";
+      }
+      if (callback == null) {
+        callback = function() {};
+      }
+      return this.client.hit(sessionId, type, dfid, this.status.params.query, callback);
     };
 
 
@@ -917,7 +891,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":59}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "3.0.1",
+    version: "3.0.2",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -930,12 +904,13 @@ author: @ecoslado
       TermFacet: require("./widgets/facets/termfacet"),
       RangeFacet: require("./widgets/facets/rangefacet")
     },
-    jQuery: require("./util/jquery")
+    jQuery: require("./util/jquery"),
+    qs: require("qs")
   };
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./util/jquery":6,"./widget":8,"./widgets/display":9,"./widgets/facets/rangefacet":10,"./widgets/facets/termfacet":11,"./widgets/queryinput":12,"./widgets/results/results":13,"./widgets/results/scrollresults":14,"mustache":58}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./util/jquery":6,"./widget":8,"./widgets/display":9,"./widgets/facets/rangefacet":10,"./widgets/facets/termfacet":11,"./widgets/queryinput":12,"./widgets/results/results":13,"./widgets/results/scrollresults":14,"mustache":58,"qs":59}],4:[function(require,module,exports){
 (function() {
   var $, dfScroll;
 

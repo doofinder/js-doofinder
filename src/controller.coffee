@@ -305,13 +305,6 @@ class Controller
     @widgets.push(widget)
     widget.init(this)
 
-  ###
-  session
-
-  Sends a session register to session logs.
-  ###
-  session: (callback) ->
-    @client.session(callback)
 
   ###
   hit
@@ -321,8 +314,8 @@ class Controller
   @param {String} dfid: the unique identifier present in the search result
   @param {Function} callback
   ###
-  hit: (dfid, callback) ->
-    @client.hit dfid, @status.params.query, callback
+  hit: (sessionId, type, dfid = "", callback=->) ->
+    @client.hit sessionId, type, dfid, @status.params.query, callback
 
 
   ###

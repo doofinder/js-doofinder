@@ -1,5 +1,5 @@
 module.exports = 
-  version: "3.0.1"  
+  version: "3.0.2"  
   Client: require "./client"
   Mustache: require "mustache"
   Widget: require "./widget"
@@ -12,3 +12,4 @@ module.exports =
     TermFacet: require "./widgets/facets/termfacet"
     RangeFacet: require "./widgets/facets/rangefacet"
   jQuery: require "./util/jquery"
+  qs: require "qs"
