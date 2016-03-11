@@ -65,7 +65,8 @@ addHelpers = (context, parameters, currency, translations, extraHelpers) ->
     'translate': () ->
       (text, render) ->
         key = render(text)
-        if translations and key of translations
+        keys = Object.keys(translations)
+        if translations and keys.indexOf(key) > -1
           return translations[key]
         else
           return key

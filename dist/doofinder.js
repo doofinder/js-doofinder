@@ -891,7 +891,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":59}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "3.0.2",
+    version: "3.0.3",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1055,9 +1055,10 @@ author: @ecoslado
       },
       'translate': function() {
         return function(text, render) {
-          var key;
+          var key, keys;
           key = render(text);
-          if (translations && key in translations) {
+          keys = Object.keys(translations);
+          if (translations && keys.indexOf(key) > -1) {
             return translations[key];
           } else {
             return key;
