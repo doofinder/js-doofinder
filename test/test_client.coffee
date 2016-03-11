@@ -269,11 +269,11 @@ describe 'doofinder client\'s ', ->
           field: "value"
         scope = nock('http://fooserver')
         .filteringPath(/random=[^&]*/g, 'random=XXX')
-        .get('/5/hit/ffffffffffffffffffffffffffffffff/666/querystring?random=XXX')
+        .get('/5/hit/ffffffffffffffffffffffffffffffff/click/ffffffffffffffffffffffffffffffff/666/querystring?random=XXX')
         .reply(200, response)
 
         client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
-        client.hit 666, 'querystring', (err, res) ->
+        client.hit 'ffffffffffffffffffffffffffffffff', 'click', 666, 'querystring', (err, res) ->
           res.should.to.be.deep.equal response
           done()
 
