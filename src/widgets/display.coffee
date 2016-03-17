@@ -29,7 +29,7 @@ class Display extends Widget
   ###
   constructor: (container, @template, options = {}) ->
     @container = container
-    @mustache = require("mustache")
+    @mustache = require "mustache"
     @extraContext = options.templateVars
     @addHelpers = (context) ->
       addHelpers context, 

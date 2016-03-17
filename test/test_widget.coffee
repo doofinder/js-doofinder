@@ -422,7 +422,7 @@ describe 'doofinder widgets: ', ->
           done()
 
         # now we click on a facet
-        facetContainer.find('a[data-facet="color"][data-value="Azul"]').trigger('click')
+        facetContainer.find('a[data-facet="color"][data-value="Azul"]').trigger 'click'
 
       @queryEl.val 'lill'
       @queryEl.trigger 'keydown'
