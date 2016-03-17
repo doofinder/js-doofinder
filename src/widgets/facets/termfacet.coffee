@@ -27,7 +27,7 @@ class TermFacet extends Display
             '{{#terms}}'+
             '<li>'+
             '<a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}" data-facet="{{name}}"'+
-            'data-value="{{ key }}">{{ term }} <span'+
+            'data-value="{{ term }}">{{ term }} <span'+
             'class="df-facet__count">{{ doc_count }}</span></a>'+
             '</li>'+
             '{{/terms}}'
@@ -79,7 +79,6 @@ class TermFacet extends Display
       throw Error "Error in TermFacet: #{@name} facet is not configured."
     else if not res.facets[@name].terms.buckets
       throw Error "Error in TermFacet: #{@name} facet is not a term facet."
-
     @selected = {}
     totalSelected = 0
     anySelected = false
