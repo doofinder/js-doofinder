@@ -59,11 +59,11 @@ fake_results =
       other: 0
       terms: 
         buckets: [
-          term: "Azul"
-          count: 3
+          key: "Azul"
+          doc_count: 3
         ,
-          term: "Rojo"
-          count: 1
+          key: "Rojo"
+          doc_count: 1
         ]
       total: 
         value: 1
@@ -76,11 +76,11 @@ fake_results =
       other: 0
       terms: 
         buckets: [
-          term: "Sillas de paseo"
-          count: 6
+          key: "Sillas de paseo"
+          doc_count: 6
         ,
-          term: "Seguridad en el hogar"
-          count: 5
+          key: "Seguridad en el hogar"
+          doc_count: 5
         ]
       total:
         value: 50
