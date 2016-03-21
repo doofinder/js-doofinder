@@ -238,13 +238,7 @@ Option | Type | Description
 wait | `Number` | milliseconds that the widget waits to check the input content length.
 captureLength | `Number` | number of Requireds typed when first search is performed
 
-#### bind
-This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name
-callback | Yes | `Function` | The function which receives the API Search response.
+`widgets.QueryInput` has no associated events.
 
 ### widgets.Results
 This widget shows the results in a DOM node. When a new search or filter is done or a new page is requested the new content will replace the older.
