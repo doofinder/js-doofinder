@@ -233,7 +233,7 @@ Sends a request to the Search API in order to receive server configuration. The 
    "precision":2
    },
    "query_limit_reached":false,
-   "mobile":{"endpoint":"mobile.shopify.com:8000"},
+   "mobile":{"endpoint":"mobile.mydomain.com"},
    "facets":[{"name":"brand",
    	        "es_definition":{"terms":{"field":"brand.facet","size":20}},
    	        "label":"Brand","type":"terms","field":"brand.facet","size":20},
