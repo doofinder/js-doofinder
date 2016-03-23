@@ -314,8 +314,8 @@ class Controller
   @param {String} dfid: the unique identifier present in the search result
   @param {Function} callback
   ###
-  hit: (sessionId, type, dfid = "", callback=->) ->
-    @client.hit sessionId, type, dfid, @status.params.query, callback
+  hit: (sessionId, type, dfid = "", query=@status.params.query, callback=->) ->
+    @client.hit sessionId, type, dfid, query, callback
 
 
   ###
