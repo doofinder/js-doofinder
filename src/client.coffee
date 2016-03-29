@@ -209,6 +209,7 @@ class Client
   __escapeChars: (word) ->
     word = word.replace(/\&/, "%26")
     word = word.replace(/\?/, "%3F")
+    word = word.replace(/\+/, "%2B")
     return word.replace(/\#/, "%23")
 
   ###

@@ -232,6 +232,7 @@ author: @ecoslado
     Client.prototype.__escapeChars = function(word) {
       word = word.replace(/\&/, "%26");
       word = word.replace(/\?/, "%3F");
+      word = word.replace(/\+/, "%2B");
       return word.replace(/\#/, "%23");
     };
 
@@ -894,7 +895,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":59}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "3.0.4",
+    version: "3.0.5",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1501,6 +1502,7 @@ them. Manages the filtering.
           }
         };
         range = $.extend(true, range, _this.sliderOptions || {});
+        console.log(_this.sliderOptions);
         if (res && res.filter && res.filter.range && res.filter.range[this.name] && parseInt(res.filter.range[this.name].gte)) {
           range.from = parseInt(res.filter.range[this.name].gte, 10);
         }
