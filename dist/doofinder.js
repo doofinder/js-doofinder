@@ -895,7 +895,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":59}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "3.0.5",
+    version: "3.0.6",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1502,7 +1502,6 @@ them. Manages the filtering.
           }
         };
         range = $.extend(true, range, _this.sliderOptions || {});
-        console.log(_this.sliderOptions);
         if (res && res.filter && res.filter.range && res.filter.range[this.name] && parseInt(res.filter.range[this.name].gte)) {
           range.from = parseInt(res.filter.range[this.name].gte, 10);
         }

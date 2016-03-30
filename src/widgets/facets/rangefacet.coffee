@@ -65,8 +65,6 @@ class RangeFacet extends Display
         range,
         _this.sliderOptions || {}
 
-      console.log _this.sliderOptions
-
       if res and res.filter and res.filter.range and res.filter.range[@name] and parseInt(res.filter.range[@name].gte)
         range.from = parseInt(res.filter.range[@name].gte, 10)
 
