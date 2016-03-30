@@ -144,6 +144,14 @@ describe 'doofinder controller: ', ->
       controller = new doofinder.Controller client_mock, [widget_mock], {rpp: 11, filters: {color: ['Azul']}}
       controller.search 'silla'
 
+  context 'filters management', ->
+
+    beforeEach ()->
+      client_mock =
+        search: ()->
+        hit: ()->
+        hashid: mock.request.hashid
+
     it 'when adding terms filters, filters params change', (done) ->
       # we need to make a search first in order to "refresh" it with
       # applied filters
@@ -161,39 +169,6 @@ describe 'doofinder controller: ', ->
       controller.addFilter 'color', 'Rojo'
 
       controller.refresh() # search wigh color: ['Azul', 'Rojo'] and brand: ['Nike']
-
-    it 'nextPage redo the search with next page', (done) ->
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      # when first search done, try nextPage
-      controller.bind 'df:search', ()->
-        client_mock.search = (query, params, cb) ->
-          # same query
-          params.query.should.be.equal 'silla'
-          # increased page
-          params.page.should.be.equal 2
-          done()
-
-        # next page!
-        controller.nextPage()
-
-      # first search
-      controller.search 'silla'
-
-    it 'getPage redo the search with any specified page', (done) ->
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      # when first search done, try getPage
-      controller.bind 'df:search', ()->
-        client_mock.search = (query, params, cb) ->
-          params.query.should.be.equal 'silla'
-          params.page.should.be.equal 22
-          done()
-
-        # get page!
-        controller.getPage 22
-
-      # first search
-      controller.search 'silla'
-
 
     it 'when removing terms filters, filters params change', (done) ->
       controller = new doofinder.Controller client_mock, [widget_mock]
@@ -236,3 +211,44 @@ describe 'doofinder controller: ', ->
         params.filters.should.be.empty
         done()
       controller.refresh()
+
+  context ' pagination methods ', ->
+
+    beforeEach ()->
+      client_mock =
+        search: ()->
+        hit: ()->
+        hashid: mock.request.hashid
+
+
+    it 'nextPage redo the search with next page', (done) ->
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      # when first search done, try nextPage
+      controller.bind 'df:search', ()->
+        client_mock.search = (query, params, cb) ->
+          # same query
+          params.query.should.be.equal 'silla'
+          # increased page
+          params.page.should.be.equal 2
+          done()
+
+        # next page!
+        controller.nextPage()
+
+      # first search
+      controller.search 'silla'
+
+    it 'getPage redo the search with any specified page', (done) ->
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      # when first search done, try getPage
+      controller.bind 'df:search', ()->
+        client_mock.search = (query, params, cb) ->
+          params.query.should.be.equal 'silla'
+          params.page.should.be.equal 22
+          done()
+
+        # get page!
+        controller.getPage 22
+
+      # first search
+      controller.search 'silla'
