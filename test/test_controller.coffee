@@ -252,3 +252,33 @@ describe 'doofinder controller: ', ->
 
       # first search
       controller.search 'silla'
+
+
+  context ' parameter setting methods ', ->
+
+    beforeEach ()->
+      client_mock =
+        search: ()->
+        hit: ()->
+        hashid: mock.request.hashid
+
+
+    it 'setSearchParam adds parameter to every search', (done) ->
+      client_mock.search = (query, params) ->
+        params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp', 'transformer'
+        params.transformer.should.eql 'testTransformer'
+        params.rpp.should.be.equal 23
+        # when we search again, the search parameters  must remain
+        client_mock.search = (query, params) ->
+          params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp', 'transformer'
+          params.transformer.should.eql 'testTransformer'
+          params.rpp.should.be.equal 23
+          done()
+        controller.search 'silla2'
+        
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      controller.setSearchParam 'rpp', 23
+      controller.setSearchParam 'transformer', 'testTransformer'
+
+      # first search
+      controller.search 'silla'
