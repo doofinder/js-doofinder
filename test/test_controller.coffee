@@ -274,11 +274,34 @@ describe 'doofinder controller: ', ->
           params.transformer.should.eql 'testTransformer'
           params.rpp.should.be.equal 23
           done()
+        # second search
         controller.search 'silla2'
-        
+
       controller = new doofinder.Controller client_mock, [widget_mock]
       controller.setSearchParam 'rpp', 23
       controller.setSearchParam 'transformer', 'testTransformer'
 
       # first search
+      controller.search 'silla'
+
+    it 'addParam adds parameter to use in reresh', (done)->
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      # when first search done, add params and refresh
+      controller.bind 'df:search', ()->
+        # add new param
+        controller.addParam 'transformer', 'testTransformer'
+        # modify param
+        controller.addParam 'rpp', 32
+        # prepare for refreshing
+        client_mock.search = (query, params, cb) ->
+          # same query
+          params.query.should.be.equal 'silla'
+          # new params
+          params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp', 'transformer'
+          params.transformer.should.eql 'testTransformer'
+          params.rpp.should.be.equal 32
+          done()
+        # refresh!
+        controller.refresh()
+      # initial search
       controller.search 'silla'
