@@ -118,7 +118,7 @@ describe 'doofinder controller: ', ->
 
     it 'basic search use right params', (done) ->
       client_mock.search = (query, params, cb) ->
-        query.should.be.equal 'silla'
+        query.should.eql 'silla'
         params.should.have.keys 'query_counter', 'query', 'filters', 'page'
         done()
 
@@ -128,7 +128,7 @@ describe 'doofinder controller: ', ->
     it 'extra search params can be added in search', (done)->
       client_mock.search = (query, params, cb)->
         params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp'
-        params.rpp.should.be.equal 23
+        params.rpp.should.eql 23
         params.filters.color.should.eql ['Rojo']
         done()
       controller = new doofinder.Controller client_mock, [widget_mock]
@@ -138,7 +138,7 @@ describe 'doofinder controller: ', ->
     it 'extra search params can be added in constructor', (done)->
       client_mock.search = (query, params)->
         params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp'
-        params.rpp.should.be.equal 11
+        params.rpp.should.eql 11
         params.filters.color.should.eql ['Azul']
         done()
       controller = new doofinder.Controller client_mock, [widget_mock], {rpp: 11, filters: {color: ['Azul']}}
@@ -227,9 +227,9 @@ describe 'doofinder controller: ', ->
       controller.bind 'df:search', ()->
         client_mock.search = (query, params, cb) ->
           # same query
-          params.query.should.be.equal 'silla'
+          params.query.should.eql 'silla'
           # increased page
-          params.page.should.be.equal 2
+          params.page.should.eql 2
           done()
 
         # next page!
@@ -243,8 +243,8 @@ describe 'doofinder controller: ', ->
       # when first search done, try getPage
       controller.bind 'df:search', ()->
         client_mock.search = (query, params, cb) ->
-          params.query.should.be.equal 'silla'
-          params.page.should.be.equal 22
+          params.query.should.eql 'silla'
+          params.page.should.eql 22
           done()
 
         # get page!
@@ -267,12 +267,12 @@ describe 'doofinder controller: ', ->
       client_mock.search = (query, params) ->
         params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp', 'transformer'
         params.transformer.should.eql 'testTransformer'
-        params.rpp.should.be.equal 23
+        params.rpp.should.eql 23
         # when we search again, the search parameters  must remain
         client_mock.search = (query, params) ->
           params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp', 'transformer'
           params.transformer.should.eql 'testTransformer'
-          params.rpp.should.be.equal 23
+          params.rpp.should.eql 23
           done()
         # second search
         controller.search 'silla2'
@@ -295,13 +295,38 @@ describe 'doofinder controller: ', ->
         # prepare for refreshing
         client_mock.search = (query, params, cb) ->
           # same query
-          params.query.should.be.equal 'silla'
+          params.query.should.eql 'silla'
           # new params
           params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp', 'transformer'
           params.transformer.should.eql 'testTransformer'
-          params.rpp.should.be.equal 32
+          params.rpp.should.eql 32
           done()
         # refresh!
         controller.refresh()
       # initial search
       controller.search 'silla'
+
+  context ' refresh methods ', ->
+
+    beforeEach ()->
+      client_mock =
+        search: ()->
+        hit: ()->
+        hashid: mock.request.hashid
+
+    it ' triggers refresh signal and actually do the search', (done) ->
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      controller.search 'silla', rpp: 33, filters: color: ['Rojo']
+
+      controller.bind 'df:refresh', (event, params)->
+        params.query_counter.should.eql 2
+
+      client_mock.search = (query, params, cb) ->
+        query.should.eql 'silla'
+        params.should.have.keys 'rpp', 'filters', 'query', 'query_counter', 'page'
+        params.query_counter.should.eql 3
+        params.filters.should.eql color: ['Rojo']
+        params.rpp.should.eql 33
+        done()
+
+      controller.refresh()
