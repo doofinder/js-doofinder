@@ -220,6 +220,38 @@ dfid |  Yes | `String` | Unique product identifier.
 Widgets are visual elements that take part into the search. They can be search inputs, places where display the results, places to put the facets, etc.
 The events you can bind in widget depend on the widget you are instantiating. Above we'll describe all the available widget and theirs correponding events. 
 
+### options
+Sends a request to the Search API in order to receive server configuration. The response received is like this:
+
+```javascript
+{"currency":
+  {"format":"%s%v",
+   "symbol":"$",
+   "label":"Hong Kong Dollar",
+   "decimal":".",
+   "thousand":",",
+   "precision":2
+   },
+   "query_limit_reached":false,
+   "mobile":{"endpoint":"mobile.mydomain.com"},
+   "facets":[{"name":"brand",
+   	        "es_definition":{"terms":{"field":"brand.facet","size":20}},
+   	        "label":"Brand","type":"terms","field":"brand.facet","size":20},
+   	     {"name":"sale_price",
+   	      "es_definition":{
+   	      	"range":{
+   	      	"ranges":[{"from":0}],"field":"sale_price"
+   	      	}
+   	      },
+   	      "label":"Sale",
+   	      "type":"range",
+   	      "ranges":[{"from":0}],"field":"sale_price"
+   	      }
+   	     ],
+   "hasMobileEnabled":false
+   	  }
+
+```
 
 ### widgets.QueryInput
 This widget triggers searches when a user types on it.
@@ -238,13 +270,46 @@ Option | Type | Description
 wait | `Number` | milliseconds that the widget waits to check the input content length.
 captureLength | `Number` | number of Requireds typed when first search is performed
 
+`widgets.QueryInput` has no associated events.
+
+### widgets.Display
+This widget shows the results in a DOM node. When a new search or filter is done the new content will replace the older. This widget doesn't have paging.
+
+#### constructor
+
+Argument | Required | Type | Description
+-------- | --------- | ---- | ---------------------
+container |  Yes | `String` | Results container CSS selector.
+options |  No | `Object` | Options to configure the input.
+
+Option | Type | Description
+------ |  ---- |  --------------
+template | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
+templateVars | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
+templateFunctions | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
+
 #### bind
 This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name
+event |  Yes | `String` | The query terms.
 callback | Yes | `Function` | The function which receives the API Search response.
+
+The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
+
+Event Name | Callback Arguments | Description
+---------- | ------------------ | -----------
+df:rendered   | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
+
+As an example, we'll print in the console the total results in the `df:rendered` event.
+
+```javascript
+results = new doofinder.widgets.Display(container, options);
+results.bind('df:rendered', function(event, res){
+   console.log(res.total);
+});
+```
 
 ### widgets.Results
 This widget shows the results in a DOM node. When a new search or filter is done or a new page is requested the new content will replace the older.

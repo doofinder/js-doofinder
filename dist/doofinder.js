@@ -232,6 +232,7 @@ author: @ecoslado
     Client.prototype.__escapeChars = function(word) {
       word = word.replace(/\&/, "%26");
       word = word.replace(/\?/, "%3F");
+      word = word.replace(/\+/, "%2B");
       return word.replace(/\#/, "%23");
     };
 
@@ -785,14 +786,17 @@ author: @ecoslado
     @param {Function} callback
      */
 
-    Controller.prototype.hit = function(sessionId, type, dfid, callback) {
+    Controller.prototype.hit = function(sessionId, type, dfid, query, callback) {
       if (dfid == null) {
         dfid = "";
+      }
+      if (query == null) {
+        query = this.status.params.query;
       }
       if (callback == null) {
         callback = function() {};
       }
-      return this.client.hit(sessionId, type, dfid, this.status.params.query, callback);
+      return this.client.hit(sessionId, type, dfid, query, callback);
     };
 
 
@@ -891,7 +895,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":59}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "3.0.3",
+    version: "3.0.6",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
