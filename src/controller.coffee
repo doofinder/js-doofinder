@@ -325,8 +325,8 @@ class Controller
 
   @param {Function} callback
   ###
-  options: (callback) ->
-    @client.options callback
+  options: (arg1, arg2) ->
+    @client.options arg1, arg2
 
 
   ###
