@@ -520,7 +520,7 @@ describe 'doofinder widgets: ', ->
       facetContainer = @$ '#fcontainer'
       counter = 0
       rangeFacetWidget.bind 'df:rendered', (res)->
-        facetContainer.find('span.js-grid-text-0').first().text().should.be.eql '8'
+        facetContainer.find('span.js-grid-text-0').first().text().should.be.eql '8.5'
         facetContainer.find('span.js-grid-text-1').first().text().should.be.eql '117'
         facetContainer.find('span.js-grid-text-2').first().text().should.be.eql '225'
         done()

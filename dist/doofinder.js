@@ -904,7 +904,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":59}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "3.0.7",
+    version: "3.0.8",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1493,10 +1493,10 @@ them. Manages the filtering.
         $(this.container).html(html);
         range = {
           type: "double",
-          min: parseInt(res.facets[this.name].range.buckets[0].stats.min, 10),
-          from: parseInt(res.facets[this.name].range.buckets[0].stats.min, 10),
-          max: parseInt(res.facets[this.name].range.buckets[0].stats.max, 10),
-          to: parseInt(res.facets[this.name].range.buckets[0].stats.max, 10),
+          min: parseFloat(res.facets[this.name].range.buckets[0].stats.min, 10),
+          from: parseFloat(res.facets[this.name].range.buckets[0].stats.min, 10),
+          max: parseFloat(res.facets[this.name].range.buckets[0].stats.max, 10),
+          to: parseFloat(res.facets[this.name].range.buckets[0].stats.max, 10),
           force_edges: true,
           prettify_enabled: true,
           hide_min_max: true,
