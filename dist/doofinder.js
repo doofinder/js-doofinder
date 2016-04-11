@@ -357,15 +357,24 @@ author: @ecoslado
     hits in a product
     
     @param {String} dfid
-    @param {String} query
-    @param {Function} callback
+    @param {Object | Function} arg1
+    @param {Function} arg2
     @api public
      */
 
-    Client.prototype.options = function(callback) {
-      var headers, options, req;
-      if (callback == null) {
-        callback = function(err, res) {};
+    Client.prototype.options = function(arg1, arg2) {
+      var callback, headers, options, querystring, req;
+      callback = (function(err, res) {});
+      if (typeof arg1 === "function" && typeof arg2 === "undefined") {
+        callback = arg1;
+      } else if (typeof arg1 === "object" && typeof arg2 === "function") {
+        options = arg1;
+        callback = arg2;
+      }
+      if (typeof options !== "undefined" && options.querystring) {
+        querystring = "?" + options.querystring;
+      } else {
+        querystring = "";
       }
       headers = {};
       if (this.apiKey) {
@@ -373,7 +382,7 @@ author: @ecoslado
       }
       options = {
         host: this.url,
-        path: "/" + this.version + "/options/" + this.hashid,
+        path: "/" + this.version + "/options/" + this.hashid + querystring,
         headers: headers
       };
       if (this.url.split(':').length > 1) {
@@ -808,8 +817,8 @@ author: @ecoslado
     @param {Function} callback
      */
 
-    Controller.prototype.options = function(callback) {
-      return this.client.options(callback);
+    Controller.prototype.options = function(arg1, arg2) {
+      return this.client.options(arg1, arg2);
     };
 
 
@@ -895,7 +904,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":59}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "3.0.6",
+    version: "3.0.8",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1484,10 +1493,10 @@ them. Manages the filtering.
         $(this.container).html(html);
         range = {
           type: "double",
-          min: parseInt(res.facets[this.name].range.buckets[0].stats.min, 10),
-          from: parseInt(res.facets[this.name].range.buckets[0].stats.min, 10),
-          max: parseInt(res.facets[this.name].range.buckets[0].stats.max, 10),
-          to: parseInt(res.facets[this.name].range.buckets[0].stats.max, 10),
+          min: parseFloat(res.facets[this.name].range.buckets[0].stats.min, 10),
+          from: parseFloat(res.facets[this.name].range.buckets[0].stats.min, 10),
+          max: parseFloat(res.facets[this.name].range.buckets[0].stats.max, 10),
+          to: parseFloat(res.facets[this.name].range.buckets[0].stats.max, 10),
           force_edges: true,
           prettify_enabled: true,
           hide_min_max: true,

@@ -48,10 +48,10 @@ class RangeFacet extends Display
       $(@container).html html
       range =
         type: "double",
-        min: parseInt(res.facets[@name].range.buckets[0].stats.min, 10)
-        from: parseInt(res.facets[@name].range.buckets[0].stats.min, 10)
-        max: parseInt(res.facets[@name].range.buckets[0].stats.max, 10)
-        to: parseInt(res.facets[@name].range.buckets[0].stats.max, 10)
+        min: parseFloat(res.facets[@name].range.buckets[0].stats.min, 10)
+        from: parseFloat(res.facets[@name].range.buckets[0].stats.min, 10)
+        max: parseFloat(res.facets[@name].range.buckets[0].stats.max, 10)
+        to: parseFloat(res.facets[@name].range.buckets[0].stats.max, 10)
         force_edges: true
         prettify_enabled: true
         hide_min_max: true

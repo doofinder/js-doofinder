@@ -216,10 +216,6 @@ Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
 dfid |  Yes | `String` | Unique product identifier.
 
-### Widget
-Widgets are visual elements that take part into the search. They can be search inputs, places where display the results, places to put the facets, etc.
-The events you can bind in widget depend on the widget you are instantiating. Above we'll describe all the available widget and theirs correponding events. 
-
 ### options
 Sends a request to the Search API in order to receive server configuration. The response received is like this:
 
@@ -252,6 +248,12 @@ Sends a request to the Search API in order to receive server configuration. The 
    	  }
 
 ```
+
+
+### Widget
+Widgets are visual elements that take part into the search. They can be search inputs, places where display the results, places to put the facets, etc.
+The events you can bind in widget depend on the widget you are instantiating. Above we'll describe all the available widget and theirs correponding events. 
+
 
 ### widgets.QueryInput
 This widget triggers searches when a user types on it.

@@ -309,17 +309,31 @@ class Client
   hits in a product
 
   @param {String} dfid
-  @param {String} query
-  @param {Function} callback
+  @param {Object | Function} arg1
+  @param {Function} arg2
   @api public
   ###
-  options: (callback = (err, res) ->) ->
+  options: (arg1, arg2) ->
+    
+    callback = ((err, res) ->)
+    # You can send options and callback or just the callback
+    if typeof arg1 == "function" and typeof arg2 == "undefined"
+      callback = arg1
+    else if typeof arg1 == "object" and typeof arg2 == "function"
+      options = arg1
+      callback = arg2
+
+    if typeof options != "undefined" and options.querystring
+      querystring = "?#{options.querystring}"
+    else
+      querystring = ""
+
     headers = {}
     if @apiKey
         headers['api token'] = @apiKey
     options =
         host: @url
-        path: "/#{@version}/options/#{@hashid}"
+        path: "/#{@version}/options/#{@hashid}#{querystring}"
         headers: headers
 
     # Just for url with host:port
