@@ -396,3 +396,29 @@ describe 'doofinder controller: ', ->
 
       controller.nextPage() # to test df:next_page
       controller.getPage 3  # to test df:get_page
+
+  context ' hit and options method ', ->
+
+    beforeEach ()->
+      client_mock =
+        search: ()->
+        hit: ()->
+        hashid: mock.request.hashid
+
+    it 'actually do the hit', (done) ->
+      client_mock.hit = (sessionId, type, dfid, query) ->
+        sessionId.should.be.eql 'sessionId'
+        type.should.be.eql 'product'
+        dfid.should.be.eql 'dfid'
+        query.should.be.eql 'silla'
+        done()
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      controller.hit 'sessionId', 'product', 'dfid', 'silla'
+
+    it 'actuallydo the options', (done) ->
+      client_mock.options = (arg1, arg2) ->
+        arg1.should.be.eql 'arg1'
+        arg2.should.be.eql 'arg2'
+        done()
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      controller.options 'arg1', 'arg2'
