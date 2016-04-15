@@ -284,7 +284,7 @@ describe 'doofinder controller: ', ->
       # first search
       controller.search 'silla'
 
-    it 'addParam adds parameter to use in reresh', (done)->
+    it 'addParam adds parameter to use in refresh', (done)->
       controller = new doofinder.Controller client_mock, [widget_mock]
       # when first search done, add params and refresh
       controller.bind 'df:search', ()->
@@ -330,3 +330,69 @@ describe 'doofinder controller: ', ->
         done()
 
       controller.refresh()
+
+  context ' addWidget method ', ->
+
+    beforeEach ()->
+      client_mock =
+        search: ()->
+        hit: ()->
+        hashid: mock.request.hashid
+
+    it ' should call the widget "init" upon adding', (done) ->
+      widget_mock.init = ()->
+        true.should.be.true
+        done()
+      controller = new doofinder.Controller client_mock
+      controller.addWidget widget_mock
+
+    it ' should increase the internal widgets list', (done) ->
+      widget_mock.init = ()->
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      controller.widgets.should.have.length 1
+      controller.addWidget widget_mock
+      controller.widgets.should.have.length 2
+      done()
+
+  context ' bind method can ', ->
+
+    beforeEach ()->
+      client_mock =
+        search: ()->
+        hit: ()->
+        hashid: mock.request.hashid
+
+    it ' bind events to callbacks (duhhh)', (done) ->
+      res_mock = { results: [1,2,3,4,5,6,7,8,9,10,11], query_name: 'test', query_coounter: 2 }
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      client_mock.search = (query, params, cb)->
+        cb null, res_mock
+      events_count = 0
+      # bind to df:results_received
+      controller.bind 'df:results_received', (e, res) ->
+        events_count++
+        res.query_name.should.eql 'test'
+        res.results.should.have.length 11
+
+      # bind to df:search
+      controller.bind 'df:search', (e, params) ->
+        events_count++
+        params.query_counter.should.be.eql 2
+
+      # bind to df:next_page
+      controller.bind 'df:next_page', (e) ->
+        events_count.should.be.eql 2
+        events_count++ # three events triggered, counting this one
+
+      # bind to df:getPage
+      controller.bind 'df:get_page', (e) ->
+        events_count.should.be.eql 3
+        done()
+
+      controller.search 'silla' # to tests df:search and df:results_received
+
+      # before getPage and nextPage bindings, turn off searching to not repeat tests
+      client_mock.search = () ->
+
+      controller.nextPage() # to test df:next_page
+      controller.getPage 3  # to test df:get_page
