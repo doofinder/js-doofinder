@@ -118,7 +118,7 @@ describe 'doofinder controller: ', ->
 
     it 'basic search use right params', (done) ->
       client_mock.search = (query, params, cb) ->
-        query.should.be.equal 'silla'
+        query.should.eql 'silla'
         params.should.have.keys 'query_counter', 'query', 'filters', 'page'
         done()
 
@@ -128,7 +128,7 @@ describe 'doofinder controller: ', ->
     it 'extra search params can be added in search', (done)->
       client_mock.search = (query, params, cb)->
         params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp'
-        params.rpp.should.be.equal 23
+        params.rpp.should.eql 23
         params.filters.color.should.eql ['Rojo']
         done()
       controller = new doofinder.Controller client_mock, [widget_mock]
@@ -138,7 +138,7 @@ describe 'doofinder controller: ', ->
     it 'extra search params can be added in constructor', (done)->
       client_mock.search = (query, params)->
         params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp'
-        params.rpp.should.be.equal 11
+        params.rpp.should.eql 11
         params.filters.color.should.eql ['Azul']
         done()
       controller = new doofinder.Controller client_mock, [widget_mock], {rpp: 11, filters: {color: ['Azul']}}
@@ -227,9 +227,9 @@ describe 'doofinder controller: ', ->
       controller.bind 'df:search', ()->
         client_mock.search = (query, params, cb) ->
           # same query
-          params.query.should.be.equal 'silla'
+          params.query.should.eql 'silla'
           # increased page
-          params.page.should.be.equal 2
+          params.page.should.eql 2
           done()
 
         # next page!
@@ -243,8 +243,8 @@ describe 'doofinder controller: ', ->
       # when first search done, try getPage
       controller.bind 'df:search', ()->
         client_mock.search = (query, params, cb) ->
-          params.query.should.be.equal 'silla'
-          params.page.should.be.equal 22
+          params.query.should.eql 'silla'
+          params.page.should.eql 22
           done()
 
         # get page!
@@ -267,12 +267,12 @@ describe 'doofinder controller: ', ->
       client_mock.search = (query, params) ->
         params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp', 'transformer'
         params.transformer.should.eql 'testTransformer'
-        params.rpp.should.be.equal 23
+        params.rpp.should.eql 23
         # when we search again, the search parameters  must remain
         client_mock.search = (query, params) ->
           params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp', 'transformer'
           params.transformer.should.eql 'testTransformer'
-          params.rpp.should.be.equal 23
+          params.rpp.should.eql 23
           done()
         # second search
         controller.search 'silla2'
@@ -284,7 +284,7 @@ describe 'doofinder controller: ', ->
       # first search
       controller.search 'silla'
 
-    it 'addParam adds parameter to use in reresh', (done)->
+    it 'addParam adds parameter to use in refresh', (done)->
       controller = new doofinder.Controller client_mock, [widget_mock]
       # when first search done, add params and refresh
       controller.bind 'df:search', ()->
@@ -295,13 +295,130 @@ describe 'doofinder controller: ', ->
         # prepare for refreshing
         client_mock.search = (query, params, cb) ->
           # same query
-          params.query.should.be.equal 'silla'
+          params.query.should.eql 'silla'
           # new params
           params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp', 'transformer'
           params.transformer.should.eql 'testTransformer'
-          params.rpp.should.be.equal 32
+          params.rpp.should.eql 32
           done()
         # refresh!
         controller.refresh()
       # initial search
       controller.search 'silla'
+
+  context ' refresh methods ', ->
+
+    beforeEach ()->
+      client_mock =
+        search: ()->
+        hit: ()->
+        hashid: mock.request.hashid
+
+    it ' triggers refresh signal and actually do the search', (done) ->
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      controller.search 'silla', rpp: 33, filters: color: ['Rojo']
+
+      controller.bind 'df:refresh', (event, params)->
+        params.query_counter.should.eql 2
+
+      client_mock.search = (query, params, cb) ->
+        query.should.eql 'silla'
+        params.should.have.keys 'rpp', 'filters', 'query', 'query_counter', 'page'
+        params.query_counter.should.eql 3
+        params.filters.should.eql color: ['Rojo']
+        params.rpp.should.eql 33
+        done()
+
+      controller.refresh()
+
+  context ' addWidget method ', ->
+
+    beforeEach ()->
+      client_mock =
+        search: ()->
+        hit: ()->
+        hashid: mock.request.hashid
+
+    it ' should call the widget "init" upon adding', (done) ->
+      widget_mock.init = ()->
+        true.should.be.true
+        done()
+      controller = new doofinder.Controller client_mock
+      controller.addWidget widget_mock
+
+    it ' should increase the internal widgets list', (done) ->
+      widget_mock.init = ()->
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      controller.widgets.should.have.length 1
+      controller.addWidget widget_mock
+      controller.widgets.should.have.length 2
+      done()
+
+  context ' bind method can ', ->
+
+    beforeEach ()->
+      client_mock =
+        search: ()->
+        hit: ()->
+        hashid: mock.request.hashid
+
+    it ' bind events to callbacks (duhhh)', (done) ->
+      res_mock = { results: [1,2,3,4,5,6,7,8,9,10,11], query_name: 'test', query_coounter: 2 }
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      client_mock.search = (query, params, cb)->
+        cb null, res_mock
+      events_count = 0
+      # bind to df:results_received
+      controller.bind 'df:results_received', (e, res) ->
+        events_count++
+        res.query_name.should.eql 'test'
+        res.results.should.have.length 11
+
+      # bind to df:search
+      controller.bind 'df:search', (e, params) ->
+        events_count++
+        params.query_counter.should.be.eql 2
+
+      # bind to df:next_page
+      controller.bind 'df:next_page', (e) ->
+        events_count.should.be.eql 2
+        events_count++ # three events triggered, counting this one
+
+      # bind to df:getPage
+      controller.bind 'df:get_page', (e) ->
+        events_count.should.be.eql 3
+        done()
+
+      controller.search 'silla' # to tests df:search and df:results_received
+
+      # before getPage and nextPage bindings, turn off searching to not repeat tests
+      client_mock.search = () ->
+
+      controller.nextPage() # to test df:next_page
+      controller.getPage 3  # to test df:get_page
+
+  context ' hit and options method ', ->
+
+    beforeEach ()->
+      client_mock =
+        search: ()->
+        hit: ()->
+        hashid: mock.request.hashid
+
+    it 'actually do the hit', (done) ->
+      client_mock.hit = (sessionId, type, dfid, query) ->
+        sessionId.should.be.eql 'sessionId'
+        type.should.be.eql 'product'
+        dfid.should.be.eql 'dfid'
+        query.should.be.eql 'silla'
+        done()
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      controller.hit 'sessionId', 'product', 'dfid', 'silla'
+
+    it 'actuallydo the options', (done) ->
+      client_mock.options = (arg1, arg2) ->
+        arg1.should.be.eql 'arg1'
+        arg2.should.be.eql 'arg2'
+        done()
+      controller = new doofinder.Controller client_mock, [widget_mock]
+      controller.options 'arg1', 'arg2'
