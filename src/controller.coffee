@@ -7,15 +7,15 @@ qs = require "qs"
 
 ###
 Controller
-  
+
 This class uses the client to
 to retrieve the data and the widgets
 to paint them.
-###  
+###
 class Controller
   ###
   Controller constructor
-  
+
   @param {doofinder.Client} client
   @param {doofinder.widget | Array} widgets
   @param {Object} searchParams
@@ -35,15 +35,15 @@ class Controller
     @status = $.extend true,
       {},
       params: $.extend true, {}, @searchParams
-    
+
     @reset()
 
   ###
   __search
   this method invokes Client's search method for
-  retrieving the data and use widget's replace or 
+  retrieving the data and use widget's replace or
   append to show them.
-  
+
   @param {String} event: the event name
   @param {Array} params: the params will be passed
     to the listeners
@@ -54,16 +54,16 @@ class Controller
     # To avoid past queries
     # we'll check the query_counter
     @status.params.query_counter++
-    
+
     params = $.extend true,
       {},
       @status.params || {}
-    
+
     params.page = @status.currentPage
     _this = this
-    
-    @client.search params.query, params, (err, res) -> 
-      # I check if I reached the last page.    
+
+    @client.search params.query, params, (err, res) ->
+      # I check if I reached the last page.
       if res.results.length < _this.status.params.rpp
         _this.status.lastPageReached = true
       # I set the query_name till next query
@@ -79,14 +79,14 @@ class Controller
             widget.renderNext res
           else
             widget.render res
-      
-  ### 
+
+  ###
   __search wrappers
   ###
 
   ###
   search
-  
+
   Takes a new query, initializes status and performs
   a search
 
@@ -114,31 +114,31 @@ class Controller
 
       if not @searchParams.query_name
         delete @status.params.query_name
-      
+
       @status.currentPage = 1
       @status.firstQueryTriggered = true
       @status.lastPageReached = false
       @__search()
-    
+
     @trigger "df:search", [@status.params]
 
   ###
   nextPage
-  
+
   Increments the currentPage and performs a search. Takes
   the next page results and shows them.
 
   @api public
   ###
   nextPage: (replace = false) ->
-    if @status.firstQueryTriggered and @status.currentPage > 0 and not @status.lastPageReached   
-      @trigger "df:next_page"   
+    if @status.firstQueryTriggered and @status.currentPage > 0 and not @status.lastPageReached
+      @trigger "df:next_page"
       @status.currentPage++
       @__search(true)
 
   ###
   getPage
-  
+
   Set the currentPage with a given value and performs a search.
   Takes a given page and shows the results.
 
@@ -147,15 +147,15 @@ class Controller
   ###
 
   getPage: (page) ->
-    @trigger "df:get_page"
     if @status.firstQueryTriggered and @status.currentPage > 0
+      @trigger "df:get_page"
       @status.currentPage = page
       self = this
       @__search()
 
   ###
   refresh
-  
+
   Makes a search call with the current status.
 
   @api public
@@ -171,7 +171,7 @@ class Controller
 
   ###
   addFilter
-  
+
   Adds new filter criteria.
 
   @param {String} key: the facet key you are filtering
@@ -184,7 +184,7 @@ class Controller
     @status.currentPage = 1
     if not @status.params.filters
       @status.params.filters = {}
-    # Range filters  
+    # Range filters
     if value.constructor == Object
       @status.params.filters[key] = value
       # Range predefined filters are removed when
@@ -199,32 +199,32 @@ class Controller
 
   ###
   addParam
-  
+
   Adds new search parameter to the current status.
 
   @param {String} key: the facet key you are filtering
   @param {String | Number} value: the filtering criteria
   @api public
   ###
-  addParam: (key, value) -> 
+  addParam: (key, value) ->
     @status.params[key] = value
 
 
   ###
   clearParam
-  
+
   Removes search parameter from current status.
 
   @param {String} key: the name of the param
   @api public
   ###
   clearParam: (key) ->
-    if key in @status.params 
+    if key in @status.params
       delete @status.params[key]
 
   ###
   reset
-  
+
   Reset the params to the initial state.
 
   @api public
@@ -241,12 +241,12 @@ class Controller
 
     if @searchParams.query
       @status.params.query = ''
-  
+
   ###
   removeFilter
-  
+
   Removes some filter criteria.
-  
+
   @param {String} key: the facet key you are filtering
   @param {String | Object} value: the filtering criteria you are removing
   @api public
@@ -257,9 +257,9 @@ class Controller
       if @status.params.filters[key].constructor == Object
         delete @status.params.filters[key]
 
-      else if @status.params.filters[key].constructor == Array 
+      else if @status.params.filters[key].constructor == Array
         index = @status.params.filters[key].indexOf(value)
-      
+
         while index >= 0
           @status.params.filters[key].splice(index, 1)
           # Just in case it is repeated
@@ -269,8 +269,8 @@ class Controller
     if @searchParams.filters and @searchParams.filters[key]
       if @searchParams.filters[key].constructor == Object
         delete @searchParams.filters[key]
-      
-      else if @searchParams.filters[key].constructor == Array 
+
+      else if @searchParams.filters[key].constructor == Array
         index = @searchParams.filters[key].indexOf(value)
 
         while index >= 0
@@ -281,9 +281,9 @@ class Controller
 
   ###
   setSearchParam
-  
+
   Removes some filter criteria.
-  
+
   @param {String} key: the param key
   @param {Mixed} value: the value
   @api public
@@ -294,7 +294,7 @@ class Controller
   ###
   addwidget
 
-  Adds a new widget to the controller and reference the 
+  Adds a new widget to the controller and reference the
   controller from the widget.
 
   @param {doofinder.widget} widget: the widget you are adding.
@@ -348,10 +348,10 @@ class Controller
   @param {Array} params
   @api public
   ###
-  trigger: (event, params) -> 
+  trigger: (event, params) ->
     $(this).trigger(event, params)
 
-  
+
 
   ###
   setStatusFromString
@@ -359,7 +359,7 @@ class Controller
   Fills in the status from queryString
   and searches.
   ###
-  setStatusFromString: (queryString, prefix="#/search/") ->          
+  setStatusFromString: (queryString, prefix="#/search/") ->
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
     searchParams = $.extend true,
