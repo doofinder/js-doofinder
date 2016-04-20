@@ -28,6 +28,7 @@ class Client
     @version ?= 5
     @params = {}
     @filters = {}
+
     @url ?= address
     # API Key can be two ways:
     # zone-APIKey
@@ -43,6 +44,7 @@ class Client
       zone = ""
       @apiKey = ""
 
+    @secured = @apiKey != '' and @version != 4
     @url ?= zone + "-search.doofinder.com"
 
   ###
@@ -125,7 +127,12 @@ class Client
       params.query = cleaned
       headers = {}
       if _this.apiKey
-        headers['api token'] = _this.apiKey
+        if _this.version == 4
+          authHeaderName = 'api token'
+        else
+          authHeaderName = 'authorization'
+        headers[authHeaderName] = _this.apiKey
+
       _this.params = {}
       _this.filters = {}
       _this.sort = []
