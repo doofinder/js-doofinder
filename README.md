@@ -1,3 +1,5 @@
+[![Build Status](https://api.travis-ci.org/doofinder/js-doofinder.svg?branch=master)](https://travis-ci.org/doofinder/js-doofinder)
+
 # jsDoofinder
 This library allows you to make requests to [Doofinder](http://www.doofinder.com) Search Engines and show the results in your website. You'll be able to retrieve and shape your data easily with it.
 
