@@ -5,6 +5,7 @@ author: @ecoslado
 ###
 
 httpLib = require "http"
+httpsLib = require "https"
 
 ###
 DfClient
@@ -44,7 +45,8 @@ class Client
       zone = ""
       @apiKey = ""
 
-    @secured = @apiKey != '' and @version != 4
+    @secured = @apiKey? and @version != 4
+
     @url ?= zone + "-search.doofinder.com"
 
   ###
@@ -127,11 +129,7 @@ class Client
       params.query = cleaned
       headers = {}
       if _this.apiKey
-        if _this.version == 4
-          authHeaderName = 'api token'
-        else
-          authHeaderName = 'authorization'
-        headers[authHeaderName] = _this.apiKey
+        headers[_this.__getAuthHeaderName()] = _this.apiKey
 
       _this.params = {}
       _this.filters = {}
@@ -164,7 +162,7 @@ class Client
         options.port = _this.url.split(':')[1]
 
       # Here is where request is done and executed processResponse
-      req = httpLib.request options, _this.__processResponse(callback)
+      req = _this.__makeRequest options, callback
       req.end()
 
   ###
@@ -291,7 +289,7 @@ class Client
     headers = {}
 
     if @apiKey
-        headers['api token'] = @apiKey
+        headers[@__getAuthHeaderName()] = @apiKey
     path =  "/#{@version}/hit/#{sessionId}/#{eventType}/#{@hashid}"
     if dfid != ""
       path += "/#{dfid}"
@@ -307,7 +305,8 @@ class Client
       options.host = @url.split(':')[0]
       options.port = @url.split(':')[1]
     # Here is where request is done and executed processResponse
-    req = httpLib.request options, @__processResponse(callback)
+    req = @__makeRequest options, callback
+#    req = httpLib.request options, @__processResponse(callback)
     req.end()
 
   ###
@@ -321,7 +320,7 @@ class Client
   @api public
   ###
   options: (arg1, arg2) ->
-    
+
     callback = ((err, res) ->)
     # You can send options and callback or just the callback
     if typeof arg1 == "function" and typeof arg2 == "undefined"
@@ -337,7 +336,7 @@ class Client
 
     headers = {}
     if @apiKey
-        headers['api token'] = @apiKey
+        headers[@__getAuthHeaderName()] = @apiKey
     options =
         host: @url
         path: "/#{@version}/options/#{@hashid}#{querystring}"
@@ -348,7 +347,8 @@ class Client
       options.host = @url.split(':')[0]
       options.port = @url.split(':')[1]
     # Here is where request is done and executed processResponse
-    req = httpLib.request options, @__processResponse(callback)
+    req = @__makeRequest options, callback
+#    req = httpLib.request options, @__processResponse(callback)
     req.end()
 
   ###
@@ -373,6 +373,32 @@ class Client
 
         res.on 'error', (err) ->
           return callback err, null
+
+  ###
+  Method to make a secured or not request based on @secured
+
+  @param (Object) options: request options
+  @param (Function) the callback function to execute with the response as arg
+  @return (Object) the request object.
+  @api private
+  ###
+  __makeRequest: (options, callback) ->
+    if @secured
+      return httpsLib.request options, @__processResponse(callback)
+    else
+      return httpLib.request options, @__processResponse(callback)
+
+  ###
+  Method to obtain security header name
+  @return (String) either 'api token' or 'authorization' depending on version
+  @api private
+  ###
+  __getAuthHeaderName: () ->
+    if @version == 4
+      return 'api token'
+    else
+      return 'authorization'
+
 
 # Module exports
 module.exports = Client

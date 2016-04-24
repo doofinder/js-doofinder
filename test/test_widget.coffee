@@ -12,7 +12,8 @@ nock = require 'nock'
 mock =
   request:
     hashid: "ffffffffffffffffffffffffffffffff"
-    api_key: "eu1-384fd8a73c7ff0859a5891f9f4083b1b9727f9c3"
+    api_key: "eu1" # to make sure its unsecured requests
+
 
 fake_results =
   query_counter: 1
