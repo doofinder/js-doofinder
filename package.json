@@ -7,7 +7,6 @@
     "test": "test"
   },
   "dependencies": {
-    "http": "^0.0.0",
     "ion-rangeslider": "git://github.com/doofinder/ion.rangeSlider.git",
     "jquery": "^2.1.4",
     "mustache": "^2.2.1",
