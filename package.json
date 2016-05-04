@@ -1,13 +1,12 @@
 {
   "name": "doofinder",
-  "version": "3.0.8",
+  "version": "3.1.0",
   "description": "Javascript Library for Doofinder Search API",
   "main": "lib/doofinder.js",
   "directories": {
     "test": "test"
   },
   "dependencies": {
-    "http": "^0.0.0",
     "ion-rangeslider": "git://github.com/doofinder/ion.rangeSlider.git",
     "jquery": "^2.1.4",
     "mustache": "^2.2.1",
