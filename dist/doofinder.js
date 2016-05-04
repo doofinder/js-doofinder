@@ -470,6 +470,7 @@ author: @ecoslado
 
 /*
  * Created by Kike Coslado on 26/10/15.
+ * 20160419 REV(@JoeZ99)
  */
 
 (function() {
@@ -483,7 +484,7 @@ author: @ecoslado
 
   /*
   Controller
-    
+  
   This class uses the client to
   to retrieve the data and the widgets
   to paint them.
@@ -523,7 +524,7 @@ author: @ecoslado
     /*
     __search
     this method invokes Client's search method for
-    retrieving the data and use widget's replace or 
+    retrieving the data and use widget's replace or
     append to show them.
     
     @param {String} event: the event name
@@ -567,7 +568,7 @@ author: @ecoslado
     };
 
 
-    /* 
+    /*
     __search wrappers
      */
 
@@ -640,8 +641,8 @@ author: @ecoslado
 
     Controller.prototype.getPage = function(page) {
       var self;
-      this.trigger("df:get_page");
       if (this.status.firstQueryTriggered && this.status.currentPage > 0) {
+        this.trigger("df:get_page");
         this.status.currentPage = page;
         self = this;
         return this.__search();
@@ -809,7 +810,7 @@ author: @ecoslado
     /*
     addwidget
     
-    Adds a new widget to the controller and reference the 
+    Adds a new widget to the controller and reference the
     controller from the widget.
     
     @param {doofinder.widget} widget: the widget you are adding.
@@ -940,7 +941,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":60}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "3.0.8",
+    version: "3.1.0",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -2082,8 +2083,6 @@ bottom
  */
 /* eslint-disable no-proto */
 
-'use strict'
-
 var base64 = require('base64-js')
 var ieee754 = require('ieee754')
 var isArray = require('isarray')
@@ -2166,10 +2165,8 @@ function Buffer (arg) {
     return new Buffer(arg)
   }
 
-  if (!Buffer.TYPED_ARRAY_SUPPORT) {
-    this.length = 0
-    this.parent = undefined
-  }
+  this.length = 0
+  this.parent = undefined
 
   // Common case.
   if (typeof arg === 'number') {
@@ -2300,10 +2297,6 @@ function fromJsonObject (that, object) {
 if (Buffer.TYPED_ARRAY_SUPPORT) {
   Buffer.prototype.__proto__ = Uint8Array.prototype
   Buffer.__proto__ = Uint8Array
-} else {
-  // pre-set for values that may exist in the future
-  Buffer.prototype.length = undefined
-  Buffer.prototype.parent = undefined
 }
 
 function allocate (that, length) {
@@ -2453,6 +2446,10 @@ function byteLength (string, encoding) {
   }
 }
 Buffer.byteLength = byteLength
+
+// pre-set for values that may exist in the future
+Buffer.prototype.length = undefined
+Buffer.prototype.parent = undefined
 
 function slowToString (encoding, start, end) {
   var loweredCase = false
@@ -22020,7 +22017,7 @@ internals.stringify = function (obj, prefix, generateArrayPrefix, strictNullHand
     var objKeys = Array.isArray(filter) ? filter : Object.keys(obj);
     for (var i = 0, il = objKeys.length; i < il; ++i) {
         var key = objKeys[i];
-
+        console.log(obj);
         if (Array.isArray(obj)) {
             values = values.concat(internals.stringify(obj[key], generateArrayPrefix(prefix, key), generateArrayPrefix, strictNullHandling, filter));
         }

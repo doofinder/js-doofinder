@@ -306,7 +306,6 @@ class Client
       options.port = @url.split(':')[1]
     # Here is where request is done and executed processResponse
     req = @__makeRequest options, callback
-#    req = httpLib.request options, @__processResponse(callback)
     req.end()
 
   ###
@@ -348,7 +347,6 @@ class Client
       options.port = @url.split(':')[1]
     # Here is where request is done and executed processResponse
     req = @__makeRequest options, callback
-#    req = httpLib.request options, @__processResponse(callback)
     req.end()
 
   ###
