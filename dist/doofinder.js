@@ -544,25 +544,29 @@ author: @ecoslado
       _this = this;
       return this.client.search(params.query, params, function(err, res) {
         var i, len, ref, results, widget;
-        if (res.results.length < _this.status.params.rpp) {
-          _this.status.lastPageReached = true;
-        }
-        if (!_this.searchParams.query_name) {
-          _this.status.params.query_name = res.query_name;
-        }
-        _this.trigger("df:results_received", [res]);
-        if (res.query_counter === _this.status.params.query_counter) {
-          ref = _this.widgets;
-          results = [];
-          for (i = 0, len = ref.length; i < len; i++) {
-            widget = ref[i];
-            if (next) {
-              results.push(widget.renderNext(res));
-            } else {
-              results.push(widget.render(res));
-            }
+        if (err) {
+          return _this.trigger("df:error_received", [err]);
+        } else if (res) {
+          if (res.results.length < _this.status.params.rpp) {
+            _this.status.lastPageReached = true;
           }
-          return results;
+          if (!_this.searchParams.query_name) {
+            _this.status.params.query_name = res.query_name;
+          }
+          _this.trigger("df:results_received", [res]);
+          if (res.query_counter === _this.status.params.query_counter) {
+            ref = _this.widgets;
+            results = [];
+            for (i = 0, len = ref.length; i < len; i++) {
+              widget = ref[i];
+              if (next) {
+                results.push(widget.renderNext(res));
+              } else {
+                results.push(widget.render(res));
+              }
+            }
+            return results;
+          }
         }
       });
     };
@@ -2083,6 +2087,8 @@ bottom
  */
 /* eslint-disable no-proto */
 
+'use strict'
+
 var base64 = require('base64-js')
 var ieee754 = require('ieee754')
 var isArray = require('isarray')
@@ -2165,8 +2171,10 @@ function Buffer (arg) {
     return new Buffer(arg)
   }
 
-  this.length = 0
-  this.parent = undefined
+  if (!Buffer.TYPED_ARRAY_SUPPORT) {
+    this.length = 0
+    this.parent = undefined
+  }
 
   // Common case.
   if (typeof arg === 'number') {
@@ -2297,6 +2305,10 @@ function fromJsonObject (that, object) {
 if (Buffer.TYPED_ARRAY_SUPPORT) {
   Buffer.prototype.__proto__ = Uint8Array.prototype
   Buffer.__proto__ = Uint8Array
+} else {
+  // pre-set for values that may exist in the future
+  Buffer.prototype.length = undefined
+  Buffer.prototype.parent = undefined
 }
 
 function allocate (that, length) {
@@ -2446,10 +2458,6 @@ function byteLength (string, encoding) {
   }
 }
 Buffer.byteLength = byteLength
-
-// pre-set for values that may exist in the future
-Buffer.prototype.length = undefined
-Buffer.prototype.parent = undefined
 
 function slowToString (encoding, start, end) {
   var loweredCase = false
@@ -22017,7 +22025,7 @@ internals.stringify = function (obj, prefix, generateArrayPrefix, strictNullHand
     var objKeys = Array.isArray(filter) ? filter : Object.keys(obj);
     for (var i = 0, il = objKeys.length; i < il; ++i) {
         var key = objKeys[i];
-        console.log(obj);
+
         if (Array.isArray(obj)) {
             values = values.concat(internals.stringify(obj[key], generateArrayPrefix(prefix, key), generateArrayPrefix, strictNullHandling, filter));
         }
