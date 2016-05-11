@@ -44,7 +44,6 @@ module.exports = (grunt) ->
 
   grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks 'grunt-mocha-test'
-  grunt.loadNpmTasks 'grunt-exec'
   grunt.loadNpmTasks 'grunt-contrib-uglify'
   grunt.loadNpmTasks 'grunt-browserify'
   grunt.loadNpmTasks('grunt-version');
