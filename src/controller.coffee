@@ -68,6 +68,9 @@ class Controller
       if err
         # Triggers error_received on search error
         _this.trigger "df:error_received", [err]
+        for widget in _this.widgets
+          widget.render {error: err}
+
       else if res
         if res.results.length < _this.status.params.rpp
           _this.status.lastPageReached = true
