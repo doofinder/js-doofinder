@@ -27,7 +27,7 @@ class TermFacet extends Display
             '{{#terms}}'+
             '<li>'+
             '<a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}" data-facet="{{name}}"'+
-            'data-value="{{ key }}">{{ term }} <span'+
+            'data-value="{{ key }}">{{ key }} <span'+
             'class="df-facet__count">{{ doc_count }}</span></a>'+
             '</li>'+
             '{{/terms}}'
