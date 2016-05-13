@@ -941,7 +941,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":60}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "3.1.0",
+    version: "3.1.2",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1607,7 +1607,7 @@ author: @ecoslado
       }
       this.selected = {};
       if (!options.template) {
-        template = '{{#@index}}' + '<hr class="df-separator">' + '{{/@index}}' + '<div class="df-facets">' + '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>' + '<div class="df-facets__content">' + '<ul>' + '{{#terms}}' + '<li>' + '<a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}" data-facet="{{name}}"' + 'data-value="{{ key }}">{{ term }} <span' + 'class="df-facet__count">{{ doc_count }}</span></a>' + '</li>' + '{{/terms}}';
+        template = '{{#@index}}' + '<hr class="df-separator">' + '{{/@index}}' + '<div class="df-facets">' + '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>' + '<div class="df-facets__content">' + '<ul>' + '{{#terms}}' + '<li>' + '<a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}" data-facet="{{name}}"' + 'data-value="{{ key }}">{{ key }} <span' + 'class="df-facet__count">{{ doc_count }}</span></a>' + '</li>' + '{{/terms}}';
       } else {
         template = options.template;
       }
@@ -2083,8 +2083,6 @@ bottom
  */
 /* eslint-disable no-proto */
 
-'use strict'
-
 var base64 = require('base64-js')
 var ieee754 = require('ieee754')
 var isArray = require('isarray')
@@ -2167,10 +2165,8 @@ function Buffer (arg) {
     return new Buffer(arg)
   }
 
-  if (!Buffer.TYPED_ARRAY_SUPPORT) {
-    this.length = 0
-    this.parent = undefined
-  }
+  this.length = 0
+  this.parent = undefined
 
   // Common case.
   if (typeof arg === 'number') {
@@ -2301,10 +2297,6 @@ function fromJsonObject (that, object) {
 if (Buffer.TYPED_ARRAY_SUPPORT) {
   Buffer.prototype.__proto__ = Uint8Array.prototype
   Buffer.__proto__ = Uint8Array
-} else {
-  // pre-set for values that may exist in the future
-  Buffer.prototype.length = undefined
-  Buffer.prototype.parent = undefined
 }
 
 function allocate (that, length) {
@@ -2454,6 +2446,10 @@ function byteLength (string, encoding) {
   }
 }
 Buffer.byteLength = byteLength
+
+// pre-set for values that may exist in the future
+Buffer.prototype.length = undefined
+Buffer.prototype.parent = undefined
 
 function slowToString (encoding, start, end) {
   var loweredCase = false
@@ -22021,7 +22017,7 @@ internals.stringify = function (obj, prefix, generateArrayPrefix, strictNullHand
     var objKeys = Array.isArray(filter) ? filter : Object.keys(obj);
     for (var i = 0, il = objKeys.length; i < il; ++i) {
         var key = objKeys[i];
-
+        console.log(obj);
         if (Array.isArray(obj)) {
             values = values.concat(internals.stringify(obj[key], generateArrayPrefix(prefix, key), generateArrayPrefix, strictNullHandling, filter));
         }
