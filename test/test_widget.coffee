@@ -54,11 +54,11 @@ fake_results =
 
     color:
       _type: "terms"
-      missing: 
+      missing:
         doc_count: 16
       doc_count: 10
       other: 0
-      terms: 
+      terms:
         buckets: [
           key: "Azul"
           doc_count: 3
@@ -66,16 +66,16 @@ fake_results =
           key: "Rojo"
           doc_count: 1
         ]
-      total: 
+      total:
         value: 1
 
     categories:
       _type: "terms"
-      missing: 
+      missing:
         doc_count: 0
       doc_count: 50
       other: 0
-      terms: 
+      terms:
         buckets: [
           key: "Sillas de paseo"
           doc_count: 6
@@ -509,7 +509,7 @@ describe 'doofinder widgets: ', ->
 
       @$ = doofinder.jQuery
       # reset html
-      @$('body').empty().append '<input type="text" id="query"></input><div id="fcontainer"></div><div id="results"></div>'
+      @$('body').empty().append '<input type="text" id="query"><div id="fcontainer"></div><div id="results"></div>'
       @queryEl = @$ '#query'
       client = new doofinder.Client mock.request.hashid, mock.request.api_key,5,null,'fooserver'
       queryInputWidget = new doofinder.widgets.QueryInput '#query'
@@ -517,14 +517,14 @@ describe 'doofinder widgets: ', ->
 
     it 'display ranges returned in the response and triggers df:rendered', (done) ->
       rangeFacetWidget = new doofinder.widgets.RangeFacet '#fcontainer', 'best_price'
+      console.log 'HOLA'
       @controller.addWidget rangeFacetWidget
       facetContainer = @$ '#fcontainer'
       counter = 0
-      rangeFacetWidget.bind 'df:rendered', (res)->
-        facetContainer.find('span.js-grid-text-0').first().text().should.be.eql '8.5'
-        facetContainer.find('span.js-grid-text-1').first().text().should.be.eql '117'
-        facetContainer.find('span.js-grid-text-2').first().text().should.be.eql '225'
+      rangeFacetWidget.bind 'df:rendered', (e, res)->
+        # facetContainer.find('.noUi-handle-lower > .noUi-tooltip').first().text().should.be.eql '8.5'
+        # facetContainer.find('.noUi-handle-upper > .noUi-tooltip').first().text().should.be.eql '225'
         done()
 
       @queryEl.val 'pill'
-      @queryEl.trigger 'keydown' ###
+      @queryEl.trigger 'keydown'

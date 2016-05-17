@@ -1,238 +1,33 @@
-@charset "UTF-8";
-/* CSS Normalization based on normalize.css v3.0.3. */
-
-/**
- * Ion.RangeSlider with Nice Skin
- * CSS version 2.0.3
- * © Denis Ineshin, 2014 - https://github.com/IonDen
- */
-
-.df-widget {
-  list-style: none;
-}
-.df-widget .irs {
-  position: relative;
-  display: block;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none; }
-.df-widget .irs-line {
-  position: relative;
-  display: block;
-  overflow: hidden;
-  outline: none !important; }
-.df-widget .irs-line-left, .df-widget .irs-line-mid, .df-widget .irs-line-right {
-  position: absolute;
-  display: block;
-  top: 0; }
-.df-widget .irs-line-left {
-  left: 0;
-  width: 11%; }
-.df-widget .irs-line-mid {
-  left: 9%;
-  width: 82%; }
-.df-widget .irs-line-right {
-  right: 0;
-  width: 11%; }
-.df-widget .irs-bar {
-  position: absolute;
-  display: block;
-  left: 0;
-  width: 0; }
-.df-widget .irs-bar-edge {
-  position: absolute;
-  display: block;
-  top: 0;
-  left: 0; }
-.df-widget .irs-shadow {
-  position: absolute;
-  display: none;
-  left: 0;
-  width: 0; }
-.df-widget .irs-slider {
-  position: absolute;
-  display: block;
-  cursor: default;
-  z-index: 1; }
-.df-widget .irs-slider.type_last {
-  z-index: 2; }
-.df-widget .irs-min {
-  position: absolute;
-  display: block;
-  left: 0;
-  cursor: default; }
-.df-widget .irs-max {
-  position: absolute;
-  display: block;
-  right: 0;
-  cursor: default; }
-.df-widget .irs-from, .df-widget .irs-to, .df-widget .irs-single {
-  position: absolute;
-  display: block;
-  top: 0;
-  left: 0;
-  cursor: default;
-  white-space: nowrap; }
-.df-widget .irs-grid {
-  position: absolute;
-  display: none;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 20px; }
-.df-widget .irs-with-grid .irs-grid {
-  display: block; }
-.df-widget .irs-grid-pol {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 1px;
-  height: 8px;
-  background: #000; }
-.df-widget .irs-grid-pol.small {
-  height: 4px; }
-.df-widget .irs-grid-text {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  white-space: nowrap;
-  text-align: center;
-  font-size: 9px;
-  line-height: 9px;
-  padding: 0 3px;
-  color: #000; }
-.df-widget .irs-disable-mask {
-  position: absolute;
-  display: block;
-  top: 0;
-  left: -1%;
-  width: 102%;
-  height: 100%;
-  cursor: default;
-  background: transparent;
-  z-index: 2; }
-.df-widget .irs-disabled {
-  opacity: 0.4; }
-.df-widget .lt-ie9 .irs-disabled {
-  filter: alpha(opacity=40); }
-.df-widget .irs-hidden-input {
-  position: absolute !important;
-  display: block !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 0 !important;
-  height: 0 !important;
-  font-size: 0 !important;
-  line-height: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  outline: none !important;
-  z-index: -9999 !important;
-  background: none !important;
-  border-style: solid !important;
-  border-color: transparent !important; }
-.df-widget .irs-line-mid,
-.df-widget .irs-line-left,
-.df-widget .irs-line-right,
-.df-widget .irs-bar,
-.df-widget .irs-bar-edge,
-.df-widget .irs-slider {
-  background: url(../img/sprite-skin-nice.png) repeat-x; }
-.df-widget .irs {
-  height: 40px; }
-.df-widget .irs-with-grid {
-  height: 60px; }
-.df-widget .irs-line {
-  height: 8px;
-  top: 25px; }
-.df-widget .irs-line-left {
-  height: 8px;
-  background-position: 0 -30px; }
-.df-widget .irs-line-mid {
-  height: 8px;
-  background-position: 0 0; }
-.df-widget .irs-line-right {
-  height: 8px;
-  background-position: 100% -30px; }
-.df-widget .irs-bar {
-  height: 8px;
-  top: 25px;
-  background-position: 0 -60px; }
-.df-widget .irs-bar-edge {
-  top: 25px;
-  height: 8px;
-  width: 11px;
-  background-position: 0 -90px; }
-.df-widget .irs-shadow {
-  height: 1px;
-  top: 34px;
-  background: #000;
-  opacity: 0.15; }
-.df-widget .lt-ie9 .irs-shadow {
-  filter: alpha(opacity=15); }
-.df-widget .irs-slider {
-  width: 22px;
-  height: 22px;
-  top: 17px;
-  background-position: 0 -120px; }
-.df-widget .irs-slider.state_hover, .df-widget .irs-slider:hover {
-  background-position: 0 -150px; }
-.df-widget .irs-min, .df-widget .irs-max {
-  color: #999;
-  font-size: 10px;
-  line-height: 1.333;
-  text-shadow: none;
-  top: 0;
-  padding: 1px 3px;
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px; }
-.df-widget .lt-ie9 .irs-min, .df-widget .lt-ie9 .irs-max {
-  background: #ccc; }
-.df-widget .irs-from, .df-widget .irs-to, .df-widget .irs-single {
-  color: #fff;
-  font-size: 10px;
-  line-height: 1.333;
-  text-shadow: none;
-  padding: 1px 5px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 3px; }
-.df-widget .lt-ie9 .irs-from, .df-widget .lt-ie9 .irs-to, .df-widget .lt-ie9 .irs-single {
-  background: #999; }
-.df-widget .irs-grid-pol {
-  background: #99a4ac; }
-.df-widget .irs-grid-text {
-  color: #99a4ac; }
-.df-widget .irs-line-mid,
-.df-widget .irs-line-left,
-.df-widget .irs-line-right,
-.df-widget .irs-bar,
-.df-widget .irs-bar-edge,
-.df-widget .irs-slider {
-  background-image: url(data:image/png;base64,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); }
-
 /* RESULTS AND SCROLL */
-
 .df-results {
   -webkit-box-flex: 1;
   -webkit-flex: 1;
-      -ms-flex: 1;
-          flex: 1;
+  -ms-flex: 1;
+  flex: 1;
   -webkit-overflow-scrolling: touch;
   overflow-x: hidden;
   overflow-y: auto;
-  height: 60%; }
+  height: 60%;
+}
+
+.df-results, .df-results * {
+  box-sizing: border-box;
+}
 
 .df-results__content {
   list-style: none;
   padding: 0;
-  margin: 0; }
+  margin: 0;
+}
 
-
-/* PANEL */
+/* FACETS PANEL */
 .df-panel {
-  margin: 8px 0; }
+  margin: 8px 0;
+}
+
+.df-panel, .df-panel * {
+  box-sizing: border-box;
+}
 
 .df-panel__title {
   display: block;
@@ -240,24 +35,402 @@
   margin: 0;
   background: no-repeat right 8px center;
   background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%20%20%3Cg%20stroke%3D%22none%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M10%207L3%207%203%206%2010%206%2010%207%2010%207Z%22%20fill%3D%22%23000000%22/%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M0%200L12%200%2012%2012%200%2012%200%200Z%22/%3E%0A%20%20%20%20%3C/g%3E%0A%3C/svg%3E%0A");
-  max-height: 30px; }
+  max-height: 30px;
+}
 
 .df-panel__content {
-  padding: 8px; }
-  .df-panel__content ul {
-    list-style: none;
-    padding: 0;
-    margin: 0; }
+  padding: 8px;
+}
 
+.df-panel__content ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* THIRD PARTY COMPONENTS */
+.df-slider {
+  padding: 40px 10px;
+}
+
+.df-slider, .df-slider * {
+  box-sizing: border-box;
+}
+
+/* Functional styling;
+ * These styles are required for noUiSlider to function.
+ * You don't need to change these rules to apply your design.
+ */
+.df-slider .noUi-target,
+.df-slider .noUi-target * {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -ms-touch-action: none;
+  touch-action: none;
+  -ms-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.df-slider .noUi-target {
+  position: relative;
+  direction: ltr;
+}
+
+.df-slider .noUi-base {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+  /* Fix 401 */
+}
+
+.df-slider .noUi-origin {
+  position: absolute;
+  right: 0;
+  top: 0;
+  left: 0;
+  bottom: 0;
+}
+
+.df-slider .noUi-handle {
+  position: relative;
+  z-index: 1;
+}
+
+.df-slider .noUi-stacking .noUi-handle {
+  /* This class is applied to the lower origin when
+   its values is > 50%. */
+  z-index: 10;
+}
+
+.df-slider .noUi-state-tap .noUi-origin {
+  -webkit-transition: left 0.3s, top 0.3s;
+  transition: left 0.3s, top 0.3s;
+}
+
+.df-slider .noUi-state-drag * {
+  cursor: inherit !important;
+}
+
+/* Painting and performance;
+ * Browsers can paint handles in their own layer.
+ */
+.df-slider .noUi-base,
+.df-slider .noUi-handle {
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+}
+
+/* Slider size and handle placement;
+ */
+.df-slider .noUi-horizontal {
+  height: 18px;
+}
+
+.df-slider .noUi-horizontal .noUi-handle {
+  width: 34px;
+  height: 28px;
+  left: -17px;
+  top: -6px;
+}
+
+.df-slider .noUi-vertical {
+  width: 18px;
+}
+
+.df-slider .noUi-vertical .noUi-handle {
+  width: 28px;
+  height: 34px;
+  left: -6px;
+  top: -17px;
+}
+
+/* Styling;
+ */
+.df-slider .noUi-background {
+  background: #FAFAFA;
+  box-shadow: inset 0 1px 1px #f0f0f0;
+}
+
+.df-slider .noUi-connect {
+  background: #3FB8AF;
+  box-shadow: inset 0 0 3px rgba(51, 51, 51, 0.45);
+  -webkit-transition: background 450ms;
+  transition: background 450ms;
+}
+
+.df-slider .noUi-origin {
+  border-radius: 2px;
+}
+
+.df-slider .noUi-target {
+  border-radius: 4px;
+  border: 1px solid #D3D3D3;
+  box-shadow: inset 0 1px 1px #F0F0F0, 0 3px 6px -5px #BBB;
+}
+
+.df-slider .noUi-target.noUi-connect {
+  box-shadow: inset 0 0 3px rgba(51, 51, 51, 0.45), 0 3px 6px -5px #BBB;
+}
+
+/* Handles and cursors;
+ */
+.df-slider .noUi-draggable {
+  cursor: w-resize;
+}
+
+.df-slider .noUi-vertical .noUi-draggable {
+  cursor: n-resize;
+}
+
+.df-slider .noUi-handle {
+  border: 1px solid #D9D9D9;
+  border-radius: 3px;
+  background: #FFF;
+  cursor: default;
+  box-shadow: inset 0 0 1px #FFF, inset 0 1px 7px #EBEBEB, 0 3px 6px -3px #BBB;
+}
+
+.df-slider .noUi-active {
+  box-shadow: inset 0 0 1px #FFF, inset 0 1px 7px #DDD, 0 3px 6px -3px #BBB;
+}
+
+/* Handle stripes;
+ */
+.df-slider .noUi-handle:before,
+.df-slider .noUi-handle:after {
+  content: "";
+  display: block;
+  position: absolute;
+  height: 14px;
+  width: 1px;
+  background: #E8E7E6;
+  left: 14px;
+  top: 6px;
+}
+
+.df-slider .noUi-handle:after {
+  left: 17px;
+}
+
+.df-slider .noUi-vertical .noUi-handle:before,
+.df-slider .noUi-vertical .noUi-handle:after {
+  width: 14px;
+  height: 1px;
+  left: 6px;
+  top: 14px;
+}
+
+.df-slider .noUi-vertical .noUi-handle:after {
+  top: 17px;
+}
+
+/* Disabled state;
+ */
+.df-slider [disabled].noUi-connect,
+.df-slider [disabled] .noUi-connect {
+  background: #B8B8B8;
+}
+
+.df-slider [disabled].noUi-origin,
+.df-slider [disabled] .noUi-handle {
+  cursor: not-allowed;
+}
+
+/* Base;
+ *
+ */
+.df-slider .noUi-pips,
+.df-slider .noUi-pips * {
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.df-slider .noUi-pips {
+  position: absolute;
+  color: #999;
+}
+
+/* Values;
+ *
+ */
+.df-slider .noUi-value {
+  position: absolute;
+  text-align: center;
+}
+
+.df-slider .noUi-value-sub {
+  color: #ccc;
+  font-size: 10px;
+}
+
+/* Markings;
+ *
+ */
+.df-slider .noUi-marker {
+  position: absolute;
+  background: #CCC;
+}
+
+.df-slider .noUi-marker-sub {
+  background: #AAA;
+}
+
+.df-slider .noUi-marker-large {
+  background: #AAA;
+}
+
+/* Horizontal layout;
+ *
+ */
+.df-slider .noUi-pips-horizontal {
+  padding: 10px 0;
+  height: 80px;
+  top: 100%;
+  left: 0;
+  width: 100%;
+}
+
+.df-slider .noUi-value-horizontal {
+  -webkit-transform: translate3d(-50%, 50%, 0);
+  transform: translate3d(-50%, 50%, 0);
+}
+
+.df-slider .noUi-marker-horizontal.noUi-marker {
+  margin-left: -1px;
+  width: 2px;
+  height: 5px;
+}
+
+.df-slider .noUi-marker-horizontal.noUi-marker-sub {
+  height: 10px;
+}
+
+.df-slider .noUi-marker-horizontal.noUi-marker-large {
+  height: 15px;
+}
+
+/* Vertical layout;
+ *
+ */
+.df-slider .noUi-pips-vertical {
+  padding: 0 10px;
+  height: 100%;
+  top: 0;
+  left: 100%;
+}
+
+.df-slider .noUi-value-vertical {
+  -webkit-transform: translate3d(0, -50%, 0);
+  transform: translate3d(0, -50%, 0);
+  padding-left: 25px;
+}
+
+.df-slider .noUi-marker-vertical.noUi-marker {
+  width: 5px;
+  height: 2px;
+  margin-top: -1px;
+}
+
+.df-slider .noUi-marker-vertical.noUi-marker-sub {
+  width: 10px;
+}
+
+.df-slider .noUi-marker-vertical.noUi-marker-large {
+  width: 15px;
+}
+
+.df-slider .noUi-tooltip {
+  display: block;
+  position: absolute;
+  border: 1px solid #D9D9D9;
+  border-radius: 3px;
+  background: #fff;
+  padding: 5px;
+  text-align: center;
+}
+
+.df-slider .noUi-horizontal .noUi-handle-lower .noUi-tooltip {
+  top: -32px;
+}
+
+.df-slider .noUi-horizontal .noUi-handle-upper .noUi-tooltip {
+  bottom: -32px;
+}
+
+.df-slider .noUi-vertical .noUi-handle-lower .noUi-tooltip {
+  left: 120%;
+}
+
+.df-slider .noUi-vertical .noUi-handle-upper .noUi-tooltip {
+  right: 120%;
+}
+
+.df-slider .noUi-background {
+  background-color: #9AA4AC;
+  box-shadow: none;
+}
+
+.df-slider .noUi-connect {
+  background-color: white;
+  box-shadow: none;
+}
+
+.df-slider .noUi-tooltip {
+  font-size: 80%;
+}
+
+.df-slider .noUi-horizontal {
+  height: 8px;
+}
+
+.df-slider .noUi-horizontal .noUi-handle {
+  left: -9px;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #CFCFCF;
+  border-radius: 18px;
+  cursor: ew-resize;
+}
+
+.df-slider .noUi-horizontal .noUi-handle::before {
+  display: none;
+}
+
+.df-slider .noUi-horizontal .noUi-handle::after {
+  width: 8px;
+  height: 8px;
+  border-radius: 8px;
+  background-color: #9AA4AC;
+  left: 4px;
+  top: 4px;
+}
+
+.df-slider .noUi-horizontal .noUi-handle:hover::after, .df-slider .noUi-horizontal .noUi-handle.noUi-active::after {
+  background-color: #333333;
+}
+
+.df-slider .noUi-horizontal .noUi-handle-upper .noUi-tooltip {
+  right: 0;
+  bottom: -36px;
+}
+
+.df-slider .noUi-horizontal .noUi-handle-lower .noUi-tooltip {
+  top: -36px;
+}
 
 /* THEME */
-
 .df-results {
   background-color: inherit;
-  padding: 0 8px 8px 8px; }
+  padding: 0 8px 8px 8px;
+}
 
 .df-panel {
-  background-color: inherit; }
+  background-color: inherit;
+}
 
 .df-panel__title {
   background-color: inherit;
@@ -265,19 +438,20 @@
   font-family: 'Arial', sans-serif;
   font-weight: bold;
   font-size: 13px;
-  text-decoration: none; }
+  text-decoration: none;
+}
 
 .df-facet {
   background-color: inherit;
   font-size: 13px;
   text-decoration: none;
-  color: #333333; }
-  .df-facet:focus, .df-facet:active, .df-facet:hover {
-    font-weight: bold; }
+  color: #333333;
+}
 
-.df-facet--active {
-  font-weight: bold; }
+.df-facet:focus, .df-facet:active, .df-facet:hover, .df-facet.df-facet--active {
+  font-weight: bold;
+}
 
 .df-facet__count {
-  color: #747474; }
-
+  color: #747474;
+}

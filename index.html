@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Client</title>
+
+  <link rel="stylesheet" type="text/css" href="dist/doofinder.css">
+  <style type="text/css">
+    * {
+      box-sizing: border-box;
+    }
+    #query {
+      margin-bottom: 1rem;
+      width: 320px;
+      padding: .25rem;
+    }
+    #scroll {
+      position: relative;
+      width: 320px;
+      height: 600px;
+      overflow: auto;
+      border: 1px solid #ccc;
+    }
+    #price {
+      width: 320px;
+      border: 1px solid #ccc;
+    }
+  </style>
+
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script type="text/javascript" src="dist/doofinder.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function(){
+      // Use here your Search Engine hashid and doofinder zone
+      var client = new doofinder.Client('97be6c1016163d7e9bceedb5d9bbc032', 'eu1');
+
+      // #query is the DOM selector that points to the search box
+      var queryInputWidget = new doofinder.widgets.QueryInput('#query');
+
+      // #scroll is where we'll display the results
+      var resultsWidget = new doofinder.widgets.ScrollResults('#scroll');
+
+      var priceWidget = new doofinder.widgets.RangeFacet('#price', 'price');
+
+      priceWidget.bind('df:rendered', function(e, res){
+        console.log(res);
+      });
+
+      // The controller to rule them all
+      var controller = new doofinder.Controller(client, [queryInputWidget, resultsWidget, priceWidget]);
+    });
+  </script>
+</head>
+<body>
+  <input type="text" id="query" autofocus>
+  <div id="scroll"></div>
+  <div id="price"></div>
+</body>
+</html>

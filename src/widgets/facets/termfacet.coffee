@@ -17,20 +17,26 @@ class TermFacet extends Display
   constructor: (container, @name, options = {}) ->
     @selected = {}
     if not options.template
-      template = '{{#@index}}' +
-            '<hr class="df-separator">' +
-            '{{/@index}}' +
-            '<div class="df-facets">'+
-            '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>'+
-            '<div class="df-facets__content">'+
-            '<ul>'+
-            '{{#terms}}'+
-            '<li>'+
-            '<a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}" data-facet="{{name}}"'+
-            'data-value="{{ key }}">{{ key }} <span'+
-            'class="df-facet__count">{{ doc_count }}</span></a>'+
-            '</li>'+
-            '{{/terms}}'
+      template = """
+        {{#@index}}
+          <hr class="df-separator">
+        {{/@index}}
+        <div class="df-facets">
+          <a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>
+          <div class="df-facets__content">
+            <ul>
+              {{#terms}}
+              <li>
+                <a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}" data-facet="{{name}}" data-value="{{ key }}">
+                  {{ key }}
+                  <span class="df-facet__count">{{ doc_count }}</span>
+                </a>
+              </li>
+              {{/terms}}
+            </ul>
+          </div>
+        </div>
+      """
     else
       template = options.template
 
@@ -46,17 +52,17 @@ class TermFacet extends Display
 
     # The filtering by click
     $(@container).on 'click', "a[data-facet='#{@name}']", (e) ->
-        e.preventDefault()
-        termFacet = $(this)
-        value = termFacet.data "value"
-        key = termFacet.data "facet"
+      e.preventDefault()
+      termFacet = $(this)
+      value = termFacet.data "value"
+      key = termFacet.data "facet"
 
-        if _this.selected[value]
-            _this.controller.removeFilter key, value
+      if _this.selected[value]
+        _this.controller.removeFilter key, value
 
-        else
-            _this.controller.addFilter key, value
-        _this.controller.refresh()
+      else
+        _this.controller.addFilter key, value
+      _this.controller.refresh()
 
     # Removes filters not present in results.
     @controller.bind "df:results_received", (event, res) ->
