@@ -945,7 +945,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":60}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "3.1.0",
+    version: "3.1.1",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1611,7 +1611,7 @@ author: @ecoslado
       }
       this.selected = {};
       if (!options.template) {
-        template = '{{#@index}}' + '<hr class="df-separator">' + '{{/@index}}' + '<div class="df-facets">' + '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>' + '<div class="df-facets__content">' + '<ul>' + '{{#terms}}' + '<li>' + '<a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}" data-facet="{{name}}"' + 'data-value="{{ key }}">{{ term }} <span' + 'class="df-facet__count">{{ doc_count }}</span></a>' + '</li>' + '{{/terms}}';
+        template = '{{#@index}}' + '<hr class="df-separator">' + '{{/@index}}' + '<div class="df-facets">' + '<a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>' + '<div class="df-facets__content">' + '<ul>' + '{{#terms}}' + '<li>' + '<a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}" data-facet="{{name}}"' + 'data-value="{{ key }}">{{ key }} <span' + 'class="df-facet__count">{{ doc_count }}</span></a>' + '</li>' + '{{/terms}}';
       } else {
         template = options.template;
       }
