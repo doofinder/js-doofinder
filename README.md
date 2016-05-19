@@ -216,7 +216,7 @@ Sends a request to the Search API in order to account the sessions in your Searc
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
-sessionId |  Yes | `String` | A unique session identifier
+sessionId |  Yes | `String` | A session identifier
 callback | No | `Function` | Receives two args: `err` and `response`
 
 #### registerClick
@@ -225,7 +225,7 @@ Sends a request to the Search API in order to account the clicks for a product.
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
 dfid |  Yes | `String` | Unique product identifier.
-options | No | `Object` | Additional options like `sessionId`, `query`
+options | No | `Object` | Additional options like `sessionId` (default `"session_id"`), `query` (default `""`), `datatype` (default `"product"`)
 callback | No | `Function` | Receives two args: `err` and `response`
 
 #### registerCheckout
@@ -233,7 +233,7 @@ Sends a request to the Search API in order to account the sales for your SearchE
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
-sessionId |  Yes | `String` | Unique product identifier.
+sessionId |  Yes | `String` | A session identifier.
 options | No | `Object` | Additional options like `query`
 callback | No | `Function` | Receives two args: `err` and `response`
 
@@ -557,7 +557,7 @@ Sends a request to the Search API in order to account the clicks for a product.
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
 dfid |  Yes | `String` | Unique product identifier. The item id in the feed.
-options | No | `Object` | Additional options like `sessionId` (default "session_id"), `query` (default ""), `datatype` (default "product")
+options | No | `Object` | Additional options like `sessionId` (default `"session_id"`), `query` (default `""`), `datatype` (default `"product"`)
 callback | No | `Function` | Receives two args: `err` and `response`
 
 #### registerCheckout
