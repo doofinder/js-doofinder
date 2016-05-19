@@ -224,7 +224,7 @@ Sends a request to the Search API in order to account the clicks for a product.
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
-dfid |  Yes | `String` | Unique product identifier.
+id |  Yes | `String` | Unique identifier of the item in the datafeed
 options | No | `Object` | Additional options like `sessionId` (default `"session_id"`), `query` (default `""`), `datatype` (default `"product"`)
 callback | No | `Function` | Receives two args: `err` and `response`
 
@@ -556,7 +556,7 @@ Sends a request to the Search API in order to account the clicks for a product.
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
-dfid |  Yes | `String` | Unique product identifier. The item id in the feed.
+id |  Yes | `String` | Unique identifier of the item in the datafeed.
 options | No | `Object` | Additional options like `sessionId` (default `"session_id"`), `query` (default `""`), `datatype` (default `"product"`)
 callback | No | `Function` | Receives two args: `err` and `response`
 
