@@ -318,6 +318,7 @@ author: @ecoslado
       var callback, datatype, dfid, dfidRe, options, path, query, req, sessionId;
       callback = (function(err, res) {});
       options = {};
+      productId += '';
       if (typeof arg2 === 'undefined' && typeof arg1 === 'function') {
         callback = arg1;
       } else if (typeof arg2 === 'undefined' && typeof arg1 === 'object') {
@@ -1120,7 +1121,7 @@ author: @ecoslado
 },{"./util/jquery":6,"qs":64}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "3.2.0",
+    version: "3.2.1",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),

@@ -1,5 +1,5 @@
 module.exports = 
-  version: "3.2.0"  
+  version: "3.2.1"  
   Client: require "./client"
   Mustache: require "mustache"
   Widget: require "./widget"

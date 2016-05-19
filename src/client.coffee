@@ -283,7 +283,8 @@ class Client
     # Defaults
     callback = ((err, res) ->)
     options = {}
-
+    # Casting to string (just in case)
+    productId += ''
     # Check how many args there are
     if typeof arg2 == 'undefined' and typeof arg1 == 'function'
       callback = arg1
