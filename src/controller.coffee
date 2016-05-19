@@ -313,6 +313,76 @@ class Controller
 
 
   ###
+  This method calls to /stats/click
+  service for accounting the
+  clicks to a product
+
+  @param {String} productId
+  @param {Object} options
+  @param {Function} callback
+
+  @api public
+  ###  
+  registerClick: (productId, arg1, arg2) ->
+    # Defaults
+    callback = ((err, res) ->)
+    options = {}
+
+    # Check how many args there are
+    if typeof arg2 == 'undefined' and typeof arg1 == 'function'
+      callback = arg1
+    else if typeof arg2 == 'undefined' and typeof arg1 == 'object'
+      options = arg1  
+    else if typeof arg2 == 'function' and typeof arg1 == 'object'
+      callback = arg2
+      options = arg1
+    # If there's no query in the options, fill in with status  
+    if not options.query  
+      options.query = @status.params.query
+
+    @client.registerClick(productId, options, callback)
+
+
+  ###
+  This method calls to /stats/init_session
+  service for init a user session
+
+  @param {String} sessionId
+  @param {Function} callback
+
+  @api public
+  ###
+  registerSession: (sessionId, callback=((err, res)->)) ->
+    @client.registerSession(sessionId, callback)
+
+
+  ###
+  This method calls to /stats/checkout
+  service for init a user session
+
+  @param {String} sessionId
+  @param {Object} options
+  @param {Function} callback
+
+  @api public
+  ###
+  registerCheckout: (sessionId, arg1, arg2) ->
+    # Defaults
+    callback = ((err, res) ->)
+    options = {}
+
+    # Check how many args there are
+    if typeof arg2 == 'undefined' and typeof arg1 == 'function'
+      callback = arg1
+    else if typeof arg2 == 'undefined' and typeof arg1 == 'object'
+      options = arg1  
+    else if typeof arg2 == 'function' and typeof arg1 == 'object'
+      callback = arg2
+      options = arg1
+
+    @client.registerCheckout(sessionId, options, callback)
+
+  ###
   hit
 
   Increment the hit counter when a product is clicked.
