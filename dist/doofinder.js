@@ -1120,8 +1120,16 @@ author: @ecoslado
 
 },{"./util/jquery":6,"qs":64}],3:[function(require,module,exports){
 (function() {
+  if (!JSON.stringify && JSON.encode) {
+    JSON.stringify = JSON.encode;
+  }
+
+  if (!JSON.parse && JSON.decode) {
+    JSON.parse = JSON.decode;
+  }
+
   module.exports = {
-    version: "3.2.1",
+    version: "3.2.2",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),

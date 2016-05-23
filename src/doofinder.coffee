@@ -1,5 +1,10 @@
+if not JSON.stringify and JSON.encode
+    JSON.stringify = JSON.encode
+if not JSON.parse and JSON.decode
+    JSON.parse = JSON.decode
+
 module.exports = 
-  version: "3.2.1"  
+  version: "3.2.2"  
   Client: require "./client"
   Mustache: require "mustache"
   Widget: require "./widget"
