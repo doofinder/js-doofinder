@@ -65,21 +65,26 @@ class Controller
 
     @client.search params.query, params, (err, res) ->
       # I check if I reached the last page.
-      if res.results.length < _this.status.params.rpp
-        _this.status.lastPageReached = true
-      # I set the query_name till next query
-      if not _this.searchParams.query_name
-        _this.status.params.query_name = res.query_name
-      # Triggers results_received
-      _this.trigger "df:results_received", [res]
-      # Whe show the results only when query counter
-      # belongs to a the present request
-      if res.query_counter == _this.status.params.query_counter
-        for widget in _this.widgets
-          if next
-            widget.renderNext res
-          else
-            widget.render res
+      if err
+        # Triggers error_received on search error
+        _this.trigger "df:error_received", [err]
+
+      else if res
+        if res.results.length < _this.status.params.rpp
+          _this.status.lastPageReached = true
+        # I set the query_name till next query
+        if not _this.searchParams.query_name
+          _this.status.params.query_name = res.query_name
+        # Triggers results_received
+        _this.trigger "df:results_received", [res]
+        # Whe show the results only when query counter
+        # belongs to a the present request
+        if res.query_counter == _this.status.params.query_counter
+          for widget in _this.widgets
+            if next
+              widget.renderNext res
+            else
+              widget.render res
 
   ###
   __search wrappers
@@ -306,6 +311,76 @@ class Controller
     @widgets.push(widget)
     widget.init(this)
 
+
+  ###
+  This method calls to /stats/click
+  service for accounting the
+  clicks to a product
+
+  @param {String} productId
+  @param {Object} options
+  @param {Function} callback
+
+  @api public
+  ###  
+  registerClick: (productId, arg1, arg2) ->
+    # Defaults
+    callback = ((err, res) ->)
+    options = {}
+
+    # Check how many args there are
+    if typeof arg2 == 'undefined' and typeof arg1 == 'function'
+      callback = arg1
+    else if typeof arg2 == 'undefined' and typeof arg1 == 'object'
+      options = arg1  
+    else if typeof arg2 == 'function' and typeof arg1 == 'object'
+      callback = arg2
+      options = arg1
+    # If there's no query in the options, fill in with status  
+    if not options.query  
+      options.query = @status.params.query
+
+    @client.registerClick(productId, options, callback)
+
+
+  ###
+  This method calls to /stats/init_session
+  service for init a user session
+
+  @param {String} sessionId
+  @param {Function} callback
+
+  @api public
+  ###
+  registerSession: (sessionId, callback=((err, res)->)) ->
+    @client.registerSession(sessionId, callback)
+
+
+  ###
+  This method calls to /stats/checkout
+  service for init a user session
+
+  @param {String} sessionId
+  @param {Object} options
+  @param {Function} callback
+
+  @api public
+  ###
+  registerCheckout: (sessionId, arg1, arg2) ->
+    # Defaults
+    callback = ((err, res) ->)
+    options = {}
+
+    # Check how many args there are
+    if typeof arg2 == 'undefined' and typeof arg1 == 'function'
+      callback = arg1
+    else if typeof arg2 == 'undefined' and typeof arg1 == 'object'
+      options = arg1  
+    else if typeof arg2 == 'function' and typeof arg1 == 'object'
+      callback = arg2
+      options = arg1
+
+    @client.registerCheckout(sessionId, options, callback)
 
   ###
   hit

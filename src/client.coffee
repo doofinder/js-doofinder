@@ -6,6 +6,7 @@ author: @ecoslado
 
 httpLib = require "http"
 httpsLib = require "https"
+md5 = require "md5"
 
 ###
 DfClient
@@ -147,19 +148,11 @@ class Client
           _this.addParam(paramKey, paramValue)
 
       queryString = _this.makeQueryString()
+      path = "/#{_this.version}/search?#{queryString}"
 
       # Preparing request variables
 
-      options =
-        host: _this.url
-        path: "/#{_this.version}/search?#{queryString}"
-        headers: headers
-
-
-      # Just for url with host:port
-      if _this.url.split(':').length > 1
-        options.host = _this.url.split(':')[0]
-        options.port = _this.url.split(':')[1]
+      options = _this.__requestOptions(path)
 
       # Here is where request is done and executed processResponse
       req = _this.__makeRequest options, callback
@@ -276,6 +269,100 @@ class Client
     return querystring
 
   ###
+  This method calls to /stats/click
+  service for accounting the
+  clicks to a product
+
+  @param {String} productId
+  @param {Object} options
+  @param {Function} callback
+
+  @api public
+  ###  
+  registerClick: (productId, arg1, arg2) ->
+    # Defaults
+    callback = ((err, res) ->)
+    options = {}
+    # Casting to string (just in case)
+    productId += ''
+    # Check how many args there are
+    if typeof arg2 == 'undefined' and typeof arg1 == 'function'
+      callback = arg1
+    else if typeof arg2 == 'undefined' and typeof arg1 == 'object'
+      options = arg1  
+    else if typeof arg2 == 'function' and typeof arg1 == 'object'
+      callback = arg2
+      options = arg1
+
+    # doofinder internal id regex
+    dfidRe = /\w{32}@[\w_-]+@\w{32}/
+    # You can receive the dfid
+    if dfidRe.exec(productId)
+      dfid = productId
+    # Or just md5(product_id)  
+    else
+      datatype = options.datatype || "product"
+      dfid = "#{@hashid}@#{datatype}@#{md5(productId)}"
+    # Optional args
+    sessionId = options.sessionId || "session_id"
+    query = options.query || ""
+    path = "/#{@version}/stats/click?dfid=#{dfid}&session_id=#{sessionId}&query=#{encodeURIComponent(query)}"
+    path += "&random=#{new Date().getTime()}"
+    options = @__requestOptions(path)
+    # Here is where request is done and executed processResponse
+    req = @__makeRequest options, callback
+    req.end()
+
+
+  ###
+  This method calls to /stats/init_session
+  service for init a user session
+
+  @param {String} sessionId
+  @param {Function} callback
+
+  @api public
+  ###
+  registerSession: (sessionId, callback=((err, res)->)) ->
+    path = "/#{@version}/stats/init?hashid=#{@hashid}&session_id=#{sessionId}"
+    path += "&random=#{new Date().getTime()}"
+    options = @__requestOptions(path)
+    req = @__makeRequest options, callback
+    req.end()
+
+
+  ###
+  This method calls to /stats/checkout
+  service for init a user session
+
+  @param {String} sessionId
+  @param {Object} options
+  @param {Function} callback
+
+  @api public
+  ###
+  registerCheckout: (sessionId, arg1, arg2) ->
+    # Defaults
+    callback = ((err, res) ->)
+    options = {}
+
+    # Check how many args there are
+    if typeof arg2 == 'undefined' and typeof arg1 == 'function'
+      callback = arg1
+    else if typeof arg2 == 'undefined' and typeof arg1 == 'object'
+      options = arg1  
+    else if typeof arg2 == 'function' and typeof arg1 == 'object'
+      callback = arg2
+      options = arg1
+
+    path = "/#{@version}/stats/checkout?hashid=#{@hashid}&session_id=#{sessionId}"
+    path += "&random=#{new Date().getTime()}"
+    reqOpts = @__requestOptions(path)
+    req = @__makeRequest reqOpts, callback
+    req.end()
+
+
+  ###
   This method calls to /hit
   service for accounting the
   hits in a product
@@ -289,24 +376,20 @@ class Client
     headers = {}
 
     if @apiKey
-        headers[@__getAuthHeaderName()] = @apiKey
+      headers[@__getAuthHeaderName()] = @apiKey
     path =  "/#{@version}/hit/#{sessionId}/#{eventType}/#{@hashid}"
     if dfid != ""
       path += "/#{dfid}"
     if query != ""
       path += "/#{encodeURIComponent(query)}"
 
-    options =
-        host: @url
-        path: "#{path}?random=#{new Date().getTime()}"
-        headers: headers
-    # Just for url with host:port
-    if @url.split(':').length > 1
-      options.host = @url.split(':')[0]
-      options.port = @url.split(':')[1]
+    path = "#{path}?random=#{new Date().getTime()}"
+    reqOpts = @__requestOptions(path)
+       
     # Here is where request is done and executed processResponse
-    req = @__makeRequest options, callback
+    req = @__makeRequest reqOpts, callback
     req.end()
+
 
   ###
   This method calls to /hit
@@ -319,7 +402,6 @@ class Client
   @api public
   ###
   options: (arg1, arg2) ->
-
     callback = ((err, res) ->)
     # You can send options and callback or just the callback
     if typeof arg1 == "function" and typeof arg2 == "undefined"
@@ -333,20 +415,11 @@ class Client
     else
       querystring = ""
 
-    headers = {}
-    if @apiKey
-        headers[@__getAuthHeaderName()] = @apiKey
-    options =
-        host: @url
-        path: "/#{@version}/options/#{@hashid}#{querystring}"
-        headers: headers
+    path = "/#{@version}/options/#{@hashid}#{querystring}"
+    reqOpts = @__requestOptions(path)
 
-    # Just for url with host:port
-    if @url.split(':').length > 1
-      options.host = @url.split(':')[0]
-      options.port = @url.split(':')[1]
     # Here is where request is done and executed processResponse
-    req = @__makeRequest options, callback
+    req = @__makeRequest reqOpts, callback
     req.end()
 
   ###
@@ -385,6 +458,31 @@ class Client
       return httpsLib.request options, @__processResponse(callback)
     else
       return httpLib.request options, @__processResponse(callback)
+
+  ###
+  Method to make the request options
+
+  @param (String) path: request options
+  @return (Object) the options object.
+  @api private
+  ###
+  
+  __requestOptions: (path) ->
+    headers = {}
+    if @apiKey
+        headers[@__getAuthHeaderName()] = @apiKey
+    options =
+        host: @url
+        path: path
+        headers: headers
+
+    # Just for url with host:port
+    if @url.split(':').length > 1
+      options.host = @url.split(':')[0]
+      options.port = @url.split(':')[1]
+
+    return options
+
 
   ###
   Method to obtain security header name
