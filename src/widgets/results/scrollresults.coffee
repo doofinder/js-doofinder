@@ -21,12 +21,20 @@ class ScrollResults extends ScrollDisplay
 
   @param {String} container
   @param {String|Function} template
-  @param {Object} extraOptions 
+  @param {Object} extraOptions
   @api public
   ###
   constructor: (container, options = {}) ->
     if not options.template
-      template = '<ul>{{#results}}{{@index}}<li><b>{{title}}</b>:{{description}}<br></li>{{/results}}</ul>'
+      template = """
+      {{#results}}
+        {{@index}}
+        <div>
+          <b>{{title}}</b>
+          <div>{{description}}</div>
+        </div>
+      {{/results}}
+      """
     else
       template = options.template
     super(container, template, options)
@@ -35,12 +43,12 @@ class ScrollResults extends ScrollDisplay
   init
 
   @api public
-  ###  
+  ###
   init: (controller) ->
     super(controller)
     _this = this
     $(@container).on 'click', 'a[data-df-hitcounter]', (e) ->
       _this.trigger 'df:hit', [$(this).data('dfHitcounter'), $(this).attr('href')]
-    
+
 
 module.exports = ScrollResults

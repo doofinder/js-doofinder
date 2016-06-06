@@ -21,12 +21,12 @@
 }
 
 /* FACETS PANEL */
-.df-panel {
-  margin: 8px 0;
-}
-
 .df-panel, .df-panel * {
   box-sizing: border-box;
+}
+
+.df-panel + .df-panel {
+  margin-top: 8px;
 }
 
 .df-panel__title {
@@ -422,6 +422,19 @@
   top: -36px;
 }
 
+.df-slider .df-slider__range[disabled],
+.df-slider .df-slider__range[disabled] .noUi-background {
+  background-color: #d2d6da;
+}
+
+.df-slider .df-slider__range[disabled] .noUi-handle {
+  cursor: not-allowed;
+}
+
+.df-slider .df-slider__range[disabled] .noUi-handle::after, .df-slider .df-slider__range[disabled] .noUi-handle:hover::after, .df-slider .df-slider__range[disabled] .noUi-handle.noUi-active::after {
+  background-color: #d2d6da;
+}
+
 /* THEME */
 .df-results {
   background-color: inherit;
@@ -433,12 +446,16 @@
 }
 
 .df-panel__title {
-  background-color: inherit;
   color: #333333;
   font-family: 'Arial', sans-serif;
   font-weight: bold;
   font-size: 13px;
   text-decoration: none;
+  background-color: #ccc;
+}
+
+.df-panel__content {
+  background-color: inherit;
 }
 
 .df-facet {

@@ -31,8 +31,10 @@
 
 .df-panel {
   @include border-box();
+}
 
-  margin: 8px 0;
+.df-panel + .df-panel {
+  margin-top: 8px;
 }
 
 .df-panel__title {
@@ -65,6 +67,7 @@
   $light: white;
   $gray: #CFCFCF;
   $hover: #333333;
+  $dark-disabled: lighten($dark, 20%);
 
 
   @at-root {
@@ -144,6 +147,22 @@
       }
     }
   }
+
+  .df-slider__range[disabled] {
+    &,
+    .noUi-background {
+      background-color: $dark-disabled;
+    }
+    .noUi-handle {
+      cursor: not-allowed;
+
+      &::after,
+      &:hover::after,
+      &.noUi-active::after {
+        background-color: $dark-disabled;
+      }
+    }
+  }
 }
 
 /* THEME */
@@ -158,12 +177,16 @@
 }
 
 .df-panel__title {
-  background-color: inherit;
   color: #333333;
   font-family: 'Arial', sans-serif;
   font-weight: bold;
   font-size: 13px;
   text-decoration: none;
+  background-color: #ccc;
+}
+
+.df-panel__content {
+  background-color: inherit;
 }
 
 .df-facet {

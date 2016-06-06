@@ -21,9 +21,9 @@ class TermFacet extends Display
         {{#@index}}
           <hr class="df-separator">
         {{/@index}}
-        <div class="df-facets">
+        <div class="df-panel">
           <a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>
-          <div class="df-facets__content">
+          <div class="df-panel__content">
             <ul>
               {{#terms}}
               <li>
