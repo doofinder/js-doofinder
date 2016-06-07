@@ -148,8 +148,11 @@
     }
   }
 
-  .df-slider__range[disabled] {
+  .noUi-target[disabled] {
+    cursor: not-allowed;
+
     &,
+    .noUi-connect,
     .noUi-background {
       background-color: $dark-disabled;
     }
@@ -160,6 +163,12 @@
       &:hover::after,
       &.noUi-active::after {
         background-color: $dark-disabled;
+      }
+    }
+    .noUi-handle-upper {
+      .noUi-tooltip {
+        right: auto;
+        left: 0;
       }
     }
   }

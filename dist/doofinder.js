@@ -566,7 +566,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"http":45,"https":22,"md5":58}],2:[function(require,module,exports){
+},{"http":46,"https":23,"md5":59}],2:[function(require,module,exports){
 
 /*
  * Created by Kike Coslado on 26/10/15.
@@ -1118,7 +1118,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./util/jquery":6,"qs":64}],3:[function(require,module,exports){
+},{"./util/jquery":6,"qs":65}],3:[function(require,module,exports){
 (function() {
   if (!JSON.stringify && JSON.encode) {
     JSON.stringify = JSON.encode;
@@ -1149,7 +1149,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./util/jquery":6,"./widget":8,"./widgets/display":9,"./widgets/facets/rangefacet":10,"./widgets/facets/termfacet":11,"./widgets/queryinput":12,"./widgets/results/results":13,"./widgets/results/scrollresults":14,"md5":58,"mustache":62,"qs":64}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./util/jquery":6,"./widget":9,"./widgets/display":10,"./widgets/facets/rangefacet":11,"./widgets/facets/termfacet":12,"./widgets/queryinput":13,"./widgets/results/results":14,"./widgets/results/scrollresults":15,"md5":59,"mustache":63,"qs":65}],4:[function(require,module,exports){
 (function() {
   var $, dfScroll;
 
@@ -1329,7 +1329,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./jquery.typewatch":7,"jquery":57}],7:[function(require,module,exports){
+},{"./jquery.typewatch":7,"jquery":58}],7:[function(require,module,exports){
 /*
 *	TypeWatch 2.2.2
 *
@@ -1427,6 +1427,49 @@ module.exports = (function($) {
 	};
 });
 },{}],8:[function(require,module,exports){
+(function() {
+  var extend, isArray,
+    slice = [].slice,
+    hasProp = {}.hasOwnProperty;
+
+  isArray = Array.isArray || function(obj) {
+    return toString.call(obj) === '[object Array]';
+  };
+
+  extend = function() {
+    var attr, deep, i, len, obj, objects, target, value;
+    target = arguments[0], objects = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+    deep = false;
+    if (typeof target === 'boolean') {
+      deep = target;
+      target = objects[0] || {};
+      objects = objects.slice(1);
+    }
+    for (i = 0, len = objects.length; i < len; i++) {
+      obj = objects[i];
+      if (!obj) {
+        continue;
+      }
+      for (attr in obj) {
+        if (!hasProp.call(obj, attr)) continue;
+        value = obj[attr];
+        if (typeof value === 'object' && !!value && deep === true && !isArray(value)) {
+          target[attr] = extend(true, target[attr], value);
+        } else {
+          target[attr] = value;
+        }
+      }
+    }
+    return target;
+  };
+
+  module.exports = {
+    extend: extend
+  };
+
+}).call(this);
+
+},{}],9:[function(require,module,exports){
 
 /*
 widget.coffee
@@ -1528,7 +1571,7 @@ shaped by template
 
 }).call(this);
 
-},{"./util/jquery":6}],9:[function(require,module,exports){
+},{"./util/jquery":6}],10:[function(require,module,exports){
 
 /*
 display.coffee
@@ -1660,7 +1703,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../util/helpers":5,"../util/jquery":6,"../widget":8,"mustache":62}],10:[function(require,module,exports){
+},{"../util/helpers":5,"../util/jquery":6,"../widget":9,"mustache":63}],11:[function(require,module,exports){
 
 /*
 rangefacet.coffee
@@ -1676,18 +1719,38 @@ them. Manages the filtering.
  */
 
 (function() {
-  var $, Display, RangeFacet, jQuery, noUiSlider,
+  var Display, RangeFacet, _, noUiSlider,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   Display = require("../display");
 
-  $ = jQuery = require("../../util/jquery");
-
   noUiSlider = require("nouislider");
+
+  _ = require('../../util/util');
 
   RangeFacet = (function(superClass) {
     extend(RangeFacet, superClass);
+
+
+    /*
+    Initializes the widget
+    
+    @param {String} container
+    @param {String|Function} template
+    @param {Object} options
+    
+    Apart from those inherited, this widget accepts these options:
+    
+    - sliderClassName {String} The CSS class of the node that holds the slider.
+    - sliderOptions {Object} See: http://refreshless.com/nouislider
+    
+    IMPORTANT: Pips support is buggy so, if no sliderOptions.pips is found, the
+    widget paints them itself. If the sliderOptions.pips is false, no pips are
+    displayed. In any other case, noUiSlider is in charge of displaying them.
+    
+    @api public
+     */
 
     function RangeFacet(container, name, options) {
       var template;
@@ -1695,90 +1758,110 @@ them. Manages the filtering.
       if (options == null) {
         options = {};
       }
+      this.sliderClassName = options.sliderClassName || 'df-slider';
+      this.sliderSelector = "." + this.sliderClassName + "[data-facet='" + this.name + "']";
       if (!options.template) {
-        template = "<div class=\"df-panel\" data-facet=\"{{name}}\">\n  <a href=\"#\" class=\"df-panel__title\" data-toggle=\"panel\">{{label}}</a>\n  <div class=\"df-panel__content\">\n    <div class=\"df-slider\" data-facet=\"{{name}}\">\n      <div class=\"df-slider__range\"></div>\n    </div>\n  </div>\n</div>";
+        template = "<div class=\"df-panel\" data-facet=\"{{name}}\">\n  <a href=\"#\" class=\"df-panel__title\" data-toggle=\"panel\">{{label}}</a>\n  <div class=\"df-panel__content\">\n    <div class=\"{{sliderClassName}}\" data-facet=\"{{name}}\"></div>\n  </div>\n</div>";
       } else {
         template = options.template;
       }
-      this.sliderSelector = ".df-slider[data-facet='" + this.name + "'] > .df-slider__range";
       this.sliderOptions = options.sliderOptions;
       this.slider = null;
       RangeFacet.__super__.constructor.call(this, container, template, options);
     }
 
-    RangeFacet.prototype.renderSlider = function(options) {
-      var _this, container, context;
-      _this = this;
-      context = $.extend(true, {
-        name: this.name
-      }, this.extraContext || {});
+
+    /*
+    Renders the slider for the very first time.
+    
+    @param {Object} Slider options
+    @api private
+     */
+
+    RangeFacet.prototype._renderSlider = function(options) {
+      var container, context, widget;
+      widget = this;
+      context = {
+        name: this.name,
+        sliderClassName: this.sliderClassName
+      };
+      context = _.extend(true, context, this.extraContext || {});
       container = document.querySelector(this.container);
       container.innerHTML = this.mustache.render(this.template, context);
-      this.slider = $(this.sliderSelector).get(0);
+      this.slider = document.createElement('div');
+      container.querySelector(this.sliderSelector).appendChild(this.slider);
       noUiSlider.create(this.slider, options);
-      this.renderPips(options);
       return this.slider.noUiSlider.on('change', function() {
         var max, min, ref;
-        ref = _this.slider.noUiSlider.get(), min = ref[0], max = ref[1];
-        _this.controller.addFilter(_this.name, {
+        ref = widget.slider.noUiSlider.get(), min = ref[0], max = ref[1];
+        widget.controller.addFilter(widget.name, {
           'gte': parseFloat(min, 10),
           'lte': parseFloat(max, 10)
         });
-        return _this.controller.refresh();
+        return widget.controller.refresh();
       });
     };
 
-    RangeFacet.prototype.updateSlider = function(options) {
-      this.slider.noUiSlider.updateOptions(options);
-      return this.renderPips(options);
-    };
 
-    RangeFacet.prototype.renderPips = function(options) {
-      var i, j, len, markerType, node, pip, pips, pos, ref, ref1, value, values;
-      if (options.pips === void 0) {
-        pips = this.slider.querySelector('div.noUi-pips.noUi-pips-horizontal');
-        values = {
-          0: options.format.to(options.range.min),
-          50: options.format.to((options.range.min + options.range.max) / 2.0),
-          100: options.format.to(options.range.max)
-        };
-        if (pips === null) {
-          pips = document.createElement('div');
-          pips.setAttribute('class', 'noUi-pips noUi-pips-horizontal');
-          for (pos = i = 0, ref = 100 / 16; i <= 100; pos = i += ref) {
-            markerType = pos === 0 || pos === 50 || pos === 100 ? 'large' : 'normal';
-            pip = document.createElement('div');
-            pip.setAttribute('class', "noUi-marker noUi-marker-horizontal noUi-marker-" + markerType);
-            pip.setAttribute('style', "left: " + pos + "%;");
-            pips.appendChild(pip);
-            if (pos === 0 || pos === 50 || pos === 100) {
-              value = document.createElement('div');
-              value.setAttribute('class', 'noUi-value noUi-value-horizontal noUi-value-large');
-              value.setAttribute('data-position', pos);
-              value.setAttribute('style', "left: " + pos + "%;");
-              value.innerText = values[pos + ''];
-              pips.appendChild(value);
-            }
-          }
-        } else {
-          ref1 = pips.querySelectorAll('div[data-position]');
-          for (j = 0, len = ref1.length; j < len; j++) {
-            node = ref1[j];
-            node.innerText = values[node.getAttribute('data-position')];
+    /*
+    Renders the slider pips
+    
+    @param {Object} Values for 0%, 50% and 100% pips ({0: 1, 50: 2, 100: 3})
+    @api private
+     */
+
+    RangeFacet.prototype._renderPips = function(values) {
+      var i, j, len, markerType, node, pip, pips, pos, ref, ref1, results, results1, value;
+      pips = this.slider.querySelector('div.noUi-pips.noUi-pips-horizontal');
+      if (pips === null) {
+        pips = document.createElement('div');
+        pips.setAttribute('class', 'noUi-pips noUi-pips-horizontal');
+        this.slider.appendChild(pips);
+        results = [];
+        for (pos = i = 0, ref = 100 / 16; i <= 100; pos = i += ref) {
+          markerType = pos === 0 || pos === 50 || pos === 100 ? 'large' : 'normal';
+          pip = document.createElement('div');
+          pip.setAttribute('class', "noUi-marker noUi-marker-horizontal noUi-marker-" + markerType);
+          pip.setAttribute('style', "left: " + pos + "%;");
+          pips.appendChild(pip);
+          if (pos === 0 || pos === 50 || pos === 100) {
+            value = document.createElement('div');
+            value.setAttribute('class', 'noUi-value noUi-value-horizontal noUi-value-large');
+            value.setAttribute('data-position', pos);
+            value.setAttribute('style', "left: " + pos + "%;");
+            value.innerHTML = values != null ? values[pos + ''] : '';
+            results.push(pips.appendChild(value));
+          } else {
+            results.push(void 0);
           }
         }
+        return results;
+      } else {
+        ref1 = pips.querySelectorAll('div[data-position]');
+        results1 = [];
+        for (j = 0, len = ref1.length; j < len; j++) {
+          node = ref1[j];
+          results1.push(node.innerHTML = values != null ? values[node.getAttribute('data-position')] : '');
+        }
+        return results1;
       }
-      return this.slider.appendChild(pips);
     };
 
+
+    /*
+    Paints the slider based on the received response.
+    
+    @param {Object} Response
+    @api public
+     */
+
     RangeFacet.prototype.render = function(res) {
-      var _this, disabled, options, range, start;
+      var disabled, options, overrides, range, start, values;
       if (!res.facets || !res.facets[this.name]) {
         throw Error("Error in RangeFacet: " + this.name + " facet is not configured.");
       } else if (!res.facets[this.name].range) {
         throw Error("Error in RangeFacet: " + this.name + " facet is not a range facet.");
       }
-      _this = this;
       if (res.total > 0) {
         range = [parseFloat(res.facets[this.name].range.buckets[0].stats.min, 10), parseFloat(res.facets[this.name].range.buckets[0].stats.max, 10)];
         options = {
@@ -1791,12 +1874,12 @@ them. Manages the filtering.
           tooltips: true,
           format: {
             to: function(value) {
-              return value !== void 0 && (value.toFixed(2) + '').replace(/0+$/, '').replace(/\.{1}$/, '');
+              return (value != null) && (value.toFixed(2) + '').replace(/0+$/, '').replace(/\.{1}$/, '');
             },
             from: Number
           }
         };
-        options = $.extend(true, options, this.sliderOptions || {});
+        options = _.extend(true, options, this.sliderOptions || {});
         if (res && res.filter && res.filter.range && res.filter.range[this.name]) {
           start = [parseFloat(res.filter.range[this.name].gte, 10), parseFloat(res.filter.range[this.name].lte, 10)];
           if (!isNaN(start[0])) {
@@ -1808,19 +1891,34 @@ them. Manages the filtering.
         }
         disabled = options.range.min === options.range.max;
         if (disabled) {
-          options.range.min -= 1;
-          options.range.max += 1;
-          options.step = 1;
+          overrides = {
+            range: {
+              min: options.range.min,
+              max: options.range.max + 1
+            }
+          };
         }
         if (this.slider === null) {
-          this.renderSlider(options);
+          this._renderSlider(_.extend(true, {}, options, overrides || {}));
         } else {
-          this.updateSlider(options);
+          this.slider.noUiSlider.updateOptions(_.extend(true, {}, options, overrides || {}));
         }
         if (disabled) {
           this.slider.setAttribute('disabled', true);
         } else {
           this.slider.removeAttribute('disabled');
+        }
+        if (options.pips == null) {
+          if (!disabled) {
+            values = {
+              0: options.format.to(options.range.min),
+              50: options.format.to((options.range.min + options.range.max) / 2.0),
+              100: options.format.to(options.range.max)
+            };
+            this._renderPips(values);
+          } else {
+            this._renderPips();
+          }
         }
       }
       return this.trigger('df:rendered', [res]);
@@ -1836,7 +1934,7 @@ them. Manages the filtering.
 
 }).call(this);
 
-},{"../../util/jquery":6,"../display":9,"nouislider":63}],11:[function(require,module,exports){
+},{"../../util/util":8,"../display":10,"nouislider":64}],12:[function(require,module,exports){
 
 /*
 termfacet.coffee
@@ -1983,7 +2081,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../display":9,"jquery":57}],12:[function(require,module,exports){
+},{"../display":10,"jquery":58}],13:[function(require,module,exports){
 
 /*
 queryinput.coffee
@@ -2069,7 +2167,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../util/jquery":6,"../widget":8}],13:[function(require,module,exports){
+},{"../util/jquery":6,"../widget":9}],14:[function(require,module,exports){
 
 /*
 display.coffee
@@ -2127,7 +2225,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../display":9}],14:[function(require,module,exports){
+},{"../display":10}],15:[function(require,module,exports){
 
 /*
 scrollresults.coffee
@@ -2203,7 +2301,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../../util/jquery":6,"../scrolldisplay":15}],15:[function(require,module,exports){
+},{"../../util/jquery":6,"../scrolldisplay":16}],16:[function(require,module,exports){
 
 /*
 scrolldisplay.coffee
@@ -2335,9 +2433,9 @@ bottom
 
 }).call(this);
 
-},{"../util/dfscroll":4,"../util/jquery":6,"./display":9}],16:[function(require,module,exports){
+},{"../util/dfscroll":4,"../util/jquery":6,"./display":10}],17:[function(require,module,exports){
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -3889,7 +3987,7 @@ function blitBuffer (src, dst, offset, length) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":18,"ieee754":19,"isarray":20}],18:[function(require,module,exports){
+},{"base64-js":19,"ieee754":20,"isarray":21}],19:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -4015,7 +4113,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -4101,14 +4199,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4411,7 +4509,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -4427,7 +4525,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":45}],23:[function(require,module,exports){
+},{"http":46}],24:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -4452,7 +4550,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /**
  * Determine if an object is Buffer
  *
@@ -4471,7 +4569,7 @@ module.exports = function (obj) {
     ))
 }
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -4567,7 +4665,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -5104,7 +5202,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -5190,7 +5288,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -5277,16 +5375,16 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":27,"./encode":28}],30:[function(require,module,exports){
+},{"./decode":28,"./encode":29}],31:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":31}],31:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":32}],32:[function(require,module,exports){
 // a duplex stream is just a stream that is both readable and writable.
 // Since JS doesn't have multiple prototypal inheritance, this class
 // prototypally inherits from Readable, and then parasitically from
@@ -5362,7 +5460,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":33,"./_stream_writable":35,"core-util-is":36,"inherits":23,"process-nextick-args":38}],32:[function(require,module,exports){
+},{"./_stream_readable":34,"./_stream_writable":36,"core-util-is":37,"inherits":24,"process-nextick-args":39}],33:[function(require,module,exports){
 // a passthrough stream.
 // basically just the most minimal sort of Transform stream.
 // Every written chunk gets output as-is.
@@ -5389,7 +5487,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":34,"core-util-is":36,"inherits":23}],33:[function(require,module,exports){
+},{"./_stream_transform":35,"core-util-is":37,"inherits":24}],34:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -6272,7 +6370,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":31,"_process":25,"buffer":17,"core-util-is":36,"events":21,"inherits":23,"isarray":37,"process-nextick-args":38,"string_decoder/":54,"util":16}],34:[function(require,module,exports){
+},{"./_stream_duplex":32,"_process":26,"buffer":18,"core-util-is":37,"events":22,"inherits":24,"isarray":38,"process-nextick-args":39,"string_decoder/":55,"util":17}],35:[function(require,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -6453,7 +6551,7 @@ function done(stream, er) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":31,"core-util-is":36,"inherits":23}],35:[function(require,module,exports){
+},{"./_stream_duplex":32,"core-util-is":37,"inherits":24}],36:[function(require,module,exports){
 (function (process){
 // A bit simpler than readable streams.
 // Implement an async ._write(chunk, encoding, cb), and it'll handle all
@@ -6972,7 +7070,7 @@ function CorkedRequest(state) {
   };
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":31,"_process":25,"buffer":17,"core-util-is":36,"events":21,"inherits":23,"process-nextick-args":38,"util-deprecate":39}],36:[function(require,module,exports){
+},{"./_stream_duplex":32,"_process":26,"buffer":18,"core-util-is":37,"events":22,"inherits":24,"process-nextick-args":39,"util-deprecate":40}],37:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -7083,9 +7181,9 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":24}],37:[function(require,module,exports){
-arguments[4][20][0].apply(exports,arguments)
-},{"dup":20}],38:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":25}],38:[function(require,module,exports){
+arguments[4][21][0].apply(exports,arguments)
+},{"dup":21}],39:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -7132,7 +7230,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":25}],39:[function(require,module,exports){
+},{"_process":26}],40:[function(require,module,exports){
 (function (global){
 
 /**
@@ -7203,10 +7301,10 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":32}],41:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":33}],42:[function(require,module,exports){
 (function (process){
 var Stream = (function (){
   try {
@@ -7226,13 +7324,13 @@ if (!process.browser && process.env.READABLE_STREAM === 'disable' && Stream) {
 }
 
 }).call(this,require('_process'))
-},{"./lib/_stream_duplex.js":31,"./lib/_stream_passthrough.js":32,"./lib/_stream_readable.js":33,"./lib/_stream_transform.js":34,"./lib/_stream_writable.js":35,"_process":25}],42:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":32,"./lib/_stream_passthrough.js":33,"./lib/_stream_readable.js":34,"./lib/_stream_transform.js":35,"./lib/_stream_writable.js":36,"_process":26}],43:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":34}],43:[function(require,module,exports){
+},{"./lib/_stream_transform.js":35}],44:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":35}],44:[function(require,module,exports){
+},{"./lib/_stream_writable.js":36}],45:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7361,7 +7459,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":21,"inherits":23,"readable-stream/duplex.js":30,"readable-stream/passthrough.js":40,"readable-stream/readable.js":41,"readable-stream/transform.js":42,"readable-stream/writable.js":43}],45:[function(require,module,exports){
+},{"events":22,"inherits":24,"readable-stream/duplex.js":31,"readable-stream/passthrough.js":41,"readable-stream/readable.js":42,"readable-stream/transform.js":43,"readable-stream/writable.js":44}],46:[function(require,module,exports){
 var ClientRequest = require('./lib/request')
 var extend = require('xtend')
 var statusCodes = require('builtin-status-codes')
@@ -7436,7 +7534,7 @@ http.METHODS = [
 	'UNLOCK',
 	'UNSUBSCRIBE'
 ]
-},{"./lib/request":47,"builtin-status-codes":49,"url":55,"xtend":56}],46:[function(require,module,exports){
+},{"./lib/request":48,"builtin-status-codes":50,"url":56,"xtend":57}],47:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableByteStream)
 
@@ -7480,7 +7578,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],47:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 (function (process,global,Buffer){
 // var Base64 = require('Base64')
 var capability = require('./capability')
@@ -7762,7 +7860,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":46,"./response":48,"_process":25,"buffer":17,"foreach":50,"indexof":51,"inherits":23,"object-keys":52,"stream":44}],48:[function(require,module,exports){
+},{"./capability":47,"./response":49,"_process":26,"buffer":18,"foreach":51,"indexof":52,"inherits":24,"object-keys":53,"stream":45}],49:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var foreach = require('foreach')
@@ -7939,7 +8037,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":46,"_process":25,"buffer":17,"foreach":50,"inherits":23,"stream":44}],49:[function(require,module,exports){
+},{"./capability":47,"_process":26,"buffer":18,"foreach":51,"inherits":24,"stream":45}],50:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -8000,7 +8098,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],50:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 
 var hasOwn = Object.prototype.hasOwnProperty;
 var toString = Object.prototype.toString;
@@ -8024,7 +8122,7 @@ module.exports = function forEach (obj, fn, ctx) {
 };
 
 
-},{}],51:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 
 var indexOf = [].indexOf;
 
@@ -8035,7 +8133,7 @@ module.exports = function(arr, obj){
   }
   return -1;
 };
-},{}],52:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 'use strict';
 
 // modified from https://github.com/es-shims/es5-shim
@@ -8165,7 +8263,7 @@ keysShim.shim = function shimObjectKeys() {
 
 module.exports = keysShim;
 
-},{"./isArguments":53}],53:[function(require,module,exports){
+},{"./isArguments":54}],54:[function(require,module,exports){
 'use strict';
 
 var toStr = Object.prototype.toString;
@@ -8184,7 +8282,7 @@ module.exports = function isArguments(value) {
 	return isArgs;
 };
 
-},{}],54:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8407,7 +8505,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":17}],55:[function(require,module,exports){
+},{"buffer":18}],56:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9116,7 +9214,7 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":26,"querystring":29}],56:[function(require,module,exports){
+},{"punycode":27,"querystring":30}],57:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -9137,7 +9235,7 @@ function extend() {
     return target
 }
 
-},{}],57:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.2.3
  * http://jquery.com/
@@ -18981,7 +19079,7 @@ if ( !noGlobal ) {
 return jQuery;
 }));
 
-},{}],58:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 (function(){
   var crypt = require('crypt'),
       utf8 = require('charenc').utf8,
@@ -19143,7 +19241,7 @@ return jQuery;
 
 })();
 
-},{"charenc":59,"crypt":60,"is-buffer":61}],59:[function(require,module,exports){
+},{"charenc":60,"crypt":61,"is-buffer":62}],60:[function(require,module,exports){
 var charenc = {
   // UTF-8 encoding
   utf8: {
@@ -19178,7 +19276,7 @@ var charenc = {
 
 module.exports = charenc;
 
-},{}],60:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 (function() {
   var base64map
       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
@@ -19276,9 +19374,9 @@ module.exports = charenc;
   module.exports = crypt;
 })();
 
-},{}],61:[function(require,module,exports){
-arguments[4][24][0].apply(exports,arguments)
-},{"dup":24}],62:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
+arguments[4][25][0].apply(exports,arguments)
+},{"dup":25}],63:[function(require,module,exports){
 /*!
  * mustache.js - Logic-less {{mustache}} templates with JavaScript
  * http://github.com/janl/mustache.js
@@ -19909,7 +20007,7 @@ arguments[4][24][0].apply(exports,arguments)
 
 }));
 
-},{}],63:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 /*! nouislider - 8.5.1 - 2016-04-24 16:00:29 */
 
 (function (factory) {
@@ -21869,7 +21967,7 @@ function closure ( target, options, originalOptions ){
 	};
 
 }));
-},{}],64:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 // Load modules
 
 var Stringify = require('./stringify');
@@ -21886,7 +21984,7 @@ module.exports = {
     parse: Parse
 };
 
-},{"./parse":65,"./stringify":66}],65:[function(require,module,exports){
+},{"./parse":66,"./stringify":67}],66:[function(require,module,exports){
 // Load modules
 
 var Utils = require('./utils');
@@ -22074,7 +22172,7 @@ module.exports = function (str, options) {
     return Utils.compact(obj);
 };
 
-},{"./utils":67}],66:[function(require,module,exports){
+},{"./utils":68}],67:[function(require,module,exports){
 // Load modules
 
 var Utils = require('./utils');
@@ -22197,7 +22295,7 @@ module.exports = function (obj, options) {
     return keys.join(delimiter);
 };
 
-},{"./utils":67}],67:[function(require,module,exports){
+},{"./utils":68}],68:[function(require,module,exports){
 // Load modules
 
 

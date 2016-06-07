@@ -11,99 +11,123 @@ them. Manages the filtering.
 ###
 
 Display = require "../display"
-$ = jQuery = require "../../util/jquery"
 noUiSlider = require "nouislider"
+_ = require '../../util/util'
 
 class RangeFacet extends Display
 
+  ###
+  Initializes the widget
+
+  @param {String} container
+  @param {String|Function} template
+  @param {Object} options
+
+  Apart from those inherited, this widget accepts these options:
+
+  - sliderClassName {String} The CSS class of the node that holds the slider.
+  - sliderOptions {Object} See: http://refreshless.com/nouislider
+
+  IMPORTANT: Pips support is buggy so, if no sliderOptions.pips is found, the
+  widget paints them itself. If the sliderOptions.pips is false, no pips are
+  displayed. In any other case, noUiSlider is in charge of displaying them.
+
+  @api public
+  ###
   constructor: (container, @name, options = {}) ->
+    @sliderClassName = options.sliderClassName or 'df-slider'
+    @sliderSelector =  ".#{@sliderClassName}[data-facet='#{@name}']"
+
     if not options.template
       template = """
       <div class="df-panel" data-facet="{{name}}">
         <a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>
         <div class="df-panel__content">
-          <div class="df-slider" data-facet="{{name}}">
-            <div class="df-slider__range"></div>
-          </div>
+          <div class="{{sliderClassName}}" data-facet="{{name}}"></div>
         </div>
       </div>
       """
     else
       template = options.template
 
-    @sliderSelector = ".df-slider[data-facet='#{@name}'] > .df-slider__range"
     @sliderOptions = options.sliderOptions
     @slider = null
 
     super(container, template, options)
 
-  renderSlider: (options) ->
-    _this = this
+  ###
+  Renders the slider for the very first time.
 
-    # render HTML
-    context = $.extend true, name: @name, @extraContext || {}
+  @param {Object} Slider options
+  @api private
+  ###
+  _renderSlider: (options) ->
+    widget = this
+
+    # Build template context
+    context =
+      name: @name
+      sliderClassName: @sliderClassName
+    context = _.extend(true, context, @extraContext or {})
+
+    # Render template HTML and place it inside the container
     container = document.querySelector(@container)
     container.innerHTML = @mustache.render(@template, context)
 
-    # Create Slider
-    @slider = $(@sliderSelector).get(0)
+    # Create a node for the the slider and append it to @sliderSelector
+    @slider = document.createElement 'div'
+    container.querySelector(@sliderSelector).appendChild @slider
+
+    # Initialize the slider
     noUiSlider.create @slider, options
-    @renderPips options
 
-    # Listen "change" event so we can query Doofinder with new filters
-    @slider.noUiSlider.on 'change', () ->
-      [min, max] = _this.slider.noUiSlider.get()
-      _this.controller.addFilter(_this.name, {'gte': parseFloat(min, 10), 'lte': parseFloat(max, 10)})
-      _this.controller.refresh()
+    # Listen for the 'change' event so we can query Doofinder with new filters
+    @slider.noUiSlider.on 'change', ->
+      [min, max] = widget.slider.noUiSlider.get()
+      widget.controller.addFilter(widget.name, {'gte': parseFloat(min, 10), 'lte': parseFloat(max, 10)})
+      widget.controller.refresh()
 
-  updateSlider: (options) ->
-    # remove pips
-    # pips = @slider.querySelector '.noUi-pips'
-    # pips.parentElement.removeChild pips
+  ###
+  Renders the slider pips
 
-    # update slider and pips
-    @slider.noUiSlider.updateOptions options
-    @renderPips options
-    # @slider.noUiSlider.pips options.pips
+  @param {Object} Values for 0%, 50% and 100% pips ({0: 1, 50: 2, 100: 3})
+  @api private
+  ###
+  _renderPips: (values) ->
+    pips = @slider.querySelector('div.noUi-pips.noUi-pips-horizontal')
+    if pips is null
+      # create pips container
+      pips = document.createElement 'div'
+      pips.setAttribute 'class', 'noUi-pips noUi-pips-horizontal'
+      @slider.appendChild pips
 
-  renderPips: (options) ->
-    # pips are buggy in noUiSlider so we are going to paint them ourselves
-    # unless options.pips has a value (either false or real options)
-    if options.pips is undefined
-      pips = @slider.querySelector('div.noUi-pips.noUi-pips-horizontal')
-      values =
-        0: options.format.to(options.range.min)
-        50: options.format.to((options.range.min + options.range.max) / 2.0)
-        100: options.format.to(options.range.max)
+      # add pips
+      for pos in [0..100] by (100/16)
+        markerType = if pos in [0, 50, 100] then 'large' else 'normal'
+        pip = document.createElement 'div'
+        pip.setAttribute 'class', "noUi-marker noUi-marker-horizontal noUi-marker-#{markerType}"
+        pip.setAttribute 'style', "left: #{pos}%;"
+        pips.appendChild pip
 
-      if pips is null
-        # create pips container
-        pips = document.createElement 'div'
-        pips.setAttribute 'class', 'noUi-pips noUi-pips-horizontal'
+        # add values
+        if pos in [0, 50, 100]
+          value = document.createElement 'div'
+          value.setAttribute 'class', 'noUi-value noUi-value-horizontal noUi-value-large'
+          value.setAttribute 'data-position', pos
+          value.setAttribute 'style', "left: #{pos}%;"
+          value.innerHTML = if values? then values[pos+''] else ''
+          pips.appendChild value
+    else
+      # update pip values
+      for node in pips.querySelectorAll('div[data-position]')
+        node.innerHTML = if values? then values[node.getAttribute('data-position')] else ''
 
-        # add pips
-        for pos in [0..100] by (100/16)
-          markerType = if pos in [0, 50, 100] then 'large' else 'normal'
-          pip = document.createElement 'div'
-          pip.setAttribute 'class', "noUi-marker noUi-marker-horizontal noUi-marker-#{markerType}"
-          pip.setAttribute 'style', "left: #{pos}%;"
-          pips.appendChild pip
+  ###
+  Paints the slider based on the received response.
 
-          # add values
-          if pos in [0, 50, 100]
-            value = document.createElement 'div'
-            value.setAttribute 'class', 'noUi-value noUi-value-horizontal noUi-value-large'
-            value.setAttribute 'data-position', pos
-            value.setAttribute 'style', "left: #{pos}%;"
-            value.innerText = values[pos+'']
-            pips.appendChild value
-      else
-        # update pip values
-        for node in pips.querySelectorAll('div[data-position]')
-          node.innerText = values[node.getAttribute('data-position')]
-
-    @slider.appendChild pips
-
+  @param {Object} Response
+  @api public
+  ###
   render: (res) ->
     # Throws errors if prerrequisites are not accomplished.
     if not res.facets or not res.facets[@name]
@@ -111,13 +135,12 @@ class RangeFacet extends Display
     else if not res.facets[@name].range
       throw Error "Error in RangeFacet: #{@name} facet is not a range facet."
 
-    _this = this
-
-    # update if any results
+    # Update widget if any results found
     if res.total > 0
       range = [parseFloat(res.facets[@name].range.buckets[0].stats.min, 10),
                parseFloat(res.facets[@name].range.buckets[0].stats.max, 10)]
 
+      # defaults
       options =
         start: range
         range:
@@ -127,38 +150,52 @@ class RangeFacet extends Display
         tooltips: true
         format:
           to: (value) ->
-            value isnt undefined and (value.toFixed(2) + '').replace(/0+$/, '').replace(/\.{1}$/, '')
+            value? and (value.toFixed(2) + '').replace(/0+$/, '').replace(/\.{1}$/, '')
           from: Number
 
-      options = $.extend true,
-        options,
-        @sliderOptions || {}
+      options = _.extend(true, options, @sliderOptions || {})
 
+      # If we have values from search filtering we apply them
       if res and res.filter and res.filter.range and res.filter.range[@name]
         start = [parseFloat(res.filter.range[@name].gte, 10),
                  parseFloat(res.filter.range[@name].lte, 10)]
-        options.start[0] = start[0] if not isNaN start[0]
-        options.start[1] = start[1] if not isNaN start[1]
+        options.start[0] = start[0] unless isNaN start[0]
+        options.start[1] = start[1] unless isNaN start[1]
+
+      # noUiSlider raises an error when range limits are equal so we hack the
+      # slider to represent this state properly
 
       disabled = options.range.min == options.range.max
       if disabled
-        # noUiSlider raises an error so we represent the slider in a different way
-        options.range.min -= 1
-        options.range.max += 1
-        options.step = 1
+        overrides =
+          range:
+            min: options.range.min
+            max: options.range.max + 1
 
       if @slider is null
-        @renderSlider options
+        @_renderSlider _.extend(true, {}, options, overrides or {})
       else
-        @updateSlider options
+        @slider.noUiSlider.updateOptions _.extend(true, {}, options, overrides or {})
 
       if disabled
         @slider.setAttribute 'disabled', true
       else
         @slider.removeAttribute 'disabled'
 
+      # Pips are buggy in noUiSlider so we are going to paint them ourselves
+      # unless options.pips has a value (either false or real options)
+      unless options.pips?
+        if not disabled
+          values =
+            0: options.format.to(options.range.min)
+            50: options.format.to((options.range.min + options.range.max) / 2.0)
+            100: options.format.to(options.range.max)
+          @_renderPips values
+        else
+          @_renderPips()  # coffee needs () here!!!
+
     @trigger('df:rendered', [res])
 
-  renderNext: () ->
+  renderNext: ->
 
 module.exports = RangeFacet

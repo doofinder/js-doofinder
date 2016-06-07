@@ -44,6 +44,9 @@
       var priceWidget = new doofinder.widgets.RangeFacet('#price', 'price', {
         templateVars: {label: 'Price'}
       });
+      var priceWidget2 = new doofinder.widgets.RangeFacet('#price2', 'price', {
+        templateVars: {label: 'Price 2'}
+      });
       var brandWidget = new doofinder.widgets.TermFacet('#brand', 'brand', {
         templateVars: {label: 'Brand'}
       });
@@ -56,6 +59,7 @@
         queryInputWidget,
         resultsWidget,
         priceWidget,
+        priceWidget2,
         brandWidget
       ]);
     });
@@ -65,6 +69,7 @@
   <input class="w m q" type="text" id="query" autofocus>
   <div class="w m b s" id="scroll"></div>
   <div class="w m b" id="price"></div>
+  <div class="w m b" id="price2"></div>
   <div class="w m b" id="brand"></div>
 </body>
 </html>

@@ -422,17 +422,27 @@
   top: -36px;
 }
 
-.df-slider .df-slider__range[disabled],
-.df-slider .df-slider__range[disabled] .noUi-background {
-  background-color: #d2d6da;
-}
-
-.df-slider .df-slider__range[disabled] .noUi-handle {
+.df-slider .noUi-target[disabled] {
   cursor: not-allowed;
 }
 
-.df-slider .df-slider__range[disabled] .noUi-handle::after, .df-slider .df-slider__range[disabled] .noUi-handle:hover::after, .df-slider .df-slider__range[disabled] .noUi-handle.noUi-active::after {
+.df-slider .noUi-target[disabled],
+.df-slider .noUi-target[disabled] .noUi-connect,
+.df-slider .noUi-target[disabled] .noUi-background {
   background-color: #d2d6da;
+}
+
+.df-slider .noUi-target[disabled] .noUi-handle {
+  cursor: not-allowed;
+}
+
+.df-slider .noUi-target[disabled] .noUi-handle::after, .df-slider .noUi-target[disabled] .noUi-handle:hover::after, .df-slider .noUi-target[disabled] .noUi-handle.noUi-active::after {
+  background-color: #d2d6da;
+}
+
+.df-slider .noUi-target[disabled] .noUi-handle-upper .noUi-tooltip {
+  right: auto;
+  left: 0;
 }
 
 /* THEME */
