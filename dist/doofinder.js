@@ -726,7 +726,6 @@ author: @ecoslado
         replace = false;
       }
       if (this.status.firstQueryTriggered && this.status.currentPage > 0 && !this.status.lastPageReached) {
-        console.log("LLAMA");
         this.trigger("df:next_page");
         this.status.currentPage++;
         return this.__search(true);
@@ -1205,7 +1204,8 @@ author: @ecoslado
       if (['horizontal', 'vertical'].indexOf(o.direction) <= -1) {
         throw Error("Direction is not properly set. It might be 'horizontal' or 'vertical'.");
       }
-      if (o.direction === 'vertical' && content.clientHeight - container.clientHeight - container.scrollTop <= o.scrollOffset || o.direction === "horizontal" && content.clientWidth() - container.clientWidth() - content.scrollLeft <= o.scrollOffset) {
+      console.log(content.clientHeight - container.clientHeight - container.scrollTop);
+      if (o.direction === 'vertical' && content.clientHeight - container.clientHeight - container.scrollTop <= o.scrollOffset || o.direction === "horizontal" && content.clientWidth - container.clientWidth - content.scrollLeft <= o.scrollOffset) {
         return o.callback();
       }
     };

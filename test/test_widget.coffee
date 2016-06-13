@@ -259,8 +259,10 @@ describe 'Widget Tests:', ->
       resultsContainer.on 'df:scroll', ->
         dfScrollCalled += 1
         if dfScrollCalled == 1
+          console.log "FIRST", nextPageCalled
           nextPageCalled.should.equal 0
         else
+          console.log "SECOND", nextPageCalled
           nextPageCalled.should.equal 1
           done()
 

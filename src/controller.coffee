@@ -138,7 +138,6 @@ class Controller
   ###
   nextPage: (replace = false) ->
     if @status.firstQueryTriggered and @status.currentPage > 0 and not @status.lastPageReached
-      console.log "LLAMA"
       @trigger "df:next_page"
       @status.currentPage++
       @__search(true)
