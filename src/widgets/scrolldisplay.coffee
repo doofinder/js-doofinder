@@ -22,12 +22,12 @@ class ScrollDisplay extends Display
   ###
   constructor
 
-  just assign wrapper property for scrolling and 
+  just assign wrapper property for scrolling and
   calls super constructor.
-  
+
   @param {String} scrollWrapper
   @param {String|Function} template
-  @param {Object} extraOptions 
+  @param {Object} extraOptions
   @api public
   ###
   constructor: (selector, template, options) ->
@@ -42,12 +42,12 @@ class ScrollDisplay extends Display
       @scrollWrapper = $(selector)
       @scrollOffset = options.scrollOffset
 
-      if not @scrollWrapper.children().length 
+      if not @scrollWrapper.children().length
         # Just in case the inner element in the scroll is not given
         @scrollWrapper.prepend '<div></div>'
-          
+
       container = @scrollWrapper.children().first()
-      
+
       # Overrides container by defined
       if options.container
         container = options.container
@@ -71,8 +71,8 @@ class ScrollDisplay extends Display
       dfScroll options
     else
       dfScroll @scrollWrapper, options
-    
-    @controller.bind 'df:search df:refresh', (params) -> 
+
+    @controller.bind 'df:search df:refresh', (params) ->
       _this.scrollWrapper.scrollTop(0)
 
 
@@ -82,13 +82,14 @@ class ScrollDisplay extends Display
   Appends results to the older in container
   @param {Object} res
   @api public
-  ###  
+  ###
   renderNext: (res) ->
     context = $.extend(true, res, @extraContext || {})
     context.is_first = false
     @addHelpers context
     html = @mustache.render @template, context
     $(@container).append html
+    @trigger("df:rendered", [res])
 
   ###
   clean
@@ -98,6 +99,6 @@ class ScrollDisplay extends Display
   ###
   clean: () ->
     $(@container).html ""
-    
+
 
 module.exports = ScrollDisplay

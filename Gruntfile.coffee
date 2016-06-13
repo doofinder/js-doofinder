@@ -22,9 +22,10 @@ module.exports = (grunt) ->
             standalone: 'doofinder'
 
     mochaTest:
+      options:
+        reporter: 'nyan'
+        require: []
       release:
-        options:
-          reporter: 'nyan'
         src: ['test/test_*.coffee']
 
     uglify:

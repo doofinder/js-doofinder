@@ -98,6 +98,7 @@ describe 'doofinder controller: ', ->
 
 
   afterEach () ->
+    window.close()
     delete global.document
     delete global.doofinder
 

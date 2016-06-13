@@ -203,6 +203,7 @@ class Controller
     else
       @status.params.filters[key].push value
 
+
   ###
   addParam
 
@@ -322,7 +323,7 @@ class Controller
   @param {Function} callback
 
   @api public
-  ###  
+  ###
   registerClick: (productId, arg1, arg2) ->
     # Defaults
     callback = ((err, res) ->)
@@ -332,12 +333,12 @@ class Controller
     if typeof arg2 == 'undefined' and typeof arg1 == 'function'
       callback = arg1
     else if typeof arg2 == 'undefined' and typeof arg1 == 'object'
-      options = arg1  
+      options = arg1
     else if typeof arg2 == 'function' and typeof arg1 == 'object'
       callback = arg2
       options = arg1
-    # If there's no query in the options, fill in with status  
-    if not options.query  
+    # If there's no query in the options, fill in with status
+    if not options.query
       options.query = @status.params.query
 
     @client.registerClick(productId, options, callback)
@@ -375,7 +376,7 @@ class Controller
     if typeof arg2 == 'undefined' and typeof arg1 == 'function'
       callback = arg1
     else if typeof arg2 == 'undefined' and typeof arg1 == 'object'
-      options = arg1  
+      options = arg1
     else if typeof arg2 == 'function' and typeof arg1 == 'object'
       callback = arg2
       options = arg1

@@ -27,13 +27,13 @@ class ScrollResults extends ScrollDisplay
   constructor: (container, options = {}) ->
     if not options.template
       template = """
-      {{#results}}
-        {{@index}}
-        <div>
-          <b>{{title}}</b>
-          <div>{{description}}</div>
-        </div>
-      {{/results}}
+      <ul>
+        {{#results}}
+          <li>
+            <b>{{title}}</b>: {{description}}
+          </li>
+        {{/results}}
+      </ul>
       """
     else
       template = options.template

@@ -45,6 +45,7 @@ class TermFacet extends Display
   init: (controller) ->
     super(controller)
     _this = this
+    _name = @name
 
     # Clean selected  terms when new search
     @controller.bind "df:search", (params) ->
@@ -58,9 +59,10 @@ class TermFacet extends Display
       key = termFacet.data "facet"
 
       if _this.selected[value]
+        delete _this.selected[value]
         _this.controller.removeFilter key, value
-
       else
+        _this.selected[value] = 1
         _this.controller.addFilter key, value
       _this.controller.refresh()
 
@@ -86,15 +88,6 @@ class TermFacet extends Display
     else if not res.facets[@name].terms.buckets
       throw Error "Error in TermFacet: #{@name} facet is not a term facet."
 
-    @selected = {}
-    totalSelected = 0
-    anySelected = false
-    if res.filter and res.filter.terms and res.filter.terms[@name]
-      for term in res.filter.terms[@name]
-        @selected[term] = 1
-        anySelected = true
-        totalSelected += 1
-
     if res.results
       # To make access to selected easier
       # we add it to each term
@@ -108,8 +101,8 @@ class TermFacet extends Display
           term.selected = 0
 
       context = $.extend true,
-        any_selected: anySelected
-        total_selected: totalSelected
+        any_selected: @selected.length > 0
+        total_selected: @selected.length
         name: @name
         terms: res.facets[@name].terms.buckets,
         @extraContext || {}
@@ -117,9 +110,10 @@ class TermFacet extends Display
       @addHelpers(context)
       html = @mustache.render(@template, context)
       $(@container).html html
-      @trigger('df:rendered', [res])
     else
       $(@container).html ''
+
+    @trigger('df:rendered', [res])
 
   renderNext: () ->
 

@@ -1977,9 +1977,10 @@ author: @ecoslado
     }
 
     TermFacet.prototype.init = function(controller) {
-      var _this;
+      var _name, _this;
       TermFacet.__super__.init.call(this, controller);
       _this = this;
+      _name = this.name;
       this.controller.bind("df:search", function(params) {
         return _this.selected = {};
       });
@@ -1990,8 +1991,10 @@ author: @ecoslado
         value = termFacet.data("value");
         key = termFacet.data("facet");
         if (_this.selected[value]) {
+          delete _this.selected[value];
           _this.controller.removeFilter(key, value);
         } else {
+          _this.selected[value] = 1;
           _this.controller.addFilter(key, value);
         }
         return _this.controller.refresh();
@@ -2026,28 +2029,16 @@ author: @ecoslado
     };
 
     TermFacet.prototype.render = function(res) {
-      var anySelected, context, html, i, index, len, ref, ref1, term, totalSelected;
+      var context, html, index, ref, term;
       if (!res.facets || !res.facets[this.name]) {
         throw Error("Error in TermFacet: " + this.name + " facet is not configured.");
       } else if (!res.facets[this.name].terms.buckets) {
         throw Error("Error in TermFacet: " + this.name + " facet is not a term facet.");
       }
-      this.selected = {};
-      totalSelected = 0;
-      anySelected = false;
-      if (res.filter && res.filter.terms && res.filter.terms[this.name]) {
-        ref = res.filter.terms[this.name];
-        for (i = 0, len = ref.length; i < len; i++) {
-          term = ref[i];
-          this.selected[term] = 1;
-          anySelected = true;
-          totalSelected += 1;
-        }
-      }
       if (res.results) {
-        ref1 = res.facets[this.name].terms.buckets;
-        for (index in ref1) {
-          term = ref1[index];
+        ref = res.facets[this.name].terms.buckets;
+        for (index in ref) {
+          term = ref[index];
           term.index = index;
           term.name = this.name;
           if (this.selected[term.key]) {
@@ -2057,18 +2048,18 @@ author: @ecoslado
           }
         }
         context = $.extend(true, {
-          any_selected: anySelected,
-          total_selected: totalSelected,
+          any_selected: this.selected.length > 0,
+          total_selected: this.selected.length,
           name: this.name,
           terms: res.facets[this.name].terms.buckets
         }, this.extraContext || {});
         this.addHelpers(context);
         html = this.mustache.render(this.template, context);
         $(this.container).html(html);
-        return this.trigger('df:rendered', [res]);
       } else {
-        return $(this.container).html('');
+        $(this.container).html('');
       }
+      return this.trigger('df:rendered', [res]);
     };
 
     TermFacet.prototype.renderNext = function() {};
@@ -2200,7 +2191,7 @@ replaces the current content.
     
     @param {String} container
     @param {String|Function} template
-    @param {Object} extraOptions 
+    @param {Object} extraOptions
     @api public
      */
 
@@ -2210,7 +2201,7 @@ replaces the current content.
         options = {};
       }
       if (!options.template) {
-        template = '<ul>{{#results}}' + '            <li>' + '               <b>{{title}}</b>:{{description}}<br></li>' + '            {{/results}}' + '         </ul>';
+        template = "<ul>\n  {{#results}}\n    <li>\n      <b>{{title}}</b>: {{description}}\n    </li>\n  {{/results}}\n</ul>";
       } else {
         template = options.template;
       }
@@ -2270,7 +2261,7 @@ replaces the current content.
         options = {};
       }
       if (!options.template) {
-        template = "{{#results}}\n  {{@index}}\n  <div>\n    <b>{{title}}</b>\n    <div>{{description}}</div>\n  </div>\n{{/results}}";
+        template = "<ul>\n  {{#results}}\n    <li>\n      <b>{{title}}</b>: {{description}}\n    </li>\n  {{/results}}\n</ul>";
       } else {
         template = options.template;
       }
@@ -2337,12 +2328,12 @@ bottom
     /*
     constructor
     
-    just assign wrapper property for scrolling and 
+    just assign wrapper property for scrolling and
     calls super constructor.
     
     @param {String} scrollWrapper
     @param {String|Function} template
-    @param {Object} extraOptions 
+    @param {Object} extraOptions
     @api public
      */
 
@@ -2410,7 +2401,8 @@ bottom
       context.is_first = false;
       this.addHelpers(context);
       html = this.mustache.render(this.template, context);
-      return $(this.container).append(html);
+      $(this.container).append(html);
+      return this.trigger("df:rendered", [res]);
     };
 
 

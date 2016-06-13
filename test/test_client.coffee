@@ -45,6 +45,7 @@ describe 'doofinder client\'s ', ->
     global.doofinder = require "../lib/doofinder.js"
 
   after () ->
+    window.close()
     delete global.document
     delete global.doofinder
 
