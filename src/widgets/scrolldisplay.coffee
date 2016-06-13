@@ -40,6 +40,7 @@ class ScrollDisplay extends Display
     # Uses an inner div as scroll wrapper
     else
       @scrollWrapper = $(selector)
+      @scrollWrapperSelector = selector
       @scrollOffset = options.scrollOffset
 
       if not @scrollWrapper.children().length
@@ -70,7 +71,7 @@ class ScrollDisplay extends Display
     if @windowScroll
       dfScroll options
     else
-      dfScroll @scrollWrapper, options
+      dfScroll @scrollWrapperSelector, options
 
     @controller.bind 'df:search df:refresh', (params) ->
       _this.scrollWrapper.scrollTop(0)

@@ -1,28 +1,26 @@
-$ = require './jquery'
+extend = require('./extend').extend
 
 dfScroll = (arg1, arg2=null) ->
 
+  defaultOptions = 
+    direction: "vertical"
+    scrollOffset: 100
+
   # Uses window scroll
-  if not arg2
+  if typeof(arg1) == 'object'
     o = arg1
-    container = $ window
-    content = $ document
+    container = document.body
+    content = document.documentElement
+    eventTrigger = window
   
   # Uses an inner div as scroll
   else
     o = arg2
-    container = $ arg1
-    content = container.children().first()
+    eventTrigger = container = document.querySelector(arg1)
+    content = container.children[0]
 
-  defaultOptions =
-    direction: 'vertical'
-    scrollOffset: 100
-
-  o = $.extend true,
-    defaultOptions, 
-    o || {}
+  o = extend defaultOptions, o
   
-
   # Throttle to avoid multiple events
   # to be triggered.
   throttle = (type, name, obj) ->
@@ -35,28 +33,30 @@ dfScroll = (arg1, arg2=null) ->
       running = true
       
       aux = () -> 
-        obj.trigger name
+        event = document.createEvent 'Event'
+        event.initEvent name, true, true
+        obj.dispatchEvent event
         running = false
 
       setTimeout aux, 250
             
-    obj.on type, func
-    obj.trigger name
+    obj.addEventListener type, func
+    event = document.createEvent 'Event'
+    event.initEvent name, true, true
+    obj.dispatchEvent event
        
-  throttle('scroll', 'df:scroll', container);
+  throttle('scroll', 'df:scroll', eventTrigger);
   
   # handling scroll event
   handler = () ->
+    # Error thrown when direction no properly configured
+    if ['horizontal', 'vertical'].indexOf(o.direction) <= -1
+      throw Error("Direction is not properly set. It might be 'horizontal' or 'vertical'.")
+    # When bottom or right side is about to be reached, callback will be called
+    if o.direction == 'vertical' and content.clientHeight - container.clientHeight - container.scrollTop <= o.scrollOffset \
+    	or o.direction == "horizontal" and content.clientWidth() - container.clientWidth() - content.scrollLeft <= o.scrollOffset
+      o.callback()
   
-    if o.direction == 'vertical'
-      # When bottom is about to be reached, callback will be called
-      if container.scrollTop() + container.height() >= content.height() - o.scrollOffset
-        o.callback()
-    else
-      # When right edge is about to be reached, callback will be called
-      if container.scrollLeft() + container.width() >= content.width() - o.scrollOffset
-        o.callback()
-  
-  container.on 'df:scroll', handler
+  eventTrigger.addEventListener 'df:scroll', handler
 
 module.exports = dfScroll
