@@ -36,19 +36,14 @@ mock =
 # Test doofinder
 describe 'doofinder client\'s ', ->
 
-  before () ->
-    global.document = require("jsdom").jsdom('<input id="query"></input>')
-    global.window = document.defaultView
-    global.navigator = window.navigator = {}
-    navigator.userAgent = 'Nasty Navigator' # kudos to @jesusenlanet: great Name!
-    navigator.appVersion = '0.0.1'
-    global.doofinder = require "../lib/doofinder.js"
+  beforeEach ->
+    document.body.innerHTML = '<input type="search" id="query" name="query">'
+    global.$ = require "jquery"
+    global.doofinder = require "../lib/doofinder"
 
-  after () ->
-    window.close()
-    delete global.document
+  afterEach ->
+    delete global.$
     delete global.doofinder
-
 
   # Tests the client's stuff
   context 'makeQueryString method can ', ->
@@ -152,7 +147,7 @@ describe 'doofinder client\'s ', ->
 
   context 'sanitizeQuery method can ', ->
 
-    before () ->
+    beforeEach () ->
       @client = new doofinder.Client mock.request.hashid, mock.request.api_key
 
     it 'checks valid queries', ->
@@ -317,6 +312,7 @@ describe 'doofinder client\'s ', ->
         { path: uri, headers: this.req.headers, parameters: if querypart? then querypart.split('&') else []}
         )
 
+    beforeEach ->
       @client = new doofinder.Client mock.request.hashid, mock.request.api_key, 5, 'product', 'fooserver'
 
     after () ->
