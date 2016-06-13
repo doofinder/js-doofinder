@@ -1151,9 +1151,11 @@ author: @ecoslado
 
 },{"./client":1,"./controller":2,"./util/jquery":7,"./widget":10,"./widgets/display":11,"./widgets/facets/rangefacet":12,"./widgets/facets/termfacet":13,"./widgets/queryinput":14,"./widgets/results/results":15,"./widgets/results/scrollresults":16,"md5":60,"mustache":64,"qs":66}],4:[function(require,module,exports){
 (function() {
-  var dfScroll, extend;
+  var $, dfScroll, extend;
 
   extend = require('./extend').extend;
+
+  $ = require('./jquery');
 
   dfScroll = function(arg1, arg2) {
     var container, content, defaultOptions, eventTrigger, handler, o, throttle;
@@ -1204,8 +1206,10 @@ author: @ecoslado
       if (['horizontal', 'vertical'].indexOf(o.direction) <= -1) {
         throw Error("Direction is not properly set. It might be 'horizontal' or 'vertical'.");
       }
-      console.log(content.clientHeight - container.clientHeight - container.scrollTop);
+      console.log("EVENT TRIGGERED");
+      console.log(container.scrollTop, content, container);
       if (o.direction === 'vertical' && content.clientHeight - container.clientHeight - container.scrollTop <= o.scrollOffset || o.direction === "horizontal" && content.clientWidth - container.clientWidth - content.scrollLeft <= o.scrollOffset) {
+        console.log("CALLBACK");
         return o.callback();
       }
     };
@@ -1216,7 +1220,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./extend":5}],5:[function(require,module,exports){
+},{"./extend":5,"./jquery":7}],5:[function(require,module,exports){
 (function() {
   var extend, isArray,
     slice = [].slice,

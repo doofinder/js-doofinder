@@ -1,4 +1,5 @@
 extend = require('./extend').extend
+$ = require('./jquery')
 
 dfScroll = (arg1, arg2=null) ->
 
@@ -54,8 +55,10 @@ dfScroll = (arg1, arg2=null) ->
       throw Error("Direction is not properly set. It might be 'horizontal' or 'vertical'.")
     # When bottom or right side is about to be reached, callback will be called
     console.log "EVENT TRIGGERED"
+    console.log container.scrollTop, content, container
     if o.direction == 'vertical' and content.clientHeight - container.clientHeight - container.scrollTop <= o.scrollOffset \
     	or o.direction == "horizontal" and content.clientWidth - container.clientWidth - content.scrollLeft <= o.scrollOffset
+      console.log "CALLBACK"
       o.callback()
   
   eventTrigger.addEventListener 'df:scroll', handler

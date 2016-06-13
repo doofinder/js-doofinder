@@ -256,7 +256,7 @@ describe 'Widget Tests:', ->
       @controller.bind 'df:next_page', ->
         nextPageCalled += 1
 
-      resultsContainer.on 'df:scroll', ->
+      document.getElementById('scroll').addEventListener 'df:scroll', ->
         dfScrollCalled += 1
         if dfScrollCalled == 1
           console.log "FIRST", nextPageCalled
@@ -268,13 +268,24 @@ describe 'Widget Tests:', ->
 
       @resultsWidget.bind 'df:rendered', (e, response) ->
         if dfScrollCalled == 1
+          console.log resultsContainer.height()
+          console.log resultsContainer.first('div').height()
+
           resultsContainer.scrollTop 305 # on the limit
-          resultsContainer.trigger 'df:scroll'
+          # resultsContainer.trigger 'df:scroll'
+          event = document.createEvent 'Event'
+          event.initEvent 'df:scroll', true, true
+          obj = document.getElementById('scroll')
+          obj.dispatchEvent event
 
       # 1. Scroll until one pixel below the limit...
       resultsContainer.scrollTop 304
       # ... and trigger the event (nothing should happen)
-      resultsContainer.trigger 'df:scroll'
+      #resultsContainer.trigger 'df:scroll'
+      event = document.createEvent 'Event'
+      event.initEvent 'df:scroll', true, true
+      obj = document.getElementById('scroll')
+      obj.dispatchEvent event
 
       # 2. now, search
       $('#query').val('zill').trigger('keydown')
