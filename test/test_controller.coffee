@@ -1,82 +1,17 @@
-###
-# js-doofinder tests
-# author: @ecoslado
-# 2015 04 01
-###
-assert = require "assert"
-should = require('chai').should()
-expect = require('chai').expect
+chai = require 'chai'
 nock = require 'nock'
+_ = require '../lib/util/util'
 
-mock =
-  request:
-    hashid: "ffffffffffffffffffffffffffffffff"
-    api_key: "eu1-384fd8a73c7ff0859a5891f9f4083b1b9727f9c3"
+chai.should()
+assert = chai.assert
+expect = chai.expect
 
-fake_results =
-  query_counter: 1
-  results_per_page: 12
-  page: 1
-  total: 31
-  query: "some query"
-  hashid: mock.request.hashid
-  max_score: 1.3
-  results: [
-    description: "Antena. 5.2 dBi. omnidireccional…"
-    dfid: "523093f0ded16148dc005362"
-    title: "Cisco Aironet Pillar Mount Diversity Omnidirectional Antenna"
-    url: "http://www.example.com/product_description.html"
-    image_url: "http://www.example.com/images/product_image.jpg"
-    type: "product"
-    id: "ID1"
-  ,
-    description: "Teclado. USB. España…"
-    dfid: "523093f0ded16148dc0053xx"
-  ],
-  query_name: "fuzzy"
-  facets:
-    best_price:
-      _type: "range"
-      ranges: [
-        from: 0
-        count: 24
-        min: 8.5
-        max: 225
-        total_count: 24
-        total: 1855.57
-        mean: 77.32
-      ]
-
-    color:
-      _type: "terms"
-      missing: 16
-      total: 10
-      other: 0
-      terms: [
-        term: "Azul"
-        count: 3
-      ,
-        term: "Rojo"
-        count: 1
-      ]
-
-    categories:
-      _type: "terms"
-      missing: 0
-      total: 50
-      other: 0
-      terms: [
-        term: "Sillas de paseo"
-        count: 6
-      ,
-        term: "Seguridad en el hogar"
-        count: 5
-      ]
+hashid = 'ffffffffffffffffffffffffffffffff'
 
 client_mock =
   search: ()->
   hit: ()->
-  hashid: mock.request.hashid
+  hashid: hashid
 
 widget_mock =
   render: () ->
@@ -102,7 +37,7 @@ describe 'doofinder controller: ', ->
       client_mock =
         search: ()->
         hit: ()->
-        hashid: mock.request.hashid
+        hashid: hashid
 
     it 'df:search is triggered', (done) ->
       controller = new doofinder.Controller client_mock, [widget_mock]
@@ -145,7 +80,7 @@ describe 'doofinder controller: ', ->
       client_mock =
         search: ()->
         hit: ()->
-        hashid: mock.request.hashid
+        hashid: hashid
 
     it 'when adding terms filters, filters params change', (done) ->
       # we need to make a search first in order to "refresh" it with
@@ -213,7 +148,7 @@ describe 'doofinder controller: ', ->
       client_mock =
         search: ()->
         hit: ()->
-        hashid: mock.request.hashid
+        hashid: hashid
 
 
     it 'nextPage redo the search with next page', (done) ->
@@ -255,7 +190,7 @@ describe 'doofinder controller: ', ->
       client_mock =
         search: ()->
         hit: ()->
-        hashid: mock.request.hashid
+        hashid: hashid
 
 
     it 'setSearchParam adds parameter to every search', (done) ->
@@ -307,7 +242,7 @@ describe 'doofinder controller: ', ->
       client_mock =
         search: ()->
         hit: ()->
-        hashid: mock.request.hashid
+        hashid: hashid
 
     it ' triggers refresh signal and actually do the search', (done) ->
       controller = new doofinder.Controller client_mock, [widget_mock]
@@ -332,7 +267,7 @@ describe 'doofinder controller: ', ->
       client_mock =
         search: ()->
         hit: ()->
-        hashid: mock.request.hashid
+        hashid: hashid
 
     it ' should call the widget "init" upon adding', (done) ->
       widget_mock.init = ()->
@@ -355,7 +290,7 @@ describe 'doofinder controller: ', ->
       client_mock =
         search: ()->
         hit: ()->
-        hashid: mock.request.hashid
+        hashid: hashid
 
     it ' bind events to callbacks (duhhh)', (done) ->
       res_mock = { results: [1,2,3,4,5,6,7,8,9,10,11], query_name: 'test', query_coounter: 2 }
@@ -398,7 +333,7 @@ describe 'doofinder controller: ', ->
       client_mock =
         search: ()->
         hit: ()->
-        hashid: mock.request.hashid
+        hashid: hashid
 
     it 'actually do the hit', (done) ->
       client_mock.hit = (sessionId, type, dfid, query) ->

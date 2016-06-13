@@ -1,8 +1,6 @@
-# jsdom = require('jsdom').jsdom
 chai = require 'chai'
 nock = require 'nock'
 _ = require '../lib/util/util'
-dom = require './util/dom'
 
 chai.should()
 assert = chai.assert
