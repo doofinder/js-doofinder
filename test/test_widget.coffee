@@ -1,6 +1,5 @@
 chai = require 'chai'
 nock = require 'nock'
-_ = require '../lib/util/util'
 
 chai.should()
 assert = chai.assert
