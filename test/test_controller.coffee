@@ -6,7 +6,6 @@
 assert = require "assert"
 should = require('chai').should()
 expect = require('chai').expect
-jsdom = require "jsdom"
 nock = require 'nock'
 
 mock =
@@ -88,18 +87,13 @@ widget_mock =
 # Test doofinder
 describe 'doofinder controller: ', ->
 
-  beforeEach () ->
-    global.document = jsdom.jsdom('<input id="query"></input>')
-    global.window = document.defaultView
-    global.navigator = window.navigator = {}
-    navigator.userAgent = 'Nasty Navigator' # kudos to @jesusenlanet: great Name!
-    navigator.appVersion = '0.0.1'
-    global.doofinder = require "../lib/doofinder.js"
+  beforeEach ->
+    document.body.innerHTML = '<input type="search" id="query" name="query">'
+    global.$ = require "jquery"
+    global.doofinder = require "../lib/doofinder"
 
-
-  afterEach () ->
-    window.close()
-    delete global.document
+  afterEach ->
+    delete global.$
     delete global.doofinder
 
   context 'search method ' , ->

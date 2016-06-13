@@ -24,7 +24,9 @@ module.exports = (grunt) ->
     mochaTest:
       options:
         reporter: 'nyan'
-        require: []
+        require: [
+          'jsdom-global/register'
+        ]
       release:
         src: ['test/test_*.coffee']
 
