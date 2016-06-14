@@ -18,3 +18,4 @@ module.exports =
     RangeFacet: require "./widgets/facets/rangefacet"
   md5: require "md5"
   qs: require "qs"
+  bean: require "bean"
