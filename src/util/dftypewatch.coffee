@@ -1,28 +1,30 @@
 extend = require('./extend')
 
-dfTypeWatch = (input, o) ->
-  _supportedInputTypes = ['TEXT', 'TEXTAREA', 'PASSWORD', 'TEL', 'SEARCH', 'URL', 'EMAIL', 'DATETIME', 'DATE', 'MONTH', 'WEEK', 'TIME', 'DATETIME-LOCAL', 'NUMBER', 'RANGE']
-
-  # Options
-  defaultOptions =
+dfTypeWatch = (input, options) ->
+  _supportedInputTypes = ['TEXT', 'TEXTAREA', 'PASSWORD', 'TEL', 'SEARCH', 'URL',
+                          'EMAIL', 'DATETIME', 'DATE', 'MONTH', 'WEEK', 'TIME', 'DATETIME-LOCAL',
+                          'NUMBER', 'RANGE']
+  defaults =
     wait: 750,
     callback: ->,
     highlight: true,
     captureLength: 2,
     inputTypes: _supportedInputTypes
 
-  options = extend(defaultOptions, o)
+  options = extend true, {}, defaults, options
 
   checkElement = (timer, override) ->
-    value = timer.el.value || ''
+    value = timer.el.value or ''
 
-    if value.length >= options.captureLength and value.toUpperCase() != timer.text or override and value.length >= options.captureLength or value.length == 0 and timer.text
+    if value.length >= options.captureLength and value.toUpperCase() != timer.text or
+        override and value.length >= options.captureLength or
+        value.length == 0 and timer.text
       timer.text = value.toUpperCase()
       timer.cb.call timer.el, value
 
   watchElement = (elem) ->
     elementType = elem.getAttribute('type').toUpperCase()
-    value = elem.value || ''
+    value = elem.value or ''
 
     if options.inputTypes.indexOf(elementType) >= 0
       # Allocate timer element
@@ -38,7 +40,10 @@ dfTypeWatch = (input, o) ->
         overrideBool = false
         evtElementType = this.type.toUpperCase()
 
-        if typeof evt.keyCode != 'undefined' and evt.keyCode == 13 and evtElementType != 'TEXTAREA' and options.inputTypes.indexOf(evtElementType) >= 0
+        if typeof evt.keyCode isnt 'undefined' and
+            evt.keyCode is 13 and
+            evtElementType != 'TEXTAREA' and
+            options.inputTypes.indexOf(evtElementType) >= 0
           timerWait = 1
           overrideBool = true
 
@@ -58,5 +63,3 @@ dfTypeWatch = (input, o) ->
   return watchElement(document.querySelector(input))
 
 module.exports = dfTypeWatch
-
-
