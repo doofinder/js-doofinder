@@ -1,4 +1,4 @@
-extend = require('./extend').extend
+extend = require('./extend')
 $ = require('./jquery')
 
 dfScroll = (arg1, arg2=null) ->

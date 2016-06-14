@@ -12,7 +12,7 @@ them. Manages the filtering.
 
 Display = require "../display"
 noUiSlider = require "nouislider"
-_ = require '../../util/util'
+extend = require "../../util/extend"
 
 class RangeFacet extends Display
 
@@ -68,7 +68,7 @@ class RangeFacet extends Display
     context =
       name: @name
       sliderClassName: @sliderClassName
-    context = _.extend(true, context, @extraContext or {})
+    context = extend(true, context, @extraContext or {})
 
     # Render template HTML and place it inside the container
     container = document.querySelector(@container)
@@ -153,7 +153,7 @@ class RangeFacet extends Display
             value? and (value.toFixed(2) + '').replace(/0+$/, '').replace(/\.{1}$/, '')
           from: Number
 
-      options = _.extend(true, options, @sliderOptions || {})
+      options = extend(true, options, @sliderOptions || {})
 
       # If we have values from search filtering we apply them
       if res and res.filter and res.filter.range and res.filter.range[@name]
@@ -173,9 +173,9 @@ class RangeFacet extends Display
             max: options.range.max + 1
 
       if @slider is null
-        @_renderSlider _.extend(true, {}, options, overrides or {})
+        @_renderSlider extend(true, {}, options, overrides or {})
       else
-        @slider.noUiSlider.updateOptions _.extend(true, {}, options, overrides or {})
+        @slider.noUiSlider.updateOptions extend(true, {}, options, overrides or {})
 
       if disabled
         @slider.setAttribute 'disabled', true

@@ -3,21 +3,21 @@ module.exports = (hashid, queryCounter = 1) ->
     hashid: hashid
     max_score: 1.3
     page: 1
-    query: 'some query'
+    query: "some query"
     query_counter: queryCounter
-    query_name: 'fuzzy'
+    query_name: "fuzzy"
     results_per_page: 12
     total: 31
     results: [
-      description: 'Antena. 5.2 dBi. omnidireccional…'
-      dfid: '523093f0ded16148dc005362'
-      id: 'ID1'
-      image_url: 'http://www.example.com/images/product_image.jpg'
-      title: 'Cisco Aironet Pillar Mount Diversity Omnidirectional Antenna'
-      type: 'product'
-      url: 'http://www.example.com/product_description.html'
+      description: "Antena. 5.2 dBi. omnidireccional…"
+      dfid: "523093f0ded16148dc005362"
+      id: "ID1"
+      image_url: "http://www.example.com/images/product_image.jpg"
+      title: "Cisco Aironet Pillar Mount Diversity Omnidirectional Antenna"
+      type: "product"
+      url: "http://www.example.com/product_description.html"
     ,
-      description: 'Teclado. USB. España…'
+      description: "Teclado. USB. España…"
       dfid: '523093f0ded16148dc0053xx'
     ]
     facets:
