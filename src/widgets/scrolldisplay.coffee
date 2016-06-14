@@ -15,7 +15,7 @@ bottom
 
 Display = require "./display"
 dfScroll = require "../util/dfscroll"
-$ = require "../util/jquery"
+extend = require '../util/extend'
 
 class ScrollDisplay extends Display
 
@@ -25,35 +25,35 @@ class ScrollDisplay extends Display
   just assign wrapper property for scrolling and
   calls super constructor.
 
-  @param {String} scrollWrapper
+  @param {String} element
   @param {String|Function} template
   @param {Object} extraOptions
   @api public
   ###
-  constructor: (selector, template, options) ->
-    # Uses window as scroll wrapper
+  constructor: (element, template, options) ->
     if options.windowScroll
-      @scrollWrapper = $(window)
+      # Uses window as scroll wrapper
       @windowScroll = true
-      container = $(selector)
+      return super(element, template, options)
 
-    # Uses an inner div as scroll wrapper
     else
-      @scrollWrapper = $(selector)
-      @scrollWrapperSelector = selector
+      super(element, template, options)
+
       @scrollOffset = options.scrollOffset
 
-      if not @scrollWrapper.children().length
+      if not @element.children.length
         # Just in case the inner element in the scroll is not given
-        @scrollWrapper.prepend '<div></div>'
+        @element.appendChild document.createElement('div')
 
-      container = @scrollWrapper.children().first()
+      @elementWrapper = @element
+      @element = @element.children[0]
 
       # Overrides container by defined
       if options.container
-        container = options.container
-
-    super(container, template, options)
+        if typeof options.container is 'string'
+          @element = document.querySelector options.container
+        else
+          @element = options.container
 
   ###
   start
@@ -62,19 +62,21 @@ class ScrollDisplay extends Display
   events to DOM elements.
   ###
   init: (controller) ->
-    _this = this
     super(controller)
-    options = $.extend true,
-      callback: () -> _this.controller.nextPage.call(_this.controller),
+
+    self = this
+
+    options = extend true,
+      callback: -> self.controller.nextPage.call(self.controller),
       if @scrollOffset then scrollOffset: @scrollOffset else {}
 
     if @windowScroll
       dfScroll options
     else
-      dfScroll @scrollWrapperSelector, options
+      dfScroll @elementWrapper, options
 
     @controller.bind 'df:search df:refresh', (params) ->
-      _this.scrollWrapper.scrollTop(0)
+      self.elementWrapper.scrollTop = 0
 
 
   ###
@@ -85,21 +87,18 @@ class ScrollDisplay extends Display
   @api public
   ###
   renderNext: (res) ->
-    context = $.extend(true, res, @extraContext || {})
+    context = extend true, res, @extraContext or {}
     context.is_first = false
     @addHelpers context
-    html = @mustache.render @template, context
-    $(@container).append html
+
+    if @element.insertAdjacentHTML?
+      @element.insertAdjacentHTML 'beforeend', @mustache.render(@template, context)
+    else
+      # WTF: Patch for tests (jsdom says that insertAdjacentHTML is not a function but it works
+      # in the browser. It's slower but KISS.
+      @element.innerHTML += @mustache.render(@template, context)
+
     @trigger("df:rendered", [res])
-
-  ###
-  clean
-
-  Cleans the container content.
-  @api public
-  ###
-  clean: () ->
-    $(@container).html ""
 
 
 module.exports = ScrollDisplay

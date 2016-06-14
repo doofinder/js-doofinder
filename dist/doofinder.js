@@ -1222,32 +1222,39 @@ author: @ecoslado
 
 },{"./extend":6}],5:[function(require,module,exports){
 (function() {
-  var $, dfScroll, extend;
+  var $, dfScroll, extend, introspection;
 
   extend = require('./extend');
+
+  introspection = require('./introspection');
 
   $ = require('./jquery');
 
   dfScroll = function(arg1, arg2) {
-    var container, content, defaultOptions, eventTrigger, handler, o, throttle;
+    var container, content, defaults, eventTrigger, handler, options, throttle;
     if (arg2 == null) {
       arg2 = null;
     }
-    defaultOptions = {
+    defaults = {
       direction: "vertical",
       scrollOffset: 100
     };
-    if (typeof arg1 === 'object') {
-      o = arg1;
+    if (introspection.isPlainObject(arg1)) {
+      options = arg1;
       container = document.body;
       content = document.documentElement;
       eventTrigger = window;
     } else {
-      o = arg2;
-      eventTrigger = container = document.querySelector(arg1);
+      options = arg2;
+      if (typeof arg1 === 'string') {
+        container = document.querySelector(arg1);
+      } else {
+        container = arg1;
+      }
       content = container.children[0];
+      eventTrigger = container;
     }
-    o = extend(defaultOptions, o);
+    options = extend(true, defaults, options);
     throttle = function(type, name, obj) {
       var event, func, running;
       obj = obj || window;
@@ -1274,11 +1281,11 @@ author: @ecoslado
     };
     throttle('scroll', 'df:scroll', eventTrigger);
     handler = function() {
-      if (['horizontal', 'vertical'].indexOf(o.direction) <= -1) {
-        throw Error("Direction is not properly set. It might be 'horizontal' or 'vertical'.");
+      if (['horizontal', 'vertical'].indexOf(options.direction) <= -1) {
+        throw Error("[Doofinder] dfScroll: Direction is not properly set. It might be 'horizontal' or 'vertical'.");
       }
-      if (o.direction === 'vertical' && content.clientHeight - container.clientHeight - container.scrollTop <= o.scrollOffset || o.direction === "horizontal" && content.clientWidth - container.clientWidth - content.scrollLeft <= o.scrollOffset) {
-        return o.callback();
+      if (options.direction === 'vertical' && content.clientHeight - container.clientHeight - container.scrollTop <= options.scrollOffset || options.direction === "horizontal" && content.clientWidth - container.clientWidth - content.scrollLeft <= options.scrollOffset) {
+        return options.callback();
       }
     };
     return eventTrigger.addEventListener('df:scroll', handler);
@@ -1288,7 +1295,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./extend":6,"./jquery":9}],6:[function(require,module,exports){
+},{"./extend":6,"./introspection":8,"./jquery":9}],6:[function(require,module,exports){
 (function() {
   var _i, extend,
     hasProp = {}.hasOwnProperty;
@@ -1623,54 +1630,53 @@ author: @ecoslado
 /*
 Display
 This class receives the search
-results and paint them in a container
+results and paint them in an element
 shaped by template. Every new page
 replaces the current content.
  */
 
 (function() {
-  var $, Display, Widget, addHelpers,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  var Display, Widget, addHelpers, extend,
+    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   Widget = require('../widget');
 
   addHelpers = require("../util/helpers").addHelpers;
 
-  $ = require("../util/jquery");
+  extend = require('../util/extend');
 
   Display = (function(superClass) {
-    extend(Display, superClass);
+    extend1(Display, superClass);
 
 
     /*
     constructor
     
-    @param {String} container
+    @param {String} element
     @param {String|Function} template
     @param {Object} options
     @api public
      */
 
-    function Display(container, template, options) {
+    function Display(element, template, options) {
       this.template = template;
       if (options == null) {
         options = {};
       }
-      this.container = container;
       this.mustache = require("mustache");
       this.extraContext = options.templateVars;
       this.addHelpers = function(context) {
         return addHelpers(context, options.urlParams, options.currency, options.translations, options.templateFunctions);
       };
-      Display.__super__.constructor.call(this, container);
+      Display.__super__.constructor.call(this, element);
     }
 
 
     /*
     render
     
-    Replaces the older results in container with
+    Replaces the older results in element with
     the given
     
     @param {Object} res
@@ -1678,12 +1684,11 @@ replaces the current content.
      */
 
     Display.prototype.render = function(res) {
-      var context, html;
-      context = $.extend(true, res, this.extraContext || {});
+      var context;
+      context = extend(true, res, this.extraContext || {});
       context.is_first = true;
       this.addHelpers(context);
-      html = this.mustache.render(this.template, context);
-      $(this.container).html(html);
+      this.element.innerHTML = this.mustache.render(this.template, context);
       return this.trigger("df:rendered", [res]);
     };
 
@@ -1691,18 +1696,17 @@ replaces the current content.
     /*
     renderNext
     
-    Replaces results to the older in container
+    Replaces old results with the new ones in the element
     @param {Object} res
     @api public
      */
 
     Display.prototype.renderNext = function(res) {
-      var context, html;
-      context = $.extend(true, res, this.extraContext || {});
+      var context;
+      context = extend(true, res, this.extraContext || {});
       context.is_first = false;
       this.addHelpers(context);
-      html = this.mustache.render(this.template, context);
-      $(this.container).html(html);
+      this.element.innerHTML = this.mustache.render(this.template, context);
       return this.trigger("df:rendered", [res]);
     };
 
@@ -1710,12 +1714,12 @@ replaces the current content.
     /*
     clean
     
-    Cleans the container content.
+    Cleans the element's content.
     @api public
      */
 
     Display.prototype.clean = function() {
-      return $(this.container).html("");
+      return this.element.innerHTML = "";
     };
 
 
@@ -1743,7 +1747,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../util/helpers":7,"../util/jquery":9,"../widget":10,"mustache":65}],12:[function(require,module,exports){
+},{"../util/extend":6,"../util/helpers":7,"../widget":10,"mustache":65}],12:[function(require,module,exports){
 
 /*
 rangefacet.coffee
@@ -1792,7 +1796,7 @@ them. Manages the filtering.
     @api public
      */
 
-    function RangeFacet(container, name, options) {
+    function RangeFacet(element, name, options) {
       var template;
       this.name = name;
       if (options == null) {
@@ -1807,7 +1811,7 @@ them. Manages the filtering.
       }
       this.sliderOptions = options.sliderOptions;
       this.slider = null;
-      RangeFacet.__super__.constructor.call(this, container, template, options);
+      RangeFacet.__super__.constructor.call(this, element, template, options);
     }
 
 
@@ -1819,24 +1823,23 @@ them. Manages the filtering.
      */
 
     RangeFacet.prototype._renderSlider = function(options) {
-      var container, context, widget;
+      var context, widget;
       widget = this;
       context = {
         name: this.name,
         sliderClassName: this.sliderClassName
       };
       context = extend(true, context, this.extraContext || {});
-      container = document.querySelector(this.container);
-      container.innerHTML = this.mustache.render(this.template, context);
+      this.element.innerHTML = this.mustache.render(this.template, context);
       this.slider = document.createElement('div');
-      container.querySelector(this.sliderSelector).appendChild(this.slider);
+      this.element.querySelector(this.sliderSelector).appendChild(this.slider);
       noUiSlider.create(this.slider, options);
       return this.slider.noUiSlider.on('change', function() {
         var max, min, ref;
         ref = widget.slider.noUiSlider.get(), min = ref[0], max = ref[1];
         widget.controller.addFilter(widget.name, {
-          'gte': parseFloat(min, 10),
-          'lte': parseFloat(max, 10)
+          gte: parseFloat(min, 10),
+          lte: parseFloat(max, 10)
         });
         return widget.controller.refresh();
       });
@@ -2269,13 +2272,13 @@ replaces the current content.
  */
 
 (function() {
-  var $, ScrollDisplay, ScrollResults,
+  var ScrollDisplay, ScrollResults, bean,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   ScrollDisplay = require('../scrolldisplay');
 
-  $ = require('../../util/jquery');
+  bean = require('bean');
 
   ScrollResults = (function(superClass) {
     extend(ScrollResults, superClass);
@@ -2284,13 +2287,13 @@ replaces the current content.
     /*
     constructor
     
-    @param {String} container
+    @param {String} element
     @param {String|Function} template
     @param {Object} extraOptions
     @api public
      */
 
-    function ScrollResults(container, options) {
+    function ScrollResults(element, options) {
       var template;
       if (options == null) {
         options = {};
@@ -2300,7 +2303,7 @@ replaces the current content.
       } else {
         template = options.template;
       }
-      ScrollResults.__super__.constructor.call(this, container, template, options);
+      ScrollResults.__super__.constructor.call(this, element, template, options);
     }
 
 
@@ -2311,11 +2314,12 @@ replaces the current content.
      */
 
     ScrollResults.prototype.init = function(controller) {
-      var _this;
+      var self;
       ScrollResults.__super__.init.call(this, controller);
-      _this = this;
-      return $(this.container).on('click', 'a[data-df-hitcounter]', function(e) {
-        return _this.trigger('df:hit', [$(this).data('dfHitcounter'), $(this).attr('href')]);
+      self = this;
+      return bean.on(this.element, 'click', 'a[data-df-hitcounter]', function() {
+        console.log('Hola, mendrugo');
+        return self.trigger('df:hit', [this.getAttribute('data-dfHitcounter'), this.getAttribute('href')]);
       });
     };
 
@@ -2327,7 +2331,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../../util/jquery":9,"../scrolldisplay":17}],17:[function(require,module,exports){
+},{"../scrolldisplay":17,"bean":18}],17:[function(require,module,exports){
 
 /*
 scrolldisplay.coffee
@@ -2346,18 +2350,18 @@ bottom
  */
 
 (function() {
-  var $, Display, ScrollDisplay, dfScroll,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  var Display, ScrollDisplay, dfScroll, extend,
+    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   Display = require("./display");
 
   dfScroll = require("../util/dfscroll");
 
-  $ = require("../util/jquery");
+  extend = require('../util/extend');
 
   ScrollDisplay = (function(superClass) {
-    extend(ScrollDisplay, superClass);
+    extend1(ScrollDisplay, superClass);
 
 
     /*
@@ -2366,31 +2370,32 @@ bottom
     just assign wrapper property for scrolling and
     calls super constructor.
     
-    @param {String} scrollWrapper
+    @param {String} element
     @param {String|Function} template
     @param {Object} extraOptions
     @api public
      */
 
-    function ScrollDisplay(selector, template, options) {
-      var container;
+    function ScrollDisplay(element, template, options) {
       if (options.windowScroll) {
-        this.scrollWrapper = $(window);
         this.windowScroll = true;
-        container = $(selector);
+        return ScrollDisplay.__super__.constructor.call(this, element, template, options);
       } else {
-        this.scrollWrapper = $(selector);
-        this.scrollWrapperSelector = selector;
+        ScrollDisplay.__super__.constructor.call(this, element, template, options);
         this.scrollOffset = options.scrollOffset;
-        if (!this.scrollWrapper.children().length) {
-          this.scrollWrapper.prepend('<div></div>');
+        if (!this.element.children.length) {
+          this.element.appendChild(document.createElement('div'));
         }
-        container = this.scrollWrapper.children().first();
+        this.elementWrapper = this.element;
+        this.element = this.element.children[0];
         if (options.container) {
-          container = options.container;
+          if (typeof options.container === 'string') {
+            this.element = document.querySelector(options.container);
+          } else {
+            this.element = options.container;
+          }
         }
       }
-      ScrollDisplay.__super__.constructor.call(this, container, template, options);
     }
 
 
@@ -2402,12 +2407,12 @@ bottom
      */
 
     ScrollDisplay.prototype.init = function(controller) {
-      var _this, options;
-      _this = this;
+      var options, self;
       ScrollDisplay.__super__.init.call(this, controller);
-      options = $.extend(true, {
+      self = this;
+      options = extend(true, {
         callback: function() {
-          return _this.controller.nextPage.call(_this.controller);
+          return self.controller.nextPage.call(self.controller);
         }
       }, this.scrollOffset ? {
         scrollOffset: this.scrollOffset
@@ -2415,10 +2420,10 @@ bottom
       if (this.windowScroll) {
         dfScroll(options);
       } else {
-        dfScroll(this.scrollWrapperSelector, options);
+        dfScroll(this.elementWrapper, options);
       }
       return this.controller.bind('df:search df:refresh', function(params) {
-        return _this.scrollWrapper.scrollTop(0);
+        return self.elementWrapper.scrollTop = 0;
       });
     };
 
@@ -2432,25 +2437,16 @@ bottom
      */
 
     ScrollDisplay.prototype.renderNext = function(res) {
-      var context, html;
-      context = $.extend(true, res, this.extraContext || {});
+      var context;
+      context = extend(true, res, this.extraContext || {});
       context.is_first = false;
       this.addHelpers(context);
-      html = this.mustache.render(this.template, context);
-      $(this.container).append(html);
+      if (this.element.insertAdjacentHTML != null) {
+        this.element.insertAdjacentHTML('beforeend', this.mustache.render(this.template, context));
+      } else {
+        this.element.innerHTML += this.mustache.render(this.template, context);
+      }
       return this.trigger("df:rendered", [res]);
-    };
-
-
-    /*
-    clean
-    
-    Cleans the container content.
-    @api public
-     */
-
-    ScrollDisplay.prototype.clean = function() {
-      return $(this.container).html("");
     };
 
     return ScrollDisplay;
@@ -2461,7 +2457,7 @@ bottom
 
 }).call(this);
 
-},{"../util/dfscroll":5,"../util/jquery":9,"./display":11}],18:[function(require,module,exports){
+},{"../util/dfscroll":5,"../util/extend":6,"./display":11}],18:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean

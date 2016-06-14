@@ -7,28 +7,26 @@ author: @ecoslado
 ###
 Display
 This class receives the search
-results and paint them in a container
+results and paint them in an element
 shaped by template. Every new page
 replaces the current content.
 ###
 
 Widget = require '../widget'
 addHelpers = require("../util/helpers").addHelpers
-
-$ = require("../util/jquery")
+extend = require '../util/extend'
 
 class Display extends Widget
 
   ###
   constructor
 
-  @param {String} container
+  @param {String} element
   @param {String|Function} template
   @param {Object} options
   @api public
   ###
-  constructor: (container, @template, options = {}) ->
-    @container = container
+  constructor: (element, @template, options = {}) ->
     @mustache = require("mustache")
     @extraContext = options.templateVars
     @addHelpers = (context) ->
@@ -38,23 +36,22 @@ class Display extends Widget
         options.translations,
         options.templateFunctions
 
-    super(container)
+    super(element)
 
   ###
   render
 
-  Replaces the older results in container with
+  Replaces the older results in element with
   the given
 
   @param {Object} res
   @api public
   ###
   render: (res) ->
-    context = $.extend(true, res, @extraContext || {})
+    context = extend true, res, @extraContext or {}
     context.is_first = true
     @addHelpers context
-    html = @mustache.render @template, context
-    $(@container).html html
+    @element.innerHTML = @mustache.render @template, context
     @trigger("df:rendered", [res])
 
 
@@ -62,26 +59,25 @@ class Display extends Widget
   ###
   renderNext
 
-  Replaces results to the older in container
+  Replaces old results with the new ones in the element
   @param {Object} res
   @api public
   ###
   renderNext: (res) ->
-    context = $.extend(true, res, @extraContext || {})
+    context = extend true, res, @extraContext or {}
     context.is_first = false
     @addHelpers context
-    html = @mustache.render @template, context
-    $(@container).html html
+    @element.innerHTML = @mustache.render @template, context
     @trigger("df:rendered", [res])
 
   ###
   clean
 
-  Cleans the container content.
+  Cleans the element's content.
   @api public
   ###
   clean: () ->
-    $(@container).html ""
+    @element.innerHTML = ""
 
   ###
   addExtraContext

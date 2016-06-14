@@ -34,7 +34,7 @@ class RangeFacet extends Display
 
   @api public
   ###
-  constructor: (container, @name, options = {}) ->
+  constructor: (element, @name, options = {}) ->
     @sliderClassName = options.sliderClassName or 'df-slider'
     @sliderSelector =  ".#{@sliderClassName}[data-facet='#{@name}']"
 
@@ -53,7 +53,7 @@ class RangeFacet extends Display
     @sliderOptions = options.sliderOptions
     @slider = null
 
-    super(container, template, options)
+    super(element, template, options)
 
   ###
   Renders the slider for the very first time.
@@ -68,15 +68,14 @@ class RangeFacet extends Display
     context =
       name: @name
       sliderClassName: @sliderClassName
-    context = extend(true, context, @extraContext or {})
+    context = extend true, context, @extraContext or {}
 
     # Render template HTML and place it inside the container
-    container = document.querySelector(@container)
-    container.innerHTML = @mustache.render(@template, context)
+    @element.innerHTML = @mustache.render(@template, context)
 
     # Create a node for the the slider and append it to @sliderSelector
     @slider = document.createElement 'div'
-    container.querySelector(@sliderSelector).appendChild @slider
+    @element.querySelector(@sliderSelector).appendChild @slider
 
     # Initialize the slider
     noUiSlider.create @slider, options
@@ -84,7 +83,9 @@ class RangeFacet extends Display
     # Listen for the 'change' event so we can query Doofinder with new filters
     @slider.noUiSlider.on 'change', ->
       [min, max] = widget.slider.noUiSlider.get()
-      widget.controller.addFilter(widget.name, {'gte': parseFloat(min, 10), 'lte': parseFloat(max, 10)})
+      widget.controller.addFilter widget.name,
+        gte: parseFloat(min, 10)
+        lte: parseFloat(max, 10)
       widget.controller.refresh()
 
   ###
