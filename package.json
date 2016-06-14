@@ -8,7 +8,6 @@
   },
   "dependencies": {
     "bean": "^1.0.15",
-    "jquery": "^2.1.4",
     "md5": "^2.1.0",
     "mustache": "^2.2.1",
     "nouislider": "^8.5.1",

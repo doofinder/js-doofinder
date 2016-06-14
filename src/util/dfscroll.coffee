@@ -1,8 +1,6 @@
 extend = require './extend'
 introspection = require './introspection'
 
-$ = require('./jquery')
-
 dfScroll = (arg1, arg2=null) ->
 
   defaults =
