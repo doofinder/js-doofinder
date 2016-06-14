@@ -15,7 +15,7 @@ $ = require "./util/jquery"
 
 class Widget
 
-  
+
   constructor: (selector) ->
     @emitter = $(selector)
 
@@ -28,7 +28,7 @@ class Widget
   ###
   init: (controller) ->
     @controller = controller
-      
+
   ###
   render
 
@@ -38,7 +38,7 @@ class Widget
 
   @param {Object} res
   @api public
-  ###  
+  ###
   render: (res) ->
 
   ###
@@ -49,9 +49,9 @@ class Widget
   In Widget is dummy. To be overriden.
   @param {Object} res
   @api public
-  ###  
+  ###
   renderNext: (res) ->
-    
+
   ###
   bind
 
@@ -71,7 +71,16 @@ class Widget
   @param {Array} params
   @api public
   ###
-  trigger: (event, params) -> 
+  trigger: (event, params) ->
     @emitter.trigger(event, params)
+
+  ###
+  raiseError
+
+  Method to raise a Doofinder error
+  @param {String} message
+  ###
+  raiseError: (message) ->
+    throw Error "[Doofinder] #{message}"
 
 module.exports = Widget

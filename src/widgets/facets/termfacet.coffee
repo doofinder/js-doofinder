@@ -16,6 +16,7 @@ class TermFacet extends Display
 
   constructor: (container, @name, options = {}) ->
     @selected = {}
+
     if not options.template
       template = """
         {{#@index}}
@@ -27,7 +28,8 @@ class TermFacet extends Display
             <ul>
               {{#terms}}
               <li>
-                <a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}" data-facet="{{name}}" data-value="{{ key }}">
+                <a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}"
+                    data-facet="{{name}}" data-value="{{ key }}">
                   {{ key }}
                   <span class="df-facet__count">{{ doc_count }}</span>
                 </a>
@@ -44,49 +46,49 @@ class TermFacet extends Display
 
   init: (controller) ->
     super(controller)
-    _this = this
-    _name = @name
+
+    self = this
 
     # Clean selected  terms when new search
     @controller.bind "df:search", (params) ->
-      _this.selected = {}
+      self.selected = {}
 
     # The filtering by click
     $(@container).on 'click', "a[data-facet='#{@name}']", (e) ->
       e.preventDefault()
+
       termFacet = $(this)
       value = termFacet.data "value"
       key = termFacet.data "facet"
 
-      if _this.selected[value]
-        delete _this.selected[value]
-        _this.controller.removeFilter key, value
+      if self.selected[value]
+        delete self.selected[value]
+        self.controller.removeFilter key, value
       else
-        _this.selected[value] = 1
-        _this.controller.addFilter key, value
-      _this.controller.refresh()
+        self.selected[value] = true
+        self.controller.addFilter key, value
+
+      self.controller.refresh()
 
     # Removes filters not present in results.
     @controller.bind "df:results_received", (event, res) ->
-      terms = res.facets[_this.name].terms.buckets
-      for term, selected of _this.selected
-        if selected and not _this._termInResults(term, terms)
-          _this.selected[term.key] = 0
-          _this.controller.removeFilter _this.name, term
+      if res.facets[self.name]?
+        terms = res.facets[self.name].terms.buckets.map (term) -> term.key
+      else
+        terms = []
 
-  _termInResults: (term, terms) ->
-    for elem in terms
-      if term == elem.key
-        return true
-    return false
+      for term, selected of self.selected
+        if selected and not terms.indexOf(term) < 0
+          delete self.selected[term]
+          self.controller.removeFilter self.name, term
 
   render: (res) ->
     # Throws errors if prerrequisites are not
     # accomplished.
     if not res.facets or not res.facets[@name]
-      throw Error "Error in TermFacet: #{@name} facet is not configured."
+      @raiseError "TermFacet: #{@name} facet is not configured"
     else if not res.facets[@name].terms.buckets
-      throw Error "Error in TermFacet: #{@name} facet is not a term facet."
+      @raiseError "TermFacet: #{@name} facet is not a terms facet"
 
     if res.results
       # To make access to selected easier

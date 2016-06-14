@@ -131,14 +131,14 @@ class RangeFacet extends Display
   render: (res) ->
     # Throws errors if prerrequisites are not accomplished.
     if not res.facets or not res.facets[@name]
-      throw Error "Error in RangeFacet: #{@name} facet is not configured."
+      @raiseError "RangeFacet: #{@name} facet is not configured"
     else if not res.facets[@name].range
-      throw Error "Error in RangeFacet: #{@name} facet is not a range facet."
+      @raiseError "RangeFacet: #{@name} facet is not a range facet"
 
     # Update widget if any results found
     if res.total > 0
-      range = [parseFloat(res.facets[@name].range.buckets[0].stats.min, 10),
-               parseFloat(res.facets[@name].range.buckets[0].stats.max, 10)]
+      range = [parseFloat(res.facets[@name].range.buckets[0].stats.min || 0, 10),
+               parseFloat(res.facets[@name].range.buckets[0].stats.max || 0, 10)]
 
       # defaults
       options =
@@ -147,7 +147,7 @@ class RangeFacet extends Display
           min: range[0]
           max: range[1]
         connect: true
-        tooltips: true
+        tooltips: true  # can't be overriden when options are updated!!!
         format:
           to: (value) ->
             value? and (value.toFixed(2) + '').replace(/0+$/, '').replace(/\.{1}$/, '')
@@ -171,6 +171,7 @@ class RangeFacet extends Display
           range:
             min: options.range.min
             max: options.range.max + 1
+          # tooltips: false  # can't be overriden :-( Use CSS to handle display
 
       if @slider is null
         @_renderSlider extend(true, {}, options, overrides or {})

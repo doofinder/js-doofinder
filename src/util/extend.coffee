@@ -1,34 +1,4 @@
-isFunction = (obj) ->
-  typeof(obj) isnt 'function' or false
-
-isArray = Array.isArray or (obj) ->
-  toString.call(obj) is '[object Array]'
-
-#  Function to test if an object is a plain object, i.e. is constructed
-#  by the built-in Object constructor and inherits directly from Object.prototype
-#  or null. Some built-in objects pass the test, e.g. Math which is a plain object
-#  and some host or exotic objects may pass also.
-#
-#  http://stackoverflow.com/a/5878101
-#
-#  @param {} obj - value to test
-#  @returns {Boolean} true if passes tests, false otherwise
-#
-isPlainObject = (obj) ->
-  # Basic check for Type object that's not null
-  if typeof obj is 'object' and obj isnt null
-
-    # If Object.getPrototypeOf supported, use it
-    if typeof Object.getPrototypeOf is 'function'
-      proto = Object.getPrototypeOf obj
-      return proto is Object.prototype or proto is null
-
-    # Otherwise, use internal class
-    # This should be reliable as if getPrototypeOf not supported, is pre-ES5
-    return Object.prototype.toString.call(obj) == '[object Object]'
-
-  # Not an object
-  return false
+_i = require './introspection'
 
 # A clone of jQuery's extend
 #
@@ -52,7 +22,7 @@ extend = module.exports = () ->
     i++
 
   # Handle case when target is a string or something (possible in deep copy)
-  if typeof(target) isnt 'object' and not isFunction(target)
+  if not _i.isFunction(target) and not _i.isObject(target)
     target = {}
 
   # If there's only one argument return it
@@ -73,12 +43,12 @@ extend = module.exports = () ->
         if target is copy
           continue
         # Recurse if we're merging plain objects or arrays
-        if deep and copy and (isPlainObject(copy) or (copyIsArray = isArray(copy)))
+        if deep and copy and (_i.isPlainObject(copy) or (copyIsArray = _i.isArray(copy)))
           if copyIsArray
             copyIsArray = false
-            clone = if src and isArray(src) then src else []
+            clone = if src and _i.isArray(src) then src else []
           else
-            clone = if src and isPlainObject(src) then src else {}
+            clone = if src and _i.isPlainObject(src) then src else {}
           target[name] = extend deep, clone, copy
         else if copy isnt undefined
           target[name] = copy

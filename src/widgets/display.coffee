@@ -24,7 +24,7 @@ class Display extends Widget
 
   @param {String} container
   @param {String|Function} template
-  @param {Object} options 
+  @param {Object} options
   @api public
   ###
   constructor: (container, @template, options = {}) ->
@@ -32,12 +32,12 @@ class Display extends Widget
     @mustache = require("mustache")
     @extraContext = options.templateVars
     @addHelpers = (context) ->
-      addHelpers context, 
-        options.urlParams, 
-        options.currency, 
-        options.translations, 
+      addHelpers context,
+        options.urlParams,
+        options.currency,
+        options.translations,
         options.templateFunctions
-    
+
     super(container)
 
   ###
@@ -48,7 +48,7 @@ class Display extends Widget
 
   @param {Object} res
   @api public
-  ###  
+  ###
   render: (res) ->
     context = $.extend(true, res, @extraContext || {})
     context.is_first = true
@@ -56,8 +56,8 @@ class Display extends Widget
     html = @mustache.render @template, context
     $(@container).html html
     @trigger("df:rendered", [res])
-    
-    
+
+
 
   ###
   renderNext
@@ -65,7 +65,7 @@ class Display extends Widget
   Replaces results to the older in container
   @param {Object} res
   @api public
-  ###  
+  ###
   renderNext: (res) ->
     context = $.extend(true, res, @extraContext || {})
     context.is_first = false
