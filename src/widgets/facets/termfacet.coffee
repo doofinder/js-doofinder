@@ -5,7 +5,7 @@ author: @ecoslado
 ###
 
 Display = require "../display"
-$ = require "jquery"
+bean = require 'bean'
 
 ###
 TermFacet
@@ -14,7 +14,7 @@ paint them. Manages the filtering.
 ###
 class TermFacet extends Display
 
-  constructor: (container, @name, options = {}) ->
+  constructor: (element, @name, options = {}) ->
     @selected = {}
 
     if not options.template
@@ -42,7 +42,7 @@ class TermFacet extends Display
     else
       template = options.template
 
-    super(container, template, options)
+    super(element, template, options)
 
   init: (controller) ->
     super(controller)
@@ -54,12 +54,12 @@ class TermFacet extends Display
       self.selected = {}
 
     # The filtering by click
-    $(@container).on 'click', "a[data-facet='#{@name}']", (e) ->
+    bean.on @element, 'click', "a[data-facet='#{@name}']", (e) ->
+    # $(@container).on 'click', "a[data-facet='#{@name}']", (e) ->
       e.preventDefault()
 
-      termFacet = $(this)
-      value = termFacet.data "value"
-      key = termFacet.data "facet"
+      value = this.getAttribute 'data-value'
+      key = this.getAttribute 'data-facet'
 
       if self.selected[value]
         delete self.selected[value]
@@ -108,12 +108,11 @@ class TermFacet extends Display
         name: @name
         terms: res.facets[@name].terms.buckets,
         @extraContext || {}
-
       @addHelpers(context)
-      html = @mustache.render(@template, context)
-      $(@container).html html
+
+      @element.innerHTML = @mustache.render(@template, context)
     else
-      $(@container).html ''
+      @element.innerHTML = ''
 
     @trigger('df:rendered', [res])
 

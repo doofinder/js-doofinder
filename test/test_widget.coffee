@@ -1,5 +1,6 @@
 chai = require 'chai'
 nock = require 'nock'
+bean = require 'bean'
 
 chai.should()
 assert = chai.assert
@@ -319,16 +320,16 @@ describe 'Widget Tests:', ->
 
       termsWidget.bind 'df:rendered', (e, response) ->
         renderCount += 1
-        term = termsContainer.find('a[data-facet="color"][data-value="Azul"]')
+        term = termsContainer.find('a[data-facet="color"][data-value="Azul"]').get(0)
         if renderCount == 1
           # initial search
           self.controller.status.params.filters.should.be.empty
-          term.trigger('click')
+          bean.fire term, 'click'
         else if renderCount == 2
           self.controller.status.params.filters.should.have.keys 'color'
           self.controller.status.params.filters.color.should.be.an.Array
           self.controller.status.params.filters.color.should.eql ['Azul']
-          term.trigger('click')
+          bean.fire term, 'click'
         else
           self.controller.status.params.filters.color.should.be.empty
           done()

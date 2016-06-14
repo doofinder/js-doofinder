@@ -1986,13 +1986,13 @@ author: @ecoslado
  */
 
 (function() {
-  var $, Display, TermFacet,
+  var Display, TermFacet, bean,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   Display = require("../display");
 
-  $ = require("jquery");
+  bean = require('bean');
 
 
   /*
@@ -2004,7 +2004,7 @@ author: @ecoslado
   TermFacet = (function(superClass) {
     extend(TermFacet, superClass);
 
-    function TermFacet(container, name, options) {
+    function TermFacet(element, name, options) {
       var template;
       this.name = name;
       if (options == null) {
@@ -2016,7 +2016,7 @@ author: @ecoslado
       } else {
         template = options.template;
       }
-      TermFacet.__super__.constructor.call(this, container, template, options);
+      TermFacet.__super__.constructor.call(this, element, template, options);
     }
 
     TermFacet.prototype.init = function(controller) {
@@ -2026,12 +2026,11 @@ author: @ecoslado
       this.controller.bind("df:search", function(params) {
         return self.selected = {};
       });
-      $(this.container).on('click', "a[data-facet='" + this.name + "']", function(e) {
-        var key, termFacet, value;
+      bean.on(this.element, 'click', "a[data-facet='" + this.name + "']", function(e) {
+        var key, value;
         e.preventDefault();
-        termFacet = $(this);
-        value = termFacet.data("value");
-        key = termFacet.data("facet");
+        value = this.getAttribute('data-value');
+        key = this.getAttribute('data-facet');
         if (self.selected[value]) {
           delete self.selected[value];
           self.controller.removeFilter(key, value);
@@ -2066,7 +2065,7 @@ author: @ecoslado
     };
 
     TermFacet.prototype.render = function(res) {
-      var context, html, index, ref, term;
+      var context, index, ref, term;
       if (!res.facets || !res.facets[this.name]) {
         this.raiseError("TermFacet: " + this.name + " facet is not configured");
       } else if (!res.facets[this.name].terms.buckets) {
@@ -2091,10 +2090,9 @@ author: @ecoslado
           terms: res.facets[this.name].terms.buckets
         }, this.extraContext || {});
         this.addHelpers(context);
-        html = this.mustache.render(this.template, context);
-        $(this.container).html(html);
+        this.element.innerHTML = this.mustache.render(this.template, context);
       } else {
-        $(this.container).html('');
+        this.element.innerHTML = '';
       }
       return this.trigger('df:rendered', [res]);
     };
@@ -2109,7 +2107,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../display":11,"jquery":60}],14:[function(require,module,exports){
+},{"../display":11,"bean":18}],14:[function(require,module,exports){
 
 /*
 queryinput.coffee
