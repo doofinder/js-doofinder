@@ -29,9 +29,9 @@ class QueryInput extends Widget
   @param {Object} options
   @api public
   ###
-  constructor: (@queryInput, @options = {}) ->
-  	super(@queryInput)
-  
+  constructor: (element, @options = {}) ->
+    super(element)
+
   ###
   start
 
@@ -45,16 +45,17 @@ class QueryInput extends Widget
     else
       @controller = [controller]
 
-    _this = this
+    self = this
+
     options = extend true,
-      callback: () ->
-        query = document.querySelector(_this.queryInput).value
+      callback: ->
+        query = self.element.value
         controller.reset()
-        controller.search.call(controller, query)
+        controller.search.call controller, query
       wait: 43
       captureLength: 3,
       @options
 
-    dfTypeWatch @queryInput, options
+    dfTypeWatch @element, options
 
 module.exports = QueryInput

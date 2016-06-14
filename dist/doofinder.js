@@ -1157,7 +1157,7 @@ author: @ecoslado
 
   extend = require('./extend');
 
-  dfTypeWatch = function(input, options) {
+  dfTypeWatch = function(element, options) {
     var _supportedInputTypes, checkElement, defaults, watchElement;
     _supportedInputTypes = ['TEXT', 'TEXTAREA', 'PASSWORD', 'TEL', 'SEARCH', 'URL', 'EMAIL', 'DATETIME', 'DATE', 'MONTH', 'WEEK', 'TIME', 'DATETIME-LOCAL', 'NUMBER', 'RANGE'];
     defaults = {
@@ -1210,7 +1210,10 @@ author: @ecoslado
         return elem.addEventListener('change', startWatch);
       }
     };
-    return watchElement(document.querySelector(input));
+    if (typeof element === 'string') {
+      element = document.querySelector(element);
+    }
+    return watchElement(element);
   };
 
   module.exports = dfTypeWatch;
@@ -2147,10 +2150,9 @@ author: @ecoslado
     @api public
      */
 
-    function QueryInput(queryInput, options1) {
-      this.queryInput = queryInput;
+    function QueryInput(element, options1) {
       this.options = options1 != null ? options1 : {};
-      QueryInput.__super__.constructor.call(this, this.queryInput);
+      QueryInput.__super__.constructor.call(this, element);
     }
 
 
@@ -2163,24 +2165,24 @@ author: @ecoslado
      */
 
     QueryInput.prototype.init = function(controller) {
-      var _this, options;
+      var options, self;
       if (this.controller) {
         this.controller.push(controller);
       } else {
         this.controller = [controller];
       }
-      _this = this;
+      self = this;
       options = extend(true, {
         callback: function() {
           var query;
-          query = document.querySelector(_this.queryInput).value;
+          query = self.element.value;
           controller.reset();
           return controller.search.call(controller, query);
         },
         wait: 43,
         captureLength: 3
       }, this.options);
-      return dfTypeWatch(this.queryInput, options);
+      return dfTypeWatch(this.element, options);
     };
 
     return QueryInput;

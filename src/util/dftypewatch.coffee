@@ -1,6 +1,6 @@
 extend = require('./extend')
 
-dfTypeWatch = (input, options) ->
+dfTypeWatch = (element, options) ->
   _supportedInputTypes = ['TEXT', 'TEXTAREA', 'PASSWORD', 'TEL', 'SEARCH', 'URL',
                           'EMAIL', 'DATETIME', 'DATE', 'MONTH', 'WEEK', 'TIME', 'DATETIME-LOCAL',
                           'NUMBER', 'RANGE']
@@ -60,6 +60,9 @@ dfTypeWatch = (input, options) ->
       elem.addEventListener 'input', startWatch
       elem.addEventListener 'change', startWatch
 
-  return watchElement(document.querySelector(input))
+  if typeof element is 'string'
+    element = document.querySelector element
+
+  return watchElement element
 
 module.exports = dfTypeWatch
