@@ -1144,14 +1144,18 @@ author: @ecoslado
       TermFacet: require("./widgets/facets/termfacet"),
       RangeFacet: require("./widgets/facets/rangefacet")
     },
-    md5: require("md5"),
-    qs: require("qs"),
-    bean: require("bean")
+    util: {
+      md5: require("md5"),
+      qs: require("qs"),
+      bean: require("bean"),
+      extend: require("./util/extend"),
+      introspection: require("./util/introspection")
+    }
   };
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./widget":9,"./widgets/display":10,"./widgets/facets/rangefacet":11,"./widgets/facets/termfacet":12,"./widgets/queryinput":13,"./widgets/results/results":14,"./widgets/results/scrollresults":15,"bean":17,"md5":59,"mustache":63,"qs":65}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./util/extend":6,"./util/introspection":8,"./widget":9,"./widgets/display":10,"./widgets/facets/rangefacet":11,"./widgets/facets/termfacet":12,"./widgets/queryinput":13,"./widgets/results/results":14,"./widgets/results/scrollresults":15,"bean":17,"md5":59,"mustache":63,"qs":65}],4:[function(require,module,exports){
 (function() {
   var dfTypeWatch, extend;
 
