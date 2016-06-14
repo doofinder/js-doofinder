@@ -71,7 +71,7 @@ class TermFacet extends Display
       self.controller.refresh()
 
     # Removes filters not present in results.
-    @controller.bind "df:results_received", (event, res) ->
+    @controller.bind "df:results_received", (res) ->
       if res.facets[self.name]?
         terms = res.facets[self.name].terms.buckets.map (term) -> term.key
       else

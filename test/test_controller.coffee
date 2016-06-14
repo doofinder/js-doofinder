@@ -40,7 +40,7 @@ describe 'doofinder controller: ', ->
 
     it 'df:search is triggered', (done) ->
       controller = new doofinder.Controller client_mock, [widget_mock]
-      controller.bind 'df:search', (ev, params) ->
+      controller.bind 'df:search', (params) ->
         params.should.have.keys 'query_counter', 'query', 'filters'
         done()
       controller.search 'silla'
@@ -247,7 +247,7 @@ describe 'doofinder controller: ', ->
       controller = new doofinder.Controller client_mock, [widget_mock]
       controller.search 'silla', rpp: 33, filters: color: ['Rojo']
 
-      controller.bind 'df:refresh', (event, params)->
+      controller.bind 'df:refresh', (params)->
         params.query_counter.should.eql 2
 
       client_mock.search = (query, params, cb) ->
@@ -298,13 +298,13 @@ describe 'doofinder controller: ', ->
         cb null, res_mock
       events_count = 0
       # bind to df:results_received
-      controller.bind 'df:results_received', (e, res) ->
+      controller.bind 'df:results_received', (res) ->
         events_count++
         res.query_name.should.eql 'test'
         res.results.should.have.length 11
 
       # bind to df:search
-      controller.bind 'df:search', (e, params) ->
+      controller.bind 'df:search', (params) ->
         events_count++
         params.query_counter.should.be.eql 2
 

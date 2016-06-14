@@ -2,8 +2,7 @@
 # Created by Kike Coslado on 26/10/15.
 # 20160419 REV(@JoeZ99)
 ###
-$ = require "./util/jquery"
-Bean = require "bean"
+bean = require "bean"
 extend = require "./util/extend"
 qs = require "qs"
 
@@ -416,7 +415,7 @@ class Controller
   @api public
   ###
   bind: (event, callback) ->
-    $(this).on(event, callback)
+    bean.on(this, event, callback)
 
   ###
   trigger
@@ -427,7 +426,7 @@ class Controller
   @api public
   ###
   trigger: (event, params) ->
-    $(this).trigger(event, params)
+    bean.fire(this, event, params)
 
 
 

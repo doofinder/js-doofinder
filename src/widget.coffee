@@ -11,13 +11,13 @@ results and paint them in a container
 shaped by template
 ###
 
-$ = require "./util/jquery"
+bean = require "bean"
 
 class Widget
 
 
   constructor: (selector) ->
-    @emitter = $(selector)
+    @emitter = document.querySelector selector 
 
   ###
   init
@@ -61,7 +61,7 @@ class Widget
   @api public
   ###
   bind: (event, callback) ->
-    @emitter.on(event, callback)
+    bean.on(@emitter, event, callback)
 
   ###
   trigger
@@ -72,7 +72,7 @@ class Widget
   @api public
   ###
   trigger: (event, params) ->
-    @emitter.trigger(event, params)
+    bean.fire(@emitter, event, params)
 
   ###
   raiseError

@@ -57,7 +57,7 @@ describe 'Widget Tests:', ->
   context 'Any widget', ->
     it 'should be able to bind and trigger events', (done) ->
       widget = new doofinder.Widget '#query'
-      widget.bind 'df:event', (e, param1, param2) ->
+      widget.bind 'df:event', (param1, param2) ->
         param1.should.be.deep.equal {a: {b: 'c'}}
         param2.should.be.equal 'd'
         done()
@@ -109,7 +109,7 @@ describe 'Widget Tests:', ->
 
     it 'should display search results and trigger df:rendered', (done) ->
       resultsContainer = $ '#results'
-      @resultsWidget.bind 'df:rendered', (e, response) ->
+      @resultsWidget.bind 'df:rendered', (response) ->
         resultsContainer.find('li').length.should.be.equal 2
         resultsContainer.find('li:first').first('b').text().should.contain 'Aironet'
         response.results.length.should.be.equal 2
@@ -124,7 +124,7 @@ describe 'Widget Tests:', ->
       resultsContainer = $('#results')
 
       searchCalled = 0
-      @resultsWidget.bind 'df:rendered', (e, response) ->
+      @resultsWidget.bind 'df:rendered', (response) ->
         searchCalled += 1
         if searchCalled == 1
           response.results.length.should.be.equal 2
@@ -160,7 +160,7 @@ describe 'Widget Tests:', ->
       self = this
       resultsContainer2 = $('#results2')
 
-      resultsWidget2.bind 'df:rendered', (e, response) ->
+      resultsWidget2.bind 'df:rendered', (response) ->
         response.results.length.should.equal 2
         resultsContainer2.find('li.custom-template').length.should.be.equal 2
         resultsContainer2.find('li b.bold').length.should.be.equal 2
@@ -178,7 +178,7 @@ describe 'Widget Tests:', ->
 
     it 'should display search results and trigger df:rendered', (done) ->
       resultsContainer = $ '#scroll'
-      @resultsWidget.bind 'df:rendered', (e, response) ->
+      @resultsWidget.bind 'df:rendered', (response) ->
         resultsContainer.find('li').length.should.be.equal 2
         resultsContainer.find('li:first').first('b').text().should.contain 'Aironet'
         response.results.length.should.be.equal 2
@@ -193,7 +193,7 @@ describe 'Widget Tests:', ->
       resultsContainer = $('#scroll')
 
       searchCalled = 0
-      @resultsWidget.bind 'df:rendered', (e, response) ->
+      @resultsWidget.bind 'df:rendered', (response) ->
         searchCalled += 1
         if searchCalled == 1
           response.results.length.should.be.equal 2
@@ -229,7 +229,7 @@ describe 'Widget Tests:', ->
       self = this
       resultsContainer2 = $('#scroll2')
 
-      resultsWidget2.bind 'df:rendered', (e, response) ->
+      resultsWidget2.bind 'df:rendered', (response) ->
         response.results.length.should.equal 2
         resultsContainer2.find('li.custom-template').length.should.be.equal 2
         resultsContainer2.find('li b.bold').length.should.be.equal 2
@@ -265,7 +265,7 @@ describe 'Widget Tests:', ->
           nextPageCalled.should.equal 1
           done()
 
-      @resultsWidget.bind 'df:rendered', (e, response) ->
+      @resultsWidget.bind 'df:rendered', (response) ->
         if dfScrollCalled == 1
           console.log resultsContainer.height()
           console.log resultsContainer.first('div').height()
@@ -301,7 +301,7 @@ describe 'Widget Tests:', ->
       @controller.addWidget termsWidget
       termsContainer = $('#terms')
 
-      termsWidget.bind 'df:rendered', (e, response) ->
+      termsWidget.bind 'df:rendered', (response) ->
         response.results.length.should.equal 2
         termsContainer.find('.df-facet').length.should.equal 2
         done()
@@ -361,7 +361,7 @@ describe 'Widget Tests:', ->
       @controller.addWidget termsWidget
       termsContainer = $('#terms')
 
-      termsWidget.bind 'df:rendered', (e, response) ->
+      termsWidget.bind 'df:rendered', (response) ->
         termsContainer.find('div.custom').length.should.equal 1
         termsContainer.find('div.customValue').length.should.equal 1
         done()
@@ -380,7 +380,7 @@ describe 'Widget Tests:', ->
       # Create RangeFacet Widget instance
       rangefacet = new doofinder.widgets.RangeFacet('#rangefacet', 'best_price')
 
-      rangefacet.bind 'df:rendered', (e, response) ->
+      rangefacet.bind 'df:rendered', (response) ->
         rangefacetNode.find('.noUi-handle-lower > .noUi-tooltip').first().text().should.be.eql '8.5'
         rangefacetNode.find('.noUi-handle-upper > .noUi-tooltip').first().text().should.be.eql '225'
         done()
