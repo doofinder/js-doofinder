@@ -16,8 +16,10 @@ bean = require "bean"
 class Widget
 
 
-  constructor: (selector) ->
-    @emitter = document.querySelector selector 
+  constructor: (element) ->
+    if typeof element is 'string'
+      element = document.querySelector element
+    @element = element
 
   ###
   init
@@ -61,7 +63,7 @@ class Widget
   @api public
   ###
   bind: (event, callback) ->
-    bean.on(@emitter, event, callback)
+    bean.on(@element, event, callback)
 
   ###
   trigger
@@ -72,7 +74,7 @@ class Widget
   @api public
   ###
   trigger: (event, params) ->
-    bean.fire(@emitter, event, params)
+    bean.fire(@element, event, params)
 
   ###
   raiseError
