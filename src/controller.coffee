@@ -2,8 +2,9 @@
 # Created by Kike Coslado on 26/10/15.
 # 20160419 REV(@JoeZ99)
 ###
-
 $ = require "./util/jquery"
+Bean = require "bean"
+extend = require "./util/extend"
 qs = require "qs"
 
 ###
@@ -33,9 +34,9 @@ class Controller
     else if widgets
       @addWidget(widgets)
 
-    @status = $.extend true,
+    @status = extend true,
       {},
-      params: $.extend true, {}, @searchParams
+      params: extend true, {}, @searchParams
 
     @reset()
 
@@ -56,7 +57,7 @@ class Controller
     # we'll check the query_counter
     @status.params.query_counter++
 
-    params = $.extend true,
+    params = extend true,
       {},
       @status.params || {}
 
@@ -101,18 +102,18 @@ class Controller
   ###
   search: (query, params={}) ->
     if query
-      searchParams = $.extend true,
+      searchParams = extend true,
         {},
         @searchParams
       # Saves current query counter
       queryCounter = @status.params.query_counter
       # Reset @status.params
-      @status.params = $.extend true,
+      @status.params = extend true,
         {},
         params
-      @status.params = $.extend true, searchParams, params
+      @status.params = extend true, searchParams, params
       @status.params.query = query
-      @status.params.filters = $.extend true,
+      @status.params.filters = extend true,
         {},
         @searchParams.filters || {},
         params.filters
@@ -239,7 +240,7 @@ class Controller
   reset: () ->
     queryCounter = @status.params.query_counter || 1
     @status =
-      params: $.extend true, {}, @searchParams
+      params: extend true, {}, @searchParams
       currentPage: 0
       firstQueryTriggered: false
       lastPageReached: false
@@ -439,10 +440,10 @@ class Controller
   setStatusFromString: (queryString, prefix="#/search/") ->
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
-    searchParams = $.extend true,
+    searchParams = extend true,
       {},
       @searchParams || {}
-    @status.params = $.extend true,
+    @status.params = extend true,
       searchParams,
       qs.parse(queryString.replace("#{prefix}", "")) || {}
     @status.params.query_counter = 1
@@ -458,7 +459,7 @@ class Controller
   with a queryString
   ###
   statusQueryString: (prefix="#/search/") ->
-    params = $.extend true,
+    params = extend true,
       {},
       @status.params
 
