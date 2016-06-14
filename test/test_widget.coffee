@@ -37,6 +37,12 @@ mockSearch = (cb, times = 1) ->
     .times(times)
     .reply(cb)
 
+typeSearchTerms = (terms) ->
+  input = document.getElementById 'query'
+  event = new KeyboardEvent('keydown')
+  input.setAttribute 'value', terms
+  cancelled = not input.dispatchEvent event
+
 
 describe 'Widget Tests:', ->
   beforeEach ->
@@ -68,14 +74,12 @@ describe 'Widget Tests:', ->
         query.length.should.be.equal 3
         done()
 
-      queryInput = $ '#query'
-
       # 2-char query, nothing happens
-      queryInput.val('ch').trigger('keydown')
+      typeSearchTerms('ch')
       searchCalled.should.be.false
 
       # 3-char query, search request performed
-      queryInput.val('cha').trigger('keydown')
+      typeSearchTerms('cha')
 
     it 'should trigger a search request when the Nth character is typed when configured', (done) ->
       client = new doofinder.Client hashid, apiKey, 5, null, host
@@ -88,14 +92,12 @@ describe 'Widget Tests:', ->
         query.length.should.be.equal 4
         done()
 
-      queryInput = $ '#query'
-
       # 3-char query, nothing happens
-      queryInput.val('cha').trigger('keydown')
+      typeSearchTerms('cha')
       searchCalled.should.be.false
 
       # 4-char query, search request performed
-      queryInput.val('chai').trigger('keydown')
+      typeSearchTerms('chai')
 
 
   context 'Results', ->
@@ -113,7 +115,7 @@ describe 'Widget Tests:', ->
         response.results.length.should.be.equal 2
         done()
 
-      $('#query').val('xill').trigger('keydown')
+      typeSearchTerms('xill')
 
     it 'should replace search results when second page of results is received', (done) ->
       mockSearch prepareResultsPop
@@ -133,7 +135,7 @@ describe 'Widget Tests:', ->
           resultsContainer.find('li').length.should.be.equal 1
           done()
 
-      $('#query').val('sill').trigger('keydown')
+      typeSearchTerms('sill')
 
     it 'should accept custom templates, variables and helpers', (done) ->
       document.body.appendChild createContainer('results2')
@@ -164,7 +166,7 @@ describe 'Widget Tests:', ->
         resultsContainer2.find('li b.bold').length.should.be.equal 2
         done()
 
-      $('#query').val('zill').trigger('keydown')
+      typeSearchTerms('zill')
 
 
   context 'ScrollResults', ->
@@ -182,7 +184,7 @@ describe 'Widget Tests:', ->
         response.results.length.should.be.equal 2
         done()
 
-      $('#query').val('xill').trigger('keydown')
+      typeSearchTerms('xill')
 
     it 'should append results when second page of results is received', (done) ->
       mockSearch prepareResultsPop
@@ -202,7 +204,7 @@ describe 'Widget Tests:', ->
           resultsContainer.find('li').length.should.be.equal 3
           done()
 
-      $('#query').val('xill').trigger('keydown')
+      typeSearchTerms('xill')
 
     it 'should accept custom templates, variables and helpers', (done) ->
       document.body.appendChild createContainer('scroll2')
@@ -233,7 +235,7 @@ describe 'Widget Tests:', ->
         resultsContainer2.find('li b.bold').length.should.be.equal 2
         done()
 
-      $('#query').val('sill').trigger('keydown')
+      typeSearchTerms('sill')
 
     it 'should call nextPage() on df:scroll with custom offset', (done) ->
       resultsContainer = $ '#scroll'
@@ -285,7 +287,7 @@ describe 'Widget Tests:', ->
       obj.dispatchEvent event
 
       # 2. now, search
-      $('#query').val('zill').trigger('keydown')
+      typeSearchTerms('zill')
 
 
   context 'TermFacet', ->
@@ -304,7 +306,7 @@ describe 'Widget Tests:', ->
         termsContainer.find('.df-facet').length.should.equal 2
         done()
 
-      $('#query').val('pill').trigger('keydown')
+      typeSearchTerms('pill')
 
     it 'should add a filter when a term is clicked and remove it on a second click', (done) ->
       mockSearch prepareResults, 2 # an extra search when facet is clicked
@@ -331,7 +333,7 @@ describe 'Widget Tests:', ->
           self.controller.status.params.filters.color.should.be.empty
           done()
 
-      $('#query').val('lill').trigger('keydown')
+      typeSearchTerms('lill')
 
     it 'should render custom templates', (done) ->
       options =
@@ -364,7 +366,7 @@ describe 'Widget Tests:', ->
         termsContainer.find('div.customValue').length.should.equal 1
         done()
 
-      $('#query').val('xixx').trigger('keydown')
+      typeSearchTerms('xixx')
 
 
   context 'RangeFacet', ->
@@ -384,4 +386,4 @@ describe 'Widget Tests:', ->
         done()
 
       createController(rangefacet)
-      $(document.getElementById('query')).val('pill').trigger('keydown')
+      typeSearchTerms('pill')
