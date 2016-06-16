@@ -1,8 +1,9 @@
 extend = require './extend'
 introspection = require './introspection'
+throttle = require './throttle'
+bean = require 'bean'
 
-dfScroll = (arg1, arg2=null) ->
-
+module.exports = (arg1, arg2 = null) ->
   defaults =
     direction: "vertical"
     scrollOffset: 100
@@ -13,8 +14,7 @@ dfScroll = (arg1, arg2=null) ->
     options = arg1
     container = document.body
     content = document.documentElement
-    eventTrigger = window
-
+    wrapper = window
   else
     # Uses an inner div as scroll
     options = arg2
@@ -23,45 +23,17 @@ dfScroll = (arg1, arg2=null) ->
     else
       container = arg1
     content = container.children[0]
-    eventTrigger = container
+    wrapper = container
 
   options = extend true, defaults, options
 
   # Throttle to avoid multiple events to be triggered.
-  throttle = (type, name, obj) ->
-    obj = obj or window
-    running = false
-    func = ->
-      if running
-        return
+  throttle 'scroll', 'df:scroll', wrapper
 
-      running = true
-
-      aux = ->
-        event = document.createEvent 'Event'
-        event.initEvent name, true, true
-        obj.dispatchEvent event
-        running = false
-
-      setTimeout aux, 250
-
-    obj.addEventListener type, func
-    event = document.createEvent 'Event'
-    event.initEvent name, true, true
-    obj.dispatchEvent event
-
-  throttle 'scroll', 'df:scroll', eventTrigger
-
-  # handling scroll event
-  handler = ->
-    # Error thrown when direction no properly configured
+  bean.on wrapper, 'df:scroll', ->
     if ['horizontal', 'vertical'].indexOf(options.direction) <= -1
       throw Error("[Doofinder] dfScroll: Direction is not properly set. It might be 'horizontal' or 'vertical'.")
-    # When bottom or right side is about to be reached, callback will be called
     if options.direction == 'vertical' and content.clientHeight - container.clientHeight - container.scrollTop <= options.scrollOffset or
         options.direction == "horizontal" and content.clientWidth - container.clientWidth - content.scrollLeft <= options.scrollOffset
+      # Bottom or right side was about to be reached so we call the callback
       options.callback()
-
-  eventTrigger.addEventListener 'df:scroll', handler
-
-module.exports = dfScroll
