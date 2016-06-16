@@ -115,7 +115,7 @@ class RangeFacet extends Display
           value = document.createElement 'div'
           value.setAttribute 'class', 'noUi-value noUi-value-horizontal noUi-value-large'
           value.setAttribute 'data-position', pos
-          value.setAttribute 'style', "left: #{pos}%;"
+          value.setAttribute 'style', if pos < 100 then "left: #{pos}%;" else "right: 0;"
           value.innerHTML = if values? then values[pos+''] else ''
           pips.appendChild value
     else

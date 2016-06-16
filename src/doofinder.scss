@@ -75,6 +75,27 @@
     @import "nouislider.pips";
     @import "nouislider.tooltips";
   }
+  .noUi-value-horizontal {
+    font-size: 80%;
+    
+    &[data-position="0"]{
+      transform: translate3d(-8px, 60%, 0);
+      left: 0;
+    }
+    &[data-position="50"]{
+      transform: translate3d(-50%, 60%, 0);
+      left: 50%;
+    }
+
+    &[data-position="100"]{
+      transform: translate3d(4px, 60%, 0);
+    }
+
+  }
+
+  .noUi-marker-horizontal.noUi-marker-large{
+    height: 8px;
+  }
 
   .noUi-background {
     background-color: $dark;
@@ -88,6 +109,10 @@
 
   .noUi-tooltip {
     font-size: 80%;
+    background-color: #b0b0b0;
+    color: white;
+    border-width: 0;
+    padding: 2px 5px;
   }
 
   .noUi-horizontal {
@@ -98,7 +123,7 @@
     $handleInnerWidth: 8px;
     $handleInnerPosition: 4px;
 
-    $tooltipOffset: -36px;
+    $tooltipOffset: -24px;
 
     height: $sliderHeight;
 

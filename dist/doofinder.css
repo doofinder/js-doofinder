@@ -369,6 +369,28 @@
   right: 120%;
 }
 
+.df-slider .noUi-value-horizontal {
+  font-size: 80%;
+}
+
+.df-slider .noUi-value-horizontal[data-position="0"] {
+  transform: translate3d(-8px, 60%, 0);
+  left: 0;
+}
+
+.df-slider .noUi-value-horizontal[data-position="50"] {
+  transform: translate3d(-50%, 60%, 0);
+  left: 50%;
+}
+
+.df-slider .noUi-value-horizontal[data-position="100"] {
+  transform: translate3d(4px, 60%, 0);
+}
+
+.df-slider .noUi-marker-horizontal.noUi-marker-large {
+  height: 8px;
+}
+
 .df-slider .noUi-background {
   background-color: #9AA4AC;
   box-shadow: none;
@@ -381,6 +403,10 @@
 
 .df-slider .noUi-tooltip {
   font-size: 80%;
+  background-color: #b0b0b0;
+  color: white;
+  border-width: 0;
+  padding: 2px 5px;
 }
 
 .df-slider .noUi-horizontal {
@@ -415,11 +441,11 @@
 
 .df-slider .noUi-horizontal .noUi-handle-upper .noUi-tooltip {
   right: 0;
-  bottom: -36px;
+  bottom: -24px;
 }
 
 .df-slider .noUi-horizontal .noUi-handle-lower .noUi-tooltip {
-  top: -36px;
+  top: -24px;
 }
 
 .df-slider .noUi-target[disabled] {
