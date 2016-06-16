@@ -1,6 +1,7 @@
-extend = require('./extend')
+extend = require './extend'
+bean = require 'bean'
 
-dfTypeWatch = (element, options) ->
+module.exports = (element, options) ->
   _supportedInputTypes = ['TEXT', 'TEXTAREA', 'PASSWORD', 'TEL', 'SEARCH', 'URL',
                           'EMAIL', 'DATETIME', 'DATE', 'MONTH', 'WEEK', 'TIME', 'DATETIME-LOCAL',
                           'NUMBER', 'RANGE']
@@ -23,46 +24,33 @@ dfTypeWatch = (element, options) ->
       timer.cb.call timer.el, value
 
   watchElement = (elem) ->
-    elementType = elem.getAttribute('type').toUpperCase()
-    value = elem.value or ''
-
-    if options.inputTypes.indexOf(elementType) >= 0
+    if elem.getAttribute('type').toUpperCase() in options.inputTypes
       # Allocate timer element
       timer =
         timer: null
-        text: value
+        text: elem.value or ''
         cb: options.callback
         wait: options.wait
         el: elem
 
-      startWatch = (evt) ->
-        timerWait = timer.wait
-        overrideBool = false
-        evtElementType = this.type.toUpperCase()
+      bean.on elem, 'keydown paste cut input change', (e) ->
+        delay = timer.wait
+        override = false
+        inputType = this.type.toUpperCase()
 
-        if typeof evt.keyCode isnt 'undefined' and
-            evt.keyCode is 13 and
-            evtElementType != 'TEXTAREA' and
-            options.inputTypes.indexOf(evtElementType) >= 0
-          timerWait = 1
-          overrideBool = true
+        if e.keyCode? and e.keyCode is 13 and inputType != 'TEXTAREA' and
+            inputType in options.inputTypes
+          delay = 1
+          override = true
 
         timerCallbackFx = () ->
-          checkElement(timer, overrideBool)
+          checkElement(timer, override)
 
         # Clear timer
         clearTimeout(timer.timer)
-        timer.timer = setTimeout timerCallbackFx, timerWait
-
-      elem.addEventListener 'keydown', startWatch
-      elem.addEventListener 'paste', startWatch
-      elem.addEventListener 'cut', startWatch
-      elem.addEventListener 'input', startWatch
-      elem.addEventListener 'change', startWatch
+        timer.timer = setTimeout timerCallbackFx, delay
 
   if typeof element is 'string'
     element = document.querySelector element
 
   return watchElement element
-
-module.exports = dfTypeWatch

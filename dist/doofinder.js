@@ -1157,11 +1157,14 @@ author: @ecoslado
 
 },{"./client":1,"./controller":2,"./util/extend":6,"./util/introspection":8,"./widget":9,"./widgets/display":10,"./widgets/facets/rangefacet":11,"./widgets/facets/termfacet":12,"./widgets/queryinput":13,"./widgets/results/results":14,"./widgets/results/scrollresults":15,"bean":17,"md5":59,"mustache":63,"qs":65}],4:[function(require,module,exports){
 (function() {
-  var dfTypeWatch, extend;
+  var bean, extend,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   extend = require('./extend');
 
-  dfTypeWatch = function(element, options) {
+  bean = require('bean');
+
+  module.exports = function(element, options) {
     var _supportedInputTypes, checkElement, defaults, watchElement;
     _supportedInputTypes = ['TEXT', 'TEXTAREA', 'PASSWORD', 'TEL', 'SEARCH', 'URL', 'EMAIL', 'DATETIME', 'DATE', 'MONTH', 'WEEK', 'TIME', 'DATETIME-LOCAL', 'NUMBER', 'RANGE'];
     defaults = {
@@ -1181,37 +1184,30 @@ author: @ecoslado
       }
     };
     watchElement = function(elem) {
-      var elementType, startWatch, timer, value;
-      elementType = elem.getAttribute('type').toUpperCase();
-      value = elem.value || '';
-      if (options.inputTypes.indexOf(elementType) >= 0) {
+      var ref, timer;
+      if (ref = elem.getAttribute('type').toUpperCase(), indexOf.call(options.inputTypes, ref) >= 0) {
         timer = {
           timer: null,
-          text: value,
+          text: elem.value || '',
           cb: options.callback,
           wait: options.wait,
           el: elem
         };
-        startWatch = function(evt) {
-          var evtElementType, overrideBool, timerCallbackFx, timerWait;
-          timerWait = timer.wait;
-          overrideBool = false;
-          evtElementType = this.type.toUpperCase();
-          if (typeof evt.keyCode !== 'undefined' && evt.keyCode === 13 && evtElementType !== 'TEXTAREA' && options.inputTypes.indexOf(evtElementType) >= 0) {
-            timerWait = 1;
-            overrideBool = true;
+        return bean.on(elem, 'keydown paste cut input change', function(e) {
+          var delay, inputType, override, timerCallbackFx;
+          delay = timer.wait;
+          override = false;
+          inputType = this.type.toUpperCase();
+          if ((e.keyCode != null) && e.keyCode === 13 && inputType !== 'TEXTAREA' && indexOf.call(options.inputTypes, inputType) >= 0) {
+            delay = 1;
+            override = true;
           }
           timerCallbackFx = function() {
-            return checkElement(timer, overrideBool);
+            return checkElement(timer, override);
           };
           clearTimeout(timer.timer);
-          return timer.timer = setTimeout(timerCallbackFx, timerWait);
-        };
-        elem.addEventListener('keydown', startWatch);
-        elem.addEventListener('paste', startWatch);
-        elem.addEventListener('cut', startWatch);
-        elem.addEventListener('input', startWatch);
-        return elem.addEventListener('change', startWatch);
+          return timer.timer = setTimeout(timerCallbackFx, delay);
+        });
       }
     };
     if (typeof element === 'string') {
@@ -1220,11 +1216,9 @@ author: @ecoslado
     return watchElement(element);
   };
 
-  module.exports = dfTypeWatch;
-
 }).call(this);
 
-},{"./extend":6}],5:[function(require,module,exports){
+},{"./extend":6,"bean":17}],5:[function(require,module,exports){
 (function() {
   var dfScroll, extend, introspection;
 
