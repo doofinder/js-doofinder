@@ -240,8 +240,14 @@ describe 'Widget Tests:', ->
 
     it 'should call nextPage() on df:scroll with custom offset', (done) ->
       resultsContainer = $ '#scroll'
-      resultsContainer.css position: 'relative', height: '800px', overflow: 'auto'
-      resultsContainer.first('div').css height: '1200px'
+
+      @resultsWidget.elementWrapper.setAttribute 'style', 'position: relative; height: 800px; overflow-x: hidden; overflow-y: scroll;'
+      @resultsWidget.element.setAttribute 'style', 'height: 1200px;'
+      # jsdom doesn't update clientHeight nor clientWidth when applying styles
+      # this hack is to make dfScroll find proper values when asking the DOM
+      # elements for these values
+      @resultsWidget.elementWrapper.clientHeight = 800
+      @resultsWidget.element.clientHeight = 1200
 
       self = this
 
@@ -256,36 +262,22 @@ describe 'Widget Tests:', ->
       @controller.bind 'df:next_page', ->
         nextPageCalled += 1
 
-      document.getElementById('scroll').addEventListener 'df:scroll', ->
+      bean.on @resultsWidget.elementWrapper, 'df:scroll', ->
         dfScrollCalled += 1
         if dfScrollCalled == 1
-          console.log "FIRST", nextPageCalled
           nextPageCalled.should.equal 0
         else
-          console.log "SECOND", nextPageCalled
           nextPageCalled.should.equal 1
           done()
 
       @resultsWidget.bind 'df:rendered', (response) ->
         if dfScrollCalled == 1
-          console.log resultsContainer.height()
-          console.log resultsContainer.first('div').height()
-
-          resultsContainer.scrollTop 305 # on the limit
-          # resultsContainer.trigger 'df:scroll'
-          event = document.createEvent 'Event'
-          event.initEvent 'df:scroll', true, true
-          obj = document.getElementById('scroll')
-          obj.dispatchEvent event
+          self.resultsWidget.elementWrapper.scrollTop = 305 # on the limit
+          bean.fire self.resultsWidget.elementWrapper, 'df:scroll'
 
       # 1. Scroll until one pixel below the limit...
-      resultsContainer.scrollTop 304
-      # ... and trigger the event (nothing should happen)
-      #resultsContainer.trigger 'df:scroll'
-      event = document.createEvent 'Event'
-      event.initEvent 'df:scroll', true, true
-      obj = document.getElementById('scroll')
-      obj.dispatchEvent event
+      @resultsWidget.elementWrapper.scrollTop = 304
+      bean.fire @resultsWidget.elementWrapper, 'df:scroll'
 
       # 2. now, search
       typeSearchTerms('zill')

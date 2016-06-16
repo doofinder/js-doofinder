@@ -31,6 +31,8 @@ class ScrollDisplay extends Display
   @api public
   ###
   constructor: (element, template, options) ->
+    self = this
+
     if options.windowScroll
       # Uses window as scroll wrapper
       @windowScroll = true
@@ -55,6 +57,18 @@ class ScrollDisplay extends Display
         else
           @element = options.container
 
+    scrollOptions = extend true,
+      callback: ->
+        if self.controller?
+          self.controller.nextPage.call(self.controller)
+      ,
+      if @scrollOffset? then scrollOffset: @scrollOffset else {}
+
+    if @windowScroll
+      dfScroll scrollOptions
+    else
+      dfScroll @elementWrapper, scrollOptions
+
   ###
   start
 
@@ -63,21 +77,9 @@ class ScrollDisplay extends Display
   ###
   init: (controller) ->
     super(controller)
-
     self = this
-
-    options = extend true,
-      callback: -> self.controller.nextPage.call(self.controller),
-      if @scrollOffset then scrollOffset: @scrollOffset else {}
-
-    if @windowScroll
-      dfScroll options
-    else
-      dfScroll @elementWrapper, options
-
     @controller.bind 'df:search df:refresh', (params) ->
       self.elementWrapper.scrollTop = 0
-
 
   ###
   renderNext

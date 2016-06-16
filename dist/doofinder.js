@@ -2308,7 +2308,6 @@ replaces the current content.
       ScrollResults.__super__.init.call(this, controller);
       self = this;
       return bean.on(this.element, 'click', 'a[data-df-hitcounter]', function() {
-        console.log('Hola, mendrugo');
         return self.trigger('df:hit', [this.getAttribute('data-dfHitcounter'), this.getAttribute('href')]);
       });
     };
@@ -2367,6 +2366,8 @@ bottom
      */
 
     function ScrollDisplay(element, template, options) {
+      var scrollOptions, self;
+      self = this;
       if (options.windowScroll) {
         this.windowScroll = true;
         return ScrollDisplay.__super__.constructor.call(this, element, template, options);
@@ -2386,6 +2387,20 @@ bottom
           }
         }
       }
+      scrollOptions = extend(true, {
+        callback: function() {
+          if (self.controller != null) {
+            return self.controller.nextPage.call(self.controller);
+          }
+        }
+      }, this.scrollOffset != null ? {
+        scrollOffset: this.scrollOffset
+      } : {});
+      if (this.windowScroll) {
+        dfScroll(scrollOptions);
+      } else {
+        dfScroll(this.elementWrapper, scrollOptions);
+      }
     }
 
 
@@ -2397,21 +2412,9 @@ bottom
      */
 
     ScrollDisplay.prototype.init = function(controller) {
-      var options, self;
+      var self;
       ScrollDisplay.__super__.init.call(this, controller);
       self = this;
-      options = extend(true, {
-        callback: function() {
-          return self.controller.nextPage.call(self.controller);
-        }
-      }, this.scrollOffset ? {
-        scrollOffset: this.scrollOffset
-      } : {});
-      if (this.windowScroll) {
-        dfScroll(options);
-      } else {
-        dfScroll(this.elementWrapper, options);
-      }
       return this.controller.bind('df:search df:refresh', function(params) {
         return self.elementWrapper.scrollTop = 0;
       });
