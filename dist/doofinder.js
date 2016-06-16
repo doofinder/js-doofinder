@@ -1157,6 +1157,56 @@ author: @ecoslado
 
 },{"./client":1,"./controller":2,"./util/extend":6,"./util/introspection":8,"./widget":10,"./widgets/display":11,"./widgets/facets/rangefacet":12,"./widgets/facets/termfacet":13,"./widgets/queryinput":14,"./widgets/results/results":15,"./widgets/results/scrollresults":16,"bean":18,"md5":61,"mustache":65,"qs":67}],4:[function(require,module,exports){
 (function() {
+  var bean, extend, introspection, throttle;
+
+  extend = require('./extend');
+
+  introspection = require('./introspection');
+
+  throttle = require('./throttle');
+
+  bean = require('bean');
+
+  module.exports = function(arg1, arg2) {
+    var container, content, defaults, options, wrapper;
+    if (arg2 == null) {
+      arg2 = null;
+    }
+    defaults = {
+      direction: "vertical",
+      scrollOffset: 100
+    };
+    if (introspection.isPlainObject(arg1)) {
+      options = arg1;
+      container = document.body;
+      content = document.documentElement;
+      wrapper = window;
+    } else {
+      options = arg2;
+      if (typeof arg1 === 'string') {
+        container = document.querySelector(arg1);
+      } else {
+        container = arg1;
+      }
+      content = container.children[0];
+      wrapper = container;
+    }
+    options = extend(true, defaults, options);
+    throttle('scroll', 'df:scroll', wrapper);
+    return bean.on(wrapper, 'df:scroll', function() {
+      if (['horizontal', 'vertical'].indexOf(options.direction) <= -1) {
+        throw Error("[Doofinder] dfScroll: Direction is not properly set. It might be 'horizontal' or 'vertical'.");
+      }
+      if (options.direction === 'vertical' && content.clientHeight - container.clientHeight - container.scrollTop <= options.scrollOffset || options.direction === "horizontal" && content.clientWidth - container.clientWidth - content.scrollLeft <= options.scrollOffset) {
+        return options.callback();
+      }
+    });
+  };
+
+}).call(this);
+
+},{"./extend":6,"./introspection":8,"./throttle":9,"bean":18}],5:[function(require,module,exports){
+(function() {
   var bean, extend,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -1218,57 +1268,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./extend":6,"bean":18}],5:[function(require,module,exports){
-(function() {
-  var bean, extend, introspection, throttle;
-
-  extend = require('./extend');
-
-  introspection = require('./introspection');
-
-  throttle = require('./throttle');
-
-  bean = require('bean');
-
-  module.exports = function(arg1, arg2) {
-    var container, content, defaults, options, wrapper;
-    if (arg2 == null) {
-      arg2 = null;
-    }
-    defaults = {
-      direction: "vertical",
-      scrollOffset: 100
-    };
-    if (introspection.isPlainObject(arg1)) {
-      options = arg1;
-      container = document.body;
-      content = document.documentElement;
-      wrapper = window;
-    } else {
-      options = arg2;
-      if (typeof arg1 === 'string') {
-        container = document.querySelector(arg1);
-      } else {
-        container = arg1;
-      }
-      content = container.children[0];
-      wrapper = container;
-    }
-    options = extend(true, defaults, options);
-    throttle('scroll', 'df:scroll', wrapper);
-    return bean.on(wrapper, 'df:scroll', function() {
-      if (['horizontal', 'vertical'].indexOf(options.direction) <= -1) {
-        throw Error("[Doofinder] dfScroll: Direction is not properly set. It might be 'horizontal' or 'vertical'.");
-      }
-      if (options.direction === 'vertical' && content.clientHeight - container.clientHeight - container.scrollTop <= options.scrollOffset || options.direction === "horizontal" && content.clientWidth - container.clientWidth - content.scrollLeft <= options.scrollOffset) {
-        return options.callback();
-      }
-    });
-  };
-
-}).call(this);
-
-},{"./extend":6,"./introspection":8,"./throttle":9,"bean":18}],6:[function(require,module,exports){
+},{"./extend":6,"bean":18}],6:[function(require,module,exports){
 (function() {
   var _i, extend,
     hasProp = {}.hasOwnProperty;
@@ -2112,7 +2112,7 @@ author: @ecoslado
 
   Widget = require('../widget');
 
-  dfTypeWatch = require('../util/dfTypeWatch');
+  dfTypeWatch = require('../util/dftypewatch');
 
 
   /*
@@ -2182,7 +2182,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../util/dfTypeWatch":4,"../util/extend":6,"../widget":10}],15:[function(require,module,exports){
+},{"../util/dftypewatch":5,"../util/extend":6,"../widget":10}],15:[function(require,module,exports){
 
 /*
 display.coffee
@@ -2446,7 +2446,7 @@ bottom
 
 }).call(this);
 
-},{"../util/dfscroll":5,"../util/extend":6,"./display":11}],18:[function(require,module,exports){
+},{"../util/dfscroll":4,"../util/extend":6,"./display":11}],18:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean

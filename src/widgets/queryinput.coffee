@@ -6,7 +6,7 @@ author: @ecoslado
 
 extend = require '../util/extend'
 Widget = require '../widget'
-dfTypeWatch = require '../util/dfTypeWatch'
+dfTypeWatch = require '../util/dftypewatch'
 
 ###
 QueryInput
