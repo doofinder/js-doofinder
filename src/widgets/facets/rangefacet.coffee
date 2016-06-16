@@ -50,7 +50,12 @@ class RangeFacet extends Display
     else
       template = options.template
 
-    @sliderOptions = options.sliderOptions
+    if options.format
+      @format = options.format
+    else
+      @format = (value) ->
+        value? and (value.toFixed(2) + '').replace(/0+$/, '').replace(/\.{1}$/, '')
+
     @slider = null
 
     super(element, template, options)
@@ -115,7 +120,6 @@ class RangeFacet extends Display
           value = document.createElement 'div'
           value.setAttribute 'class', 'noUi-value noUi-value-horizontal noUi-value-large'
           value.setAttribute 'data-position', pos
-          value.setAttribute 'style', if pos < 100 then "left: #{pos}%;" else "right: 0;"
           value.innerHTML = if values? then values[pos+''] else ''
           pips.appendChild value
     else
@@ -150,8 +154,7 @@ class RangeFacet extends Display
         connect: true
         tooltips: true  # can't be overriden when options are updated!!!
         format:
-          to: (value) ->
-            value? and (value.toFixed(2) + '').replace(/0+$/, '').replace(/\.{1}$/, '')
+          to: @format
           from: Number
 
       options = extend(true, options, @sliderOptions || {})
@@ -199,5 +202,9 @@ class RangeFacet extends Display
     @trigger('df:rendered', [res])
 
   renderNext: ->
+
+  clean: () ->
+    super()
+    @slider = null
 
 module.exports = RangeFacet

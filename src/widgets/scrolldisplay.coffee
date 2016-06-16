@@ -32,17 +32,20 @@ class ScrollDisplay extends Display
   ###
   constructor: (element, template, options) ->
     self = this
+    super(element, template, options)
+    scrollOptions = extend true,
+      callback: ->
+        if self.controller?
+          self.controller.nextPage.call(self.controller)
+      ,
+      if options.scrollOffset? then scrollOffset: options.scrollOffset else {}
 
     if options.windowScroll
       # Uses window as scroll wrapper
-      @windowScroll = true
-      return super(element, template, options)
-
+      @elementWrapper = document.body
+      dfScroll scrollOptions
+      
     else
-      super(element, template, options)
-
-      @scrollOffset = options.scrollOffset
-
       if not @element.children.length
         # Just in case the inner element in the scroll is not given
         @element.appendChild document.createElement('div')
@@ -56,17 +59,6 @@ class ScrollDisplay extends Display
           @element = document.querySelector options.container
         else
           @element = options.container
-
-    scrollOptions = extend true,
-      callback: ->
-        if self.controller?
-          self.controller.nextPage.call(self.controller)
-      ,
-      if @scrollOffset? then scrollOffset: @scrollOffset else {}
-
-    if @windowScroll
-      dfScroll scrollOptions
-    else
       dfScroll @elementWrapper, scrollOptions
 
   ###
@@ -79,6 +71,7 @@ class ScrollDisplay extends Display
     super(controller)
     self = this
     @controller.bind 'df:search df:refresh', (params) ->
+      console.log self.elementWrapper
       self.elementWrapper.scrollTop = 0
 
   ###

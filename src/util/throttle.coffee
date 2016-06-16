@@ -14,5 +14,3 @@ module.exports = (sourceEvent, targetEvent, obj) ->
       bean.fire obj, targetEvent
       running = false
     , 250
-
-  bean.fire obj, targetEvent
