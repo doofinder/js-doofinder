@@ -1595,6 +1595,18 @@ shaped by template
 
 
     /*
+    clean
+    
+    This function clean the html in the widget.
+    In Widget is dummy. To be overriden.
+    
+    @api public
+     */
+
+    Widget.prototype.clean = function() {};
+
+
+    /*
     bind
     
     Method to add and event listener
@@ -1810,7 +1822,6 @@ them. Manages the filtering.
     Apart from those inherited, this widget accepts these options:
     
     - sliderClassName {String} The CSS class of the node that holds the slider.
-    - sliderOptions {Object} See: http://refreshless.com/nouislider
     
     IMPORTANT: Pips support is buggy so, if no sliderOptions.pips is found, the
     widget paints them itself. If the sliderOptions.pips is false, no pips are
@@ -1840,6 +1851,7 @@ them. Manages the filtering.
         };
       }
       this.slider = null;
+      this.values = {};
       RangeFacet.__super__.constructor.call(this, element, template, options);
     }
 
@@ -1852,8 +1864,8 @@ them. Manages the filtering.
      */
 
     RangeFacet.prototype._renderSlider = function(options) {
-      var context, widget;
-      widget = this;
+      var context, self;
+      self = this;
       context = {
         name: this.name,
         sliderClassName: this.sliderClassName
@@ -1865,12 +1877,13 @@ them. Manages the filtering.
       noUiSlider.create(this.slider, options);
       return this.slider.noUiSlider.on('change', function() {
         var max, min, ref;
-        ref = widget.slider.noUiSlider.get(), min = ref[0], max = ref[1];
-        widget.controller.addFilter(widget.name, {
-          gte: parseFloat(min, 10),
-          lte: parseFloat(max, 10)
+        ref = self.slider.noUiSlider.get(), min = ref[0], max = ref[1];
+        self.controller.addFilter(self.name, {
+          gte: self.values[min],
+          lte: self.values[max]
         });
-        return widget.controller.refresh();
+        self.controller.refresh();
+        return self.values = {};
       });
     };
 
@@ -1927,12 +1940,13 @@ them. Manages the filtering.
      */
 
     RangeFacet.prototype.render = function(res) {
-      var disabled, options, overrides, range, start, values;
+      var disabled, options, overrides, range, self, start, values;
       if (!res.facets || !res.facets[this.name]) {
         this.raiseError("RangeFacet: " + this.name + " facet is not configured");
       } else if (!res.facets[this.name].range) {
         this.raiseError("RangeFacet: " + this.name + " facet is not a range facet");
       }
+      self = this;
       if (res.total > 0) {
         range = [parseFloat(res.facets[this.name].range.buckets[0].stats.min || 0, 10), parseFloat(res.facets[this.name].range.buckets[0].stats.max || 0, 10)];
         options = {
@@ -1944,11 +1958,21 @@ them. Manages the filtering.
           connect: true,
           tooltips: true,
           format: {
-            to: this.format,
-            from: Number
+            to: function(value) {
+              var formattedValue;
+              if (value != null) {
+                formattedValue = self.format(value);
+                self.values[formattedValue] = value;
+                return formattedValue;
+              } else {
+                return "";
+              }
+            },
+            from: function(formattedValue) {
+              return formattedValue;
+            }
           }
         };
-        options = extend(true, options, this.sliderOptions || {});
         if (res && res.filter && res.filter.range && res.filter.range[this.name]) {
           start = [parseFloat(res.filter.range[this.name].gte, 10), parseFloat(res.filter.range[this.name].lte, 10)];
           if (!isNaN(start[0])) {
@@ -2450,7 +2474,6 @@ bottom
       ScrollDisplay.__super__.init.call(this, controller);
       self = this;
       return this.controller.bind('df:search df:refresh', function(params) {
-        console.log(self.elementWrapper);
         return self.elementWrapper.scrollTop = 0;
       });
     };

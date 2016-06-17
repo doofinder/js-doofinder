@@ -71,7 +71,6 @@ class ScrollDisplay extends Display
     super(controller)
     self = this
     @controller.bind 'df:search df:refresh', (params) ->
-      console.log self.elementWrapper
       self.elementWrapper.scrollTop = 0
 
   ###

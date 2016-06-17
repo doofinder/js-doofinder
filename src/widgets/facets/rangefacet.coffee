@@ -26,7 +26,6 @@ class RangeFacet extends Display
   Apart from those inherited, this widget accepts these options:
 
   - sliderClassName {String} The CSS class of the node that holds the slider.
-  - sliderOptions {Object} See: http://refreshless.com/nouislider
 
   IMPORTANT: Pips support is buggy so, if no sliderOptions.pips is found, the
   widget paints them itself. If the sliderOptions.pips is false, no pips are
@@ -57,6 +56,7 @@ class RangeFacet extends Display
         value? and (value.toFixed(2) + '').replace(/0+$/, '').replace(/\.{1}$/, '')
 
     @slider = null
+    @values = {}
 
     super(element, template, options)
 
@@ -67,7 +67,7 @@ class RangeFacet extends Display
   @api private
   ###
   _renderSlider: (options) ->
-    widget = this
+    self = this
 
     # Build template context
     context =
@@ -87,11 +87,15 @@ class RangeFacet extends Display
 
     # Listen for the 'change' event so we can query Doofinder with new filters
     @slider.noUiSlider.on 'change', ->
-      [min, max] = widget.slider.noUiSlider.get()
-      widget.controller.addFilter widget.name,
-        gte: parseFloat(min, 10)
-        lte: parseFloat(max, 10)
-      widget.controller.refresh()
+      [min, max] = self.slider.noUiSlider.get()
+      # WTF(@ecoslado) noUISlider gets the formatted values
+      # so we maintain an object with key the formatted values
+      # and value the numbers
+      self.controller.addFilter self.name,
+        gte: self.values[min]
+        lte: self.values[max]
+      self.controller.refresh()
+      self.values = {}
 
   ###
   Renders the slider pips
@@ -140,12 +144,13 @@ class RangeFacet extends Display
     else if not res.facets[@name].range
       @raiseError "RangeFacet: #{@name} facet is not a range facet"
 
+    self = this
+
     # Update widget if any results found
     if res.total > 0
       range = [parseFloat(res.facets[@name].range.buckets[0].stats.min || 0, 10),
                parseFloat(res.facets[@name].range.buckets[0].stats.max || 0, 10)]
 
-      # defaults
       options =
         start: range
         range:
@@ -154,10 +159,18 @@ class RangeFacet extends Display
         connect: true
         tooltips: true  # can't be overriden when options are updated!!!
         format:
-          to: @format
-          from: Number
-
-      options = extend(true, options, @sliderOptions || {})
+          to: (value) ->
+            # WTF(@ecoslado) noUISlider gets the formatted values
+            # so we maintain an object with key the formatted values
+            # and value the numbers
+            if value?
+              formattedValue = self.format value
+              self.values[formattedValue] = value
+              formattedValue
+            else
+              ""
+          from: (formattedValue) ->
+            formattedValue
 
       # If we have values from search filtering we apply them
       if res and res.filter and res.filter.range and res.filter.range[@name]

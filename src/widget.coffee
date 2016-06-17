@@ -55,6 +55,16 @@ class Widget
   renderNext: (res) ->
 
   ###
+  clean
+
+  This function clean the html in the widget.
+  In Widget is dummy. To be overriden.
+
+  @api public
+  ###  
+  clean: () ->  
+
+  ###
   bind
 
   Method to add and event listener
