@@ -4,7 +4,7 @@ if not JSON.parse and JSON.decode
   JSON.parse = JSON.decode
 
 module.exports =
-  version: "3.2.2"
+  version: "4.0.0"
   Client: require "./client"
   Mustache: require "mustache"
   Widget: require "./widget"

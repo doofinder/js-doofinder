@@ -6,6 +6,7 @@ author: @ecoslado
 
 Display = require "../display"
 bean = require 'bean'
+extend = require "../../util/extend"
 
 ###
 TermFacet
@@ -55,7 +56,6 @@ class TermFacet extends Display
 
     # The filtering by click
     bean.on @element, 'click', "a[data-facet='#{@name}']", (e) ->
-    # $(@container).on 'click', "a[data-facet='#{@name}']", (e) ->
       e.preventDefault()
 
       value = this.getAttribute 'data-value'
@@ -90,6 +90,10 @@ class TermFacet extends Display
     else if not res.facets[@name].terms.buckets
       @raiseError "TermFacet: #{@name} facet is not a terms facet"
 
+    if res.filter? and res.filter.terms? and res.filter.terms[@name]?
+      for selectedTerm in res.filter.terms[@name]
+        @selected[selectedTerm] = true 
+
     if res.results
       # To make access to selected easier
       # we add it to each term
@@ -102,7 +106,9 @@ class TermFacet extends Display
         else
           term.selected = 0
 
-      context = $.extend true,
+
+
+      context = extend true,
         any_selected: @selected.length > 0
         total_selected: @selected.length
         name: @name
