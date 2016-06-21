@@ -1131,7 +1131,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.0.0",
+    version: "4.0.1",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1241,8 +1241,12 @@ author: @ecoslado
       }
     };
     watchElement = function(elem) {
-      var ref, timer;
-      if (ref = elem.getAttribute('type').toUpperCase(), indexOf.call(options.inputTypes, ref) >= 0) {
+      var inputType, ref, timer;
+      inputType = elem.getAttribute('type');
+      if (!inputType) {
+        inputType = 'text';
+      }
+      if (ref = inputType.toUpperCase(), indexOf.call(options.inputTypes, ref) >= 0) {
         timer = {
           timer: null,
           text: elem.value || '',
@@ -1251,7 +1255,7 @@ author: @ecoslado
           el: elem
         };
         return bean.on(elem, 'keydown paste cut input change', function(e) {
-          var delay, inputType, override, timerCallbackFx;
+          var delay, override, timerCallbackFx;
           delay = timer.wait;
           override = false;
           inputType = this.type.toUpperCase();

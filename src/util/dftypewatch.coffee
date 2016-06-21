@@ -24,7 +24,11 @@ module.exports = (element, options) ->
       timer.cb.call timer.el, value
 
   watchElement = (elem) ->
-    if elem.getAttribute('type').toUpperCase() in options.inputTypes
+    inputType = elem.getAttribute('type')
+    if not inputType
+      inputType = 'text'
+
+    if inputType.toUpperCase() in options.inputTypes
       # Allocate timer element
       timer =
         timer: null
