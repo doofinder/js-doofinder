@@ -20,16 +20,20 @@ class Results extends Display
 
   @param {String} container
   @param {String|Function} template
-  @param {Object} extraOptions 
+  @param {Object} extraOptions
   @api public
   ###
   constructor: (container, options = {}) ->
   	if not options.template
-  	  template = '<ul>{{#results}}' +
-        '            <li>' +
-        '               <b>{{title}}</b>:{{description}}<br></li>' +
-        '            {{/results}}' +
-        '         </ul>'
+      template = """
+        <ul>
+          {{#results}}
+            <li>
+              <b>{{title}}</b>: {{description}}
+            </li>
+          {{/results}}
+        </ul>
+      """
     else
       template = options.template
   	super(container, template, options)

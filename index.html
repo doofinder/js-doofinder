@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Client</title>
+
+  <link rel="stylesheet" type="text/css" href="dist/doofinder.css">
+  <style type="text/css">
+    * {
+      box-sizing: border-box;
+    }
+
+    .m {
+      margin-bottom: 1rem;
+    }
+
+    .w {
+      width: 320px;
+    }
+
+    .b {
+      border: 1px solid #ccc;
+    }
+
+    .q {
+      padding: .25rem;
+    }
+
+    .s {
+      position: relative;
+      height: 400px;
+      overflow: auto;
+    }
+  </style>
+
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script type="text/javascript" src="dist/doofinder.js"></script>
+  <script type="text/javascript" src="node_modules/bean/bean.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function(){
+      var client = new doofinder.Client('97be6c1016163d7e9bceedb5d9bbc032', 'eu1');
+      var queryInputWidget = new doofinder.widgets.QueryInput('#query');
+      var resultsWidget = new doofinder.widgets.ScrollResults('#scroll');
+      var priceWidget = new doofinder.widgets.RangeFacet('#price', 'price', {
+        templateVars: {label: 'Price'}
+      });
+      var priceWidget2 = new doofinder.widgets.RangeFacet('#price2', 'price', {
+        templateVars: {label: 'Price 2'}
+      });
+      var brandWidget = new doofinder.widgets.TermFacet('#brand', 'brand', {
+        templateVars: {label: 'Brand'}
+      });
+
+      priceWidget.bind('df:rendered', function(res){
+        console.log(res);
+      });
+
+      var controller = new doofinder.Controller(client, [
+        queryInputWidget,
+        resultsWidget,
+        priceWidget,
+        priceWidget2,
+        brandWidget
+      ]);
+    });
+  </script>
+</head>
+<body>
+  <input class="w m q" type="text" id="query" autofocus>
+  <div class="w m b s" id="scroll"></div>
+  <div class="w m b" id="price"></div>
+  <div class="w m b" id="price2"></div>
+  <div class="w m b" id="brand"></div>
+</body>
+</html>

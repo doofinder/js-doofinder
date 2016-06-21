@@ -1,83 +1,16 @@
-###
-# js-doofinder tests
-# author: @ecoslado
-# 2015 04 01
-###
-assert = require "assert"
-should = require('chai').should()
-expect = require('chai').expect
-jsdom = require "jsdom"
+chai = require 'chai'
 nock = require 'nock'
 
-mock =
-  request:
-    hashid: "ffffffffffffffffffffffffffffffff"
-    api_key: "eu1-384fd8a73c7ff0859a5891f9f4083b1b9727f9c3"
+chai.should()
+assert = chai.assert
+expect = chai.expect
 
-fake_results =
-  query_counter: 1
-  results_per_page: 12
-  page: 1
-  total: 31
-  query: "some query"
-  hashid: mock.request.hashid
-  max_score: 1.3
-  results: [
-    description: "Antena. 5.2 dBi. omnidireccional…"
-    dfid: "523093f0ded16148dc005362"
-    title: "Cisco Aironet Pillar Mount Diversity Omnidirectional Antenna"
-    url: "http://www.example.com/product_description.html"
-    image_url: "http://www.example.com/images/product_image.jpg"
-    type: "product"
-    id: "ID1"
-  ,
-    description: "Teclado. USB. España…"
-    dfid: "523093f0ded16148dc0053xx"
-  ],
-  query_name: "fuzzy"
-  facets:
-    best_price:
-      _type: "range"
-      ranges: [
-        from: 0
-        count: 24
-        min: 8.5
-        max: 225
-        total_count: 24
-        total: 1855.57
-        mean: 77.32
-      ]
-
-    color:
-      _type: "terms"
-      missing: 16
-      total: 10
-      other: 0
-      terms: [
-        term: "Azul"
-        count: 3
-      ,
-        term: "Rojo"
-        count: 1
-      ]
-
-    categories:
-      _type: "terms"
-      missing: 0
-      total: 50
-      other: 0
-      terms: [
-        term: "Sillas de paseo"
-        count: 6
-      ,
-        term: "Seguridad en el hogar"
-        count: 5
-      ]
+hashid = 'ffffffffffffffffffffffffffffffff'
 
 client_mock =
   search: ()->
   hit: ()->
-  hashid: mock.request.hashid
+  hashid: hashid
 
 widget_mock =
   render: () ->
@@ -88,17 +21,13 @@ widget_mock =
 # Test doofinder
 describe 'doofinder controller: ', ->
 
-  beforeEach () ->
-    global.document = jsdom.jsdom('<input id="query"></input>')
-    global.window = document.defaultView
-    global.navigator = window.navigator = {}
-    navigator.userAgent = 'Nasty Navigator' # kudos to @jesusenlanet: great Name!
-    navigator.appVersion = '0.0.1'
-    global.doofinder = require "../lib/doofinder.js"
+  beforeEach ->
+    document.body.innerHTML = '<input type="search" id="query" name="query">'
+    global.$ = require "jquery"
+    global.doofinder = require "../lib/doofinder"
 
-
-  afterEach () ->
-    delete global.document
+  afterEach ->
+    delete global.$
     delete global.doofinder
 
   context 'search method ' , ->
@@ -107,11 +36,11 @@ describe 'doofinder controller: ', ->
       client_mock =
         search: ()->
         hit: ()->
-        hashid: mock.request.hashid
+        hashid: hashid
 
     it 'df:search is triggered', (done) ->
       controller = new doofinder.Controller client_mock, [widget_mock]
-      controller.bind 'df:search', (ev, params) ->
+      controller.bind 'df:search', (params) ->
         params.should.have.keys 'query_counter', 'query', 'filters'
         done()
       controller.search 'silla'
@@ -150,7 +79,7 @@ describe 'doofinder controller: ', ->
       client_mock =
         search: ()->
         hit: ()->
-        hashid: mock.request.hashid
+        hashid: hashid
 
     it 'when adding terms filters, filters params change', (done) ->
       # we need to make a search first in order to "refresh" it with
@@ -218,7 +147,7 @@ describe 'doofinder controller: ', ->
       client_mock =
         search: ()->
         hit: ()->
-        hashid: mock.request.hashid
+        hashid: hashid
 
 
     it 'nextPage redo the search with next page', (done) ->
@@ -260,7 +189,7 @@ describe 'doofinder controller: ', ->
       client_mock =
         search: ()->
         hit: ()->
-        hashid: mock.request.hashid
+        hashid: hashid
 
 
     it 'setSearchParam adds parameter to every search', (done) ->
@@ -312,13 +241,13 @@ describe 'doofinder controller: ', ->
       client_mock =
         search: ()->
         hit: ()->
-        hashid: mock.request.hashid
+        hashid: hashid
 
     it ' triggers refresh signal and actually do the search', (done) ->
       controller = new doofinder.Controller client_mock, [widget_mock]
       controller.search 'silla', rpp: 33, filters: color: ['Rojo']
 
-      controller.bind 'df:refresh', (event, params)->
+      controller.bind 'df:refresh', (params)->
         params.query_counter.should.eql 2
 
       client_mock.search = (query, params, cb) ->
@@ -337,7 +266,7 @@ describe 'doofinder controller: ', ->
       client_mock =
         search: ()->
         hit: ()->
-        hashid: mock.request.hashid
+        hashid: hashid
 
     it ' should call the widget "init" upon adding', (done) ->
       widget_mock.init = ()->
@@ -360,7 +289,7 @@ describe 'doofinder controller: ', ->
       client_mock =
         search: ()->
         hit: ()->
-        hashid: mock.request.hashid
+        hashid: hashid
 
     it ' bind events to callbacks (duhhh)', (done) ->
       res_mock = { results: [1,2,3,4,5,6,7,8,9,10,11], query_name: 'test', query_coounter: 2 }
@@ -369,13 +298,13 @@ describe 'doofinder controller: ', ->
         cb null, res_mock
       events_count = 0
       # bind to df:results_received
-      controller.bind 'df:results_received', (e, res) ->
+      controller.bind 'df:results_received', (res) ->
         events_count++
         res.query_name.should.eql 'test'
         res.results.should.have.length 11
 
       # bind to df:search
-      controller.bind 'df:search', (e, params) ->
+      controller.bind 'df:search', (params) ->
         events_count++
         params.query_counter.should.be.eql 2
 
@@ -403,7 +332,7 @@ describe 'doofinder controller: ', ->
       client_mock =
         search: ()->
         hit: ()->
-        hashid: mock.request.hashid
+        hashid: hashid
 
     it 'actually do the hit', (done) ->
       client_mock.hit = (sessionId, type, dfid, query) ->

@@ -2,8 +2,8 @@
 # Created by Kike Coslado on 26/10/15.
 # 20160419 REV(@JoeZ99)
 ###
-
-$ = require "./util/jquery"
+bean = require "bean"
+extend = require "./util/extend"
 qs = require "qs"
 
 ###
@@ -33,9 +33,9 @@ class Controller
     else if widgets
       @addWidget(widgets)
 
-    @status = $.extend true,
+    @status = extend true,
       {},
-      params: $.extend true, {}, @searchParams
+      params: extend true, {}, @searchParams
 
     @reset()
 
@@ -56,7 +56,7 @@ class Controller
     # we'll check the query_counter
     @status.params.query_counter++
 
-    params = $.extend true,
+    params = extend true,
       {},
       @status.params || {}
 
@@ -101,18 +101,18 @@ class Controller
   ###
   search: (query, params={}) ->
     if query
-      searchParams = $.extend true,
+      searchParams = extend true,
         {},
         @searchParams
       # Saves current query counter
       queryCounter = @status.params.query_counter
       # Reset @status.params
-      @status.params = $.extend true,
+      @status.params = extend true,
         {},
         params
-      @status.params = $.extend true, searchParams, params
+      @status.params = extend true, searchParams, params
       @status.params.query = query
-      @status.params.filters = $.extend true,
+      @status.params.filters = extend true,
         {},
         @searchParams.filters || {},
         params.filters
@@ -203,6 +203,7 @@ class Controller
     else
       @status.params.filters[key].push value
 
+
   ###
   addParam
 
@@ -238,7 +239,7 @@ class Controller
   reset: () ->
     queryCounter = @status.params.query_counter || 1
     @status =
-      params: $.extend true, {}, @searchParams
+      params: extend true, {}, @searchParams
       currentPage: 0
       firstQueryTriggered: false
       lastPageReached: false
@@ -322,7 +323,7 @@ class Controller
   @param {Function} callback
 
   @api public
-  ###  
+  ###
   registerClick: (productId, arg1, arg2) ->
     # Defaults
     callback = ((err, res) ->)
@@ -332,12 +333,12 @@ class Controller
     if typeof arg2 == 'undefined' and typeof arg1 == 'function'
       callback = arg1
     else if typeof arg2 == 'undefined' and typeof arg1 == 'object'
-      options = arg1  
+      options = arg1
     else if typeof arg2 == 'function' and typeof arg1 == 'object'
       callback = arg2
       options = arg1
-    # If there's no query in the options, fill in with status  
-    if not options.query  
+    # If there's no query in the options, fill in with status
+    if not options.query
       options.query = @status.params.query
 
     @client.registerClick(productId, options, callback)
@@ -375,7 +376,7 @@ class Controller
     if typeof arg2 == 'undefined' and typeof arg1 == 'function'
       callback = arg1
     else if typeof arg2 == 'undefined' and typeof arg1 == 'object'
-      options = arg1  
+      options = arg1
     else if typeof arg2 == 'function' and typeof arg1 == 'object'
       callback = arg2
       options = arg1
@@ -414,7 +415,7 @@ class Controller
   @api public
   ###
   bind: (event, callback) ->
-    $(this).on(event, callback)
+    bean.on(this, event, callback)
 
   ###
   trigger
@@ -425,7 +426,7 @@ class Controller
   @api public
   ###
   trigger: (event, params) ->
-    $(this).trigger(event, params)
+    bean.fire(this, event, params)
 
 
 
@@ -438,10 +439,10 @@ class Controller
   setStatusFromString: (queryString, prefix="#/search/") ->
     @status.firstQueryTriggered = true
     @status.lastPageReached = false
-    searchParams = $.extend true,
+    searchParams = extend true,
       {},
       @searchParams || {}
-    @status.params = $.extend true,
+    @status.params = extend true,
       searchParams,
       qs.parse(queryString.replace("#{prefix}", "")) || {}
     @status.params.query_counter = 1
@@ -457,7 +458,7 @@ class Controller
   with a queryString
   ###
   statusQueryString: (prefix="#/search/") ->
-    params = $.extend true,
+    params = extend true,
       {},
       @status.params
 

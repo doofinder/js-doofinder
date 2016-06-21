@@ -1,0 +1,242 @@
+@charset "UTF-8";
+
+@mixin border-box() {
+  &, & * {
+    box-sizing: border-box;
+  }
+}
+
+/* RESULTS AND SCROLL */
+
+.df-results {
+  @include border-box();
+
+  -webkit-box-flex: 1;
+  -webkit-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+  overflow-y: auto;
+  height: 60%;
+}
+
+.df-results__content {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* FACETS PANEL */
+
+.df-panel {
+  @include border-box();
+}
+
+.df-panel + .df-panel {
+  margin-top: 8px;
+}
+
+.df-panel__title {
+  display: block;
+  padding: 8px;
+  margin: 0;
+  background: no-repeat right 8px center;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%20%20%3Cg%20stroke%3D%22none%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M10%207L3%207%203%206%2010%206%2010%207%2010%207Z%22%20fill%3D%22%23000000%22/%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M0%200L12%200%2012%2012%200%2012%200%200Z%22/%3E%0A%20%20%20%20%3C/g%3E%0A%3C/svg%3E%0A");
+  max-height: 30px;
+}
+
+.df-panel__content {
+  padding: 8px;
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+/* THIRD PARTY COMPONENTS */
+
+.df-slider {
+  @include border-box();
+
+  padding: 40px 10px;
+
+  $dark: #9AA4AC;
+  $light: white;
+  $gray: #CFCFCF;
+  $hover: #333333;
+  $dark-disabled: lighten($dark, 20%);
+
+
+  @at-root {
+    @import "nouislider";
+    @import "nouislider.pips";
+    @import "nouislider.tooltips";
+  }
+  .noUi-value-horizontal {
+    font-size: 80%;
+    
+    &[data-position="0"]{
+      transform: translate3d(-8px, 60%, 0);
+      left: 0;
+    }
+    &[data-position="50"]{
+      transform: translate3d(-50%, 60%, 0);
+      left: 50%;
+    }
+
+    &[data-position="100"]{
+      transform: translate3d(4px, 60%, 0);
+    }
+
+  }
+
+  .noUi-marker-horizontal.noUi-marker-large{
+    height: 8px;
+  }
+
+  .noUi-background {
+    background-color: $dark;
+    box-shadow: none;
+  }
+
+  .noUi-connect {
+    background-color: $light;
+    box-shadow: none;
+  }
+
+  .noUi-tooltip {
+    font-size: 80%;
+    background-color: #b0b0b0;
+    color: white;
+    border-width: 0;
+    padding: 2px 5px;
+  }
+
+  .noUi-horizontal {
+    $sliderHeight: 8px;
+
+    $handleWidth: 18px;
+    $handleBorder: 1px;
+    $handleInnerWidth: 8px;
+    $handleInnerPosition: 4px;
+
+    $tooltipOffset: -24px;
+
+    height: $sliderHeight;
+
+    .noUi-handle {
+      left: $handleWidth / -2;
+
+      width: $handleWidth;
+      height: $handleWidth;
+
+      border: $handleBorder solid $gray;
+      border-radius: $handleWidth;
+
+      cursor: ew-resize;
+
+      &::before {
+        display: none;
+      }
+
+      &::after {
+        width: $handleInnerWidth;
+        height: $handleInnerWidth;
+        border-radius: $handleInnerWidth;
+        background-color: $dark;
+        left: $handleInnerPosition;
+        top: $handleInnerPosition;
+      }
+
+      &:hover,
+      &.noUi-active {
+        &::after {
+          background-color: $hover;
+        }
+      }
+    }
+
+    .noUi-handle-upper {
+      .noUi-tooltip {
+        right: 0;
+        bottom: $tooltipOffset;
+      }
+    }
+
+    .noUi-handle-lower {
+      .noUi-tooltip {
+        top: $tooltipOffset;
+      }
+    }
+  }
+
+  .noUi-target[disabled] {
+    cursor: not-allowed;
+
+    &,
+    .noUi-connect,
+    .noUi-background {
+      background-color: $dark-disabled;
+    }
+    .noUi-handle {
+      cursor: not-allowed;
+
+      &::after,
+      &:hover::after,
+      &.noUi-active::after {
+        background-color: $dark-disabled;
+      }
+    }
+    .noUi-handle-upper {
+      .noUi-tooltip {
+        display: none;
+      }
+    }
+  }
+}
+
+/* THEME */
+
+.df-results {
+  background-color: inherit;
+  padding: 0 8px 8px 8px;
+}
+
+.df-panel {
+  background-color: inherit;
+}
+
+.df-panel__title {
+  color: #333333;
+  font-family: 'Arial', sans-serif;
+  font-weight: bold;
+  font-size: 13px;
+  text-decoration: none;
+  background-color: #ccc;
+}
+
+.df-panel__content {
+  background-color: inherit;
+}
+
+.df-facet {
+  background-color: inherit;
+  font-size: 13px;
+  text-decoration: none;
+  color: #333333;
+
+  &:focus,
+  &:active,
+  &:hover,
+  &.df-facet--active {
+    font-weight: bold;
+  }
+}
+
+.df-facet__count {
+  color: #747474;
+}
+

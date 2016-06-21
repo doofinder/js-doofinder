@@ -3,7 +3,7 @@
 # 2015 09 30
 ###
 
-$ = require "./jquery"
+extend = require "./extend"
 
 addHelpers = (context, parameters, currency, translations, extraHelpers) ->
   
@@ -72,10 +72,10 @@ addHelpers = (context, parameters, currency, translations, extraHelpers) ->
           return key
 
 
-  $.extend helpers,
+  extend helpers,
     extraHelpers
   
-  $.extend context,
+  extend context,
     helpers
 
 

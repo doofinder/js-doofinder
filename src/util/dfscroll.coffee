@@ -1,62 +1,46 @@
-$ = require './jquery'
+extend = require './extend'
+introspection = require './introspection'
+throttle = require './throttle'
+dimensions = require './dimensions'
+bean = require 'bean'
 
-dfScroll = (arg1, arg2=null) ->
+module.exports = (arg1, arg2 = null) ->
+  defaults =
+    direction: "vertical"
+    scrollOffset: 200
 
-  # Uses window scroll
-  if not arg2
-    o = arg1
-    container = $ window
-    content = $ document
-  
-  # Uses an inner div as scroll
-  else
-    o = arg2
-    container = $ arg1
-    content = container.children().first()
-
-  defaultOptions =
-    direction: 'vertical'
-    scrollOffset: 100
-
-  o = $.extend true,
-    defaultOptions, 
-    o || {}
-  
-
-  # Throttle to avoid multiple events
-  # to be triggered.
-  throttle = (type, name, obj) ->
-    obj = obj || window
-    running = false
-    func = () ->
-      if running
-        return
-                
-      running = true
+  if introspection.isPlainObject arg1
+    # if typeof arg1 is 'object'
+    # First parameter is an options object, uses window scroll
+    
+    options = extend true, defaults, arg1
+    content = document
+    container = window
+    bean.on container, 'df:scroll', ->
+      if ['horizontal', 'vertical'].indexOf(options.direction) <= -1
+        throw Error("[Doofinder] dfScroll: Direction is not properly set. It might be 'horizontal' or 'vertical'.")
       
-      aux = () -> 
-        obj.trigger name
-        running = false
-
-      setTimeout aux, 250
-            
-    obj.on type, func
-    obj.trigger name
-       
-  throttle('scroll', 'df:scroll', container);
-  
-  # handling scroll event
-  handler = () ->
-  
-    if o.direction == 'vertical'
-      # When bottom is about to be reached, callback will be called
-      if container.scrollTop() + container.height() >= content.height() - o.scrollOffset
-        o.callback()
+      if options.direction == 'vertical' and window.innerHeight + window.scrollY + options.scrollOffset >= dimensions.clientHeight(content) or
+          options.direction == "horizontal" and window.innerWidth + window.scrollX + options.scrollOffset >= dimensions.clientWidth(content)
+        # Bottom or right side was about to be reached so we call the callback
+        options.callback()
+  else
+    # Uses an inner div as scroll
+    options = extend true, defaults, arg2
+    if typeof arg1 is 'string'
+      container = document.querySelector arg1
     else
-      # When right edge is about to be reached, callback will be called
-      if container.scrollLeft() + container.width() >= content.width() - o.scrollOffset
-        o.callback()
-  
-  container.on 'df:scroll', handler
+      container = arg1
+    content = container.children[0]
+    bean.on container, 'df:scroll', ->
+      if ['horizontal', 'vertical'].indexOf(options.direction) <= -1
+        throw Error("[Doofinder] dfScroll: Direction is not properly set. It might be 'horizontal' or 'vertical'.")
 
-module.exports = dfScroll
+      if options.direction == 'vertical' and content.clientHeight - container.clientHeight - container.scrollTop <= options.scrollOffset or
+          options.direction == "horizontal" and content.clientWidth - container.clientWidth - container.scrollLeft <= options.scrollOffset
+        # Bottom or right side was about to be reached so we call the callback
+        options.callback()
+
+
+  # Throttle to avoid multiple events to be triggered.
+  throttle 'scroll', 'df:scroll', container

@@ -146,14 +146,14 @@ Removes a filter from the currently applied.
   -------- | -------- | ---- | ---------------------
   facet | Yes | `String` | The name of the facet.
   value | Yes |`String` `Object` | The value of the facet. This can be a `String`, if the facet is a term facet or an `Object` if it's a range.
-  
+
 #### addParam
 Adds new search parameter to the current status.
 
  Argument | Required | Type | Description
  -------- | -------- | ---- | ---------------------
  param  | Yes | `String` | The name of the param.
- value | Yes |`Mixed` | The value of the param. 
+ value | Yes |`Mixed` | The value of the param.
 
 #### clearParam
 Removes a parameter from the current status.
@@ -171,7 +171,7 @@ Sets a param for every query.
 Argument | Required | Type | Description
 -------- | -------- | ---- | ---------------------
 param  | Yes | `String` | The name of the param.
-value | Yes |`Mixed` | The value of the param. 
+value | Yes |`Mixed` | The value of the param.
 
 
 #### refresh
@@ -274,7 +274,7 @@ Sends a request to the Search API in order to receive server configuration. The 
 
 ### Widget
 Widgets are visual elements that take part into the search. They can be search inputs, places where display the results, places to put the facets, etc.
-The events you can bind in widget depend on the widget you are instantiating. Above we'll describe all the available widget and theirs correponding events. 
+The events you can bind in widget depend on the widget you are instantiating. Above we'll describe all the available widget and theirs correponding events.
 
 
 ### widgets.QueryInput
@@ -496,6 +496,8 @@ Option | Type | Description
 template | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
 templateVars | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
 templateFunctions | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
+sliderClassName | `String` | The CSS class of the node that holds the slider. It's injected into the template context.
+sliderOptions | `Object` | We use [noUiSlider](http://refreshless.com/nouislider) and this option holds the slider configuration. Due to a buggy pips support, if no `pips` option is found, the widget paints them itself. If the `pips` option is `false`, no pips are displayed. In any other case, noUiSlider is in charge of displaying them.
 
 #### bind
 This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
@@ -542,7 +544,7 @@ This method performs a Search API call and retrieves the data. The data will be 
  query |  Yes | `String` | The query terms.
  params |  No | `Object` | The query terms.
  callback | Yes | `Function` | The function which receives the API Search response.
- 
+
 #### registerSession
 Sends a request to the Search API in order to account the sessions in your SearchEngine.
 
@@ -577,7 +579,7 @@ callback | No | `Function` | Receives two args: `err` and `response`
 In the [Quick Start](#quick-start) example we composed a simple view using the Doofinder Library. Let's see how to shape the results by a Mustache template.
 
 ```javascript
- 
+
 var resultsTemplate = '{{#results}}' +
   ' <div>'+
   '   <div>' +
@@ -625,7 +627,7 @@ var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {
 So you can modify your template in order to show a standard title if there's no header supplied by the item.
 
 ```javascript
- 
+
 var resultsTemplate = '{{#results}}' +
   ' <div>'+
   '   <div>' +
@@ -702,7 +704,7 @@ var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {
       return function(text, render){
         return "<b>" + render(text) + "</b>"
       }
-    }   
+    }
   }
 });
 

@@ -4,8 +4,9 @@ author: @ecoslado
 2015 11 21
 ###
 
-$ = require '../util/jquery'
+extend = require '../util/extend'
 Widget = require '../widget'
+dfTypeWatch = require '../util/dftypewatch'
 
 ###
 QueryInput
@@ -28,9 +29,9 @@ class QueryInput extends Widget
   @param {Object} options
   @api public
   ###
-  constructor: (@queryInput, @options = {}) ->
-  	super(@queryInput)
-  
+  constructor: (element, @options = {}) ->
+    super(element)
+
   ###
   start
 
@@ -44,16 +45,17 @@ class QueryInput extends Widget
     else
       @controller = [controller]
 
-    _this = this
-    options = $.extend true,
-      callback: () ->
-        query = $(_this.queryInput).val()
+    self = this
+
+    options = extend true,
+      callback: ->
+        query = self.element.value
         controller.reset()
-        controller.search.call(controller, query)
+        controller.search.call controller, query
       wait: 43
       captureLength: 3,
       @options
 
-    $(@queryInput).typeWatch options
+    dfTypeWatch @element, options
 
 module.exports = QueryInput

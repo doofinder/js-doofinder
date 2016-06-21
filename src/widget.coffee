@@ -11,13 +11,15 @@ results and paint them in a container
 shaped by template
 ###
 
-$ = require "./util/jquery"
+bean = require "bean"
 
 class Widget
 
-  
-  constructor: (selector) ->
-    @emitter = $(selector)
+
+  constructor: (element) ->
+    if typeof element is 'string'
+      element = document.querySelector element
+    @element = element
 
   ###
   init
@@ -28,7 +30,7 @@ class Widget
   ###
   init: (controller) ->
     @controller = controller
-      
+
   ###
   render
 
@@ -38,7 +40,7 @@ class Widget
 
   @param {Object} res
   @api public
-  ###  
+  ###
   render: (res) ->
 
   ###
@@ -49,9 +51,19 @@ class Widget
   In Widget is dummy. To be overriden.
   @param {Object} res
   @api public
-  ###  
+  ###
   renderNext: (res) ->
-    
+
+  ###
+  clean
+
+  This function clean the html in the widget.
+  In Widget is dummy. To be overriden.
+
+  @api public
+  ###  
+  clean: () ->  
+
   ###
   bind
 
@@ -61,7 +73,7 @@ class Widget
   @api public
   ###
   bind: (event, callback) ->
-    @emitter.on(event, callback)
+    bean.on(@element, event, callback)
 
   ###
   trigger
@@ -71,7 +83,16 @@ class Widget
   @param {Array} params
   @api public
   ###
-  trigger: (event, params) -> 
-    @emitter.trigger(event, params)
+  trigger: (event, params) ->
+    bean.fire(@element, event, params)
+
+  ###
+  raiseError
+
+  Method to raise a Doofinder error
+  @param {String} message
+  ###
+  raiseError: (message) ->
+    throw Error "[Doofinder] #{message}"
 
 module.exports = Widget
