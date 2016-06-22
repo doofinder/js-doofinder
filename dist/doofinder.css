@@ -466,7 +466,7 @@
   background-color: #d2d6da;
 }
 
-.df-slider .noUi-target[disabled] .noUi-handle-upper .noUi-tooltip {
+.df-slider .noUi-target[disabled] .noUi-tooltip {
   display: none;
 }
 
