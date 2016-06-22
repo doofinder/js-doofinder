@@ -4,7 +4,7 @@ author: @ecoslado
 2015 11 21
 ###
 
-extend = require '../util/extend'
+extend = require 'extend'
 Widget = require '../widget'
 dfTypeWatch = require '../util/dftypewatch'
 

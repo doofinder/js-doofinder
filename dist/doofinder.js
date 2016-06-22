@@ -579,7 +579,7 @@ author: @ecoslado
 
   bean = require("bean");
 
-  extend = require("./util/extend");
+  extend = require("extend");
 
   qs = require("qs");
 
@@ -1120,7 +1120,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./util/extend":7,"bean":19,"qs":68}],3:[function(require,module,exports){
+},{"bean":18,"extend":19,"qs":68}],3:[function(require,module,exports){
 (function() {
   if (!JSON.stringify && JSON.encode) {
     JSON.stringify = JSON.encode;
@@ -1131,7 +1131,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.0.2",
+    version: "4.0.3",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1148,18 +1148,18 @@ author: @ecoslado
       md5: require("md5"),
       qs: require("qs"),
       bean: require("bean"),
-      extend: require("./util/extend"),
+      extend: require("extend"),
       introspection: require("./util/introspection")
     }
   };
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./util/extend":7,"./util/introspection":9,"./widget":11,"./widgets/display":12,"./widgets/facets/rangefacet":13,"./widgets/facets/termfacet":14,"./widgets/queryinput":15,"./widgets/results/results":16,"./widgets/results/scrollresults":17,"bean":19,"md5":62,"mustache":66,"qs":68}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./util/introspection":8,"./widget":10,"./widgets/display":11,"./widgets/facets/rangefacet":12,"./widgets/facets/termfacet":13,"./widgets/queryinput":14,"./widgets/results/results":15,"./widgets/results/scrollresults":16,"bean":18,"extend":19,"md5":62,"mustache":66,"qs":68}],4:[function(require,module,exports){
 (function() {
   var bean, dimensions, extend, introspection, throttle;
 
-  extend = require('./extend');
+  extend = require('extend');
 
   introspection = require('./introspection');
 
@@ -1212,12 +1212,12 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./dimensions":6,"./extend":7,"./introspection":9,"./throttle":10,"bean":19}],5:[function(require,module,exports){
+},{"./dimensions":6,"./introspection":8,"./throttle":9,"bean":18,"extend":19}],5:[function(require,module,exports){
 (function() {
   var bean, extend,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  extend = require('./extend');
+  extend = require('extend');
 
   bean = require('bean');
 
@@ -1279,7 +1279,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./extend":7,"bean":19}],6:[function(require,module,exports){
+},{"bean":18,"extend":19}],6:[function(require,module,exports){
 (function() {
   var calculateDimension, clientHeight, clientWidth;
 
@@ -1309,60 +1309,6 @@ author: @ecoslado
 }).call(this);
 
 },{}],7:[function(require,module,exports){
-(function() {
-  var _i, extend,
-    hasProp = {}.hasOwnProperty;
-
-  _i = require('./introspection');
-
-  extend = module.exports = function() {
-    var clone, copy, copyIsArray, deep, i, j, k, name, options, ref, ref1, src, target;
-    target = arguments[0] || {};
-    deep = false;
-    i = 1;
-    j = arguments.length;
-    if (typeof target === 'boolean') {
-      deep = target;
-      target = arguments[i] || {};
-      i++;
-    }
-    if (!_i.isFunction(target) && !_i.isObject(target)) {
-      target = {};
-    }
-    if (i === j) {
-      return target;
-    }
-    j--;
-    for (i = k = ref = i, ref1 = j; ref <= ref1 ? k <= ref1 : k >= ref1; i = ref <= ref1 ? ++k : --k) {
-      options = arguments[i];
-      if (options !== null) {
-        for (name in options) {
-          if (!hasProp.call(options, name)) continue;
-          src = target[name];
-          copy = options[name];
-          if (target === copy) {
-            continue;
-          }
-          if (deep && copy && (_i.isPlainObject(copy) || (copyIsArray = _i.isArray(copy)))) {
-            if (copyIsArray) {
-              copyIsArray = false;
-              clone = src && _i.isArray(src) ? src : [];
-            } else {
-              clone = src && _i.isPlainObject(src) ? src : {};
-            }
-            target[name] = extend(deep, clone, copy);
-          } else if (copy !== void 0) {
-            target[name] = copy;
-          }
-        }
-      }
-    }
-    return target;
-  };
-
-}).call(this);
-
-},{"./introspection":9}],8:[function(require,module,exports){
 
 /*
  * author: @ecoslado
@@ -1372,7 +1318,7 @@ author: @ecoslado
 (function() {
   var addHelpers, extend;
 
-  extend = require("./extend");
+  extend = require("extend");
 
   addHelpers = function(context, parameters, currency, translations, extraHelpers) {
     var helpers;
@@ -1465,7 +1411,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./extend":7}],9:[function(require,module,exports){
+},{"extend":19}],8:[function(require,module,exports){
 (function() {
   var isArray, isFunction, isObject, isPlainObject;
 
@@ -1504,7 +1450,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{}],10:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 (function() {
   var bean;
 
@@ -1528,7 +1474,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"bean":19}],11:[function(require,module,exports){
+},{"bean":18}],10:[function(require,module,exports){
 
 /*
 widget.coffee
@@ -1657,7 +1603,7 @@ shaped by template
 
 }).call(this);
 
-},{"bean":19}],12:[function(require,module,exports){
+},{"bean":18}],11:[function(require,module,exports){
 
 /*
 display.coffee
@@ -1683,7 +1629,7 @@ replaces the current content.
 
   addHelpers = require("../util/helpers").addHelpers;
 
-  extend = require('../util/extend');
+  extend = require('extend');
 
   Display = (function(superClass) {
     extend1(Display, superClass);
@@ -1786,7 +1732,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../util/extend":7,"../util/helpers":8,"../widget":11,"mustache":66}],13:[function(require,module,exports){
+},{"../util/helpers":7,"../widget":10,"extend":19,"mustache":66}],12:[function(require,module,exports){
 
 /*
 rangefacet.coffee
@@ -1810,7 +1756,7 @@ them. Manages the filtering.
 
   noUiSlider = require("nouislider");
 
-  extend = require("../../util/extend");
+  extend = require("extend");
 
   RangeFacet = (function(superClass) {
     extend1(RangeFacet, superClass);
@@ -2036,7 +1982,7 @@ them. Manages the filtering.
 
 }).call(this);
 
-},{"../../util/extend":7,"../display":12,"nouislider":67}],14:[function(require,module,exports){
+},{"../display":11,"extend":19,"nouislider":67}],13:[function(require,module,exports){
 
 /*
 termfacet.coffee
@@ -2053,7 +1999,7 @@ author: @ecoslado
 
   bean = require('bean');
 
-  extend = require("../../util/extend");
+  extend = require("extend");
 
 
   /*
@@ -2175,7 +2121,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../../util/extend":7,"../display":12,"bean":19}],15:[function(require,module,exports){
+},{"../display":11,"bean":18,"extend":19}],14:[function(require,module,exports){
 
 /*
 queryinput.coffee
@@ -2188,7 +2134,7 @@ author: @ecoslado
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  extend = require('../util/extend');
+  extend = require('extend');
 
   Widget = require('../widget');
 
@@ -2262,7 +2208,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../util/dftypewatch":5,"../util/extend":7,"../widget":11}],16:[function(require,module,exports){
+},{"../util/dftypewatch":5,"../widget":10,"extend":19}],15:[function(require,module,exports){
 
 /*
 display.coffee
@@ -2320,7 +2266,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../display":12}],17:[function(require,module,exports){
+},{"../display":11}],16:[function(require,module,exports){
 
 /*
 scrollresults.coffee
@@ -2396,7 +2342,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../scrolldisplay":18,"bean":19}],18:[function(require,module,exports){
+},{"../scrolldisplay":17,"bean":18}],17:[function(require,module,exports){
 
 /*
 scrolldisplay.coffee
@@ -2423,7 +2369,7 @@ bottom
 
   dfScroll = require("../util/dfscroll");
 
-  extend = require('../util/extend');
+  extend = require('extend');
 
   ScrollDisplay = (function(superClass) {
     extend1(ScrollDisplay, superClass);
@@ -2521,7 +2467,7 @@ bottom
 
 }).call(this);
 
-},{"../util/dfscroll":4,"../util/extend":7,"./display":12}],19:[function(require,module,exports){
+},{"../util/dfscroll":4,"./display":11,"extend":19}],18:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean
@@ -3263,6 +3209,94 @@ bottom
 
   return bean
 });
+
+},{}],19:[function(require,module,exports){
+'use strict';
+
+var hasOwn = Object.prototype.hasOwnProperty;
+var toStr = Object.prototype.toString;
+
+var isArray = function isArray(arr) {
+	if (typeof Array.isArray === 'function') {
+		return Array.isArray(arr);
+	}
+
+	return toStr.call(arr) === '[object Array]';
+};
+
+var isPlainObject = function isPlainObject(obj) {
+	if (!obj || toStr.call(obj) !== '[object Object]') {
+		return false;
+	}
+
+	var hasOwnConstructor = hasOwn.call(obj, 'constructor');
+	var hasIsPrototypeOf = obj.constructor && obj.constructor.prototype && hasOwn.call(obj.constructor.prototype, 'isPrototypeOf');
+	// Not own constructor property must be Object
+	if (obj.constructor && !hasOwnConstructor && !hasIsPrototypeOf) {
+		return false;
+	}
+
+	// Own properties are enumerated firstly, so to speed up,
+	// if last one is own, then all properties are own.
+	var key;
+	for (key in obj) {/**/}
+
+	return typeof key === 'undefined' || hasOwn.call(obj, key);
+};
+
+module.exports = function extend() {
+	var options, name, src, copy, copyIsArray, clone,
+		target = arguments[0],
+		i = 1,
+		length = arguments.length,
+		deep = false;
+
+	// Handle a deep copy situation
+	if (typeof target === 'boolean') {
+		deep = target;
+		target = arguments[1] || {};
+		// skip the boolean and the target
+		i = 2;
+	} else if ((typeof target !== 'object' && typeof target !== 'function') || target == null) {
+		target = {};
+	}
+
+	for (; i < length; ++i) {
+		options = arguments[i];
+		// Only deal with non-null/undefined values
+		if (options != null) {
+			// Extend the base object
+			for (name in options) {
+				src = target[name];
+				copy = options[name];
+
+				// Prevent never-ending loop
+				if (target !== copy) {
+					// Recurse if we're merging plain objects or arrays
+					if (deep && copy && (isPlainObject(copy) || (copyIsArray = isArray(copy)))) {
+						if (copyIsArray) {
+							copyIsArray = false;
+							clone = src && isArray(src) ? src : [];
+						} else {
+							clone = src && isPlainObject(src) ? src : {};
+						}
+
+						// Never move original objects, clone them
+						target[name] = extend(deep, clone, copy);
+
+					// Don't bring in undefined values
+					} else if (typeof copy !== 'undefined') {
+						target[name] = copy;
+					}
+				}
+			}
+		}
+	}
+
+	// Return the modified object
+	return target;
+};
+
 
 },{}],20:[function(require,module,exports){
 

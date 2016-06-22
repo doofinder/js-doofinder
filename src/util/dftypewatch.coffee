@@ -1,4 +1,4 @@
-extend = require './extend'
+extend = require 'extend'
 bean = require 'bean'
 
 module.exports = (element, options) ->

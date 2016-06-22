@@ -4,7 +4,7 @@ if not JSON.parse and JSON.decode
   JSON.parse = JSON.decode
 
 module.exports =
-  version: "4.0.2"
+  version: "4.0.3"
   Client: require "./client"
   Mustache: require "mustache"
   Widget: require "./widget"
@@ -20,5 +20,5 @@ module.exports =
     md5: require "md5"
     qs: require "qs"
     bean: require "bean"
-    extend: require "./util/extend"
+    extend: require "extend"
     introspection: require "./util/introspection"

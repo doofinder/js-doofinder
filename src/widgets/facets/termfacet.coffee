@@ -6,7 +6,7 @@ author: @ecoslado
 
 Display = require "../display"
 bean = require 'bean'
-extend = require "../../util/extend"
+extend = require "extend"
 
 ###
 TermFacet
