@@ -1,4 +1,4 @@
-extend = require './extend'
+extend = require 'extend'
 introspection = require './introspection'
 throttle = require './throttle'
 dimensions = require './dimensions'

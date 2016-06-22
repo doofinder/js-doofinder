@@ -3,7 +3,7 @@
 # 20160419 REV(@JoeZ99)
 ###
 bean = require "bean"
-extend = require "./util/extend"
+extend = require "extend"
 qs = require "qs"
 
 ###

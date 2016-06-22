@@ -14,7 +14,7 @@ replaces the current content.
 
 Widget = require '../widget'
 addHelpers = require("../util/helpers").addHelpers
-extend = require '../util/extend'
+extend = require 'extend'
 
 class Display extends Widget
 

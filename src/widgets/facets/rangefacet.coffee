@@ -12,7 +12,7 @@ them. Manages the filtering.
 
 Display = require "../display"
 noUiSlider = require "nouislider"
-extend = require "../../util/extend"
+extend = require "extend"
 
 class RangeFacet extends Display
 

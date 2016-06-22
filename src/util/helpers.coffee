@@ -3,7 +3,7 @@
 # 2015 09 30
 ###
 
-extend = require "./extend"
+extend = require "extend"
 
 addHelpers = (context, parameters, currency, translations, extraHelpers) ->
   

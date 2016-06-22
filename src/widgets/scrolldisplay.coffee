@@ -15,7 +15,7 @@ bottom
 
 Display = require "./display"
 dfScroll = require "../util/dfscroll"
-extend = require '../util/extend'
+extend = require 'extend'
 
 class ScrollDisplay extends Display
 
