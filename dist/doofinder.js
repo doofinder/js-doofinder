@@ -1131,7 +1131,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.0.1",
+    version: "4.0.2",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -2384,7 +2384,7 @@ replaces the current content.
       ScrollResults.__super__.init.call(this, controller);
       self = this;
       return bean.on(this.element, 'click', 'a[data-df-hitcounter]', function() {
-        return self.trigger('df:hit', [this.getAttribute('data-dfHitcounter'), this.getAttribute('href')]);
+        return self.trigger('df:hit', [this.getAttribute('data-df-hitcounter'), this.getAttribute('href')]);
       });
     };
 

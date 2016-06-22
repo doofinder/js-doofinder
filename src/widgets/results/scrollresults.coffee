@@ -52,6 +52,6 @@ class ScrollResults extends ScrollDisplay
     self = this
     # TODO(@carlosescri): I think this is better outside of the widget
     bean.on @element, 'click', 'a[data-df-hitcounter]', ->
-      self.trigger 'df:hit', [this.getAttribute('data-dfHitcounter'), this.getAttribute('href')]
+      self.trigger 'df:hit', [this.getAttribute('data-df-hitcounter'), this.getAttribute('href')]
 
 module.exports = ScrollResults
