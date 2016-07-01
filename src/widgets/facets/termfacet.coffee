@@ -106,11 +106,11 @@ class TermFacet extends Display
         else
           term.selected = 0
 
-
+      selected_length = Object.keys(@selected).length
 
       context = extend true,
-        any_selected: @selected.length > 0
-        total_selected: @selected.length
+        any_selected: selected_length > 0
+        total_selected: selected_length
         name: @name
         terms: res.facets[@name].terms.buckets,
         @extraContext || {}

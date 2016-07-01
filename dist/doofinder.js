@@ -1131,7 +1131,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.0.4",
+    version: "4.0.5",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -2072,7 +2072,7 @@ author: @ecoslado
     };
 
     TermFacet.prototype.render = function(res) {
-      var context, i, index, len, ref, ref1, selectedTerm, term;
+      var context, i, index, len, ref, ref1, selectedTerm, selected_length, term;
       if (!res.facets || !res.facets[this.name]) {
         this.raiseError("TermFacet: " + this.name + " facet is not configured");
       } else if (!res.facets[this.name].terms.buckets) {
@@ -2097,9 +2097,10 @@ author: @ecoslado
             term.selected = 0;
           }
         }
+        selected_length = Object.keys(this.selected).length;
         context = extend(true, {
-          any_selected: this.selected.length > 0,
-          total_selected: this.selected.length,
+          any_selected: selected_length > 0,
+          total_selected: selected_length,
           name: this.name,
           terms: res.facets[this.name].terms.buckets
         }, this.extraContext || {});
