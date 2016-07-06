@@ -13,7 +13,6 @@ replaces the current content.
 ###
 
 ScrollDisplay = require '../scrolldisplay'
-bean = require 'bean'
 
 
 class ScrollResults extends ScrollDisplay
@@ -38,7 +37,6 @@ class ScrollResults extends ScrollDisplay
       """
     else
       template = options.template
-
     super(element, template, options)
 
   ###
@@ -51,7 +49,7 @@ class ScrollResults extends ScrollDisplay
 
     self = this
     # TODO(@carlosescri): I think this is better outside of the widget
-    bean.on @element, 'click', 'a[data-df-hitcounter]', ->
-      self.trigger 'df:hit', [this.getAttribute('data-df-hitcounter'), this.getAttribute('href')]
+    @element.on 'click', 'a[data-df-hitcounter]', ->
+      self.trigger 'df:hit', [this.data('df-hitcounter'), this.attr('href')]
 
 module.exports = ScrollResults

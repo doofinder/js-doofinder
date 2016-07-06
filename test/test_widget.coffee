@@ -1,6 +1,7 @@
 chai = require 'chai'
 nock = require 'nock'
 bean = require 'bean'
+dfdom = require '../src/util/dfdom'
 
 chai.should()
 assert = chai.assert
@@ -241,13 +242,13 @@ describe 'Widget Tests:', ->
     it 'should call nextPage() on df:scroll with custom offset', (done) ->
       resultsContainer = $ '#scroll'
 
-      @resultsWidget.elementWrapper.setAttribute 'style', 'position: relative; height: 800px; overflow-x: hidden; overflow-y: scroll;'
-      @resultsWidget.element.setAttribute 'style', 'height: 1200px;'
+      @resultsWidget.elementWrapper.attr 'style', 'position: relative; height: 800px; overflow-x: hidden; overflow-y: scroll;'
+      @resultsWidget.element.attr 'style', 'height: 1200px;'
       # jsdom doesn't update clientHeight nor clientWidth when applying styles
       # this hack is to make dfScroll find proper values when asking the DOM
       # elements for these values
-      @resultsWidget.elementWrapper.clientHeight = 800
-      @resultsWidget.element.clientHeight = 1200
+      @resultsWidget.elementWrapper.element.clientHeight = 800
+      @resultsWidget.element.element.clientHeight = 1200
 
       self = this
 
@@ -372,11 +373,16 @@ describe 'Widget Tests:', ->
 
       # Create RangeFacet Widget instance
       rangefacet = new doofinder.widgets.RangeFacet('#rangefacet', 'best_price')
+      console.log rangefacet.element
+      console.log "HPS"
 
       rangefacet.bind 'df:rendered', (response) ->
+        console.log "RENDERED"
         rangefacetNode.find('.noUi-handle-lower > .noUi-tooltip').first().text().should.be.eql '8.5'
         rangefacetNode.find('.noUi-handle-upper > .noUi-tooltip').first().text().should.be.eql '225'
         done()
 
       createController(rangefacet)
+      console.log "DESPUES CREATE CONTROLLER"
       typeSearchTerms('pill')
+      console.log "DESPUES DE SEARCH"

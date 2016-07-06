@@ -22,3 +22,4 @@ module.exports =
     bean: require "bean"
     extend: require "extend"
     introspection: require "./util/introspection"
+    dfdom: require "./util/dfdom"

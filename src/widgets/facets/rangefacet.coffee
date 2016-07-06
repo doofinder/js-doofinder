@@ -76,11 +76,11 @@ class RangeFacet extends Display
     context = extend true, context, @extraContext or {}
 
     # Render template HTML and place it inside the container
-    @element.innerHTML = @mustache.render(@template, context)
+    @element.html @mustache.render @template, context
 
     # Create a node for the the slider and append it to @sliderSelector
     @slider = document.createElement 'div'
-    @element.querySelector(@sliderSelector).appendChild @slider
+    @element.find(@sliderSelector).append(@slider)
 
     # Initialize the slider
     noUiSlider.create @slider, options

@@ -49,7 +49,7 @@ class QueryInput extends Widget
 
     options = extend true,
       callback: ->
-        query = self.element.value
+        query = self.element.val()
         controller.reset()
         controller.search.call controller, query
       wait: 43

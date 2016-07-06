@@ -1,5 +1,5 @@
 extend = require 'extend'
-bean = require 'bean'
+$ = require './dfdom'
 
 module.exports = (element, options) ->
   _supportedInputTypes = ['TEXT', 'TEXTAREA', 'PASSWORD', 'TEL', 'SEARCH', 'URL',
@@ -15,7 +15,7 @@ module.exports = (element, options) ->
   options = extend true, {}, defaults, options
 
   checkElement = (timer, override) ->
-    value = timer.el.value or ''
+    value = timer.el.val() or ''
 
     if value.length >= options.captureLength and value.toUpperCase() != timer.text or
         override and value.length >= options.captureLength or
@@ -24,7 +24,7 @@ module.exports = (element, options) ->
       timer.cb.call timer.el, value
 
   watchElement = (elem) ->
-    inputType = elem.getAttribute('type')
+    inputType = elem.attr('type')
     if not inputType
       inputType = 'text'
 
@@ -37,7 +37,7 @@ module.exports = (element, options) ->
         wait: options.wait
         el: elem
 
-      bean.on elem, 'keydown paste cut input change', (e) ->
+      elem.on 'keydown paste cut input change', (e) ->
         delay = timer.wait
         override = false
         inputType = this.type.toUpperCase()
@@ -55,6 +55,6 @@ module.exports = (element, options) ->
         timer.timer = setTimeout timerCallbackFx, delay
 
   if typeof element is 'string'
-    element = document.querySelector element
+    element = $ element
 
   return watchElement element
