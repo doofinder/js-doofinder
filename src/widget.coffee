@@ -12,14 +12,13 @@ shaped by template
 ###
 
 bean = require "bean"
+$ = require "./util/dfdom"
 
 class Widget
 
 
   constructor: (element) ->
-    if typeof element is 'string'
-      element = document.querySelector element
-    @element = element
+    @element = $ element
 
   ###
   init
@@ -73,7 +72,7 @@ class Widget
   @api public
   ###
   bind: (event, callback) ->
-    bean.on(@element, event, callback)
+    @element.on event, callback
 
   ###
   trigger
@@ -84,7 +83,7 @@ class Widget
   @api public
   ###
   trigger: (event, params) ->
-    bean.fire(@element, event, params)
+    @element.trigger event, params
 
   ###
   raiseError

@@ -5,8 +5,8 @@ author: @ecoslado
 ###
 
 Display = require "../display"
-bean = require 'bean'
 extend = require "extend"
+$ = require "../../util/dfdom"
 
 ###
 TermFacet
@@ -55,11 +55,11 @@ class TermFacet extends Display
       self.selected = {}
 
     # The filtering by click
-    bean.on @element, 'click', "a[data-facet='#{@name}']", (e) ->
+    @element.on 'click', "a[data-facet='#{@name}']", (e) ->
       e.preventDefault()
 
-      value = this.getAttribute 'data-value'
-      key = this.getAttribute 'data-facet'
+      value = $(this).data 'value'
+      key = $(this).data 'facet'
 
       if self.selected[value]
         delete self.selected[value]
@@ -116,9 +116,9 @@ class TermFacet extends Display
         @extraContext || {}
       @addHelpers(context)
 
-      @element.innerHTML = @mustache.render(@template, context)
+      @element.html @mustache.render(@template, context)
     else
-      @element.innerHTML = ''
+      @element.html ''
 
     @trigger('df:rendered', [res])
 

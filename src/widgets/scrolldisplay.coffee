@@ -16,6 +16,7 @@ bottom
 Display = require "./display"
 dfScroll = require "../util/dfscroll"
 extend = require 'extend'
+$ = require '../util/dfdom'
 
 class ScrollDisplay extends Display
 
@@ -42,21 +43,21 @@ class ScrollDisplay extends Display
 
     if options.windowScroll
       # Uses window as scroll wrapper
-      @elementWrapper = document.body
+      @elementWrapper = $ document.body
       dfScroll scrollOptions
       
     else
-      if not @element.children.length
+      if not @element.children().length
         # Just in case the inner element in the scroll is not given
-        @element.appendChild document.createElement('div')
+        @element.append document.createElement('div')
 
       @elementWrapper = @element
-      @element = @element.children[0]
+      @element = @element.children().first()
 
       # Overrides container by defined
       if options.container
         if typeof options.container is 'string'
-          @element = document.querySelector options.container
+          @element = $ options.container
         else
           @element = options.container
       dfScroll @elementWrapper, scrollOptions
@@ -71,7 +72,7 @@ class ScrollDisplay extends Display
     super(controller)
     self = this
     @controller.bind 'df:search df:refresh', (params) ->
-      self.elementWrapper.scrollTop = 0
+      self.elementWrapper.scrollTop(0)
 
   ###
   renderNext
@@ -84,14 +85,7 @@ class ScrollDisplay extends Display
     context = extend true, res, @extraContext or {}
     context.is_first = false
     @addHelpers context
-
-    if @element.insertAdjacentHTML?
-      @element.insertAdjacentHTML 'beforeend', @mustache.render(@template, context)
-    else
-      # WTF: Patch for tests (jsdom says that insertAdjacentHTML is not a function but it works
-      # in the browser. It's slower but KISS.
-      @element.innerHTML += @mustache.render(@template, context)
-
+    @element.append @mustache.render(@template, context)
     @trigger("df:rendered", [res])
 
 
