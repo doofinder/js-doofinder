@@ -1229,13 +1229,15 @@ author: @ecoslado
     DfDomElement.prototype.parents = function(selector) {
       var o, p, parents;
       parents = [];
-      p = this._first().parentElement;
-      while (p !== null) {
-        o = p;
-        if ((selector == null) || o.matches(selector)) {
-          parents.push(o);
+      if (this._first() && this._first().parentElement) {
+        p = this._first().parentElement;
+        while (p !== null) {
+          o = p;
+          if ((selector == null) || o.matches(selector)) {
+            parents.push(o);
+          }
+          p = o.parentElement;
         }
-        p = o.parentElement;
       }
       return new DfDomElement(parents);
     };
@@ -1258,19 +1260,6 @@ author: @ecoslado
     DfDomElement.prototype.html = function(htmlString) {
       this.each(function(elem) {
         return elem.innerHTML = htmlString;
-      });
-      return this;
-    };
-
-    DfDomElement.prototype._insert = function(fragment, mode) {
-      this.each(function(elem) {
-        if (typeof fragment === "string") {
-          return elem.insertAdjacentHTML(mode, fragment);
-        } else if (fragment.tagName) {
-          return elem.appendChild(fragment);
-        } else {
-          return elem.appendChild(fragment._first());
-        }
       });
       return this;
     };
@@ -1335,14 +1324,22 @@ author: @ecoslado
     };
 
     DfDomElement.prototype.attr = function(key, value) {
-      if (typeof value !== "undefined") {
-        this._first().setAttribute(key, value);
+      var first;
+      first = this._first();
+      if ((first != null) && (first.getAttribute != null)) {
+        if (typeof value !== "undefined") {
+          first.setAttribute(key, value);
+        }
+        return first.getAttribute(key);
       }
-      return this._first().getAttribute(key);
     };
 
     DfDomElement.prototype.removeAttr = function(key) {
-      this._first().removeAttribute(key);
+      var first;
+      first = this._first();
+      if ((first != null) && (first.removeAttribute != null)) {
+        first.removeAttribute(key);
+      }
       return this;
     };
 
@@ -1360,24 +1357,44 @@ author: @ecoslado
     };
 
     DfDomElement.prototype.width = function() {
-      return Math.max(this._first().clientWidth, this._first().offsetWidth);
+      var first;
+      first = this._first();
+      if (first != null) {
+        return Math.max(first.clientWidth, first.offsetWidth);
+      }
     };
 
     DfDomElement.prototype.height = function() {
-      return Math.max(this._first().clientHeight, this._first().offsetHeight);
+      var first;
+      first = this._first();
+      if (first != null) {
+        return Math.max(first.clientHeight, first.offsetHeight);
+      }
     };
 
     DfDomElement.prototype.top = function() {
-      return this._first().getBoundingClientRect().top;
+      var first;
+      first = this._first();
+      if ((first != null) && first.getBoundingClientRect()) {
+        return first.getBoundingClientRect().top;
+      } else {
+        return 0;
+      }
     };
 
     DfDomElement.prototype.left = function() {
-      return this._first().getBoundingClientRect().left;
+      var first;
+      first = this._first();
+      if ((first != null) && first.getBoundingClientRect()) {
+        return this._first().getBoundingClientRect().left;
+      } else {
+        return 0;
+      }
     };
 
     DfDomElement.prototype.scrollTop = function(value) {
       if (typeof value !== "undefined") {
-        this._first().scrollTop = 0;
+        this._first().scrollTop = value;
       }
       return this._first().scrollTop;
     };
@@ -1427,17 +1444,25 @@ author: @ecoslado
     };
 
     DfDomElement.prototype.remove = function() {
-      return this._first().parentNode.removeChild(this._first());
+      var first;
+      first = this._first();
+      if ((first != null) && (first.parentNode != null)) {
+        return first.parentNode.removeChild(this._first());
+      }
     };
 
     DfDomElement.prototype.on = function(arg1, arg2, arg3) {
       if (arg3 != null) {
         this.each(function(elem) {
-          return bean.on(elem, arg1, arg2, arg3);
+          if (elem != null) {
+            return bean.on(elem, arg1, arg2, arg3);
+          }
         });
       } else {
         this.each(function(elem) {
-          return bean.on(elem, arg1, arg2);
+          if (elem != null) {
+            return bean.on(elem, arg1, arg2);
+          }
         });
       }
       return this;
@@ -1445,7 +1470,18 @@ author: @ecoslado
 
     DfDomElement.prototype.trigger = function(event, params) {
       this.each(function(elem) {
-        return bean.fire(elem, event, params);
+        if (elem != null) {
+          return bean.fire(elem, event, params);
+        }
+      });
+      return this;
+    };
+
+    DfDomElement.prototype.off = function(event) {
+      this.each(function(elem) {
+        if (elem != null) {
+          return bean.off(elem, event);
+        }
       });
       return this;
     };
@@ -1497,7 +1533,6 @@ author: @ecoslado
       options = extend(true, defaults, arg1);
       content = document;
       container = window;
-      console.log(bean.on);
       bean.on(container, 'df:scroll', function() {
         if (['horizontal', 'vertical'].indexOf(options.direction) <= -1) {
           throw Error("[Doofinder] dfScroll: Direction is not properly set. It might be 'horizontal' or 'vertical'.");

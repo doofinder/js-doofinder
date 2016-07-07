@@ -17,7 +17,6 @@ module.exports = (arg1, arg2 = null) ->
     options = extend true, defaults, arg1
     content = document
     container = window
-    console.log bean.on
     bean.on container, 'df:scroll', ->
       if ['horizontal', 'vertical'].indexOf(options.direction) <= -1
         throw Error("[Doofinder] dfScroll: Direction is not properly set. It might be 'horizontal' or 'vertical'.")

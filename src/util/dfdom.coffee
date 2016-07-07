@@ -54,14 +54,15 @@ class DfDomElement
     return null
 
   parents: (selector) ->
-    parents = [];
-    p = @_first().parentElement
-    while (p != null)
-      o = p
-      if not selector? or o.matches(selector)
-        parents.push(o)
- 
-      p = o.parentElement
+    parents = []
+    if @_first() and @_first().parentElement
+      p = @_first().parentElement
+      while (p != null)
+        o = p
+        if not selector? or o.matches(selector)
+          parents.push(o)
+   
+        p = o.parentElement
     return new DfDomElement parents
 
   _first: () ->
@@ -126,12 +127,16 @@ class DfDomElement
     @html("")
 
   attr: (key, value) ->
-    if typeof(value) != "undefined"
-      @_first().setAttribute(key,value)
-    return @_first().getAttribute(key)
+    first = @_first()
+    if first? and first.getAttribute?
+      if typeof(value) != "undefined"
+        first.setAttribute(key,value)
+      return first.getAttribute(key)
 
   removeAttr: (key) ->
-    @_first().removeAttribute(key)
+    first = @_first()
+    if first? and first.removeAttribute?
+      first.removeAttribute(key)
     return this
     
   data: (key, value) ->
@@ -145,20 +150,33 @@ class DfDomElement
 
   # STYLES
   width: () ->
-    Math.max @_first().clientWidth, @_first().offsetWidth
+    first = @_first()
+    if first?
+      Math.max first.clientWidth, first.offsetWidth
 
   height: () ->
-    Math.max @_first().clientHeight, @_first().offsetHeight
+    first = @_first()
+    if first?
+      Math.max first.clientHeight, first.offsetHeight
 
   top: () ->
-    @_first().getBoundingClientRect().top
+    first = @_first()
+    if first? and first.getBoundingClientRect()
+      return first.getBoundingClientRect().top
+    else
+      return 0
+
 
   left: () ->
-    @_first().getBoundingClientRect().left
+    first = @_first()
+    if first? and first.getBoundingClientRect()
+      return @_first().getBoundingClientRect().left
+    else
+      return 0
 
   scrollTop: (value) ->
     if typeof(value) != "undefined"
-      @_first().scrollTop = 0
+      @_first().scrollTop = value
     @_first().scrollTop
 
   scrollLeft: () ->
@@ -194,21 +212,32 @@ class DfDomElement
     @css "display", "block"
 
   remove: () ->
-    @_first().parentNode.removeChild(@_first())
+    first = @_first()
+    if first? and first.parentNode?
+      first.parentNode.removeChild(@_first())
 
   # EVENTS
   on: (arg1, arg2, arg3) ->
     if arg3?
       @each (elem) ->
-        bean.on(elem, arg1, arg2, arg3)
+        if elem?
+          bean.on(elem, arg1, arg2, arg3)
     else
       @each (elem) ->
-        bean.on(elem, arg1, arg2)
+        if elem?
+          bean.on(elem, arg1, arg2)
     return this
 
   trigger: (event, params) ->
     @each (elem) ->
-      bean.fire(elem, event, params)
+      if elem?
+        bean.fire(elem, event, params)
+    return this
+
+  off: (event) ->
+    @each (elem) ->
+      if elem?
+        bean.off(elem, event)
     return this
 
   focus: () ->

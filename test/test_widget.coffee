@@ -181,6 +181,7 @@ describe 'Widget Tests:', ->
     it 'should display search results and trigger df:rendered', (done) ->
       resultsContainer = $ '#scroll'
       @resultsWidget.bind 'df:rendered', (response) ->
+        console.log "TEST RENDERED"
         resultsContainer.find('li').length.should.be.equal 2
         resultsContainer.find('li:first').first('b').text().should.contain 'Aironet'
         response.results.length.should.be.equal 2
@@ -373,16 +374,11 @@ describe 'Widget Tests:', ->
 
       # Create RangeFacet Widget instance
       rangefacet = new doofinder.widgets.RangeFacet('#rangefacet', 'best_price')
-      console.log rangefacet.element
-      console.log "HPS"
 
       rangefacet.bind 'df:rendered', (response) ->
-        console.log "RENDERED"
         rangefacetNode.find('.noUi-handle-lower > .noUi-tooltip').first().text().should.be.eql '8.5'
         rangefacetNode.find('.noUi-handle-upper > .noUi-tooltip').first().text().should.be.eql '225'
         done()
 
       createController(rangefacet)
-      console.log "DESPUES CREATE CONTROLLER"
       typeSearchTerms('pill')
-      console.log "DESPUES DE SEARCH"
