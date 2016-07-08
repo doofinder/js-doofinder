@@ -241,7 +241,12 @@ class DfDomElement
     return this
 
   focus: () ->
-    @_first().focus()
+    if @_first()?
+      @_first().focus()
+
+  blur: () ->
+    if @_first()?
+      @_first().blur()
 
 
 

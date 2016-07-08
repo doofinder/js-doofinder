@@ -1131,7 +1131,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.0",
+    version: "4.1.1",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1150,13 +1150,14 @@ author: @ecoslado
       bean: require("bean"),
       extend: require("extend"),
       introspection: require("./util/introspection"),
-      dfdom: require("./util/dfdom")
+      dfdom: require("./util/dfdom"),
+      throttle: require("./util/throttle")
     }
   };
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./util/dfdom":4,"./util/introspection":9,"./widget":11,"./widgets/display":12,"./widgets/facets/rangefacet":13,"./widgets/facets/termfacet":14,"./widgets/queryinput":15,"./widgets/results/results":16,"./widgets/results/scrollresults":17,"bean":19,"extend":20,"md5":63,"mustache":67,"qs":69}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./util/dfdom":4,"./util/introspection":9,"./util/throttle":10,"./widget":11,"./widgets/display":12,"./widgets/facets/rangefacet":13,"./widgets/facets/termfacet":14,"./widgets/queryinput":15,"./widgets/results/results":16,"./widgets/results/scrollresults":17,"bean":19,"extend":20,"md5":63,"mustache":67,"qs":69}],4:[function(require,module,exports){
 
 /*
 dfdom.coffee
@@ -1487,7 +1488,15 @@ author: @ecoslado
     };
 
     DfDomElement.prototype.focus = function() {
-      return this._first().focus();
+      if (this._first() != null) {
+        return this._first().focus();
+      }
+    };
+
+    DfDomElement.prototype.blur = function() {
+      if (this._first() != null) {
+        return this._first().blur();
+      }
     };
 
     return DfDomElement;
