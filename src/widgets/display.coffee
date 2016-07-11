@@ -50,6 +50,7 @@ class Display extends Widget
   render: (res) ->
     context = extend true, res, @extraContext or {}
     context.is_first = true
+    context.is_last = @controller.status.lastPageReached
     @addHelpers context
     @element.html @mustache.render @template, context
     @trigger("df:rendered", [res])
@@ -66,6 +67,7 @@ class Display extends Widget
   renderNext: (res) ->
     context = extend true, res, @extraContext or {}
     context.is_first = false
+    context.is_last = @controller.status.lastPageReached
     @addHelpers context
     @element.html @mustache.render @template, context
     @trigger("df:rendered", [res])

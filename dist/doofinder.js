@@ -1131,7 +1131,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.1",
+    version: "4.1.2",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1220,7 +1220,7 @@ author: @ecoslado
       while (el) {
         parent = el.parentElement;
         if (parent && parent[matchesFn](selector)) {
-          return parent;
+          return new DfDomElement(parent);
         }
         el = parent;
       }
@@ -2046,6 +2046,7 @@ replaces the current content.
       var context;
       context = extend(true, res, this.extraContext || {});
       context.is_first = true;
+      context.is_last = this.controller.status.lastPageReached;
       this.addHelpers(context);
       this.element.html(this.mustache.render(this.template, context));
       return this.trigger("df:rendered", [res]);
@@ -2064,6 +2065,7 @@ replaces the current content.
       var context;
       context = extend(true, res, this.extraContext || {});
       context.is_first = false;
+      context.is_last = this.controller.status.lastPageReached;
       this.addHelpers(context);
       this.element.html(this.mustache.render(this.template, context));
       return this.trigger("df:rendered", [res]);
@@ -2825,6 +2827,7 @@ bottom
       var context;
       context = extend(true, res, this.extraContext || {});
       context.is_first = false;
+      context.is_last = this.controller.status.lastPageReached;
       this.addHelpers(context);
       this.element.append(this.mustache.render(this.template, context));
       return this.trigger("df:rendered", [res]);

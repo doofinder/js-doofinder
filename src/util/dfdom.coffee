@@ -49,7 +49,7 @@ class DfDomElement
     while (el)
       parent = el.parentElement
       if (parent && parent[matchesFn](selector))
-        return parent
+        return new DfDomElement parent
       el = parent
     return null
 

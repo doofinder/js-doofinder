@@ -84,6 +84,7 @@ class ScrollDisplay extends Display
   renderNext: (res) ->
     context = extend true, res, @extraContext or {}
     context.is_first = false
+    context.is_last = @controller.status.lastPageReached
     @addHelpers context
     @element.append @mustache.render(@template, context)
     @trigger("df:rendered", [res])
