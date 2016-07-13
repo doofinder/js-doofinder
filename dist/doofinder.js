@@ -1131,7 +1131,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.2",
+    version: "4.1.3",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -2692,22 +2692,6 @@ replaces the current content.
       }
       ScrollResults.__super__.constructor.call(this, element, template, options);
     }
-
-
-    /*
-    init
-    
-    @api public
-     */
-
-    ScrollResults.prototype.init = function(controller) {
-      var self;
-      ScrollResults.__super__.init.call(this, controller);
-      self = this;
-      return this.element.on('click', 'a[data-df-hitcounter]', function() {
-        return self.trigger('df:hit', [this.data('df-hitcounter'), this.attr('href')]);
-      });
-    };
 
     return ScrollResults;
 

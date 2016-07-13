@@ -38,18 +38,6 @@ class ScrollResults extends ScrollDisplay
     else
       template = options.template
     super(element, template, options)
-
-  ###
-  init
-
-  @api public
-  ###
-  init: (controller) ->
-    super(controller)
-
-    self = this
-    # TODO(@carlosescri): I think this is better outside of the widget
-    @element.on 'click', 'a[data-df-hitcounter]', ->
-      self.trigger 'df:hit', [this.data('df-hitcounter'), this.attr('href')]
+    
 
 module.exports = ScrollResults
