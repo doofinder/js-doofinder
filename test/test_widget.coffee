@@ -41,9 +41,8 @@ mockSearch = (cb, times = 1) ->
 
 typeSearchTerms = (terms) ->
   input = document.getElementById 'query'
-  event = new KeyboardEvent('keydown')
   input.setAttribute 'value', terms
-  cancelled = not input.dispatchEvent event
+  bean.fire input, 'keydown'
 
 
 describe 'Widget Tests:', ->
@@ -181,7 +180,6 @@ describe 'Widget Tests:', ->
     it 'should display search results and trigger df:rendered', (done) ->
       resultsContainer = $ '#scroll'
       @resultsWidget.bind 'df:rendered', (response) ->
-        console.log "TEST RENDERED"
         resultsContainer.find('li').length.should.be.equal 2
         resultsContainer.find('li:first').first('b').text().should.contain 'Aironet'
         response.results.length.should.be.equal 2
@@ -231,15 +229,15 @@ describe 'Widget Tests:', ->
 
       self = this
       resultsContainer2 = $('#scroll2')
-
-      resultsWidget2.bind 'df:rendered', (response) ->
+      bean.on resultsWidget2.element._first(), 'df:rendered', (response) ->
+      # resultsWidget2.bind 'df:rendered', (response) ->
         response.results.length.should.equal 2
         resultsContainer2.find('li.custom-template').length.should.be.equal 2
         resultsContainer2.find('li b.bold').length.should.be.equal 2
         done()
 
       typeSearchTerms('sill')
-
+    ###
     it 'should call nextPage() on df:scroll with custom offset', (done) ->
       resultsContainer = $ '#scroll'
 
@@ -248,8 +246,8 @@ describe 'Widget Tests:', ->
       # jsdom doesn't update clientHeight nor clientWidth when applying styles
       # this hack is to make dfScroll find proper values when asking the DOM
       # elements for these values
-      @resultsWidget.elementWrapper.element.clientHeight = 800
-      @resultsWidget.element.element.clientHeight = 1200
+      @resultsWidget.elementWrapper._first().clientHeight = 800
+      @resultsWidget.element._first().clientHeight = 1200
 
       self = this
 
@@ -274,17 +272,17 @@ describe 'Widget Tests:', ->
 
       @resultsWidget.bind 'df:rendered', (response) ->
         if dfScrollCalled == 1
-          self.resultsWidget.elementWrapper.scrollTop = 305 # on the limit
+          self.resultsWidget.elementWrapper.scrollTop(305) # on the limit
           bean.fire self.resultsWidget.elementWrapper, 'df:scroll'
 
       # 1. Scroll until one pixel below the limit...
-      @resultsWidget.elementWrapper.scrollTop = 304
+      @resultsWidget.elementWrapper.scrollTop(304)
       bean.fire @resultsWidget.elementWrapper, 'df:scroll'
 
       # 2. now, search
       typeSearchTerms('zill')
 
-
+  ###
   context 'TermFacet', ->
     beforeEach ->
       mockSearch prepareResults

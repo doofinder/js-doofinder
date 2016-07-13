@@ -84,18 +84,23 @@ class DfDomElement
 
   append: (fragment) ->
     @each (elem) -> 
-      if typeof fragment is "string"
+      if typeof fragment is "string" and elem.insertAdjacentHTML?
         elem.insertAdjacentHTML  "beforeend", fragment
-      else if fragment.tagName
+      else if typeof fragment is "string" and not elem.insertAdjacentHTML?
+        elem.innerHTML += fragment
+      else if fragment.tagName?
         elem.appendChild fragment
-      else
+      else if fragment._first?
         elem.appendChild fragment._first()
+        
     return this
 
   prepend: (fragment) ->
     @each (elem) -> 
-      if typeof fragment is "string"
+      if typeof fragment is "string" and elem.insertAdjacentHTML?
         elem.insertAdjacentHTML  "afterbegin", fragment
+      else if typeof fragment is "string" and not elem.insertAdjacentHTML?
+        elem.innerHTML = fragment + elem.innerHTML
       else
         if not fragment.tagName
           fragment = fragment._first()    

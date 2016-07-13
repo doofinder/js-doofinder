@@ -1131,7 +1131,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.3",
+    version: "4.1.4",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1267,11 +1267,13 @@ author: @ecoslado
 
     DfDomElement.prototype.append = function(fragment) {
       this.each(function(elem) {
-        if (typeof fragment === "string") {
+        if (typeof fragment === "string" && (elem.insertAdjacentHTML != null)) {
           return elem.insertAdjacentHTML("beforeend", fragment);
-        } else if (fragment.tagName) {
+        } else if (typeof fragment === "string" && (elem.insertAdjacentHTML == null)) {
+          return elem.innerHTML += fragment;
+        } else if (fragment.tagName != null) {
           return elem.appendChild(fragment);
-        } else {
+        } else if (fragment._first != null) {
           return elem.appendChild(fragment._first());
         }
       });
@@ -1280,8 +1282,10 @@ author: @ecoslado
 
     DfDomElement.prototype.prepend = function(fragment) {
       return this.each(function(elem) {
-        if (typeof fragment === "string") {
+        if (typeof fragment === "string" && (elem.insertAdjacentHTML != null)) {
           return elem.insertAdjacentHTML("afterbegin", fragment);
+        } else if (typeof fragment === "string" && (elem.insertAdjacentHTML == null)) {
+          return elem.innerHTML = fragment + elem.innerHTML;
         } else {
           if (!fragment.tagName) {
             fragment = fragment._first();
@@ -2765,7 +2769,7 @@ bottom
         this.elementWrapper = $(document.body);
         dfScroll(scrollOptions);
       } else {
-        if (!this.element.children().length) {
+        if (!this.element.children().length()) {
           this.element.append(document.createElement('div'));
         }
         this.elementWrapper = this.element;

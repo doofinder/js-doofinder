@@ -47,9 +47,9 @@ class ScrollDisplay extends Display
       dfScroll scrollOptions
       
     else
-      if not @element.children().length
+      if not @element.children().length()
         # Just in case the inner element in the scroll is not given
-        @element.append document.createElement('div')
+        @element.append document.createElement 'div'
 
       @elementWrapper = @element
       @element = @element.children().first()
