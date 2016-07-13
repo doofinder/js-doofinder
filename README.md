@@ -420,7 +420,6 @@ The events you can bind in widget are the described above. Note that each event 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
 df:rendered   | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
-df:hit   | <ul><li>event`Object`: object with the event information.</li><li>dfid`String`: Doofinder Item Identifier. Useful to make the controller.hit call.</li><li>url`String`: The url associated to the item. Useful to make the controller.sendToGA call.</li></ul> | This event is triggered when a result link is clicked.
 
 As an example, we'll print in the console the total results in the `df:rendered` event.
 
