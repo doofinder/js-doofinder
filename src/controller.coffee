@@ -447,7 +447,6 @@ class Controller
       qs.parse(queryString.replace("#{prefix}", "")) || {}
     @status.params.query_counter = 1
     @status.currentPage = 1
-
     @refresh()
     return @status.params.query
 
@@ -466,7 +465,16 @@ class Controller
     delete params.rpp
     delete params.query_counter
     delete params.page
+    # (@ecoslado) Hack to avoid the underscore's
+    # Array methods
+    if [].each?
+      filters = {}
+      for key, value of params.filters
+        filters[key] = []
+        value.each (elem) ->
+          filters[key].push elem
 
+      params.filters = filters
 
     return "#{prefix}#{qs.stringify(params)}"
 

@@ -1100,7 +1100,7 @@ author: @ecoslado
      */
 
     Controller.prototype.statusQueryString = function(prefix) {
-      var params;
+      var filters, key, params, ref, value;
       if (prefix == null) {
         prefix = "#/search/";
       }
@@ -1109,6 +1109,18 @@ author: @ecoslado
       delete params.rpp;
       delete params.query_counter;
       delete params.page;
+      if ([].each != null) {
+        filters = {};
+        ref = params.filters;
+        for (key in ref) {
+          value = ref[key];
+          filters[key] = [];
+          value.each(function(elem) {
+            return filters[key].push(elem);
+          });
+        }
+        params.filters = filters;
+      }
       return "" + prefix + (qs.stringify(params));
     };
 
@@ -1131,7 +1143,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.4",
+    version: "4.1.5",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
