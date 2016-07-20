@@ -31,6 +31,7 @@ class QueryInput extends Widget
   ###
   constructor: (element, @options = {}) ->
     super(element)
+    @typingTimeout = @options.typingTimeout || 1000
 
   ###
   start
@@ -57,5 +58,14 @@ class QueryInput extends Widget
       @options
 
     dfTypeWatch @element, options
+    controller = @controller[0]
+    controller.bind 'df:results_received', (res) ->
+      setTimeout (->
+        if controller.status.params.query_counter == res.query_counter and
+            controller.status.currentPage == 1
+          self.trigger('df:typing_stopped')),
+        self.typingTimeout
+
+
 
 module.exports = QueryInput

@@ -1143,7 +1143,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.5",
+    version: "4.1.6",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -2561,6 +2561,7 @@ author: @ecoslado
     function QueryInput(element, options1) {
       this.options = options1 != null ? options1 : {};
       QueryInput.__super__.constructor.call(this, element);
+      this.typingTimeout = this.options.typingTimeout || 1000;
     }
 
 
@@ -2590,7 +2591,15 @@ author: @ecoslado
         wait: 43,
         captureLength: 3
       }, this.options);
-      return dfTypeWatch(this.element, options);
+      dfTypeWatch(this.element, options);
+      controller = this.controller[0];
+      return controller.bind('df:results_received', function(res) {
+        return setTimeout((function() {
+          if (controller.status.params.query_counter === res.query_counter && controller.status.currentPage === 1) {
+            return self.trigger('df:typing_stopped');
+          }
+        }), self.typingTimeout);
+      });
     };
 
     return QueryInput;
