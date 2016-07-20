@@ -1143,7 +1143,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.7",
+    version: "4.1.8",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -2574,7 +2574,7 @@ author: @ecoslado
      */
 
     QueryInput.prototype.init = function(controller) {
-      var options, self;
+      var ctrl, options, self;
       if (this.controller) {
         this.controller.push(controller);
       } else {
@@ -2592,11 +2592,11 @@ author: @ecoslado
         captureLength: 3
       }, this.options);
       dfTypeWatch(this.element, options);
-      controller = this.controller[0];
-      return controller.bind('df:results_received', function(res) {
+      ctrl = this.controller[0];
+      return ctrl.bind('df:results_received', function(res) {
         return setTimeout((function() {
-          if (controller.status.params.query_counter === res.query_counter && controller.status.currentPage === 1) {
-            return self.trigger('df:typing_stopped', [controller.status.params.query]);
+          if (ctrl.status.params.query_counter === res.query_counter && ctrl.status.currentPage === 1) {
+            return self.trigger('df:typing_stopped', [ctrl.status.params.query]);
           }
         }), self.typingTimeout);
       });

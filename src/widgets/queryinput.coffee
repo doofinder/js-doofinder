@@ -58,12 +58,12 @@ class QueryInput extends Widget
       @options
 
     dfTypeWatch @element, options
-    controller = @controller[0]
-    controller.bind 'df:results_received', (res) ->
+    ctrl = @controller[0]
+    ctrl.bind 'df:results_received', (res) ->
       setTimeout (->
-        if controller.status.params.query_counter == res.query_counter and
-            controller.status.currentPage == 1
-          self.trigger('df:typing_stopped', [controller.status.params.query])),
+        if ctrl.status.params.query_counter == res.query_counter and
+            ctrl.status.currentPage == 1
+          self.trigger('df:typing_stopped', [ctrl.status.params.query])),
         self.typingTimeout
 
 
