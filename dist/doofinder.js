@@ -1143,7 +1143,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.6",
+    version: "4.1.7",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -2596,7 +2596,7 @@ author: @ecoslado
       return controller.bind('df:results_received', function(res) {
         return setTimeout((function() {
           if (controller.status.params.query_counter === res.query_counter && controller.status.currentPage === 1) {
-            return self.trigger('df:typing_stopped');
+            return self.trigger('df:typing_stopped', [controller.status.params.query]);
           }
         }), self.typingTimeout);
       });

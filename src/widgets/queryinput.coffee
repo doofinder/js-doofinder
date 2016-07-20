@@ -63,7 +63,7 @@ class QueryInput extends Widget
       setTimeout (->
         if controller.status.params.query_counter == res.query_counter and
             controller.status.currentPage == 1
-          self.trigger('df:typing_stopped')),
+          self.trigger('df:typing_stopped', [controller.status.params.query])),
         self.typingTimeout
 
 
