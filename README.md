@@ -293,8 +293,13 @@ Option | Type | Description
 ------ |  ---- |  --------------
 wait | `Number` | milliseconds that the widget waits to check the input content length.
 captureLength | `Number` | number of Requireds typed when first search is performed
+typingTimeout | `Number` | number of milliseconds the `QueryInput` waits from the user's last character typed till trigger `df:typing_stopped`.
 
-`widgets.QueryInput` has no associated events.
+The events you can bind to a `widgets.QueryInput` are:
+
+Event Name | Callback Arguments | Description
+---------- | ------------------ | -----------
+df:typing_stopped   | <ul><li>event`Object`: object with the event information.</li><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when the user has stopped to type for a while (`typingTimeout` property, one second by default).
 
 ### widgets.Display
 This widget shows the results in a DOM node. When a new search or filter is done the new content will replace the older. This widget doesn't have paging.
