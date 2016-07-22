@@ -1143,7 +1143,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.8",
+    version: "4.1.9",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1240,13 +1240,21 @@ author: @ecoslado
     };
 
     DfDomElement.prototype.parents = function(selector) {
-      var o, p, parents;
+      var matchesFn, o, p, parents;
+      matchesFn = null;
+      ['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector'].some(function(fn) {
+        if (typeof document.body[fn] === 'function') {
+          matchesFn = fn;
+          return true;
+        }
+        return false;
+      });
       parents = [];
       if (this._first() && this._first().parentElement) {
         p = this._first().parentElement;
         while (p !== null) {
           o = p;
-          if ((selector == null) || o.matches(selector)) {
+          if ((selector == null) || o[matchesFn](selector)) {
             parents.push(o);
           }
           p = o.parentElement;

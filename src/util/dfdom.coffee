@@ -54,12 +54,19 @@ class DfDomElement
     return null
 
   parents: (selector) ->
+    matchesFn = null
+    ['matches','webkitMatchesSelector','mozMatchesSelector','msMatchesSelector','oMatchesSelector'].some (fn) ->
+      if (typeof document.body[fn] == 'function')
+        matchesFn = fn
+        return true
+
+      return false
     parents = []
     if @_first() and @_first().parentElement
       p = @_first().parentElement
       while (p != null)
         o = p
-        if not selector? or o.matches(selector)
+        if not selector? or o[matchesFn](selector)
           parents.push(o)
    
         p = o.parentElement
