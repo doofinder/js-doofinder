@@ -197,10 +197,10 @@ The events you can bind in widget are the described above. Note that each event 
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-df:search   | <ul><li>event`Object`: object with the event information.</li><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.search is called.
-df:next_page  | <ul><li>event`Object`: object with the event information.</li><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.nextPage is called.
-df:get_page   | <ul><li>event`Object`: object with the event information.</li><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.getPage is called.
-df:results_received | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: the Search API response</li></ul> | This event is triggered when new results are received from Search API.
+df:search   | <ul><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.search is called.
+df:next_page  | <ul><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.nextPage is called.
+df:get_page   | <ul><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.getPage is called.
+df:results_received | <ul><li>res`Object`: the Search API response</li></ul> | This event is triggered when new results are received from Search API.
 
 As an example, we'll print in the console the total results in the `df:results_received` event.
 
@@ -299,7 +299,7 @@ The events you can bind to a `widgets.QueryInput` are:
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-df:typing_stopped   | <ul><li>event`Object`: object with the event information.</li><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when the user has stopped to type for a while (`typingTimeout` property, one second by default).
+df:typing_stopped   | <ul><li>query `String`: the query in the input.</li></ul> | This event is triggered when the user has stopped to type for a while (`typingTimeout` property, one second by default).
 
 ### widgets.Display
 This widget shows the results in a DOM node. When a new search or filter is done the new content will replace the older. This widget doesn't have paging.
@@ -329,7 +329,7 @@ The events you can bind in widget are the described above. Note that each event 
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-df:rendered   | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
+df:rendered   | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
 
 As an example, we'll print in the console the total results in the `df:rendered` event.
 
@@ -370,7 +370,7 @@ The events you can bind in widget are the described above. Note that each event 
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-df:rendered   | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
+df:rendered   | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
 
 As an example, we'll print in the console the total results in the `df:rendered` event.
 
@@ -424,7 +424,7 @@ The events you can bind in widget are the described above. Note that each event 
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-df:rendered   | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
+df:rendered   | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
 
 As an example, we'll print in the console the total results in the `df:rendered` event.
 
@@ -467,7 +467,7 @@ The events you can bind in widget are the described above. Note that each event 
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-df:rendered   | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the facet is rendered.
+df:rendered   | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the facet is rendered.
 
 As an example, we'll print in the console the total results in the `df:rendered` event.
 
@@ -515,7 +515,7 @@ The events you can bind in widget are the described above. Note that each event 
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-df:rendered   | <ul><li>event`Object`: object with the event information.</li><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the facet is rendered.
+df:rendered   | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the facet is rendered.
 
 As an example, we'll print in the console the total results in the `df:rendered` event.
 
