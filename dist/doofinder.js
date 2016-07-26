@@ -1143,7 +1143,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.9",
+    version: "4.1.10",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1194,8 +1194,9 @@ author: @ecoslado
       this.element = element;
       if (typeof this.element === "string") {
         this.element = Array.prototype.slice.call(document.querySelectorAll(this.element));
-      }
-      if (this.element.constructor !== Array) {
+      } else if (this.element.element != null) {
+        this.element = this.element.element;
+      } else if (this.element.constructor !== Array) {
         this.element = [this.element];
       }
       return this;

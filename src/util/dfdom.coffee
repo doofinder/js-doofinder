@@ -15,9 +15,14 @@ DOM elements identified by a selector
 class DfDomElement
 
   constructor: (@element) ->
+    # @element is a CSS Selector
     if typeof @element is "string"
       @element = Array.prototype.slice.call document.querySelectorAll @element
-    if @element.constructor != Array
+    # @element is DfDomElement
+    else if @element.element?
+      @element = @element.element
+    # @element is a DOMElement
+    else if @element.constructor != Array
       @element = [@element]
     return this
   
