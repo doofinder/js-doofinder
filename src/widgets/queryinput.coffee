@@ -32,6 +32,7 @@ class QueryInput extends Widget
   constructor: (element, @options = {}) ->
     super(element)
     @typingTimeout = @options.typingTimeout || 1000
+    @eventsBound = false
 
   ###
   start
@@ -48,23 +49,29 @@ class QueryInput extends Widget
 
     self = this
 
-    options = extend true,
-      callback: ->
-        query = self.element.val()
-        controller.reset()
-        controller.search.call controller, query
-      wait: 43
-      captureLength: 3,
-      @options
+    # Bind events only once
+    if not @eventsBound
+      options = extend true,
+        callback: ->
+          query = self.element.val()
+          self.controller.forEach (item)->
+            item.reset()
+            item.search.call item, query
+        wait: 43
+        captureLength: 3,
+        @options
+      dfTypeWatch @element, options
+      
+      # Typing stopped event
+      ctrl = @controller[0]
+      ctrl.bind 'df:results_received', (res) ->
+        setTimeout (->
+          if ctrl.status.params.query_counter == res.query_counter and
+              ctrl.status.currentPage == 1
+            self.trigger('df:typing_stopped', [ctrl.status.params.query])),
+          self.typingTimeout
 
-    dfTypeWatch @element, options
-    ctrl = @controller[0]
-    ctrl.bind 'df:results_received', (res) ->
-      setTimeout (->
-        if ctrl.status.params.query_counter == res.query_counter and
-            ctrl.status.currentPage == 1
-          self.trigger('df:typing_stopped', [ctrl.status.params.query])),
-        self.typingTimeout
+      @eventsBound = true
 
 
 
