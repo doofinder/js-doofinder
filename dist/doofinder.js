@@ -1143,7 +1143,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.11",
+    version: "4.1.12",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -2203,6 +2203,7 @@ them. Manages the filtering.
       }
       this.slider = null;
       this.values = {};
+      this.parseNumber = parseFloat;
       RangeFacet.__super__.constructor.call(this, element, template, options);
     }
 
@@ -2226,7 +2227,7 @@ them. Manages the filtering.
       this.slider = document.createElement('div');
       this.element.find(this.sliderSelector).append(this.slider);
       noUiSlider.create(this.slider, options);
-      return this.slider.noUiSlider.on('change', function() {
+      this.slider.noUiSlider.on('change', function() {
         var max, min, ref;
         ref = self.slider.noUiSlider.get(), min = ref[0], max = ref[1];
         self.controller.addFilter(self.name, {
@@ -2236,6 +2237,7 @@ them. Manages the filtering.
         self.controller.refresh();
         return self.values = {};
       });
+      return this.numberType;
     };
 
 
@@ -2291,7 +2293,7 @@ them. Manages the filtering.
      */
 
     RangeFacet.prototype.render = function(res) {
-      var disabled, options, overrides, range, self, start, values;
+      var disabled, minimum, options, overrides, range, self, start, values;
       if (!res.facets || !res.facets[this.name]) {
         this.raiseError("RangeFacet: " + this.name + " facet is not configured");
       } else if (!res.facets[this.name].range) {
@@ -2299,7 +2301,9 @@ them. Manages the filtering.
       }
       self = this;
       if (res.total > 0) {
-        range = [parseFloat(res.facets[this.name].range.buckets[0].stats.min || 0, 10), parseFloat(res.facets[this.name].range.buckets[0].stats.max || 0, 10)];
+        minimum = res.facets[this.name].range.buckets[0].stats.min || 0;
+        this.parseNumber = Number(minimum) && minimum % 1 === 0 ? parseInt : parseFloat;
+        range = [this.parseNumber(res.facets[this.name].range.buckets[0].stats.min || 0, 10), this.parseNumber(res.facets[this.name].range.buckets[0].stats.max || 0, 10)];
         options = {
           start: range,
           range: {
@@ -2313,7 +2317,7 @@ them. Manages the filtering.
               var formattedValue;
               if (value != null) {
                 formattedValue = self.format(value);
-                self.values[formattedValue] = value;
+                self.values[formattedValue] = self.parseNumber(value);
                 return formattedValue;
               } else {
                 return "";
@@ -2325,7 +2329,7 @@ them. Manages the filtering.
           }
         };
         if (res && res.filter && res.filter.range && res.filter.range[this.name]) {
-          start = [parseFloat(res.filter.range[this.name].gte, 10), parseFloat(res.filter.range[this.name].lte, 10)];
+          start = [this.parseNumber(res.filter.range[this.name].gte, 10), this.parseNumber(res.filter.range[this.name].lte, 10)];
           if (!isNaN(start[0])) {
             options.start[0] = start[0];
           }
@@ -2353,7 +2357,14 @@ them. Manages the filtering.
           this.slider.removeAttribute('disabled');
         }
         if (options.pips == null) {
-          if (!disabled) {
+          if (!disabled && this.parseNumber === parseInt) {
+            values = {
+              0: this.parseNumber(options.format.to(options.range.min)),
+              50: this.parseNumber(options.format.to((options.range.min + options.range.max) / 2.0)),
+              100: this.parseNumber(options.format.to(options.range.max))
+            };
+            this._renderPips(values);
+          } else if (!disabled) {
             values = {
               0: options.format.to(options.range.min),
               50: options.format.to((options.range.min + options.range.max) / 2.0),

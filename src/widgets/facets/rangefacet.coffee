@@ -57,6 +57,8 @@ class RangeFacet extends Display
 
     @slider = null
     @values = {}
+    # Default number format
+    @parseNumber = parseFloat
 
     super(element, template, options)
 
@@ -96,6 +98,8 @@ class RangeFacet extends Display
         lte: self.values[max]
       self.controller.refresh()
       self.values = {}
+
+    @numberType  
 
   ###
   Renders the slider pips
@@ -146,10 +150,14 @@ class RangeFacet extends Display
 
     self = this
 
+
     # Update widget if any results found
     if res.total > 0
-      range = [parseFloat(res.facets[@name].range.buckets[0].stats.min || 0, 10),
-               parseFloat(res.facets[@name].range.buckets[0].stats.max || 0, 10)]
+      minimum = res.facets[@name].range.buckets[0].stats.min || 0
+      @parseNumber = if Number(minimum) and minimum % 1 == 0 then parseInt else parseFloat
+
+      range = [@parseNumber(res.facets[@name].range.buckets[0].stats.min || 0, 10),
+               @parseNumber(res.facets[@name].range.buckets[0].stats.max || 0, 10)]
 
       options =
         start: range
@@ -165,7 +173,7 @@ class RangeFacet extends Display
             # and value the numbers
             if value?
               formattedValue = self.format value
-              self.values[formattedValue] = value
+              self.values[formattedValue] = self.parseNumber(value)
               formattedValue
             else
               ""
@@ -174,8 +182,8 @@ class RangeFacet extends Display
 
       # If we have values from search filtering we apply them
       if res and res.filter and res.filter.range and res.filter.range[@name]
-        start = [parseFloat(res.filter.range[@name].gte, 10),
-                 parseFloat(res.filter.range[@name].lte, 10)]
+        start = [@parseNumber(res.filter.range[@name].gte, 10),
+                 @parseNumber(res.filter.range[@name].lte, 10)]
         options.start[0] = start[0] unless isNaN start[0]
         options.start[1] = start[1] unless isNaN start[1]
 
@@ -203,11 +211,17 @@ class RangeFacet extends Display
       # Pips are buggy in noUiSlider so we are going to paint them ourselves
       # unless options.pips has a value (either false or real options)
       unless options.pips?
-        if not disabled
+        if not disabled and @parseNumber == parseInt
           values =
-            0: options.format.to(options.range.min)
+            0: @parseNumber options.format.to options.range.min
+            50: @parseNumber(options.format.to((options.range.min + options.range.max) / 2.0))
+            100: @parseNumber options.format.to options.range.max
+          @_renderPips values
+        else if not disabled
+          values =
+            0: options.format.to options.range.min
             50: options.format.to((options.range.min + options.range.max) / 2.0)
-            100: options.format.to(options.range.max)
+            100: options.format.to options.range.max
           @_renderPips values
         else
           @_renderPips()  # coffee needs () here!!!
