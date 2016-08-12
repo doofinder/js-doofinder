@@ -151,8 +151,13 @@ class RangeFacet extends Display
     self = this
 
 
-    # Update widget if any results found
-    if res.total > 0
+    # Empty the widget if there's no items with values in the range
+    if res.total > 0 and not res.facets[@name].range.buckets[0].stats.max? or
+       res.facets[@name].range.buckets[0].stats.max == res.facets[@name].range.buckets[0].stats.min
+      @slider = null
+      @element.empty()
+    # Update widget if any results found and there are range bounds  
+    else if res.total > 0 
       minimum = res.facets[@name].range.buckets[0].stats.min || 0
       @parseNumber = if Number(minimum) and minimum % 1 == 0 then parseInt else parseFloat
 

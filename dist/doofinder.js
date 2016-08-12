@@ -1143,7 +1143,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.12",
+    version: "4.1.13",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -2300,7 +2300,10 @@ them. Manages the filtering.
         this.raiseError("RangeFacet: " + this.name + " facet is not a range facet");
       }
       self = this;
-      if (res.total > 0) {
+      if (res.total > 0 && (res.facets[this.name].range.buckets[0].stats.max == null) || res.facets[this.name].range.buckets[0].stats.max === res.facets[this.name].range.buckets[0].stats.min) {
+        this.slider = null;
+        this.element.empty();
+      } else if (res.total > 0) {
         minimum = res.facets[this.name].range.buckets[0].stats.min || 0;
         this.parseNumber = Number(minimum) && minimum % 1 === 0 ? parseInt : parseFloat;
         range = [this.parseNumber(res.facets[this.name].range.buckets[0].stats.min || 0, 10), this.parseNumber(res.facets[this.name].range.buckets[0].stats.max || 0, 10)];
