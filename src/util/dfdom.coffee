@@ -17,7 +17,9 @@ class DfDomElement
   constructor: (@element) ->
     # @element is a CSS Selector
     if typeof @element is "string"
-      @element = Array.prototype.slice.call document.querySelectorAll @element
+      # check for bad ids (starting with number)
+      selector = if /^#\d/.test @element then  "[id=\"#{@element.substring 1}\"]" else @element
+      @element = Array.prototype.slice.call document.querySelectorAll selector
     # @element is DfDomElement
     else if @element.element?
       @element = @element.element
