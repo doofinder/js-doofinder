@@ -227,14 +227,21 @@ class Client
     # Adding types
     if @type and @type instanceof Array
       for key, value of @type
-        querystring += encodeURI "&type=#{value}"
-
+        querystring += encodeURI "&type[]=#{value}"
     else if @type and @type.constructor == String
       querystring += encodeURI "&type=#{@type}"
+    else if @params.type and @params.type instanceof Array
+      for key, value of @params.type
+        querystring += encodeURI "&type[]=#{value}"
+    else if @params.type and @params.type.constructor == String
+      querystring += encodeURI "&type=#{@type}"
+
+    
 
     # Adding params
     for key, value of @params
-      querystring += encodeURI "&#{key}=#{value}"
+      if key != "type"
+        querystring += encodeURI "&#{key}=#{value}"
 
     # Adding filters
     for key, value of @filters
