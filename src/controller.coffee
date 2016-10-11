@@ -465,18 +465,13 @@ class Controller
     delete params.rpp
     delete params.query_counter
     delete params.page
-    # (@ecoslado) Hack to avoid the underscore's
-    # Array methods
-    if [].each?
-      filters = {}
-      for key, value of params.filters
-        filters[key] = []
-        value.each (elem) ->
-          filters[key].push elem
+    # serialization filter. no function is allowed inside querystring params
+    discardQSFunctions = (prefix, value) ->
+      if typeof value == 'function'  # probably some injected function (i.e.: [].each)
+        return
+      return value
 
-      params.filters = filters
-
-    return "#{prefix}#{qs.stringify(params)}"
+    return "#{prefix}#{qs.stringify(params, filter: discardQSFunctions)}"
 
 
 module.exports = Controller
