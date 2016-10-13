@@ -1110,7 +1110,7 @@ author: @ecoslado
      */
 
     Controller.prototype.statusQueryString = function(prefix) {
-      var filters, key, params, ref, value;
+      var discardQSFunctions, params;
       if (prefix == null) {
         prefix = "#/search/";
       }
@@ -1119,19 +1119,15 @@ author: @ecoslado
       delete params.rpp;
       delete params.query_counter;
       delete params.page;
-      if ([].each != null) {
-        filters = {};
-        ref = params.filters;
-        for (key in ref) {
-          value = ref[key];
-          filters[key] = [];
-          value.each(function(elem) {
-            return filters[key].push(elem);
-          });
+      discardQSFunctions = function(prefix, value) {
+        if (typeof value === 'function') {
+          return;
         }
-        params.filters = filters;
-      }
-      return "" + prefix + (qs.stringify(params));
+        return value;
+      };
+      return "" + prefix + (qs.stringify(params, {
+        filter: discardQSFunctions
+      }));
     };
 
     return Controller;
@@ -5520,7 +5516,6 @@ function isnan (val) {
 },{"base64-js":23,"ieee754":24,"isarray":25}],23:[function(require,module,exports){
 'use strict'
 
-exports.byteLength = byteLength
 exports.toByteArray = toByteArray
 exports.fromByteArray = fromByteArray
 
@@ -5528,17 +5523,23 @@ var lookup = []
 var revLookup = []
 var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
 
-var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-for (var i = 0, len = code.length; i < len; ++i) {
-  lookup[i] = code[i]
-  revLookup[code.charCodeAt(i)] = i
+function init () {
+  var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+  for (var i = 0, len = code.length; i < len; ++i) {
+    lookup[i] = code[i]
+    revLookup[code.charCodeAt(i)] = i
+  }
+
+  revLookup['-'.charCodeAt(0)] = 62
+  revLookup['_'.charCodeAt(0)] = 63
 }
 
-revLookup['-'.charCodeAt(0)] = 62
-revLookup['_'.charCodeAt(0)] = 63
+init()
 
-function placeHoldersCount (b64) {
+function toByteArray (b64) {
+  var i, j, l, tmp, placeHolders, arr
   var len = b64.length
+
   if (len % 4 > 0) {
     throw new Error('Invalid string. Length must be a multiple of 4')
   }
@@ -5548,19 +5549,9 @@ function placeHoldersCount (b64) {
   // represent one byte
   // if there is only one, then the three characters before it represent 2 bytes
   // this is just a cheap hack to not do indexOf twice
-  return b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0
-}
+  placeHolders = b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0
 
-function byteLength (b64) {
   // base64 is 4/3 + up to two characters of the original data
-  return b64.length * 3 / 4 - placeHoldersCount(b64)
-}
-
-function toByteArray (b64) {
-  var i, j, l, tmp, placeHolders, arr
-  var len = b64.length
-  placeHolders = placeHoldersCount(b64)
-
   arr = new Arr(len * 3 / 4 - placeHolders)
 
   // if there are placeholders, only get up to the last complete 4 chars
@@ -9310,8 +9301,8 @@ var toArrayBuffer = require('to-arraybuffer')
 var IncomingMessage = response.IncomingMessage
 var rStates = response.readyStates
 
-function decideMode (preferBinary, useFetch) {
-	if (capability.fetch && useFetch) {
+function decideMode (preferBinary) {
+	if (capability.fetch) {
 		return 'fetch'
 	} else if (capability.mozchunkedarraybuffer) {
 		return 'moz-chunked-arraybuffer'
@@ -9340,12 +9331,7 @@ var ClientRequest = module.exports = function (opts) {
 	})
 
 	var preferBinary
-	var useFetch = true
-	if (opts.mode === 'disable-fetch') {
-		// If the use of XHR should be preferred and includes preserving the 'content-type' header
-		useFetch = false
-		preferBinary = true
-	} else if (opts.mode === 'prefer-streaming') {
+	if (opts.mode === 'prefer-streaming') {
 		// If streaming is a high priority but binary compatibility and
 		// the accuracy of the 'content-type' header aren't
 		preferBinary = false
@@ -9358,7 +9344,7 @@ var ClientRequest = module.exports = function (opts) {
 	} else {
 		throw new Error('Invalid value for opts.mode')
 	}
-	self._mode = decideMode(preferBinary, useFetch)
+	self._mode = decideMode(preferBinary)
 
 	self.on('finish', function () {
 		self._onFinish()
@@ -9732,7 +9718,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 			}
 			break
 		case 'arraybuffer':
-			if (xhr.readyState !== rStates.DONE || !xhr.response)
+			if (xhr.readyState !== rStates.DONE)
 				break
 			response = xhr.response
 			self.push(new Buffer(new Uint8Array(response)))
@@ -11010,8 +10996,8 @@ function extend() {
   md5._digestsize = 16;
 
   module.exports = function (message, options) {
-    if(typeof message == 'undefined')
-      return;
+    if (message === undefined || message === null)
+      throw new Error('Illegal argument ' + message);
 
     var digestbytes = crypt.wordsToBytes(md5(message, options));
     return options && options.asBytes ? digestbytes :
@@ -11155,25 +11141,8 @@ module.exports = charenc;
 })();
 
 },{}],60:[function(require,module,exports){
-/**
- * Determine if an object is Buffer
- *
- * Author:   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
- * License:  MIT
- *
- * `npm install is-buffer`
- */
-
-module.exports = function (obj) {
-  return !!(obj != null &&
-    (obj._isBuffer || // For Safari 5-7 (missing Object.prototype.constructor)
-      (obj.constructor &&
-      typeof obj.constructor.isBuffer === 'function' &&
-      obj.constructor.isBuffer(obj))
-    ))
-}
-
-},{}],61:[function(require,module,exports){
+arguments[4][29][0].apply(exports,arguments)
+},{"dup":29}],61:[function(require,module,exports){
 /*!
  * mustache.js - Logic-less {{mustache}} templates with JavaScript
  * http://github.com/janl/mustache.js
