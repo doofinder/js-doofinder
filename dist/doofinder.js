@@ -520,9 +520,9 @@ author: @ecoslado
 
     Client.prototype.__makeRequest = function(options, callback) {
       if (this.secured) {
-        return httpsLib.request(options, this.__processResponse(callback));
+        return httpsLib.get(options, this.__processResponse(callback));
       } else {
-        return httpLib.request(options, this.__processResponse(callback));
+        return httpLib.get(options, this.__processResponse(callback));
       }
     };
 
@@ -1149,7 +1149,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.18",
+    version: "4.1.19",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -9619,12 +9619,12 @@ var IncomingMessage = exports.IncomingMessage = function (xhr, response, mode) {
 		self.url = response.url
 		self.statusCode = response.status
 		self.statusMessage = response.statusText
-		// backwards compatible version of for (<item> of <iterable>):
-		// for (var <item>,_i,_it = <iterable>[Symbol.iterator](); <item> = (_i = _it.next()).value,!_i.done;)
-		for (var header, _i, _it = response.headers[Symbol.iterator](); header = (_i = _it.next()).value, !_i.done;) {
-			self.headers[header[0].toLowerCase()] = header[1]
-			self.rawHeaders.push(header[0], header[1])
-		}
+		
+		response.headers.forEach(function(header, key){
+			self.headers[key.toLowerCase()] = header
+			self.rawHeaders.push(key, header)
+		})
+
 
 		// TODO: this doesn't respect backpressure. Once WritableStream is available, this can be fixed
 		var reader = response.body.getReader()

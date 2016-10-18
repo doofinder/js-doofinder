@@ -1076,9 +1076,7 @@
               "resolved": "https://registry.npmjs.org/stream-browserify/-/stream-browserify-2.0.1.tgz"
             },
             "stream-http": {
-              "version": "2.4.0",
               "from": "git://github.com/ecoslado/stream-http.git#edge-silent-error",
-              "resolved": "https://registry.npmjs.org/stream-http/-/stream-http-2.4.0.tgz",
               "dependencies": {
                 "builtin-status-codes": {
                   "version": "2.0.0",

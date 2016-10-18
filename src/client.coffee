@@ -462,9 +462,9 @@ class Client
   ###
   __makeRequest: (options, callback) ->
     if @secured
-      return httpsLib.request options, @__processResponse(callback)
+      return httpsLib.get options, @__processResponse(callback)
     else
-      return httpLib.request options, @__processResponse(callback)
+      return httpLib.get options, @__processResponse(callback)
 
   ###
   Method to make the request options
