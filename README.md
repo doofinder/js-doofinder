@@ -201,6 +201,7 @@ df:search   | <ul><li>params`Object`: the object will be send as params to the S
 df:next_page  | <ul><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.nextPage is called.
 df:get_page   | <ul><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.getPage is called.
 df:results_received | <ul><li>res`Object`: the Search API response</li></ul> | This event is triggered when new results are received from Search API.
+df:error_received | <ul><li>err`Object`: The Error response</li></ul> | This event is triggered when the server gives an error response.
 
 As an example, we'll print in the console the total results in the `df:results_received` event.
 
