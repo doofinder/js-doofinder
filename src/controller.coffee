@@ -226,8 +226,7 @@ class Controller
   @api public
   ###
   clearParam: (key) ->
-    if key in @status.params
-      delete @status.params[key]
+    delete @status.params[key]
 
   ###
   reset

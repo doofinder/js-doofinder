@@ -584,8 +584,7 @@ author: @ecoslado
  */
 
 (function() {
-  var Controller, bean, extend, qs,
-    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+  var Controller, bean, extend, qs;
 
   bean = require("bean");
 
@@ -838,9 +837,7 @@ author: @ecoslado
      */
 
     Controller.prototype.clearParam = function(key) {
-      if (indexOf.call(this.status.params, key) >= 0) {
-        return delete this.status.params[key];
-      }
+      return delete this.status.params[key];
     };
 
 
@@ -1149,7 +1146,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.19",
+    version: "4.1.20",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -9604,7 +9601,7 @@ var IncomingMessage = exports.IncomingMessage = function (xhr, response, mode) {
 	self.rawHeaders = []
 	self.trailers = {}
 	self.rawTrailers = []
-
+	console.log("HHHHHH")
 	// Fake the 'close' event, but only once 'end' fires
 	self.on('end', function () {
 		// The nextTick is necessary to prevent the 'request' module from causing an infinite loop
@@ -9619,12 +9616,14 @@ var IncomingMessage = exports.IncomingMessage = function (xhr, response, mode) {
 		self.url = response.url
 		self.statusCode = response.status
 		self.statusMessage = response.statusText
-		
+		// ecoslado stuff
+		console.log("HI It's me.")
 		response.headers.forEach(function(header, key){
+			console.log("hello", header, key)
 			self.headers[key.toLowerCase()] = header
 			self.rawHeaders.push(key, header)
 		})
-
+		// end ecoslado stuff
 
 		// TODO: this doesn't respect backpressure. Once WritableStream is available, this can be fixed
 		var reader = response.body.getReader()
