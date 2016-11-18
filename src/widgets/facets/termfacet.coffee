@@ -55,7 +55,7 @@ class TermFacet extends Display
       self.selected = {}
 
     # The filtering by click
-    @element.on 'click', "a[data-facet='#{@name}']", (e) ->
+    @element.on 'click', "a[data-facet=\"#{@name}\"]", (e) ->
       e.preventDefault()
 
       value = $(this).data 'value'
