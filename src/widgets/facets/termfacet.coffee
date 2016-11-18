@@ -55,6 +55,7 @@ class TermFacet extends Display
       self.selected = {}
 
     # The filtering by click
+    # attr name within " in case a ' is inside
     @element.on 'click', "a[data-facet=\"#{@name}\"]", (e) ->
       e.preventDefault()
 
