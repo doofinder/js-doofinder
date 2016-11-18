@@ -714,7 +714,12 @@ var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {
 
 ```
 
+## Issues in embedded dependencies (or what is npm-shrinkwrap file)
+We've added this file to deal with issues in embedded dependencies. You have there the whole dependencies tree so you can import your own fork when anything happen with the official ones. Since this suppose a work around, this file can appears and disappears. More information [here](https://docs.npmjs.com/cli/shrinkwrap)
 
+Issue related | Dependency modified
+------------- | -------------------
+v4.1.9 Edge showing nothing. | grunt-browserify > browserify > stream-http. Loop using `Symbol.iterator` fails silently.
 
 
 
