@@ -192,7 +192,7 @@ Argument | Required | Type | Description
 event |  Yes | `String` | The event name.
 callback | Yes | `Function` | The function which receives the API Search response.
 
-The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
+The events you can bind to a widget are the described below. Note that each event sends different arguments to the callback in order to implement it properly.
 
 
 Event Name | Callback Arguments | Description
@@ -201,6 +201,7 @@ df:search   | <ul><li>params`Object`: the object will be send as params to the S
 df:next_page  | <ul><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.nextPage is called.
 df:get_page   | <ul><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.getPage is called.
 df:results_received | <ul><li>res`Object`: the Search API response</li></ul> | This event is triggered when new results are received from Search API.
+df:error_received | <ul><li>err`Object`: The Error response</li></ul> | This event is triggered when the search server returns an error response.
 
 As an example, we'll print in the console the total results in the `df:results_received` event.
 
