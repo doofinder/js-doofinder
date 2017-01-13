@@ -36,7 +36,12 @@ class ScrollDisplay extends Display
     super(element, template, options)
     scrollOptions = extend true,
       callback: ->
-        if self.controller?
+        if self.controller? and not self.pageRequested
+          self.pageRequested = true
+          # if page fetch fails...
+          setTimeout ->
+            self.pageRequested = false
+          , 5000
           self.controller.nextPage.call(self.controller)
       ,
       if options.scrollOffset? then scrollOffset: options.scrollOffset else {}
@@ -82,6 +87,7 @@ class ScrollDisplay extends Display
   @api public
   ###
   renderNext: (res) ->
+    @pageRequested = false
     context = extend true, res, @extraContext or {}
     context.is_first = false
     context.is_last = @controller.status.lastPageReached
