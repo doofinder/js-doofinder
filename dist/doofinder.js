@@ -1146,7 +1146,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.22",
+    version: "4.1.23",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -2453,7 +2453,7 @@ author: @ecoslado
       this.controller.bind("df:search", function(params) {
         return self.selected = {};
       });
-      this.element.on('click', "a[data-facet='" + this.name + "']", function(e) {
+      this.element.on('click', "a[data-facet=\"" + this.name + "\"]", function(e) {
         var key, value;
         e.preventDefault();
         value = $(this).data('value');
@@ -2813,7 +2813,11 @@ bottom
       ScrollDisplay.__super__.constructor.call(this, element, template, options);
       scrollOptions = extend(true, {
         callback: function() {
-          if (self.controller != null) {
+          if ((self.controller != null) && !self.pageRequested) {
+            self.pageRequested = true;
+            setTimeout(function() {
+              return self.pageRequested = false;
+            }, 5000);
             return self.controller.nextPage.call(self.controller);
           }
         }
@@ -2868,6 +2872,7 @@ bottom
 
     ScrollDisplay.prototype.renderNext = function(res) {
       var context;
+      this.pageRequested = false;
       context = extend(true, res, this.extraContext || {});
       context.is_first = false;
       context.is_last = this.controller.status.lastPageReached;
