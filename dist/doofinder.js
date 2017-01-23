@@ -1271,14 +1271,22 @@ author: @ecoslado
     };
 
     DfDomElement.prototype._first = function() {
-      if (this.element && this.element.length) {
-        return this.element[0];
-      }
-      return this.element;
+      return this._get(0);
     };
 
     DfDomElement.prototype.first = function() {
       return new DfDomElement(this._first());
+    };
+
+    DfDomElement.prototype._get = function(key) {
+      if (this.element && this.element.length > key) {
+        return this.element[key];
+      }
+      return this.element;
+    };
+
+    DfDomElement.prototype.get = function(key) {
+      return new DfDomElement(this._get(key));
     };
 
     DfDomElement.prototype.length = function() {

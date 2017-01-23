@@ -80,12 +80,18 @@ class DfDomElement
     return new DfDomElement parents
 
   _first: () ->
-    if @element and @element.length
-      return  @element[0]
-    return @element
+    @_get(0)
 
   first: () ->
     return  new DfDomElement @_first()
+
+  _get: (key) ->
+    if @element and @element.length > key
+      return @element[key]
+    return @element
+
+  get: (key) ->
+    return new DfDomElement @_get(key)
 
   length: () ->
     return @element.length
