@@ -1091,7 +1091,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.24",
+    version: "4.1.25",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1788,6 +1788,11 @@ author: @ecoslado
 
     HttpClient.prototype.request = function(options, callback) {
       var req;
+      if (typeof options === "string") {
+        options = {
+          host: options
+        };
+      }
       req = this.__makeRequest(options, callback);
       return req.end;
     };
@@ -1802,24 +1807,19 @@ author: @ecoslado
      */
 
     HttpClient.prototype.__processResponse = function(callback) {
-      console.log("PROCESS RESPONSE");
       return function(res) {
         var data;
-        console.log("CCC");
         if (res.statusCode >= 400) {
           return callback(res.statusCode, null);
         } else {
           data = "";
           res.on('data', function(chunk) {
-            console.log("DATA");
             return data += chunk;
           });
           res.on('end', function() {
-            console.log("END");
             return callback(null, JSON.parse(data));
           });
           return res.on('error', function(err) {
-            console.log("ERROR");
             return callback(err, null);
           });
         }
@@ -1828,7 +1828,7 @@ author: @ecoslado
 
 
     /*
-    Method to make a secured or not request based on @secured
+    Method to make a secured or not request based on @client
     
     @param (Object) options: request options
     @param (Function) the callback function to execute with the response as arg
@@ -1837,8 +1837,7 @@ author: @ecoslado
      */
 
     HttpClient.prototype.__makeRequest = function(options, callback) {
-      console.log("REQUESTS");
-      return this.client.request(options, this.__processResponse(callback));
+      return this.client.get(options, this.__processResponse(callback));
     };
 
     return HttpClient;
