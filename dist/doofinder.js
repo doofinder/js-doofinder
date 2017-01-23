@@ -7,11 +7,9 @@ author: @ecoslado
  */
 
 (function() {
-  var Client, httpLib, httpsLib, md5;
+  var Client, HttpClient, md5;
 
-  httpLib = require("http");
-
-  httpsLib = require("https");
+  HttpClient = require("./util/http");
 
   md5 = require("md5");
 
@@ -59,7 +57,7 @@ author: @ecoslado
         zone = "";
         this.apiKey = "";
       }
-      this.secured = (this.apiKey != null) && this.version !== 4;
+      this.httpClient = new HttpClient((this.apiKey != null) && this.version !== 4);
       if (this.url == null) {
         this.url = zone + "-search.doofinder.com";
       }
@@ -141,7 +139,7 @@ author: @ecoslado
       }
       _this = this;
       return this._sanitizeQuery(query, function(cleaned) {
-        var filterKey, filterTerms, headers, options, paramKey, paramValue, path, queryString, req;
+        var filterKey, filterTerms, headers, options, paramKey, paramValue, path, queryString;
         params.query = cleaned;
         headers = {};
         if (_this.apiKey) {
@@ -166,8 +164,7 @@ author: @ecoslado
         queryString = _this.makeQueryString();
         path = "/" + _this.version + "/search?" + queryString;
         options = _this.__requestOptions(path);
-        req = _this.__makeRequest(options, callback);
-        return req.end();
+        return _this.httpClient.request(options, callback);
       });
     };
 
@@ -325,7 +322,7 @@ author: @ecoslado
      */
 
     Client.prototype.registerClick = function(productId, arg1, arg2) {
-      var callback, datatype, dfid, dfidRe, options, path, query, req, sessionId;
+      var callback, datatype, dfid, dfidRe, options, path, query, sessionId;
       callback = (function(err, res) {});
       options = {};
       productId += '';
@@ -349,8 +346,7 @@ author: @ecoslado
       path = "/" + this.version + "/stats/click?dfid=" + dfid + "&session_id=" + sessionId + "&query=" + (encodeURIComponent(query));
       path += "&random=" + (new Date().getTime());
       options = this.__requestOptions(path);
-      req = this.__makeRequest(options, callback);
-      return req.end();
+      return this.httpClient.request(options, callback);
     };
 
 
@@ -365,15 +361,14 @@ author: @ecoslado
      */
 
     Client.prototype.registerSession = function(sessionId, callback) {
-      var options, path, req;
+      var options, path;
       if (callback == null) {
         callback = (function(err, res) {});
       }
       path = "/" + this.version + "/stats/init?hashid=" + this.hashid + "&session_id=" + sessionId;
       path += "&random=" + (new Date().getTime());
       options = this.__requestOptions(path);
-      req = this.__makeRequest(options, callback);
-      return req.end();
+      return this.httpClient.request(options, callback);
     };
 
 
@@ -389,7 +384,7 @@ author: @ecoslado
      */
 
     Client.prototype.registerCheckout = function(sessionId, arg1, arg2) {
-      var callback, options, path, req, reqOpts;
+      var callback, options, path, reqOpts;
       callback = (function(err, res) {});
       options = {};
       if (typeof arg2 === 'undefined' && typeof arg1 === 'function') {
@@ -403,8 +398,7 @@ author: @ecoslado
       path = "/" + this.version + "/stats/checkout?hashid=" + this.hashid + "&session_id=" + sessionId;
       path += "&random=" + (new Date().getTime());
       reqOpts = this.__requestOptions(path);
-      req = this.__makeRequest(reqOpts, callback);
-      return req.end();
+      return this.httpClient.request(options, callback);
     };
 
 
@@ -420,7 +414,7 @@ author: @ecoslado
      */
 
     Client.prototype.hit = function(sessionId, eventType, dfid, query, callback) {
-      var headers, path, req, reqOpts;
+      var headers, path, reqOpts;
       if (dfid == null) {
         dfid = "";
       }
@@ -443,8 +437,7 @@ author: @ecoslado
       }
       path = path + "?random=" + (new Date().getTime());
       reqOpts = this.__requestOptions(path);
-      req = this.__makeRequest(reqOpts, callback);
-      return req.end();
+      return this.httpClient.request(reqOpts, callback);
     };
 
 
@@ -460,7 +453,7 @@ author: @ecoslado
      */
 
     Client.prototype.options = function(arg1, arg2) {
-      var callback, options, path, querystring, req, reqOpts;
+      var callback, options, path, querystring, reqOpts;
       callback = (function(err, res) {});
       if (typeof arg1 === "function" && typeof arg2 === "undefined") {
         callback = arg1;
@@ -475,55 +468,7 @@ author: @ecoslado
       }
       path = "/" + this.version + "/options/" + this.hashid + querystring;
       reqOpts = this.__requestOptions(path);
-      req = this.__makeRequest(reqOpts, callback);
-      return req.end();
-    };
-
-
-    /*
-    Callback function will be passed as argument to search
-    and will be returned with response body
-    
-    @param {Object} res: the response
-    @api private
-     */
-
-    Client.prototype.__processResponse = function(callback) {
-      return function(res) {
-        var data;
-        if (res.statusCode >= 400) {
-          return callback(res.statusCode, null);
-        } else {
-          data = "";
-          res.on('data', function(chunk) {
-            return data += chunk;
-          });
-          res.on('end', function() {
-            return callback(null, JSON.parse(data));
-          });
-          return res.on('error', function(err) {
-            return callback(err, null);
-          });
-        }
-      };
-    };
-
-
-    /*
-    Method to make a secured or not request based on @secured
-    
-    @param (Object) options: request options
-    @param (Function) the callback function to execute with the response as arg
-    @return (Object) the request object.
-    @api private
-     */
-
-    Client.prototype.__makeRequest = function(options, callback) {
-      if (this.secured) {
-        return httpsLib.get(options, this.__processResponse(callback));
-      } else {
-        return httpLib.get(options, this.__processResponse(callback));
-      }
+      return this.httpClient.request(reqOpts, callback);
     };
 
 
@@ -576,7 +521,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"http":47,"https":27,"md5":57}],2:[function(require,module,exports){
+},{"./util/http":9,"md5":58}],2:[function(require,module,exports){
 
 /*
  * Created by Kike Coslado on 26/10/15.
@@ -1135,7 +1080,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"bean":19,"extend":20,"qs":63}],3:[function(require,module,exports){
+},{"bean":20,"extend":21,"qs":64}],3:[function(require,module,exports){
 (function() {
   if (!JSON.stringify && JSON.encode) {
     JSON.stringify = JSON.encode;
@@ -1146,7 +1091,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.24",
+    version: "4.1.25",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1167,13 +1112,13 @@ author: @ecoslado
       introspection: require("./util/introspection"),
       dfdom: require("./util/dfdom"),
       throttle: require("./util/throttle"),
-      http: require("http")
+      http: require("./util/http")
     }
   };
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./util/dfdom":4,"./util/introspection":9,"./util/throttle":10,"./widget":11,"./widgets/display":12,"./widgets/facets/rangefacet":13,"./widgets/facets/termfacet":14,"./widgets/queryinput":15,"./widgets/results/results":16,"./widgets/results/scrollresults":17,"bean":19,"extend":20,"http":47,"md5":57,"mustache":61,"qs":63}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./util/dfdom":4,"./util/http":9,"./util/introspection":10,"./util/throttle":11,"./widget":12,"./widgets/display":13,"./widgets/facets/rangefacet":14,"./widgets/facets/termfacet":15,"./widgets/queryinput":16,"./widgets/results/results":17,"./widgets/results/scrollresults":18,"bean":20,"extend":21,"md5":58,"mustache":62,"qs":64}],4:[function(require,module,exports){
 
 /*
 dfdom.coffee
@@ -1271,14 +1216,22 @@ author: @ecoslado
     };
 
     DfDomElement.prototype._first = function() {
-      if (this.element && this.element.length) {
-        return this.element[0];
-      }
-      return this.element;
+      return this._get(0);
     };
 
     DfDomElement.prototype.first = function() {
       return new DfDomElement(this._first());
+    };
+
+    DfDomElement.prototype._get = function(key) {
+      if (this.element && this.element.length > key) {
+        return this.element[key];
+      }
+      return this.element;
+    };
+
+    DfDomElement.prototype.get = function(key) {
+      return new DfDomElement(this._get(key));
     };
 
     DfDomElement.prototype.length = function() {
@@ -1544,7 +1497,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"bean":19}],5:[function(require,module,exports){
+},{"bean":20}],5:[function(require,module,exports){
 (function() {
   var $, bean, dimensions, extend, introspection, throttle;
 
@@ -1603,7 +1556,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./dfdom":4,"./dimensions":7,"./introspection":9,"./throttle":10,"bean":19,"extend":20}],6:[function(require,module,exports){
+},{"./dfdom":4,"./dimensions":7,"./introspection":10,"./throttle":11,"bean":20,"extend":21}],6:[function(require,module,exports){
 (function() {
   var $, extend,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -1670,7 +1623,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./dfdom":4,"extend":20}],7:[function(require,module,exports){
+},{"./dfdom":4,"extend":21}],7:[function(require,module,exports){
 (function() {
   var calculateDimension, clientHeight, clientWidth;
 
@@ -1802,7 +1755,100 @@ author: @ecoslado
 
 }).call(this);
 
-},{"extend":20}],9:[function(require,module,exports){
+},{"extend":21}],9:[function(require,module,exports){
+
+/*
+client.coffee
+author: @ecoslado
+2017 01 23
+ */
+
+(function() {
+  var HttpClient, httpLib, httpsLib;
+
+  httpLib = require("http");
+
+  httpsLib = require("https");
+
+
+  /*
+  HttpClient
+  This class implements a more
+  easy API with http module
+   */
+
+  HttpClient = (function() {
+
+    /*
+    Just assigns
+     */
+    function HttpClient(ssl) {
+      this.client = ssl ? httpsLib : httpLib;
+    }
+
+    HttpClient.prototype.request = function(options, callback) {
+      var req;
+      if (typeof options === "string") {
+        options = {
+          host: options
+        };
+      }
+      req = this.__makeRequest(options, callback);
+      return req.end;
+    };
+
+
+    /*
+    Callback function will be passed as argument to search
+    and will be returned with response body
+    
+    @param {Object} res: the response
+    @api private
+     */
+
+    HttpClient.prototype.__processResponse = function(callback) {
+      return function(res) {
+        var data;
+        if (res.statusCode >= 400) {
+          return callback(res.statusCode, null);
+        } else {
+          data = "";
+          res.on('data', function(chunk) {
+            return data += chunk;
+          });
+          res.on('end', function() {
+            return callback(null, JSON.parse(data));
+          });
+          return res.on('error', function(err) {
+            return callback(err, null);
+          });
+        }
+      };
+    };
+
+
+    /*
+    Method to make a secured or not request based on @client
+    
+    @param (Object) options: request options
+    @param (Function) the callback function to execute with the response as arg
+    @return (Object) the request object.
+    @api private
+     */
+
+    HttpClient.prototype.__makeRequest = function(options, callback) {
+      return this.client.get(options, this.__processResponse(callback));
+    };
+
+    return HttpClient;
+
+  })();
+
+  module.exports = HttpClient;
+
+}).call(this);
+
+},{"http":48,"https":28}],10:[function(require,module,exports){
 (function() {
   var isArray, isFunction, isObject, isPlainObject;
 
@@ -1841,7 +1887,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 (function() {
   var $, bean;
 
@@ -1880,7 +1926,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./dfdom":4,"bean":19}],11:[function(require,module,exports){
+},{"./dfdom":4,"bean":20}],12:[function(require,module,exports){
 
 /*
 widget.coffee
@@ -2008,7 +2054,7 @@ shaped by template
 
 }).call(this);
 
-},{"./util/dfdom":4,"bean":19}],12:[function(require,module,exports){
+},{"./util/dfdom":4,"bean":20}],13:[function(require,module,exports){
 
 /*
 display.coffee
@@ -2139,7 +2185,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../util/helpers":8,"../widget":11,"extend":20,"mustache":61}],13:[function(require,module,exports){
+},{"../util/helpers":8,"../widget":12,"extend":21,"mustache":62}],14:[function(require,module,exports){
 
 /*
 rangefacet.coffee
@@ -2403,7 +2449,7 @@ them. Manages the filtering.
 
 }).call(this);
 
-},{"../display":12,"extend":20,"nouislider":62}],14:[function(require,module,exports){
+},{"../display":13,"extend":21,"nouislider":63}],15:[function(require,module,exports){
 
 /*
 termfacet.coffee
@@ -2543,7 +2589,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../../util/dfdom":4,"../display":12,"extend":20}],15:[function(require,module,exports){
+},{"../../util/dfdom":4,"../display":13,"extend":21}],16:[function(require,module,exports){
 
 /*
 queryinput.coffee
@@ -2645,7 +2691,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../util/dftypewatch":6,"../widget":11,"extend":20}],16:[function(require,module,exports){
+},{"../util/dftypewatch":6,"../widget":12,"extend":21}],17:[function(require,module,exports){
 
 /*
 display.coffee
@@ -2703,7 +2749,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../display":12}],17:[function(require,module,exports){
+},{"../display":13}],18:[function(require,module,exports){
 
 /*
 scrollresults.coffee
@@ -2761,7 +2807,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../scrolldisplay":18}],18:[function(require,module,exports){
+},{"../scrolldisplay":19}],19:[function(require,module,exports){
 
 /*
 scrolldisplay.coffee
@@ -2890,7 +2936,7 @@ bottom
 
 }).call(this);
 
-},{"../util/dfdom":4,"../util/dfscroll":5,"./display":12,"extend":20}],19:[function(require,module,exports){
+},{"../util/dfdom":4,"../util/dfscroll":5,"./display":13,"extend":21}],20:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean
@@ -3633,7 +3679,7 @@ bottom
   return bean
 });
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 'use strict';
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -3721,9 +3767,9 @@ module.exports = function extend() {
 };
 
 
-},{}],21:[function(require,module,exports){
-
 },{}],22:[function(require,module,exports){
+
+},{}],23:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -5516,7 +5562,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":23,"ieee754":24,"isarray":25}],23:[function(require,module,exports){
+},{"base64-js":24,"ieee754":25,"isarray":26}],24:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -5632,7 +5678,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -5718,14 +5764,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -6029,7 +6075,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -6045,7 +6091,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":47}],28:[function(require,module,exports){
+},{"http":48}],29:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -6070,7 +6116,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -6093,7 +6139,7 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -6275,7 +6321,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -6812,7 +6858,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],32:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -6898,7 +6944,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -6985,13 +7031,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":32,"./encode":33}],35:[function(require,module,exports){
+},{"./decode":33,"./encode":34}],36:[function(require,module,exports){
 // a duplex stream is just a stream that is both readable and writable.
 // Since JS doesn't have multiple prototypal inheritance, this class
 // prototypally inherits from Readable, and then parasitically from
@@ -7067,7 +7113,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":37,"./_stream_writable":39,"core-util-is":42,"inherits":28,"process-nextick-args":44}],36:[function(require,module,exports){
+},{"./_stream_readable":38,"./_stream_writable":40,"core-util-is":43,"inherits":29,"process-nextick-args":45}],37:[function(require,module,exports){
 // a passthrough stream.
 // basically just the most minimal sort of Transform stream.
 // Every written chunk gets output as-is.
@@ -7094,7 +7140,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":38,"core-util-is":42,"inherits":28}],37:[function(require,module,exports){
+},{"./_stream_transform":39,"core-util-is":43,"inherits":29}],38:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -8038,7 +8084,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":35,"./internal/streams/BufferList":40,"_process":30,"buffer":22,"buffer-shims":41,"core-util-is":42,"events":26,"inherits":28,"isarray":43,"process-nextick-args":44,"string_decoder/":53,"util":21}],38:[function(require,module,exports){
+},{"./_stream_duplex":36,"./internal/streams/BufferList":41,"_process":31,"buffer":23,"buffer-shims":42,"core-util-is":43,"events":27,"inherits":29,"isarray":44,"process-nextick-args":45,"string_decoder/":54,"util":22}],39:[function(require,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -8221,7 +8267,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":35,"core-util-is":42,"inherits":28}],39:[function(require,module,exports){
+},{"./_stream_duplex":36,"core-util-is":43,"inherits":29}],40:[function(require,module,exports){
 (function (process){
 // A bit simpler than readable streams.
 // Implement an async ._write(chunk, encoding, cb), and it'll handle all
@@ -8778,7 +8824,7 @@ function CorkedRequest(state) {
   };
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":35,"_process":30,"buffer":22,"buffer-shims":41,"core-util-is":42,"events":26,"inherits":28,"process-nextick-args":44,"util-deprecate":45}],40:[function(require,module,exports){
+},{"./_stream_duplex":36,"_process":31,"buffer":23,"buffer-shims":42,"core-util-is":43,"events":27,"inherits":29,"process-nextick-args":45,"util-deprecate":46}],41:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('buffer').Buffer;
@@ -8843,7 +8889,7 @@ BufferList.prototype.concat = function (n) {
   }
   return ret;
 };
-},{"buffer":22,"buffer-shims":41}],41:[function(require,module,exports){
+},{"buffer":23,"buffer-shims":42}],42:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -8955,7 +9001,7 @@ exports.allocUnsafeSlow = function allocUnsafeSlow(size) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"buffer":22}],42:[function(require,module,exports){
+},{"buffer":23}],43:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -9066,9 +9112,9 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":29}],43:[function(require,module,exports){
-arguments[4][25][0].apply(exports,arguments)
-},{"dup":25}],44:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":30}],44:[function(require,module,exports){
+arguments[4][26][0].apply(exports,arguments)
+},{"dup":26}],45:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -9115,7 +9161,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":30}],45:[function(require,module,exports){
+},{"_process":31}],46:[function(require,module,exports){
 (function (global){
 
 /**
@@ -9186,7 +9232,7 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],46:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 (function (process){
 var Stream = (function (){
   try {
@@ -9206,7 +9252,7 @@ if (!process.browser && process.env.READABLE_STREAM === 'disable' && Stream) {
 }
 
 }).call(this,require('_process'))
-},{"./lib/_stream_duplex.js":35,"./lib/_stream_passthrough.js":36,"./lib/_stream_readable.js":37,"./lib/_stream_transform.js":38,"./lib/_stream_writable.js":39,"_process":30}],47:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":36,"./lib/_stream_passthrough.js":37,"./lib/_stream_readable.js":38,"./lib/_stream_transform.js":39,"./lib/_stream_writable.js":40,"_process":31}],48:[function(require,module,exports){
 (function (global){
 var ClientRequest = require('./lib/request')
 var extend = require('xtend')
@@ -9288,7 +9334,7 @@ http.METHODS = [
 	'UNSUBSCRIBE'
 ]
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./lib/request":49,"builtin-status-codes":51,"url":54,"xtend":56}],48:[function(require,module,exports){
+},{"./lib/request":50,"builtin-status-codes":52,"url":55,"xtend":57}],49:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
 
@@ -9361,7 +9407,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],49:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -9659,7 +9705,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":48,"./response":50,"_process":30,"buffer":22,"inherits":28,"readable-stream":46,"to-arraybuffer":52}],50:[function(require,module,exports){
+},{"./capability":49,"./response":51,"_process":31,"buffer":23,"inherits":29,"readable-stream":47,"to-arraybuffer":53}],51:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -9845,7 +9891,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":48,"_process":30,"buffer":22,"inherits":28,"readable-stream":46}],51:[function(require,module,exports){
+},{"./capability":49,"_process":31,"buffer":23,"inherits":29,"readable-stream":47}],52:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -9911,7 +9957,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],52:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
 
 module.exports = function (buf) {
@@ -9940,7 +9986,7 @@ module.exports = function (buf) {
 	}
 }
 
-},{"buffer":22}],53:[function(require,module,exports){
+},{"buffer":23}],54:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -10163,7 +10209,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":22}],54:[function(require,module,exports){
+},{"buffer":23}],55:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -10897,7 +10943,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":55,"punycode":31,"querystring":34}],55:[function(require,module,exports){
+},{"./util":56,"punycode":32,"querystring":35}],56:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -10915,7 +10961,7 @@ module.exports = {
   }
 };
 
-},{}],56:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -10936,7 +10982,7 @@ function extend() {
     return target
 }
 
-},{}],57:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 (function(){
   var crypt = require('crypt'),
       utf8 = require('charenc').utf8,
@@ -11098,7 +11144,7 @@ function extend() {
 
 })();
 
-},{"charenc":58,"crypt":59,"is-buffer":60}],58:[function(require,module,exports){
+},{"charenc":59,"crypt":60,"is-buffer":61}],59:[function(require,module,exports){
 var charenc = {
   // UTF-8 encoding
   utf8: {
@@ -11133,7 +11179,7 @@ var charenc = {
 
 module.exports = charenc;
 
-},{}],59:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 (function() {
   var base64map
       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
@@ -11231,9 +11277,9 @@ module.exports = charenc;
   module.exports = crypt;
 })();
 
-},{}],60:[function(require,module,exports){
-arguments[4][29][0].apply(exports,arguments)
-},{"dup":29}],61:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
+arguments[4][30][0].apply(exports,arguments)
+},{"dup":30}],62:[function(require,module,exports){
 /*!
  * mustache.js - Logic-less {{mustache}} templates with JavaScript
  * http://github.com/janl/mustache.js
@@ -11865,7 +11911,7 @@ arguments[4][29][0].apply(exports,arguments)
   return mustache;
 }));
 
-},{}],62:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 /*! nouislider - 8.5.1 - 2016-04-24 16:00:29 */
 
 (function (factory) {
@@ -13825,7 +13871,7 @@ function closure ( target, options, originalOptions ){
 	};
 
 }));
-},{}],63:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 // Load modules
 
 var Stringify = require('./stringify');
@@ -13842,7 +13888,7 @@ module.exports = {
     parse: Parse
 };
 
-},{"./parse":64,"./stringify":65}],64:[function(require,module,exports){
+},{"./parse":65,"./stringify":66}],65:[function(require,module,exports){
 // Load modules
 
 var Utils = require('./utils');
@@ -14030,7 +14076,7 @@ module.exports = function (str, options) {
     return Utils.compact(obj);
 };
 
-},{"./utils":66}],65:[function(require,module,exports){
+},{"./utils":67}],66:[function(require,module,exports){
 // Load modules
 
 var Utils = require('./utils');
@@ -14153,7 +14199,7 @@ module.exports = function (obj, options) {
     return keys.join(delimiter);
 };
 
-},{"./utils":66}],66:[function(require,module,exports){
+},{"./utils":67}],67:[function(require,module,exports){
 // Load modules
 
 
