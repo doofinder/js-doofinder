@@ -4,8 +4,7 @@ author: @ecoslado
 2015 04 01
 ###
 
-httpLib = require "http"
-httpsLib = require "https"
+HttpClient = require "./util/http"
 md5 = require "md5"
 
 ###
@@ -31,6 +30,7 @@ class Client
     @params = {}
     @filters = {}
 
+
     @url ?= address
     # API Key can be two ways:
     # zone-APIKey
@@ -41,13 +41,11 @@ class Client
       zone = zoneApiKey[0]
       if zoneApiKey.length > 1
         @apiKey = zoneApiKey[1]
-
     else
       zone = ""
       @apiKey = ""
 
-    @secured = @apiKey? and @version != 4
-
+    @httpClient = new HttpClient(@apiKey? and @version != 4)
     @url ?= zone + "-search.doofinder.com"
 
   ###
@@ -155,8 +153,7 @@ class Client
       options = _this.__requestOptions(path)
 
       # Here is where request is done and executed processResponse
-      req = _this.__makeRequest options, callback
-      req.end()
+      _this.httpClient.request options, callback
 
   ###
   addParam
@@ -317,8 +314,7 @@ class Client
     path += "&random=#{new Date().getTime()}"
     options = @__requestOptions(path)
     # Here is where request is done and executed processResponse
-    req = @__makeRequest options, callback
-    req.end()
+    @httpClient.request options, callback
 
 
   ###
@@ -334,8 +330,7 @@ class Client
     path = "/#{@version}/stats/init?hashid=#{@hashid}&session_id=#{sessionId}"
     path += "&random=#{new Date().getTime()}"
     options = @__requestOptions(path)
-    req = @__makeRequest options, callback
-    req.end()
+    @httpClient.request options, callback
 
 
   ###
@@ -365,8 +360,7 @@ class Client
     path = "/#{@version}/stats/checkout?hashid=#{@hashid}&session_id=#{sessionId}"
     path += "&random=#{new Date().getTime()}"
     reqOpts = @__requestOptions(path)
-    req = @__makeRequest reqOpts, callback
-    req.end()
+    @httpClient.request options, callback
 
 
   ###
@@ -394,8 +388,7 @@ class Client
     reqOpts = @__requestOptions(path)
        
     # Here is where request is done and executed processResponse
-    req = @__makeRequest reqOpts, callback
-    req.end()
+    @httpClient.request reqOpts, callback
 
 
   ###
@@ -426,45 +419,7 @@ class Client
     reqOpts = @__requestOptions(path)
 
     # Here is where request is done and executed processResponse
-    req = @__makeRequest reqOpts, callback
-    req.end()
-
-  ###
-  Callback function will be passed as argument to search
-  and will be returned with response body
-
-  @param {Object} res: the response
-  @api private
-  ###
-  __processResponse: (callback) ->
-    (res) ->
-      if res.statusCode >= 400
-        return callback res.statusCode, null
-
-      else
-        data = ""
-        res.on 'data', (chunk) ->
-          data += chunk
-
-        res.on 'end', () ->
-          return callback null, JSON.parse(data)
-
-        res.on 'error', (err) ->
-          return callback err, null
-
-  ###
-  Method to make a secured or not request based on @secured
-
-  @param (Object) options: request options
-  @param (Function) the callback function to execute with the response as arg
-  @return (Object) the request object.
-  @api private
-  ###
-  __makeRequest: (options, callback) ->
-    if @secured
-      return httpsLib.get options, @__processResponse(callback)
-    else
-      return httpLib.get options, @__processResponse(callback)
+    @httpClient.request reqOpts, callback
 
   ###
   Method to make the request options

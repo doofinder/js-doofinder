@@ -24,4 +24,4 @@ module.exports =
     introspection: require "./util/introspection"
     dfdom: require "./util/dfdom"
     throttle: require "./util/throttle"
-    http: require "http"
+    http: require "./util/http"
