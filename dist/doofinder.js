@@ -398,7 +398,7 @@ author: @ecoslado
       path = "/" + this.version + "/stats/checkout?hashid=" + this.hashid + "&session_id=" + sessionId;
       path += "&random=" + (new Date().getTime());
       reqOpts = this.__requestOptions(path);
-      return this.httpClient.request(options, callback);
+      return this.httpClient.request(reqOpts, callback);
     };
 
 
@@ -1091,7 +1091,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.25",
+    version: "4.1.26",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),

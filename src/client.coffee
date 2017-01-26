@@ -360,7 +360,7 @@ class Client
     path = "/#{@version}/stats/checkout?hashid=#{@hashid}&session_id=#{sessionId}"
     path += "&random=#{new Date().getTime()}"
     reqOpts = @__requestOptions(path)
-    @httpClient.request options, callback
+    @httpClient.request reqOpts, callback
 
 
   ###
