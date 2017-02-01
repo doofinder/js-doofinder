@@ -111,7 +111,7 @@ Controller is the class that manages client and widgets. Allows you to make diff
   -------- | -------- |---- | ---------------------
   client   | Yes | `doofinder.Client` | The Search API wrapper
   widgets  | Yes | `doofinder.Widget` `Array(doofinder.Widget)` | Array of widgets for interacting and rendering the results
-  searchParameters | No | `Object` | An object with params that will passed to the client for every search. You can use here all the parameters defined in [Doofinder Search API](http://doofinder.com/en/developer/search-api).
+  searchParameters | No | `Object` | An object with params that will passed to the client for every search. You can use here all the parameters defined in [Doofinder Search API](https://www.doofinder.com/support/developer/api/search-api).
 
 #### search
 This method makes a query to the Search API and renders the results into the widgets.
@@ -119,7 +119,7 @@ This method makes a query to the Search API and renders the results into the wid
   Argument | Required | Type | Description
   -------- | -------- | ---- | ---------------------
   query    | Yes  | `String` | The query terms.
-  params   | No  | `Object` | An object with search parameters. You can use here all the parameters defined in [Doofinder Search API](http://doofinder.com/en/developer/search-api).
+  params   | No  | `Object` | An object with search parameters. You can use here all the parameters defined in [Doofinder Search API](https://www.doofinder.com/support/developer/api/search-api).
 
 #### nextPage
 Asks for the next page of the previous search done, and sends the response to all widgets to render it.
