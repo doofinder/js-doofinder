@@ -33,7 +33,7 @@ class QueryInput extends Widget
     super(element)
     @typingTimeout = @options.typingTimeout || 1000
     @eventsBound = false
-    @clean_input = @options.clean || false
+    @cleanInput = @options.clean || true
 
   ###
   start
@@ -75,7 +75,7 @@ class QueryInput extends Widget
       @eventsBound = true
 
   clean: () ->
-    if @clean_input
+    if @cleanInput
       @element.val('')
 
 module.exports = QueryInput
