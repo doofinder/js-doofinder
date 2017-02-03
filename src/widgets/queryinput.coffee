@@ -33,7 +33,7 @@ class QueryInput extends Widget
     super(element)
     @typingTimeout = @options.typingTimeout || 1000
     @eventsBound = false
-    @clean_input = false || options.clean
+    @clean_input = @options.clean || false
 
   ###
   start
