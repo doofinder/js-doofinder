@@ -135,9 +135,9 @@ class Client
       _this.sort = []
 
       for paramKey, paramValue of params
-        if paramKey == "filters"
+        if paramKey == "filters" or paramKey == "exclude"
           for filterKey, filterTerms of paramValue
-            _this.addFilter(filterKey, filterTerms)
+            _this.addFilter(filterKey, filterTerms, paramKey)
 
         else if paramKey == "sort"
           _this.setSort(paramValue)
@@ -178,8 +178,8 @@ class Client
   @param {Array|Object} filterValues
   @api public
   ###
-  addFilter: (filterKey, filterValues) ->
-    @filters[filterKey] = filterValues
+  addFilter: (filterKey, filterValues, type="filters") ->
+    this[type][filterKey] = filterValues
 
   ###
   setSort
@@ -253,6 +253,21 @@ class Client
           # escapeChars encodes &#? characters
           # those characters that encodeURI doesn't
           segment = @__escapeChars encodeURI "filter[#{key}]=#{elem}"
+          querystring += "&#{segment}"
+
+    # Adding filters
+    for key, value of @exclude
+      # Range filters
+      if value.constructor == Object
+        for k, v of value
+          querystring += encodeURI "&exclude[#{key}][#{k}]=#{v}"
+
+      # Terms filters
+      if value.constructor == Array
+        for elem in value
+          # escapeChars encodes &#? characters
+          # those characters that encodeURI doesn't
+          segment = @__escapeChars encodeURI "exclude[#{key}]=#{elem}"
           querystring += "&#{segment}"
 
     # Adding sort options
