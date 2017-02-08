@@ -29,6 +29,7 @@ class Client
     @version ?= 5
     @params = {}
     @filters = {}
+    @exclude = {}
 
 
     @url ?= address
