@@ -32,10 +32,10 @@ author: @ecoslado
     @param {String} address
     @api public
      */
-    function Client(hashid, apiKey, version, type, address) {
+    function Client(hashid, apiKey, version, type1, address) {
       var zone, zoneApiKey;
       this.hashid = hashid;
-      this.type = type;
+      this.type = type1;
       if (this.version == null) {
         this.version = version;
       }
@@ -44,6 +44,7 @@ author: @ecoslado
       }
       this.params = {};
       this.filters = {};
+      this.exclude = {};
       if (this.url == null) {
         this.url = address;
       }
@@ -150,10 +151,10 @@ author: @ecoslado
         _this.sort = [];
         for (paramKey in params) {
           paramValue = params[paramKey];
-          if (paramKey === "filters") {
+          if (paramKey === "filters" || paramKey === "exclude") {
             for (filterKey in paramValue) {
               filterTerms = paramValue[filterKey];
-              _this.addFilter(filterKey, filterTerms);
+              _this.addFilter(filterKey, filterTerms, paramKey);
             }
           } else if (paramKey === "sort") {
             _this.setSort(paramValue);
@@ -196,8 +197,11 @@ author: @ecoslado
     @api public
      */
 
-    Client.prototype.addFilter = function(filterKey, filterValues) {
-      return this.filters[filterKey] = filterValues;
+    Client.prototype.addFilter = function(filterKey, filterValues, type) {
+      if (type == null) {
+        type = "filters";
+      }
+      return this[type][filterKey] = filterValues;
     };
 
 
@@ -244,7 +248,7 @@ author: @ecoslado
      */
 
     Client.prototype.makeQueryString = function() {
-      var elem, facet, j, k, key, l, len, len1, querystring, ref, ref1, ref2, ref3, ref4, ref5, segment, term, v, value;
+      var elem, facet, j, k, key, l, len, len1, len2, m, querystring, ref, ref1, ref2, ref3, ref4, ref5, ref6, segment, term, v, value;
       querystring = encodeURI("hashid=" + this.hashid);
       if (this.type && this.type instanceof Array) {
         ref = this.type;
@@ -287,10 +291,27 @@ author: @ecoslado
           }
         }
       }
+      ref4 = this.exclude;
+      for (key in ref4) {
+        value = ref4[key];
+        if (value.constructor === Object) {
+          for (k in value) {
+            v = value[k];
+            querystring += encodeURI("&exclude[" + key + "][" + k + "]=" + v);
+          }
+        }
+        if (value.constructor === Array) {
+          for (l = 0, len1 = value.length; l < len1; l++) {
+            elem = value[l];
+            segment = this.__escapeChars(encodeURI("exclude[" + key + "]=" + elem));
+            querystring += "&" + segment;
+          }
+        }
+      }
       if (this.sort && this.sort.constructor === Array) {
-        ref4 = this.sort;
-        for (l = 0, len1 = ref4.length; l < len1; l++) {
-          value = ref4[l];
+        ref5 = this.sort;
+        for (m = 0, len2 = ref5.length; m < len2; m++) {
+          value = ref5[m];
           for (facet in value) {
             term = value[facet];
             querystring += encodeURI("&sort[" + (this.sort.indexOf(value)) + "][" + facet + "]=" + term);
@@ -299,9 +320,9 @@ author: @ecoslado
       } else if (this.sort && this.sort.constructor === String) {
         querystring += encodeURI("&sort=" + this.sort);
       } else if (this.sort && this.sort.constructor === Object) {
-        ref5 = this.sort;
-        for (key in ref5) {
-          value = ref5[key];
+        ref6 = this.sort;
+        for (key in ref6) {
+          value = ref6[key];
           querystring += encodeURI("&sort[" + key + "]=" + value);
         }
       }
@@ -2638,7 +2659,6 @@ author: @ecoslado
       QueryInput.__super__.constructor.call(this, element);
       this.typingTimeout = this.options.typingTimeout || 1000;
       this.eventsBound = false;
-      this.cleanInput = this.options.clean || true;
     }
 
 
@@ -2681,12 +2701,6 @@ author: @ecoslado
           }), self.typingTimeout);
         });
         return this.eventsBound = true;
-      }
-    };
-
-    QueryInput.prototype.clean = function() {
-      if (this.cleanInput) {
-        return this.element.val('');
       }
     };
 
