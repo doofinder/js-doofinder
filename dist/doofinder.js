@@ -1091,7 +1091,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.26",
+    version: "4.1.27",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -2638,6 +2638,7 @@ author: @ecoslado
       QueryInput.__super__.constructor.call(this, element);
       this.typingTimeout = this.options.typingTimeout || 1000;
       this.eventsBound = false;
+      this.cleanInput = this.options.clean || true;
     }
 
 
@@ -2680,6 +2681,12 @@ author: @ecoslado
           }), self.typingTimeout);
         });
         return this.eventsBound = true;
+      }
+    };
+
+    QueryInput.prototype.clean = function() {
+      if (this.cleanInput) {
+        return this.element.val('');
       }
     };
 
