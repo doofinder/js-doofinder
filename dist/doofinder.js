@@ -565,6 +565,8 @@ author: @ecoslado
   This class uses the client to
   to retrieve the data and the widgets
   to paint them.
+  
+  TODO(@carlosescri): Use our introspection tool to do some cleanup.
    */
 
   Controller = (function() {
@@ -770,11 +772,25 @@ author: @ecoslado
         if (this.searchParams.filters && this.searchParams.filters[key]) {
           return delete this.searchParams.filters[key];
         }
-      } else if (!this.status.params.filters[key]) {
-        return this.status.params.filters[key] = [value];
       } else {
-        return this.status.params.filters[key].push(value);
+        if (!this.status.params.filters[key]) {
+          this.status.params.filters[key] = [];
+        }
+        if (value.constructor !== Array) {
+          value = [value];
+        }
+        return this.status.params.filters[key] = this.status.params.filters[key].concat(value);
       }
+    };
+
+    Controller.prototype.hasFilter = function(key) {
+      var ref;
+      return ((ref = this.status.params.filters) != null ? ref[key] : void 0) != null;
+    };
+
+    Controller.prototype.getFilter = function(key) {
+      var ref;
+      return (ref = this.status.params.filters) != null ? ref[key] : void 0;
     };
 
 
@@ -842,32 +858,46 @@ author: @ecoslado
      */
 
     Controller.prototype.removeFilter = function(key, value) {
-      var index, results;
+      var ref, ref1;
       this.status.currentPage = 1;
-      if (this.status.params.filters && this.status.params.filters[key]) {
+      if (((ref = this.status.params.filters) != null ? ref[key] : void 0) != null) {
         if (this.status.params.filters[key].constructor === Object) {
           delete this.status.params.filters[key];
         } else if (this.status.params.filters[key].constructor === Array) {
-          index = this.status.params.filters[key].indexOf(value);
-          while (index >= 0) {
-            this.status.params.filters[key].splice(index, 1);
-            index = this.status.params.filters[key].indexOf(value);
+          if (value != null) {
+            this.__splice(this.status.params.filters[key], value);
+            if (!(this.status.params.filters[key].length > 0)) {
+              delete this.status.params.filters[key];
+            }
+          } else {
+            delete this.status.params.filters[key];
           }
         }
       }
-      if (this.searchParams.filters && this.searchParams.filters[key]) {
+      if (((ref1 = this.searchParams.filters) != null ? ref1[key] : void 0) != null) {
         if (this.searchParams.filters[key].constructor === Object) {
           return delete this.searchParams.filters[key];
         } else if (this.searchParams.filters[key].constructor === Array) {
-          index = this.searchParams.filters[key].indexOf(value);
-          results = [];
-          while (index >= 0) {
-            this.searchParams.filters[key].splice(index, 1);
-            results.push(index = this.searchParams.filters[key].indexOf(value));
+          if (value != null) {
+            this.__splice(this.searchParams.filters[key], value);
+            if (!(this.searchParams.filters[key].length > 0)) {
+              return delete this.searchParams.filters[key];
+            }
+          } else {
+            return delete this.searchParams.filters[key];
           }
-          return results;
         }
       }
+    };
+
+    Controller.prototype.__splice = function(list, value) {
+      var idx;
+      idx = list.indexOf(value);
+      while (idx >= 0) {
+        list.splice(idx, 1);
+        idx = list.indexOf(value);
+      }
+      return list;
     };
 
 
@@ -1922,25 +1952,21 @@ author: @ecoslado
     running = false;
     if (obj !== window) {
       return obj.on(sourceEvent, function() {
-        if (running) {
-          return;
+        if (!running) {
+          requestAnimationFrame(function() {
+            obj.trigger(targetEvent);
+            return running = false;
+          });
         }
-        running = true;
-        return setTimeout(function() {
-          obj.trigger(targetEvent);
-          return running = false;
-        }, 250);
+        return running = true;
       });
     } else {
       return bean.on(obj, sourceEvent, function() {
-        if (running) {
-          return;
-        }
-        running = true;
-        return setTimeout(function() {
+        if (!running) {
           bean.fire(obj, targetEvent);
-          return running = false;
-        }, 250);
+          running = false;
+        }
+        return running = true;
       });
     }
   };
@@ -2276,7 +2302,7 @@ them. Manages the filtering.
       }
       this.slider = null;
       this.values = {};
-      this.parseNumber = parseFloat;
+      this.range = {};
       RangeFacet.__super__.constructor.call(this, element, template, options);
     }
 
@@ -2303,14 +2329,18 @@ them. Manages the filtering.
       this.slider.noUiSlider.on('change', function() {
         var max, min, ref;
         ref = self.slider.noUiSlider.get(), min = ref[0], max = ref[1];
-        self.controller.addFilter(self.name, {
-          gte: self.values[min],
-          lte: self.values[max]
-        });
+        if (self.values[min] === self.range.min && self.values[max] === self.range.max) {
+          self.controller.removeFilter(self.name);
+        } else {
+          self.controller.addFilter(self.name, {
+            gte: self.values[min],
+            lte: self.values[max]
+          });
+        }
         self.controller.refresh();
         return self.values = {};
       });
-      return this.numberType;
+      return void 0;
     };
 
 
@@ -2357,6 +2387,15 @@ them. Manages the filtering.
       }
     };
 
+    RangeFacet.prototype._getRangeFromResponse = function(res) {
+      var range, stats;
+      stats = res.facets[this.name].range.buckets[0].stats;
+      return range = {
+        min: parseFloat(stats.min || 0, 10),
+        max: parseFloat(stats.max || 0, 10)
+      };
+    };
+
 
     /*
     Paints the slider based on the received response.
@@ -2366,26 +2405,21 @@ them. Manages the filtering.
      */
 
     RangeFacet.prototype.render = function(res) {
-      var disabled, minimum, options, overrides, range, self, start, values;
+      var options, self, start, values;
       if (!res.facets || !res.facets[this.name]) {
         this.raiseError("RangeFacet: " + this.name + " facet is not configured");
       } else if (!res.facets[this.name].range) {
         this.raiseError("RangeFacet: " + this.name + " facet is not a range facet");
       }
       self = this;
-      if (res.total > 0 && (res.facets[this.name].range.buckets[0].stats.max == null) || res.facets[this.name].range.buckets[0].stats.max === res.facets[this.name].range.buckets[0].stats.min) {
+      this.range = this._getRangeFromResponse(res);
+      if (this.range.min === this.range.max) {
         this.slider = null;
         this.element.empty();
-      } else if (res.total > 0) {
-        minimum = res.facets[this.name].range.buckets[0].stats.min || 0;
-        this.parseNumber = Number(minimum) && minimum % 1 === 0 ? parseInt : parseFloat;
-        range = [this.parseNumber(res.facets[this.name].range.buckets[0].stats.min || 0, 10), this.parseNumber(res.facets[this.name].range.buckets[0].stats.max || 0, 10)];
+      } else {
         options = {
-          start: range,
-          range: {
-            min: range[0],
-            max: range[1]
-          },
+          start: [this.range.min, this.range.max],
+          range: this.range,
           connect: true,
           tooltips: true,
           format: {
@@ -2393,7 +2427,7 @@ them. Manages the filtering.
               var formattedValue;
               if (value != null) {
                 formattedValue = self.format(value);
-                self.values[formattedValue] = self.parseNumber(value);
+                self.values[formattedValue] = parseFloat(value, 10);
                 return formattedValue;
               } else {
                 return "";
@@ -2405,7 +2439,7 @@ them. Manages the filtering.
           }
         };
         if (res && res.filter && res.filter.range && res.filter.range[this.name]) {
-          start = [this.parseNumber(res.filter.range[this.name].gte, 10), this.parseNumber(res.filter.range[this.name].lte, 10)];
+          start = [parseFloat(res.filter.range[this.name].gte, 10), parseFloat(res.filter.range[this.name].lte, 10)];
           if (!isNaN(start[0])) {
             options.start[0] = start[0];
           }
@@ -2413,43 +2447,18 @@ them. Manages the filtering.
             options.start[1] = start[1];
           }
         }
-        disabled = options.range.min === options.range.max;
-        if (disabled) {
-          overrides = {
-            range: {
-              min: options.range.min,
-              max: options.range.max + 1
-            }
-          };
-        }
         if (this.slider === null) {
-          this._renderSlider(extend(true, {}, options, overrides || {}));
+          this._renderSlider(options);
         } else {
-          this.slider.noUiSlider.updateOptions(extend(true, {}, options, overrides || {}));
-        }
-        if (disabled) {
-          this.slider.setAttribute('disabled', true);
-        } else {
-          this.slider.removeAttribute('disabled');
+          this.slider.noUiSlider.updateOptions(options);
         }
         if (options.pips == null) {
-          if (!disabled && this.parseNumber === parseInt) {
-            values = {
-              0: this.parseNumber(options.format.to(options.range.min)),
-              50: this.parseNumber(options.format.to((options.range.min + options.range.max) / 2.0)),
-              100: this.parseNumber(options.format.to(options.range.max))
-            };
-            this._renderPips(values);
-          } else if (!disabled) {
-            values = {
-              0: options.format.to(options.range.min),
-              50: options.format.to((options.range.min + options.range.max) / 2.0),
-              100: options.format.to(options.range.max)
-            };
-            this._renderPips(values);
-          } else {
-            this._renderPips();
-          }
+          values = {
+            0: options.format.to(options.range.min),
+            50: options.format.to((options.range.min + options.range.max) / 2.0),
+            100: options.format.to(options.range.max)
+          };
+          this._renderPips(values);
         }
       }
       return this.trigger('df:rendered', [res]);
@@ -2505,9 +2514,8 @@ author: @ecoslado
       if (options == null) {
         options = {};
       }
-      this.selected = {};
       if (!options.template) {
-        template = "{{#@index}}\n  <hr class=\"df-separator\">\n{{/@index}}\n<div class=\"df-panel\">\n  <a href=\"#\" class=\"df-panel__title\" data-toggle=\"panel\">{{label}}</a>\n  <div class=\"df-panel__content\">\n    <ul>\n      {{#terms}}\n      <li>\n        <a href=\"#\" class=\"df-facet {{#selected}}df-facet--active{{/selected}}\"\n            data-facet=\"{{name}}\" data-value=\"{{ key }}\">\n          {{ key }}\n          <span class=\"df-facet__count\">{{ doc_count }}</span>\n        </a>\n      </li>\n      {{/terms}}\n    </ul>\n  </div>\n</div>";
+        template = "{{#@index}}\n  <hr class=\"df-separator\">\n{{/@index}}\n<div class=\"df-panel\">\n  <a href=\"#\" class=\"df-panel__title\" data-toggle=\"panel\">{{label}}</a>\n  <div class=\"df-panel__content\">\n    <ul>\n      {{#terms}}\n      <li>\n        <a href=\"#\" class=\"df-facet {{#selected}}df-facet--active{{/selected}}\"\n            data-facet=\"{{name}}\" data-value=\"{{ key }}\" {{#selected}}data-selected{{/selected}}>\n          {{ key }}\n          <span class=\"df-facet__count\">{{ doc_count }}</span>\n        </a>\n      </li>\n      {{/terms}}\n    </ul>\n  </div>\n</div>";
       } else {
         template = options.template;
       }
@@ -2518,74 +2526,48 @@ author: @ecoslado
       var self;
       TermFacet.__super__.init.call(this, controller);
       self = this;
-      this.controller.bind("df:search", function(params) {
-        return self.selected = {};
-      });
-      this.element.on('click', "a[data-facet=\"" + this.name + "\"]", function(e) {
+      return this.element.on('click', "a[data-facet=\"" + this.name + "\"]", function(e) {
         var key, value;
         e.preventDefault();
         value = $(this).data('value');
         key = $(this).data('facet');
-        if (self.selected[value]) {
-          delete self.selected[value];
-          self.controller.removeFilter(key, value);
-        } else {
-          self.selected[value] = true;
+        if (!this.hasAttribute('data-selected')) {
+          this.setAttribute('data-selected', '');
           self.controller.addFilter(key, value);
+        } else {
+          this.removeAttribute('data-selected');
+          self.controller.removeFilter(key, value);
         }
         return self.controller.refresh();
-      });
-      return this.controller.bind("df:results_received", function(res) {
-        var ref, results, selected, term, terms;
-        if (res.facets[self.name] != null) {
-          terms = res.facets[self.name].terms.buckets.map(function(term) {
-            return term.key;
-          });
-        } else {
-          terms = [];
-        }
-        ref = self.selected;
-        results = [];
-        for (term in ref) {
-          selected = ref[term];
-          if (selected && !terms.indexOf(term) < 0) {
-            delete self.selected[term];
-            results.push(self.controller.removeFilter(self.name, term));
-          } else {
-            results.push(void 0);
-          }
-        }
-        return results;
       });
     };
 
     TermFacet.prototype.render = function(res) {
-      var context, i, index, len, ref, ref1, selectedTerm, selected_length, term;
+      var context, i, index, len, ref, ref1, ref2, ref3, selectedTerms, selected_length, term;
       if (!res.facets || !res.facets[this.name]) {
         this.raiseError("TermFacet: " + this.name + " facet is not configured");
       } else if (!res.facets[this.name].terms.buckets) {
         this.raiseError("TermFacet: " + this.name + " facet is not a terms facet");
       }
-      if ((res.filter != null) && (res.filter.terms != null) && (res.filter.terms[this.name] != null)) {
-        ref = res.filter.terms[this.name];
-        for (i = 0, len = ref.length; i < len; i++) {
-          selectedTerm = ref[i];
-          this.selected[selectedTerm] = true;
-        }
+      selectedTerms = {};
+      ref2 = ((ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.name] : void 0 : void 0) || [];
+      for (i = 0, len = ref2.length; i < len; i++) {
+        term = ref2[i];
+        selectedTerms[term] = true;
       }
       if (res.results) {
-        ref1 = res.facets[this.name].terms.buckets;
-        for (index in ref1) {
-          term = ref1[index];
+        ref3 = res.facets[this.name].terms.buckets;
+        for (index in ref3) {
+          term = ref3[index];
           term.index = index;
           term.name = this.name;
-          if (this.selected[term.key]) {
+          if (selectedTerms[term.key]) {
             term.selected = 1;
           } else {
             term.selected = 0;
           }
         }
-        selected_length = Object.keys(this.selected).length;
+        selected_length = Object.keys(selectedTerms).length;
         context = extend(true, {
           any_selected: selected_length > 0,
           total_selected: selected_length,
@@ -2659,6 +2641,7 @@ author: @ecoslado
       QueryInput.__super__.constructor.call(this, element);
       this.typingTimeout = this.options.typingTimeout || 1000;
       this.eventsBound = false;
+      this.cleanInput = this.options.clean != null ? this.options.clean : true;
     }
 
 
@@ -2701,6 +2684,12 @@ author: @ecoslado
           }), self.typingTimeout);
         });
         return this.eventsBound = true;
+      }
+    };
+
+    QueryInput.prototype.clean = function() {
+      if (this.cleanInput) {
+        return this.element.val('');
       }
     };
 
@@ -2896,17 +2885,14 @@ bottom
         this.elementWrapper = $(document.body);
         dfScroll(scrollOptions);
       } else {
-        if (!this.element.children().length()) {
-          this.element.append(document.createElement('div'));
-        }
         this.elementWrapper = this.element;
-        this.element = this.element.children().first();
-        if (options.container) {
-          if (typeof options.container === 'string') {
-            this.element = $(options.container);
-          } else {
-            this.element = options.container;
+        if (options.container != null) {
+          this.element = $(options.container);
+        } else {
+          if (!this.element.children().length()) {
+            this.element.append(document.createElement('div'));
           }
+          this.element = this.element.children().first();
         }
         dfScroll(this.elementWrapper, scrollOptions);
       }

@@ -50,21 +50,17 @@ class ScrollDisplay extends Display
       # Uses window as scroll wrapper
       @elementWrapper = $ document.body
       dfScroll scrollOptions
-      
     else
-      if not @element.children().length()
-        # Just in case the inner element in the scroll is not given
-        @element.append document.createElement 'div'
-
       @elementWrapper = @element
-      @element = @element.children().first()
+      if options.container?
+        # Force container
+        @element = $ options.container
+      else
+        if not @element.children().length()
+          # Just in case the inner element in the scroll is not given
+          @element.append (document.createElement 'div')
+        @element = @element.children().first()
 
-      # Overrides container by defined
-      if options.container
-        if typeof options.container is 'string'
-          @element = $ options.container
-        else
-          @element = options.container
       dfScroll @elementWrapper, scrollOptions
 
   ###

@@ -33,6 +33,7 @@ class QueryInput extends Widget
     super(element)
     @typingTimeout = @options.typingTimeout || 1000
     @eventsBound = false
+    @cleanInput = if @options.clean? then @options.clean else true # TODO: docs!!!
 
   ###
   start
@@ -61,7 +62,7 @@ class QueryInput extends Widget
         captureLength: 3,
         @options
       dfTypeWatch @element, options
-      
+
       # Typing stopped event
       ctrl = @controller[0]
       ctrl.bind 'df:results_received', (res) ->
@@ -72,5 +73,9 @@ class QueryInput extends Widget
           self.typingTimeout
 
       @eventsBound = true
+
+  clean: () ->
+    if @cleanInput
+      @element.val('')
 
 module.exports = QueryInput

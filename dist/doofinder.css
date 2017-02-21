@@ -385,6 +385,7 @@
 
 .df-slider .noUi-value-horizontal[data-position="100"] {
   transform: translate3d(4px, 60%, 0);
+  right: 0%;
 }
 
 .df-slider .noUi-marker-horizontal.noUi-marker-large {

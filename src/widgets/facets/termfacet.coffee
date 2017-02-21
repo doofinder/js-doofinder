@@ -16,8 +16,6 @@ paint them. Manages the filtering.
 class TermFacet extends Display
 
   constructor: (element, @name, options = {}) ->
-    @selected = {}
-
     if not options.template
       template = """
         {{#@index}}
@@ -30,7 +28,7 @@ class TermFacet extends Display
               {{#terms}}
               <li>
                 <a href="#" class="df-facet {{#selected}}df-facet--active{{/selected}}"
-                    data-facet="{{name}}" data-value="{{ key }}">
+                    data-facet="{{name}}" data-value="{{ key }}" {{#selected}}data-selected{{/selected}}>
                   {{ key }}
                   <span class="df-facet__count">{{ doc_count }}</span>
                 </a>
@@ -50,10 +48,6 @@ class TermFacet extends Display
 
     self = this
 
-    # Clean selected  terms when new search
-    @controller.bind "df:search", (params) ->
-      self.selected = {}
-
     # The filtering by click
     # attr name within " in case a ' is inside
     @element.on 'click', "a[data-facet=\"#{@name}\"]", (e) ->
@@ -62,26 +56,14 @@ class TermFacet extends Display
       value = $(this).data 'value'
       key = $(this).data 'facet'
 
-      if self.selected[value]
-        delete self.selected[value]
-        self.controller.removeFilter key, value
-      else
-        self.selected[value] = true
+      unless this.hasAttribute 'data-selected'
+        this.setAttribute 'data-selected', ''
         self.controller.addFilter key, value
+      else
+        this.removeAttribute 'data-selected'
+        self.controller.removeFilter key, value
 
       self.controller.refresh()
-
-    # Removes filters not present in results.
-    @controller.bind "df:results_received", (res) ->
-      if res.facets[self.name]?
-        terms = res.facets[self.name].terms.buckets.map (term) -> term.key
-      else
-        terms = []
-
-      for term, selected of self.selected
-        if selected and not terms.indexOf(term) < 0
-          delete self.selected[term]
-          self.controller.removeFilter self.name, term
 
   render: (res) ->
     # Throws errors if prerrequisites are not
@@ -91,9 +73,9 @@ class TermFacet extends Display
     else if not res.facets[@name].terms.buckets
       @raiseError "TermFacet: #{@name} facet is not a terms facet"
 
-    if res.filter? and res.filter.terms? and res.filter.terms[@name]?
-      for selectedTerm in res.filter.terms[@name]
-        @selected[selectedTerm] = true 
+    selectedTerms = {}
+    for term in (res.filter?.terms?[@name] or [])
+      selectedTerms[term] = true
 
     if res.results
       # To make access to selected easier
@@ -102,12 +84,12 @@ class TermFacet extends Display
         term.index = index
         term.name = @name
 
-        if @selected[term.key]
+        if selectedTerms[term.key]
           term.selected = 1
         else
           term.selected = 0
 
-      selected_length = Object.keys(@selected).length
+      selected_length = Object.keys(selectedTerms).length
 
       context = extend true,
         any_selected: selected_length > 0
