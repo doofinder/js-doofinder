@@ -270,7 +270,10 @@ author: @ecoslado
       ref2 = this.params;
       for (key in ref2) {
         value = ref2[key];
-        if (key !== "type") {
+        if (key === "query") {
+          querystring += encodeURI("&" + key + "=");
+          querystring += encodeURIComponent(value);
+        } else if (key !== "type") {
           querystring += encodeURI("&" + key + "=" + value);
         }
       }
@@ -1142,7 +1145,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.27",
+    version: "4.1.28",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
