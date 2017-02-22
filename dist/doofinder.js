@@ -271,11 +271,10 @@ author: @ecoslado
       for (key in ref2) {
         value = ref2[key];
         if (key === "query") {
-          value = this.__escapeChars(value);
-        }
-        if (key !== "type") {
+          querystring += encodeURI("&" + key + "=");
+          querystring += encodeURIComponent(value);
+        } else if (key !== "type") {
           querystring += encodeURI("&" + key + "=" + value);
-          console.log(encodeURI("&" + key + "=" + value));
         }
       }
       ref3 = this.filters;
@@ -1116,7 +1115,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.27",
+    version: "4.1.28",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),

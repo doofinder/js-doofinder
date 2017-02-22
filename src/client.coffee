@@ -239,8 +239,9 @@ class Client
     # Adding params
     for key, value of @params
       if key == "query"
-        value = @__escapeChars(value)
-      if key != "type"
+        querystring += encodeURI "&#{key}="
+        querystring += encodeURIComponent value
+      else if key != "type"
         querystring += encodeURI "&#{key}=#{value}"
 
     # Adding filters
