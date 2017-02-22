@@ -8,14 +8,12 @@ module.exports = (container, options = null) ->
     container = $ container
 
   defaults =
-    # callback: ->
+    callback: ->
     scrollOffset: 200
     content: container.children().first()
   options = extend(true, defaults, options || {})
 
   content = $ options.content
-
-  console.log "scrollOffset: #{options.scrollOffset}"
 
   container.on 'df:scroll', ->
     contentHeight = content.height()
@@ -23,15 +21,8 @@ module.exports = (container, options = null) ->
     containerScroll = container.scrollTop()
     delta = contentHeight - containerHeight - containerScroll
 
-    console.log "df:scroll!!! contentHeight(#{contentHeight})"
-    console.log "df:scroll!!! containerHeight(#{containerHeight})"
-    console.log "df:scroll!!! containerScrollTop(#{containerScroll})"
-    console.log "df:scroll!!! delta(#{delta})"
-
     if delta <= options.scrollOffset
-      console.log "callback()"
-      # Bottom was about to be reached so we call the callback
       options.callback()
 
-  # Throttle to avoid multiple events to be triggered.
+  # Avoid too much event triggering
   throttle 'scroll', 'df:scroll', container
