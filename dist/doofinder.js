@@ -1955,21 +1955,25 @@ author: @ecoslado
     running = false;
     if (obj !== window) {
       return obj.on(sourceEvent, function() {
-        if (!running) {
-          requestAnimationFrame(function() {
-            obj.trigger(targetEvent);
-            return running = false;
-          });
+        if (running) {
+          return;
         }
-        return running = true;
+        running = true;
+        return setTimeout(function() {
+          obj.trigger(targetEvent);
+          return running = false;
+        }, 250);
       });
     } else {
       return bean.on(obj, sourceEvent, function() {
-        if (!running) {
-          bean.fire(obj, targetEvent);
-          running = false;
+        if (running) {
+          return;
         }
-        return running = true;
+        running = true;
+        return setTimeout(function() {
+          bean.fire(obj, targetEvent);
+          return running = false;
+        }, 250);
       });
     }
   };
