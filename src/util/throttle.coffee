@@ -6,14 +6,21 @@ module.exports = (sourceEvent, targetEvent, obj) ->
   running = false
   if obj != window
     obj.on sourceEvent, ->
-      if not running
-        requestAnimationFrame ->
-          obj.trigger targetEvent
-          running = false
+      if running
+        return
+
       running = true
+
+      setTimeout ->
+        obj.trigger targetEvent
+        running = false
+      , 250
   else
     bean.on obj, sourceEvent, ->
-      if not running
+      if running
+        return
+      running = true
+      setTimeout ->
         bean.fire obj, targetEvent
         running = false
-      running = true
+      , 250
