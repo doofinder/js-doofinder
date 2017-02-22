@@ -253,6 +253,17 @@ class DfDomElement
           bean.on(elem, arg1, arg2)
     return this
 
+  one: (arg1, arg2, arg3) ->
+    if arg3?
+      @each (elem) ->
+        if elem?
+          bean.one(elem, arg1, arg2, arg3)
+    else
+      @each (elem) ->
+        if elem?
+          bean.one(elem, arg1, arg2)
+    return this
+
   trigger: (event, params) ->
     @each (elem) ->
       if elem?
