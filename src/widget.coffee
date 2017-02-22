@@ -86,6 +86,17 @@ class Widget
     @element.on event, callback
 
   ###
+  off
+
+  Method to remove an event listener
+  @param {String} event
+  @param {Function} callback
+  @api public
+  ###
+  off: (event, callback) ->
+    @element.off event, callback
+
+  ###
   trigger
 
   Method to trigger an event
