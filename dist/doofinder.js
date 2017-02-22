@@ -1115,7 +1115,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.29",
+    version: "4.1.30",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -2046,6 +2046,20 @@ shaped by template
      */
 
     Widget.prototype.clean = function() {};
+
+
+    /*
+    one
+    
+    Method to add and event listener and the handler will only be executed once
+    @param {String} event
+    @param {Function} callback
+    @api public
+     */
+
+    Widget.prototype.one = function(event, callback) {
+      return this.element.one(event, callback);
+    };
 
 
     /*
