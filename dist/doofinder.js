@@ -1566,17 +1566,28 @@ author: @ecoslado
     if (options == null) {
       options = null;
     }
-    defaults = {
-      scrollOffset: 200
-    };
-    options = extend(true, defaults, options || {});
     if (typeof container === 'string') {
       container = $(container);
     }
-    content = container.children().first();
+    defaults = {
+      scrollOffset: 200,
+      content: container.children().first()
+    };
+    options = extend(true, defaults, options || {});
+    content = $(options.content);
+    console.log("scrollOffset: " + options.scrollOffset);
     container.on('df:scroll', function() {
-      console.log("df:scroll!!! contentHeight(" + (content.height()) + ") containerHeight(" + (container.height()) + ") containerScrollTop(" + (container.scrollTop()) + ")");
-      if (content.height() - container.height() - container.scrollTop() <= options.scrollOffset) {
+      var containerHeight, containerScroll, contentHeight, delta;
+      contentHeight = content.height();
+      containerHeight = container.height();
+      containerScroll = container.scrollTop();
+      delta = contentHeight - containerHeight - containerScroll;
+      console.log("df:scroll!!! contentHeight(" + contentHeight + ")");
+      console.log("df:scroll!!! containerHeight(" + containerHeight + ")");
+      console.log("df:scroll!!! containerScrollTop(" + containerScroll + ")");
+      console.log("df:scroll!!! delta(" + delta + ")");
+      if (delta <= options.scrollOffset) {
+        console.log("callback()");
         return options.callback();
       }
     });
@@ -2814,14 +2825,20 @@ bottom
     @param {String} element
     @param {String|Function} template
     @param {Object} extraOptions
+    
+    options =
+      scrollOffset: 200
+      contentNode: "Node that holds the results => this.element"
+      contentWrapper: "Node that is used for the scroll instead of the first "
+                      "child of the container"
     @api public
      */
 
     function ScrollDisplay(element, template, options) {
       var scrollOptions, self;
-      ScrollDisplay.__super__.constructor.call(this, element, template, options);
+      ScrollDisplay.__super__.constructor.apply(this, arguments);
       self = this;
-      scrollOptions = extend(true, {
+      scrollOptions = {
         callback: function() {
           if ((self.controller != null) && !self.pageRequested) {
             self.pageRequested = true;
@@ -2831,12 +2848,16 @@ bottom
             return self.controller.nextPage.call(self.controller);
           }
         }
-      }, options.scrollOffset != null ? {
-        scrollOffset: options.scrollOffset
-      } : {});
+      };
+      if (options.scrollOffset != null) {
+        scrollOptions.scrollOffset = options.scrollOffset;
+      }
+      if (options.contentWrapper != null) {
+        scrollOptions.content = options.contentWrapper;
+      }
       this.elementWrapper = this.element;
-      if (options.container != null) {
-        this.element = $(options.container);
+      if (options.contentNode != null) {
+        this.element = $(options.contentNode);
       } else {
         if (!this.element.children().length()) {
           this.element.append(document.createElement('div'));

@@ -8,15 +8,28 @@ module.exports = (container, options = null) ->
     container = $ container
 
   defaults =
+    # callback: ->
     scrollOffset: 200
     content: container.children().first()
   options = extend(true, defaults, options || {})
 
   content = $ options.content
 
+  console.log "scrollOffset: #{options.scrollOffset}"
+
   container.on 'df:scroll', ->
-    console.log "df:scroll!!! contentHeight(#{content.height()}) containerHeight(#{container.height()}) containerScrollTop(#{container.scrollTop()})"
-    if content.height() - container.height() - container.scrollTop() <= options.scrollOffset
+    contentHeight = content.height()
+    containerHeight = container.height()
+    containerScroll = container.scrollTop()
+    delta = contentHeight - containerHeight - containerScroll
+
+    console.log "df:scroll!!! contentHeight(#{contentHeight})"
+    console.log "df:scroll!!! containerHeight(#{containerHeight})"
+    console.log "df:scroll!!! containerScrollTop(#{containerScroll})"
+    console.log "df:scroll!!! delta(#{delta})"
+
+    if delta <= options.scrollOffset
+      console.log "callback()"
       # Bottom was about to be reached so we call the callback
       options.callback()
 

@@ -40,7 +40,8 @@ class ScrollDisplay extends Display
   constructor: (element, template, options) ->
     super
     self = this
-    scrollOptions = extend true,
+
+    scrollOptions =
       callback: ->
         if self.controller? and not self.pageRequested
           self.pageRequested = true
@@ -49,10 +50,11 @@ class ScrollDisplay extends Display
             self.pageRequested = false
           , 5000
           self.controller.nextPage.call(self.controller)
-      ,
-      if options.scrollOffset? then scrollOffset: options.scrollOffset else {}
-      ,
-      if options.contentWrapper? then content: $ options.contentWrapper else {}
+
+    if options.scrollOffset?
+      scrollOptions.scrollOffset = options.scrollOffset
+    if options.contentWrapper?
+      scrollOptions.content = options.contentWrapper
 
     @elementWrapper = @element
 
