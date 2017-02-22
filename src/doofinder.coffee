@@ -23,5 +23,5 @@ module.exports =
     extend: require "extend"
     introspection: require "./util/introspection"
     dfdom: require "./util/dfdom"
-    throttle: require "./util/throttle"
+    throttle: require "lodash.throttle"
     http: require "./util/http"

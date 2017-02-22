@@ -1,16 +1,16 @@
-extend = require 'extend'
-throttle = require './throttle'
 $ = require './dfdom'
-# bean = require 'bean'
+bean = require 'bean'
+extend = require 'extend'
+throttle = require 'lodash.throttle'
 
 module.exports = (container, options = null) ->
-  if typeof container is 'string'
-    container = $ container
+  container = $ container
 
   defaults =
     callback: ->
     scrollOffset: 200
     content: container.children().first()
+    throttle: 150
   options = extend(true, defaults, options || {})
 
   content = $ options.content
@@ -25,4 +25,5 @@ module.exports = (container, options = null) ->
       options.callback()
 
   # Avoid too much event triggering
-  throttle 'scroll', 'df:scroll', container
+  fn = -> bean.fire container.element[0], 'df:scroll'
+  bean.on container.element[0], 'scroll', throttle(fn, options.throttle, trailing: true)

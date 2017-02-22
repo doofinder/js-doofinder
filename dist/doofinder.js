@@ -1134,7 +1134,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"bean":19,"extend":20,"qs":63}],3:[function(require,module,exports){
+},{"bean":18,"extend":19,"qs":63}],3:[function(require,module,exports){
 (function() {
   if (!JSON.stringify && JSON.encode) {
     JSON.stringify = JSON.encode;
@@ -1165,14 +1165,14 @@ author: @ecoslado
       extend: require("extend"),
       introspection: require("./util/introspection"),
       dfdom: require("./util/dfdom"),
-      throttle: require("./util/throttle"),
+      throttle: require("lodash.throttle"),
       http: require("./util/http")
     }
   };
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./util/dfdom":4,"./util/http":8,"./util/introspection":9,"./util/throttle":10,"./widget":11,"./widgets/display":12,"./widgets/facets/rangefacet":13,"./widgets/facets/termfacet":14,"./widgets/queryinput":15,"./widgets/results/results":16,"./widgets/results/scrollresults":17,"bean":19,"extend":20,"md5":57,"mustache":61,"qs":63}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./util/dfdom":4,"./util/http":8,"./util/introspection":9,"./widget":10,"./widgets/display":11,"./widgets/facets/rangefacet":12,"./widgets/facets/termfacet":13,"./widgets/queryinput":14,"./widgets/results/results":15,"./widgets/results/scrollresults":16,"bean":18,"extend":19,"lodash.throttle":56,"md5":57,"mustache":61,"qs":63}],4:[function(require,module,exports){
 
 /*
 dfdom.coffee
@@ -1551,28 +1551,29 @@ author: @ecoslado
 
 }).call(this);
 
-},{"bean":19}],5:[function(require,module,exports){
+},{"bean":18}],5:[function(require,module,exports){
 (function() {
-  var $, extend, throttle;
-
-  extend = require('extend');
-
-  throttle = require('./throttle');
+  var $, bean, extend, throttle;
 
   $ = require('./dfdom');
 
+  bean = require('bean');
+
+  extend = require('extend');
+
+  throttle = require('lodash.throttle');
+
   module.exports = function(container, options) {
-    var content, defaults;
+    var content, defaults, fn;
     if (options == null) {
       options = null;
     }
-    if (typeof container === 'string') {
-      container = $(container);
-    }
+    container = $(container);
     defaults = {
       callback: function() {},
       scrollOffset: 200,
-      content: container.children().first()
+      content: container.children().first(),
+      throttle: 150
     };
     options = extend(true, defaults, options || {});
     content = $(options.content);
@@ -1586,12 +1587,17 @@ author: @ecoslado
         return options.callback();
       }
     });
-    return throttle('scroll', 'df:scroll', container);
+    fn = function() {
+      return bean.fire(container.element[0], 'df:scroll');
+    };
+    return bean.on(container.element[0], 'scroll', throttle(fn, options.throttle, {
+      trailing: true
+    }));
   };
 
 }).call(this);
 
-},{"./dfdom":4,"./throttle":10,"extend":20}],6:[function(require,module,exports){
+},{"./dfdom":4,"bean":18,"extend":19,"lodash.throttle":56}],6:[function(require,module,exports){
 (function() {
   var $, extend,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -1658,7 +1664,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./dfdom":4,"extend":20}],7:[function(require,module,exports){
+},{"./dfdom":4,"extend":19}],7:[function(require,module,exports){
 
 /*
  * author: @ecoslado
@@ -1761,7 +1767,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"extend":20}],8:[function(require,module,exports){
+},{"extend":19}],8:[function(require,module,exports){
 
 /*
 client.coffee
@@ -1854,7 +1860,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"http":47,"https":27}],9:[function(require,module,exports){
+},{"http":46,"https":26}],9:[function(require,module,exports){
 (function() {
   var isArray, isFunction, isObject, isPlainObject;
 
@@ -1894,45 +1900,6 @@ author: @ecoslado
 }).call(this);
 
 },{}],10:[function(require,module,exports){
-(function() {
-  var $, bean;
-
-  $ = require('./dfdom');
-
-  bean = require('bean');
-
-  module.exports = function(sourceEvent, targetEvent, obj) {
-    var running;
-    obj = obj || window;
-    running = false;
-    if (obj !== window) {
-      return obj.on(sourceEvent, function() {
-        if (running) {
-          return;
-        }
-        running = true;
-        return setTimeout(function() {
-          obj.trigger(targetEvent);
-          return running = false;
-        }, 250);
-      });
-    } else {
-      return bean.on(obj, sourceEvent, function() {
-        if (running) {
-          return;
-        }
-        running = true;
-        return setTimeout(function() {
-          bean.fire(obj, targetEvent);
-          return running = false;
-        }, 250);
-      });
-    }
-  };
-
-}).call(this);
-
-},{"./dfdom":4,"bean":19}],11:[function(require,module,exports){
 
 /*
 widget.coffee
@@ -2060,7 +2027,7 @@ shaped by template
 
 }).call(this);
 
-},{"./util/dfdom":4,"bean":19}],12:[function(require,module,exports){
+},{"./util/dfdom":4,"bean":18}],11:[function(require,module,exports){
 
 /*
 display.coffee
@@ -2191,7 +2158,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../util/helpers":7,"../widget":11,"extend":20,"mustache":61}],13:[function(require,module,exports){
+},{"../util/helpers":7,"../widget":10,"extend":19,"mustache":61}],12:[function(require,module,exports){
 
 /*
 rangefacet.coffee
@@ -2438,7 +2405,7 @@ them. Manages the filtering.
 
 }).call(this);
 
-},{"../display":12,"extend":20,"nouislider":62}],14:[function(require,module,exports){
+},{"../display":11,"extend":19,"nouislider":62}],13:[function(require,module,exports){
 
 /*
 termfacet.coffee
@@ -2551,7 +2518,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../../util/dfdom":4,"../display":12,"extend":20}],15:[function(require,module,exports){
+},{"../../util/dfdom":4,"../display":11,"extend":19}],14:[function(require,module,exports){
 
 /*
 queryinput.coffee
@@ -2660,7 +2627,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../util/dftypewatch":6,"../widget":11,"extend":20}],16:[function(require,module,exports){
+},{"../util/dftypewatch":6,"../widget":10,"extend":19}],15:[function(require,module,exports){
 
 /*
 display.coffee
@@ -2718,7 +2685,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../display":12}],17:[function(require,module,exports){
+},{"../display":11}],16:[function(require,module,exports){
 
 /*
 scrollresults.coffee
@@ -2776,7 +2743,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../scrolldisplay":18}],18:[function(require,module,exports){
+},{"../scrolldisplay":17}],17:[function(require,module,exports){
 
 /*
 scrolldisplay.coffee
@@ -2907,7 +2874,7 @@ bottom
 
 }).call(this);
 
-},{"../util/dfdom":4,"../util/dfscroll":5,"./display":12,"extend":20}],19:[function(require,module,exports){
+},{"../util/dfdom":4,"../util/dfscroll":5,"./display":11,"extend":19}],18:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean
@@ -3650,7 +3617,7 @@ bottom
   return bean
 });
 
-},{}],20:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -3738,9 +3705,9 @@ module.exports = function extend() {
 };
 
 
-},{}],21:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 
-},{}],22:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -5533,7 +5500,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":23,"ieee754":24,"isarray":25}],23:[function(require,module,exports){
+},{"base64-js":22,"ieee754":23,"isarray":24}],22:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -5649,7 +5616,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],24:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -5735,14 +5702,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],25:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],26:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -6046,7 +6013,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],27:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -6062,7 +6029,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":47}],28:[function(require,module,exports){
+},{"http":46}],27:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -6087,7 +6054,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],29:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -6110,7 +6077,7 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],30:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -6292,7 +6259,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],31:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -6829,7 +6796,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],32:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -6915,7 +6882,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],33:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7002,13 +6969,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],34:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":32,"./encode":33}],35:[function(require,module,exports){
+},{"./decode":31,"./encode":32}],34:[function(require,module,exports){
 // a duplex stream is just a stream that is both readable and writable.
 // Since JS doesn't have multiple prototypal inheritance, this class
 // prototypally inherits from Readable, and then parasitically from
@@ -7084,7 +7051,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":37,"./_stream_writable":39,"core-util-is":42,"inherits":28,"process-nextick-args":44}],36:[function(require,module,exports){
+},{"./_stream_readable":36,"./_stream_writable":38,"core-util-is":41,"inherits":27,"process-nextick-args":43}],35:[function(require,module,exports){
 // a passthrough stream.
 // basically just the most minimal sort of Transform stream.
 // Every written chunk gets output as-is.
@@ -7111,7 +7078,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":38,"core-util-is":42,"inherits":28}],37:[function(require,module,exports){
+},{"./_stream_transform":37,"core-util-is":41,"inherits":27}],36:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -8055,7 +8022,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":35,"./internal/streams/BufferList":40,"_process":30,"buffer":22,"buffer-shims":41,"core-util-is":42,"events":26,"inherits":28,"isarray":43,"process-nextick-args":44,"string_decoder/":53,"util":21}],38:[function(require,module,exports){
+},{"./_stream_duplex":34,"./internal/streams/BufferList":39,"_process":29,"buffer":21,"buffer-shims":40,"core-util-is":41,"events":25,"inherits":27,"isarray":42,"process-nextick-args":43,"string_decoder/":52,"util":20}],37:[function(require,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -8238,7 +8205,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":35,"core-util-is":42,"inherits":28}],39:[function(require,module,exports){
+},{"./_stream_duplex":34,"core-util-is":41,"inherits":27}],38:[function(require,module,exports){
 (function (process){
 // A bit simpler than readable streams.
 // Implement an async ._write(chunk, encoding, cb), and it'll handle all
@@ -8795,7 +8762,7 @@ function CorkedRequest(state) {
   };
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":35,"_process":30,"buffer":22,"buffer-shims":41,"core-util-is":42,"events":26,"inherits":28,"process-nextick-args":44,"util-deprecate":45}],40:[function(require,module,exports){
+},{"./_stream_duplex":34,"_process":29,"buffer":21,"buffer-shims":40,"core-util-is":41,"events":25,"inherits":27,"process-nextick-args":43,"util-deprecate":44}],39:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('buffer').Buffer;
@@ -8860,7 +8827,7 @@ BufferList.prototype.concat = function (n) {
   }
   return ret;
 };
-},{"buffer":22,"buffer-shims":41}],41:[function(require,module,exports){
+},{"buffer":21,"buffer-shims":40}],40:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -8972,7 +8939,7 @@ exports.allocUnsafeSlow = function allocUnsafeSlow(size) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"buffer":22}],42:[function(require,module,exports){
+},{"buffer":21}],41:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -9083,9 +9050,9 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":29}],43:[function(require,module,exports){
-arguments[4][25][0].apply(exports,arguments)
-},{"dup":25}],44:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":28}],42:[function(require,module,exports){
+arguments[4][24][0].apply(exports,arguments)
+},{"dup":24}],43:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -9132,7 +9099,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":30}],45:[function(require,module,exports){
+},{"_process":29}],44:[function(require,module,exports){
 (function (global){
 
 /**
@@ -9203,7 +9170,7 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],46:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 (function (process){
 var Stream = (function (){
   try {
@@ -9223,7 +9190,7 @@ if (!process.browser && process.env.READABLE_STREAM === 'disable' && Stream) {
 }
 
 }).call(this,require('_process'))
-},{"./lib/_stream_duplex.js":35,"./lib/_stream_passthrough.js":36,"./lib/_stream_readable.js":37,"./lib/_stream_transform.js":38,"./lib/_stream_writable.js":39,"_process":30}],47:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":34,"./lib/_stream_passthrough.js":35,"./lib/_stream_readable.js":36,"./lib/_stream_transform.js":37,"./lib/_stream_writable.js":38,"_process":29}],46:[function(require,module,exports){
 (function (global){
 var ClientRequest = require('./lib/request')
 var extend = require('xtend')
@@ -9305,7 +9272,7 @@ http.METHODS = [
 	'UNSUBSCRIBE'
 ]
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./lib/request":49,"builtin-status-codes":51,"url":54,"xtend":56}],48:[function(require,module,exports){
+},{"./lib/request":48,"builtin-status-codes":50,"url":53,"xtend":55}],47:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
 
@@ -9378,7 +9345,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],49:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -9676,7 +9643,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":48,"./response":50,"_process":30,"buffer":22,"inherits":28,"readable-stream":46,"to-arraybuffer":52}],50:[function(require,module,exports){
+},{"./capability":47,"./response":49,"_process":29,"buffer":21,"inherits":27,"readable-stream":45,"to-arraybuffer":51}],49:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -9862,7 +9829,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":48,"_process":30,"buffer":22,"inherits":28,"readable-stream":46}],51:[function(require,module,exports){
+},{"./capability":47,"_process":29,"buffer":21,"inherits":27,"readable-stream":45}],50:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -9928,7 +9895,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],52:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
 
 module.exports = function (buf) {
@@ -9957,7 +9924,7 @@ module.exports = function (buf) {
 	}
 }
 
-},{"buffer":22}],53:[function(require,module,exports){
+},{"buffer":21}],52:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -10180,7 +10147,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":22}],54:[function(require,module,exports){
+},{"buffer":21}],53:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -10914,7 +10881,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":55,"punycode":31,"querystring":34}],55:[function(require,module,exports){
+},{"./util":54,"punycode":30,"querystring":33}],54:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -10932,7 +10899,7 @@ module.exports = {
   }
 };
 
-},{}],56:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -10953,6 +10920,449 @@ function extend() {
     return target
 }
 
+},{}],56:[function(require,module,exports){
+(function (global){
+/**
+ * lodash (Custom Build) <https://lodash.com/>
+ * Build: `lodash modularize exports="npm" -o ./`
+ * Copyright jQuery Foundation and other contributors <https://jquery.org/>
+ * Released under MIT license <https://lodash.com/license>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ */
+
+/** Used as the `TypeError` message for "Functions" methods. */
+var FUNC_ERROR_TEXT = 'Expected a function';
+
+/** Used as references for various `Number` constants. */
+var NAN = 0 / 0;
+
+/** `Object#toString` result references. */
+var symbolTag = '[object Symbol]';
+
+/** Used to match leading and trailing whitespace. */
+var reTrim = /^\s+|\s+$/g;
+
+/** Used to detect bad signed hexadecimal string values. */
+var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
+
+/** Used to detect binary string values. */
+var reIsBinary = /^0b[01]+$/i;
+
+/** Used to detect octal string values. */
+var reIsOctal = /^0o[0-7]+$/i;
+
+/** Built-in method references without a dependency on `root`. */
+var freeParseInt = parseInt;
+
+/** Detect free variable `global` from Node.js. */
+var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
+
+/** Detect free variable `self`. */
+var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
+
+/** Used as a reference to the global object. */
+var root = freeGlobal || freeSelf || Function('return this')();
+
+/** Used for built-in method references. */
+var objectProto = Object.prototype;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var objectToString = objectProto.toString;
+
+/* Built-in method references for those with the same name as other `lodash` methods. */
+var nativeMax = Math.max,
+    nativeMin = Math.min;
+
+/**
+ * Gets the timestamp of the number of milliseconds that have elapsed since
+ * the Unix epoch (1 January 1970 00:00:00 UTC).
+ *
+ * @static
+ * @memberOf _
+ * @since 2.4.0
+ * @category Date
+ * @returns {number} Returns the timestamp.
+ * @example
+ *
+ * _.defer(function(stamp) {
+ *   console.log(_.now() - stamp);
+ * }, _.now());
+ * // => Logs the number of milliseconds it took for the deferred invocation.
+ */
+var now = function() {
+  return root.Date.now();
+};
+
+/**
+ * Creates a debounced function that delays invoking `func` until after `wait`
+ * milliseconds have elapsed since the last time the debounced function was
+ * invoked. The debounced function comes with a `cancel` method to cancel
+ * delayed `func` invocations and a `flush` method to immediately invoke them.
+ * Provide `options` to indicate whether `func` should be invoked on the
+ * leading and/or trailing edge of the `wait` timeout. The `func` is invoked
+ * with the last arguments provided to the debounced function. Subsequent
+ * calls to the debounced function return the result of the last `func`
+ * invocation.
+ *
+ * **Note:** If `leading` and `trailing` options are `true`, `func` is
+ * invoked on the trailing edge of the timeout only if the debounced function
+ * is invoked more than once during the `wait` timeout.
+ *
+ * If `wait` is `0` and `leading` is `false`, `func` invocation is deferred
+ * until to the next tick, similar to `setTimeout` with a timeout of `0`.
+ *
+ * See [David Corbacho's article](https://css-tricks.com/debouncing-throttling-explained-examples/)
+ * for details over the differences between `_.debounce` and `_.throttle`.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Function
+ * @param {Function} func The function to debounce.
+ * @param {number} [wait=0] The number of milliseconds to delay.
+ * @param {Object} [options={}] The options object.
+ * @param {boolean} [options.leading=false]
+ *  Specify invoking on the leading edge of the timeout.
+ * @param {number} [options.maxWait]
+ *  The maximum time `func` is allowed to be delayed before it's invoked.
+ * @param {boolean} [options.trailing=true]
+ *  Specify invoking on the trailing edge of the timeout.
+ * @returns {Function} Returns the new debounced function.
+ * @example
+ *
+ * // Avoid costly calculations while the window size is in flux.
+ * jQuery(window).on('resize', _.debounce(calculateLayout, 150));
+ *
+ * // Invoke `sendMail` when clicked, debouncing subsequent calls.
+ * jQuery(element).on('click', _.debounce(sendMail, 300, {
+ *   'leading': true,
+ *   'trailing': false
+ * }));
+ *
+ * // Ensure `batchLog` is invoked once after 1 second of debounced calls.
+ * var debounced = _.debounce(batchLog, 250, { 'maxWait': 1000 });
+ * var source = new EventSource('/stream');
+ * jQuery(source).on('message', debounced);
+ *
+ * // Cancel the trailing debounced invocation.
+ * jQuery(window).on('popstate', debounced.cancel);
+ */
+function debounce(func, wait, options) {
+  var lastArgs,
+      lastThis,
+      maxWait,
+      result,
+      timerId,
+      lastCallTime,
+      lastInvokeTime = 0,
+      leading = false,
+      maxing = false,
+      trailing = true;
+
+  if (typeof func != 'function') {
+    throw new TypeError(FUNC_ERROR_TEXT);
+  }
+  wait = toNumber(wait) || 0;
+  if (isObject(options)) {
+    leading = !!options.leading;
+    maxing = 'maxWait' in options;
+    maxWait = maxing ? nativeMax(toNumber(options.maxWait) || 0, wait) : maxWait;
+    trailing = 'trailing' in options ? !!options.trailing : trailing;
+  }
+
+  function invokeFunc(time) {
+    var args = lastArgs,
+        thisArg = lastThis;
+
+    lastArgs = lastThis = undefined;
+    lastInvokeTime = time;
+    result = func.apply(thisArg, args);
+    return result;
+  }
+
+  function leadingEdge(time) {
+    // Reset any `maxWait` timer.
+    lastInvokeTime = time;
+    // Start the timer for the trailing edge.
+    timerId = setTimeout(timerExpired, wait);
+    // Invoke the leading edge.
+    return leading ? invokeFunc(time) : result;
+  }
+
+  function remainingWait(time) {
+    var timeSinceLastCall = time - lastCallTime,
+        timeSinceLastInvoke = time - lastInvokeTime,
+        result = wait - timeSinceLastCall;
+
+    return maxing ? nativeMin(result, maxWait - timeSinceLastInvoke) : result;
+  }
+
+  function shouldInvoke(time) {
+    var timeSinceLastCall = time - lastCallTime,
+        timeSinceLastInvoke = time - lastInvokeTime;
+
+    // Either this is the first call, activity has stopped and we're at the
+    // trailing edge, the system time has gone backwards and we're treating
+    // it as the trailing edge, or we've hit the `maxWait` limit.
+    return (lastCallTime === undefined || (timeSinceLastCall >= wait) ||
+      (timeSinceLastCall < 0) || (maxing && timeSinceLastInvoke >= maxWait));
+  }
+
+  function timerExpired() {
+    var time = now();
+    if (shouldInvoke(time)) {
+      return trailingEdge(time);
+    }
+    // Restart the timer.
+    timerId = setTimeout(timerExpired, remainingWait(time));
+  }
+
+  function trailingEdge(time) {
+    timerId = undefined;
+
+    // Only invoke if we have `lastArgs` which means `func` has been
+    // debounced at least once.
+    if (trailing && lastArgs) {
+      return invokeFunc(time);
+    }
+    lastArgs = lastThis = undefined;
+    return result;
+  }
+
+  function cancel() {
+    if (timerId !== undefined) {
+      clearTimeout(timerId);
+    }
+    lastInvokeTime = 0;
+    lastArgs = lastCallTime = lastThis = timerId = undefined;
+  }
+
+  function flush() {
+    return timerId === undefined ? result : trailingEdge(now());
+  }
+
+  function debounced() {
+    var time = now(),
+        isInvoking = shouldInvoke(time);
+
+    lastArgs = arguments;
+    lastThis = this;
+    lastCallTime = time;
+
+    if (isInvoking) {
+      if (timerId === undefined) {
+        return leadingEdge(lastCallTime);
+      }
+      if (maxing) {
+        // Handle invocations in a tight loop.
+        timerId = setTimeout(timerExpired, wait);
+        return invokeFunc(lastCallTime);
+      }
+    }
+    if (timerId === undefined) {
+      timerId = setTimeout(timerExpired, wait);
+    }
+    return result;
+  }
+  debounced.cancel = cancel;
+  debounced.flush = flush;
+  return debounced;
+}
+
+/**
+ * Creates a throttled function that only invokes `func` at most once per
+ * every `wait` milliseconds. The throttled function comes with a `cancel`
+ * method to cancel delayed `func` invocations and a `flush` method to
+ * immediately invoke them. Provide `options` to indicate whether `func`
+ * should be invoked on the leading and/or trailing edge of the `wait`
+ * timeout. The `func` is invoked with the last arguments provided to the
+ * throttled function. Subsequent calls to the throttled function return the
+ * result of the last `func` invocation.
+ *
+ * **Note:** If `leading` and `trailing` options are `true`, `func` is
+ * invoked on the trailing edge of the timeout only if the throttled function
+ * is invoked more than once during the `wait` timeout.
+ *
+ * If `wait` is `0` and `leading` is `false`, `func` invocation is deferred
+ * until to the next tick, similar to `setTimeout` with a timeout of `0`.
+ *
+ * See [David Corbacho's article](https://css-tricks.com/debouncing-throttling-explained-examples/)
+ * for details over the differences between `_.throttle` and `_.debounce`.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Function
+ * @param {Function} func The function to throttle.
+ * @param {number} [wait=0] The number of milliseconds to throttle invocations to.
+ * @param {Object} [options={}] The options object.
+ * @param {boolean} [options.leading=true]
+ *  Specify invoking on the leading edge of the timeout.
+ * @param {boolean} [options.trailing=true]
+ *  Specify invoking on the trailing edge of the timeout.
+ * @returns {Function} Returns the new throttled function.
+ * @example
+ *
+ * // Avoid excessively updating the position while scrolling.
+ * jQuery(window).on('scroll', _.throttle(updatePosition, 100));
+ *
+ * // Invoke `renewToken` when the click event is fired, but not more than once every 5 minutes.
+ * var throttled = _.throttle(renewToken, 300000, { 'trailing': false });
+ * jQuery(element).on('click', throttled);
+ *
+ * // Cancel the trailing throttled invocation.
+ * jQuery(window).on('popstate', throttled.cancel);
+ */
+function throttle(func, wait, options) {
+  var leading = true,
+      trailing = true;
+
+  if (typeof func != 'function') {
+    throw new TypeError(FUNC_ERROR_TEXT);
+  }
+  if (isObject(options)) {
+    leading = 'leading' in options ? !!options.leading : leading;
+    trailing = 'trailing' in options ? !!options.trailing : trailing;
+  }
+  return debounce(func, wait, {
+    'leading': leading,
+    'maxWait': wait,
+    'trailing': trailing
+  });
+}
+
+/**
+ * Checks if `value` is the
+ * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
+ * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(_.noop);
+ * // => true
+ *
+ * _.isObject(null);
+ * // => false
+ */
+function isObject(value) {
+  var type = typeof value;
+  return !!value && (type == 'object' || type == 'function');
+}
+
+/**
+ * Checks if `value` is object-like. A value is object-like if it's not `null`
+ * and has a `typeof` result of "object".
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+ * @example
+ *
+ * _.isObjectLike({});
+ * // => true
+ *
+ * _.isObjectLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isObjectLike(_.noop);
+ * // => false
+ *
+ * _.isObjectLike(null);
+ * // => false
+ */
+function isObjectLike(value) {
+  return !!value && typeof value == 'object';
+}
+
+/**
+ * Checks if `value` is classified as a `Symbol` primitive or object.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
+ * @example
+ *
+ * _.isSymbol(Symbol.iterator);
+ * // => true
+ *
+ * _.isSymbol('abc');
+ * // => false
+ */
+function isSymbol(value) {
+  return typeof value == 'symbol' ||
+    (isObjectLike(value) && objectToString.call(value) == symbolTag);
+}
+
+/**
+ * Converts `value` to a number.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to process.
+ * @returns {number} Returns the number.
+ * @example
+ *
+ * _.toNumber(3.2);
+ * // => 3.2
+ *
+ * _.toNumber(Number.MIN_VALUE);
+ * // => 5e-324
+ *
+ * _.toNumber(Infinity);
+ * // => Infinity
+ *
+ * _.toNumber('3.2');
+ * // => 3.2
+ */
+function toNumber(value) {
+  if (typeof value == 'number') {
+    return value;
+  }
+  if (isSymbol(value)) {
+    return NAN;
+  }
+  if (isObject(value)) {
+    var other = typeof value.valueOf == 'function' ? value.valueOf() : value;
+    value = isObject(other) ? (other + '') : other;
+  }
+  if (typeof value != 'string') {
+    return value === 0 ? value : +value;
+  }
+  value = value.replace(reTrim, '');
+  var isBinary = reIsBinary.test(value);
+  return (isBinary || reIsOctal.test(value))
+    ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
+    : (reIsBadHex.test(value) ? NAN : +value);
+}
+
+module.exports = throttle;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],57:[function(require,module,exports){
 (function(){
   var crypt = require('crypt'),
@@ -11249,8 +11659,8 @@ module.exports = charenc;
 })();
 
 },{}],60:[function(require,module,exports){
-arguments[4][29][0].apply(exports,arguments)
-},{"dup":29}],61:[function(require,module,exports){
+arguments[4][28][0].apply(exports,arguments)
+},{"dup":28}],61:[function(require,module,exports){
 /*!
  * mustache.js - Logic-less {{mustache}} templates with JavaScript
  * http://github.com/janl/mustache.js
