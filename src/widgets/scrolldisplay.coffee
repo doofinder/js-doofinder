@@ -29,11 +29,17 @@ class ScrollDisplay extends Display
   @param {String} element
   @param {String|Function} template
   @param {Object} extraOptions
+
+  options =
+    scrollOffset: 200
+    contentNode: "Node that holds the results => this.element"
+    contentWrapper: "Node that is used for the scroll instead of the first "
+                    "child of the container"
   @api public
   ###
   constructor: (element, template, options) ->
+    super
     self = this
-    super(element, template, options)
     scrollOptions = extend true,
       callback: ->
         if self.controller? and not self.pageRequested
@@ -45,23 +51,19 @@ class ScrollDisplay extends Display
           self.controller.nextPage.call(self.controller)
       ,
       if options.scrollOffset? then scrollOffset: options.scrollOffset else {}
+      ,
+      if options.contentWrapper? then content: $ options.contentWrapper else {}
 
-    if options.windowScroll
-      # Uses window as scroll wrapper
-      @elementWrapper = $ document.body
-      dfScroll scrollOptions
+    @elementWrapper = @element
+
+    if options.contentNode?
+      @element = $ options.contentNode
     else
-      @elementWrapper = @element
-      if options.container?
-        # Force container
-        @element = $ options.container
-      else
-        if not @element.children().length()
-          # Just in case the inner element in the scroll is not given
-          @element.append (document.createElement 'div')
-        @element = @element.children().first()
+      if not @element.children().length()
+        @element.append (document.createElement 'div')
+      @element = @element.children().first()
 
-      dfScroll @elementWrapper, scrollOptions
+    dfScroll @elementWrapper, scrollOptions
 
   ###
   start
