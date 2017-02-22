@@ -10,8 +10,9 @@ module.exports = (container, options = null) ->
   defaults =
     scrollOffset: 200
     content: container.children().first()
-
   options = extend(true, defaults, options || {})
+
+  content = $ options.content
 
   container.on 'df:scroll', ->
     console.log "df:scroll!!! contentHeight(#{content.height()}) containerHeight(#{container.height()}) containerScrollTop(#{container.scrollTop()})"
