@@ -1145,7 +1145,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.28",
+    version: "4.1.29",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1501,6 +1501,23 @@ author: @ecoslado
         this.each(function(elem) {
           if (elem != null) {
             return bean.on(elem, arg1, arg2);
+          }
+        });
+      }
+      return this;
+    };
+
+    DfDomElement.prototype.one = function(arg1, arg2, arg3) {
+      if (arg3 != null) {
+        this.each(function(elem) {
+          if (elem != null) {
+            return bean.one(elem, arg1, arg2, arg3);
+          }
+        });
+      } else {
+        this.each(function(elem) {
+          if (elem != null) {
+            return bean.one(elem, arg1, arg2);
           }
         });
       }
