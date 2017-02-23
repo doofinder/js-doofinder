@@ -1590,7 +1590,7 @@ author: @ecoslado
       callback: function() {},
       scrollOffset: 200,
       content: container.children().first(),
-      throttle: 150
+      throttle: 250
     };
     options = extend(true, defaults, options || {});
     content = $(options.content);
@@ -1605,7 +1605,8 @@ author: @ecoslado
       }
     });
     fn = function(e) {
-      return bean.fire(container.element[0], 'df:scroll');
+      bean.fire(container.element[0], 'df:scroll');
+      return console.log('df:scroll');
     };
     return bean.on(container.element[0], 'scroll', throttle(fn, options.throttle, {
       trailing: true

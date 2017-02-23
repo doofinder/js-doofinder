@@ -10,7 +10,7 @@ module.exports = (container, options = null) ->
     callback: ->
     scrollOffset: 200
     content: container.children().first()
-    throttle: 150
+    throttle: 250
   options = extend(true, defaults, options || {})
 
   content = $ options.content
@@ -25,5 +25,7 @@ module.exports = (container, options = null) ->
       options.callback()
 
   # Avoid too much event triggering
-  fn = (e) -> bean.fire container.element[0], 'df:scroll'
+  fn = (e) ->
+    bean.fire container.element[0], 'df:scroll'
+    console.log 'df:scroll'
   bean.on container.element[0], 'scroll', throttle(fn, options.throttle, trailing: true)
