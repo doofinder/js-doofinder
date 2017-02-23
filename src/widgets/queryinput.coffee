@@ -79,8 +79,5 @@ class QueryInput extends Widget
   clean: () ->
     if @cleanInput
       @element.val('')
-      @controller?.forEach (controller) ->
-        console.log "reset controller!"
-        controller.reset()
 
 module.exports = QueryInput
