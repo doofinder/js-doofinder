@@ -64,6 +64,17 @@ class Widget
   clean: () ->  
 
   ###
+  one
+
+  Method to add and event listener and the handler will only be executed once
+  @param {String} event
+  @param {Function} callback
+  @api public
+  ###
+  one: (event, callback) ->
+    @element.one event, callback
+
+  ###
   bind
 
   Method to add and event listener
@@ -73,6 +84,17 @@ class Widget
   ###
   bind: (event, callback) ->
     @element.on event, callback
+
+  ###
+  off
+
+  Method to remove an event listener
+  @param {String} event
+  @param {Function} callback
+  @api public
+  ###
+  off: (event, callback) ->
+    @element.off event, callback
 
   ###
   trigger

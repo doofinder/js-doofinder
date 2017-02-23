@@ -1145,7 +1145,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.29",
+    version: "4.1.31",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1998,6 +1998,20 @@ shaped by template
 
 
     /*
+    one
+    
+    Method to add and event listener and the handler will only be executed once
+    @param {String} event
+    @param {Function} callback
+    @api public
+     */
+
+    Widget.prototype.one = function(event, callback) {
+      return this.element.one(event, callback);
+    };
+
+
+    /*
     bind
     
     Method to add and event listener
@@ -2008,6 +2022,20 @@ shaped by template
 
     Widget.prototype.bind = function(event, callback) {
       return this.element.on(event, callback);
+    };
+
+
+    /*
+    off
+    
+    Method to remove an event listener
+    @param {String} event
+    @param {Function} callback
+    @api public
+     */
+
+    Widget.prototype.off = function(event, callback) {
+      return this.element.off(event, callback);
     };
 
 
