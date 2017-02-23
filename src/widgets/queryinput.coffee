@@ -55,15 +55,17 @@ class QueryInput extends Widget
       options = extend true,
         callback: ->
           query = self.element.val()
-          self.controller.forEach (item)->
-            item.reset()
-            item.search.call item, query
+          self.controller.forEach (controller)->
+            controller.reset()
+            controller.search.call controller, query
         wait: 43
         captureLength: 3,
         @options
       dfTypeWatch @element, options
 
       # Typing stopped event
+      # WTF(@carlosescri): Why we declare @controller as an array and then use
+      # only the first one?
       ctrl = @controller[0]
       ctrl.bind 'df:results_received', (res) ->
         setTimeout (->
@@ -77,5 +79,8 @@ class QueryInput extends Widget
   clean: () ->
     if @cleanInput
       @element.val('')
+      @controller?.forEach (controller) ->
+        console.log "reset controller!"
+        controller.reset()
 
 module.exports = QueryInput

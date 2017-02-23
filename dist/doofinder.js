@@ -2637,9 +2637,9 @@ author: @ecoslado
           callback: function() {
             var query;
             query = self.element.val();
-            return self.controller.forEach(function(item) {
-              item.reset();
-              return item.search.call(item, query);
+            return self.controller.forEach(function(controller) {
+              controller.reset();
+              return controller.search.call(controller, query);
             });
           },
           wait: 43,
@@ -2659,8 +2659,13 @@ author: @ecoslado
     };
 
     QueryInput.prototype.clean = function() {
+      var ref;
       if (this.cleanInput) {
-        return this.element.val('');
+        this.element.val('');
+        return (ref = this.controller) != null ? ref.forEach(function(controller) {
+          console.log("reset controller!");
+          return controller.reset();
+        }) : void 0;
       }
     };
 
