@@ -1590,7 +1590,7 @@ author: @ecoslado
       callback: function() {},
       scrollOffset: 200,
       content: container.children().first(),
-      throttle: 150
+      throttle: 100
     };
     options = extend(true, defaults, options || {});
     content = $(options.content);
