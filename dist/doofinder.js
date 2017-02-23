@@ -1605,6 +1605,7 @@ author: @ecoslado
       }
     });
     fn = function(e) {
+      e.stopImmediatePropagation();
       e.stopPropagation();
       return bean.fire(container.element[0], 'df:scroll');
     };
