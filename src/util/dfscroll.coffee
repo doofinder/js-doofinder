@@ -21,13 +21,11 @@ module.exports = (container, options = null) ->
     containerScroll = container.scrollTop()
     delta = contentHeight - containerHeight - containerScroll
 
-    console.log delta
+    console.log contentHeight
 
     if delta <= options.scrollOffset
       options.callback()
 
   # Avoid too much event triggering
-  fn = (e) ->
-    bean.fire container.element[0], 'df:scroll'
-    console.log 'df:scroll'
-  bean.on container.element[0], 'scroll', throttle(fn, options.throttle, trailing: true)
+  fn = (e) -> bean.fire container.element[0], 'df:scroll'
+  bean.on container.element[0], 'scroll', throttle(fn, options.throttle, leading: true)
