@@ -10,7 +10,7 @@ module.exports = (container, options = null) ->
     callback: ->
     scrollOffset: 200
     content: container.children().first()
-    throttle: 100
+    throttle: 150
   options = extend(true, defaults, options || {})
 
   content = $ options.content
