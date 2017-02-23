@@ -25,8 +25,5 @@ module.exports = (container, options = null) ->
       options.callback()
 
   # Avoid too much event triggering
-  fn = (e) ->
-    e.stopImmediatePropagation()
-    e.stopPropagation()
-    bean.fire container.element[0], 'df:scroll'
+  fn = (e) -> bean.fire container.element[0], 'df:scroll'
   bean.on container.element[0], 'scroll', throttle(fn, options.throttle, leading: true)
