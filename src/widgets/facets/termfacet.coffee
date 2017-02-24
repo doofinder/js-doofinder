@@ -48,9 +48,10 @@ class TermFacet extends Display
 
     self = this
 
-    # The filtering by click
-    # attr name within " in case a ' is inside
-    @element.on 'click', "[data-facet='#{@name}']", (e) ->
+    # Handle clicks on terms by event delegation.
+    # A term has both a data-facet and a data-value attribute (panel could have
+    # a data-facet attribut so we're specific here to avoid strange behaviors).
+    @element.on 'click', "[data-facet='#{@name}'][data-value]", (e) ->
       e.preventDefault()
 
       value = $(this).data 'value'

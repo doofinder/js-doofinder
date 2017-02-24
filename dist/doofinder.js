@@ -2497,7 +2497,7 @@ author: @ecoslado
       var self;
       TermFacet.__super__.init.call(this, controller);
       self = this;
-      return this.element.on('click', "[data-facet='" + this.name + "']", function(e) {
+      return this.element.on('click', "[data-facet='" + this.name + "'][data-value]", function(e) {
         var key, value;
         e.preventDefault();
         value = $(this).data('value');
