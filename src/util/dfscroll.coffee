@@ -21,7 +21,7 @@ module.exports = (container, options = null) ->
     containerScroll = container.scrollTop()
     delta = contentHeight - containerHeight - containerScroll
 
-    console.log contentHeight
+    console.log "contentHeight: #{contentHeight}, delta: #{delta}"
 
     if delta <= options.scrollOffset
       options.callback()
