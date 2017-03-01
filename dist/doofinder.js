@@ -1601,7 +1601,7 @@ author: @ecoslado
       contentHeight = contentElement.offsetHeight;
       containerHeight = containerElement.clientHeight;
       containerScroll = container.scrollTop();
-      delta = contentHeight - containerHeight - containerScroll;
+      delta = Math.max(0, contentHeight - containerHeight - containerScroll);
       console.log("contentHeight: " + contentHeight + " / containerHeight: " + containerHeight + " / containerScroll: " + containerScroll + " / delta: " + delta);
       if (delta > 0 && delta <= options.scrollOffset) {
         return options.callback();
