@@ -1581,11 +1581,12 @@ author: @ecoslado
   throttle = require('lodash.throttle');
 
   module.exports = function(container, options) {
-    var content, defaults, fn;
+    var containerElement, content, contentElement, defaults, fn;
     if (options == null) {
       options = null;
     }
     container = $(container);
+    containerElement = container.element[0];
     defaults = {
       callback: function() {},
       scrollOffset: 200,
@@ -1594,10 +1595,11 @@ author: @ecoslado
     };
     options = extend(true, defaults, options || {});
     content = $(options.content);
+    contentElement = content.element[0];
     container.on('df:scroll', function() {
       var containerHeight, containerScroll, contentHeight, delta;
-      contentHeight = content.height();
-      containerHeight = container.height();
+      contentHeight = contentElement.clientHeight;
+      containerHeight = containerElement.offsetHeight;
       containerScroll = container.scrollTop();
       delta = contentHeight - containerHeight - containerScroll;
       console.log("contentHeight: " + contentHeight + " / containerHeight: " + containerHeight + " / containerScroll: " + containerScroll + " / delta: " + delta);
@@ -1608,7 +1610,7 @@ author: @ecoslado
     fn = function(e) {
       return bean.fire(container.element[0], 'df:scroll');
     };
-    return bean.on(container.element[0], 'scroll', throttle(fn, options.throttle, {
+    return bean.on(containerElement, 'scroll', throttle(fn, options.throttle, {
       leading: true
     }));
   };

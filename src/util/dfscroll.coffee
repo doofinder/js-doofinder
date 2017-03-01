@@ -5,6 +5,7 @@ throttle = require 'lodash.throttle'
 
 module.exports = (container, options = null) ->
   container = $ container
+  containerElement = container.element[0]
 
   defaults =
     callback: ->
@@ -14,19 +15,22 @@ module.exports = (container, options = null) ->
   options = extend(true, defaults, options || {})
 
   content = $ options.content
+  contentElement = content.element[0]
 
   container.on 'df:scroll', ->
-    contentHeight = content.height()
-    containerHeight = container.height()
+    contentHeight = contentElement.clientHeight
+    containerHeight = containerElement.offsetHeight
     containerScroll = container.scrollTop()
     delta = contentHeight - containerHeight - containerScroll
+    # delta = Math.abs(contentHeight - containerHeight - containerScroll)
 
     console.log "contentHeight: #{contentHeight} / containerHeight: #{containerHeight} / containerScroll: #{containerScroll} / delta: #{delta}"
 
+    # if containerScroll > 0 and delta >= 0 and
     # Trigger only on scroll down
     if delta > 0 and delta <= options.scrollOffset
       options.callback()
 
   # Avoid too much event triggering
   fn = (e) -> bean.fire container.element[0], 'df:scroll'
-  bean.on container.element[0], 'scroll', throttle(fn, options.throttle, leading: true)
+  bean.on containerElement, 'scroll', throttle(fn, options.throttle, leading: true)
