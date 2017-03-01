@@ -87,6 +87,7 @@ class Controller
               widget.renderNext res
             else
               widget.render res
+          # TODO(@carlosescri): This could trigger an event.
 
   ###
   __search wrappers
