@@ -21,14 +21,10 @@ module.exports = (container, options = null) ->
     contentHeight = contentElement.offsetHeight
     containerHeight = containerElement.clientHeight
     containerScroll = container.scrollTop()
-    # delta = contentHeight - containerHeight - containerScroll
     delta = Math.max(0, contentHeight - containerHeight - containerScroll)
-
-    console.log "contentHeight: #{contentHeight} / containerHeight: #{containerHeight} / containerScroll: #{containerScroll} / delta: #{delta}"
 
     # Trigger only on scroll down
     if containerScroll > 0 and delta >= 0 and delta <= options.scrollOffset
-    # if delta > 0 and delta <= options.scrollOffset
       options.callback()
 
   # Avoid too much event triggering
