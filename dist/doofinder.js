@@ -1598,8 +1598,8 @@ author: @ecoslado
     contentElement = content.element[0];
     container.on('df:scroll', function() {
       var containerHeight, containerScroll, contentHeight, delta;
-      contentHeight = contentElement.clientHeight;
-      containerHeight = containerElement.offsetHeight;
+      contentHeight = contentElement.offsetHeight;
+      containerHeight = containerElement.clientHeight;
       containerScroll = container.scrollTop();
       delta = contentHeight - containerHeight - containerScroll;
       console.log("contentHeight: " + contentHeight + " / containerHeight: " + containerHeight + " / containerScroll: " + containerScroll + " / delta: " + delta);

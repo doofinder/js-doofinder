@@ -18,8 +18,8 @@ module.exports = (container, options = null) ->
   contentElement = content.element[0]
 
   container.on 'df:scroll', ->
-    contentHeight = contentElement.clientHeight
-    containerHeight = containerElement.offsetHeight
+    contentHeight = contentElement.offsetHeight
+    containerHeight = containerElement.clientHeight
     containerScroll = container.scrollTop()
     delta = contentHeight - containerHeight - containerScroll
     # delta = Math.abs(contentHeight - containerHeight - containerScroll)
