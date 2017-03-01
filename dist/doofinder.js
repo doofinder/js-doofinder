@@ -1603,7 +1603,7 @@ author: @ecoslado
       containerScroll = container.scrollTop();
       delta = Math.max(0, contentHeight - containerHeight - containerScroll);
       console.log("contentHeight: " + contentHeight + " / containerHeight: " + containerHeight + " / containerScroll: " + containerScroll + " / delta: " + delta);
-      if (delta > 0 && delta <= options.scrollOffset) {
+      if (containerScroll > 0 && delta >= 0 && delta <= options.scrollOffset) {
         return options.callback();
       }
     });
