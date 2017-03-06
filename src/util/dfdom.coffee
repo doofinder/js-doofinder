@@ -177,12 +177,12 @@ class DfDomElement
   width: () ->
     first = @_first()
     if first?
-      Math.max first.clientWidth, first.offsetWidth
+      first.innerWidth || first.clientWidth
 
   height: () ->
     first = @_first()
     if first?
-      Math.max first.clientHeight, first.offsetHeight
+      first.innerHeight || first.offsetHeight
 
   top: () ->
     first = @_first()
@@ -202,7 +202,7 @@ class DfDomElement
   scrollTop: (value) ->
     if typeof(value) != "undefined"
       @_first().scrollTop = value
-    @_first().scrollTop
+    @_first().scrollY || @_first().scrollTop
 
   scrollLeft: () ->
     @_first().scrollLeft

@@ -1407,7 +1407,7 @@ author: @ecoslado
       var first;
       first = this._first();
       if (first != null) {
-        return Math.max(first.clientHeight, first.offsetHeight);
+        return first.innerHeight || Math.max(first.clientHeight, first.offsetHeight);
       }
     };
 
@@ -1435,7 +1435,7 @@ author: @ecoslado
       if (typeof value !== "undefined") {
         this._first().scrollTop = value;
       }
-      return this._first().scrollTop;
+      return this._first().scrollY || this._first().scrollTop;
     };
 
     DfDomElement.prototype.scrollLeft = function() {
@@ -1581,7 +1581,7 @@ author: @ecoslado
   throttle = require('lodash.throttle');
 
   module.exports = function(container, options) {
-    var containerElement, content, contentElement, defaults, fn;
+    var containerElement, content, defaults, fn;
     if (options == null) {
       options = null;
     }
@@ -1590,16 +1590,15 @@ author: @ecoslado
     defaults = {
       callback: function() {},
       scrollOffset: 200,
-      content: container.children().first(),
+      content: containerElement === window ? $("body") : container.children().first(),
       throttle: 250
     };
     options = extend(true, defaults, options || {});
     content = $(options.content);
-    contentElement = content.element[0];
     container.on('df:scroll', function() {
       var containerHeight, containerScroll, contentHeight, delta;
-      contentHeight = contentElement.offsetHeight;
-      containerHeight = containerElement.clientHeight;
+      contentHeight = content.height();
+      containerHeight = container.height();
       containerScroll = container.scrollTop();
       delta = Math.max(0, contentHeight - containerHeight - containerScroll);
       if (containerScroll > 0 && delta >= 0 && delta <= options.scrollOffset) {
@@ -2840,12 +2839,24 @@ bottom
       contentNode: "Node that holds the results => this.element"
       contentWrapper: "Node that is used for the scroll instead of the first "
                       "child of the container"
+    
+    elementWrapper
+     -------------------
+    |  contentWrapper  ^|
+    |  --------------- !|
+    | | element       |!|
+    | |  ------------ |!|
+    | | |   items    ||!|
+    
     @api public
      */
 
     function ScrollDisplay(element, template, options) {
       var scrollOptions, self;
       ScrollDisplay.__super__.constructor.apply(this, arguments);
+      if (this.element.element[0] === window && (options.contentNode == null)) {
+        throw "when the wrapper is window you must set contentNode option.";
+      }
       self = this;
       scrollOptions = {
         callback: function() {
@@ -2867,6 +2878,8 @@ bottom
       this.elementWrapper = this.element;
       if (options.contentNode != null) {
         this.element = $(options.contentNode);
+      } else if (this.element.element[0] === window) {
+        this.element = $("body");
       } else {
         if (!this.element.children().length()) {
           this.element.append(document.createElement('div'));

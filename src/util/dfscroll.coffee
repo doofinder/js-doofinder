@@ -10,16 +10,15 @@ module.exports = (container, options = null) ->
   defaults =
     callback: ->
     scrollOffset: 200
-    content: container.children().first()
+    content: if containerElement is window then $ "body" else container.children().first()
     throttle: 250
   options = extend(true, defaults, options || {})
 
   content = $ options.content
-  contentElement = content.element[0]
 
   container.on 'df:scroll', ->
-    contentHeight = contentElement.offsetHeight
-    containerHeight = containerElement.clientHeight
+    contentHeight = content.height()
+    containerHeight = container.height()
     containerScroll = container.scrollTop()
     delta = Math.max(0, contentHeight - containerHeight - containerScroll)
 

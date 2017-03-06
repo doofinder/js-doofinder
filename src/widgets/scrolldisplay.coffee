@@ -35,12 +35,24 @@ class ScrollDisplay extends Display
     contentNode: "Node that holds the results => this.element"
     contentWrapper: "Node that is used for the scroll instead of the first "
                     "child of the container"
+
+  elementWrapper
+   -------------------
+  |  contentWrapper  ^|
+  |  --------------- !|
+  | | element       |!|
+  | |  ------------ |!|
+  | | |   items    ||!|
+
   @api public
   ###
   constructor: (element, template, options) ->
     super
+    
+    if @element.element[0] is window and not options.contentNode?
+      throw "when the wrapper is window you must set contentNode option."
+    
     self = this
-
     scrollOptions =
       callback: ->
         if self.controller? and not self.pageRequested
@@ -60,6 +72,8 @@ class ScrollDisplay extends Display
 
     if options.contentNode?
       @element = $ options.contentNode
+    else if @element.element[0] is window
+      @element = $ "body"
     else
       if not @element.children().length()
         @element.append (document.createElement 'div')
