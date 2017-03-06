@@ -545,7 +545,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./util/http":9,"md5":58}],2:[function(require,module,exports){
+},{"./util/http":8,"md5":57}],2:[function(require,module,exports){
 
 /*
  * Created by Kike Coslado on 26/10/15.
@@ -568,6 +568,8 @@ author: @ecoslado
   This class uses the client to
   to retrieve the data and the widgets
   to paint them.
+  
+  TODO(@carlosescri): Use our introspection tool to do some cleanup.
    */
 
   Controller = (function() {
@@ -773,11 +775,25 @@ author: @ecoslado
         if (this.searchParams.filters && this.searchParams.filters[key]) {
           return delete this.searchParams.filters[key];
         }
-      } else if (!this.status.params.filters[key]) {
-        return this.status.params.filters[key] = [value];
       } else {
-        return this.status.params.filters[key].push(value);
+        if (!this.status.params.filters[key]) {
+          this.status.params.filters[key] = [];
+        }
+        if (value.constructor !== Array) {
+          value = [value];
+        }
+        return this.status.params.filters[key] = this.status.params.filters[key].concat(value);
       }
+    };
+
+    Controller.prototype.hasFilter = function(key) {
+      var ref;
+      return ((ref = this.status.params.filters) != null ? ref[key] : void 0) != null;
+    };
+
+    Controller.prototype.getFilter = function(key) {
+      var ref;
+      return (ref = this.status.params.filters) != null ? ref[key] : void 0;
     };
 
 
@@ -845,32 +861,46 @@ author: @ecoslado
      */
 
     Controller.prototype.removeFilter = function(key, value) {
-      var index, results;
+      var ref, ref1;
       this.status.currentPage = 1;
-      if (this.status.params.filters && this.status.params.filters[key]) {
+      if (((ref = this.status.params.filters) != null ? ref[key] : void 0) != null) {
         if (this.status.params.filters[key].constructor === Object) {
           delete this.status.params.filters[key];
         } else if (this.status.params.filters[key].constructor === Array) {
-          index = this.status.params.filters[key].indexOf(value);
-          while (index >= 0) {
-            this.status.params.filters[key].splice(index, 1);
-            index = this.status.params.filters[key].indexOf(value);
+          if (value != null) {
+            this.__splice(this.status.params.filters[key], value);
+            if (!(this.status.params.filters[key].length > 0)) {
+              delete this.status.params.filters[key];
+            }
+          } else {
+            delete this.status.params.filters[key];
           }
         }
       }
-      if (this.searchParams.filters && this.searchParams.filters[key]) {
+      if (((ref1 = this.searchParams.filters) != null ? ref1[key] : void 0) != null) {
         if (this.searchParams.filters[key].constructor === Object) {
           return delete this.searchParams.filters[key];
         } else if (this.searchParams.filters[key].constructor === Array) {
-          index = this.searchParams.filters[key].indexOf(value);
-          results = [];
-          while (index >= 0) {
-            this.searchParams.filters[key].splice(index, 1);
-            results.push(index = this.searchParams.filters[key].indexOf(value));
+          if (value != null) {
+            this.__splice(this.searchParams.filters[key], value);
+            if (!(this.searchParams.filters[key].length > 0)) {
+              return delete this.searchParams.filters[key];
+            }
+          } else {
+            return delete this.searchParams.filters[key];
           }
-          return results;
         }
       }
+    };
+
+    Controller.prototype.__splice = function(list, value) {
+      var idx;
+      idx = list.indexOf(value);
+      while (idx >= 0) {
+        list.splice(idx, 1);
+        idx = list.indexOf(value);
+      }
+      return list;
     };
 
 
@@ -1104,7 +1134,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"bean":20,"extend":21,"qs":64}],3:[function(require,module,exports){
+},{"bean":18,"extend":19,"qs":63}],3:[function(require,module,exports){
 (function() {
   if (!JSON.stringify && JSON.encode) {
     JSON.stringify = JSON.encode;
@@ -1115,7 +1145,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.31",
+    version: "5.0.0",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1135,14 +1165,14 @@ author: @ecoslado
       extend: require("extend"),
       introspection: require("./util/introspection"),
       dfdom: require("./util/dfdom"),
-      throttle: require("./util/throttle"),
+      throttle: require("lodash.throttle"),
       http: require("./util/http")
     }
   };
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./util/dfdom":4,"./util/http":9,"./util/introspection":10,"./util/throttle":11,"./widget":12,"./widgets/display":13,"./widgets/facets/rangefacet":14,"./widgets/facets/termfacet":15,"./widgets/queryinput":16,"./widgets/results/results":17,"./widgets/results/scrollresults":18,"bean":20,"extend":21,"md5":58,"mustache":62,"qs":64}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./util/dfdom":4,"./util/http":8,"./util/introspection":9,"./widget":10,"./widgets/display":11,"./widgets/facets/rangefacet":12,"./widgets/facets/termfacet":13,"./widgets/queryinput":14,"./widgets/results/results":15,"./widgets/results/scrollresults":16,"bean":18,"extend":19,"lodash.throttle":56,"md5":57,"mustache":61,"qs":63}],4:[function(require,module,exports){
 
 /*
 dfdom.coffee
@@ -1369,7 +1399,7 @@ author: @ecoslado
       var first;
       first = this._first();
       if (first != null) {
-        return Math.max(first.clientWidth, first.offsetWidth);
+        return first.innerWidth || first.clientWidth;
       }
     };
 
@@ -1377,7 +1407,7 @@ author: @ecoslado
       var first;
       first = this._first();
       if (first != null) {
-        return Math.max(first.clientHeight, first.offsetHeight);
+        return first.innerHeight || first.offsetHeight;
       }
     };
 
@@ -1405,7 +1435,7 @@ author: @ecoslado
       if (typeof value !== "undefined") {
         this._first().scrollTop = value;
       }
-      return this._first().scrollTop;
+      return this._first().scrollY || this._first().scrollTop;
     };
 
     DfDomElement.prototype.scrollLeft = function() {
@@ -1538,66 +1568,54 @@ author: @ecoslado
 
 }).call(this);
 
-},{"bean":20}],5:[function(require,module,exports){
+},{"bean":18}],5:[function(require,module,exports){
 (function() {
-  var $, bean, dimensions, extend, introspection, throttle;
-
-  extend = require('extend');
-
-  introspection = require('./introspection');
-
-  throttle = require('./throttle');
-
-  dimensions = require('./dimensions');
+  var $, bean, extend, throttle;
 
   $ = require('./dfdom');
 
   bean = require('bean');
 
-  module.exports = function(arg1, arg2) {
-    var container, content, defaults, options;
-    if (arg2 == null) {
-      arg2 = null;
+  extend = require('extend');
+
+  throttle = require('lodash.throttle');
+
+  module.exports = function(container, options) {
+    var containerElement, content, defaults, fn;
+    if (options == null) {
+      options = null;
     }
+    container = $(container);
+    containerElement = container.element[0];
     defaults = {
-      direction: "vertical",
-      scrollOffset: 200
+      callback: function() {},
+      scrollOffset: 200,
+      content: containerElement === window ? $("body") : container.children().first(),
+      throttle: 250
     };
-    if (introspection.isPlainObject(arg1)) {
-      options = extend(true, defaults, arg1);
-      content = document;
-      container = window;
-      bean.on(container, 'df:scroll', function() {
-        if (['horizontal', 'vertical'].indexOf(options.direction) <= -1) {
-          throw Error("[Doofinder] dfScroll: Direction is not properly set. It might be 'horizontal' or 'vertical'.");
-        }
-        if (options.direction === 'vertical' && window.innerHeight + window.scrollY + options.scrollOffset >= dimensions.clientHeight(content) || options.direction === "horizontal" && window.innerWidth + window.scrollX + options.scrollOffset >= dimensions.clientWidth(content)) {
-          return options.callback();
-        }
-      });
-    } else {
-      options = extend(true, defaults, arg2);
-      if (typeof arg1 === 'string') {
-        container = $(arg1);
-      } else {
-        container = arg1;
+    options = extend(true, defaults, options || {});
+    content = $(options.content);
+    container.on('df:scroll', function() {
+      var containerHeight, containerScroll, contentHeight, delta;
+      contentHeight = content.height();
+      containerHeight = container.height();
+      containerScroll = container.scrollTop();
+      delta = Math.max(0, contentHeight - containerHeight - containerScroll);
+      if (containerScroll > 0 && delta >= 0 && delta <= options.scrollOffset) {
+        return options.callback();
       }
-      content = container.children().first();
-      container.on('df:scroll', function() {
-        if (['horizontal', 'vertical'].indexOf(options.direction) <= -1) {
-          throw Error("[Doofinder] dfScroll: Direction is not properly set. It might be 'horizontal' or 'vertical'.");
-        }
-        if (options.direction === 'vertical' && content.height() - container.height() - container.scrollTop() <= options.scrollOffset || options.direction === "horizontal" && content.width() - container.width() - container.scrollLeft() <= options.scrollOffset) {
-          return options.callback();
-        }
-      });
-    }
-    return throttle('scroll', 'df:scroll', container);
+    });
+    fn = function(e) {
+      return bean.fire(container.element[0], 'df:scroll');
+    };
+    return bean.on(containerElement, 'scroll', throttle(fn, options.throttle, {
+      leading: true
+    }));
   };
 
 }).call(this);
 
-},{"./dfdom":4,"./dimensions":7,"./introspection":10,"./throttle":11,"bean":20,"extend":21}],6:[function(require,module,exports){
+},{"./dfdom":4,"bean":18,"extend":19,"lodash.throttle":56}],6:[function(require,module,exports){
 (function() {
   var $, extend,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -1664,36 +1682,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./dfdom":4,"extend":21}],7:[function(require,module,exports){
-(function() {
-  var calculateDimension, clientHeight, clientWidth;
-
-  calculateDimension = function(name, elem) {
-    var doc;
-    if (elem.nodeType === 9) {
-      doc = elem.documentElement;
-      return Math.max(elem.body["scroll" + name], doc["scroll" + name], elem.body["offset" + name], doc["offset" + name], doc["client" + name]);
-    } else {
-      return elem["client" + name];
-    }
-  };
-
-  clientWidth = function(elem) {
-    return calculateDimension("Width", elem);
-  };
-
-  clientHeight = function(elem) {
-    return calculateDimension("Height", elem);
-  };
-
-  module.exports = {
-    clientWidth: clientWidth,
-    clientHeight: clientHeight
-  };
-
-}).call(this);
-
-},{}],8:[function(require,module,exports){
+},{"./dfdom":4,"extend":19}],7:[function(require,module,exports){
 
 /*
  * author: @ecoslado
@@ -1796,7 +1785,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"extend":21}],9:[function(require,module,exports){
+},{"extend":19}],8:[function(require,module,exports){
 
 /*
 client.coffee
@@ -1889,7 +1878,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"http":48,"https":28}],10:[function(require,module,exports){
+},{"http":46,"https":26}],9:[function(require,module,exports){
 (function() {
   var isArray, isFunction, isObject, isPlainObject;
 
@@ -1928,46 +1917,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{}],11:[function(require,module,exports){
-(function() {
-  var $, bean;
-
-  $ = require('./dfdom');
-
-  bean = require('bean');
-
-  module.exports = function(sourceEvent, targetEvent, obj) {
-    var running;
-    obj = obj || window;
-    running = false;
-    if (obj !== window) {
-      return obj.on(sourceEvent, function() {
-        if (running) {
-          return;
-        }
-        running = true;
-        return setTimeout(function() {
-          obj.trigger(targetEvent);
-          return running = false;
-        }, 250);
-      });
-    } else {
-      return bean.on(obj, sourceEvent, function() {
-        if (running) {
-          return;
-        }
-        running = true;
-        return setTimeout(function() {
-          bean.fire(obj, targetEvent);
-          return running = false;
-        }, 250);
-      });
-    }
-  };
-
-}).call(this);
-
-},{"./dfdom":4,"bean":20}],12:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 
 /*
 widget.coffee
@@ -2123,7 +2073,7 @@ shaped by template
 
 }).call(this);
 
-},{"./util/dfdom":4,"bean":20}],13:[function(require,module,exports){
+},{"./util/dfdom":4,"bean":18}],11:[function(require,module,exports){
 
 /*
 display.coffee
@@ -2254,7 +2204,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../util/helpers":8,"../widget":12,"extend":21,"mustache":62}],14:[function(require,module,exports){
+},{"../util/helpers":7,"../widget":10,"extend":19,"mustache":61}],12:[function(require,module,exports){
 
 /*
 rangefacet.coffee
@@ -2324,7 +2274,7 @@ them. Manages the filtering.
       }
       this.slider = null;
       this.values = {};
-      this.parseNumber = parseFloat;
+      this.range = {};
       RangeFacet.__super__.constructor.call(this, element, template, options);
     }
 
@@ -2351,14 +2301,18 @@ them. Manages the filtering.
       this.slider.noUiSlider.on('change', function() {
         var max, min, ref;
         ref = self.slider.noUiSlider.get(), min = ref[0], max = ref[1];
-        self.controller.addFilter(self.name, {
-          gte: self.values[min],
-          lte: self.values[max]
-        });
+        if (self.values[min] === self.range.min && self.values[max] === self.range.max) {
+          self.controller.removeFilter(self.name);
+        } else {
+          self.controller.addFilter(self.name, {
+            gte: self.values[min],
+            lte: self.values[max]
+          });
+        }
         self.controller.refresh();
         return self.values = {};
       });
-      return this.numberType;
+      return void 0;
     };
 
 
@@ -2405,6 +2359,15 @@ them. Manages the filtering.
       }
     };
 
+    RangeFacet.prototype._getRangeFromResponse = function(res) {
+      var range, stats;
+      stats = res.facets[this.name].range.buckets[0].stats;
+      return range = {
+        min: parseFloat(stats.min || 0, 10),
+        max: parseFloat(stats.max || 0, 10)
+      };
+    };
+
 
     /*
     Paints the slider based on the received response.
@@ -2414,26 +2377,21 @@ them. Manages the filtering.
      */
 
     RangeFacet.prototype.render = function(res) {
-      var disabled, minimum, options, overrides, range, self, start, values;
+      var options, self, start, values;
       if (!res.facets || !res.facets[this.name]) {
         this.raiseError("RangeFacet: " + this.name + " facet is not configured");
       } else if (!res.facets[this.name].range) {
         this.raiseError("RangeFacet: " + this.name + " facet is not a range facet");
       }
       self = this;
-      if (res.total > 0 && (res.facets[this.name].range.buckets[0].stats.max == null) || res.facets[this.name].range.buckets[0].stats.max === res.facets[this.name].range.buckets[0].stats.min) {
+      this.range = this._getRangeFromResponse(res);
+      if (this.range.min === this.range.max) {
         this.slider = null;
         this.element.empty();
-      } else if (res.total > 0) {
-        minimum = res.facets[this.name].range.buckets[0].stats.min || 0;
-        this.parseNumber = Number(minimum) && minimum % 1 === 0 ? parseInt : parseFloat;
-        range = [this.parseNumber(res.facets[this.name].range.buckets[0].stats.min || 0, 10), this.parseNumber(res.facets[this.name].range.buckets[0].stats.max || 0, 10)];
+      } else {
         options = {
-          start: range,
-          range: {
-            min: range[0],
-            max: range[1]
-          },
+          start: [this.range.min, this.range.max],
+          range: this.range,
           connect: true,
           tooltips: true,
           format: {
@@ -2441,7 +2399,7 @@ them. Manages the filtering.
               var formattedValue;
               if (value != null) {
                 formattedValue = self.format(value);
-                self.values[formattedValue] = self.parseNumber(value);
+                self.values[formattedValue] = parseFloat(value, 10);
                 return formattedValue;
               } else {
                 return "";
@@ -2453,7 +2411,7 @@ them. Manages the filtering.
           }
         };
         if (res && res.filter && res.filter.range && res.filter.range[this.name]) {
-          start = [this.parseNumber(res.filter.range[this.name].gte, 10), this.parseNumber(res.filter.range[this.name].lte, 10)];
+          start = [parseFloat(res.filter.range[this.name].gte, 10), parseFloat(res.filter.range[this.name].lte, 10)];
           if (!isNaN(start[0])) {
             options.start[0] = start[0];
           }
@@ -2461,43 +2419,18 @@ them. Manages the filtering.
             options.start[1] = start[1];
           }
         }
-        disabled = options.range.min === options.range.max;
-        if (disabled) {
-          overrides = {
-            range: {
-              min: options.range.min,
-              max: options.range.max + 1
-            }
-          };
-        }
         if (this.slider === null) {
-          this._renderSlider(extend(true, {}, options, overrides || {}));
+          this._renderSlider(options);
         } else {
-          this.slider.noUiSlider.updateOptions(extend(true, {}, options, overrides || {}));
-        }
-        if (disabled) {
-          this.slider.setAttribute('disabled', true);
-        } else {
-          this.slider.removeAttribute('disabled');
+          this.slider.noUiSlider.updateOptions(options);
         }
         if (options.pips == null) {
-          if (!disabled && this.parseNumber === parseInt) {
-            values = {
-              0: this.parseNumber(options.format.to(options.range.min)),
-              50: this.parseNumber(options.format.to((options.range.min + options.range.max) / 2.0)),
-              100: this.parseNumber(options.format.to(options.range.max))
-            };
-            this._renderPips(values);
-          } else if (!disabled) {
-            values = {
-              0: options.format.to(options.range.min),
-              50: options.format.to((options.range.min + options.range.max) / 2.0),
-              100: options.format.to(options.range.max)
-            };
-            this._renderPips(values);
-          } else {
-            this._renderPips();
-          }
+          values = {
+            0: options.format.to(options.range.min),
+            50: options.format.to((options.range.min + options.range.max) / 2.0),
+            100: options.format.to(options.range.max)
+          };
+          this._renderPips(values);
         }
       }
       return this.trigger('df:rendered', [res]);
@@ -2518,7 +2451,7 @@ them. Manages the filtering.
 
 }).call(this);
 
-},{"../display":13,"extend":21,"nouislider":63}],15:[function(require,module,exports){
+},{"../display":11,"extend":19,"nouislider":62}],13:[function(require,module,exports){
 
 /*
 termfacet.coffee
@@ -2553,9 +2486,8 @@ author: @ecoslado
       if (options == null) {
         options = {};
       }
-      this.selected = {};
       if (!options.template) {
-        template = "{{#@index}}\n  <hr class=\"df-separator\">\n{{/@index}}\n<div class=\"df-panel\">\n  <a href=\"#\" class=\"df-panel__title\" data-toggle=\"panel\">{{label}}</a>\n  <div class=\"df-panel__content\">\n    <ul>\n      {{#terms}}\n      <li>\n        <a href=\"#\" class=\"df-facet {{#selected}}df-facet--active{{/selected}}\"\n            data-facet=\"{{name}}\" data-value=\"{{ key }}\">\n          {{ key }}\n          <span class=\"df-facet__count\">{{ doc_count }}</span>\n        </a>\n      </li>\n      {{/terms}}\n    </ul>\n  </div>\n</div>";
+        template = "{{#@index}}\n  <hr class=\"df-separator\">\n{{/@index}}\n<div class=\"df-panel\">\n  <a href=\"#\" class=\"df-panel__title\" data-toggle=\"panel\">{{label}}</a>\n  <div class=\"df-panel__content\">\n    <ul>\n      {{#terms}}\n      <li>\n        <a href=\"#\" class=\"df-facet {{#selected}}df-facet--active{{/selected}}\"\n            data-facet=\"{{name}}\" data-value=\"{{ key }}\" {{#selected}}data-selected{{/selected}}>\n          {{ key }}\n          <span class=\"df-facet__count\">{{ doc_count }}</span>\n        </a>\n      </li>\n      {{/terms}}\n    </ul>\n  </div>\n</div>";
       } else {
         template = options.template;
       }
@@ -2566,74 +2498,48 @@ author: @ecoslado
       var self;
       TermFacet.__super__.init.call(this, controller);
       self = this;
-      this.controller.bind("df:search", function(params) {
-        return self.selected = {};
-      });
-      this.element.on('click', "a[data-facet=\"" + this.name + "\"]", function(e) {
+      return this.element.on('click', "[data-facet='" + this.name + "'][data-value]", function(e) {
         var key, value;
         e.preventDefault();
         value = $(this).data('value');
         key = $(this).data('facet');
-        if (self.selected[value]) {
-          delete self.selected[value];
-          self.controller.removeFilter(key, value);
-        } else {
-          self.selected[value] = true;
+        if (!this.hasAttribute('data-selected')) {
+          this.setAttribute('data-selected', '');
           self.controller.addFilter(key, value);
+        } else {
+          this.removeAttribute('data-selected');
+          self.controller.removeFilter(key, value);
         }
         return self.controller.refresh();
-      });
-      return this.controller.bind("df:results_received", function(res) {
-        var ref, results, selected, term, terms;
-        if (res.facets[self.name] != null) {
-          terms = res.facets[self.name].terms.buckets.map(function(term) {
-            return term.key;
-          });
-        } else {
-          terms = [];
-        }
-        ref = self.selected;
-        results = [];
-        for (term in ref) {
-          selected = ref[term];
-          if (selected && !terms.indexOf(term) < 0) {
-            delete self.selected[term];
-            results.push(self.controller.removeFilter(self.name, term));
-          } else {
-            results.push(void 0);
-          }
-        }
-        return results;
       });
     };
 
     TermFacet.prototype.render = function(res) {
-      var context, i, index, len, ref, ref1, selectedTerm, selected_length, term;
+      var context, i, index, len, ref, ref1, ref2, ref3, selectedTerms, selected_length, term;
       if (!res.facets || !res.facets[this.name]) {
         this.raiseError("TermFacet: " + this.name + " facet is not configured");
       } else if (!res.facets[this.name].terms.buckets) {
         this.raiseError("TermFacet: " + this.name + " facet is not a terms facet");
       }
-      if ((res.filter != null) && (res.filter.terms != null) && (res.filter.terms[this.name] != null)) {
-        ref = res.filter.terms[this.name];
-        for (i = 0, len = ref.length; i < len; i++) {
-          selectedTerm = ref[i];
-          this.selected[selectedTerm] = true;
-        }
+      selectedTerms = {};
+      ref2 = ((ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.name] : void 0 : void 0) || [];
+      for (i = 0, len = ref2.length; i < len; i++) {
+        term = ref2[i];
+        selectedTerms[term] = true;
       }
       if (res.results) {
-        ref1 = res.facets[this.name].terms.buckets;
-        for (index in ref1) {
-          term = ref1[index];
+        ref3 = res.facets[this.name].terms.buckets;
+        for (index in ref3) {
+          term = ref3[index];
           term.index = index;
           term.name = this.name;
-          if (this.selected[term.key]) {
+          if (selectedTerms[term.key]) {
             term.selected = 1;
           } else {
             term.selected = 0;
           }
         }
-        selected_length = Object.keys(this.selected).length;
+        selected_length = Object.keys(selectedTerms).length;
         context = extend(true, {
           any_selected: selected_length > 0,
           total_selected: selected_length,
@@ -2658,7 +2564,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../../util/dfdom":4,"../display":13,"extend":21}],16:[function(require,module,exports){
+},{"../../util/dfdom":4,"../display":11,"extend":19}],14:[function(require,module,exports){
 
 /*
 queryinput.coffee
@@ -2707,6 +2613,7 @@ author: @ecoslado
       QueryInput.__super__.constructor.call(this, element);
       this.typingTimeout = this.options.typingTimeout || 1000;
       this.eventsBound = false;
+      this.cleanInput = this.options.clean != null ? this.options.clean : true;
     }
 
 
@@ -2731,9 +2638,9 @@ author: @ecoslado
           callback: function() {
             var query;
             query = self.element.val();
-            return self.controller.forEach(function(item) {
-              item.reset();
-              return item.search.call(item, query);
+            return self.controller.forEach(function(controller) {
+              controller.reset();
+              return controller.search.call(controller, query);
             });
           },
           wait: 43,
@@ -2752,6 +2659,12 @@ author: @ecoslado
       }
     };
 
+    QueryInput.prototype.clean = function() {
+      if (this.cleanInput) {
+        return this.element.val('');
+      }
+    };
+
     return QueryInput;
 
   })(Widget);
@@ -2760,7 +2673,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../util/dftypewatch":6,"../widget":12,"extend":21}],17:[function(require,module,exports){
+},{"../util/dftypewatch":6,"../widget":10,"extend":19}],15:[function(require,module,exports){
 
 /*
 display.coffee
@@ -2818,7 +2731,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../display":13}],18:[function(require,module,exports){
+},{"../display":11}],16:[function(require,module,exports){
 
 /*
 scrollresults.coffee
@@ -2876,7 +2789,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../scrolldisplay":19}],19:[function(require,module,exports){
+},{"../scrolldisplay":17}],17:[function(require,module,exports){
 
 /*
 scrolldisplay.coffee
@@ -2920,14 +2833,32 @@ bottom
     @param {String} element
     @param {String|Function} template
     @param {Object} extraOptions
+    
+    options =
+      scrollOffset: 200
+      contentNode: "Node that holds the results => this.element"
+      contentWrapper: "Node that is used for the scroll instead of the first "
+                      "child of the container"
+    
+    elementWrapper
+     -------------------
+    |  contentWrapper  ^|
+    |  --------------- !|
+    | | element       |!|
+    | |  ------------ |!|
+    | | |   items    ||!|
+    
     @api public
      */
 
     function ScrollDisplay(element, template, options) {
       var scrollOptions, self;
+      ScrollDisplay.__super__.constructor.apply(this, arguments);
+      if (this.element.element[0] === window && (options.contentNode == null)) {
+        throw "when the wrapper is window you must set contentNode option.";
+      }
       self = this;
-      ScrollDisplay.__super__.constructor.call(this, element, template, options);
-      scrollOptions = extend(true, {
+      scrollOptions = {
         callback: function() {
           if ((self.controller != null) && !self.pageRequested) {
             self.pageRequested = true;
@@ -2937,27 +2868,25 @@ bottom
             return self.controller.nextPage.call(self.controller);
           }
         }
-      }, options.scrollOffset != null ? {
-        scrollOffset: options.scrollOffset
-      } : {});
-      if (options.windowScroll) {
-        this.elementWrapper = $(document.body);
-        dfScroll(scrollOptions);
+      };
+      if (options.scrollOffset != null) {
+        scrollOptions.scrollOffset = options.scrollOffset;
+      }
+      if (options.contentWrapper != null) {
+        scrollOptions.content = options.contentWrapper;
+      }
+      this.elementWrapper = this.element;
+      if (options.contentNode != null) {
+        this.element = $(options.contentNode);
+      } else if (this.element.element[0] === window) {
+        this.element = $("body");
       } else {
         if (!this.element.children().length()) {
           this.element.append(document.createElement('div'));
         }
-        this.elementWrapper = this.element;
         this.element = this.element.children().first();
-        if (options.container) {
-          if (typeof options.container === 'string') {
-            this.element = $(options.container);
-          } else {
-            this.element = options.container;
-          }
-        }
-        dfScroll(this.elementWrapper, scrollOptions);
       }
+      dfScroll(this.elementWrapper, scrollOptions);
     }
 
 
@@ -3005,7 +2934,7 @@ bottom
 
 }).call(this);
 
-},{"../util/dfdom":4,"../util/dfscroll":5,"./display":13,"extend":21}],20:[function(require,module,exports){
+},{"../util/dfdom":4,"../util/dfscroll":5,"./display":11,"extend":19}],18:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean
@@ -3748,7 +3677,7 @@ bottom
   return bean
 });
 
-},{}],21:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -3836,9 +3765,9 @@ module.exports = function extend() {
 };
 
 
-},{}],22:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 
-},{}],23:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -5631,7 +5560,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":24,"ieee754":25,"isarray":26}],24:[function(require,module,exports){
+},{"base64-js":22,"ieee754":23,"isarray":24}],22:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -5747,7 +5676,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],25:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -5833,14 +5762,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],26:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],27:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -6144,7 +6073,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],28:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -6160,7 +6089,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":48}],29:[function(require,module,exports){
+},{"http":46}],27:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -6185,7 +6114,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],30:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -6208,7 +6137,7 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],31:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -6390,7 +6319,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],32:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -6927,7 +6856,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],33:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7013,7 +6942,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],34:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7100,13 +7029,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],35:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":33,"./encode":34}],36:[function(require,module,exports){
+},{"./decode":31,"./encode":32}],34:[function(require,module,exports){
 // a duplex stream is just a stream that is both readable and writable.
 // Since JS doesn't have multiple prototypal inheritance, this class
 // prototypally inherits from Readable, and then parasitically from
@@ -7182,7 +7111,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":38,"./_stream_writable":40,"core-util-is":43,"inherits":29,"process-nextick-args":45}],37:[function(require,module,exports){
+},{"./_stream_readable":36,"./_stream_writable":38,"core-util-is":41,"inherits":27,"process-nextick-args":43}],35:[function(require,module,exports){
 // a passthrough stream.
 // basically just the most minimal sort of Transform stream.
 // Every written chunk gets output as-is.
@@ -7209,7 +7138,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":39,"core-util-is":43,"inherits":29}],38:[function(require,module,exports){
+},{"./_stream_transform":37,"core-util-is":41,"inherits":27}],36:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -8153,7 +8082,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":36,"./internal/streams/BufferList":41,"_process":31,"buffer":23,"buffer-shims":42,"core-util-is":43,"events":27,"inherits":29,"isarray":44,"process-nextick-args":45,"string_decoder/":54,"util":22}],39:[function(require,module,exports){
+},{"./_stream_duplex":34,"./internal/streams/BufferList":39,"_process":29,"buffer":21,"buffer-shims":40,"core-util-is":41,"events":25,"inherits":27,"isarray":42,"process-nextick-args":43,"string_decoder/":52,"util":20}],37:[function(require,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -8336,7 +8265,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":36,"core-util-is":43,"inherits":29}],40:[function(require,module,exports){
+},{"./_stream_duplex":34,"core-util-is":41,"inherits":27}],38:[function(require,module,exports){
 (function (process){
 // A bit simpler than readable streams.
 // Implement an async ._write(chunk, encoding, cb), and it'll handle all
@@ -8893,7 +8822,7 @@ function CorkedRequest(state) {
   };
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":36,"_process":31,"buffer":23,"buffer-shims":42,"core-util-is":43,"events":27,"inherits":29,"process-nextick-args":45,"util-deprecate":46}],41:[function(require,module,exports){
+},{"./_stream_duplex":34,"_process":29,"buffer":21,"buffer-shims":40,"core-util-is":41,"events":25,"inherits":27,"process-nextick-args":43,"util-deprecate":44}],39:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('buffer').Buffer;
@@ -8958,7 +8887,7 @@ BufferList.prototype.concat = function (n) {
   }
   return ret;
 };
-},{"buffer":23,"buffer-shims":42}],42:[function(require,module,exports){
+},{"buffer":21,"buffer-shims":40}],40:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -9070,7 +8999,7 @@ exports.allocUnsafeSlow = function allocUnsafeSlow(size) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"buffer":23}],43:[function(require,module,exports){
+},{"buffer":21}],41:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -9181,9 +9110,9 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":30}],44:[function(require,module,exports){
-arguments[4][26][0].apply(exports,arguments)
-},{"dup":26}],45:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":28}],42:[function(require,module,exports){
+arguments[4][24][0].apply(exports,arguments)
+},{"dup":24}],43:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -9230,7 +9159,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":31}],46:[function(require,module,exports){
+},{"_process":29}],44:[function(require,module,exports){
 (function (global){
 
 /**
@@ -9301,7 +9230,7 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],47:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 (function (process){
 var Stream = (function (){
   try {
@@ -9321,7 +9250,7 @@ if (!process.browser && process.env.READABLE_STREAM === 'disable' && Stream) {
 }
 
 }).call(this,require('_process'))
-},{"./lib/_stream_duplex.js":36,"./lib/_stream_passthrough.js":37,"./lib/_stream_readable.js":38,"./lib/_stream_transform.js":39,"./lib/_stream_writable.js":40,"_process":31}],48:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":34,"./lib/_stream_passthrough.js":35,"./lib/_stream_readable.js":36,"./lib/_stream_transform.js":37,"./lib/_stream_writable.js":38,"_process":29}],46:[function(require,module,exports){
 (function (global){
 var ClientRequest = require('./lib/request')
 var extend = require('xtend')
@@ -9403,7 +9332,7 @@ http.METHODS = [
 	'UNSUBSCRIBE'
 ]
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./lib/request":50,"builtin-status-codes":52,"url":55,"xtend":57}],49:[function(require,module,exports){
+},{"./lib/request":48,"builtin-status-codes":50,"url":53,"xtend":55}],47:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
 
@@ -9476,7 +9405,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],50:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -9774,7 +9703,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":49,"./response":51,"_process":31,"buffer":23,"inherits":29,"readable-stream":47,"to-arraybuffer":53}],51:[function(require,module,exports){
+},{"./capability":47,"./response":49,"_process":29,"buffer":21,"inherits":27,"readable-stream":45,"to-arraybuffer":51}],49:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -9960,7 +9889,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":49,"_process":31,"buffer":23,"inherits":29,"readable-stream":47}],52:[function(require,module,exports){
+},{"./capability":47,"_process":29,"buffer":21,"inherits":27,"readable-stream":45}],50:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -10026,7 +9955,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],53:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
 
 module.exports = function (buf) {
@@ -10055,7 +9984,7 @@ module.exports = function (buf) {
 	}
 }
 
-},{"buffer":23}],54:[function(require,module,exports){
+},{"buffer":21}],52:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -10278,7 +10207,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":23}],55:[function(require,module,exports){
+},{"buffer":21}],53:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -11012,7 +10941,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":56,"punycode":32,"querystring":35}],56:[function(require,module,exports){
+},{"./util":54,"punycode":30,"querystring":33}],54:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -11030,7 +10959,7 @@ module.exports = {
   }
 };
 
-},{}],57:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -11051,7 +10980,450 @@ function extend() {
     return target
 }
 
-},{}],58:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
+(function (global){
+/**
+ * lodash (Custom Build) <https://lodash.com/>
+ * Build: `lodash modularize exports="npm" -o ./`
+ * Copyright jQuery Foundation and other contributors <https://jquery.org/>
+ * Released under MIT license <https://lodash.com/license>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ */
+
+/** Used as the `TypeError` message for "Functions" methods. */
+var FUNC_ERROR_TEXT = 'Expected a function';
+
+/** Used as references for various `Number` constants. */
+var NAN = 0 / 0;
+
+/** `Object#toString` result references. */
+var symbolTag = '[object Symbol]';
+
+/** Used to match leading and trailing whitespace. */
+var reTrim = /^\s+|\s+$/g;
+
+/** Used to detect bad signed hexadecimal string values. */
+var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
+
+/** Used to detect binary string values. */
+var reIsBinary = /^0b[01]+$/i;
+
+/** Used to detect octal string values. */
+var reIsOctal = /^0o[0-7]+$/i;
+
+/** Built-in method references without a dependency on `root`. */
+var freeParseInt = parseInt;
+
+/** Detect free variable `global` from Node.js. */
+var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
+
+/** Detect free variable `self`. */
+var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
+
+/** Used as a reference to the global object. */
+var root = freeGlobal || freeSelf || Function('return this')();
+
+/** Used for built-in method references. */
+var objectProto = Object.prototype;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var objectToString = objectProto.toString;
+
+/* Built-in method references for those with the same name as other `lodash` methods. */
+var nativeMax = Math.max,
+    nativeMin = Math.min;
+
+/**
+ * Gets the timestamp of the number of milliseconds that have elapsed since
+ * the Unix epoch (1 January 1970 00:00:00 UTC).
+ *
+ * @static
+ * @memberOf _
+ * @since 2.4.0
+ * @category Date
+ * @returns {number} Returns the timestamp.
+ * @example
+ *
+ * _.defer(function(stamp) {
+ *   console.log(_.now() - stamp);
+ * }, _.now());
+ * // => Logs the number of milliseconds it took for the deferred invocation.
+ */
+var now = function() {
+  return root.Date.now();
+};
+
+/**
+ * Creates a debounced function that delays invoking `func` until after `wait`
+ * milliseconds have elapsed since the last time the debounced function was
+ * invoked. The debounced function comes with a `cancel` method to cancel
+ * delayed `func` invocations and a `flush` method to immediately invoke them.
+ * Provide `options` to indicate whether `func` should be invoked on the
+ * leading and/or trailing edge of the `wait` timeout. The `func` is invoked
+ * with the last arguments provided to the debounced function. Subsequent
+ * calls to the debounced function return the result of the last `func`
+ * invocation.
+ *
+ * **Note:** If `leading` and `trailing` options are `true`, `func` is
+ * invoked on the trailing edge of the timeout only if the debounced function
+ * is invoked more than once during the `wait` timeout.
+ *
+ * If `wait` is `0` and `leading` is `false`, `func` invocation is deferred
+ * until to the next tick, similar to `setTimeout` with a timeout of `0`.
+ *
+ * See [David Corbacho's article](https://css-tricks.com/debouncing-throttling-explained-examples/)
+ * for details over the differences between `_.debounce` and `_.throttle`.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Function
+ * @param {Function} func The function to debounce.
+ * @param {number} [wait=0] The number of milliseconds to delay.
+ * @param {Object} [options={}] The options object.
+ * @param {boolean} [options.leading=false]
+ *  Specify invoking on the leading edge of the timeout.
+ * @param {number} [options.maxWait]
+ *  The maximum time `func` is allowed to be delayed before it's invoked.
+ * @param {boolean} [options.trailing=true]
+ *  Specify invoking on the trailing edge of the timeout.
+ * @returns {Function} Returns the new debounced function.
+ * @example
+ *
+ * // Avoid costly calculations while the window size is in flux.
+ * jQuery(window).on('resize', _.debounce(calculateLayout, 150));
+ *
+ * // Invoke `sendMail` when clicked, debouncing subsequent calls.
+ * jQuery(element).on('click', _.debounce(sendMail, 300, {
+ *   'leading': true,
+ *   'trailing': false
+ * }));
+ *
+ * // Ensure `batchLog` is invoked once after 1 second of debounced calls.
+ * var debounced = _.debounce(batchLog, 250, { 'maxWait': 1000 });
+ * var source = new EventSource('/stream');
+ * jQuery(source).on('message', debounced);
+ *
+ * // Cancel the trailing debounced invocation.
+ * jQuery(window).on('popstate', debounced.cancel);
+ */
+function debounce(func, wait, options) {
+  var lastArgs,
+      lastThis,
+      maxWait,
+      result,
+      timerId,
+      lastCallTime,
+      lastInvokeTime = 0,
+      leading = false,
+      maxing = false,
+      trailing = true;
+
+  if (typeof func != 'function') {
+    throw new TypeError(FUNC_ERROR_TEXT);
+  }
+  wait = toNumber(wait) || 0;
+  if (isObject(options)) {
+    leading = !!options.leading;
+    maxing = 'maxWait' in options;
+    maxWait = maxing ? nativeMax(toNumber(options.maxWait) || 0, wait) : maxWait;
+    trailing = 'trailing' in options ? !!options.trailing : trailing;
+  }
+
+  function invokeFunc(time) {
+    var args = lastArgs,
+        thisArg = lastThis;
+
+    lastArgs = lastThis = undefined;
+    lastInvokeTime = time;
+    result = func.apply(thisArg, args);
+    return result;
+  }
+
+  function leadingEdge(time) {
+    // Reset any `maxWait` timer.
+    lastInvokeTime = time;
+    // Start the timer for the trailing edge.
+    timerId = setTimeout(timerExpired, wait);
+    // Invoke the leading edge.
+    return leading ? invokeFunc(time) : result;
+  }
+
+  function remainingWait(time) {
+    var timeSinceLastCall = time - lastCallTime,
+        timeSinceLastInvoke = time - lastInvokeTime,
+        result = wait - timeSinceLastCall;
+
+    return maxing ? nativeMin(result, maxWait - timeSinceLastInvoke) : result;
+  }
+
+  function shouldInvoke(time) {
+    var timeSinceLastCall = time - lastCallTime,
+        timeSinceLastInvoke = time - lastInvokeTime;
+
+    // Either this is the first call, activity has stopped and we're at the
+    // trailing edge, the system time has gone backwards and we're treating
+    // it as the trailing edge, or we've hit the `maxWait` limit.
+    return (lastCallTime === undefined || (timeSinceLastCall >= wait) ||
+      (timeSinceLastCall < 0) || (maxing && timeSinceLastInvoke >= maxWait));
+  }
+
+  function timerExpired() {
+    var time = now();
+    if (shouldInvoke(time)) {
+      return trailingEdge(time);
+    }
+    // Restart the timer.
+    timerId = setTimeout(timerExpired, remainingWait(time));
+  }
+
+  function trailingEdge(time) {
+    timerId = undefined;
+
+    // Only invoke if we have `lastArgs` which means `func` has been
+    // debounced at least once.
+    if (trailing && lastArgs) {
+      return invokeFunc(time);
+    }
+    lastArgs = lastThis = undefined;
+    return result;
+  }
+
+  function cancel() {
+    if (timerId !== undefined) {
+      clearTimeout(timerId);
+    }
+    lastInvokeTime = 0;
+    lastArgs = lastCallTime = lastThis = timerId = undefined;
+  }
+
+  function flush() {
+    return timerId === undefined ? result : trailingEdge(now());
+  }
+
+  function debounced() {
+    var time = now(),
+        isInvoking = shouldInvoke(time);
+
+    lastArgs = arguments;
+    lastThis = this;
+    lastCallTime = time;
+
+    if (isInvoking) {
+      if (timerId === undefined) {
+        return leadingEdge(lastCallTime);
+      }
+      if (maxing) {
+        // Handle invocations in a tight loop.
+        timerId = setTimeout(timerExpired, wait);
+        return invokeFunc(lastCallTime);
+      }
+    }
+    if (timerId === undefined) {
+      timerId = setTimeout(timerExpired, wait);
+    }
+    return result;
+  }
+  debounced.cancel = cancel;
+  debounced.flush = flush;
+  return debounced;
+}
+
+/**
+ * Creates a throttled function that only invokes `func` at most once per
+ * every `wait` milliseconds. The throttled function comes with a `cancel`
+ * method to cancel delayed `func` invocations and a `flush` method to
+ * immediately invoke them. Provide `options` to indicate whether `func`
+ * should be invoked on the leading and/or trailing edge of the `wait`
+ * timeout. The `func` is invoked with the last arguments provided to the
+ * throttled function. Subsequent calls to the throttled function return the
+ * result of the last `func` invocation.
+ *
+ * **Note:** If `leading` and `trailing` options are `true`, `func` is
+ * invoked on the trailing edge of the timeout only if the throttled function
+ * is invoked more than once during the `wait` timeout.
+ *
+ * If `wait` is `0` and `leading` is `false`, `func` invocation is deferred
+ * until to the next tick, similar to `setTimeout` with a timeout of `0`.
+ *
+ * See [David Corbacho's article](https://css-tricks.com/debouncing-throttling-explained-examples/)
+ * for details over the differences between `_.throttle` and `_.debounce`.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Function
+ * @param {Function} func The function to throttle.
+ * @param {number} [wait=0] The number of milliseconds to throttle invocations to.
+ * @param {Object} [options={}] The options object.
+ * @param {boolean} [options.leading=true]
+ *  Specify invoking on the leading edge of the timeout.
+ * @param {boolean} [options.trailing=true]
+ *  Specify invoking on the trailing edge of the timeout.
+ * @returns {Function} Returns the new throttled function.
+ * @example
+ *
+ * // Avoid excessively updating the position while scrolling.
+ * jQuery(window).on('scroll', _.throttle(updatePosition, 100));
+ *
+ * // Invoke `renewToken` when the click event is fired, but not more than once every 5 minutes.
+ * var throttled = _.throttle(renewToken, 300000, { 'trailing': false });
+ * jQuery(element).on('click', throttled);
+ *
+ * // Cancel the trailing throttled invocation.
+ * jQuery(window).on('popstate', throttled.cancel);
+ */
+function throttle(func, wait, options) {
+  var leading = true,
+      trailing = true;
+
+  if (typeof func != 'function') {
+    throw new TypeError(FUNC_ERROR_TEXT);
+  }
+  if (isObject(options)) {
+    leading = 'leading' in options ? !!options.leading : leading;
+    trailing = 'trailing' in options ? !!options.trailing : trailing;
+  }
+  return debounce(func, wait, {
+    'leading': leading,
+    'maxWait': wait,
+    'trailing': trailing
+  });
+}
+
+/**
+ * Checks if `value` is the
+ * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
+ * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(_.noop);
+ * // => true
+ *
+ * _.isObject(null);
+ * // => false
+ */
+function isObject(value) {
+  var type = typeof value;
+  return !!value && (type == 'object' || type == 'function');
+}
+
+/**
+ * Checks if `value` is object-like. A value is object-like if it's not `null`
+ * and has a `typeof` result of "object".
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+ * @example
+ *
+ * _.isObjectLike({});
+ * // => true
+ *
+ * _.isObjectLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isObjectLike(_.noop);
+ * // => false
+ *
+ * _.isObjectLike(null);
+ * // => false
+ */
+function isObjectLike(value) {
+  return !!value && typeof value == 'object';
+}
+
+/**
+ * Checks if `value` is classified as a `Symbol` primitive or object.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
+ * @example
+ *
+ * _.isSymbol(Symbol.iterator);
+ * // => true
+ *
+ * _.isSymbol('abc');
+ * // => false
+ */
+function isSymbol(value) {
+  return typeof value == 'symbol' ||
+    (isObjectLike(value) && objectToString.call(value) == symbolTag);
+}
+
+/**
+ * Converts `value` to a number.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to process.
+ * @returns {number} Returns the number.
+ * @example
+ *
+ * _.toNumber(3.2);
+ * // => 3.2
+ *
+ * _.toNumber(Number.MIN_VALUE);
+ * // => 5e-324
+ *
+ * _.toNumber(Infinity);
+ * // => Infinity
+ *
+ * _.toNumber('3.2');
+ * // => 3.2
+ */
+function toNumber(value) {
+  if (typeof value == 'number') {
+    return value;
+  }
+  if (isSymbol(value)) {
+    return NAN;
+  }
+  if (isObject(value)) {
+    var other = typeof value.valueOf == 'function' ? value.valueOf() : value;
+    value = isObject(other) ? (other + '') : other;
+  }
+  if (typeof value != 'string') {
+    return value === 0 ? value : +value;
+  }
+  value = value.replace(reTrim, '');
+  var isBinary = reIsBinary.test(value);
+  return (isBinary || reIsOctal.test(value))
+    ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
+    : (reIsBadHex.test(value) ? NAN : +value);
+}
+
+module.exports = throttle;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],57:[function(require,module,exports){
 (function(){
   var crypt = require('crypt'),
       utf8 = require('charenc').utf8,
@@ -11213,7 +11585,7 @@ function extend() {
 
 })();
 
-},{"charenc":59,"crypt":60,"is-buffer":61}],59:[function(require,module,exports){
+},{"charenc":58,"crypt":59,"is-buffer":60}],58:[function(require,module,exports){
 var charenc = {
   // UTF-8 encoding
   utf8: {
@@ -11248,7 +11620,7 @@ var charenc = {
 
 module.exports = charenc;
 
-},{}],60:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 (function() {
   var base64map
       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
@@ -11346,9 +11718,9 @@ module.exports = charenc;
   module.exports = crypt;
 })();
 
-},{}],61:[function(require,module,exports){
-arguments[4][30][0].apply(exports,arguments)
-},{"dup":30}],62:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
+arguments[4][28][0].apply(exports,arguments)
+},{"dup":28}],61:[function(require,module,exports){
 /*!
  * mustache.js - Logic-less {{mustache}} templates with JavaScript
  * http://github.com/janl/mustache.js
@@ -11980,7 +12352,7 @@ arguments[4][30][0].apply(exports,arguments)
   return mustache;
 }));
 
-},{}],63:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 /*! nouislider - 8.5.1 - 2016-04-24 16:00:29 */
 
 (function (factory) {
@@ -13940,7 +14312,7 @@ function closure ( target, options, originalOptions ){
 	};
 
 }));
-},{}],64:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 // Load modules
 
 var Stringify = require('./stringify');
@@ -13957,7 +14329,7 @@ module.exports = {
     parse: Parse
 };
 
-},{"./parse":65,"./stringify":66}],65:[function(require,module,exports){
+},{"./parse":64,"./stringify":65}],64:[function(require,module,exports){
 // Load modules
 
 var Utils = require('./utils');
@@ -14145,7 +14517,7 @@ module.exports = function (str, options) {
     return Utils.compact(obj);
 };
 
-},{"./utils":67}],66:[function(require,module,exports){
+},{"./utils":66}],65:[function(require,module,exports){
 // Load modules
 
 var Utils = require('./utils');
@@ -14268,7 +14640,7 @@ module.exports = function (obj, options) {
     return keys.join(delimiter);
 };
 
-},{"./utils":67}],67:[function(require,module,exports){
+},{"./utils":66}],66:[function(require,module,exports){
 // Load modules
 
 

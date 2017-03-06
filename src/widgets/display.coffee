@@ -35,7 +35,6 @@ class Display extends Widget
         options.currency,
         options.translations,
         options.templateFunctions
-
     super(element)
 
   ###

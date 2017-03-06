@@ -57,8 +57,7 @@ class RangeFacet extends Display
 
     @slider = null
     @values = {}
-    # Default number format
-    @parseNumber = parseFloat
+    @range = {}
 
     super(element, template, options)
 
@@ -90,16 +89,19 @@ class RangeFacet extends Display
     # Listen for the 'change' event so we can query Doofinder with new filters
     @slider.noUiSlider.on 'change', ->
       [min, max] = self.slider.noUiSlider.get()
-      # WTF(@ecoslado) noUISlider gets the formatted values
-      # so we maintain an object with key the formatted values
-      # and value the numbers
-      self.controller.addFilter self.name,
-        gte: self.values[min]
-        lte: self.values[max]
+
+      if self.values[min] == self.range.min and self.values[max] == self.range.max
+        # No need to filter
+        self.controller.removeFilter self.name
+      else
+        self.controller.addFilter self.name,
+          gte: self.values[min]
+          lte: self.values[max]
+
       self.controller.refresh()
       self.values = {}
 
-    @numberType  
+    undefined
 
   ###
   Renders the slider pips
@@ -135,6 +137,12 @@ class RangeFacet extends Display
       for node in pips.querySelectorAll('div[data-position]')
         node.innerHTML = if values? then values[node.getAttribute('data-position')] else ''
 
+  _getRangeFromResponse: (res) ->
+    stats = res.facets[@name].range.buckets[0].stats
+    range =
+      min: parseFloat(stats.min || 0, 10)
+      max: parseFloat(stats.max || 0, 10)
+
   ###
   Paints the slider based on the received response.
 
@@ -150,25 +158,18 @@ class RangeFacet extends Display
 
     self = this
 
+    @range = @_getRangeFromResponse(res)
 
-    # Empty the widget if there's no items with values in the range
-    if res.total > 0 and not res.facets[@name].range.buckets[0].stats.max? or
-       res.facets[@name].range.buckets[0].stats.max == res.facets[@name].range.buckets[0].stats.min
+    if @range.min == @range.max
+      # There's only one or no items with values in the range
       @slider = null
       @element.empty()
-    # Update widget if any results found and there are range bounds  
-    else if res.total > 0 
-      minimum = res.facets[@name].range.buckets[0].stats.min || 0
-      @parseNumber = if Number(minimum) and minimum % 1 == 0 then parseInt else parseFloat
-
-      range = [@parseNumber(res.facets[@name].range.buckets[0].stats.min || 0, 10),
-               @parseNumber(res.facets[@name].range.buckets[0].stats.max || 0, 10)]
+    else
+      # Update widget if any results found and there are range bounds
 
       options =
-        start: range
-        range:
-          min: range[0]
-          max: range[1]
+        start: [@range.min, @range.max]
+        range: @range
         connect: true
         tooltips: true  # can't be overriden when options are updated!!!
         format:
@@ -178,7 +179,7 @@ class RangeFacet extends Display
             # and value the numbers
             if value?
               formattedValue = self.format value
-              self.values[formattedValue] = self.parseNumber(value)
+              self.values[formattedValue] = parseFloat value, 10
               formattedValue
             else
               ""
@@ -187,49 +188,24 @@ class RangeFacet extends Display
 
       # If we have values from search filtering we apply them
       if res and res.filter and res.filter.range and res.filter.range[@name]
-        start = [@parseNumber(res.filter.range[@name].gte, 10),
-                 @parseNumber(res.filter.range[@name].lte, 10)]
+        start = [parseFloat(res.filter.range[@name].gte, 10),
+                 parseFloat(res.filter.range[@name].lte, 10)]
         options.start[0] = start[0] unless isNaN start[0]
         options.start[1] = start[1] unless isNaN start[1]
 
-      # noUiSlider raises an error when range limits are equal so we hack the
-      # slider to represent this state properly
-
-      disabled = options.range.min == options.range.max
-      if disabled
-        overrides =
-          range:
-            min: options.range.min
-            max: options.range.max + 1
-          # tooltips: false  # can't be overriden :-( Use CSS to handle display
-
       if @slider is null
-        @_renderSlider extend(true, {}, options, overrides or {})
+        @_renderSlider options
       else
-        @slider.noUiSlider.updateOptions extend(true, {}, options, overrides or {})
-
-      if disabled
-        @slider.setAttribute 'disabled', true
-      else
-        @slider.removeAttribute 'disabled'
+        @slider.noUiSlider.updateOptions options
 
       # Pips are buggy in noUiSlider so we are going to paint them ourselves
       # unless options.pips has a value (either false or real options)
       unless options.pips?
-        if not disabled and @parseNumber == parseInt
-          values =
-            0: @parseNumber options.format.to options.range.min
-            50: @parseNumber(options.format.to((options.range.min + options.range.max) / 2.0))
-            100: @parseNumber options.format.to options.range.max
-          @_renderPips values
-        else if not disabled
-          values =
-            0: options.format.to options.range.min
-            50: options.format.to((options.range.min + options.range.max) / 2.0)
-            100: options.format.to options.range.max
-          @_renderPips values
-        else
-          @_renderPips()  # coffee needs () here!!!
+        values =
+          0: options.format.to options.range.min
+          50: options.format.to((options.range.min + options.range.max) / 2.0)
+          100: options.format.to options.range.max
+        @_renderPips values
 
     @trigger('df:rendered', [res])
 

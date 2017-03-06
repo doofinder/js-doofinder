@@ -29,12 +29,31 @@ class ScrollDisplay extends Display
   @param {String} element
   @param {String|Function} template
   @param {Object} extraOptions
+
+  options =
+    scrollOffset: 200
+    contentNode: "Node that holds the results => this.element"
+    contentWrapper: "Node that is used for the scroll instead of the first "
+                    "child of the container"
+
+  elementWrapper
+   -------------------
+  |  contentWrapper  ^|
+  |  --------------- !|
+  | | element       |!|
+  | |  ------------ |!|
+  | | |   items    ||!|
+
   @api public
   ###
   constructor: (element, template, options) ->
+    super
+    
+    if @element.element[0] is window and not options.contentNode?
+      throw "when the wrapper is window you must set contentNode option."
+    
     self = this
-    super(element, template, options)
-    scrollOptions = extend true,
+    scrollOptions =
       callback: ->
         if self.controller? and not self.pageRequested
           self.pageRequested = true
@@ -43,29 +62,24 @@ class ScrollDisplay extends Display
             self.pageRequested = false
           , 5000
           self.controller.nextPage.call(self.controller)
-      ,
-      if options.scrollOffset? then scrollOffset: options.scrollOffset else {}
 
-    if options.windowScroll
-      # Uses window as scroll wrapper
-      @elementWrapper = $ document.body
-      dfScroll scrollOptions
-      
+    if options.scrollOffset?
+      scrollOptions.scrollOffset = options.scrollOffset
+    if options.contentWrapper?
+      scrollOptions.content = options.contentWrapper
+
+    @elementWrapper = @element
+
+    if options.contentNode?
+      @element = $ options.contentNode
+    else if @element.element[0] is window
+      @element = $ "body"
     else
       if not @element.children().length()
-        # Just in case the inner element in the scroll is not given
-        @element.append document.createElement 'div'
-
-      @elementWrapper = @element
+        @element.append (document.createElement 'div')
       @element = @element.children().first()
 
-      # Overrides container by defined
-      if options.container
-        if typeof options.container is 'string'
-          @element = $ options.container
-        else
-          @element = options.container
-      dfScroll @elementWrapper, scrollOptions
+    dfScroll @elementWrapper, scrollOptions
 
   ###
   start

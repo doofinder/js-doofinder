@@ -1,48 +1,31 @@
-extend = require 'extend'
-introspection = require './introspection'
-throttle = require './throttle'
-dimensions = require './dimensions'
 $ = require './dfdom'
 bean = require 'bean'
+extend = require 'extend'
+throttle = require 'lodash.throttle'
 
-module.exports = (arg1, arg2 = null) ->
+module.exports = (container, options = null) ->
+  container = $ container
+  containerElement = container.element[0]
+
   defaults =
-    direction: "vertical"
+    callback: ->
     scrollOffset: 200
+    content: if containerElement is window then $ "body" else container.children().first()
+    throttle: 250
+  options = extend(true, defaults, options || {})
 
-  if introspection.isPlainObject arg1
-    # if typeof arg1 is 'object'
-    # First parameter is an options object, uses window scroll
-    
-    options = extend true, defaults, arg1
-    content = document
-    container = window
-    bean.on container, 'df:scroll', ->
-      if ['horizontal', 'vertical'].indexOf(options.direction) <= -1
-        throw Error("[Doofinder] dfScroll: Direction is not properly set. It might be 'horizontal' or 'vertical'.")
-      
-      if options.direction == 'vertical' and window.innerHeight + window.scrollY + options.scrollOffset >= dimensions.clientHeight(content) or
-          options.direction == "horizontal" and window.innerWidth + window.scrollX + options.scrollOffset >= dimensions.clientWidth(content)
-        # Bottom or right side was about to be reached so we call the callback
-        options.callback()
-  else
-    # Uses an inner div as scroll
-    options = extend true, defaults, arg2
-    if typeof arg1 is 'string'
-      container = $ arg1
-    else
-      container = arg1
+  content = $ options.content
 
-    content = container.children().first()
-    container.on 'df:scroll', ->
-      if ['horizontal', 'vertical'].indexOf(options.direction) <= -1
-        throw Error("[Doofinder] dfScroll: Direction is not properly set. It might be 'horizontal' or 'vertical'.")
+  container.on 'df:scroll', ->
+    contentHeight = content.height()
+    containerHeight = container.height()
+    containerScroll = container.scrollTop()
+    delta = Math.max(0, contentHeight - containerHeight - containerScroll)
 
-      if options.direction == 'vertical' and content.height() - container.height() - container.scrollTop() <= options.scrollOffset or
-          options.direction == "horizontal" and content.width() - container.width() - container.scrollLeft() <= options.scrollOffset
-        # Bottom or right side was about to be reached so we call the callback
-        options.callback()
+    # Trigger only on scroll down
+    if containerScroll > 0 and delta >= 0 and delta <= options.scrollOffset
+      options.callback()
 
-
-  # Throttle to avoid multiple events to be triggered.
-  throttle 'scroll', 'df:scroll', container
+  # Avoid too much event triggering
+  fn = (e) -> bean.fire container.element[0], 'df:scroll'
+  bean.on containerElement, 'scroll', throttle(fn, options.throttle, leading: true)

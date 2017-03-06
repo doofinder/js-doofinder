@@ -12,6 +12,8 @@ Controller
 This class uses the client to
 to retrieve the data and the widgets
 to paint them.
+
+TODO(@carlosescri): Use our introspection tool to do some cleanup.
 ###
 class Controller
   ###
@@ -85,6 +87,7 @@ class Controller
               widget.renderNext res
             else
               widget.render res
+          # TODO(@carlosescri): This could trigger an event.
 
   ###
   __search wrappers
@@ -198,11 +201,19 @@ class Controller
       if @searchParams.filters and @searchParams.filters[key]
         delete @searchParams.filters[key]
     # Term filter
-    else if not @status.params.filters[key]
-      @status.params.filters[key] = [value]
     else
-      @status.params.filters[key].push value
+      if not @status.params.filters[key]
+        @status.params.filters[key] = []
+      if value.constructor != Array
+        value = [value]
+      @status.params.filters[key] = @status.params.filters[key].concat value
 
+
+  hasFilter: (key) ->
+    @status.params.filters?[key]?
+
+  getFilter: (key) ->
+    @status.params.filters?[key]
 
   ###
   addParam
@@ -259,30 +270,35 @@ class Controller
   ###
   removeFilter: (key, value) ->
     @status.currentPage = 1
-    if @status.params.filters and @status.params.filters[key]
+    if @status.params.filters?[key]?
       if @status.params.filters[key].constructor == Object
         delete @status.params.filters[key]
-
       else if @status.params.filters[key].constructor == Array
-        index = @status.params.filters[key].indexOf(value)
-
-        while index >= 0
-          @status.params.filters[key].splice(index, 1)
-          # Just in case it is repeated
-          index = @status.params.filters[key].indexOf(value)
+        if value?
+          @__splice @status.params.filters[key], value
+          unless @status.params.filters[key].length > 0
+            delete @status.params.filters[key]
+        else
+          delete @status.params.filters[key]
 
     # Removes a predefined filter when it is deselected.
-    if @searchParams.filters and @searchParams.filters[key]
+    if @searchParams.filters?[key]?
       if @searchParams.filters[key].constructor == Object
         delete @searchParams.filters[key]
-
       else if @searchParams.filters[key].constructor == Array
-        index = @searchParams.filters[key].indexOf(value)
+        if value?
+          @__splice @searchParams.filters[key], value
+          unless @searchParams.filters[key].length > 0
+            delete @searchParams.filters[key]
+        else
+          delete @searchParams.filters[key]
 
-        while index >= 0
-          @searchParams.filters[key].splice(index, 1)
-          # Just in case it is repeated
-          index = @searchParams.filters[key].indexOf(value)
+  __splice: (list, value) ->
+    idx = list.indexOf value
+    while idx >= 0
+      list.splice idx, 1
+      idx = list.indexOf value
+    list
 
 
   ###

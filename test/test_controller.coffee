@@ -1,7 +1,7 @@
 chai = require 'chai'
 nock = require 'nock'
 
-chai.should()
+should = chai.should()
 assert = chai.assert
 expect = chai.expect
 
@@ -97,6 +97,20 @@ describe 'doofinder controller: ', ->
       controller.addFilter 'brand', 'Nike'
       controller.addFilter 'color', 'Rojo'
 
+      # Check filters management
+      controller.hasFilter('color').should.be.true
+      controller.getFilter('color').should.be.eql ['Azul', 'Rojo']
+
+      controller.addFilter 'price', gt: 10
+      controller.hasFilter('price').should.be.true
+      controller.getFilter('price').should.be.eql {gt: 10}
+
+      controller.removeFilter 'price'
+      controller.hasFilter('price').should.be.false
+      should.equal controller.getFilter('price'), undefined
+
+      controller.hasFilter('material').should.be.false
+
       controller.refresh() # search wigh color: ['Azul', 'Rojo'] and brand: ['Nike']
 
     it 'when removing terms filters, filters params change', (done) ->
@@ -114,9 +128,8 @@ describe 'doofinder controller: ', ->
       controller.removeFilter 'brand', 'Nike'
       # those filters should be removed
       client_mock.search = (query, params, cb) ->
-        params.filters.should.have.keys 'color', 'brand'
+        params.filters.should.have.keys 'color'
         params.filters.color.should.be.eql ['Rojo']
-        params.filters.brand.should.be.empty
         done()
       # go!
       controller.refresh()
