@@ -1399,7 +1399,7 @@ author: @ecoslado
       var first;
       first = this._first();
       if (first != null) {
-        return Math.max(first.clientWidth, first.offsetWidth);
+        return first.innerWidth || first.clientWidth;
       }
     };
 
@@ -1407,7 +1407,7 @@ author: @ecoslado
       var first;
       first = this._first();
       if (first != null) {
-        return first.innerHeight || Math.max(first.clientHeight, first.offsetHeight);
+        return first.innerHeight || first.offsetHeight;
       }
     };
 
