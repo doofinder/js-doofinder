@@ -1145,7 +1145,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "4.1.31",
+    version: "5.0.0",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),

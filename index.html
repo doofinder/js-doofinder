@@ -41,7 +41,7 @@
     $(document).ready(function(){
       var client = new doofinder.Client('8a87949e8103093566ea55e7f4893fcc', 'eu1', null, null, 'localhost:8881');
       var queryInputWidget = new doofinder.widgets.QueryInput('#query');
-      var resultsWidget = new doofinder.widgets.ScrollResults('#scroll');
+      var resultsWidget = new doofinder.widgets.ScrollResults(window, {contentNode: '#window-scroll'});
       var priceWidget = new doofinder.widgets.RangeFacet('#price', 'price', {
         templateVars: {label: 'Price'}
       });
@@ -75,6 +75,7 @@
   </script>
 </head>
 <body>
+  <div id="window-scroll"></div>
   <input class="w m q" type="text" id="query" autofocus>
   <div class="w m b s" id="scroll"></div>
   <div class="w m b" id="price"></div>
