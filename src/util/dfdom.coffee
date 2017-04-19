@@ -174,23 +174,27 @@ class DfDomElement
     return @_first().value
 
   # STYLES
+
   width: () ->
     @_first()?.offsetWidth
 
   height: () ->
     @_first()?.offsetHeight
 
+  _clientRect: ->
+    @_first()?.getBoundingClientRect?()
+
   top: ->
-    @_first()?.getBoundingClientRect?().top or 0
+    @_clientRect()?.top or 0
 
   right: ->
-    @_first()?.getBoundingClientRect?().right or 0
+    @_clientRect()?.right or 0
 
   bottom: ->
-    @_first()?.getBoundingClientRect?().bottom or 0
+    @_clientRect()?.bottom or 0
 
   left: () ->
-    @_first()?.getBoundingClientRect?().left or 0
+    @_clientRect()?.left or 0
 
   scrollTop: (value) ->
     if typeof(value) != "undefined"
