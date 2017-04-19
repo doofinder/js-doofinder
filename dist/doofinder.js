@@ -1145,7 +1145,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "5.0.0",
+    version: "5.0.1",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1396,39 +1396,38 @@ author: @ecoslado
     };
 
     DfDomElement.prototype.width = function() {
-      var first;
-      first = this._first();
-      if (first != null) {
-        return first.innerWidth || first.clientWidth;
-      }
+      var ref;
+      return (ref = this._first()) != null ? ref.offsetWidth : void 0;
     };
 
     DfDomElement.prototype.height = function() {
-      var first;
-      first = this._first();
-      if (first != null) {
-        return first.innerHeight || first.offsetHeight;
-      }
+      var ref;
+      return (ref = this._first()) != null ? ref.offsetHeight : void 0;
+    };
+
+    DfDomElement.prototype._clientRect = function() {
+      var ref;
+      return (ref = this._first()) != null ? typeof ref.getBoundingClientRect === "function" ? ref.getBoundingClientRect() : void 0 : void 0;
     };
 
     DfDomElement.prototype.top = function() {
-      var first;
-      first = this._first();
-      if ((first != null) && first.getBoundingClientRect()) {
-        return first.getBoundingClientRect().top;
-      } else {
-        return 0;
-      }
+      var ref;
+      return ((ref = this._clientRect()) != null ? ref.top : void 0) || 0;
+    };
+
+    DfDomElement.prototype.right = function() {
+      var ref;
+      return ((ref = this._clientRect()) != null ? ref.right : void 0) || 0;
+    };
+
+    DfDomElement.prototype.bottom = function() {
+      var ref;
+      return ((ref = this._clientRect()) != null ? ref.bottom : void 0) || 0;
     };
 
     DfDomElement.prototype.left = function() {
-      var first;
-      first = this._first();
-      if ((first != null) && first.getBoundingClientRect()) {
-        return this._first().getBoundingClientRect().left;
-      } else {
-        return 0;
-      }
+      var ref;
+      return ((ref = this._clientRect()) != null ? ref.left : void 0) || 0;
     };
 
     DfDomElement.prototype.scrollTop = function(value) {
