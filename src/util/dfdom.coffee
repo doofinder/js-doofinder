@@ -27,14 +27,14 @@ class DfDomElement
     else if @element.constructor != Array
       @element = [@element]
     return this
-  
-  # NODE HIERARCHY MANAGEMENT  
-  find: (selector) ->  
+
+  # NODE HIERARCHY MANAGEMENT
+  find: (selector) ->
     return new DfDomElement Array.prototype.slice.call @_first().querySelectorAll selector
 
   each: (callback) ->
     @element.forEach(callback)
-      
+
   children: () ->
     new DfDomElement Array.prototype.slice.call @_first().children
 
@@ -75,7 +75,7 @@ class DfDomElement
         o = p
         if not selector? or o[matchesFn](selector)
           parents.push(o)
-   
+
         p = o.parentElement
     return new DfDomElement parents
 
@@ -95,15 +95,15 @@ class DfDomElement
 
   length: () ->
     return @element.length
-    
+
   # CONTENT RETRIEVING AND INJECTION
   html: (htmlString) ->
-    @each (elem) ->  
+    @each (elem) ->
       elem.innerHTML = htmlString
     return this
 
   append: (fragment) ->
-    @each (elem) -> 
+    @each (elem) ->
       if typeof fragment is "string" and elem.insertAdjacentHTML?
         elem.insertAdjacentHTML  "beforeend", fragment
       else if typeof fragment is "string" and not elem.insertAdjacentHTML?
@@ -112,25 +112,25 @@ class DfDomElement
         elem.appendChild fragment
       else if fragment._first?
         elem.appendChild fragment._first()
-        
+
     return this
 
   prepend: (fragment) ->
-    @each (elem) -> 
+    @each (elem) ->
       if typeof fragment is "string" and elem.insertAdjacentHTML?
         elem.insertAdjacentHTML  "afterbegin", fragment
       else if typeof fragment is "string" and not elem.insertAdjacentHTML?
         elem.innerHTML = fragment + elem.innerHTML
       else
         if not fragment.tagName
-          fragment = fragment._first()    
+          fragment = fragment._first()
         if elem.children and elem.children.length > 0
           elem.insertBefore fragment, elem.children[0]
         else
           elem.appendChild fragment
-      
+
   before: (fragment) ->
-    @each (elem) -> 
+    @each (elem) ->
       if typeof fragment is "string"
         elem.insertAdjacentHTML  "beforebegin", fragment
       else if fragment.tagName
@@ -139,7 +139,7 @@ class DfDomElement
         elem.parentElement.insertBefore fragment._first(), elem
 
   after: (fragment) ->
-    @each (elem) -> 
+    @each (elem) ->
       if typeof fragment is "string"
         elem.insertAdjacentHTML  "afterend", fragment
       else if fragment.tagName
@@ -163,7 +163,7 @@ class DfDomElement
     if first? and first.removeAttribute?
       first.removeAttribute(key)
     return this
-    
+
   data: (key, value) ->
     actualKey = "data-#{key}"
     return @attr(actualKey, value)
@@ -175,29 +175,22 @@ class DfDomElement
 
   # STYLES
   width: () ->
-    first = @_first()
-    if first?
-      first.innerWidth || first.clientWidth
+    @_first()?.offsetWidth
 
   height: () ->
-    first = @_first()
-    if first?
-      first.innerHeight || first.offsetHeight
+    @_first()?.offsetHeight
 
-  top: () ->
-    first = @_first()
-    if first? and first.getBoundingClientRect()
-      return first.getBoundingClientRect().top
-    else
-      return 0
+  top: ->
+    @_first()?.getBoundingClientRect?().top or 0
 
+  right: ->
+    @_first()?.getBoundingClientRect?().right or 0
+
+  bottom: ->
+    @_first()?.getBoundingClientRect?().bottom or 0
 
   left: () ->
-    first = @_first()
-    if first? and first.getBoundingClientRect()
-      return @_first().getBoundingClientRect().left
-    else
-      return 0
+    @_first()?.getBoundingClientRect?().left or 0
 
   scrollTop: (value) ->
     if typeof(value) != "undefined"
@@ -215,7 +208,7 @@ class DfDomElement
   removeClass: (className) ->
     @each (elem) ->
       elem.classList.remove className
-    return this 
+    return this
 
   toggleClass: (className) ->
     @each (elem) ->
@@ -223,13 +216,13 @@ class DfDomElement
     return this
 
   hasClass: (className) ->
-    @_first().classList.contains className 
+    @_first().classList.contains className
 
   css: (key, value) ->
     @each (elem) ->
       elem.style[key] = value
     return getComputedStyle(@_first())[key]
-  
+
   hide: () ->
     @css "display", "none"
 
