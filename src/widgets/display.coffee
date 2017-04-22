@@ -40,32 +40,33 @@ class Display extends Widget
   ###
   render
 
-  Replaces the older results in element with
+  Render fist page
   the given
 
   @param {Object} res
   @api public
   ###
-  render: (res) ->
-    context = extend true, res, @extraContext or {}
-    context.is_first = true
-    context.is_last = @controller.status.lastPageReached
-    @addHelpers context
-    @element.html @mustache.render @template, context
-    @trigger("df:rendered", [res])
-
-
+  render: (res) -> renderPage(res)
 
   ###
   renderNext
+
+  Render next Page
+  @param {Object} res
+  @api public
+  ###
+  renderNext: (res) -> renderPage(res, false)
+
+  ###
+  renderPage
 
   Replaces old results with the new ones in the element
   @param {Object} res
   @api public
   ###
-  renderNext: (res) ->
+  renderPage = (res, is_first = true) ->
     context = extend true, res, @extraContext or {}
-    context.is_first = false
+    context.is_first = is_first;
     context.is_last = @controller.status.lastPageReached
     @addHelpers context
     @element.html @mustache.render @template, context
