@@ -10,11 +10,12 @@ This class receives a facet ranges and paint
 them. Manages the filtering.
 ###
 
-Display = require "../display"
+BaseFacet = require "./basefacet"
 noUiSlider = require "nouislider"
 extend = require "extend"
 
-class RangeFacet extends Display
+class RangeFacet extends BaseFacet
+  @defaultTemplate: """<div class="{{sliderClassName}}" data-facet="{{name}}"></div>"""
 
   ###
   Initializes the widget
@@ -33,24 +34,14 @@ class RangeFacet extends Display
 
   @api public
   ###
-  constructor: (element, @name, options = {}) ->
+  constructor: (element, name, options = {}) ->
+    super
+
     @sliderClassName = options.sliderClassName or 'df-slider'
     @sliderSelector =  ".#{@sliderClassName}[data-facet='#{@name}']"
 
-    if not options.template
-      template = """
-      <div class="df-panel" data-facet="{{name}}">
-        <a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>
-        <div class="df-panel__content">
-          <div class="{{sliderClassName}}" data-facet="{{name}}"></div>
-        </div>
-      </div>
-      """
-    else
-      template = options.template
-
-    if options.format
-      @format = options.format
+    if @options.format
+      @format = @options.format
     else
       @format = (value) ->
         value? and (value.toFixed(2) + '').replace(/0+$/, '').replace(/\.{1}$/, '')
@@ -58,8 +49,6 @@ class RangeFacet extends Display
     @slider = null
     @values = {}
     @range = {}
-
-    super(element, template, options)
 
   ###
   Renders the slider for the very first time.
@@ -208,8 +197,6 @@ class RangeFacet extends Display
         @_renderPips values
 
     @trigger('df:rendered', [res])
-
-  renderNext: ->
 
   clean: () ->
     super()

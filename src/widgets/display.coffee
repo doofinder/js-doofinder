@@ -1,10 +1,4 @@
 ###
-display.coffee
-author: @ecoslado
-2015 11 10
-###
-
-###
 Display
 This class receives the search
 results and paint them in an element
@@ -27,15 +21,17 @@ class Display extends Widget
   @api public
   ###
   constructor: (element, @template, options = {}) ->
-    @mustache = require("mustache")
+    @mustache = require "mustache"
     @extraContext = options.templateVars
-    @addHelpers = (context) ->
-      addHelpers context,
-        options.urlParams,
-        options.currency,
-        options.translations,
-        options.templateFunctions
-    super(element)
+    super element, options
+
+  addHelpers: (res) ->
+    context = addHelpers (extend true, res, @extraContext),
+      @options.urlParams,
+      @options.currency,
+      @options.translations,
+      @options.templateFunctions
+    extend true, context, is_first: res.page == 1, is_last: @controller.status.lastPageReached
 
   ###
   render
@@ -47,12 +43,8 @@ class Display extends Widget
   @api public
   ###
   render: (res) ->
-    context = extend true, res, @extraContext or {}
-    context.is_first = true
-    context.is_last = @controller.status.lastPageReached
-    @addHelpers context
-    @element.html @mustache.render @template, context
-    @trigger("df:rendered", [res])
+    @element.html (@mustache.render @template, @addHelpers res)
+    @trigger "df:rendered", [res]
 
 
 
@@ -64,12 +56,8 @@ class Display extends Widget
   @api public
   ###
   renderNext: (res) ->
-    context = extend true, res, @extraContext or {}
-    context.is_first = false
-    context.is_last = @controller.status.lastPageReached
-    @addHelpers context
-    @element.html @mustache.render @template, context
-    @trigger("df:rendered", [res])
+    @element.html (@mustache.render @template, @addHelpers res)
+    @trigger "df:rendered", [res]
 
   ###
   clean

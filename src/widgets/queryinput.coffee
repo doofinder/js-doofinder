@@ -29,8 +29,8 @@ class QueryInput extends Widget
   @param {Object} options
   @api public
   ###
-  constructor: (element, @options = {}) ->
-    super(element)
+  constructor: (element, options = {}) ->
+    super element, options
     @typingTimeout = @options.typingTimeout || 1000
     @eventsBound = false
     @cleanInput = if @options.clean? then @options.clean else true # TODO: docs!!!

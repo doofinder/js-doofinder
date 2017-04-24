@@ -48,10 +48,10 @@ class ScrollDisplay extends Display
   ###
   constructor: (element, template, options) ->
     super
-    
+
     if @element.element[0] is window and not options.contentNode?
       throw "when the wrapper is window you must set contentNode option."
-    
+
     self = this
     scrollOptions =
       callback: ->
@@ -102,12 +102,8 @@ class ScrollDisplay extends Display
   ###
   renderNext: (res) ->
     @pageRequested = false
-    context = extend true, res, @extraContext or {}
-    context.is_first = false
-    context.is_last = @controller.status.lastPageReached
-    @addHelpers context
-    @element.append @mustache.render(@template, context)
-    @trigger("df:rendered", [res])
+    @element.append (@mustache.render @template, @addHelpers res)
+    @trigger "df:rendered", [res]
 
 
 module.exports = ScrollDisplay

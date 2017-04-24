@@ -545,7 +545,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./util/http":8,"md5":57}],2:[function(require,module,exports){
+},{"./util/http":8,"md5":60}],2:[function(require,module,exports){
 
 /*
  * Created by Kike Coslado on 26/10/15.
@@ -1134,7 +1134,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"bean":18,"extend":19,"qs":63}],3:[function(require,module,exports){
+},{"bean":21,"extend":22,"qs":66}],3:[function(require,module,exports){
 (function() {
   if (!JSON.stringify && JSON.encode) {
     JSON.stringify = JSON.encode;
@@ -1145,7 +1145,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "5.0.1",
+    version: "5.0.2",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1155,8 +1155,10 @@ author: @ecoslado
       Results: require("./widgets/results/results"),
       ScrollResults: require("./widgets/results/scrollresults"),
       QueryInput: require("./widgets/queryinput"),
+      BaseFacet: require("./widgets/facets/basefacet"),
       TermFacet: require("./widgets/facets/termfacet"),
-      RangeFacet: require("./widgets/facets/rangefacet")
+      RangeFacet: require("./widgets/facets/rangefacet"),
+      FacetPanel: require("./widgets/facets/facetpanel")
     },
     util: {
       md5: require("md5"),
@@ -1166,13 +1168,14 @@ author: @ecoslado
       introspection: require("./util/introspection"),
       dfdom: require("./util/dfdom"),
       throttle: require("lodash.throttle"),
-      http: require("./util/http")
+      http: require("./util/http"),
+      uid: require("./util/uniqueid")
     }
   };
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./util/dfdom":4,"./util/http":8,"./util/introspection":9,"./widget":10,"./widgets/display":11,"./widgets/facets/rangefacet":12,"./widgets/facets/termfacet":13,"./widgets/queryinput":14,"./widgets/results/results":15,"./widgets/results/scrollresults":16,"bean":18,"extend":19,"lodash.throttle":56,"md5":57,"mustache":61,"qs":63}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./util/dfdom":4,"./util/http":8,"./util/introspection":9,"./util/uniqueid":10,"./widget":11,"./widgets/display":12,"./widgets/facets/basefacet":13,"./widgets/facets/facetpanel":14,"./widgets/facets/rangefacet":15,"./widgets/facets/termfacet":16,"./widgets/queryinput":17,"./widgets/results/results":18,"./widgets/results/scrollresults":19,"bean":21,"extend":22,"lodash.throttle":59,"md5":60,"mustache":64,"qs":66}],4:[function(require,module,exports){
 
 /*
 dfdom.coffee
@@ -1567,7 +1570,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"bean":18}],5:[function(require,module,exports){
+},{"bean":21}],5:[function(require,module,exports){
 (function() {
   var $, bean, extend, throttle;
 
@@ -1614,7 +1617,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./dfdom":4,"bean":18,"extend":19,"lodash.throttle":56}],6:[function(require,module,exports){
+},{"./dfdom":4,"bean":21,"extend":22,"lodash.throttle":59}],6:[function(require,module,exports){
 (function() {
   var $, extend,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -1681,7 +1684,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./dfdom":4,"extend":19}],7:[function(require,module,exports){
+},{"./dfdom":4,"extend":22}],7:[function(require,module,exports){
 
 /*
  * author: @ecoslado
@@ -1784,7 +1787,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"extend":19}],8:[function(require,module,exports){
+},{"extend":22}],8:[function(require,module,exports){
 
 /*
 client.coffee
@@ -1877,7 +1880,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"http":46,"https":26}],9:[function(require,module,exports){
+},{"http":49,"https":29}],9:[function(require,module,exports){
 (function() {
   var isArray, isFunction, isObject, isPlainObject;
 
@@ -1917,6 +1920,22 @@ author: @ecoslado
 }).call(this);
 
 },{}],10:[function(require,module,exports){
+(function() {
+  module.exports = function(length) {
+    var id;
+    if (length == null) {
+      length = 8;
+    }
+    id = "";
+    while (id.length < length) {
+      id += Math.random().toString(36).substr(2);
+    }
+    return id.substr(0, length);
+  };
+
+}).call(this);
+
+},{}],11:[function(require,module,exports){
 
 /*
 widget.coffee
@@ -1940,9 +1959,14 @@ shaped by template
   $ = require("./util/dfdom");
 
   Widget = (function() {
-    function Widget(element) {
-      this.element = $(element);
+    function Widget(element, options) {
+      this.options = options;
+      this.setElement(element);
     }
+
+    Widget.prototype.setElement = function(element) {
+      return this.element = ($(element)).first();
+    };
 
 
     /*
@@ -2072,14 +2096,7 @@ shaped by template
 
 }).call(this);
 
-},{"./util/dfdom":4,"bean":18}],11:[function(require,module,exports){
-
-/*
-display.coffee
-author: @ecoslado
-2015 11 10
- */
-
+},{"./util/dfdom":4,"bean":21}],12:[function(require,module,exports){
 
 /*
 Display
@@ -2120,11 +2137,17 @@ replaces the current content.
       }
       this.mustache = require("mustache");
       this.extraContext = options.templateVars;
-      this.addHelpers = function(context) {
-        return addHelpers(context, options.urlParams, options.currency, options.translations, options.templateFunctions);
-      };
-      Display.__super__.constructor.call(this, element);
+      Display.__super__.constructor.call(this, element, options);
     }
+
+    Display.prototype.addHelpers = function(res) {
+      var context;
+      context = addHelpers(extend(true, res, this.extraContext), this.options.urlParams, this.options.currency, this.options.translations, this.options.templateFunctions);
+      return extend(true, context, {
+        is_first: res.page === 1,
+        is_last: this.controller.status.lastPageReached
+      });
+    };
 
 
     /*
@@ -2138,12 +2161,7 @@ replaces the current content.
      */
 
     Display.prototype.render = function(res) {
-      var context;
-      context = extend(true, res, this.extraContext || {});
-      context.is_first = true;
-      context.is_last = this.controller.status.lastPageReached;
-      this.addHelpers(context);
-      this.element.html(this.mustache.render(this.template, context));
+      this.element.html(this.mustache.render(this.template, this.addHelpers(res)));
       return this.trigger("df:rendered", [res]);
     };
 
@@ -2157,12 +2175,7 @@ replaces the current content.
      */
 
     Display.prototype.renderNext = function(res) {
-      var context;
-      context = extend(true, res, this.extraContext || {});
-      context.is_first = false;
-      context.is_last = this.controller.status.lastPageReached;
-      this.addHelpers(context);
-      this.element.html(this.mustache.render(this.template, context));
+      this.element.html(this.mustache.render(this.template, this.addHelpers(res)));
       return this.trigger("df:rendered", [res]);
     };
 
@@ -2203,7 +2216,171 @@ replaces the current content.
 
 }).call(this);
 
-},{"../util/helpers":7,"../widget":10,"extend":19,"mustache":61}],12:[function(require,module,exports){
+},{"../util/helpers":7,"../widget":11,"extend":22,"mustache":64}],13:[function(require,module,exports){
+(function() {
+  var BaseFacet, Display, extend,
+    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  Display = require("../display");
+
+  extend = require("extend");
+
+
+  /**
+   * Common behavior of a facet widget.
+   */
+
+  BaseFacet = (function(superClass) {
+    extend1(BaseFacet, superClass);
+
+    BaseFacet.defaultLabelTemplate = "{{label}}";
+
+    function BaseFacet(element, name, options) {
+      var defaults;
+      this.name = name;
+      if (options == null) {
+        options = {};
+      }
+      defaults = {
+        templateVars: {
+          label: options.label || this.name
+        },
+        labelTemplate: this.constructor.defaultLabelTemplate,
+        template: this.constructor.defaultTemplate
+      };
+      options = extend(true, defaults, options);
+      BaseFacet.__super__.constructor.call(this, element, options.template, options);
+    }
+
+    BaseFacet.prototype.renderLabel = function(res) {
+      return this.mustache.render(this.options.labelTemplate, this.addHelpers(res));
+    };
+
+    BaseFacet.prototype.renderNext = function(res) {};
+
+    return BaseFacet;
+
+  })(Display);
+
+  module.exports = BaseFacet;
+
+}).call(this);
+
+},{"../display":12,"extend":22}],14:[function(require,module,exports){
+(function() {
+  var $, Display, FacetPanel, extend, uid,
+    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  extend = require("extend");
+
+  $ = require("../../util/dfdom");
+
+  Display = require("../display");
+
+  uid = require("../../util/uniqueid");
+
+
+  /**
+   * Collapsible panel that contains a facet widget.
+   * It's always appended to a container element, it does not replace the entire
+   * HTML content.
+   */
+
+  FacetPanel = (function(superClass) {
+    extend1(FacetPanel, superClass);
+
+    FacetPanel.defaultTemplate = "<div id=\"{{id}}\" data-role=\"panel\">\n  <a href=\"#\" data-role=\"panel-label\" data-toggle=\"panel\"></a>\n  <div data-role=\"panel-content\"></div>\n</div>";
+
+    function FacetPanel(element, options) {
+      var defaults;
+      defaults = {
+        id: "df-panel-" + (uid()),
+        template: this.constructor.defaultTemplate,
+        startCollapsed: false
+      };
+      options = extend(true, defaults, options);
+      FacetPanel.__super__.constructor.call(this, element, options.template, options);
+      this.element.append(this.mustache.render(this.template, {
+        id: this.options.id
+      }));
+      this.setElement("#" + this.options.id);
+      if (this.options.startCollapsed) {
+        this.collapse();
+      }
+      this.toggleElement = (this.element.find('[data-toggle="panel"]')).first();
+      this.labelElement = (this.element.find('[data-role="panel-label"]')).first();
+      this.contentElement = (this.element.find('[data-role="panel-content"]')).first();
+    }
+
+    FacetPanel.prototype.init = function(controller) {
+      this.controller = controller;
+      return this.toggleElement.on("click", (function(_this) {
+        return function(e) {
+          e.preventDefault();
+          if (_this.isCollapsed()) {
+            return _this.expand();
+          } else {
+            return _this.collapse();
+          }
+        };
+      })(this));
+    };
+
+    FacetPanel.prototype.isCollapsed = function() {
+      return (this.element.attr("data-collapse")) != null;
+    };
+
+    FacetPanel.prototype.collapse = function() {
+      return this.element.attr("data-collapse", "");
+    };
+
+    FacetPanel.prototype.expand = function() {
+      return this.element.removeAttr("data-collapse");
+    };
+
+
+    /**
+     * Embeds one and only one widget into this panel content.
+     * @param  {Widget} embeddedWidget A (child) instance of `Widget`.
+     */
+
+    FacetPanel.prototype.embedWidget = function(embeddedWidget) {
+      if (this.embeddedWidget != null) {
+        return this.raiseError("You can embed only one item on a `FacetPanel` instance.");
+      } else {
+        this.embeddedWidget = embeddedWidget;
+        return this.controller.addWidget(this.embeddedWidget);
+      }
+    };
+
+
+    /**
+     * Renders the panel title with the label obtained from the embedded widget.
+     * @param  {Object} res Search response from the server.
+     */
+
+    FacetPanel.prototype.render = function(res) {
+      if (this.embeddedWidget != null) {
+        this.labelElement.html(this.embeddedWidget.renderLabel(res));
+        return this.trigger("df:rendered", [res]);
+      }
+    };
+
+    FacetPanel.prototype.renderNext = function(res) {};
+
+    FacetPanel.prototype.clean = function() {};
+
+    return FacetPanel;
+
+  })(Display);
+
+  module.exports = FacetPanel;
+
+}).call(this);
+
+},{"../../util/dfdom":4,"../../util/uniqueid":10,"../display":12,"extend":22}],15:[function(require,module,exports){
 
 /*
 rangefacet.coffee
@@ -2219,11 +2396,11 @@ them. Manages the filtering.
  */
 
 (function() {
-  var Display, RangeFacet, extend, noUiSlider,
+  var BaseFacet, RangeFacet, extend, noUiSlider,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  Display = require("../display");
+  BaseFacet = require("./basefacet");
 
   noUiSlider = require("nouislider");
 
@@ -2231,6 +2408,8 @@ them. Manages the filtering.
 
   RangeFacet = (function(superClass) {
     extend1(RangeFacet, superClass);
+
+    RangeFacet.defaultTemplate = "<div class=\"{{sliderClassName}}\" data-facet=\"{{name}}\"></div>";
 
 
     /*
@@ -2252,20 +2431,14 @@ them. Manages the filtering.
      */
 
     function RangeFacet(element, name, options) {
-      var template;
-      this.name = name;
       if (options == null) {
         options = {};
       }
+      RangeFacet.__super__.constructor.apply(this, arguments);
       this.sliderClassName = options.sliderClassName || 'df-slider';
       this.sliderSelector = "." + this.sliderClassName + "[data-facet='" + this.name + "']";
-      if (!options.template) {
-        template = "<div class=\"df-panel\" data-facet=\"{{name}}\">\n  <a href=\"#\" class=\"df-panel__title\" data-toggle=\"panel\">{{label}}</a>\n  <div class=\"df-panel__content\">\n    <div class=\"{{sliderClassName}}\" data-facet=\"{{name}}\"></div>\n  </div>\n</div>";
-      } else {
-        template = options.template;
-      }
-      if (options.format) {
-        this.format = options.format;
+      if (this.options.format) {
+        this.format = this.options.format;
       } else {
         this.format = function(value) {
           return (value != null) && (value.toFixed(2) + '').replace(/0+$/, '').replace(/\.{1}$/, '');
@@ -2274,7 +2447,6 @@ them. Manages the filtering.
       this.slider = null;
       this.values = {};
       this.range = {};
-      RangeFacet.__super__.constructor.call(this, element, template, options);
     }
 
 
@@ -2435,8 +2607,6 @@ them. Manages the filtering.
       return this.trigger('df:rendered', [res]);
     };
 
-    RangeFacet.prototype.renderNext = function() {};
-
     RangeFacet.prototype.clean = function() {
       RangeFacet.__super__.clean.call(this);
       return this.slider = null;
@@ -2444,13 +2614,13 @@ them. Manages the filtering.
 
     return RangeFacet;
 
-  })(Display);
+  })(BaseFacet);
 
   module.exports = RangeFacet;
 
 }).call(this);
 
-},{"../display":11,"extend":19,"nouislider":62}],13:[function(require,module,exports){
+},{"./basefacet":13,"extend":22,"nouislider":65}],16:[function(require,module,exports){
 
 /*
 termfacet.coffee
@@ -2459,11 +2629,11 @@ author: @ecoslado
  */
 
 (function() {
-  var $, Display, TermFacet, extend,
+  var $, BaseFacet, TermFacet, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  Display = require("../display");
+  BaseFacet = require("./basefacet");
 
   extend = require("extend");
 
@@ -2479,54 +2649,100 @@ author: @ecoslado
   TermFacet = (function(superClass) {
     extend1(TermFacet, superClass);
 
-    function TermFacet(element, name, options) {
-      var template;
-      this.name = name;
-      if (options == null) {
-        options = {};
-      }
-      if (!options.template) {
-        template = "{{#@index}}\n  <hr class=\"df-separator\">\n{{/@index}}\n<div class=\"df-panel\">\n  <a href=\"#\" class=\"df-panel__title\" data-toggle=\"panel\">{{label}}</a>\n  <div class=\"df-panel__content\">\n    <ul>\n      {{#terms}}\n      <li>\n        <a href=\"#\" class=\"df-facet {{#selected}}df-facet--active{{/selected}}\"\n            data-facet=\"{{name}}\" data-value=\"{{ key }}\" {{#selected}}data-selected{{/selected}}>\n          {{ key }}\n          <span class=\"df-facet__count\">{{ doc_count }}</span>\n        </a>\n      </li>\n      {{/terms}}\n    </ul>\n  </div>\n</div>";
-      } else {
-        template = options.template;
-      }
-      TermFacet.__super__.constructor.call(this, element, template, options);
+    function TermFacet() {
+      return TermFacet.__super__.constructor.apply(this, arguments);
     }
 
+    TermFacet.defaultLabelTemplate = "{{label}}{{#total_selected}} ({{total_selected}}){{/total_selected}}";
+
+    TermFacet.defaultTemplate = "<ul>\n  {{#terms}}\n  <li>\n    <a href=\"#\" data-facet=\"{{name}}\" data-value=\"{{key}}\" {{#selected}}data-selected{{/selected}}>\n      {{ key }} <span>{{ doc_count }}</span>\n    </a>\n  </li>\n  {{/terms}}\n</ul>";
+
     TermFacet.prototype.init = function(controller) {
-      var self;
-      TermFacet.__super__.init.call(this, controller);
-      self = this;
-      return this.element.on('click', "[data-facet='" + this.name + "'][data-value]", function(e) {
-        var key, value;
-        e.preventDefault();
-        value = $(this).data('value');
-        key = $(this).data('facet');
-        if (!this.hasAttribute('data-selected')) {
-          this.setAttribute('data-selected', '');
-          self.controller.addFilter(key, value);
-        } else {
-          this.removeAttribute('data-selected');
-          self.controller.removeFilter(key, value);
-        }
-        return self.controller.refresh();
-      });
+      TermFacet.__super__.init.apply(this, arguments);
+      return this.element.on("click", "[data-facet='" + this.name + "'][data-value]", (function(_this) {
+        return function(e) {
+          var clickInfo, key, termNode, value, wasSelected;
+          e.preventDefault();
+          termNode = $(e.target);
+          value = termNode.data("value");
+          key = termNode.data("facet");
+          wasSelected = e.target.hasAttribute("data-selected");
+          if (!wasSelected) {
+            termNode.attr("data-selected", "");
+            _this.controller.addFilter(key, value);
+          } else {
+            termNode.removeAttr("data-selected");
+            _this.controller.removeFilter(key, value);
+          }
+          _this.controller.refresh();
+          clickInfo = {
+            widget: _this,
+            termNode: termNode.element[0],
+            facetName: key,
+            facetValue: value,
+            isSelected: !wasSelected
+          };
+          return _this.trigger("df:term_clicked", [clickInfo]);
+        };
+      })(this));
+    };
+
+
+    /**
+     * @return {DfDomElement} Collection of selected term nodes.
+     */
+
+    TermFacet.prototype.getSelectedElements = function() {
+      return this.element.find("[data-facet][data-selected]");
+    };
+
+
+    /**
+     * @return {Number} Number of selected term nodes.
+     */
+
+    TermFacet.prototype.countSelectedElements = function() {
+      return this.getSelectedElements().length();
+    };
+
+
+    /**
+     * @param  {Object} res Results response from the server.
+     * @return {Number}     Total terms used for filter.
+     */
+
+    TermFacet.prototype.countSelectedTerms = function(res) {
+      var ref, ref1;
+      return (((ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.name] : void 0 : void 0) || []).length;
+    };
+
+
+    /**
+     * Render a descriptive label for this facet given a search response.
+     * @param  {Object} res Results response from the server.
+     */
+
+    TermFacet.prototype.renderLabel = function(res) {
+      return TermFacet.__super__.renderLabel.call(this, extend(true, res, {
+        total_selected: this.countSelectedTerms(res)
+      }));
     };
 
     TermFacet.prototype.render = function(res) {
-      var context, i, index, len, ref, ref1, ref2, ref3, selectedTerms, selected_length, term;
+      var context, i, index, len, ref, ref1, ref2, ref3, selectedTerms, term, totalSelected;
       if (!res.facets || !res.facets[this.name]) {
         this.raiseError("TermFacet: " + this.name + " facet is not configured");
       } else if (!res.facets[this.name].terms.buckets) {
         this.raiseError("TermFacet: " + this.name + " facet is not a terms facet");
       }
-      selectedTerms = {};
-      ref2 = ((ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.name] : void 0 : void 0) || [];
-      for (i = 0, len = ref2.length; i < len; i++) {
-        term = ref2[i];
-        selectedTerms[term] = true;
-      }
       if (res.results) {
+        selectedTerms = {};
+        ref2 = ((ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.name] : void 0 : void 0) || [];
+        for (i = 0, len = ref2.length; i < len; i++) {
+          term = ref2[i];
+          selectedTerms[term] = true;
+        }
+        selectedTerms;
         ref3 = res.facets[this.name].terms.buckets;
         for (index in ref3) {
           term = ref3[index];
@@ -2538,32 +2754,30 @@ author: @ecoslado
             term.selected = 0;
           }
         }
-        selected_length = Object.keys(selectedTerms).length;
+        totalSelected = this.countSelectedTerms(res);
         context = extend(true, {
-          any_selected: selected_length > 0,
-          total_selected: selected_length,
+          any_selected: totalSelected > 0,
+          total_selected: totalSelected,
           name: this.name,
           terms: res.facets[this.name].terms.buckets
         }, this.extraContext || {});
         this.addHelpers(context);
         this.element.html(this.mustache.render(this.template, context));
       } else {
-        this.element.html('');
+        this.element.html("");
       }
-      return this.trigger('df:rendered', [res]);
+      return this.trigger("df:rendered", [res]);
     };
-
-    TermFacet.prototype.renderNext = function() {};
 
     return TermFacet;
 
-  })(Display);
+  })(BaseFacet);
 
   module.exports = TermFacet;
 
 }).call(this);
 
-},{"../../util/dfdom":4,"../display":11,"extend":19}],14:[function(require,module,exports){
+},{"../../util/dfdom":4,"./basefacet":13,"extend":22}],17:[function(require,module,exports){
 
 /*
 queryinput.coffee
@@ -2607,9 +2821,11 @@ author: @ecoslado
     @api public
      */
 
-    function QueryInput(element, options1) {
-      this.options = options1 != null ? options1 : {};
-      QueryInput.__super__.constructor.call(this, element);
+    function QueryInput(element, options) {
+      if (options == null) {
+        options = {};
+      }
+      QueryInput.__super__.constructor.call(this, element, options);
       this.typingTimeout = this.options.typingTimeout || 1000;
       this.eventsBound = false;
       this.cleanInput = this.options.clean != null ? this.options.clean : true;
@@ -2672,7 +2888,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../util/dftypewatch":6,"../widget":10,"extend":19}],15:[function(require,module,exports){
+},{"../util/dftypewatch":6,"../widget":11,"extend":22}],18:[function(require,module,exports){
 
 /*
 display.coffee
@@ -2730,7 +2946,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../display":11}],16:[function(require,module,exports){
+},{"../display":12}],19:[function(require,module,exports){
 
 /*
 scrollresults.coffee
@@ -2788,7 +3004,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../scrolldisplay":17}],17:[function(require,module,exports){
+},{"../scrolldisplay":20}],20:[function(require,module,exports){
 
 /*
 scrolldisplay.coffee
@@ -2915,13 +3131,8 @@ bottom
      */
 
     ScrollDisplay.prototype.renderNext = function(res) {
-      var context;
       this.pageRequested = false;
-      context = extend(true, res, this.extraContext || {});
-      context.is_first = false;
-      context.is_last = this.controller.status.lastPageReached;
-      this.addHelpers(context);
-      this.element.append(this.mustache.render(this.template, context));
+      this.element.append(this.mustache.render(this.template, this.addHelpers(res)));
       return this.trigger("df:rendered", [res]);
     };
 
@@ -2933,7 +3144,7 @@ bottom
 
 }).call(this);
 
-},{"../util/dfdom":4,"../util/dfscroll":5,"./display":11,"extend":19}],18:[function(require,module,exports){
+},{"../util/dfdom":4,"../util/dfscroll":5,"./display":12,"extend":22}],21:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean
@@ -3676,7 +3887,7 @@ bottom
   return bean
 });
 
-},{}],19:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 'use strict';
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -3764,9 +3975,9 @@ module.exports = function extend() {
 };
 
 
-},{}],20:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 
-},{}],21:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -5559,7 +5770,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":22,"ieee754":23,"isarray":24}],22:[function(require,module,exports){
+},{"base64-js":25,"ieee754":26,"isarray":27}],25:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -5675,7 +5886,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],23:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -5761,14 +5972,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],24:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],25:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -6072,7 +6283,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],26:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -6088,7 +6299,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":46}],27:[function(require,module,exports){
+},{"http":49}],30:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -6113,7 +6324,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],28:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -6136,7 +6347,7 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],29:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -6318,7 +6529,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],30:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -6855,7 +7066,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],31:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -6941,7 +7152,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],32:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7028,13 +7239,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],33:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":31,"./encode":32}],34:[function(require,module,exports){
+},{"./decode":34,"./encode":35}],37:[function(require,module,exports){
 // a duplex stream is just a stream that is both readable and writable.
 // Since JS doesn't have multiple prototypal inheritance, this class
 // prototypally inherits from Readable, and then parasitically from
@@ -7110,7 +7321,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":36,"./_stream_writable":38,"core-util-is":41,"inherits":27,"process-nextick-args":43}],35:[function(require,module,exports){
+},{"./_stream_readable":39,"./_stream_writable":41,"core-util-is":44,"inherits":30,"process-nextick-args":46}],38:[function(require,module,exports){
 // a passthrough stream.
 // basically just the most minimal sort of Transform stream.
 // Every written chunk gets output as-is.
@@ -7137,7 +7348,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":37,"core-util-is":41,"inherits":27}],36:[function(require,module,exports){
+},{"./_stream_transform":40,"core-util-is":44,"inherits":30}],39:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -8081,7 +8292,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":34,"./internal/streams/BufferList":39,"_process":29,"buffer":21,"buffer-shims":40,"core-util-is":41,"events":25,"inherits":27,"isarray":42,"process-nextick-args":43,"string_decoder/":52,"util":20}],37:[function(require,module,exports){
+},{"./_stream_duplex":37,"./internal/streams/BufferList":42,"_process":32,"buffer":24,"buffer-shims":43,"core-util-is":44,"events":28,"inherits":30,"isarray":45,"process-nextick-args":46,"string_decoder/":55,"util":23}],40:[function(require,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -8264,7 +8475,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":34,"core-util-is":41,"inherits":27}],38:[function(require,module,exports){
+},{"./_stream_duplex":37,"core-util-is":44,"inherits":30}],41:[function(require,module,exports){
 (function (process){
 // A bit simpler than readable streams.
 // Implement an async ._write(chunk, encoding, cb), and it'll handle all
@@ -8821,7 +9032,7 @@ function CorkedRequest(state) {
   };
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":34,"_process":29,"buffer":21,"buffer-shims":40,"core-util-is":41,"events":25,"inherits":27,"process-nextick-args":43,"util-deprecate":44}],39:[function(require,module,exports){
+},{"./_stream_duplex":37,"_process":32,"buffer":24,"buffer-shims":43,"core-util-is":44,"events":28,"inherits":30,"process-nextick-args":46,"util-deprecate":47}],42:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('buffer').Buffer;
@@ -8886,7 +9097,7 @@ BufferList.prototype.concat = function (n) {
   }
   return ret;
 };
-},{"buffer":21,"buffer-shims":40}],40:[function(require,module,exports){
+},{"buffer":24,"buffer-shims":43}],43:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -8998,7 +9209,7 @@ exports.allocUnsafeSlow = function allocUnsafeSlow(size) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"buffer":21}],41:[function(require,module,exports){
+},{"buffer":24}],44:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -9109,9 +9320,9 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":28}],42:[function(require,module,exports){
-arguments[4][24][0].apply(exports,arguments)
-},{"dup":24}],43:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":31}],45:[function(require,module,exports){
+arguments[4][27][0].apply(exports,arguments)
+},{"dup":27}],46:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -9158,7 +9369,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":29}],44:[function(require,module,exports){
+},{"_process":32}],47:[function(require,module,exports){
 (function (global){
 
 /**
@@ -9229,7 +9440,7 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],45:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 (function (process){
 var Stream = (function (){
   try {
@@ -9249,7 +9460,7 @@ if (!process.browser && process.env.READABLE_STREAM === 'disable' && Stream) {
 }
 
 }).call(this,require('_process'))
-},{"./lib/_stream_duplex.js":34,"./lib/_stream_passthrough.js":35,"./lib/_stream_readable.js":36,"./lib/_stream_transform.js":37,"./lib/_stream_writable.js":38,"_process":29}],46:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":37,"./lib/_stream_passthrough.js":38,"./lib/_stream_readable.js":39,"./lib/_stream_transform.js":40,"./lib/_stream_writable.js":41,"_process":32}],49:[function(require,module,exports){
 (function (global){
 var ClientRequest = require('./lib/request')
 var extend = require('xtend')
@@ -9331,7 +9542,7 @@ http.METHODS = [
 	'UNSUBSCRIBE'
 ]
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./lib/request":48,"builtin-status-codes":50,"url":53,"xtend":55}],47:[function(require,module,exports){
+},{"./lib/request":51,"builtin-status-codes":53,"url":56,"xtend":58}],50:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
 
@@ -9404,7 +9615,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],48:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -9702,7 +9913,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":47,"./response":49,"_process":29,"buffer":21,"inherits":27,"readable-stream":45,"to-arraybuffer":51}],49:[function(require,module,exports){
+},{"./capability":50,"./response":52,"_process":32,"buffer":24,"inherits":30,"readable-stream":48,"to-arraybuffer":54}],52:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -9888,7 +10099,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":47,"_process":29,"buffer":21,"inherits":27,"readable-stream":45}],50:[function(require,module,exports){
+},{"./capability":50,"_process":32,"buffer":24,"inherits":30,"readable-stream":48}],53:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -9954,7 +10165,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],51:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
 
 module.exports = function (buf) {
@@ -9983,7 +10194,7 @@ module.exports = function (buf) {
 	}
 }
 
-},{"buffer":21}],52:[function(require,module,exports){
+},{"buffer":24}],55:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -10206,7 +10417,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":21}],53:[function(require,module,exports){
+},{"buffer":24}],56:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -10940,7 +11151,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":54,"punycode":30,"querystring":33}],54:[function(require,module,exports){
+},{"./util":57,"punycode":33,"querystring":36}],57:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -10958,7 +11169,7 @@ module.exports = {
   }
 };
 
-},{}],55:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -10979,7 +11190,7 @@ function extend() {
     return target
 }
 
-},{}],56:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 (function (global){
 /**
  * lodash (Custom Build) <https://lodash.com/>
@@ -11422,7 +11633,7 @@ function toNumber(value) {
 module.exports = throttle;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],57:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 (function(){
   var crypt = require('crypt'),
       utf8 = require('charenc').utf8,
@@ -11584,7 +11795,7 @@ module.exports = throttle;
 
 })();
 
-},{"charenc":58,"crypt":59,"is-buffer":60}],58:[function(require,module,exports){
+},{"charenc":61,"crypt":62,"is-buffer":63}],61:[function(require,module,exports){
 var charenc = {
   // UTF-8 encoding
   utf8: {
@@ -11619,7 +11830,7 @@ var charenc = {
 
 module.exports = charenc;
 
-},{}],59:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 (function() {
   var base64map
       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
@@ -11717,9 +11928,9 @@ module.exports = charenc;
   module.exports = crypt;
 })();
 
-},{}],60:[function(require,module,exports){
-arguments[4][28][0].apply(exports,arguments)
-},{"dup":28}],61:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
+arguments[4][31][0].apply(exports,arguments)
+},{"dup":31}],64:[function(require,module,exports){
 /*!
  * mustache.js - Logic-less {{mustache}} templates with JavaScript
  * http://github.com/janl/mustache.js
@@ -12351,7 +12562,7 @@ arguments[4][28][0].apply(exports,arguments)
   return mustache;
 }));
 
-},{}],62:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 /*! nouislider - 8.5.1 - 2016-04-24 16:00:29 */
 
 (function (factory) {
@@ -14311,7 +14522,7 @@ function closure ( target, options, originalOptions ){
 	};
 
 }));
-},{}],63:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 // Load modules
 
 var Stringify = require('./stringify');
@@ -14328,7 +14539,7 @@ module.exports = {
     parse: Parse
 };
 
-},{"./parse":64,"./stringify":65}],64:[function(require,module,exports){
+},{"./parse":67,"./stringify":68}],67:[function(require,module,exports){
 // Load modules
 
 var Utils = require('./utils');
@@ -14516,7 +14727,7 @@ module.exports = function (str, options) {
     return Utils.compact(obj);
 };
 
-},{"./utils":66}],65:[function(require,module,exports){
+},{"./utils":69}],68:[function(require,module,exports){
 // Load modules
 
 var Utils = require('./utils');
@@ -14639,7 +14850,7 @@ module.exports = function (obj, options) {
     return keys.join(delimiter);
 };
 
-},{"./utils":66}],66:[function(require,module,exports){
+},{"./utils":69}],69:[function(require,module,exports){
 // Load modules
 
 

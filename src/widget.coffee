@@ -16,9 +16,11 @@ $ = require "./util/dfdom"
 
 class Widget
 
+  constructor: (element, @options) ->
+    @setElement element
 
-  constructor: (element) ->
-    @element = $ element
+  setElement: (element) ->
+    @element = ($ element).first()
 
   ###
   init
@@ -60,8 +62,8 @@ class Widget
   In Widget is dummy. To be overriden.
 
   @api public
-  ###  
-  clean: () ->  
+  ###
+  clean: ->
 
   ###
   one
