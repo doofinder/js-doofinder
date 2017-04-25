@@ -1,17 +1,11 @@
-###
-termfacet.coffee
-author: @ecoslado
-2015 11 10
-###
-
 BaseFacet = require "./basefacet"
 extend = require "extend"
 $ = require "../../util/dfdom"
 
-###
-TermFacet
-This class receives a facet terms and
-paint them. Manages the filtering.
+
+###*
+ * Represents a terms selector control to filter by the possible values of a
+ * text field.
 ###
 class TermFacet extends BaseFacet
   @defaultLabelTemplate: "{{label}}{{#total_selected}} ({{total_selected}}){{/total_selected}}"
@@ -27,6 +21,12 @@ class TermFacet extends BaseFacet
     </ul>
   """
 
+  ###*
+   * Initializes the object with a controller and attachs event handlers for
+   * this widget instance.
+   *
+   * @param  {Controller} controller Doofinder Search controller.
+  ###
   init: (controller) ->
     super
 
@@ -79,12 +79,23 @@ class TermFacet extends BaseFacet
     (res.filter?.terms?[@name] or []).length
 
   ###*
-   * Render a descriptive label for this facet given a search response.
-   * @param  {Object} res Results response from the server.
+   * Renders the label of the facet widget based on the given search response,
+   * within the configured label template. The number of selected terms is
+   * passed to the context so it can be used in the template.
+   *
+   * @param  {Object} res Search response.
+   * @return {String}     The rendered label.
   ###
   renderLabel: (res) ->
     super extend true, res, total_selected: (@countSelectedTerms res)
 
+  ###*
+   * Called when the "first page" response for a specific search is received.
+   * Renders the widget with the data received, by replacing its content.
+   *
+   * @param {Object} res Search response.
+   * @fires TermFacet#df:rendered
+  ###
   render: (res) ->
     # Throws errors if pre-requisites are not satisfied.
     if not res.facets or not res.facets[@name]
@@ -114,9 +125,8 @@ class TermFacet extends BaseFacet
         name: @name
         terms: res.facets[@name].terms.buckets,
         @extraContext || {}
-      @addHelpers context
 
-      @element.html @mustache.render(@template, context)
+      @element.html (@mustache.render @template, (@addHelpers context))
     else
       @element.html ""
 

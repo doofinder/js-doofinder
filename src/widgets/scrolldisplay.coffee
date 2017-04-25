@@ -1,50 +1,39 @@
-###
-scrolldisplay.coffee
-author: @ecoslado
-2015 11 10
-###
-
-###
-ScrollDisplay
-This class receives the search
-results and paint them in a container
-shaped by template. Ask for a new page
-when scroll in wrapper reaches the
-bottom
-###
-
 Display = require "./display"
 dfScroll = require "../util/dfscroll"
 extend = require 'extend'
 $ = require '../util/dfdom'
 
+
+###*
+ * Displays results by appending subsequent pages for the same search instead of
+ * replacing them, and requests next pages when the user reaches the end of the
+ * last page rendered.
+###
 class ScrollDisplay extends Display
 
-  ###
-  constructor
-
-  just assign wrapper property for scrolling and
-  calls super constructor.
-
-  @param {String} element
-  @param {String|Function} template
-  @param {Object} extraOptions
-
-  options =
-    scrollOffset: 200
-    contentNode: "Node that holds the results => this.element"
-    contentWrapper: "Node that is used for the scroll instead of the first "
-                    "child of the container"
-
-  elementWrapper
-   -------------------
-  |  contentWrapper  ^|
-  |  --------------- !|
-  | | element       |!|
-  | |  ------------ |!|
-  | | |   items    ||!|
-
-  @api public
+  ###*
+   * Options:
+   *
+   * - scrollOffset: 200
+   * - contentNode: Node that holds the results will become the container
+   *   element of the widget.
+   * - contentWrapper: Node that is used for scrolling instead of the first
+   *   child of the container.
+   *
+   *  elementWrapper
+   *  -------------------
+   * |  contentWrapper  ^|
+   * |  --------------- !|
+   * | |  element      |!|
+   * | |  ------------ |!|
+   * | | |  items     ||!|
+   *
+   * TODO(@carlosescri): Document this better!!!
+   *
+   * @param  {[type]} element  [description]
+   * @param  {[type]} template [description]
+   * @param  {[type]} options  [description]
+   * @return {[type]}          [description]
   ###
   constructor: (element, template, options) ->
     super
@@ -81,24 +70,24 @@ class ScrollDisplay extends Display
 
     dfScroll @elementWrapper, scrollOptions
 
-  ###
-  start
-
-  This is the function where bind the
-  events to DOM elements.
+  ###*
+   * Initializes the object with a controller and attachs event handlers for
+   * this widget instance.
+   *
+   * @param  {Controller} controller Doofinder Search controller.
   ###
   init: (controller) ->
-    super(controller)
-    self = this
-    @controller.bind 'df:search df:refresh', (params) ->
-      self.elementWrapper.scrollTop(0)
+    super
+    @controller.bind 'df:search df:refresh', (params) =>
+      @elementWrapper.scrollTop 0
 
-  ###
-  renderNext
-
-  Appends results to the older in container
-  @param {Object} res
-  @api public
+  ###*
+   * Called when subsequent (not "first-page") responses for a specific search
+   * are received. Renders the widget with the data received, by appending
+   * content after the last content received.
+   *
+   * @param {Object} res Search response.
+   * @fires ScrollDisplay#df:rendered
   ###
   renderNext: (res) ->
     @pageRequested = false

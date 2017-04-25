@@ -17,21 +17,27 @@ class FacetPanel extends Display
     </div>
   """
 
-  constructor: (element, options) ->
+  ###*
+   * @param  {String|Node|DfDomElement} element  Container node.
+   * @param  {Object} options Options object. Empty by default.
+  ###
+  constructor: (element, options = {}) ->
     uid = "df-panel-#{uniqueId()}"
+
     defaults =
       id: uid
       template: @constructor.defaultTemplate
-      startHidden: true
-      startCollapsed: false
+      startHidden: true     # Hide the panel until the embedded widget has been
+                            # rendered.
+      startCollapsed: false # Render collapsed instead of expanded.
       templateVars:
         id: options.id or uid
-    options = extend true, defaults, options
 
+    options = extend true, defaults, options
     super element, options.template, options
 
     # Render as soon as possible!
-    @element.append (@mustache.render @template, (@addHelpers {}))
+    @element.append (@mustache.render @template, @addHelpers())
     # Once appended, change the @element reference to the panel itself instead
     # of the container.
     @setElement "##{@options.id}"
@@ -44,20 +50,41 @@ class FacetPanel extends Display
     # Reset to finish initialization
     @clean()
 
-  init: (@controller) ->
+  ###*
+   * Initializes the object with a controller and attachs event handlers for
+   * this widget instance.
+   *
+   * @param  {Controller} controller Doofinder Search controller.
+  ###
+  init: (controller) ->
+    super
     @toggleElement.on "click", (e) =>
       e.preventDefault()
       if @isCollapsed() then @expand() else @collapse()
 
+  ###*
+   * Adds a "single-use" event handler to react to the embedded widget rendering
+   * and then display the panel itself.
+  ###
   __waitForEmbeddedWidget: ->
     @embeddedWidget?.one "df:rendered", (=> @element.css "display", "inherit")
 
+  ###*
+   * Checks whether the panel is collapsed or not.
+   * @return {Boolean} `true` if the panel is collapsed, `false` otherwise.
+  ###
   isCollapsed: ->
     (@element.attr "data-collapse")?
 
+  ###*
+   * Collapses the panel to hide its content.
+  ###
   collapse: ->
     @element.attr "data-collapse", ""
 
+  ###*
+   * Expands the panel to display its content.
+  ###
   expand: ->
     @element.removeAttr "data-collapse"
 
@@ -77,18 +104,38 @@ class FacetPanel extends Display
         @__waitForEmbeddedWidget()
 
   ###*
+   * Called when the "first page" response for a specific search is received.
    * Renders the panel title with the label obtained from the embedded widget.
-   * @param  {Object} res Search response from the server.
+   * This method does not replace its own HTML code, only the HTML of specific
+   * parts.
+   *
+   * @param {Object} res Search response.
+   * @fires FacetPanel#df:rendered
   ###
   render: (res) ->
     if @embeddedWidget?
       @labelElement.html (@embeddedWidget.renderLabel res)
       @trigger "df:rendered", [res]
 
+  ###*
+   * Called when subsequent (not "first-page") responses for a specific search
+   * are received. Disabled in this kind of widget.
+   *
+   * @param {Object} res Search response.
+  ###
   renderNext: (res) ->
 
+  ###*
+   * Cleans the widget by removing the HTML inside the label element. Also, if
+   * the panel starts hidden, it's hidden again. If the panel starts collapsed,
+   * it's collapsed again.
+   *
+   * WARNING: DON'T CALL `super()` here. We don't want the panel container to
+   * be reset!!!
+   *
+   * @fires FacetPanel#df:cleaned
+  ###
   clean: ->
-    # Don't use `super()` here!!!
     @labelElement.html ""
     if @options.startHidden
       @element.css "display", "none"

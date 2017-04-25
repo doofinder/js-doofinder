@@ -1,33 +1,18 @@
-###
-queryinput.coffee
-author: @ecoslado
-2015 11 21
-###
+extend = require "extend"
+Widget = require "../widget"
+dfTypeWatch = require "../util/dftypewatch"
 
-extend = require 'extend'
-Widget = require '../widget'
-dfTypeWatch = require '../util/dftypewatch'
 
+###*
+ * Represents a search input. This widget gets the search terms and calls the
+ * controller's search method. Certain minimum number of characters are needed
+ * to trigger search but the value is configurable.
 ###
-QueryInput
-
-This class gets the query and
-calls controller's search method.
-Gets the string from an input when
-receives more than given number of
-characters (3 by default).
-###
-
 class QueryInput extends Widget
 
-  ###
-  constructor
-
-  Just to set the queryInput
-
-  @param {String} queryInput
-  @param {Object} options
-  @api public
+  ###*
+   * @param  {String|Node|DfDomElement} element  The search input element.
+   * @param  {Object} options Options object. Empty by default.
   ###
   constructor: (element, options = {}) ->
     super element, options
@@ -35,12 +20,15 @@ class QueryInput extends Widget
     @eventsBound = false
     @cleanInput = if @options.clean? then @options.clean else true # TODO: docs!!!
 
-  ###
-  start
-
-  This is the function where bind the
-  events to DOM elements.
-  @api public
+  ###*
+   * Initializes the object with a controller and attachs event handlers for
+   * this widget instance. A QueryInput widget can be used by more than one
+   * controller (is an input widget, so it doesn't render results).
+   *
+   * TODO(@carlosescri): Seems that is not clear how the assignment works and
+   * only the first controller is being notified when the user stops typing...
+   *
+   * @param  {Controller} controller Doofinder Search controller.
   ###
   init: (controller) ->
     if @controller
@@ -76,8 +64,15 @@ class QueryInput extends Widget
 
       @eventsBound = true
 
-  clean: () ->
+  ###*
+   * If the widget is configured to be cleaned, empties the value of the input
+   * element.
+   * @fires QueryInput#df:cleaned
+  ###
+  clean: ->
     if @cleanInput
       @element.val('')
+      @trigger "df:cleaned"
+
 
 module.exports = QueryInput
