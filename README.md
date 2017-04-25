@@ -1,7 +1,8 @@
 [![Build Status](https://api.travis-ci.org/doofinder/js-doofinder.svg?branch=master)](https://travis-ci.org/doofinder/js-doofinder)
 
 # jsDoofinder
-This library allows you to make requests to [Doofinder](http://www.doofinder.com) Search Engines and show the results in your website. You'll be able to retrieve and shape your data easily with it.
+
+This library allows you to make requests to your [Doofinder](http://www.doofinder.com) Search Engines and display the results in your website. You'll be able to retrieve and shape your data easily with it.
 
 ## Summary
 
@@ -15,6 +16,7 @@ This library allows you to make requests to [Doofinder](http://www.doofinder.com
 		* [ScrollResults](#widgetsscrollresults)
 		* [TermFacet](#widgetstermfacet)
 		* [RangeFacet](#widgetsrangefacet)
+    * [FacetPanel](#widgetsfacetpanel)
 	* [Client](#client)
 * [Examples](#examples)
   * [Example 1: Create a simple template to show results.](#example-1-create-a-simple-template-to-show-results)
@@ -109,17 +111,17 @@ Controller is the class that manages client and widgets. Allows you to make diff
 
   Argument | Required | Type | Description
   -------- | -------- |---- | ---------------------
-  client   | Yes | `doofinder.Client` | The Search API wrapper
-  widgets  | Yes | `doofinder.Widget` `Array(doofinder.Widget)` | Array of widgets for interacting and rendering the results
-  searchParameters | No | `Object` | An object with params that will passed to the client for every search. You can use here all the parameters defined in [Doofinder Search API](https://www.doofinder.com/support/developer/api/search-api).
+  `client`   | Yes | `doofinder.Client` | The Search API wrapper
+  `widgets`  | Yes | `doofinder.Widget` `Array(doofinder.Widget)` | Array of widgets for interacting and rendering the results
+  `searchParameters` | No | `Object` | An object with params that will passed to the client for every search. You can use here all the parameters defined in [Doofinder Search API](https://www.doofinder.com/support/developer/api/search-api).
 
 #### search
 This method makes a query to the Search API and renders the results into the widgets.
 
   Argument | Required | Type | Description
   -------- | -------- | ---- | ---------------------
-  query    | Yes  | `String` | The query terms.
-  params   | No  | `Object` | An object with search parameters. You can use here all the parameters defined in [Doofinder Search API](https://www.doofinder.com/support/developer/api/search-api).
+  `query`    | Yes  | `String` | The query terms.
+  `params`   | No  | `Object` | An object with search parameters. You can use here all the parameters defined in [Doofinder Search API](https://www.doofinder.com/support/developer/api/search-api).
 
 #### nextPage
 Asks for the next page of the previous search done, and sends the response to all widgets to render it.
@@ -129,38 +131,38 @@ Asks for a concrete page. Then pass the response to all widgets to render it.
 
   Argument | Required  | Type | Description
   -------- | -------- | ---- | ---------------------
-  page     | Yes  | `Number` | The page requested
+  `page`     | Yes  | `Number` | The page requested
 
 #### addFilter
 Adds a filter to the currently applied in the search.
 
   Argument | Required | Type | Description
   -------- | -------- | ---- | ---------------------
-  facet  | Yes | `String` | The name of the facet.
-  value | Yes |`String` `Object` | The value the facet should have. This can be a `String`, if the facet is a term facet or an `Object` if it's a range.
+  `facet`  | Yes | `String` | The name of the facet.
+  `value` | Yes |`String` `Object` | The value the facet should have. This can be a `String`, if the facet is a term facet or an `Object` if it's a range.
 
 #### removeFilter
 Removes a filter from the currently applied.
 
   Argument | Required | Type | Description
   -------- | -------- | ---- | ---------------------
-  facet | Yes | `String` | The name of the facet.
-  value | Yes |`String` `Object` | The value of the facet. This can be a `String`, if the facet is a term facet or an `Object` if it's a range.
+  `facet` | Yes | `String` | The name of the facet.
+  `value` | Yes |`String` `Object` | The value of the facet. This can be a `String`, if the facet is a term facet or an `Object` if it's a range.
 
 #### addParam
 Adds new search parameter to the current status.
 
  Argument | Required | Type | Description
  -------- | -------- | ---- | ---------------------
- param  | Yes | `String` | The name of the param.
- value | Yes |`Mixed` | The value of the param.
+ `param`  | Yes | `String` | The name of the param.
+ `value` | Yes |`Mixed` | The value of the param.
 
 #### clearParam
 Removes a parameter from the current status.
 
 Argument | Required | Type | Description
 -------- | -------- | ---- | ---------------------
-param  | Yes | `String` | The name of the param.
+`param`  | Yes | `String` | The name of the param.
 
 #### reset
 Gets the params to the initial state.
@@ -170,8 +172,8 @@ Sets a param for every query.
 
 Argument | Required | Type | Description
 -------- | -------- | ---- | ---------------------
-param  | Yes | `String` | The name of the param.
-value | Yes |`Mixed` | The value of the param.
+`param`  | Yes | `String` | The name of the param.
+`value` | Yes |`Mixed` | The value of the param.
 
 
 #### refresh
@@ -182,18 +184,20 @@ Adds a widget to the controller after the instantiation.
 
  Argument | Required | Type | Description
  -------- | --------- |---- | ---------------------
-  widget |  Yes |`doofinder.Widget` | The widget to add.
+  `widget` |  Yes |`doofinder.Widget` | The widget to add.
 
 #### bind
+
 This method adds a callback to an event triggered from the controller. Events are triggered from the controller when a query is going to be done or when results are received.
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function which receives the API Search response.
+`event` |  Yes | `String` | The event name.
+`callback` | Yes | `Function` | The function which receives the API Search response.
 
 The events you can bind to a widget are the described below. Note that each event sends different arguments to the callback in order to implement it properly.
 
+#### Events
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
@@ -217,26 +221,26 @@ Sends a request to the Search API in order to account the sessions in your Searc
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
-sessionId |  Yes | `String` | A session identifier
-callback | No | `Function` | Receives two args: `err` and `response`
+`sessionId` |  Yes | `String` | A session identifier
+`callback` | No | `Function` | Receives two args: `err` and `response`
 
 #### registerClick
 Sends a request to the Search API in order to account the clicks for a product.
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
-id |  Yes | `String` | Unique identifier of the item in the datafeed
-options | No | `Object` | Additional options like `sessionId` (default `"session_id"`), `query` (default `""`), `datatype` (default `"product"`)
-callback | No | `Function` | Receives two args: `err` and `response`
+`id` |  Yes | `String` | Unique identifier of the item in the datafeed
+`options` | No | `Object` | Additional options like `sessionId` (default `"session_id"`), `query` (default `""`), `datatype` (default `"product"`)
+`callback` | No | `Function` | Receives two args: `err` and `response`
 
 #### registerCheckout
 Sends a request to the Search API in order to account the sales for your SearchEngine.
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
-sessionId |  Yes | `String` | A session identifier.
-options | No | `Object` | Additional options like `query`
-callback | No | `Function` | Receives two args: `err` and `response`
+`sessionId` |  Yes | `String` | A session identifier.
+`options` | No | `Object` | Additional options like `query`
+`callback` | No | `Function` | Receives two args: `err` and `response`
 
 
 ### options
@@ -272,65 +276,123 @@ Sends a request to the Search API in order to receive server configuration. The 
 
 ```
 
-
 ### Widget
+
 Widgets are visual elements that take part into the search. They can be search inputs, places where display the results, places to put the facets, etc.
+
 The events you can bind in widget depend on the widget you are instantiating. Above we'll describe all the available widget and theirs correponding events.
 
-
 ### widgets.QueryInput
+
 This widget triggers searches when a user types on it.
 
 #### constructor
 
 Argument | Required | Type | Description
 -------- | --------- | ---- | ---------------------
-selector |  Yes | `String` | Input CSS selector.
-options |  No | `Object` | Options to configure the input.
+`selector` |  Yes | `String` | Input CSS selector.
+`options` |  No | `Object` | Options to configure the input.
 
 The options to configure the input are:
 
 Option | Type | Description
 ------ |  ---- |  --------------
-wait | `Number` | milliseconds that the widget waits to check the input content length.
-captureLength | `Number` | number of Requireds typed when first search is performed
-typingTimeout | `Number` | number of milliseconds the `QueryInput` waits from the user's last character typed till trigger `df:typing_stopped`.
+`wait` | `Number` | milliseconds that the widget waits to check the input content length.
+`captureLength` | `Number` | number of Requireds typed when first search is performed
+`typingTimeout` | `Number` | number of milliseconds the `QueryInput` waits from the user's last character typed till trigger `df:typing_stopped`.
+`clean` | `Boolean` | If `true`, the input is cleared when the `clean()` method is invoked. Otherwise the input retains its value until the user cleans it.
+
+#### bind
+
+This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The event name.
+callback | Yes | `Function` | The function which receives the API Search response.
+
+#### one
+Does the same as the `bind` method but the callback is executed only once.
+
+#### off
+Removes an event listener previously defined with `bind`.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The event name.
+callback | Yes | `Function` | The function passed to `bind`.
+
+#### trigger
+Triggers an event in the widget instance.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The event name.
+callback | Yes | `Function` | The function passed to `bind`.
+
+#### Events
 
 The events you can bind to a `widgets.QueryInput` are:
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-df:typing_stopped   | <ul><li>query `String`: the query in the input.</li></ul> | This event is triggered when the user has stopped to type for a while (`typingTimeout` property, one second by default).
+`df:typing_stopped`   | <ul><li>query `String`: the query in the input.</li></ul> | This event is triggered when the user has stopped to type for a while (`typingTimeout` property, one second by default).
+`df:cleaned` | | This event is triggered when the input is cleaned (which happens when the `clean` option is `true`).
 
 ### widgets.Display
-This widget shows the results in a DOM node. When a new search or filter is done the new content will replace the older. This widget doesn't have paging.
+This widget renders the results in a DOM node. When a new search or filter is done the new content will replace the older. This widget doesn't have paging.
 
 #### constructor
 
 Argument | Required | Type | Description
 -------- | --------- | ---- | ---------------------
-container |  Yes | `String` | Results container CSS selector.
-options |  No | `Object` | Options to configure the input.
+`container` |  Yes | `String` | Results container CSS selector.
+`template` | Yes | `String` | Template to shape the response into HTML.
+`options` |  No | `Object` | Options to configure the widget.
+
+##### Options
 
 Option | Type | Description
 ------ |  ---- |  --------------
-template | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
-templateVars | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
-templateFunctions | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
+`template` | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
+`templateVars` | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
+`templateFunctions` | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
 
 #### bind
 This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
-event |  Yes | `String` | The query terms.
+event |  Yes | `String` | The event name.
 callback | Yes | `Function` | The function which receives the API Search response.
+
+#### one
+Does the same as the `bind` method but the callback is executed only once.
+
+#### off
+Removes an event listener previously defined with `bind`.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The event name.
+callback | Yes | `Function` | The function passed to `bind`.
+
+#### trigger
+Triggers an event in the widget instance.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The event name.
+callback | Yes | `Function` | The function passed to `bind`.
+
+#### Events
 
 The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-df:rendered   | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
+`df:rendered` | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
+`df:cleaned` | | This event is triggered when the widget is cleaned.
 
 As an example, we'll print in the console the total results in the `df:rendered` event.
 
@@ -342,36 +404,61 @@ results.bind('df:rendered', function(event, res){
 ```
 
 ### widgets.Results
+
+**Extends:** `widgets.Display`. You can use `bind`, `one`, `off` and `trigger` and listen to `df:rendered` and `df:cleaned`.
+
 This widget shows the results in a DOM node. When a new search or filter is done or a new page is requested the new content will replace the older.
 
 #### constructor
 
 Argument | Required | Type | Description
 -------- | --------- | ---- | ---------------------
-container |  Yes | `String` | Results container CSS selector.
-options |  No | `Object` | Options to configure the input.
+`container` |  Yes | `String` | Results container CSS selector.
+`options` |  No | `Object` | Options to configure the widget.
 
 The options to configure the widget are:
 
 Option | Type | Description
 ------ |  ---- |  --------------
-template | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
-templateVars | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
-templateFunctions | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
+`template` | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
+`templateVars` | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
+`templateFunctions` | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
 
 #### bind
 This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
 
 Argument | Required | Type | Description
 -------- | --------- |---- | ---------------------
-event |  Yes | `String` | The query terms.
+event |  Yes | `String` | The event name.
 callback | Yes | `Function` | The function which receives the API Search response.
+
+#### one
+Does the same as the `bind` method but the callback is executed only once.
+
+#### off
+Removes an event listener previously defined with `bind`.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The event name.
+callback | Yes | `Function` | The function passed to `bind`.
+
+#### trigger
+Triggers an event in the widget instance.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The event name.
+callback | Yes | `Function` | The function passed to `bind`.
+
+#### Events
 
 The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-df:rendered   | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
+`df:rendered` | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
+`df:cleaned` | | This event is triggered when the widget is cleaned.
 
 As an example, we'll print in the console the total results in the `df:rendered` event.
 
@@ -384,23 +471,25 @@ results.bind('df:rendered', function(event, res){
 
 ### widgets.ScrollResults
 
+**Extends:** `widgets.Display`. You can use `bind`, `one`, `off` and `trigger` and listen to `df:rendered` and `df:cleaned`.
+
 This widget render the results in an DOM node with an inner scroll. So the next page will be requested when scroll reaches the bottom.
 
 #### constructor
 
 Argument | Required | Type | Description
 -------- | --------- | ---- | ---------------------
-container |  Yes | `String` | Results container CSS selector.
-options |  No | `Object` | Options to configure the input.
+`container` |  Yes | `String` | Results container CSS selector.
+`options` |  No | `Object` | Options to configure the widget.
 
-The options to configure the widget are:
+##### Options
 
 Option | Type | Description
 ------ |  ---- |  --------------
-template | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
-templateVars | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
-templateFunctions | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
-scrollOffset | `Number` | Distance in pixels to the bottom in scroll when next page is requested. Default 50.
+`template` | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
+`templateVars` | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
+`templateFunctions` | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
+`scrollOffset` | `Number` | Distance in pixels to the bottom in scroll when next page is requested. Default 50.
 
 There is some CSS you have to add to your container in order to make the inner scroll to work properly:
 
@@ -411,6 +500,7 @@ There is some CSS you have to add to your container in order to make the inner s
   overflow: auto;
 }
 ```
+
 In the example above `#container` could be your scroll container selector and the height can be set to the value you prefer.
 
 #### bind
@@ -421,11 +511,33 @@ Argument | Required | Type | Description
 event |  Yes | `String` | The event name.
 callback | Yes | `Function` | The function which receives the API Search response.
 
+#### one
+Does the same as the `bind` method but the callback is executed only once.
+
+#### off
+Removes an event listener previously defined with `bind`.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The event name.
+callback | Yes | `Function` | The function passed to `bind`.
+
+#### trigger
+Triggers an event in the widget instance.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The event name.
+callback | Yes | `Function` | The function passed to `bind`.
+
+#### Events
+
 The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-df:rendered   | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
+`df:rendered` | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
+`df:cleaned` | | This event is triggered when the widget is cleaned.
 
 As an example, we'll print in the console the total results in the `df:rendered` event.
 
@@ -438,23 +550,25 @@ results.bind('df:rendered', function(event, res){
 
 ### widgets.TermFacet
 
+**Extends:** `widgets.Display`. You can use `bind`, `one`, `off` and `trigger` and listen to `df:rendered` and `df:cleaned`.
+
 This widget render a term facet in a list of terms.
 
 #### constructor
 
 Argument | Required | Type | Description
 -------- | --------- | ---- | ---------------------
-container |  Yes | `String` | Results container CSS selector.
-name | Yes | `String`| The facet key.
-options |  No | `Object` | Options to configure the input.
+`container` |  Yes | `String` | Results container CSS selector.
+`name` | Yes | `String`| The facet key.
+`options` |  No | `Object` | Options to configure the widget.
 
-The options to configure the widget are:
+##### Options
 
 Option | Type | Description
 ------ |  ---- |  --------------
-template | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
-templateVars | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
-templateFunctions | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
+`template` | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
+`templateVars` | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
+`templateFunctions` | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
 
 #### bind
 This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
@@ -464,11 +578,33 @@ Argument | Required | Type | Description
 event |  Yes | `String` | The event name.
 callback | Yes | `Function` | The function which receives the API Search response.
 
+#### one
+Does the same as the `bind` method but the callback is executed only once.
+
+#### off
+Removes an event listener previously defined with `bind`.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The event name.
+callback | Yes | `Function` | The function passed to `bind`.
+
+#### trigger
+Triggers an event in the widget instance.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The event name.
+callback | Yes | `Function` | The function passed to `bind`.
+
+#### Events
+
 The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-df:rendered   | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the facet is rendered.
+`df:rendered` | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
+`df:cleaned` | | This event is triggered when the widget is cleaned.
 
 As an example, we'll print in the console the total results in the `df:rendered` event.
 
@@ -481,6 +617,8 @@ facet.bind('df:rendered', function(event, res){
 
 ### widgets.RangeFacet
 
+**Extends:** `widgets.Display`. You can use `bind`, `one`, `off` and `trigger` and listen to `df:rendered` and `df:cleaned`.
+
 This widget render a range facet in a slider. To show it properly is necessary some
 CSS. You can add this stylesheet:
 
@@ -490,19 +628,19 @@ https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.c
 
 Argument | Required | Type | Description
 -------- | --------- | ---- | ---------------------
-container |  Yes | `String` | Results container CSS selector.
-name | Yes | `String`| The facet key.
-options |  No | `Object` | Options to configure the input.
+`container` |  Yes | `String` | Results container CSS selector.
+`name` | Yes | `String`| The facet key.
+`options` |  No | `Object` | Options to configure the widget.
 
-The options to configure the widget are:
+##### Options
 
 Option | Type | Description
 ------ |  ---- |  --------------
-template | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
-templateVars | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
-templateFunctions | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
-sliderClassName | `String` | The CSS class of the node that holds the slider. It's injected into the template context.
-sliderOptions | `Object` | We use [noUiSlider](http://refreshless.com/nouislider) and this option holds the slider configuration. Due to a buggy pips support, if no `pips` option is found, the widget paints them itself. If the `pips` option is `false`, no pips are displayed. In any other case, noUiSlider is in charge of displaying them.
+`template` | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
+`templateVars` | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
+`templateFunctions` | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
+`sliderClassName`| `String` | The CSS class of the node that holds the slider. It's injected into the template context.
+`sliderOptions` | `Object` | We use [noUiSlider](http://refreshless.com/nouislider) and this option holds the slider configuration. Due to a buggy pips support, if no `pips` option is found, the widget paints them itself. If the `pips` option is `false`, no pips are displayed. In any other case, noUiSlider is in charge of displaying them.
 
 #### bind
 This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
@@ -512,11 +650,33 @@ Argument | Required | Type | Description
 event |  Yes | `String` | The event name.
 callback | Yes | `Function` | The function which receives the API Search response.
 
+#### one
+Does the same as the `bind` method but the callback is executed only once.
+
+#### off
+Removes an event listener previously defined with `bind`.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The event name.
+callback | Yes | `Function` | The function passed to `bind`.
+
+#### trigger
+Triggers an event in the widget instance.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The event name.
+callback | Yes | `Function` | The function passed to `bind`.
+
+#### Events
+
 The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-df:rendered   | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the facet is rendered.
+`df:rendered` | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
+`df:cleaned` | | This event is triggered when the widget is cleaned.
 
 As an example, we'll print in the console the total results in the `df:rendered` event.
 
@@ -526,6 +686,91 @@ facet.bind('df:rendered', function(event, res){
    console.log(res.total);
 });
 ```
+
+### widgets.FacetPanel
+
+**Extends:** `widgets.Display`. You can use `bind`, `one`, `off` and `trigger` and listen to `df:rendered` and `df:cleaned`.
+
+A panel that can contain a facet widget. Instead of replacing the HTML of its container, this widget appends itself to it.
+
+Use the `embedWidget` method to notify the panel about the widget to use to render itself.
+
+#### constructor
+
+Argument | Required | Type | Description
+-------- | --------- | ---- | ---------------------
+`container` |  Yes | `String` | Results container CSS selector.
+`options` |  No | `Object` | Options to configure the widget.
+
+##### Options
+
+Option | Type | Description
+------ |  ---- |  --------------
+`id` | `String` | Value for the `id` attribute of the panel. Optional. A random one will be generated if none provided.
+`template` | `String` | [Mustache](http://mustache.github.io/) template to paint the panel.
+`templateVars` | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
+`templateFunctions` | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
+`startHidden` | `Boolean` | `true` by default. If `true`, the panel is hidden until the embedded widget is rendered. This avoids weird looking empty panels in your layout. You can disable this option if your template takes this issue into account.
+`startCollapsed` | `Boolean` | `false` by default. If `true`, the panel is collapsed by default. Otherwise the content of the panel is displayed on rendering.
+
+##### Example
+
+```javascript
+var panel = new doofinder.widgets.FacetPanel(
+  document.getElementById('aside'), {
+    startCollapsed: true,
+    templateVars: {
+      name: "categories_facet"
+    }
+  }
+);
+controller.addWidget(panel);
+
+var facetWidget = new doofinder.widgets.TermFacet(
+  panel.contentElement,
+  facetName,
+  facetOptions
+);
+controller.addWidget(facetWidget);
+
+panel.embedWidget(facetWidget);
+```
+
+#### bind
+This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The event name.
+callback | Yes | `Function` | The function which receives the API Search response.
+
+#### one
+Does the same as the `bind` method but the callback is executed only once.
+
+#### off
+Removes an event listener previously defined with `bind`.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The event name.
+callback | Yes | `Function` | The function passed to `bind`.
+
+#### trigger
+Triggers an event in the widget instance.
+
+Argument | Required | Type | Description
+-------- | --------- |---- | ---------------------
+event |  Yes | `String` | The event name.
+callback | Yes | `Function` | The function passed to `bind`.
+
+#### Events
+
+The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
+
+Event Name | Callback Arguments | Description
+---------- | ------------------ | -----------
+`df:rendered` | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
+`df:cleaned` | | This event is triggered when the widget is cleaned.
 
 ### Client
 

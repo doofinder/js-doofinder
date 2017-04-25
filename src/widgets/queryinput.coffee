@@ -18,7 +18,7 @@ class QueryInput extends Widget
     super element, options
     @typingTimeout = @options.typingTimeout || 1000
     @eventsBound = false
-    @cleanInput = if @options.clean? then @options.clean else true # TODO: docs!!!
+    @cleanInput = if @options.clean? then @options.clean else true
 
   ###*
    * Initializes the object with a controller and attachs event handlers for
