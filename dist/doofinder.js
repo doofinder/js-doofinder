@@ -1169,7 +1169,7 @@ author: @ecoslado
       dfdom: require("./util/dfdom"),
       throttle: require("lodash.throttle"),
       http: require("./util/http"),
-      uid: require("./util/uniqueid")
+      uniqueId: require("./util/uniqueid")
     }
   };
 
@@ -1920,8 +1920,18 @@ author: @ecoslado
 }).call(this);
 
 },{}],10:[function(require,module,exports){
+
+/**
+ * Generates a UID of the given length.
+ *
+ * @param  {Number} length = 8  Length of the UID.
+ * @return {String}             Unique ID as a String.
+ */
+
 (function() {
-  module.exports = function(length) {
+  var uniqueId;
+
+  uniqueId = function(length) {
     var id;
     if (length == null) {
       length = 8;
@@ -1933,24 +1943,11 @@ author: @ecoslado
     return id.substr(0, length);
   };
 
+  module.exports = uniqueId;
+
 }).call(this);
 
 },{}],11:[function(require,module,exports){
-
-/*
-widget.coffee
-author: @ecoslado
-2015 11 10
- */
-
-
-/*
-Widget
-This class receives the search
-results and paint them in a container
-shaped by template
- */
-
 (function() {
   var $, Widget, bean;
 
@@ -1958,76 +1955,82 @@ shaped by template
 
   $ = require("./util/dfdom");
 
+
+  /**
+   * Base class for a Widget, a class that paints itself given a search response.
+   *
+   * A widget knows how to:
+   *
+   * - Render and clean itself.
+   * - Bind handlers to/trigger events on the main element node.
+   */
+
   Widget = (function() {
+
+    /**
+     * @param  {String|Node|DfDomElement} element   Container node.
+     * @param  {Object} @options = {}               Options for the widget.
+     */
     function Widget(element, options) {
       this.options = options != null ? options : {};
       this.setElement(element);
     }
+
+
+    /**
+     * Assigns the container element to the widget.
+     * @param  {String|Node|DfDomElement} element   Container node.
+     */
 
     Widget.prototype.setElement = function(element) {
       return this.element = ($(element)).first();
     };
 
 
-    /*
-    init
-    
-    This is the function where bind the
-    events to DOM elements. In Widget
-    is dummy. To be overriden.
+    /**
+     * Initializes the object. Intended to be extended in child classes.
+     * You will want to add your own event handlers here.
+     *
+     * @param  {Controller} controller Doofinder Search controller.
      */
 
     Widget.prototype.init = function(controller) {
-      return this.controller = controller;
+      this.controller = controller;
     };
 
 
-    /*
-    render
-    
-    This function will be called when search and
-    getPage function si called in controller.
-    In Widget is dummy. To be overriden.
-    
-    @param {Object} res
-    @api public
+    /**
+     * Called when the "first page" response for a specific search is received.
+     * Renders the widget with the data received.
+     *
+     * @param  {Object} res Search response.
      */
 
     Widget.prototype.render = function(res) {};
 
 
-    /*
-    renderMore
-    
-    This function will be called when nextPage
-    function si called in controller.
-    In Widget is dummy. To be overriden.
-    @param {Object} res
-    @api public
+    /**
+     * Called when subsequent (not "first-page") responses for a specific search
+     * are received. Renders the widget with the data received.
+     *
+     * @param  {Object} res Search response.
      */
 
     Widget.prototype.renderNext = function(res) {};
 
 
-    /*
-    clean
-    
-    This function clean the html in the widget.
-    In Widget is dummy. To be overriden.
-    
-    @api public
+    /**
+     * Cleans the widget. Intended to be overriden.
      */
 
     Widget.prototype.clean = function() {};
 
 
-    /*
-    one
-    
-    Method to add and event listener and the handler will only be executed once
-    @param {String} event
-    @param {Function} callback
-    @api public
+    /**
+     * Attachs a single-use event listener to the container element.
+     * @param  {String}   event    Event name.
+     * @param  {Function} callback Function that will be executed in response to
+     *                             the event.
      */
 
     Widget.prototype.one = function(event, callback) {
@@ -2035,13 +2038,13 @@ shaped by template
     };
 
 
-    /*
-    bind
-    
-    Method to add and event listener
-    @param {String} event
-    @param {Function} callback
-    @api public
+    /**
+     * Attachs an event listener to the container element.
+     * TODO(@carlosescri): Rename to "on" to unify.
+     *
+     * @param  {String}   event    Event name.
+     * @param  {Function} callback Function that will be executed in response to
+     *                             the event.
      */
 
     Widget.prototype.bind = function(event, callback) {
@@ -2049,13 +2052,11 @@ shaped by template
     };
 
 
-    /*
-    off
-    
-    Method to remove an event listener
-    @param {String} event
-    @param {Function} callback
-    @api public
+    /**
+     * Removes an event listener from the container element.
+     * @param  {String}   event    Event name.
+     * @param  {Function} callback Function that won't be executed anymore in
+     *                             response to the event.
      */
 
     Widget.prototype.off = function(event, callback) {
@@ -2072,16 +2073,22 @@ shaped by template
     @api public
      */
 
+
+    /**
+     * Triggers an event with the container element as the target of the event.
+     * @param  {String} event  Event name.
+     * @param  {Array}  params Array of parameters to be sent to the handler.
+     */
+
     Widget.prototype.trigger = function(event, params) {
       return this.element.trigger(event, params);
     };
 
 
-    /*
-    raiseError
-    
-    Method to raise a Doofinder error
-    @param {String} message
+    /**
+     * Throws an error that can be captured.
+     * @param  {String} message Error message.
+     * @throws {Error}
      */
 
     Widget.prototype.raiseError = function(message) {
@@ -2097,37 +2104,30 @@ shaped by template
 }).call(this);
 
 },{"./util/dfdom":4,"bean":21}],12:[function(require,module,exports){
-
-/*
-Display
-This class receives the search
-results and paint them in an element
-shaped by template. Every new page
-replaces the current content.
- */
-
 (function() {
   var Display, Widget, addHelpers, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  Widget = require('../widget');
+  Widget = require("../widget");
 
-  addHelpers = require("../util/helpers").addHelpers;
+  addHelpers = (require("../util/helpers")).addHelpers;
 
-  extend = require('extend');
+  extend = require("extend");
+
+
+  /**
+   * Widget that renders a search response within a given template.
+   */
 
   Display = (function(superClass) {
     extend1(Display, superClass);
 
 
-    /*
-    constructor
-    
-    @param {String} element
-    @param {String|Function} template
-    @param {Object} options
-    @api public
+    /**
+     * @param  {String|Node|DfDomElement} element  Container node.
+     * @param  {String}                   template Template to paint the response.
+     * @param  {Objects}                  options  Options for the widget.
      */
 
     function Display(element, template, options) {
@@ -2136,12 +2136,33 @@ replaces the current content.
         options = {};
       }
       this.mustache = require("mustache");
-      this.extraContext = options.templateVars;
+      this.extraContext = options.templateVars || {};
       Display.__super__.constructor.call(this, element, options);
     }
 
+
+    /**
+     * Adds more context to the search response.
+     *
+     * Adds:
+     *
+     * - extraContent (templateVars passed in the options or added later)
+     * - Extra parameters to add to the results links.
+     * - Currency options.
+     * - Translations.
+     * - Template Functions.
+     * - is_first: Indicates if this is a "first page" response.
+     * - is_last: Indicates if there's no next page for this search.
+     *
+     * @param  {Object} res Search response.
+     * @return {Object} Extended response.
+     */
+
     Display.prototype.addHelpers = function(res) {
       var context, ref, ref1;
+      if (res == null) {
+        res = {};
+      }
       context = addHelpers(extend(true, res, this.extraContext), this.options.urlParams, this.options.currency, this.options.translations, this.options.templateFunctions);
       return extend(true, context, {
         is_first: res.page === 1,
@@ -2150,14 +2171,12 @@ replaces the current content.
     };
 
 
-    /*
-    render
-    
-    Replaces the older results in element with
-    the given
-    
-    @param {Object} res
-    @api public
+    /**
+     * Called when the "first page" response for a specific search is received.
+     * Renders the widget with the data received, by replacing its content.
+     *
+     * @param {Object} res Search response.
+     * @fires Display#df:rendered
      */
 
     Display.prototype.render = function(res) {
@@ -2166,12 +2185,13 @@ replaces the current content.
     };
 
 
-    /*
-    renderNext
-    
-    Replaces old results with the new ones in the element
-    @param {Object} res
-    @api public
+    /**
+     * Called when subsequent (not "first-page") responses for a specific search
+     * are received. Renders the widget with the data received, by replacing its
+     * content.
+     *
+     * @param {Object} res Search response.
+     * @fires Display#df:rendered
      */
 
     Display.prototype.renderNext = function(res) {
@@ -2180,11 +2200,9 @@ replaces the current content.
     };
 
 
-    /*
-    clean
-    
-    Cleans the element's content.
-    @api public
+    /**
+     * Cleans the widget by removing all the HTML inside the container element.
+     * @fires Display#df:cleaned
      */
 
     Display.prototype.clean = function() {
@@ -2193,13 +2211,10 @@ replaces the current content.
     };
 
 
-    /*
-    addExtraContext
-    
-    Allows adding context dynamically.
-    @param {String} key
-    @param {Mixed} value
-    @api public
+    /**
+     * Adds extra context to be used when rendering a search response.
+     * @param {String} key   Name of the variable to be used in the template.
+     * @param {*}      value Value of the variable.
      */
 
     Display.prototype.addExtraContext = function(key, value) {
@@ -2209,11 +2224,11 @@ replaces the current content.
       return this.extraContext[key] = value;
     };
 
-    module.exports = Display;
-
     return Display;
 
   })(Widget);
+
+  module.exports = Display;
 
 }).call(this);
 
@@ -2229,13 +2244,20 @@ replaces the current content.
 
 
   /**
-   * Common behavior of a facet widget.
+   * Base class that represents a widget that renders a facet/filter control.
    */
 
   BaseFacet = (function(superClass) {
     extend1(BaseFacet, superClass);
 
     BaseFacet.defaultLabelTemplate = "{{label}}";
+
+
+    /**
+     * @param  {String|Node|DfDomElement} element  Container node.
+     * @param  {String} name    Name of the facet/filter.
+     * @param  {Object} options Options object. Empty by default.
+     */
 
     function BaseFacet(element, name, options) {
       var defaults;
@@ -2254,9 +2276,27 @@ replaces the current content.
       BaseFacet.__super__.constructor.call(this, element, options.template, options);
     }
 
+
+    /**
+     * Renders the label of the facet widget based on the given search response,
+     * within the configured label template.
+     *
+     * @param  {Object} res Search response.
+     * @return {String}     The rendered label.
+     */
+
     BaseFacet.prototype.renderLabel = function(res) {
       return this.mustache.render(this.options.labelTemplate, this.addHelpers(res));
     };
+
+
+    /**
+     * Called when subsequent (not "first-page") responses for a specific search
+     * are received. Usually not used in this kind of widgets. Here is overwritten
+     * to avoid strange behavior.
+     *
+     * @param {Object} res Search response.
+     */
 
     BaseFacet.prototype.renderNext = function(res) {};
 
@@ -2294,8 +2334,17 @@ replaces the current content.
 
     FacetPanel.defaultTemplate = "<div id=\"{{id}}\" data-role=\"panel\">\n  <a href=\"#\" data-role=\"panel-label\" data-toggle=\"panel\"></a>\n  <div data-role=\"panel-content\"></div>\n</div>";
 
+
+    /**
+     * @param  {String|Node|DfDomElement} element  Container node.
+     * @param  {Object} options Options object. Empty by default.
+     */
+
     function FacetPanel(element, options) {
       var defaults, uid;
+      if (options == null) {
+        options = {};
+      }
       uid = "df-panel-" + (uniqueId());
       defaults = {
         id: uid,
@@ -2308,7 +2357,7 @@ replaces the current content.
       };
       options = extend(true, defaults, options);
       FacetPanel.__super__.constructor.call(this, element, options.template, options);
-      this.element.append(this.mustache.render(this.template, this.addHelpers({})));
+      this.element.append(this.mustache.render(this.template, this.addHelpers()));
       this.setElement("#" + this.options.id);
       this.toggleElement = (this.element.find('[data-toggle="panel"]')).first();
       this.labelElement = (this.element.find('[data-role="panel-label"]')).first();
@@ -2316,8 +2365,16 @@ replaces the current content.
       this.clean();
     }
 
+
+    /**
+     * Initializes the object with a controller and attachs event handlers for
+     * this widget instance.
+     *
+     * @param  {Controller} controller Doofinder Search controller.
+     */
+
     FacetPanel.prototype.init = function(controller) {
-      this.controller = controller;
+      FacetPanel.__super__.init.apply(this, arguments);
       return this.toggleElement.on("click", (function(_this) {
         return function(e) {
           e.preventDefault();
@@ -2330,6 +2387,12 @@ replaces the current content.
       })(this));
     };
 
+
+    /**
+     * Adds a "single-use" event handler to react to the embedded widget rendering
+     * and then display the panel itself.
+     */
+
     FacetPanel.prototype.__waitForEmbeddedWidget = function() {
       var ref;
       return (ref = this.embeddedWidget) != null ? ref.one("df:rendered", ((function(_this) {
@@ -2339,13 +2402,29 @@ replaces the current content.
       })(this))) : void 0;
     };
 
+
+    /**
+     * Checks whether the panel is collapsed or not.
+     * @return {Boolean} `true` if the panel is collapsed, `false` otherwise.
+     */
+
     FacetPanel.prototype.isCollapsed = function() {
       return (this.element.attr("data-collapse")) != null;
     };
 
+
+    /**
+     * Collapses the panel to hide its content.
+     */
+
     FacetPanel.prototype.collapse = function() {
       return this.element.attr("data-collapse", "");
     };
+
+
+    /**
+     * Expands the panel to display its content.
+     */
 
     FacetPanel.prototype.expand = function() {
       return this.element.removeAttr("data-collapse");
@@ -2373,8 +2452,13 @@ replaces the current content.
 
 
     /**
+     * Called when the "first page" response for a specific search is received.
      * Renders the panel title with the label obtained from the embedded widget.
-     * @param  {Object} res Search response from the server.
+     * This method does not replace its own HTML code, only the HTML of specific
+     * parts.
+     *
+     * @param {Object} res Search response.
+     * @fires FacetPanel#df:rendered
      */
 
     FacetPanel.prototype.render = function(res) {
@@ -2384,7 +2468,27 @@ replaces the current content.
       }
     };
 
+
+    /**
+     * Called when subsequent (not "first-page") responses for a specific search
+     * are received. Disabled in this kind of widget.
+     *
+     * @param {Object} res Search response.
+     */
+
     FacetPanel.prototype.renderNext = function(res) {};
+
+
+    /**
+     * Cleans the widget by removing the HTML inside the label element. Also, if
+     * the panel starts hidden, it's hidden again. If the panel starts collapsed,
+     * it's collapsed again.
+     *
+     * WARNING: DON'T CALL `super()` here. We don't want the panel container to
+     * be reset!!!
+     *
+     * @fires FacetPanel#df:cleaned
+     */
 
     FacetPanel.prototype.clean = function() {
       this.labelElement.html("");
@@ -2409,20 +2513,6 @@ replaces the current content.
 }).call(this);
 
 },{"../../util/dfdom":4,"../../util/uniqueid":10,"../display":12,"extend":22}],15:[function(require,module,exports){
-
-/*
-rangefacet.coffee
-author: @ecoslado
-2015 11 10
- */
-
-
-/*
-RangeFacet
-This class receives a facet ranges and paint
-them. Manages the filtering.
- */
-
 (function() {
   var BaseFacet, RangeFacet, extend, noUiSlider,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -2434,28 +2524,30 @@ them. Manages the filtering.
 
   extend = require("extend");
 
+
+  /**
+   * Represents a range slider control to filter numbers within a range.
+   */
+
   RangeFacet = (function(superClass) {
     extend1(RangeFacet, superClass);
 
     RangeFacet.defaultTemplate = "<div class=\"{{sliderClassName}}\" data-facet=\"{{name}}\"></div>";
 
 
-    /*
-    Initializes the widget
-    
-    @param {String} container
-    @param {String|Function} template
-    @param {Object} options
-    
-    Apart from those inherited, this widget accepts these options:
-    
-    - sliderClassName {String} The CSS class of the node that holds the slider.
-    
-    IMPORTANT: Pips support is buggy so, if no sliderOptions.pips is found, the
-    widget paints them itself. If the sliderOptions.pips is false, no pips are
-    displayed. In any other case, noUiSlider is in charge of displaying them.
-    
-    @api public
+    /**
+     * Apart from inherited options, this widget accepts these options:
+     *
+     * - sliderClassName (String) The CSS class of the node that actually holds
+     *                            the slider.
+     *
+     * IMPORTANT: Pips support is buggy so, if no sliderOptions.pips is found, the
+     * widget paints them itself. If the sliderOptions.pips is false, no pips are
+     * displayed. In any other case, noUiSlider is in charge of displaying them.
+     *
+     * @param  {String|Node|DfDomElement} element  Container node.
+     * @param  {String} name    Name of the facet/filter.
+     * @param  {Object} options Options object. Empty by default.
      */
 
     function RangeFacet(element, name, options) {
@@ -2478,14 +2570,13 @@ them. Manages the filtering.
     }
 
 
-    /*
-    Renders the slider for the very first time.
-    
-    @param {Object} Slider options
-    @api private
+    /**
+     * Renders the slider for the very first time.
+     * @protected
+     * @param  {Object} options Slider options.
      */
 
-    RangeFacet.prototype._renderSlider = function(options) {
+    RangeFacet.prototype.__renderSlider = function(options) {
       var context, self;
       self = this;
       context = {
@@ -2522,7 +2613,19 @@ them. Manages the filtering.
     @api private
      */
 
-    RangeFacet.prototype._renderPips = function(values) {
+
+    /**
+     * Renders the slider's pips.
+     * @param  {Object} values Values for 0%, 50% and 100% pips:
+     *
+     *                         {
+     *                           0: 1,
+     *                           50: 2,
+     *                           100: 3
+     *                         }
+     */
+
+    RangeFacet.prototype.__renderPips = function(values) {
       var i, j, len, markerType, node, pip, pips, pos, ref, ref1, results, results1, value;
       pips = this.slider.querySelector('div.noUi-pips.noUi-pips-horizontal');
       if (pips === null) {
@@ -2558,7 +2661,15 @@ them. Manages the filtering.
       }
     };
 
-    RangeFacet.prototype._getRangeFromResponse = function(res) {
+
+    /**
+     * Gets a proper range for the slider given a search response.
+     * @protected
+     * @param  {Object} res Search response.
+     * @return {Object}     Object with `min` and `max` properties.
+     */
+
+    RangeFacet.prototype.__getRangeFromResponse = function(res) {
       var range, stats;
       stats = res.facets[this.name].range.buckets[0].stats;
       return range = {
@@ -2568,11 +2679,12 @@ them. Manages the filtering.
     };
 
 
-    /*
-    Paints the slider based on the received response.
-    
-    @param {Object} Response
-    @api public
+    /**
+     * Called when the "first page" response for a specific search is received.
+     * Renders the widget with the data received, by replacing its content.
+     *
+     * @param {Object} res Search response.
+     * @fires RangeFacet#df:rendered
      */
 
     RangeFacet.prototype.render = function(res) {
@@ -2583,7 +2695,7 @@ them. Manages the filtering.
         this.raiseError("RangeFacet: " + this.name + " facet is not a range facet");
       }
       self = this;
-      this.range = this._getRangeFromResponse(res);
+      this.range = this.__getRangeFromResponse(res);
       if (this.range.min === this.range.max) {
         this.slider = null;
         this.element.empty();
@@ -2619,7 +2731,7 @@ them. Manages the filtering.
           }
         }
         if (this.slider === null) {
-          this._renderSlider(options);
+          this.__renderSlider(options);
         } else {
           this.slider.noUiSlider.updateOptions(options);
         }
@@ -2629,14 +2741,21 @@ them. Manages the filtering.
             50: options.format.to((options.range.min + options.range.max) / 2.0),
             100: options.format.to(options.range.max)
           };
-          this._renderPips(values);
+          this.__renderPips(values);
         }
       }
-      return this.trigger('df:rendered', [res]);
+      return this.trigger("df:rendered", [res]);
     };
 
+
+    /**
+     * Cleans the widget by removing all the HTML inside the container element.
+     * Resets the `slider` property of the widget to remove any references to the
+     * slider and allowing garbage collection.
+     */
+
     RangeFacet.prototype.clean = function() {
-      RangeFacet.__super__.clean.call(this);
+      RangeFacet.__super__.clean.apply(this, arguments);
       return this.slider = null;
     };
 
@@ -2649,13 +2768,6 @@ them. Manages the filtering.
 }).call(this);
 
 },{"./basefacet":13,"extend":22,"nouislider":65}],16:[function(require,module,exports){
-
-/*
-termfacet.coffee
-author: @ecoslado
-2015 11 10
- */
-
 (function() {
   var $, BaseFacet, TermFacet, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -2668,10 +2780,9 @@ author: @ecoslado
   $ = require("../../util/dfdom");
 
 
-  /*
-  TermFacet
-  This class receives a facet terms and
-  paint them. Manages the filtering.
+  /**
+   * Represents a terms selector control to filter by the possible values of a
+   * text field.
    */
 
   TermFacet = (function(superClass) {
@@ -2684,6 +2795,14 @@ author: @ecoslado
     TermFacet.defaultLabelTemplate = "{{label}}{{#total_selected}} ({{total_selected}}){{/total_selected}}";
 
     TermFacet.defaultTemplate = "<ul>\n  {{#terms}}\n  <li>\n    <a href=\"#\" data-facet=\"{{name}}\" data-value=\"{{key}}\" {{#selected}}data-selected{{/selected}}>\n      {{ key }} <span>{{ doc_count }}</span>\n    </a>\n  </li>\n  {{/terms}}\n</ul>";
+
+
+    /**
+     * Initializes the object with a controller and attachs event handlers for
+     * this widget instance.
+     *
+     * @param  {Controller} controller Doofinder Search controller.
+     */
 
     TermFacet.prototype.init = function(controller) {
       TermFacet.__super__.init.apply(this, arguments);
@@ -2746,8 +2865,12 @@ author: @ecoslado
 
 
     /**
-     * Render a descriptive label for this facet given a search response.
-     * @param  {Object} res Results response from the server.
+     * Renders the label of the facet widget based on the given search response,
+     * within the configured label template. The number of selected terms is
+     * passed to the context so it can be used in the template.
+     *
+     * @param  {Object} res Search response.
+     * @return {String}     The rendered label.
      */
 
     TermFacet.prototype.renderLabel = function(res) {
@@ -2755,6 +2878,15 @@ author: @ecoslado
         total_selected: this.countSelectedTerms(res)
       }));
     };
+
+
+    /**
+     * Called when the "first page" response for a specific search is received.
+     * Renders the widget with the data received, by replacing its content.
+     *
+     * @param {Object} res Search response.
+     * @fires TermFacet#df:rendered
+     */
 
     TermFacet.prototype.render = function(res) {
       var context, i, index, len, ref, ref1, ref2, ref3, selectedTerms, term, totalSelected;
@@ -2789,8 +2921,7 @@ author: @ecoslado
           name: this.name,
           terms: res.facets[this.name].terms.buckets
         }, this.extraContext || {});
-        this.addHelpers(context);
-        this.element.html(this.mustache.render(this.template, context));
+        this.element.html(this.mustache.render(this.template, this.addHelpers(context)));
       } else {
         this.element.html("");
       }
@@ -2806,47 +2937,31 @@ author: @ecoslado
 }).call(this);
 
 },{"../../util/dfdom":4,"./basefacet":13,"extend":22}],17:[function(require,module,exports){
-
-/*
-queryinput.coffee
-author: @ecoslado
-2015 11 21
- */
-
 (function() {
   var QueryInput, Widget, dfTypeWatch, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  extend = require('extend');
+  extend = require("extend");
 
-  Widget = require('../widget');
+  Widget = require("../widget");
 
-  dfTypeWatch = require('../util/dftypewatch');
+  dfTypeWatch = require("../util/dftypewatch");
 
 
-  /*
-  QueryInput
-  
-  This class gets the query and
-  calls controller's search method.
-  Gets the string from an input when
-  receives more than given number of
-  characters (3 by default).
+  /**
+   * Represents a search input. This widget gets the search terms and calls the
+   * controller's search method. Certain minimum number of characters are needed
+   * to trigger search but the value is configurable.
    */
 
   QueryInput = (function(superClass) {
     extend1(QueryInput, superClass);
 
 
-    /*
-    constructor
-    
-    Just to set the queryInput
-    
-    @param {String} queryInput
-    @param {Object} options
-    @api public
+    /**
+     * @param  {String|Node|DfDomElement} element  The search input element.
+     * @param  {Object} options Options object. Empty by default.
      */
 
     function QueryInput(element, options) {
@@ -2860,12 +2975,15 @@ author: @ecoslado
     }
 
 
-    /*
-    start
-    
-    This is the function where bind the
-    events to DOM elements.
-    @api public
+    /**
+     * Initializes the object with a controller and attachs event handlers for
+     * this widget instance. A QueryInput widget can be used by more than one
+     * controller (is an input widget, so it doesn't render results).
+     *
+     * TODO(@carlosescri): Seems that is not clear how the assignment works and
+     * only the first controller is being notified when the user stops typing...
+     *
+     * @param  {Controller} controller Doofinder Search controller.
      */
 
     QueryInput.prototype.init = function(controller) {
@@ -2902,9 +3020,17 @@ author: @ecoslado
       }
     };
 
+
+    /**
+     * If the widget is configured to be cleaned, empties the value of the input
+     * element.
+     * @fires QueryInput#df:cleaned
+     */
+
     QueryInput.prototype.clean = function() {
       if (this.cleanInput) {
-        return this.element.val('');
+        this.element.val('');
+        return this.trigger("df:cleaned");
       }
     };
 
@@ -3033,23 +3159,6 @@ replaces the current content.
 }).call(this);
 
 },{"../scrolldisplay":20}],20:[function(require,module,exports){
-
-/*
-scrolldisplay.coffee
-author: @ecoslado
-2015 11 10
- */
-
-
-/*
-ScrollDisplay
-This class receives the search
-results and paint them in a container
-shaped by template. Ask for a new page
-when scroll in wrapper reaches the
-bottom
- */
-
 (function() {
   var $, Display, ScrollDisplay, dfScroll, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3063,35 +3172,40 @@ bottom
 
   $ = require('../util/dfdom');
 
+
+  /**
+   * Displays results by appending subsequent pages for the same search instead of
+   * replacing them, and requests next pages when the user reaches the end of the
+   * last page rendered.
+   */
+
   ScrollDisplay = (function(superClass) {
     extend1(ScrollDisplay, superClass);
 
 
-    /*
-    constructor
-    
-    just assign wrapper property for scrolling and
-    calls super constructor.
-    
-    @param {String} element
-    @param {String|Function} template
-    @param {Object} extraOptions
-    
-    options =
-      scrollOffset: 200
-      contentNode: "Node that holds the results => this.element"
-      contentWrapper: "Node that is used for the scroll instead of the first "
-                      "child of the container"
-    
-    elementWrapper
-     -------------------
-    |  contentWrapper  ^|
-    |  --------------- !|
-    | | element       |!|
-    | |  ------------ |!|
-    | | |   items    ||!|
-    
-    @api public
+    /**
+     * Options:
+     *
+     * - scrollOffset: 200
+     * - contentNode: Node that holds the results will become the container
+     *   element of the widget.
+     * - contentWrapper: Node that is used for scrolling instead of the first
+     *   child of the container.
+     *
+     *  elementWrapper
+     *  -------------------
+     * |  contentWrapper  ^|
+     * |  --------------- !|
+     * | |  element      |!|
+     * | |  ------------ |!|
+     * | | |  items     ||!|
+     *
+     * TODO(@carlosescri): Document this better!!!
+     *
+     * @param  {[type]} element  [description]
+     * @param  {[type]} template [description]
+     * @param  {[type]} options  [description]
+     * @return {[type]}          [description]
      */
 
     function ScrollDisplay(element, template, options) {
@@ -3133,29 +3247,30 @@ bottom
     }
 
 
-    /*
-    start
-    
-    This is the function where bind the
-    events to DOM elements.
+    /**
+     * Initializes the object with a controller and attachs event handlers for
+     * this widget instance.
+     *
+     * @param  {Controller} controller Doofinder Search controller.
      */
 
     ScrollDisplay.prototype.init = function(controller) {
-      var self;
-      ScrollDisplay.__super__.init.call(this, controller);
-      self = this;
-      return this.controller.bind('df:search df:refresh', function(params) {
-        return self.elementWrapper.scrollTop(0);
-      });
+      ScrollDisplay.__super__.init.apply(this, arguments);
+      return this.controller.bind('df:search df:refresh', (function(_this) {
+        return function(params) {
+          return _this.elementWrapper.scrollTop(0);
+        };
+      })(this));
     };
 
 
-    /*
-    renderNext
-    
-    Appends results to the older in container
-    @param {Object} res
-    @api public
+    /**
+     * Called when subsequent (not "first-page") responses for a specific search
+     * are received. Renders the widget with the data received, by appending
+     * content after the last content received.
+     *
+     * @param {Object} res Search response.
+     * @fires ScrollDisplay#df:rendered
      */
 
     ScrollDisplay.prototype.renderNext = function(res) {

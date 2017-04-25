@@ -27,4 +27,4 @@ module.exports =
     dfdom: require "./util/dfdom"
     throttle: require "lodash.throttle"
     http: require "./util/http"
-    uid: require "./util/uniqueid"
+    uniqueId: require "./util/uniqueid"
