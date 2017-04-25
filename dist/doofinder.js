@@ -2188,7 +2188,8 @@ replaces the current content.
      */
 
     Display.prototype.clean = function() {
-      return this.element.html("");
+      this.element.html("");
+      return this.trigger("df:cleaned");
     };
 
 
@@ -2299,6 +2300,7 @@ replaces the current content.
       defaults = {
         id: uid,
         template: this.constructor.defaultTemplate,
+        startHidden: true,
         startCollapsed: false,
         templateVars: {
           id: options.id || uid
@@ -2308,12 +2310,10 @@ replaces the current content.
       FacetPanel.__super__.constructor.call(this, element, options.template, options);
       this.element.append(this.mustache.render(this.template, this.addHelpers({})));
       this.setElement("#" + this.options.id);
-      if (this.options.startCollapsed) {
-        this.collapse();
-      }
       this.toggleElement = (this.element.find('[data-toggle="panel"]')).first();
       this.labelElement = (this.element.find('[data-role="panel-label"]')).first();
       this.contentElement = (this.element.find('[data-role="panel-content"]')).first();
+      this.clean();
     }
 
     FacetPanel.prototype.init = function(controller) {
@@ -2330,6 +2330,15 @@ replaces the current content.
       })(this));
     };
 
+    FacetPanel.prototype.__waitForEmbeddedWidget = function() {
+      var ref;
+      return (ref = this.embeddedWidget) != null ? ref.one("df:rendered", ((function(_this) {
+        return function() {
+          return _this.element.css("display", "inherit");
+        };
+      })(this))) : void 0;
+    };
+
     FacetPanel.prototype.isCollapsed = function() {
       return (this.element.attr("data-collapse")) != null;
     };
@@ -2344,7 +2353,10 @@ replaces the current content.
 
 
     /**
-     * Embeds one and only one widget into this panel content.
+     * Embeds one and only one widget into this panel content. If the panel is
+     * rendered hidden (default), we listen for the first rendering of the
+     * embedded widget and then we display it.
+     *
      * @param  {Widget} embeddedWidget A (child) instance of `Widget`.
      */
 
@@ -2353,7 +2365,9 @@ replaces the current content.
         return this.raiseError("You can embed only one item on a `FacetPanel` instance.");
       } else {
         this.embeddedWidget = embeddedWidget;
-        return this.controller.addWidget(this.embeddedWidget);
+        if (this.options.startHidden) {
+          return this.__waitForEmbeddedWidget();
+        }
       }
     };
 
@@ -2372,7 +2386,19 @@ replaces the current content.
 
     FacetPanel.prototype.renderNext = function(res) {};
 
-    FacetPanel.prototype.clean = function() {};
+    FacetPanel.prototype.clean = function() {
+      this.labelElement.html("");
+      if (this.options.startHidden) {
+        this.element.css("display", "none");
+        this.__waitForEmbeddedWidget();
+      }
+      if (this.options.startCollapsed) {
+        this.collapse();
+      } else {
+        this.expand();
+      }
+      return this.trigger("df:cleaned");
+    };
 
     return FacetPanel;
 

@@ -65,8 +65,9 @@ class Display extends Widget
   Cleans the element's content.
   @api public
   ###
-  clean: () ->
+  clean: ->
     @element.html ""
+    @trigger "df:cleaned"
 
   ###
   addExtraContext

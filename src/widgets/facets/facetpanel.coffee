@@ -22,6 +22,7 @@ class FacetPanel extends Display
     defaults =
       id: uid
       template: @constructor.defaultTemplate
+      startHidden: true
       startCollapsed: false
       templateVars:
         id: options.id or uid
@@ -34,17 +35,22 @@ class FacetPanel extends Display
     # Once appended, change the @element reference to the panel itself instead
     # of the container.
     @setElement "##{@options.id}"
-    @collapse() if @options.startCollapsed
 
     # Initialize accessors to important nodes
     @toggleElement = (@element.find '[data-toggle="panel"]').first()
     @labelElement = (@element.find '[data-role="panel-label"]').first()
     @contentElement = (@element.find '[data-role="panel-content"]').first()
 
+    # Reset to finish initialization
+    @clean()
+
   init: (@controller) ->
     @toggleElement.on "click", (e) =>
       e.preventDefault()
       if @isCollapsed() then @expand() else @collapse()
+
+  __waitForEmbeddedWidget: ->
+    @embeddedWidget?.one "df:rendered", (=> @element.css "display", "inherit")
 
   isCollapsed: ->
     (@element.attr "data-collapse")?
@@ -56,7 +62,10 @@ class FacetPanel extends Display
     @element.removeAttr "data-collapse"
 
   ###*
-   * Embeds one and only one widget into this panel content.
+   * Embeds one and only one widget into this panel content. If the panel is
+   * rendered hidden (default), we listen for the first rendering of the
+   * embedded widget and then we display it.
+   *
    * @param  {Widget} embeddedWidget A (child) instance of `Widget`.
   ###
   embedWidget: (embeddedWidget) ->
@@ -64,7 +73,8 @@ class FacetPanel extends Display
       @raiseError "You can embed only one item on a `FacetPanel` instance."
     else
       @embeddedWidget = embeddedWidget
-      @controller.addWidget @embeddedWidget
+      if @options.startHidden
+        @__waitForEmbeddedWidget()
 
   ###*
    * Renders the panel title with the label obtained from the embedded widget.
@@ -77,7 +87,14 @@ class FacetPanel extends Display
 
   renderNext: (res) ->
 
-  clean: () ->
+  clean: ->
+    # Don't use `super()` here!!!
+    @labelElement.html ""
+    if @options.startHidden
+      @element.css "display", "none"
+      @__waitForEmbeddedWidget()
+    if @options.startCollapsed then @collapse() else @expand()
+    @trigger "df:cleaned"
 
 
 module.exports = FacetPanel
