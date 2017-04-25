@@ -1,56 +1,36 @@
-###
-rangefacet.coffee
-author: @ecoslado
-2015 11 10
-###
-
-###
-RangeFacet
-This class receives a facet ranges and paint
-them. Manages the filtering.
-###
-
-Display = require "../display"
+BaseFacet = require "./basefacet"
 noUiSlider = require "nouislider"
 extend = require "extend"
 
-class RangeFacet extends Display
 
+###*
+ * Represents a range slider control to filter numbers within a range.
+###
+class RangeFacet extends BaseFacet
+  @defaultTemplate: """<div class="{{sliderClassName}}" data-facet="{{name}}"></div>"""
+
+  ###*
+   * Apart from inherited options, this widget accepts these options:
+   *
+   * - sliderClassName (String) The CSS class of the node that actually holds
+   *                            the slider.
+   *
+   * IMPORTANT: Pips support is buggy so, if no sliderOptions.pips is found, the
+   * widget paints them itself. If the sliderOptions.pips is false, no pips are
+   * displayed. In any other case, noUiSlider is in charge of displaying them.
+   *
+   * @param  {String|Node|DfDomElement} element  Container node.
+   * @param  {String} name    Name of the facet/filter.
+   * @param  {Object} options Options object. Empty by default.
   ###
-  Initializes the widget
+  constructor: (element, name, options = {}) ->
+    super
 
-  @param {String} container
-  @param {String|Function} template
-  @param {Object} options
-
-  Apart from those inherited, this widget accepts these options:
-
-  - sliderClassName {String} The CSS class of the node that holds the slider.
-
-  IMPORTANT: Pips support is buggy so, if no sliderOptions.pips is found, the
-  widget paints them itself. If the sliderOptions.pips is false, no pips are
-  displayed. In any other case, noUiSlider is in charge of displaying them.
-
-  @api public
-  ###
-  constructor: (element, @name, options = {}) ->
     @sliderClassName = options.sliderClassName or 'df-slider'
     @sliderSelector =  ".#{@sliderClassName}[data-facet='#{@name}']"
 
-    if not options.template
-      template = """
-      <div class="df-panel" data-facet="{{name}}">
-        <a href="#" class="df-panel__title" data-toggle="panel">{{label}}</a>
-        <div class="df-panel__content">
-          <div class="{{sliderClassName}}" data-facet="{{name}}"></div>
-        </div>
-      </div>
-      """
-    else
-      template = options.template
-
-    if options.format
-      @format = options.format
+    if @options.format
+      @format = @options.format
     else
       @format = (value) ->
         value? and (value.toFixed(2) + '').replace(/0+$/, '').replace(/\.{1}$/, '')
@@ -59,15 +39,12 @@ class RangeFacet extends Display
     @values = {}
     @range = {}
 
-    super(element, template, options)
-
+  ###*
+   * Renders the slider for the very first time.
+   * @protected
+   * @param  {Object} options Slider options.
   ###
-  Renders the slider for the very first time.
-
-  @param {Object} Slider options
-  @api private
-  ###
-  _renderSlider: (options) ->
+  __renderSlider: (options) ->
     self = this
 
     # Build template context
@@ -109,7 +86,17 @@ class RangeFacet extends Display
   @param {Object} Values for 0%, 50% and 100% pips ({0: 1, 50: 2, 100: 3})
   @api private
   ###
-  _renderPips: (values) ->
+  ###*
+   * Renders the slider's pips.
+   * @param  {Object} values Values for 0%, 50% and 100% pips:
+   *
+   *                         {
+   *                           0: 1,
+   *                           50: 2,
+   *                           100: 3
+   *                         }
+  ###
+  __renderPips: (values) ->
     pips = @slider.querySelector('div.noUi-pips.noUi-pips-horizontal')
     if pips is null
       # create pips container
@@ -137,17 +124,24 @@ class RangeFacet extends Display
       for node in pips.querySelectorAll('div[data-position]')
         node.innerHTML = if values? then values[node.getAttribute('data-position')] else ''
 
-  _getRangeFromResponse: (res) ->
+  ###*
+   * Gets a proper range for the slider given a search response.
+   * @protected
+   * @param  {Object} res Search response.
+   * @return {Object}     Object with `min` and `max` properties.
+  ###
+  __getRangeFromResponse: (res) ->
     stats = res.facets[@name].range.buckets[0].stats
     range =
       min: parseFloat(stats.min || 0, 10)
       max: parseFloat(stats.max || 0, 10)
 
-  ###
-  Paints the slider based on the received response.
-
-  @param {Object} Response
-  @api public
+  ###*
+   * Called when the "first page" response for a specific search is received.
+   * Renders the widget with the data received, by replacing its content.
+   *
+   * @param {Object} res Search response.
+   * @fires RangeFacet#df:rendered
   ###
   render: (res) ->
     # Throws errors if prerrequisites are not accomplished.
@@ -158,7 +152,7 @@ class RangeFacet extends Display
 
     self = this
 
-    @range = @_getRangeFromResponse(res)
+    @range = @__getRangeFromResponse(res)
 
     if @range.min == @range.max
       # There's only one or no items with values in the range
@@ -194,7 +188,7 @@ class RangeFacet extends Display
         options.start[1] = start[1] unless isNaN start[1]
 
       if @slider is null
-        @_renderSlider options
+        @__renderSlider options
       else
         @slider.noUiSlider.updateOptions options
 
@@ -205,14 +199,18 @@ class RangeFacet extends Display
           0: options.format.to options.range.min
           50: options.format.to((options.range.min + options.range.max) / 2.0)
           100: options.format.to options.range.max
-        @_renderPips values
+        @__renderPips values
 
-    @trigger('df:rendered', [res])
+    @trigger "df:rendered", [res]
 
-  renderNext: ->
-
-  clean: () ->
-    super()
+  ###*
+   * Cleans the widget by removing all the HTML inside the container element.
+   * Resets the `slider` property of the widget to remove any references to the
+   * slider and allowing garbage collection.
+  ###
+  clean: ->
+    super
     @slider = null
+
 
 module.exports = RangeFacet

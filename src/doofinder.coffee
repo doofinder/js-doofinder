@@ -4,7 +4,7 @@ if not JSON.parse and JSON.decode
   JSON.parse = JSON.decode
 
 module.exports =
-  version: "5.0.1"
+  version: "5.0.2"
   Client: require "./client"
   Mustache: require "mustache"
   Widget: require "./widget"
@@ -14,8 +14,10 @@ module.exports =
     Results: require "./widgets/results/results"
     ScrollResults: require "./widgets/results/scrollresults"
     QueryInput: require "./widgets/queryinput"
+    BaseFacet: require "./widgets/facets/basefacet"
     TermFacet: require "./widgets/facets/termfacet"
     RangeFacet: require "./widgets/facets/rangefacet"
+    FacetPanel: require "./widgets/facets/facetpanel"
   util:
     md5: require "md5"
     qs: require "qs"
@@ -25,3 +27,4 @@ module.exports =
     dfdom: require "./util/dfdom"
     throttle: require "lodash.throttle"
     http: require "./util/http"
+    uniqueId: require "./util/uniqueid"

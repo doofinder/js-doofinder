@@ -309,7 +309,7 @@ describe 'Widget Tests:', ->
 
       termsWidget.bind 'df:rendered', (response) ->
         response.results.length.should.equal 2
-        termsContainer.find('.df-facet').length.should.equal 2
+        termsContainer.find('[data-facet="color"]').length.should.equal 2
         done()
 
       typeSearchTerms('pill')
