@@ -1960,7 +1960,7 @@ shaped by template
 
   Widget = (function() {
     function Widget(element, options) {
-      this.options = options;
+      this.options = options != null ? options : {};
       this.setElement(element);
     }
 
@@ -2141,11 +2141,11 @@ replaces the current content.
     }
 
     Display.prototype.addHelpers = function(res) {
-      var context;
+      var context, ref, ref1;
       context = addHelpers(extend(true, res, this.extraContext), this.options.urlParams, this.options.currency, this.options.translations, this.options.templateFunctions);
       return extend(true, context, {
         is_first: res.page === 1,
-        is_last: this.controller.status.lastPageReached
+        is_last: (ref = this.controller) != null ? (ref1 = ref.status) != null ? ref1.lastPageReached : void 0 : void 0
       });
     };
 
@@ -2269,7 +2269,7 @@ replaces the current content.
 
 },{"../display":12,"extend":22}],14:[function(require,module,exports){
 (function() {
-  var $, Display, FacetPanel, extend, uid,
+  var $, Display, FacetPanel, extend, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -2279,7 +2279,7 @@ replaces the current content.
 
   Display = require("../display");
 
-  uid = require("../../util/uniqueid");
+  uniqueId = require("../../util/uniqueid");
 
 
   /**
@@ -2294,17 +2294,19 @@ replaces the current content.
     FacetPanel.defaultTemplate = "<div id=\"{{id}}\" data-role=\"panel\">\n  <a href=\"#\" data-role=\"panel-label\" data-toggle=\"panel\"></a>\n  <div data-role=\"panel-content\"></div>\n</div>";
 
     function FacetPanel(element, options) {
-      var defaults;
+      var defaults, uid;
+      uid = "df-panel-" + (uniqueId());
       defaults = {
-        id: "df-panel-" + (uid()),
+        id: uid,
         template: this.constructor.defaultTemplate,
-        startCollapsed: false
+        startCollapsed: false,
+        templateVars: {
+          id: options.id || uid
+        }
       };
       options = extend(true, defaults, options);
       FacetPanel.__super__.constructor.call(this, element, options.template, options);
-      this.element.append(this.mustache.render(this.template, {
-        id: this.options.id
-      }));
+      this.element.append(this.mustache.render(this.template, this.addHelpers({})));
       this.setElement("#" + this.options.id);
       if (this.options.startCollapsed) {
         this.collapse();

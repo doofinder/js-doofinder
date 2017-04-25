@@ -16,7 +16,7 @@ $ = require "./util/dfdom"
 
 class Widget
 
-  constructor: (element, @options) ->
+  constructor: (element, @options = {}) ->
     @setElement element
 
   setElement: (element) ->

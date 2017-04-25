@@ -31,7 +31,7 @@ class Display extends Widget
       @options.currency,
       @options.translations,
       @options.templateFunctions
-    extend true, context, is_first: res.page == 1, is_last: @controller.status.lastPageReached
+    extend true, context, is_first: res.page == 1, is_last: @controller?.status?.lastPageReached
 
   ###
   render

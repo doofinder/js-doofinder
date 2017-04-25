@@ -1,7 +1,7 @@
 extend = require "extend"
 $ = require "../../util/dfdom"
 Display = require "../display"
-uid = require "../../util/uniqueid"
+uniqueId = require "../../util/uniqueid"
 
 
 ###*
@@ -18,16 +18,19 @@ class FacetPanel extends Display
   """
 
   constructor: (element, options) ->
+    uid = "df-panel-#{uniqueId()}"
     defaults =
-      id: "df-panel-#{uid()}"
+      id: uid
       template: @constructor.defaultTemplate
       startCollapsed: false
+      templateVars:
+        id: options.id or uid
     options = extend true, defaults, options
 
     super element, options.template, options
 
     # Render as soon as possible!
-    @element.append (@mustache.render @template, id: @options.id)
+    @element.append (@mustache.render @template, (@addHelpers {}))
     # Once appended, change the @element reference to the panel itself instead
     # of the container.
     @setElement "##{@options.id}"
