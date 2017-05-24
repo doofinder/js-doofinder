@@ -156,8 +156,7 @@ class RangeFacet extends BaseFacet
 
     if @range.min == @range.max
       # There's only one or no items with values in the range
-      @slider = null
-      @element.empty()
+      @clean()
     else
       # Update widget if any results found and there are range bounds
 
@@ -201,7 +200,7 @@ class RangeFacet extends BaseFacet
           100: options.format.to options.range.max
         @__renderPips values
 
-    @trigger "df:rendered", [res]
+      @trigger "df:rendered", [res]
 
   ###*
    * Cleans the widget by removing all the HTML inside the container element.
@@ -209,8 +208,8 @@ class RangeFacet extends BaseFacet
    * slider and allowing garbage collection.
   ###
   clean: ->
-    super
     @slider = null
+    super
 
 
 module.exports = RangeFacet

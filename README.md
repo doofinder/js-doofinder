@@ -603,8 +603,8 @@ The events you can bind in widget are the described above. Note that each event 
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-`df:rendered` | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
-`df:cleaned` | | This event is triggered when the widget is cleaned.
+`df:rendered` | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the widget is rendered (when there're terms to render, otherwise the widget will be cleaned).
+`df:cleaned` | | This event is triggered when the widget is cleaned (when there's no terms to render or when the `clean()` method is called in other circumstances).
 
 As an example, we'll print in the console the total results in the `df:rendered` event.
 
@@ -675,8 +675,8 @@ The events you can bind in widget are the described above. Note that each event 
 
 Event Name | Callback Arguments | Description
 ---------- | ------------------ | -----------
-`df:rendered` | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
-`df:cleaned` | | This event is triggered when the widget is cleaned.
+`df:rendered` | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the range slider is rendered.
+`df:cleaned` | | This event is triggered when the widget is cleared (the slider is not rendered because it doesn't make sense).
 
 As an example, we'll print in the console the total results in the `df:rendered` event.
 

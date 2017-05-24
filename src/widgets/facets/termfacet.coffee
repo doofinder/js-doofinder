@@ -103,7 +103,7 @@ class TermFacet extends BaseFacet
     else if not res.facets[@name].terms.buckets
       @raiseError "TermFacet: #{@name} facet is not a terms facet"
 
-    if res.results
+    if res.facets[@name].terms.buckets.length > 0
       selectedTerms = {}
       for term in (res.filter?.terms?[@name] or [])
         selectedTerms[term] = true
@@ -127,9 +127,8 @@ class TermFacet extends BaseFacet
         @extraContext || {}
 
       @element.html (@mustache.render @template, (@addHelpers context))
+      @trigger "df:rendered", [res]
     else
-      @element.html ""
-
-    @trigger "df:rendered", [res]
+      @clean()
 
 module.exports = TermFacet
