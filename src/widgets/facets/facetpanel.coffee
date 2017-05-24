@@ -63,13 +63,6 @@ class FacetPanel extends Display
       if @isCollapsed() then @expand() else @collapse()
 
   ###*
-   * Adds a "single-use" event handler to react to the embedded widget rendering
-   * and then display the panel itself.
-  ###
-  __waitForEmbeddedWidget: ->
-    @embeddedWidget?.one "df:rendered", (=> @element.css "display", "inherit")
-
-  ###*
    * Checks whether the panel is collapsed or not.
    * @return {Boolean} `true` if the panel is collapsed, `false` otherwise.
   ###
@@ -100,8 +93,10 @@ class FacetPanel extends Display
       @raiseError "You can embed only one item on a `FacetPanel` instance."
     else
       @embeddedWidget = embeddedWidget
-      if @options.startHidden
-        @__waitForEmbeddedWidget()
+      # auto-show when the embedded widget is rendered
+      @embeddedWidget.bind "df:rendered", (=> @element.css "display", "inherit")
+      # auto-hide when the embedded widget is cleaned
+      @embeddedWidget.bind "df:cleaned", (=> @element.css "display", "none")
 
   ###*
    * Called when the "first page" response for a specific search is received.
@@ -139,7 +134,6 @@ class FacetPanel extends Display
     @labelElement.html ""
     if @options.startHidden
       @element.css "display", "none"
-      @__waitForEmbeddedWidget()
     if @options.startCollapsed then @collapse() else @expand()
     @trigger "df:cleaned"
 

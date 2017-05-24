@@ -1145,7 +1145,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "5.0.2",
+    version: "5.0.3",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -2389,21 +2389,6 @@ author: @ecoslado
 
 
     /**
-     * Adds a "single-use" event handler to react to the embedded widget rendering
-     * and then display the panel itself.
-     */
-
-    FacetPanel.prototype.__waitForEmbeddedWidget = function() {
-      var ref;
-      return (ref = this.embeddedWidget) != null ? ref.one("df:rendered", ((function(_this) {
-        return function() {
-          return _this.element.css("display", "inherit");
-        };
-      })(this))) : void 0;
-    };
-
-
-    /**
      * Checks whether the panel is collapsed or not.
      * @return {Boolean} `true` if the panel is collapsed, `false` otherwise.
      */
@@ -2444,9 +2429,16 @@ author: @ecoslado
         return this.raiseError("You can embed only one item on a `FacetPanel` instance.");
       } else {
         this.embeddedWidget = embeddedWidget;
-        if (this.options.startHidden) {
-          return this.__waitForEmbeddedWidget();
-        }
+        this.embeddedWidget.bind("df:rendered", ((function(_this) {
+          return function() {
+            return _this.element.css("display", "inherit");
+          };
+        })(this)));
+        return this.embeddedWidget.bind("df:cleaned", ((function(_this) {
+          return function() {
+            return _this.element.css("display", "none");
+          };
+        })(this)));
       }
     };
 
@@ -2494,7 +2486,6 @@ author: @ecoslado
       this.labelElement.html("");
       if (this.options.startHidden) {
         this.element.css("display", "none");
-        this.__waitForEmbeddedWidget();
       }
       if (this.options.startCollapsed) {
         this.collapse();
@@ -2697,8 +2688,7 @@ author: @ecoslado
       self = this;
       this.range = this.__getRangeFromResponse(res);
       if (this.range.min === this.range.max) {
-        this.slider = null;
-        this.element.empty();
+        return this.clean();
       } else {
         options = {
           start: [this.range.min, this.range.max],
@@ -2743,8 +2733,8 @@ author: @ecoslado
           };
           this.__renderPips(values);
         }
+        return this.trigger("df:rendered", [res]);
       }
-      return this.trigger("df:rendered", [res]);
     };
 
 
@@ -2755,8 +2745,8 @@ author: @ecoslado
      */
 
     RangeFacet.prototype.clean = function() {
-      RangeFacet.__super__.clean.apply(this, arguments);
-      return this.slider = null;
+      this.slider = null;
+      return RangeFacet.__super__.clean.apply(this, arguments);
     };
 
     return RangeFacet;
@@ -2895,7 +2885,7 @@ author: @ecoslado
       } else if (!res.facets[this.name].terms.buckets) {
         this.raiseError("TermFacet: " + this.name + " facet is not a terms facet");
       }
-      if (res.results) {
+      if (res.facets[this.name].terms.buckets.length > 0) {
         selectedTerms = {};
         ref2 = ((ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.name] : void 0 : void 0) || [];
         for (i = 0, len = ref2.length; i < len; i++) {
@@ -2922,10 +2912,10 @@ author: @ecoslado
           terms: res.facets[this.name].terms.buckets
         }, this.extraContext || {});
         this.element.html(this.mustache.render(this.template, this.addHelpers(context)));
+        return this.trigger("df:rendered", [res]);
       } else {
-        this.element.html("");
+        return this.clean();
       }
-      return this.trigger("df:rendered", [res]);
     };
 
     return TermFacet;
