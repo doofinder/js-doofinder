@@ -34,7 +34,7 @@ class BaseFacet extends Display
    * @return {String}     The rendered label.
   ###
   renderLabel: (res) ->
-    @mustache.render @options.labelTemplate, @addHelpers res
+    @mustache.render @options.labelTemplate, @buildContext res
 
   ###*
    * Called when subsequent (not "first-page") responses for a specific search

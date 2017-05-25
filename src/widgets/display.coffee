@@ -1,5 +1,5 @@
 Widget = require "../widget"
-addHelpers = (require "../util/helpers").addHelpers
+buildHelpers = require "../util/helpers"
 extend = require "extend"
 
 
@@ -16,32 +16,28 @@ class Display extends Widget
   constructor: (element, @template, options = {}) ->
     @mustache = require "mustache"
     # TODO(@carlosescri): Remove @extraContext and use @options.templateVars!!!
-    @extraContext = options.templateVars or {}
+    @extraContext = {}
     super element, options
 
   ###*
-   * Adds more context to the search response.
-   *
-   * Adds:
-   *
-   * - extraContent (templateVars passed in the options or added later)
-   * - Extra parameters to add to the results links.
-   * - Currency options.
-   * - Translations.
-   * - Template Functions.
-   * - is_first: Indicates if this is a "first page" response.
-   * - is_last: Indicates if there's no next page for this search.
-   *
-   * @param  {Object} res Search response.
-   * @return {Object} Extended response.
+   * Adds extra context to the passed context object.
+   * @param  {Object} context = {}  Initial context (i.e: a search response).
+   * @return {Object}               Extended context.
   ###
-  addHelpers: (res = {}) ->
-    context = addHelpers (extend true, res, @extraContext),
-      @options.urlParams,
-      @options.currency,
-      @options.translations,
-      @options.templateFunctions
-    extend true, context, is_first: res.page == 1, is_last: @controller?.status?.lastPageReached
+  buildContext: (context = {}) ->
+    context = extend true,
+      context,
+      @options.templateVars,
+      @options.templateFunctions,
+      (is_first: context.page == 1, is_last: @controller?.status?.lastPageReached),
+      @extraContext
+
+    # Compose URL parameters from options and from the query (if configured)
+    urlParams = extend true, {}, (@options.urlParams or {})
+    if @options.queryParam
+      urlParams[@options.queryParam] = context.query or ""
+
+    buildHelpers context, urlParams, @options.currency, @options.translations
 
   ###*
    * Called when the "first page" response for a specific search is received.
@@ -51,7 +47,7 @@ class Display extends Widget
    * @fires Display#df:rendered
   ###
   render: (res) ->
-    @element.html (@mustache.render @template, @addHelpers res)
+    @element.html (@mustache.render @template, @buildContext res)
     @trigger "df:rendered", [res]
 
   ###*
@@ -63,7 +59,7 @@ class Display extends Widget
    * @fires Display#df:rendered
   ###
   renderNext: (res) ->
-    @element.html (@mustache.render @template, @addHelpers res)
+    @element.html (@mustache.render @template, @buildContext res)
     @trigger "df:rendered", [res]
 
   ###*
@@ -80,8 +76,6 @@ class Display extends Widget
    * @param {*}      value Value of the variable.
   ###
   addExtraContext: (key, value) ->
-    if @extraContext == undefined
-      @extraContext = {}
     @extraContext[key] = value
 
 
