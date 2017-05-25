@@ -1761,14 +1761,8 @@ author: @ecoslado
       },
       'translate': function() {
         return function(text, render) {
-          var key, keys;
-          key = render(text);
-          keys = Object.keys(translations);
-          if (translations && keys.indexOf(key) > -1) {
-            return translations[key];
-          } else {
-            return key;
-          }
+          text = render(text);
+          return translations[text] || text;
         };
       }
     };

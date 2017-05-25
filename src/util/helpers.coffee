@@ -48,11 +48,7 @@ module.exports = (context, parameters = {}, currency = null, translations = {}) 
 
     'translate': () ->
       (text, render) ->
-        key = render(text)
-        keys = Object.keys(translations)
-        if translations and keys.indexOf(key) > -1
-          return translations[key]
-        else
-          return key
+        text = render text
+        translations[text] or text
 
   extend context, helpers
