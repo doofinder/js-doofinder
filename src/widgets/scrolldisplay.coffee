@@ -91,7 +91,7 @@ class ScrollDisplay extends Display
   ###
   renderNext: (res) ->
     @pageRequested = false
-    @element.append (@mustache.render @template, @addHelpers res)
+    @element.append (@mustache.render @template, @buildContext res)
     @trigger "df:rendered", [res]
 
 

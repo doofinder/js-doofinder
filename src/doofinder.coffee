@@ -4,7 +4,7 @@ if not JSON.parse and JSON.decode
   JSON.parse = JSON.decode
 
 module.exports =
-  version: "5.0.3"
+  version: "5.0.4"
   Client: require "./client"
   Mustache: require "mustache"
   Widget: require "./widget"
@@ -28,3 +28,4 @@ module.exports =
     throttle: require "lodash.throttle"
     http: require "./util/http"
     uniqueId: require "./util/uniqueid"
+    buildHelpers: require "./util/helpers"

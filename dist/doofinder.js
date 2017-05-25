@@ -1145,7 +1145,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "5.0.3",
+    version: "5.0.4",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1169,13 +1169,14 @@ author: @ecoslado
       dfdom: require("./util/dfdom"),
       throttle: require("lodash.throttle"),
       http: require("./util/http"),
-      uniqueId: require("./util/uniqueid")
+      uniqueId: require("./util/uniqueid"),
+      buildHelpers: require("./util/helpers")
     }
   };
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./util/dfdom":4,"./util/http":8,"./util/introspection":9,"./util/uniqueid":10,"./widget":11,"./widgets/display":12,"./widgets/facets/basefacet":13,"./widgets/facets/facetpanel":14,"./widgets/facets/rangefacet":15,"./widgets/facets/termfacet":16,"./widgets/queryinput":17,"./widgets/results/results":18,"./widgets/results/scrollresults":19,"bean":21,"extend":22,"lodash.throttle":59,"md5":60,"mustache":64,"qs":66}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./util/dfdom":4,"./util/helpers":7,"./util/http":8,"./util/introspection":9,"./util/uniqueid":10,"./widget":11,"./widgets/display":12,"./widgets/facets/basefacet":13,"./widgets/facets/facetpanel":14,"./widgets/facets/rangefacet":15,"./widgets/facets/termfacet":16,"./widgets/queryinput":17,"./widgets/results/results":18,"./widgets/results/scrollresults":19,"bean":21,"extend":22,"lodash.throttle":59,"md5":60,"mustache":64,"qs":66}],4:[function(require,module,exports){
 
 /*
 dfdom.coffee
@@ -1692,12 +1693,21 @@ author: @ecoslado
  */
 
 (function() {
-  var addHelpers, extend;
+  var extend;
 
   extend = require("extend");
 
-  addHelpers = function(context, parameters, currency, translations, extraHelpers) {
+  module.exports = function(context, parameters, currency, translations) {
     var helpers;
+    if (parameters == null) {
+      parameters = {};
+    }
+    if (currency == null) {
+      currency = null;
+    }
+    if (translations == null) {
+      translations = {};
+    }
     if (!currency) {
       currency = {
         symbol: '&euro;',
@@ -1707,37 +1717,22 @@ author: @ecoslado
         precision: 2
       };
     }
-    if (!parameters) {
-      parameters = {
-        queryParam: '',
-        extraParams: {}
-      };
-    }
     helpers = {
       'url-params': function() {
         return function(text, render) {
-          var i, paramsArray, paramsFinal, params_str;
-          paramsFinal = render(text);
-          if (paramsFinal) {
-            paramsArray = [];
-            if (parameters.queryParam) {
-              paramsArray.push(parameters.queryParam + '=' + context.query);
+          var glue, key, params, querystring, value;
+          querystring = render(text);
+          if (querystring) {
+            params = [];
+            for (key in parameters) {
+              value = parameters[key];
+              params.push(key + "=" + value);
             }
-            if (parameters.extraParams) {
-              for (i in parameters.extraParams) {
-                paramsArray.push(i + '=' + parameters.extraParams[i]);
-              }
-            }
-            if (paramsArray.length) {
-              params_str = paramsArray.join('&');
-              if (paramsFinal.match(/\?/)) {
-                paramsFinal = paramsFinal + '&' + params_str;
-              } else {
-                paramsFinal = paramsFinal + '?' + params_str;
-              }
-            }
+            params = params.join("&");
+            glue = querystring.match(/\?/) ? "&" : "?";
+            querystring = "" + querystring + glue + params;
           }
-          return paramsFinal;
+          return querystring;
         };
       },
       'remove-protocol': function() {
@@ -1777,12 +1772,7 @@ author: @ecoslado
         };
       }
     };
-    extend(helpers, extraHelpers);
     return extend(context, helpers);
-  };
-
-  module.exports = {
-    addHelpers: addHelpers
   };
 
 }).call(this);
@@ -2105,13 +2095,13 @@ author: @ecoslado
 
 },{"./util/dfdom":4,"bean":21}],12:[function(require,module,exports){
 (function() {
-  var Display, Widget, addHelpers, extend,
+  var Display, Widget, buildHelpers, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   Widget = require("../widget");
 
-  addHelpers = (require("../util/helpers")).addHelpers;
+  buildHelpers = require("../util/helpers");
 
   extend = require("extend");
 
@@ -2136,38 +2126,31 @@ author: @ecoslado
         options = {};
       }
       this.mustache = require("mustache");
-      this.extraContext = options.templateVars || {};
+      this.extraContext = {};
       Display.__super__.constructor.call(this, element, options);
     }
 
 
     /**
-     * Adds more context to the search response.
-     *
-     * Adds:
-     *
-     * - extraContent (templateVars passed in the options or added later)
-     * - Extra parameters to add to the results links.
-     * - Currency options.
-     * - Translations.
-     * - Template Functions.
-     * - is_first: Indicates if this is a "first page" response.
-     * - is_last: Indicates if there's no next page for this search.
-     *
-     * @param  {Object} res Search response.
-     * @return {Object} Extended response.
+     * Adds extra context to the passed context object.
+     * @param  {Object} context = {}  Initial context (i.e: a search response).
+     * @return {Object}               Extended context.
      */
 
-    Display.prototype.addHelpers = function(res) {
-      var context, ref, ref1;
-      if (res == null) {
-        res = {};
+    Display.prototype.buildContext = function(context) {
+      var ref, ref1, urlParams;
+      if (context == null) {
+        context = {};
       }
-      context = addHelpers(extend(true, res, this.extraContext), this.options.urlParams, this.options.currency, this.options.translations, this.options.templateFunctions);
-      return extend(true, context, {
-        is_first: res.page === 1,
+      context = extend(true, context, this.options.templateVars, this.options.templateFunctions, {
+        is_first: context.page === 1,
         is_last: (ref = this.controller) != null ? (ref1 = ref.status) != null ? ref1.lastPageReached : void 0 : void 0
-      });
+      }, this.extraContext);
+      urlParams = extend(true, {}, this.options.urlParams || {});
+      if (this.options.queryParam) {
+        urlParams[this.options.queryParam] = context.query || "";
+      }
+      return buildHelpers(context, urlParams, this.options.currency, this.options.translations);
     };
 
 
@@ -2180,7 +2163,7 @@ author: @ecoslado
      */
 
     Display.prototype.render = function(res) {
-      this.element.html(this.mustache.render(this.template, this.addHelpers(res)));
+      this.element.html(this.mustache.render(this.template, this.buildContext(res)));
       return this.trigger("df:rendered", [res]);
     };
 
@@ -2195,7 +2178,7 @@ author: @ecoslado
      */
 
     Display.prototype.renderNext = function(res) {
-      this.element.html(this.mustache.render(this.template, this.addHelpers(res)));
+      this.element.html(this.mustache.render(this.template, this.buildContext(res)));
       return this.trigger("df:rendered", [res]);
     };
 
@@ -2218,9 +2201,6 @@ author: @ecoslado
      */
 
     Display.prototype.addExtraContext = function(key, value) {
-      if (this.extraContext === void 0) {
-        this.extraContext = {};
-      }
       return this.extraContext[key] = value;
     };
 
@@ -2286,7 +2266,7 @@ author: @ecoslado
      */
 
     BaseFacet.prototype.renderLabel = function(res) {
-      return this.mustache.render(this.options.labelTemplate, this.addHelpers(res));
+      return this.mustache.render(this.options.labelTemplate, this.buildContext(res));
     };
 
 
@@ -2357,7 +2337,7 @@ author: @ecoslado
       };
       options = extend(true, defaults, options);
       FacetPanel.__super__.constructor.call(this, element, options.template, options);
-      this.element.append(this.mustache.render(this.template, this.addHelpers()));
+      this.element.append(this.mustache.render(this.template, this.buildContext()));
       this.setElement("#" + this.options.id);
       this.toggleElement = (this.element.find('[data-toggle="panel"]')).first();
       this.labelElement = (this.element.find('[data-role="panel-label"]')).first();
@@ -2778,13 +2758,87 @@ author: @ecoslado
   TermFacet = (function(superClass) {
     extend1(TermFacet, superClass);
 
-    function TermFacet() {
-      return TermFacet.__super__.constructor.apply(this, arguments);
-    }
-
     TermFacet.defaultLabelTemplate = "{{label}}{{#total_selected}} ({{total_selected}}){{/total_selected}}";
 
-    TermFacet.defaultTemplate = "<ul>\n  {{#terms}}\n  <li>\n    <a href=\"#\" data-facet=\"{{name}}\" data-value=\"{{key}}\" {{#selected}}data-selected{{/selected}}>\n      {{ key }} <span>{{ doc_count }}</span>\n    </a>\n  </li>\n  {{/terms}}\n</ul>";
+    TermFacet.defaultTemplate = "{{#terms}}\n  <a class=\"df-term\" href=\"#\" data-facet=\"{{name}}\" data-value=\"{{key}}\"\n      {{#extra-content}}{{index}}:{{size}}{{/extra-content}}\n      {{#selected}}data-selected{{/selected}}>\n    {{key}} <span class=\"df-term__count\">{{doc_count}}</span>\n  </a>\n{{/terms}}\n{{#show-more-button}}{{terms.length}}:{{size}}{{/show-more-button}}";
+
+    TermFacet.defaultButtonTemplate = "<button type=\"button\" data-toggle-extra-content\n    data-text-normal=\"{{#translate}}{{viewMoreLabel}}{{/translate}}\"\n    data-text-toggle=\"{{#translate}}{{viewLessLabel}}{{/translate}}\">\n  {{#translate}}{{viewMoreLabel}}{{/translate}}\n</button>";
+
+
+    /**
+     * @param  {String|Node|DfDomElement} element  Container node.
+     * @param  {String} name    Name of the facet/filter.
+     * @param  {Object} options Options object. Empty by default.
+     */
+
+    function TermFacet(element, name, options) {
+      var defaults;
+      if (options == null) {
+        options = {};
+      }
+      defaults = {
+        size: null,
+        buttonTemplate: this.constructor.defaultButtonTemplate,
+        templateVars: {
+          viewMoreLabel: "View more...",
+          viewLessLabel: "View less..."
+        },
+        templateFunctions: {
+          "extra-content": (function(_this) {
+            return function() {
+
+              /**
+               * Returns `data-extra-content` if the (0-based) index is greater
+               * than or equal to the size passed.
+               *
+               * Index and size are passed as text and must be parsed:
+               *
+               * {{#extra-content}}{{index}}:{{size}}{{/extra-content}}
+               *
+               * @param  {string}   text
+               * @param  {Function} render
+               * @return {string}   "data-extra-content" or ""
+               */
+              return function(text, render) {
+                var index, ref, size;
+                ref = (render(text)).split(":"), index = ref[0], size = ref[1];
+                if ((parseInt(index.trim(), 10)) >= (parseInt(size.trim(), 10))) {
+                  return "data-extra-content";
+                } else {
+                  return "";
+                }
+              };
+            };
+          })(this),
+          "show-more-button": (function(_this) {
+            return function() {
+
+              /**
+               * Renders a `View More` button if the length is greater than the
+               * size passed.
+               *
+               * {{#show-more-button}}{{length}}:{{size}}{{/show-more-button}}
+               *
+               * @param  {string}   text
+               * @param  {Function} render
+               * @return {string}   Rendered button or "".
+               */
+              return function(text, render) {
+                var length, ref, size;
+                ref = (render(text)).split(":"), length = ref[0], size = ref[1];
+                if ((parseInt(length.trim(), 10)) > (parseInt(size.trim(), 10))) {
+                  return _this.mustache.render(_this.options.buttonTemplate, _this.buildContext());
+                } else {
+                  return "";
+                }
+              };
+            };
+          })(this)
+        }
+      };
+      options = extend(true, defaults, options);
+      TermFacet.__super__.constructor.apply(this, arguments);
+    }
 
 
     /**
@@ -2796,9 +2850,9 @@ author: @ecoslado
 
     TermFacet.prototype.init = function(controller) {
       TermFacet.__super__.init.apply(this, arguments);
-      return this.element.on("click", "[data-facet='" + this.name + "'][data-value]", (function(_this) {
+      this.element.on("click", "[data-facet='" + this.name + "'][data-value]", (function(_this) {
         return function(e) {
-          var clickInfo, key, termNode, value, wasSelected;
+          var eventInfo, key, termNode, value, wasSelected;
           e.preventDefault();
           termNode = $(e.target);
           value = termNode.data("value");
@@ -2812,16 +2866,60 @@ author: @ecoslado
             _this.controller.removeFilter(key, value);
           }
           _this.controller.refresh();
-          clickInfo = {
-            widget: _this,
-            termNode: termNode.element[0],
+          eventInfo = {
             facetName: key,
             facetValue: value,
-            isSelected: !wasSelected
+            selected: !wasSelected,
+            totalSelected: _this.getSelectedElements().length()
           };
-          return _this.trigger("df:term_clicked", [clickInfo]);
+          return _this.trigger("df:term_clicked", [eventInfo]);
         };
       })(this));
+      if (this.options.size !== null) {
+        this.element.on("click", "[data-toggle-extra-content]", (function(_this) {
+          return function(e) {
+            var btn, currentText, viewLessText, viewMoreText;
+            e.preventDefault();
+            btn = _this.getShowMoreButton();
+            currentText = btn.textContent.trim();
+            viewMoreText = (btn.getAttribute("data-text-normal")).trim();
+            viewLessText = (btn.getAttribute("data-text-toggle")).trim();
+            if (currentText === viewMoreText) {
+              btn.textContent = viewLessText;
+              return _this.element.attr("data-view-extra-content", "");
+            } else {
+              btn.textContent = viewMoreText;
+              return _this.element.removeAttr("data-view-extra-content");
+            }
+          };
+        })(this));
+        this.bind("df:rendered", (function(_this) {
+          return function(res) {
+            var btn;
+            if ((_this.element.attr("data-view-extra-content")) != null) {
+              btn = _this.getShowMoreButton();
+              return btn != null ? btn.textContent = (btn.getAttribute("data-text-toggle")).trim() : void 0;
+            }
+          };
+        })(this));
+        return this.bind("df:cleaned", (function(_this) {
+          return function(res) {
+            var btn;
+            _this.element.removeAttr("data-view-extra-content");
+            btn = _this.getShowMoreButton();
+            return btn != null ? btn.textContent = (btn.getAttribute("data-text-normal")).trim() : void 0;
+          };
+        })(this));
+      }
+    };
+
+
+    /**
+     * @return {HTMLElement} The "show more" button.
+     */
+
+    TermFacet.prototype.getShowMoreButton = function() {
+      return (this.element.find("[data-toggle-extra-content]")).element[0];
     };
 
 
@@ -2879,7 +2977,7 @@ author: @ecoslado
      */
 
     TermFacet.prototype.render = function(res) {
-      var context, i, index, len, ref, ref1, ref2, ref3, selectedTerms, term, totalSelected;
+      var context, eventInfo, i, index, len, ref, ref1, ref2, ref3, selectedTerms, term, totalSelected;
       if (!res.facets || !res.facets[this.name]) {
         this.raiseError("TermFacet: " + this.name + " facet is not configured");
       } else if (!res.facets[this.name].terms.buckets) {
@@ -2910,9 +3008,13 @@ author: @ecoslado
           total_selected: totalSelected,
           name: this.name,
           terms: res.facets[this.name].terms.buckets
-        }, this.extraContext || {});
-        this.element.html(this.mustache.render(this.template, this.addHelpers(context)));
-        return this.trigger("df:rendered", [res]);
+        });
+        eventInfo = {
+          facetName: this.name,
+          totalSelected: totalSelected
+        };
+        this.element.html(this.mustache.render(this.template, this.buildContext(context)));
+        return this.trigger("df:rendered", [res, eventInfo]);
       } else {
         return this.clean();
       }
@@ -3265,7 +3367,7 @@ replaces the current content.
 
     ScrollDisplay.prototype.renderNext = function(res) {
       this.pageRequested = false;
-      this.element.append(this.mustache.render(this.template, this.addHelpers(res)));
+      this.element.append(this.mustache.render(this.template, this.buildContext(res)));
       return this.trigger("df:rendered", [res]);
     };
 

@@ -10,16 +10,74 @@ $ = require "../../util/dfdom"
 class TermFacet extends BaseFacet
   @defaultLabelTemplate: "{{label}}{{#total_selected}} ({{total_selected}}){{/total_selected}}"
   @defaultTemplate: """
-    <ul>
-      {{#terms}}
-      <li>
-        <a href="#" data-facet="{{name}}" data-value="{{key}}" {{#selected}}data-selected{{/selected}}>
-          {{ key }} <span>{{ doc_count }}</span>
-        </a>
-      </li>
-      {{/terms}}
-    </ul>
+    {{#terms}}
+      <a class="df-term" href="#" data-facet="{{name}}" data-value="{{key}}"
+          {{#extra-content}}{{index}}:{{size}}{{/extra-content}}
+          {{#selected}}data-selected{{/selected}}>
+        {{key}} <span class="df-term__count">{{doc_count}}</span>
+      </a>
+    {{/terms}}
+    {{#show-more-button}}{{terms.length}}:{{size}}{{/show-more-button}}
   """
+  @defaultButtonTemplate: """
+    <button type="button" data-toggle-extra-content
+        data-text-normal="{{#translate}}{{viewMoreLabel}}{{/translate}}"
+        data-text-toggle="{{#translate}}{{viewLessLabel}}{{/translate}}">
+      {{#translate}}{{viewMoreLabel}}{{/translate}}
+    </button>
+  """
+
+  ###*
+   * @param  {String|Node|DfDomElement} element  Container node.
+   * @param  {String} name    Name of the facet/filter.
+   * @param  {Object} options Options object. Empty by default.
+  ###
+  constructor: (element, name, options = {}) ->
+    defaults =
+      size: null  # set an int value to enable extra content behavior
+      buttonTemplate: @constructor.defaultButtonTemplate
+      templateVars:
+        viewMoreLabel: "View more..."
+        viewLessLabel: "View less..."
+      templateFunctions:
+        "extra-content": =>
+          ###*
+           * Returns `data-extra-content` if the (0-based) index is greater
+           * than or equal to the size passed.
+           *
+           * Index and size are passed as text and must be parsed:
+           *
+           * {{#extra-content}}{{index}}:{{size}}{{/extra-content}}
+           *
+           * @param  {string}   text
+           * @param  {Function} render
+           * @return {string}   "data-extra-content" or ""
+          ###
+          (text, render) =>
+            [index, size] = (render text).split ":"
+            if (parseInt index.trim(), 10) >= (parseInt size.trim(), 10)
+              "data-extra-content"
+            else
+              ""
+        "show-more-button": =>
+          ###*
+           * Renders a `View More` button if the length is greater than the
+           * size passed.
+           *
+           * {{#show-more-button}}{{length}}:{{size}}{{/show-more-button}}
+           *
+           * @param  {string}   text
+           * @param  {Function} render
+           * @return {string}   Rendered button or "".
+          ###
+          return (text, render) =>
+            [length, size] = (render text).split ":"
+            if (parseInt length.trim(), 10) > (parseInt size.trim(), 10)
+              @mustache.render @options.buttonTemplate, @buildContext()
+            else
+              ""
+    options = extend true, defaults, options
+    super
 
   ###*
    * Initializes the object with a controller and attachs event handlers for
@@ -50,14 +108,57 @@ class TermFacet extends BaseFacet
 
       @controller.refresh()
 
-      clickInfo =
-        widget: @
-        termNode: termNode.element[0]
+      eventInfo =
         facetName: key
         facetValue: value
-        isSelected: not wasSelected
+        selected: not wasSelected
+        totalSelected: @getSelectedElements().length()
 
-      @trigger "df:term_clicked", [clickInfo]
+      @trigger "df:term_clicked", [eventInfo]
+
+    if @options.size != null
+
+      # - Declare the container element to display or hide extra terms when the
+      #   view more button is clicked.
+
+      @element.on "click", "[data-toggle-extra-content]", (e) =>
+        e.preventDefault()
+
+        btn = @getShowMoreButton()
+
+        currentText  = btn.textContent.trim()
+        viewMoreText = (btn.getAttribute "data-text-normal").trim()
+        viewLessText = (btn.getAttribute "data-text-toggle").trim()
+
+        if currentText == viewMoreText
+          btn.textContent = viewLessText
+          @element.attr "data-view-extra-content", ""
+        else
+          btn.textContent = viewMoreText
+          @element.removeAttr "data-view-extra-content"
+
+      # - Fix the "view more" button when the container element is displaying
+      #   extra content but the controller is refreshed and the facet widget is
+      #   rendered again.
+
+      @bind "df:rendered", (res) =>
+        if (@element.attr "data-view-extra-content")?
+          btn = @getShowMoreButton()
+          btn?.textContent = (btn.getAttribute "data-text-toggle").trim()
+
+      # - Reset also the "view more" state of the container element when the
+      #   widget is reset.
+
+      @bind "df:cleaned", (res) =>
+        @element.removeAttr "data-view-extra-content"
+        btn = @getShowMoreButton()
+        btn?.textContent = (btn.getAttribute "data-text-normal").trim()
+
+  ###*
+   * @return {HTMLElement} The "show more" button.
+  ###
+  getShowMoreButton: ->
+    (@element.find "[data-toggle-extra-content]").element[0]
 
   ###*
    * @return {DfDomElement} Collection of selected term nodes.
@@ -123,11 +224,14 @@ class TermFacet extends BaseFacet
         any_selected: totalSelected > 0
         total_selected: totalSelected
         name: @name
-        terms: res.facets[@name].terms.buckets,
-        @extraContext || {}
+        terms: res.facets[@name].terms.buckets
 
-      @element.html (@mustache.render @template, (@addHelpers context))
-      @trigger "df:rendered", [res]
+      eventInfo =
+        facetName: @name
+        totalSelected: totalSelected
+
+      @element.html (@mustache.render @template, (@buildContext context))
+      @trigger "df:rendered", [res, eventInfo]
     else
       @clean()
 

@@ -37,7 +37,7 @@ class FacetPanel extends Display
     super element, options.template, options
 
     # Render as soon as possible!
-    @element.append (@mustache.render @template, @addHelpers())
+    @element.append (@mustache.render @template, @buildContext())
     # Once appended, change the @element reference to the panel itself instead
     # of the container.
     @setElement "##{@options.id}"
