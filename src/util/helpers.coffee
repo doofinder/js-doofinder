@@ -15,18 +15,19 @@ module.exports = (context, parameters = {}, currency = null, translations = {}) 
       precision: 2
 
   helpers =
-    'url-params': () ->
-      (text, render) ->
-        url = (render text).trim()
-        if url.length > 0
-          params = []
-          for key of parameters
-            params.push "#{key}=#{parameters[key]}"
-          if params.length > 0
-            params = params.join "&"
-            glue = if url.match /\?/ then "&" else "?"
-            url = "#{url}#{glue}#{params}"
-        url
+      'url-params': () ->
+        (text, render) ->
+          querystring = render text
+          if querystring
+            params = []
+            for key, value of parameters
+              params.push "#{key}=#{value}"
+              if params.length != 0
+                params = params.join "&"
+            
+                glue = if querystring.match /\?/ then "&" else "?"
+              else querystring = "#{querystring}#{glue}#{params}"
+          querystring
 
     'remove-protocol': () ->
       (text, render) ->
