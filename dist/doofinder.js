@@ -1145,7 +1145,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "5.0.4",
+    version: "5.0.6",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1720,19 +1720,20 @@ author: @ecoslado
     helpers = {
       'url-params': function() {
         return function(text, render) {
-          var glue, key, params, querystring, value;
-          querystring = render(text);
-          if (querystring) {
+          var glue, key, params, url;
+          url = (render(text)).trim();
+          if (url.length > 0) {
             params = [];
             for (key in parameters) {
-              value = parameters[key];
-              params.push(key + "=" + value);
+              params.push(key + "=" + parameters[key]);
             }
-            params = params.join("&");
-            glue = querystring.match(/\?/) ? "&" : "?";
-            querystring = "" + querystring + glue + params;
+            if (params.length > 0) {
+              params = params.join("&");
+              glue = url.match(/\?/) ? "&" : "?";
+              url = "" + url + glue + params;
+            }
           }
-          return querystring;
+          return url;
         };
       },
       'remove-protocol': function() {
