@@ -203,10 +203,11 @@ class Client
   @param {String} word
   ###
   __escapeChars: (word) ->
-    word = word.replace(/\&/, "%26")
-    word = word.replace(/\?/, "%3F")
-    word = word.replace(/\+/, "%2B")
-    return word.replace(/\#/, "%23")
+    word
+      .replace(/\&/, "%26")
+      .replace(/\?/, "%3F")
+      .replace(/\+/, "%2B")
+      .replace(/\#/, "%23")
 
   ###
   makeQueryString
