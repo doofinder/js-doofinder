@@ -229,7 +229,7 @@ author: @ecoslado
      */
 
     Client.prototype.__escapeChars = function(word) {
-      return word.replace(/\&/, "%26").replace(/\?/, "%3F").replace(/\+/, "%2B").replace(/\#/, "%23");
+      return word.replace(/\&/g, "%26").replace(/\?/g, "%3F").replace(/\+/g, "%2B").replace(/\#/g, "%23");
     };
 
 
