@@ -30,8 +30,13 @@ class DfDomElement
 
   # NODE HIERARCHY MANAGEMENT
   find: (selector) ->
-    return new DfDomElement Array.prototype.slice.call @_first().querySelectorAll selector
-
+    selectedNodes = []
+    @each (item) ->
+      selectedNodes = selectedNodes.concat(
+        Array.prototype.slice.call item.querySelectorAll(selector)
+      )
+    new DfDomElement selectedNodes
+  
   each: (callback) ->
     @element.forEach(callback)
 
@@ -58,7 +63,7 @@ class DfDomElement
       if (parent && parent[matchesFn](selector))
         return new DfDomElement parent
       el = parent
-    return null
+    return new DfDomElement []
 
   parents: (selector) ->
     matchesFn = null
