@@ -165,6 +165,7 @@ class DfDomElement
   empty: (htmlString) ->
     @html("")
 
+  # TAG ATTRIBUTES
   attr: (key, value) ->
     first = @_first()
     if first?.getAttribute?
