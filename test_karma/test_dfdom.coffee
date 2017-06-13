@@ -263,9 +263,15 @@ describe "dfdom tests:", ->
         """
 
       it "attr", (done) ->
-        dfdom("div").attr("foo").should.equal("bar")
-        dfdom("div").attr("foo", "lorem ipsum").should.equal("lorem ipsum")
-        dfdom("[data-role='main']").attr("foo").should.equal("lorem ipsum")
+        dfdom("div")
+          .attr("foo")
+          .should.equal("bar")
+        dfdom("div")
+          .attr("foo", "lorem ipsum")
+          .should.equal("lorem ipsum")
+        dfdom("[data-role='main']")
+          .attr("foo")
+          .should.equal("lorem ipsum")
         done()
 
       it "removeAttr", (done) ->
@@ -287,6 +293,25 @@ describe "dfdom tests:", ->
         dfdom("input").val().should.equal("hello")
         dfdom("input").val("goodbye").should.equal("goodbye")
         dfdom("input").val().should.equal("goodbye")
+        done()
+
+    context "Position, style and CSS classes management", ->
+      beforeEach ->
+        resetBody()
+
+      it "width and height", (done) ->
+        insertHTML """
+        <div class="my-class"></div>
+        <style>
+          .my-class{
+            width: 42px;
+            height: 24px;
+          }
+        </style>
+        """
+
+        dfdom(".my-class").width().should.equal(42)
+        dfdom(".my-class").height().should.equal(24)
         done()
 
 

@@ -1256,7 +1256,6 @@ author: @ecoslado
       });
       parent = null;
       while (el) {
-        console.log(el);
         parent = el.parentElement;
         if (parent && parent[matchesFn](selector)) {
           return new DfDomElement(parent);
