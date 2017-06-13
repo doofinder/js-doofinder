@@ -314,5 +314,39 @@ describe "dfdom tests:", ->
         dfdom(".my-class").height().should.equal(24)
         done()
 
+      it "top left right bottom", (done) ->
+        insertHTML """
+          <div class="container">
+            <div class="content">
+            </div>
+          </div>
+
+          <style>
+          .container {
+            position: absolute;
+            top: 5rem;
+            left: 10rem;
+            bottom: 3px;
+            right: 8px;
+          }
+          .content {
+            position: relative;
+            margin-top: 15px;
+            margin-left: 5px;
+            margin-bottom: 2px;
+            margin-right: 10px;
+          }
+          </style>
+        """
+        dfdom(".container").top().should.equal(80)
+        dfdom(".container").left().should.equal(160)
+        dfdom(".container").bottom().should.equal(691)
+        dfdom(".container").right().should.equal(1016)
+        dfdom(".content").top().should.equal(95)
+        dfdom(".content").left().should.equal(165)
+        dfdom(".content").bottom().should.equal(95)
+        dfdom(".content").right().should.equal(1006)
+        done()
+
 
 
