@@ -51,7 +51,7 @@ class DfDomElement
   parent: () ->
     selectedNodes = []
     @each (item) ->
-      selectedNodes = selectedNodes.push item.parentElement
+      selectedNodes.push(item.parentElement)
     selectedNodes = @_unique(selectedNodes)
     new DfDomElement selectedNodes
 
