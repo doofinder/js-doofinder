@@ -178,6 +178,9 @@ class DfDomElement
       item.removeAttribute(key)
     return this
 
+  hasAttr: (key) ->
+    @attr(key)? and @attr(key) != ""
+
   data: (key, value) ->
     actualKey = "data-#{key}"
     return @attr(actualKey, value)
