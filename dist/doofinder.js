@@ -1211,6 +1211,10 @@ author: @ecoslado
       return this;
     }
 
+    DfDomElement.prototype.each = function(callback) {
+      return this.element.forEach(callback);
+    };
+
     DfDomElement.prototype.find = function(selector) {
       var selectedNodes;
       selectedNodes = [];
@@ -1220,16 +1224,23 @@ author: @ecoslado
       return new DfDomElement(selectedNodes);
     };
 
-    DfDomElement.prototype.each = function(callback) {
-      return this.element.forEach(callback);
-    };
-
     DfDomElement.prototype.children = function() {
-      return new DfDomElement(Array.prototype.slice.call(this._first().children));
+      var selectedNodes;
+      selectedNodes = [];
+      this.each(function(item) {
+        return selectedNodes = selectedNodes.concat(Array.prototype.slice.call(item.children));
+      });
+      return new DfDomElement(selectedNodes);
     };
 
     DfDomElement.prototype.parent = function() {
-      return new DfDomElement(this._first().parentElement);
+      var selectedNodes;
+      selectedNodes = [];
+      this.each(function(item) {
+        return selectedNodes = selectedNodes.push(item.parentElement);
+      });
+      selectedNodes = this._unique(selectedNodes);
+      return new DfDomElement(selectedNodes);
     };
 
     DfDomElement.prototype.closest = function(selector) {
@@ -1374,7 +1385,7 @@ author: @ecoslado
     DfDomElement.prototype.attr = function(key, value) {
       var first;
       first = this._first();
-      if ((first != null) && (first.getAttribute != null)) {
+      if ((first != null ? first.getAttribute : void 0) != null) {
         if (typeof value !== "undefined") {
           first.setAttribute(key, value);
         }
@@ -1383,11 +1394,9 @@ author: @ecoslado
     };
 
     DfDomElement.prototype.removeAttr = function(key) {
-      var first;
-      first = this._first();
-      if ((first != null) && (first.removeAttribute != null)) {
-        first.removeAttribute(key);
-      }
+      this.each(function(item) {
+        return item.removeAttribute(key);
+      });
       return this;
     };
 
@@ -1496,6 +1505,33 @@ author: @ecoslado
       if ((first != null) && (first.parentNode != null)) {
         return first.parentNode.removeChild(this._first());
       }
+    };
+
+    DfDomElement.prototype._unique = function(nodes) {
+      var BreakException, selectedNodes;
+      BreakException = {};
+      selectedNodes = [];
+      nodes.forEach(function(node) {
+        var e, repeated;
+        repeated = false;
+        try {
+          selectedNodes.forEach(function(selectedNode) {
+            repeated = node === selectedNode;
+            if (repeated) {
+              throw BreakException;
+            }
+          });
+        } catch (_error) {
+          e = _error;
+          if (e !== BreakException) {
+            throw e;
+          }
+        }
+        if (!repeated) {
+          return selectedNodes.push(node);
+        }
+      });
+      return selectedNodes;
     };
 
     DfDomElement.prototype.on = function(arg1, arg2, arg3) {

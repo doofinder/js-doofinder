@@ -29,6 +29,9 @@ class DfDomElement
     return this
 
   # NODE HIERARCHY MANAGEMENT
+  each: (callback) ->
+    @element.forEach(callback)
+
   find: (selector) ->
     selectedNodes = []
     @each (item) ->
@@ -36,21 +39,27 @@ class DfDomElement
         Array.prototype.slice.call item.querySelectorAll(selector)
       )
     new DfDomElement selectedNodes
-  
-  each: (callback) ->
-    @element.forEach(callback)
 
   children: () ->
-    new DfDomElement Array.prototype.slice.call @_first().children
-
+    selectedNodes = []
+    @each (item) ->
+      selectedNodes = selectedNodes.concat(
+        Array.prototype.slice.call item.children
+      )
+    new DfDomElement selectedNodes
+  
   parent: () ->
-    new DfDomElement @_first().parentElement
+    selectedNodes = []
+    @each (item) ->
+      selectedNodes = selectedNodes.push item.parentElement
+    selectedNodes = @_unique(selectedNodes)
+    new DfDomElement selectedNodes
 
   closest: (selector) ->
     matchesFn = null
     el = @_first()
     # find vendor prefix
-    ['matches','webkitMatchesSelector','mozMatchesSelector','msMatchesSelector','oMatchesSelector'].some (fn) ->
+    ['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector'].some (fn) ->
       if (typeof document.body[fn] == 'function')
         matchesFn = fn
         return true
@@ -67,7 +76,7 @@ class DfDomElement
 
   parents: (selector) ->
     matchesFn = null
-    ['matches','webkitMatchesSelector','mozMatchesSelector','msMatchesSelector','oMatchesSelector'].some (fn) ->
+    ['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector'].some (fn) ->
       if (typeof document.body[fn] == 'function')
         matchesFn = fn
         return true
@@ -158,15 +167,14 @@ class DfDomElement
 
   attr: (key, value) ->
     first = @_first()
-    if first? and first.getAttribute?
+    if first?.getAttribute?
       if typeof(value) != "undefined"
         first.setAttribute(key,value)
       return first.getAttribute(key)
 
   removeAttr: (key) ->
-    first = @_first()
-    if first? and first.removeAttribute?
-      first.removeAttribute(key)
+    @each (item) ->
+      item.removeAttribute(key)
     return this
 
   data: (key, value) ->
@@ -243,6 +251,25 @@ class DfDomElement
     if first? and first.parentNode?
       first.parentNode.removeChild(@_first())
 
+  _unique: (nodes) ->
+    BreakException = {}
+    selectedNodes = []
+    nodes.forEach (node) ->
+      repeated = false
+      # Checks if node is in the list
+      try
+        selectedNodes.forEach (selectedNode) ->
+          repeated = (node == selectedNode)
+          if repeated 
+            throw BreakException
+      catch e
+        if e != BreakException 
+          throw e
+      # Add it only if not repeated
+      unless repeated
+        selectedNodes.push(node)
+    return selectedNodes
+
   # EVENTS
   on: (arg1, arg2, arg3) ->
     if arg3?
@@ -285,7 +312,6 @@ class DfDomElement
   blur: () ->
     if @_first()?
       @_first().blur()
-
 
 
 dfdom = (selector) ->
