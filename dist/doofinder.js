@@ -1400,6 +1400,10 @@ author: @ecoslado
       return this;
     };
 
+    DfDomElement.prototype.hasAttr = function(key) {
+      return (this.attr(key) != null) && this.attr(key) !== "";
+    };
+
     DfDomElement.prototype.data = function(key, value) {
       var actualKey;
       actualKey = "data-" + key;
