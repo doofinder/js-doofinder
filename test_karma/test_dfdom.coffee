@@ -12,37 +12,79 @@ describe "dfdom tests:", ->
     dfdom = doofinder.util.dfdom
 
     # Instantiation
-    context "Creating DfDomElements", ->
+    context "New instance of DfDomElement", ->
       beforeEach ->
         resetBody()
 
-      it "Not existing element", (done) ->
-        div = dfdom("div")
-        div.element.should.be.empty
+      it "is empty for an element that doesn't exist", (done) ->
+        dfdom("div").element.should.be.empty
         done()
 
-      it "Gets existing element by tagName and CSS should return the same", (done) ->
+      it "can be instantiated with a CSS selector", (done) ->
         insertHTML """
         <ul class="test"></ul>
         """
-        test = dfdom(".test")
-        ul = dfdom("ul")
-        el = document.querySelectorAll "ul"
-
-        ul.should.eql test
-        ul.element[0].should.eql el["0"]
+        selection = (dfdom ".test")
+        selection.element[0].should.eql (document.querySelector "ul")
         done()
 
-      it "Call dfdom with the element and the selector should return the same", (done) ->
+      it "can be instantiated with a CSS selector being an instance of String", (done) ->
         insertHTML """
         <ul class="test"></ul>
         """
-        el = document.querySelector ".test"
+        selection = (dfdom (new String ".test"))
+        selection.element[0].should.eql (document.querySelector "ul")
+        done()
 
-        fromClass = dfdom(".test")
-        fromElement = dfdom(el)
+      it "can be instantiated with a HTMLElement node", (done) ->
+        insertHTML """
+        <ul class="test"></ul>
+        """
+        rawNode = document.querySelector ".test"
+        (dfdom rawNode).element[0].should.eql rawNode
+        done()
 
-        fromClass.should.eql fromElement
+      it "can be instantiated with a NodeList", (done) ->
+        insertHTML """
+        <ul class="test">
+          <li></li>
+          <li></li>
+        </ul>
+        """
+        rawNodes = document.querySelectorAll ".test li"
+        selection = (dfdom rawNodes)
+        selection.length().should.eq 2
+        (selection.element.indexOf rawNodes[0]).should.eq 0
+        done()
+
+      it "can be instantiated with an array", (done) ->
+        insertHTML """
+        <ul class="test">
+          <li></li>
+          <li></li>
+        </ul>
+        """
+        selection = dfdom ["ul", ".test", ".test > li", "li", document.querySelectorAll "li", []]
+        selection.length().should.eq 3
+        done()
+
+      it "can be instantiated with multiple selectors separated by commas", (done) ->
+        insertHTML """
+        <ul class="test">
+          <li></li>
+          <li></li>
+        </ul>
+        """
+        selection = dfdom "ul, .test, .test > li, li"
+        selection.length().should.eq 3
+        done()
+
+      it "returns the same DfDomElement instance if passed to the dfdom function", (done) ->
+        insertHTML """
+        <ul class="test"></ul>
+        """
+        selection = dfdom "ul"
+        (dfdom selection).should.eql selection
         done()
 
     # Methods
@@ -185,7 +227,7 @@ describe "dfdom tests:", ->
         dfdom("li")
           .length()
           .should.equal(4)
-        
+
         done()
 
     context "Content retrieving and injection", ->
@@ -217,12 +259,12 @@ describe "dfdom tests:", ->
         """
         dfdom("#test")
           .append("<li id='item3'></li>")
-        
+
         dfdom("li")
           .get(2)
           .attr("id")
           .should.equal("item3")
-        
+
         li = document.createElement("li")
         li.id = "item4"
         dfdom("#test").append(li)
@@ -230,7 +272,7 @@ describe "dfdom tests:", ->
           .get(3)
           .attr("id")
           .should.equal("item4")
-        
+
         done()
 
       it "prepend", (done) ->
@@ -239,7 +281,7 @@ describe "dfdom tests:", ->
           .get(0)
           .attr("id")
           .should.equal("item1")
-        
+
         li = document.createElement("li")
         li.id = "item0"
         dfdom("#test").prepend(li)
@@ -255,7 +297,7 @@ describe "dfdom tests:", ->
           .get(1)
           .attr("id")
           .should.equal("item3")
-        
+
         li = document.createElement("li")
         li.id = "item4"
         dfdom("#item3").after(li)
@@ -269,7 +311,7 @@ describe "dfdom tests:", ->
 
         dfdom("#item2").before("<li id='item1'></li>")
         dfdom("li").get(0).attr("id").should.equal("item1")
-        
+
         li = document.createElement("li")
         li.id = "item0"
         dfdom("#item1").before(li)
@@ -513,11 +555,11 @@ describe "dfdom tests:", ->
         executionTimes = 0
         input.on "df:foo", () ->
           executionTimes += 1
-        
+
         input.trigger("df:foo")
         input.trigger("df:foo")
         input.trigger("df:foo")
-        
+
         executionTimes.should.equal(3)
         done()
 
@@ -527,9 +569,9 @@ describe "dfdom tests:", ->
         input.on "df:foo", () ->
           executed = true
         input.off "df:foo"
-        
+
         input.trigger "df:foo"
-        
+
         executed.should.be.false
         done()
 

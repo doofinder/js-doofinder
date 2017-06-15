@@ -1,31 +1,93 @@
-###
-dfdom.coffee
-author: @ecoslado
-2016 07 05
-###
-
-
 bean = require "bean"
 
-###
-DfDomElement
-This class manages an set of
-DOM elements identified by a selector
+###*
+ * DfDomElement
+ * This class manages a set of DOM elements identified by a selector.
 ###
 class DfDomElement
 
-  constructor: (@element) ->
-    # @element is a CSS Selector
-    if typeof @element is "string"
-      # check for bad ids (starting with number)
-      selector = if /^#\d/.test @element then  "[id=\"#{@element.substring 1}\"]" else @element
-      @element = Array.prototype.slice.call document.querySelectorAll selector
-    # @element is DfDomElement
-    else if @element.element?
-      @element = @element.element
-    # @element is a DOMElement
-    else if @element.constructor != Array
-      @element = [@element]
+  ###*
+   * @public
+   * @param  {string|String|HTMLElement|NodeList|Array} selector
+   * @return {DfDomElement}
+  ###
+  constructor: (selector) ->
+    if selector instanceof String
+      selector = selector.toString()
+    if typeof selector is "string"
+      selector = selector.split ","
+      selector = selector[0] if selector.length == 0
+    if selector instanceof Array
+      @element = @__initFromSelectorArray selector
+    else
+      @element = @__initFromSelector selector
+    @__uniquify()
+
+  ###*
+   * Fixes the provided selector by:
+   *
+   * - Removing blanks.
+   * - Changing the selection query for IDs starting by a number.
+   *
+   * @protected
+   * @param  {string} selector A CSS selector.
+   * @return {string}
+  ###
+  __fixSelector: (selector) ->
+    selector = selector.trim()
+    switch
+      when /^#\d/.test selector then "[id=\"#{selector.substring 1}\"]"
+      else selector
+
+  ###*
+   * Converts a NodeList to an Array.
+   * @protected
+   * @param  {NodeList} nodeList A NodeList instance.
+   * @return {Array}             An Array with the same nodes as the NodeList.
+  ###
+  __fixNodeList: (nodeList) ->
+    Array.prototype.slice.call nodeList
+
+  ###*
+   * Fills the internal store from an array of selectors.
+   * @protected
+   * @param  {Array} arr An Array of selectors (of all valid types)
+   * @return {Array}     An Array of nodes.
+  ###
+  __initFromSelectorArray: (arr) ->
+    element = []
+    arr.forEach (selector) =>
+      element = element.concat @__initFromSelector selector
+    element
+
+  ###*
+   * Fills the internal store from a selector.
+   * @protected
+   * @param  {string|HTMLElement|NodeList|Array} selector
+   * @return {Array}     An Array of nodes.
+  ###
+  __initFromSelector: (selector) ->
+    if typeof selector is "string"
+      element = @__fixNodeList document.querySelectorAll @__fixSelector selector
+    else if selector instanceof HTMLElement
+      element = [selector]
+    else if selector instanceof NodeList
+      element = @__fixNodeList selector
+    else
+      element = []
+    element
+
+  ###*
+   * Removes duplicates from the internal store.
+   * @protected
+   * @return {DfDomElement} The current instance.
+  ###
+  __uniquify: ->
+    nodes = while @element.length > 0
+      candidate = (@element.splice 0, 1).pop()
+      @element = @element.filter (node) -> node != candidate
+      candidate
+    @element = nodes
     return this
 
   # NODE HIERARCHY MANAGEMENT
@@ -47,12 +109,11 @@ class DfDomElement
         Array.prototype.slice.call item.children
       )
     new DfDomElement selectedNodes
-  
+
   parent: () ->
     selectedNodes = []
     @each (item) ->
       selectedNodes.push(item.parentElement)
-    selectedNodes = @_unique(selectedNodes)
     new DfDomElement selectedNodes
 
   closest: (selector) ->
@@ -255,25 +316,6 @@ class DfDomElement
     if first? and first.parentNode?
       first.parentNode.removeChild(@_first())
 
-  _unique: (nodes) ->
-    BreakException = {}
-    selectedNodes = []
-    nodes.forEach (node) ->
-      repeated = false
-      # Checks if node is in the list
-      try
-        selectedNodes.forEach (selectedNode) ->
-          repeated = (node == selectedNode)
-          if repeated 
-            throw BreakException
-      catch e
-        if e != BreakException 
-          throw e
-      # Add it only if not repeated
-      unless repeated
-        selectedNodes.push(node)
-    return selectedNodes
-
   # EVENTS
   on: (arg1, arg2, arg3) ->
     if arg3?
@@ -320,7 +362,9 @@ class DfDomElement
 
 dfdom = (selector) ->
   if selector?
-    return new DfDomElement selector
+    switch
+      when selector instanceof DfDomElement then selector
+      else new DfDomElement selector
 
 
 module.exports = dfdom
