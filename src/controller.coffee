@@ -371,18 +371,7 @@ class Controller
   registerSession: (sessionId, callback=((err, res)->)) ->
     @client.registerSession(sessionId, callback)
 
-  ###
-  This method calls to /stats/init_session
-  service for init a user session
-
-  @param {String} sessionId
-  @param {Function} callback
-
-  @api public
-  ###
-  registerBannerEvent: (eventType, bannerId, callback=((err, res)->)) ->
-    @client.registerBannerEvent(eventType, bannerId, callback)
-
+  
   ###
   This method calls to /stats/checkout
   service for init a user session
@@ -408,6 +397,19 @@ class Controller
       options = arg1
 
     @client.registerCheckout(sessionId, options, callback)
+
+  ###
+  Method to register banner events
+
+  @param {String} eventType
+  @param {String} bannerId
+  @param {Function} callback
+
+  @api public
+  ###
+  registerBannerEvent: (eventType, bannerId, callback=((err, res)->)) ->
+    @client.registerBannerEvent(eventType, bannerId, callback)
+
 
   ###
   hit
