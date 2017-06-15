@@ -43,8 +43,8 @@ module.exports = (grunt) ->
             return dest + '_' + src.replace(/\.css$/, '.scss')
         ]
       karma:
-        files:
-          'test_karma/doofinder.min.js': 'dist/doofinder.min.js'
+        files: 
+          'test_karma/doofinder.min.js': 'dist/doofinder.min.js' 
 
     clean:
       build_scss: ['build_scss/']
@@ -89,4 +89,3 @@ module.exports = (grunt) ->
   grunt.registerTask 'css', ['copy:build_scss', 'sass:build_scss', 'clean:build_scss']
   grunt.registerTask 'release', ['version:library', 'version:bower', 'coffee:release', 'browserify', 'uglify:release']
   grunt.registerTask 'test_karma', ['copy:karma', 'karma:test', 'clean:karma']
-  grunt.registerTask 'test', ['mochaTest', 'test_karma']
