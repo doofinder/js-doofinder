@@ -382,6 +382,22 @@ class Client
     reqOpts = @__requestOptions(path)
     @httpClient.request reqOpts, callback
 
+  ###
+  This method calls to /stats/banner_<event_type>
+  service for registering banner events like display
+  or click
+
+  @param {String} eventType
+  @param {Object} bannerId
+  @param {Function} callback
+
+  @api public
+  ###
+  registerBannerEvent: (eventType, bannerId, callback=((err, res) ->)) ->
+    path = "/#{@version}/stats/banner_#{eventType}?hashid=#{@hashid}&banner_id=#{bannerId}"
+    path += "&random=#{new Date().getTime()}"
+    reqOpts = @__requestOptions(path)
+    @httpClient.request reqOpts, callback
 
   ###
   This method calls to /hit
