@@ -161,35 +161,79 @@ describe "dfdom tests:", ->
         dfdom("li").parent().length().should.equal(2)
         done()
 
-      it "Closest", (done) ->
+      it "can retrieve all parent nodes for the set of matched elements", (done) ->
         insertHTML """
         <div id="parent2" class="parent">
           <div id="parent1" class="parent">
-            <div id="child">
-            </div>
+            <div class="child"></div>
+            <div class="child"></div>
           </div>
         </div>
+        <div id="parent3">
+          <div class="child"></div>
+        </div>
         """
-        dfdom("#child").closest(".parent").attr("id").should.equal("parent1")
+        parents = (dfdom ".child").parents()
+        parents.length().should.eq 5
+        parents.element[0].should.eql document.getElementById "parent1"
+        parents.element[1].should.eql document.getElementById "parent2"
+        parents.element[2].should.eql document.body
+        parents.element[3].should.eql document.documentElement
+        # This is due to the way DfDomElement.__uniquify() is programmed
+        parents.element[4].should.eql document.getElementById "parent3"
         done()
 
-      it "Parents", (done) ->
+      it "can retrieve all parent nodes that match a selector for the set of matched elements", (done) ->
         insertHTML """
         <div id="parent2" class="parent">
-          <div id="parent1" class="parent">
-            <div id="child">
-            </div>
+          <div id="parent1">
+            <div class="child"></div>
+            <div class="child"></div>
           </div>
         </div>
+        <div id="parent3">
+          <div class="child"></div>
+        </div>
         """
-        parent1 = document.getElementById("parent1")
-        parent2 = document.getElementById("parent2")
-        body = document.body
-        html = document.documentElement
+        parents = (dfdom ".child").parents ".parent"
+        parents.length().should.eq 1
+        parents.element[0].should.eql document.getElementById "parent2"
+        done()
 
-        dfdom("#child").parents().
-          element
-          .should.eql([parent1, parent2, body, html])
+      it "can retrieve the closest ancestor for the set of matched elements", (done) ->
+        insertHTML """
+        <div id="parent2" class="parent">
+          <div id="parent1">
+            <div class="child"></div>
+            <div class="child"></div>
+          </div>
+        </div>
+        <div id="parent3">
+          <div class="child"></div>
+        </div>
+        """
+        parents = (dfdom ".child").closest()
+        parents.length().should.eq 2
+        parents.element[0].should.eql document.getElementById "parent1"
+        parents.element[1].should.eql document.getElementById "parent3"
+        done()
+
+      it "can retrieve the closest ancestor that matches a selector for the set of matched elements", (done) ->
+        insertHTML """
+        <div id="parent2" class="parent">
+          <div id="parent1">
+            <div class="child"></div>
+            <div class="child"></div>
+          </div>
+        </div>
+        <div id="parent3" class="parent">
+          <div class="child"></div>
+        </div>
+        """
+        parents = (dfdom ".child").closest ".parent"
+        parents.length().should.eq 2
+        parents.element[0].should.eql document.getElementById "parent2"
+        parents.element[1].should.eql document.getElementById "parent3"
         done()
 
       it "Get", (done) ->
@@ -587,8 +631,3 @@ describe "dfdom tests:", ->
 
         executionTimes.should.equal(1)
         done()
-
-
-
-
-

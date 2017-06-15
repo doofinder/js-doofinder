@@ -114,6 +114,7 @@ class DfDomElement
   ###*
    * Iterates over nodes in the store, passing them to the callback, and stores
    * the result of the callback in an array.
+   *
    * @public
    * @param  {Function} callback
    * @return {Array}
@@ -126,73 +127,85 @@ class DfDomElement
    * should return a NodeList (or compatible object) with nodes found for the
    * passed item. Found nodes are stored all together and returned at the end
    * of the function call.
+   *
    * @protected
-   * @param  {Function} nodeFinder Finder function that finds more nodes
-   *                               starting from the received one.
-   * @return {Array}               Array with all the nodes found.
+   * @param  {Function} finder Finder function that finds more nodes starting
+   *                           from the received one.
+   *
+   * @return {Array}           Array with all the nodes found.
   ###
-  __expand: (nodeFinder) ->
+  __find: (finder) ->
     results = []
     @each (rootNode) ->
       start = (Math.max results.length - 1, 0)
-      args = [start, 0].concat (nodeFinder rootNode)
+      args = [start, 0].concat (finder rootNode)
       Array.prototype.splice.apply results, args
     results
 
   ###*
    * Finds nodes that match the passed selector starting from each element in
    * the store.
+   *
    * @public
    * @param  {string} selector CSS Selector.
    * @return {DfDomElement}
   ###
   find: (selector) ->
-    nodeFinder = (item) => @__fixNodeList item.querySelectorAll selector
-    new DfDomElement @__expand nodeFinder
+    new DfDomElement @__find (item) => @__fixNodeList item.querySelectorAll selector
 
   ###*
    * Returns all the children of the elements in the store in a DfDomElement
    * instance.
+   *
    * @public
    * @return {DfDomElement}
   ###
   children: ->
-    childFinder = (item) => @__fixNodeList item.children
-    new DfDomElement @__expand childFinder
+    new DfDomElement @__find (item) => @__fixNodeList item.children
 
   ###*
-   * Returns all the parent nodes of the elements in the store in a DfDomElement
-   * instance. Duplicates are removed.
+   * Returns a DfDomElement instance that contains the parent node of all the
+   * elements in the current store. Duplicates are removed.
+   *
    * @public
    * @return {DfDomElement}
   ###
   parent: ->
-    parentNodes = @map (item) -> item.parentElement
-    new DfDomElement parentNodes
+    new DfDomElement @map (item) -> item.parentElement
+
+  ###*
+   * Returns a DfDomElement instance that contains all the parents of all the
+   * elements in the store. Can be limited to nodes that match the provided
+   * selector. Duplicates are removed.
+   *
+   * @public
+   * @param  {string} selector Optional CSS Selector.
+   * @return {DfDomElement}
+  ###
+  parents: (selector) ->
+    finder = (item) =>
+      results = []
+      while item.parentElement
+        if not selector? or item.parentElement[MATCHES_SELECTOR_FN] selector
+          results.push item.parentElement
+        item = item.parentElement
+      results
+    new DfDomElement @__find finder
+
+  ###*
+   * Returns a DfDomElement instance that contains the closest parent of all
+   * the elements in the store. If a selector is provided, nodes must match
+   * the selector to be selected.
+   *
+   * @public
+   * @param  {string} selector Optional CSS Selector.
+   * @return {DfDomElement}
+  ###
+  closest: (selector) ->
+    new DfDomElement @map (item) ->
+      ((new DfDomElement item).parents selector).first()._get 0
 
   # TODO(@carlosescri): I'm here!
-
-  closest: (selector) ->
-    el = @_first()
-    parent = null
-    # traverse parents
-    while (el)
-      parent = el.parentElement
-      if (parent and parent[MATCHES_SELECTOR_FN](selector))
-        return new DfDomElement parent
-      el = parent
-    return new DfDomElement []
-
-  parents: (selector) ->
-    parents = []
-    if @_first() and @_first().parentElement
-      p = @_first().parentElement
-      while p?
-        o = p
-        if not selector? or o[MATCHES_SELECTOR_FN](selector)
-          parents.push(o)
-        p = o.parentElement
-    return new DfDomElement parents
 
   _first: () ->
     @_get(0)
