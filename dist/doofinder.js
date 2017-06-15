@@ -229,10 +229,7 @@ author: @ecoslado
      */
 
     Client.prototype.__escapeChars = function(word) {
-      word = word.replace(/\&/, "%26");
-      word = word.replace(/\?/, "%3F");
-      word = word.replace(/\+/, "%2B");
-      return word.replace(/\#/, "%23");
+      return word.replace(/\&/g, "%26").replace(/\?/g, "%3F").replace(/\+/g, "%2B").replace(/\#/g, "%23");
     };
 
 
@@ -1145,7 +1142,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "5.0.6",
+    version: "5.0.7",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
