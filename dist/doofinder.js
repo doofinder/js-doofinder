@@ -1175,9 +1175,13 @@ author: @ecoslado
 
 },{"./client":1,"./controller":2,"./util/dfdom":4,"./util/helpers":7,"./util/http":8,"./util/introspection":9,"./util/uniqueid":10,"./widget":11,"./widgets/display":12,"./widgets/facets/basefacet":13,"./widgets/facets/facetpanel":14,"./widgets/facets/rangefacet":15,"./widgets/facets/termfacet":16,"./widgets/queryinput":17,"./widgets/results/results":18,"./widgets/results/scrollresults":19,"bean":21,"extend":22,"lodash.throttle":60,"md5":61,"mustache":65,"qs":67}],4:[function(require,module,exports){
 (function() {
-  var DfDomElement, bean, dfdom;
+  var DfDomElement, MATCHES_SELECTOR_FN, bean, dfdom;
 
   bean = require("bean");
+
+  MATCHES_SELECTOR_FN = (['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector', 'matchesSelector'].filter(function(funcName) {
+    return typeof document.body[funcName] === 'function';
+  })).pop();
 
 
   /**
@@ -1295,67 +1299,130 @@ author: @ecoslado
     DfDomElement.prototype.__uniquify = function() {
       var candidate, nodes;
       nodes = (function() {
-        var results;
-        results = [];
+        var results1;
+        results1 = [];
         while (this.element.length > 0) {
           candidate = (this.element.splice(0, 1)).pop();
           this.element = this.element.filter(function(node) {
             return node !== candidate;
           });
-          results.push(candidate);
+          results1.push(candidate);
         }
-        return results;
+        return results1;
       }).call(this);
       this.element = nodes;
       return this;
     };
 
+
+    /**
+     * Iterates over nodes in the store, passing them to the callback.
+     * @public
+     * @param  {Function} callback
+     * @return {undefined}
+     */
+
     DfDomElement.prototype.each = function(callback) {
       return this.element.forEach(callback);
     };
 
-    DfDomElement.prototype.find = function(selector) {
-      var selectedNodes;
-      selectedNodes = [];
-      this.each(function(item) {
-        return selectedNodes = selectedNodes.concat(Array.prototype.slice.call(item.querySelectorAll(selector)));
-      });
-      return new DfDomElement(selectedNodes);
+
+    /**
+     * Iterates over nodes in the store, passing them to the callback, and stores
+     * the result of the callback in an array.
+     * @public
+     * @param  {Function} callback
+     * @return {Array}
+     */
+
+    DfDomElement.prototype.map = function(callback) {
+      return this.element.map(callback);
     };
+
+
+    /**
+     * Iterates over nodes in the store, passing them to a "finder" callback that
+     * should return a NodeList (or compatible object) with nodes found for the
+     * passed item. Found nodes are stored all together and returned at the end
+     * of the function call.
+     * @protected
+     * @param  {Function} nodeFinder Finder function that finds more nodes
+     *                               starting from the received one.
+     * @return {Array}               Array with all the nodes found.
+     */
+
+    DfDomElement.prototype.__expand = function(nodeFinder) {
+      var results;
+      results = [];
+      this.each(function(rootNode) {
+        var args, start;
+        start = Math.max(results.length - 1, 0);
+        args = [start, 0].concat(nodeFinder(rootNode));
+        return Array.prototype.splice.apply(results, args);
+      });
+      return results;
+    };
+
+
+    /**
+     * Finds nodes that match the passed selector starting from each element in
+     * the store.
+     * @public
+     * @param  {string} selector CSS Selector.
+     * @return {DfDomElement}
+     */
+
+    DfDomElement.prototype.find = function(selector) {
+      var nodeFinder;
+      nodeFinder = (function(_this) {
+        return function(item) {
+          return _this.__fixNodeList(item.querySelectorAll(selector));
+        };
+      })(this);
+      return new DfDomElement(this.__expand(nodeFinder));
+    };
+
+
+    /**
+     * Returns all the children of the elements in the store in a DfDomElement
+     * instance.
+     * @public
+     * @return {DfDomElement}
+     */
 
     DfDomElement.prototype.children = function() {
-      var selectedNodes;
-      selectedNodes = [];
-      this.each(function(item) {
-        return selectedNodes = selectedNodes.concat(Array.prototype.slice.call(item.children));
-      });
-      return new DfDomElement(selectedNodes);
+      var childFinder;
+      childFinder = (function(_this) {
+        return function(item) {
+          return _this.__fixNodeList(item.children);
+        };
+      })(this);
+      return new DfDomElement(this.__expand(childFinder));
     };
 
+
+    /**
+     * Returns all the parent nodes of the elements in the store in a DfDomElement
+     * instance. Duplicates are removed.
+     * @public
+     * @return {DfDomElement}
+     */
+
     DfDomElement.prototype.parent = function() {
-      var selectedNodes;
-      selectedNodes = [];
-      this.each(function(item) {
-        return selectedNodes.push(item.parentElement);
+      var parentNodes;
+      parentNodes = this.map(function(item) {
+        return item.parentElement;
       });
-      return new DfDomElement(selectedNodes);
+      return new DfDomElement(parentNodes);
     };
 
     DfDomElement.prototype.closest = function(selector) {
-      var el, matchesFn, parent;
-      matchesFn = null;
+      var el, parent;
       el = this._first();
-      ['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector'].some(function(fn) {
-        if (typeof document.body[fn] === 'function') {
-          matchesFn = fn;
-          return true;
-        }
-        return false;
-      });
       parent = null;
       while (el) {
         parent = el.parentElement;
-        if (parent && parent[matchesFn](selector)) {
+        if (parent && parent[MATCHES_SELECTOR_FN](selector)) {
           return new DfDomElement(parent);
         }
         el = parent;
@@ -1364,21 +1431,13 @@ author: @ecoslado
     };
 
     DfDomElement.prototype.parents = function(selector) {
-      var matchesFn, o, p, parents;
-      matchesFn = null;
-      ['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector'].some(function(fn) {
-        if (typeof document.body[fn] === 'function') {
-          matchesFn = fn;
-          return true;
-        }
-        return false;
-      });
+      var o, p, parents;
       parents = [];
       if (this._first() && this._first().parentElement) {
         p = this._first().parentElement;
-        while (p !== null) {
+        while (p != null) {
           o = p;
-          if ((selector == null) || o[matchesFn](selector)) {
+          if ((selector == null) || o[MATCHES_SELECTOR_FN](selector)) {
             parents.push(o);
           }
           p = o.parentElement;

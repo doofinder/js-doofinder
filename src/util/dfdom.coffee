@@ -1,11 +1,19 @@
 bean = require "bean"
 
+MATCHES_SELECTOR_FN = ([
+  'matches',
+  'webkitMatchesSelector',
+  'mozMatchesSelector',
+  'msMatchesSelector',
+  'oMatchesSelector',
+  'matchesSelector'
+].filter (funcName) -> typeof document.body[funcName] is 'function').pop()
+
 ###*
  * DfDomElement
  * This class manages a set of DOM elements identified by a selector.
 ###
 class DfDomElement
-
   ###*
    * @public
    * @param  {string|String|HTMLElement|NodeList|Array} selector
@@ -90,67 +98,99 @@ class DfDomElement
     @element = nodes
     return this
 
+  #
   # NODE HIERARCHY MANAGEMENT
+  #
+
+  ###*
+   * Iterates over nodes in the store, passing them to the callback.
+   * @public
+   * @param  {Function} callback
+   * @return {undefined}
+  ###
   each: (callback) ->
-    @element.forEach(callback)
+    @element.forEach callback
 
+  ###*
+   * Iterates over nodes in the store, passing them to the callback, and stores
+   * the result of the callback in an array.
+   * @public
+   * @param  {Function} callback
+   * @return {Array}
+  ###
+  map: (callback) ->
+    @element.map callback
+
+  ###*
+   * Iterates over nodes in the store, passing them to a "finder" callback that
+   * should return a NodeList (or compatible object) with nodes found for the
+   * passed item. Found nodes are stored all together and returned at the end
+   * of the function call.
+   * @protected
+   * @param  {Function} nodeFinder Finder function that finds more nodes
+   *                               starting from the received one.
+   * @return {Array}               Array with all the nodes found.
+  ###
+  __expand: (nodeFinder) ->
+    results = []
+    @each (rootNode) ->
+      start = (Math.max results.length - 1, 0)
+      args = [start, 0].concat (nodeFinder rootNode)
+      Array.prototype.splice.apply results, args
+    results
+
+  ###*
+   * Finds nodes that match the passed selector starting from each element in
+   * the store.
+   * @public
+   * @param  {string} selector CSS Selector.
+   * @return {DfDomElement}
+  ###
   find: (selector) ->
-    selectedNodes = []
-    @each (item) ->
-      selectedNodes = selectedNodes.concat(
-        Array.prototype.slice.call item.querySelectorAll(selector)
-      )
-    new DfDomElement selectedNodes
+    nodeFinder = (item) => @__fixNodeList item.querySelectorAll selector
+    new DfDomElement @__expand nodeFinder
 
-  children: () ->
-    selectedNodes = []
-    @each (item) ->
-      selectedNodes = selectedNodes.concat(
-        Array.prototype.slice.call item.children
-      )
-    new DfDomElement selectedNodes
+  ###*
+   * Returns all the children of the elements in the store in a DfDomElement
+   * instance.
+   * @public
+   * @return {DfDomElement}
+  ###
+  children: ->
+    childFinder = (item) => @__fixNodeList item.children
+    new DfDomElement @__expand childFinder
 
-  parent: () ->
-    selectedNodes = []
-    @each (item) ->
-      selectedNodes.push(item.parentElement)
-    new DfDomElement selectedNodes
+  ###*
+   * Returns all the parent nodes of the elements in the store in a DfDomElement
+   * instance. Duplicates are removed.
+   * @public
+   * @return {DfDomElement}
+  ###
+  parent: ->
+    parentNodes = @map (item) -> item.parentElement
+    new DfDomElement parentNodes
+
+  # TODO(@carlosescri): I'm here!
 
   closest: (selector) ->
-    matchesFn = null
     el = @_first()
-    # find vendor prefix
-    ['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector'].some (fn) ->
-      if (typeof document.body[fn] == 'function')
-        matchesFn = fn
-        return true
-
-      return false
     parent = null
     # traverse parents
     while (el)
       parent = el.parentElement
-      if (parent && parent[matchesFn](selector))
+      if (parent and parent[MATCHES_SELECTOR_FN](selector))
         return new DfDomElement parent
       el = parent
     return new DfDomElement []
 
   parents: (selector) ->
-    matchesFn = null
-    ['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector'].some (fn) ->
-      if (typeof document.body[fn] == 'function')
-        matchesFn = fn
-        return true
-
-      return false
     parents = []
     if @_first() and @_first().parentElement
       p = @_first().parentElement
-      while (p != null)
+      while p?
         o = p
-        if not selector? or o[matchesFn](selector)
+        if not selector? or o[MATCHES_SELECTOR_FN](selector)
           parents.push(o)
-
         p = o.parentElement
     return new DfDomElement parents
 
