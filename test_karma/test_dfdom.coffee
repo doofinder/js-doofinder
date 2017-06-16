@@ -127,7 +127,7 @@ describe "dfdom tests:", ->
         """
         items = (dfdom "li")
         elements = items.map (item) -> item
-        elements.should.eql items.element
+        items.element.should.eql elements
         done()
 
     # Methods
@@ -271,21 +271,6 @@ describe "dfdom tests:", ->
         """
         parent1 = (dfdom ".parent").get 1
         ((dfdom parent1).attr "id").should.equal "parent1"
-        done()
-
-      it "can return the length of the set of matched elements", (done) ->
-        insertHTML """
-          <ul class="test">
-            <li></li>
-            <li></li>
-          </ul>
-          <ul class="test">
-            <li></li>
-            <li></li>
-          </ul>
-        """
-
-        (dfdom "li").length().should.equal 4
         done()
 
     context "DOM Manipulation Methods", ->

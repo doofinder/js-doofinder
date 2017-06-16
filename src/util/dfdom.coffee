@@ -112,23 +112,19 @@ class DfDomElement
    * @return {undefined}
   ###
   each: (callback) ->
-    @element.forEach callback
+    @element.forEach callback, @
     return @
 
   ###*
    * Iterates over nodes in the store, passing them to the callback, and stores
    * the result of the callback in an array.
    *
-   * TODO: THIS SHOULD BE INTERNAL, CREATE A MAP FUNCTION THAT RETURNS A DfDomElement INSTANCE
-   *
    * @public
    * @param  {Function} callback
    * @return {Array}
   ###
   map: (callback) ->
-    @element.map callback
-
-  # TODO: CREATE A FILTER METHOD THAT RETURNS A FILTERED DfDomElement INSTANCE
+    @element.map callback, @
 
   ###*
    * Iterates over nodes in the store, passing them to a "finder" callback that

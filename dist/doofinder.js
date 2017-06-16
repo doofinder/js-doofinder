@@ -1328,7 +1328,7 @@ author: @ecoslado
      */
 
     DfDomElement.prototype.each = function(callback) {
-      this.element.forEach(callback);
+      this.element.forEach(callback, this);
       return this;
     };
 
@@ -1337,15 +1337,13 @@ author: @ecoslado
      * Iterates over nodes in the store, passing them to the callback, and stores
      * the result of the callback in an array.
      *
-     * TODO: THIS SHOULD BE INTERNAL, CREATE A MAP FUNCTION THAT RETURNS A DfDomElement INSTANCE
-     *
      * @public
      * @param  {Function} callback
      * @return {Array}
      */
 
     DfDomElement.prototype.map = function(callback) {
-      return this.element.map(callback);
+      return this.element.map(callback, this);
     };
 
 
