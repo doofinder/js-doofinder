@@ -20,6 +20,8 @@ class DfDomElement
    * @return {DfDomElement}
   ###
   constructor: (selector) ->
+    Object.defineProperty this, 'len', get: -> @element.length
+
     if selector instanceof String
       selector = selector.toString()
     if typeof selector is "string"
@@ -29,6 +31,7 @@ class DfDomElement
       @element = @__initFromSelectorArray selector
     else
       @element = @__initFromSelector selector
+
     @__uniquify()
 
   ###*
@@ -115,12 +118,16 @@ class DfDomElement
    * Iterates over nodes in the store, passing them to the callback, and stores
    * the result of the callback in an array.
    *
+   * TODO: THIS SHOULD BE INTERNAL, CREATE A MAP FUNCTION THAT RETURNS A DfDomElement INSTANCE
+   *
    * @public
    * @param  {Function} callback
    * @return {Array}
   ###
   map: (callback) ->
     @element.map callback
+
+  # TODO: CREATE A FILTER METHOD THAT RETURNS A FILTERED DfDomElement INSTANCE
 
   ###*
    * Iterates over nodes in the store, passing them to a "finder" callback that
@@ -219,90 +226,248 @@ class DfDomElement
     return @element
 
   get: (key) ->
-    return new DfDomElement @_get(key)
+    if key? then @element[key] or null else @element
 
   length: () ->
     return @element.length
 
   # CONTENT RETRIEVING AND INJECTION
-  html: (htmlString) ->
-    @each (elem) ->
-      elem.innerHTML = htmlString
+
+  ###*
+   * Sets the HTML contents of each element in the set of matched elements. If
+   * called with no arguments retrieves the HTML of the first element in the set
+   * of matched elements.
+   *
+   * @public
+   * @param  {string} htmlContent   HTML source code to insert. Optional.
+   * @return {DfDomElement|string}  The same instance if is a set operation.
+   *                                The HTML source code if is get operation.
+  ###
+  html: (htmlContent) ->
+    if htmlContent?
+      @each (node) -> node.innerHTML = htmlContent
+      return this
+    else
+      @_first().innerHTML
+
+  ###*
+   * Clones a HTMLElement node or returns the same if it's a HTML string.
+   * @public
+   * @param  {HTMLElement|string} node The node to be cloned.
+   * @return {HTMLElement|string}      The copy or the same string.
+  ###
+  __cloneNode: (node) ->
+    switch
+      when typeof node is "string" then node
+      when node instanceof HTMLElement then node.cloneNode true
+      else throw "Invalid argument: #{node}"
+
+  ###*
+   * Appends a node or HTML into the set of matched elements. If the child is a
+   * HTMLElement then new copies are created when there're more than 1 item in
+   * the set. If the child is a DfDomElement instance, the first node of its set
+   * of matched elements is used.
+   *
+   * @public
+   * @param  {DfDomElement|HTMLElement|string} child Stuff to be appended.
+   * @return {DfDomElement}                          The current instance.
+  ###
+  append: (child) ->
+    child = (child.get 0) if child instanceof DfDomElement
+    if child?
+      @each (node, i) =>
+        if typeof child is "string"
+          node.insertAdjacentHTML "beforeend", child
+        else if child instanceof HTMLElement
+          node.appendChild (if i is 0 then child else @__cloneNode child)
     return this
 
-  append: (fragment) ->
-    @each (elem) ->
-      if typeof fragment is "string" and elem.insertAdjacentHTML?
-        elem.insertAdjacentHTML  "beforeend", fragment
-      else if typeof fragment is "string" and not elem.insertAdjacentHTML?
-        elem.innerHTML += fragment
-      else if fragment.tagName?
-        elem.appendChild fragment
-      else if fragment._first?
-        elem.appendChild fragment._first()
-
+  ###*
+   * Prepends a node or HTML into the set of matched elements. If the child is a
+   * HTMLElement then new copies are created when there're more than 1 item in
+   * the set. If the child is a DfDomElement instance, the first node of its set
+   * of matched elements is used.
+   *
+   * @public
+   * @param  {DfDomElement|HTMLElement|string} child Stuff to be prepended.
+   * @return {DfDomElement}                          The current instance.
+  ###
+  prepend: (child) ->
+    child = (child.get 0) if child instanceof DfDomElement
+    if child?
+      @each (node, i) =>
+        if typeof child is "string"
+          node.insertAdjacentHTML "afterbegin", child
+        else if child instanceof HTMLElement
+          newChild = (if i is 0 then child else @__cloneNode child)
+          if node.children?.length > 0
+            node.insertBefore newChild, node.children[0]
+          else
+            node.appendChild newChild
     return this
 
-  prepend: (fragment) ->
-    @each (elem) ->
-      if typeof fragment is "string" and elem.insertAdjacentHTML?
-        elem.insertAdjacentHTML  "afterbegin", fragment
-      else if typeof fragment is "string" and not elem.insertAdjacentHTML?
-        elem.innerHTML = fragment + elem.innerHTML
-      else
-        if not fragment.tagName
-          fragment = fragment._first()
-        if elem.children and elem.children.length > 0
-          elem.insertBefore fragment, elem.children[0]
-        else
-          elem.appendChild fragment
-
-  before: (fragment) ->
-    @each (elem) ->
-      if typeof fragment is "string"
-        elem.insertAdjacentHTML  "beforebegin", fragment
-      else if fragment.tagName
-        elem.parentElement.insertBefore fragment, elem
-      else
-        elem.parentElement.insertBefore fragment._first(), elem
-
-  after: (fragment) ->
-    @each (elem) ->
-      if typeof fragment is "string"
-        elem.insertAdjacentHTML  "afterend", fragment
-      else if fragment.tagName
-        elem.parentElement.appendChild fragment
-      else
-        elem.parentElement.appendChild fragment._first()
+  ###*
+   * Inserts a node or HTML before the set of matched elements. If the node is a
+   * HTMLElement then new copies are created when there're more than 1 item in
+   * the set. If the node is a DfDomElement instance, the first node of its set
+   * of matched elements is used.
+   *
+   * @public
+   * @param  {DfDomElement|HTMLElement|string} child Stuff to be inserted.
+   * @return {DfDomElement}                          The current instance.
+  ###
+  before: (sibling) ->
+    sibling = (sibling.get 0) if sibling instanceof DfDomElement
+    if sibling?
+      @each (node, i) =>
+        if typeof sibling is "string"
+          node.insertAdjacentHTML  "beforebegin", sibling
+        else if sibling instanceof HTMLElement
+          newSibling = (if i is 0 then sibling else @__cloneNode sibling)
+          node.parentElement.insertBefore newSibling, node
     return this
 
-  empty: (htmlString) ->
-    @html("")
-
-  # TAG ATTRIBUTES
-  attr: (key, value) ->
-    first = @_first()
-    if first?.getAttribute?
-      if typeof(value) != "undefined"
-        first.setAttribute(key,value)
-      return first.getAttribute(key)
-
-  removeAttr: (key) ->
-    @each (item) ->
-      item.removeAttribute(key)
+  ###*
+   * Inserts a node or HTML after the set of matched elements. If the node is a
+   * HTMLElement then new copies are created when there're more than 1 item in
+   * the set. If the node is a DfDomElement instance, the first node of its set
+   * of matched elements is used.
+   *
+   * @public
+   * @param  {DfDomElement|HTMLElement|string} child Stuff to be inserted.
+   * @return {DfDomElement}                          The current instance.
+  ###
+  after: (sibling) ->
+    sibling = (sibling.get 0) if sibling instanceof DfDomElement
+    if sibling?
+      @each (node, i) =>
+        if typeof sibling is "string"
+          node.insertAdjacentHTML  "afterend", sibling
+        else if sibling instanceof HTMLElement
+          newSibling = (if i is 0 then sibling else @__cloneNode sibling)
+          node.parentElement.insertBefore newSibling, node.nextSibling
     return this
 
-  hasAttr: (key) ->
-    @attr(key)? and @attr(key) != ""
+  ###*
+   * Empties the nodes in the set of matched elements so there's no HTML inside.
+   * @return {DfDomElement} Current instance.
+  ###
+  empty: -> @html ""
 
-  data: (key, value) ->
-    actualKey = "data-#{key}"
-    return @attr(actualKey, value)
+  #
+  # Tag Attributes, Classes, Values
+  #
 
+  ###*
+   * Get the value of an attribute for the first element in the set of matched
+   * elements or set one or more attributes for every matched element.
+   *
+   * @public
+   * @param  {string} name              Attribute name.
+   * @param  {string} value             Attribute value.
+   * @return {DfDomElement|string|null} Current instance on set, attribute
+   *                                    value on get.
+  ###
+  attr: (name, value) ->
+    if value?
+      @each (node) -> node.setAttribute name, value
+      return this
+    else
+      @_first()?.getAttribute name
+
+  ###*
+   * Removes an attribute from the set of matched elements.
+   * @public
+   * @param  {string} name          Attribute name.
+   * @return {DfDomElement|string}  Current instance.
+  ###
+  removeAttr: (name) ->
+    @each (node) -> node.removeAttribute name
+    return this
+
+  ###*
+   * Checks whether all the elements in the set of matched elements have certain
+   * attribute or not.
+   *
+   * @public
+   * @param  {string} name  Attribute name.
+   * @return {Boolean}      true if the attribute is present.
+  ###
+  hasAttr: (name) ->
+    (@element.filter (node) -> node.hasAttribute name).length > 0
+
+  ###*
+   * Shortcut to get or set data-* attributes' values for the set of matched
+   * elements. When getting the value returns the value of the first element
+   * in the set.
+   *
+   * @public
+   * @param  {string} name              Attribute name.
+   * @param  {string} value             Attribute value.
+   * @return {DfDomElement|string|null} Current instance on set,
+   *                                    data-attribute value on get.
+  ###
+  data: (name, value) -> @attr "data-#{name}", value
+
+  ###*
+   * Sets the value of the elements in the set of matched elements whose
+   * prototype has `value` defined as a valid property. When no value is
+   * provided, returns the value of the first element in the set, if it
+   * supports it. Otherwise, returns undefined.
+   *
+   * @public
+   * @param  {*} value Optional. The value that must be set for each element.
+   * @return {*}       The value of the first element in the set, if supports
+   *                   it.
+  ###
   val: (value) ->
-    if typeof(value) != "undefined"
-      @_first().value = value
-    return @_first().value
+    if value?
+      @each (node) ->
+        node.value = value if node.__proto__.hasOwnProperty "value"
+      return this
+    else if (node = @_first())?.__proto__.hasOwnProperty "value"
+      node.value
+    else
+      undefined
+
+  ###*
+   * Adds a class name to all the elements in the set of matched elements.
+   * @public
+   * @param {string} className
+  ###
+  addClass: (className) ->
+    @each (node) -> node.classList.add className
+    return this
+
+  ###*
+   * Checks whether all elements in the set of matched elements have a certain
+   * class name.
+   *
+   * @public
+   * @param {string} className
+  ###
+  hasClass: (className) ->
+    (@element.filter (node) -> node.classList.contains className).length > 0
+
+  ###*
+   * Removes a class name from all the elements in the set of matched elements.
+   * @public
+   * @param {string} className
+  ###
+  removeClass: (className) ->
+    @each (node) -> node.classList.remove className
+    return this
+
+  ###*
+   * Toggles the presence of certain class name for the elements in the set of
+   * matched elements.
+   *
+   * @public
+   * @param {string} className
+  ###
+  toggleClass: (className) ->
+    @each (node) -> node.classList.toggle className
+    return this
 
   # STYLES
 
@@ -334,24 +499,6 @@ class DfDomElement
 
   scrollLeft: () ->
     @_first().scrollLeft
-
-  addClass: (className) ->
-    @each (elem) ->
-      elem.classList.add className
-    return this
-
-  removeClass: (className) ->
-    @each (elem) ->
-      elem.classList.remove className
-    return this
-
-  toggleClass: (className) ->
-    @each (elem) ->
-      elem.classList.toggle className
-    return this
-
-  hasClass: (className) ->
-    @_first().classList.contains className
 
   css: (key, value) ->
     @each (elem) ->

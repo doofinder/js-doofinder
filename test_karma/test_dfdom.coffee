@@ -88,7 +88,7 @@ describe "dfdom tests:", ->
         done()
 
     context "Internal Utilities", ->
-      it "properly iterates each node in the set of matched elements", (done) ->
+      it "can iterate each node in the set of matched elements", (done) ->
         insertHTML """
         <ul class="test">
           <li></li>
@@ -108,7 +108,7 @@ describe "dfdom tests:", ->
         count.should.eq 4
         done()
 
-      it "properly maps each node in the set of matched elements", (done) ->
+      it "can map each node in the set of matched elements to a new array", (done) ->
         insertHTML """
         <ul class="test">
           <li></li>
@@ -126,8 +126,8 @@ describe "dfdom tests:", ->
         done()
 
     # Methods
-    context "Traversing the DOM", ->
-      it "can properly find nodes inside the set of matched elements given a selector", (done) ->
+    context "DOM Traversing Methods", ->
+      it "can find nodes inside the set of matched elements given a selector", (done) ->
         insertHTML """
           <ul>
             <li></li>
@@ -150,7 +150,7 @@ describe "dfdom tests:", ->
         ((dfdom ".test").find "div").length().should.eq 0
         done()
 
-      it "can properly get the direct child nodes of the set of matched elements", (done) ->
+      it "can get the direct child nodes of the set of matched elements", (done) ->
         insertHTML """
           <ul class="test">
             <li></li>
@@ -256,23 +256,19 @@ describe "dfdom tests:", ->
         parents.element[1].should.eql document.getElementById "parent3"
         done()
 
-      it "Get", (done) ->
+      it "can get specific nodes by index from the set of matched elements", (done) ->
         insertHTML """
         <div id="parent2" class="parent">
           <div id="parent1" class="parent">
-            <div id="child">
-            </div>
+            <div id="child"></div>
           </div>
         </div>
         """
-
-        dfdom(".parent")
-          .get(1)
-          .attr("id")
-          .should.equal("parent1")
+        parent1 = (dfdom ".parent").get 1
+        ((dfdom parent1).attr "id").should.equal "parent1"
         done()
 
-      it "Length", (done) ->
+      it "can return the length of the set of matched elements", (done) ->
         insertHTML """
           <ul class="test">
             <li></li>
@@ -284,151 +280,184 @@ describe "dfdom tests:", ->
           </ul>
         """
 
-        dfdom("li")
-          .length()
-          .should.equal(4)
-
+        (dfdom "li").length().should.equal 4
         done()
 
-    context "Content retrieving and injection", ->
+    context "DOM Manipulation Methods", ->
       beforeEach ->
         insertHTML """
-          <ul id='test'>
-            <li id='item2'>
-            </li>
-          </ul>
+          <div class="container"></div>
+          <div class="container"></div>
         """
-      it "html", (done) ->
-        insertHTML """
-        <div class="container"></div>
+
+      it "can insert and retrieve HTML code", (done) ->
+        code = """
+          <div class="content"></div>
+          <div class="content"></div>
         """
-        dfdom(".container").html('<div class="content"></div>')
-          .element[0]
-          .innerHTML
-          .should.equal('<div class="content"></div>')
+        containers = ((dfdom ".container").html code)
+        containers.len.should.eq 2
+        containers.children().len.should.eq 4
+        containers.html().should.equal code
         done()
 
-      it "append", (done) ->
-        insertHTML """
-          <ul id='test'>
-            <li id='item1'>
-            </li>
-            <li id='item2'>
-            </li>
-          </ul>
-        """
-        dfdom("#test")
-          .append("<li id='item3'></li>")
-
-        dfdom("li")
-          .get(2)
-          .attr("id")
-          .should.equal("item3")
-
-        li = document.createElement("li")
-        li.id = "item4"
-        dfdom("#test").append(li)
-        dfdom("li")
-          .get(3)
-          .attr("id")
-          .should.equal("item4")
-
+      it "can append HTML inside the set of matched elements", (done) ->
+        (dfdom ".container").append """<div class="content"></div>"""
+        contents = (dfdom ".content")
+        contents.len.should.eq 2
+        (contents.parents ".container").len.should.eq 2
         done()
 
-      it "prepend", (done) ->
-        dfdom("#test").prepend("<li id='item1'></li>")
-        dfdom("li")
-          .get(0)
-          .attr("id")
-          .should.equal("item1")
-
-        li = document.createElement("li")
-        li.id = "item0"
-        dfdom("#test").prepend(li)
-        dfdom("li")
-          .get(0)
-          .attr("id")
-          .should.equal("item0")
+      it "can append a node inside the set of matched elements", (done) ->
+        (dfdom "body").append """<div class="copiedContent"></div>"""
+        (dfdom ".copiedContent").len.should.eq 1
+        (dfdom ".container").append ((dfdom ".copiedContent").get 0)
+        contents = (dfdom ".copiedContent")
+        contents.len.should.eq 2
+        (contents.parents ".container").len.should.eq 2
         done()
 
-      it "after", (done) ->
-        dfdom("#item2").after("<li id='item3'></li>")
-        dfdom("li")
-          .get(1)
-          .attr("id")
-          .should.equal("item3")
-
-        li = document.createElement("li")
-        li.id = "item4"
-        dfdom("#item3").after(li)
-        dfdom("li")
-          .get(2)
-          .attr("id")
-          .should.equal("item4")
+      it "can prepend HTML inside the set of matched elements", (done) ->
+        ((dfdom ".container").prepend """<div></div>""").prepend """<div class="content"></div>"""
+        contents = dfdom ".content"
+        contents.len.should.eq 2
+        (contents.parents ".container").len.should.eq 2
         done()
 
-      it "before", (done) ->
-
-        dfdom("#item2").before("<li id='item1'></li>")
-        dfdom("li").get(0).attr("id").should.equal("item1")
-
-        li = document.createElement("li")
-        li.id = "item0"
-        dfdom("#item1").before(li)
-        dfdom("li")
-          .get(0)
-          .attr("id")
-          .should.equal("item0")
+      it "can prepend a node inside the set of matched elements", (done) ->
+        (dfdom "body").prepend """<div class="copiedContent"></div>"""
+        (dfdom ".copiedContent").len.should.eq 1
+        ((dfdom ".container").prepend """<div></div>""").prepend (dfdom ".copiedContent").get 0
+        contents = (dfdom ".copiedContent")
+        contents.len.should.eq 2
+        (contents.parents ".container").len.should.eq 2
         done()
 
-      it "empty", (done) ->
-        dfdom("#test").empty()
-          .element[0]
-          .innerHTML
-          .should.equal("")
+      it "can insert HTML after the set of matched elements", (done) ->
+        (dfdom ".container").after """<div class="container new"></div>"""
+        containers = (dfdom ".container")
+        containers.len.should.eq 4
+        ((dfdom containers.get 1).hasClass "new").should.be.true
+        ((dfdom containers.get 3).hasClass "new").should.be.true
         done()
 
-    context "Tag attributes", ->
+      it "can insert a node after the set of matched elements", (done) ->
+        (dfdom "body").prepend """<div class="new"></div>"""
+        (dfdom ".new").len.should.eq 1
+        (dfdom ".container").after (dfdom ".new").addClass "container"
+        containers = (dfdom ".container")
+        containers.len.should.eq 4
+        ((dfdom containers.get 1).hasClass "new").should.be.true
+        ((dfdom containers.get 3).hasClass "new").should.be.true
+        done()
+
+      it "can insert HTML before the set of matched elements", (done) ->
+        (dfdom ".container").before """<div class="container new"></div>"""
+        containers = (dfdom ".container")
+        containers.len.should.eq 4
+        ((dfdom containers.get 0).hasClass "new").should.be.true
+        ((dfdom containers.get 2).hasClass "new").should.be.true
+        done()
+
+      it "can insert a node before the set of matched elements", (done) ->
+        (dfdom "body").append """<div class="new"></div>"""
+        (dfdom ".new").len.should.eq 1
+        (dfdom ".container").before (dfdom ".new").addClass "container"
+        containers = (dfdom ".container")
+        containers.len.should.eq 4
+        ((dfdom containers.get 0).hasClass "new").should.be.true
+        ((dfdom containers.get 2).hasClass "new").should.be.true
+        done()
+
+      it "can empty the HTML content of a node", (done) ->
+        (dfdom "body").empty().html().should.equal ""
+        done()
+
+    context "Tag Attributes Methods", ->
       beforeEach ->
         insertHTML """
-          <div foo="bar" data-role="main"></div>
+          <div></div>
+          <div></div>
         """
-      it "attr", (done) ->
-        dfdom("div")
-          .attr("foo")
-          .should.equal("bar")
-        dfdom("div")
-          .attr("foo", "lorem ipsum")
-          .should.equal("lorem ipsum")
-        dfdom("[data-role='main']")
-          .attr("foo")
-          .should.equal("lorem ipsum")
+
+      it "can set, retrieve, check and remove attributes", (done) ->
+        # No attributes
+        (expect ((dfdom "div").attr "foo")).to.be.null
+        ((dfdom "div").hasAttr "foo").should.be.false
+
+        # Set attribute
+        (dfdom "div").attr "foo", "bar"
+        (dfdom "div[foo='bar']").len.should.eq 2
+
+        # Check and retrieve attribute
+        ((dfdom "div").hasAttr "foo").should.be.true
+        ((dfdom "div").attr "foo").should.equal "bar"
+
+        # Remove attribute
+        ((dfdom "div").removeAttr "foo")
+
+        # No attributes again
+        (expect ((dfdom "div").attr "foo")).to.be.null
+        ((dfdom "div").hasAttr "foo").should.be.false
+
         done()
 
-      it "removeAttr", (done) ->
-        dfdom("div")
-          .removeAttr("foo")
-        assert dfdom("div").attr("foo") == null
+      it "can set and retrieve data attributes", (done) ->
+        (expect ((dfdom "div").data "role")).to.be.null
+        (dfdom "div").data "role", "presentational"
+        (dfdom "div[data-role='presentational']").len.should.eq 2
         done()
 
-      it "hasAttr", (done) ->
-        dfdom("div").hasAttr("foo").should.be.true
-        dfdom("div").hasAttr("xxx").should.be.false
-        done()
-
-      it "data", (done) ->
-        dfdom("div").data("role").should.equal("main")
-        dfdom("div").data("other", "whatever").should.equal("whatever")
-        dfdom("div").data("other").should.equal("whatever")
-        done()
-
-      it "val", (done) ->
+      it "can get and set the value of elements that support it", (done) ->
         insertHTML """
-        <input value="hello" />
+        <div></div>
+        <textarea>hello</textarea>
+        <input type="text" value="hello">
+        <input type="checkbox" value="hello">
+        <input type="radio" name="radio" value="hello" checked>
+        <input type="radio" name="radio" value="hola">
         """
-        dfdom("input").val().should.equal("hello")
-        dfdom("input").val("goodbye").should.equal("goodbye")
-        dfdom("input").val().should.equal("goodbye")
+        (expect (dfdom "div").val()).to.be.undefined
+        (expect (dfdom "div").val("hello").val()).to.be.undefined
+
+        (dfdom "textarea").val().should.equal "hello"
+        (dfdom "textarea").val("bye").val().should.equal "bye"
+
+        (dfdom "input[type='text']").val().should.equal "hello"
+        (dfdom "input[type='text']").val("bye").val().should.equal "bye"
+
+        (dfdom "input[type='checkbox']").val().should.equal "hello"
+        (dfdom "input[type='checkbox']").val("bye").val().should.equal "bye"
+
+        (dfdom "input[type='radio'][value='hello']").val().should.equal "hello"
+        (dfdom "input[type='radio'][value='hello']").val("bye").val().should.equal "bye"
+        (dfdom "input[type='radio'][value='hello']").len.should.eq 0
+
+        (dfdom "input[type='radio'][value='hola']").val().should.equal "hola"
+        (dfdom "input[type='radio'][value='hola']").val("adios").val().should.equal "adios"
+        (dfdom "input[type='radio'][value='hola']").len.should.eq 0
+
+        done()
+
+      it "can add a class name to the set of matched elements", (done) ->
+        (dfdom "div").addClass "foo"
+        (dfdom ".foo").len.should.eq 2
+        (dfdom ".foo").addClass "bar"
+        (dfdom ".foo.bar").len.should.eq 2
+        done()
+
+      it "can check whether the set of matched elements has certain class name", (done) ->
+        ((dfdom "div").hasClass "foo").should.be.false
+        (((dfdom "div").addClass "foo").hasClass "foo").should.be.true
+        done()
+
+      it "can remove a class name from the set of matched elements", (done) ->
+        ((((dfdom "div").addClass "foo").removeClass "foo").hasClass "foo").should.be.false
+        done()
+
+      it "can toggle a class name in the set of matched elements", (done) ->
+        (((dfdom "div").toggleClass "foo").hasClass "foo").should.be.true
+        (((dfdom ".foo").toggleClass "foo").hasClass "foo").should.be.false
         done()
 
     context "Position, style and CSS classes management", ->
@@ -503,61 +532,6 @@ describe "dfdom tests:", ->
         dfdom(el).scrollLeft().should.equal(0)
         el.scrollLeft = 500
         dfdom(el).scrollLeft().should.equal(500)
-        done()
-
-      it "addClass", (done) ->
-        insertHTML """
-        <div class="foo"></div>
-        """
-        foo = dfdom(".foo")
-        foo.element[0].classList
-          .contains("bar")
-          .should.be.false
-        foo.addClass("bar")
-        foo.element[0].classList
-          .contains("bar")
-          .should.be.true
-        done()
-
-      it "removeClass", (done) ->
-        insertHTML """
-        <div class="foo"></div>
-        """
-        foo = dfdom(".foo")
-        foo.element[0].classList
-          .contains("foo")
-          .should.be.true
-        foo.removeClass("foo")
-        foo.element[0].classList
-          .contains("foo")
-          .should.be.false
-        done()
-
-      it "toggleClass", (done) ->
-        insertHTML """
-        <div class="foo"></div>
-        """
-        foo = dfdom(".foo")
-        foo.element[0].classList
-          .contains("foo")
-          .should.be.true
-        foo.toggleClass("foo")
-        foo.element[0].classList
-          .contains("foo")
-          .should.be.false
-        foo.toggleClass("foo")
-        foo.element[0].classList
-          .contains("foo")
-          .should.be.true
-        done()
-
-      it "hasClass", (done) ->
-        insertHTML """
-        <div class="foo"></div>
-        """
-        foo = dfdom(".foo")
-        foo.hasClass("foo").should.be.true
-        foo.hasClass("bar").should.be.false
         done()
 
       it "css", (done) ->

@@ -14,6 +14,13 @@ service = nock("http://#{host}")
 responseMock = require './util/responsemock'
 
 
+HTMLElement.prototype.insertAdjacentHTML = (position, text) ->
+  if position == "beforeend"
+    @innerHTML += text
+  else if position == "afterbegin"
+    @innerHTML = text + @innerHTML
+
+
 createController = (widgets...) ->
   client = new doofinder.Client hashid, apiKey, 5, null, host
   queryInput = new doofinder.widgets.QueryInput '#query'

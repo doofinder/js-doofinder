@@ -1197,6 +1197,11 @@ author: @ecoslado
      * @return {DfDomElement}
      */
     function DfDomElement(selector) {
+      Object.defineProperty(this, 'len', {
+        get: function() {
+          return this.element.length;
+        }
+      });
       if (selector instanceof String) {
         selector = selector.toString();
       }
@@ -1330,6 +1335,8 @@ author: @ecoslado
     /**
      * Iterates over nodes in the store, passing them to the callback, and stores
      * the result of the callback in an array.
+     *
+     * TODO: THIS SHOULD BE INTERNAL, CREATE A MAP FUNCTION THAT RETURNS A DfDomElement INSTANCE
      *
      * @public
      * @param  {Function} callback
@@ -1478,116 +1485,357 @@ author: @ecoslado
     };
 
     DfDomElement.prototype.get = function(key) {
-      return new DfDomElement(this._get(key));
+      if (key != null) {
+        return this.element[key] || null;
+      } else {
+        return this.element;
+      }
     };
 
     DfDomElement.prototype.length = function() {
       return this.element.length;
     };
 
-    DfDomElement.prototype.html = function(htmlString) {
-      this.each(function(elem) {
-        return elem.innerHTML = htmlString;
-      });
+
+    /**
+     * Sets the HTML contents of each element in the set of matched elements. If
+     * called with no arguments retrieves the HTML of the first element in the set
+     * of matched elements.
+     *
+     * @public
+     * @param  {string} htmlContent   HTML source code to insert. Optional.
+     * @return {DfDomElement|string}  The same instance if is a set operation.
+     *                                The HTML source code if is get operation.
+     */
+
+    DfDomElement.prototype.html = function(htmlContent) {
+      if (htmlContent != null) {
+        this.each(function(node) {
+          return node.innerHTML = htmlContent;
+        });
+        return this;
+      } else {
+        return this._first().innerHTML;
+      }
+    };
+
+
+    /**
+     * Clones a HTMLElement node or returns the same if it's a HTML string.
+     * @public
+     * @param  {HTMLElement|string} node The node to be cloned.
+     * @return {HTMLElement|string}      The copy or the same string.
+     */
+
+    DfDomElement.prototype.__cloneNode = function(node) {
+      switch (false) {
+        case typeof node !== "string":
+          return node;
+        case !(node instanceof HTMLElement):
+          return node.cloneNode(true);
+        default:
+          throw "Invalid argument: " + node;
+      }
+    };
+
+
+    /**
+     * Appends a node or HTML into the set of matched elements. If the child is a
+     * HTMLElement then new copies are created when there're more than 1 item in
+     * the set. If the child is a DfDomElement instance, the first node of its set
+     * of matched elements is used.
+     *
+     * @public
+     * @param  {DfDomElement|HTMLElement|string} child Stuff to be appended.
+     * @return {DfDomElement}                          The current instance.
+     */
+
+    DfDomElement.prototype.append = function(child) {
+      if (child instanceof DfDomElement) {
+        child = child.get(0);
+      }
+      if (child != null) {
+        this.each((function(_this) {
+          return function(node, i) {
+            if (typeof child === "string") {
+              return node.insertAdjacentHTML("beforeend", child);
+            } else if (child instanceof HTMLElement) {
+              return node.appendChild((i === 0 ? child : _this.__cloneNode(child)));
+            }
+          };
+        })(this));
+      }
       return this;
     };
 
-    DfDomElement.prototype.append = function(fragment) {
-      this.each(function(elem) {
-        if (typeof fragment === "string" && (elem.insertAdjacentHTML != null)) {
-          return elem.insertAdjacentHTML("beforeend", fragment);
-        } else if (typeof fragment === "string" && (elem.insertAdjacentHTML == null)) {
-          return elem.innerHTML += fragment;
-        } else if (fragment.tagName != null) {
-          return elem.appendChild(fragment);
-        } else if (fragment._first != null) {
-          return elem.appendChild(fragment._first());
-        }
-      });
+
+    /**
+     * Prepends a node or HTML into the set of matched elements. If the child is a
+     * HTMLElement then new copies are created when there're more than 1 item in
+     * the set. If the child is a DfDomElement instance, the first node of its set
+     * of matched elements is used.
+     *
+     * @public
+     * @param  {DfDomElement|HTMLElement|string} child Stuff to be prepended.
+     * @return {DfDomElement}                          The current instance.
+     */
+
+    DfDomElement.prototype.prepend = function(child) {
+      if (child instanceof DfDomElement) {
+        child = child.get(0);
+      }
+      if (child != null) {
+        this.each((function(_this) {
+          return function(node, i) {
+            var newChild, ref;
+            if (typeof child === "string") {
+              return node.insertAdjacentHTML("afterbegin", child);
+            } else if (child instanceof HTMLElement) {
+              newChild = (i === 0 ? child : _this.__cloneNode(child));
+              if (((ref = node.children) != null ? ref.length : void 0) > 0) {
+                return node.insertBefore(newChild, node.children[0]);
+              } else {
+                return node.appendChild(newChild);
+              }
+            }
+          };
+        })(this));
+      }
       return this;
     };
 
-    DfDomElement.prototype.prepend = function(fragment) {
-      return this.each(function(elem) {
-        if (typeof fragment === "string" && (elem.insertAdjacentHTML != null)) {
-          return elem.insertAdjacentHTML("afterbegin", fragment);
-        } else if (typeof fragment === "string" && (elem.insertAdjacentHTML == null)) {
-          return elem.innerHTML = fragment + elem.innerHTML;
-        } else {
-          if (!fragment.tagName) {
-            fragment = fragment._first();
-          }
-          if (elem.children && elem.children.length > 0) {
-            return elem.insertBefore(fragment, elem.children[0]);
-          } else {
-            return elem.appendChild(fragment);
-          }
-        }
-      });
-    };
 
-    DfDomElement.prototype.before = function(fragment) {
-      return this.each(function(elem) {
-        if (typeof fragment === "string") {
-          return elem.insertAdjacentHTML("beforebegin", fragment);
-        } else if (fragment.tagName) {
-          return elem.parentElement.insertBefore(fragment, elem);
-        } else {
-          return elem.parentElement.insertBefore(fragment._first(), elem);
-        }
-      });
-    };
+    /**
+     * Inserts a node or HTML before the set of matched elements. If the node is a
+     * HTMLElement then new copies are created when there're more than 1 item in
+     * the set. If the node is a DfDomElement instance, the first node of its set
+     * of matched elements is used.
+     *
+     * @public
+     * @param  {DfDomElement|HTMLElement|string} child Stuff to be inserted.
+     * @return {DfDomElement}                          The current instance.
+     */
 
-    DfDomElement.prototype.after = function(fragment) {
-      this.each(function(elem) {
-        if (typeof fragment === "string") {
-          return elem.insertAdjacentHTML("afterend", fragment);
-        } else if (fragment.tagName) {
-          return elem.parentElement.appendChild(fragment);
-        } else {
-          return elem.parentElement.appendChild(fragment._first());
-        }
-      });
+    DfDomElement.prototype.before = function(sibling) {
+      if (sibling instanceof DfDomElement) {
+        sibling = sibling.get(0);
+      }
+      if (sibling != null) {
+        this.each((function(_this) {
+          return function(node, i) {
+            var newSibling;
+            if (typeof sibling === "string") {
+              return node.insertAdjacentHTML("beforebegin", sibling);
+            } else if (sibling instanceof HTMLElement) {
+              newSibling = (i === 0 ? sibling : _this.__cloneNode(sibling));
+              return node.parentElement.insertBefore(newSibling, node);
+            }
+          };
+        })(this));
+      }
       return this;
     };
 
-    DfDomElement.prototype.empty = function(htmlString) {
+
+    /**
+     * Inserts a node or HTML after the set of matched elements. If the node is a
+     * HTMLElement then new copies are created when there're more than 1 item in
+     * the set. If the node is a DfDomElement instance, the first node of its set
+     * of matched elements is used.
+     *
+     * @public
+     * @param  {DfDomElement|HTMLElement|string} child Stuff to be inserted.
+     * @return {DfDomElement}                          The current instance.
+     */
+
+    DfDomElement.prototype.after = function(sibling) {
+      if (sibling instanceof DfDomElement) {
+        sibling = sibling.get(0);
+      }
+      if (sibling != null) {
+        this.each((function(_this) {
+          return function(node, i) {
+            var newSibling;
+            if (typeof sibling === "string") {
+              return node.insertAdjacentHTML("afterend", sibling);
+            } else if (sibling instanceof HTMLElement) {
+              newSibling = (i === 0 ? sibling : _this.__cloneNode(sibling));
+              return node.parentElement.insertBefore(newSibling, node.nextSibling);
+            }
+          };
+        })(this));
+      }
+      return this;
+    };
+
+
+    /**
+     * Empties the nodes in the set of matched elements so there's no HTML inside.
+     * @return {DfDomElement} Current instance.
+     */
+
+    DfDomElement.prototype.empty = function() {
       return this.html("");
     };
 
-    DfDomElement.prototype.attr = function(key, value) {
-      var first;
-      first = this._first();
-      if ((first != null ? first.getAttribute : void 0) != null) {
-        if (typeof value !== "undefined") {
-          first.setAttribute(key, value);
-        }
-        return first.getAttribute(key);
+
+    /**
+     * Get the value of an attribute for the first element in the set of matched
+     * elements or set one or more attributes for every matched element.
+     *
+     * @public
+     * @param  {string} name              Attribute name.
+     * @param  {string} value             Attribute value.
+     * @return {DfDomElement|string|null} Current instance on set, attribute
+     *                                    value on get.
+     */
+
+    DfDomElement.prototype.attr = function(name, value) {
+      var ref;
+      if (value != null) {
+        this.each(function(node) {
+          return node.setAttribute(name, value);
+        });
+        return this;
+      } else {
+        return (ref = this._first()) != null ? ref.getAttribute(name) : void 0;
       }
     };
 
-    DfDomElement.prototype.removeAttr = function(key) {
-      this.each(function(item) {
-        return item.removeAttribute(key);
+
+    /**
+     * Removes an attribute from the set of matched elements.
+     * @public
+     * @param  {string} name          Attribute name.
+     * @return {DfDomElement|string}  Current instance.
+     */
+
+    DfDomElement.prototype.removeAttr = function(name) {
+      this.each(function(node) {
+        return node.removeAttribute(name);
       });
       return this;
     };
 
-    DfDomElement.prototype.hasAttr = function(key) {
-      return (this.attr(key) != null) && this.attr(key) !== "";
+
+    /**
+     * Checks whether all the elements in the set of matched elements have certain
+     * attribute or not.
+     *
+     * @public
+     * @param  {string} name  Attribute name.
+     * @return {Boolean}      true if the attribute is present.
+     */
+
+    DfDomElement.prototype.hasAttr = function(name) {
+      return (this.element.filter(function(node) {
+        return node.hasAttribute(name);
+      })).length > 0;
     };
 
-    DfDomElement.prototype.data = function(key, value) {
-      var actualKey;
-      actualKey = "data-" + key;
-      return this.attr(actualKey, value);
+
+    /**
+     * Shortcut to get or set data-* attributes' values for the set of matched
+     * elements. When getting the value returns the value of the first element
+     * in the set.
+     *
+     * @public
+     * @param  {string} name              Attribute name.
+     * @param  {string} value             Attribute value.
+     * @return {DfDomElement|string|null} Current instance on set,
+     *                                    data-attribute value on get.
+     */
+
+    DfDomElement.prototype.data = function(name, value) {
+      return this.attr("data-" + name, value);
     };
+
+
+    /**
+     * Sets the value of the elements in the set of matched elements whose
+     * prototype has `value` defined as a valid property. When no value is
+     * provided, returns the value of the first element in the set, if it
+     * supports it. Otherwise, returns undefined.
+     *
+     * @public
+     * @param  {*} value Optional. The value that must be set for each element.
+     * @return {*}       The value of the first element in the set, if supports
+     *                   it.
+     */
 
     DfDomElement.prototype.val = function(value) {
-      if (typeof value !== "undefined") {
-        this._first().value = value;
+      var node, ref;
+      if (value != null) {
+        this.each(function(node) {
+          if (node.__proto__.hasOwnProperty("value")) {
+            return node.value = value;
+          }
+        });
+        return this;
+      } else if ((ref = (node = this._first())) != null ? ref.__proto__.hasOwnProperty("value") : void 0) {
+        return node.value;
+      } else {
+        return void 0;
       }
-      return this._first().value;
+    };
+
+
+    /**
+     * Adds a class name to all the elements in the set of matched elements.
+     * @public
+     * @param {string} className
+     */
+
+    DfDomElement.prototype.addClass = function(className) {
+      this.each(function(node) {
+        return node.classList.add(className);
+      });
+      return this;
+    };
+
+
+    /**
+     * Checks whether all elements in the set of matched elements have a certain
+     * class name.
+     *
+     * @public
+     * @param {string} className
+     */
+
+    DfDomElement.prototype.hasClass = function(className) {
+      return (this.element.filter(function(node) {
+        return node.classList.contains(className);
+      })).length > 0;
+    };
+
+
+    /**
+     * Removes a class name from all the elements in the set of matched elements.
+     * @public
+     * @param {string} className
+     */
+
+    DfDomElement.prototype.removeClass = function(className) {
+      this.each(function(node) {
+        return node.classList.remove(className);
+      });
+      return this;
+    };
+
+
+    /**
+     * Toggles the presence of certain class name for the elements in the set of
+     * matched elements.
+     *
+     * @public
+     * @param {string} className
+     */
+
+    DfDomElement.prototype.toggleClass = function(className) {
+      this.each(function(node) {
+        return node.classList.toggle(className);
+      });
+      return this;
     };
 
     DfDomElement.prototype.width = function() {
@@ -1634,31 +1882,6 @@ author: @ecoslado
 
     DfDomElement.prototype.scrollLeft = function() {
       return this._first().scrollLeft;
-    };
-
-    DfDomElement.prototype.addClass = function(className) {
-      this.each(function(elem) {
-        return elem.classList.add(className);
-      });
-      return this;
-    };
-
-    DfDomElement.prototype.removeClass = function(className) {
-      this.each(function(elem) {
-        return elem.classList.remove(className);
-      });
-      return this;
-    };
-
-    DfDomElement.prototype.toggleClass = function(className) {
-      this.each(function(elem) {
-        return elem.classList.toggle(className);
-      });
-      return this;
-    };
-
-    DfDomElement.prototype.hasClass = function(className) {
-      return this._first().classList.contains(className);
     };
 
     DfDomElement.prototype.css = function(key, value) {
