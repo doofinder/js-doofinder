@@ -99,7 +99,7 @@ class DfDomElement
       @element = @element.filter (node) -> node != candidate
       candidate
     @element = nodes
-    return this
+    return @
 
   #
   # NODE HIERARCHY MANAGEMENT
@@ -113,6 +113,7 @@ class DfDomElement
   ###
   each: (callback) ->
     @element.forEach callback
+    return @
 
   ###*
    * Iterates over nodes in the store, passing them to the callback, and stores
@@ -212,7 +213,7 @@ class DfDomElement
     new DfDomElement @map (item) ->
       ((new DfDomElement item).parents selector).first()._get 0
 
-  # TODO(@carlosescri): I'm here!
+  # TODO: refactor all these stuff
 
   _first: () ->
     @_get(0)
@@ -246,7 +247,6 @@ class DfDomElement
   html: (htmlContent) ->
     if htmlContent?
       @each (node) -> node.innerHTML = htmlContent
-      return this
     else
       @_first().innerHTML
 
@@ -263,38 +263,22 @@ class DfDomElement
       else throw "Invalid argument: #{node}"
 
   ###*
-   * Appends a node or HTML into the set of matched elements. If the child is a
-   * HTMLElement then new copies are created when there're more than 1 item in
-   * the set. If the child is a DfDomElement instance, the first node of its set
-   * of matched elements is used.
-   *
-   * @public
-   * @param  {DfDomElement|HTMLElement|string} child Stuff to be appended.
-   * @return {DfDomElement}                          The current instance.
-  ###
-  append: (child) ->
-    child = (child.get 0) if child instanceof DfDomElement
-    if child?
-      @each (node, i) =>
-        if typeof child is "string"
-          node.insertAdjacentHTML "beforeend", child
-        else if child instanceof HTMLElement
-          node.appendChild (if i is 0 then child else @__cloneNode child)
-    return this
-
-  ###*
    * Prepends a node or HTML into the set of matched elements. If the child is a
    * HTMLElement then new copies are created when there're more than 1 item in
-   * the set. If the child is a DfDomElement instance, the first node of its set
-   * of matched elements is used.
+   * the set. If the child is a DfDomElement instance, all its matched elements
+   * are "prepended" individually.
    *
    * @public
    * @param  {DfDomElement|HTMLElement|string} child Stuff to be prepended.
    * @return {DfDomElement}                          The current instance.
   ###
   prepend: (child) ->
-    child = (child.get 0) if child instanceof DfDomElement
-    if child?
+    if child instanceof DfDomElement
+      child = child.get()
+    if child instanceof Array
+      child.forEach (node) => @prepend node
+      return @
+    else
       @each (node, i) =>
         if typeof child is "string"
           node.insertAdjacentHTML "afterbegin", child
@@ -304,55 +288,93 @@ class DfDomElement
             node.insertBefore newChild, node.children[0]
           else
             node.appendChild newChild
-    return this
+
+  ###*
+   * Appends a node or HTML into the set of matched elements. If the child is a
+   * HTMLElement then new copies are created when there're more than 1 item in
+   * the set. If the child is a DfDomElement instance, all its matched elements
+   * are appended individually.
+   *
+   * @public
+   * @param  {DfDomElement|HTMLElement|string} child Stuff to be appended.
+   * @return {DfDomElement}                          The current instance.
+  ###
+  append: (child) ->
+    if child instanceof DfDomElement
+      child = child.get()
+    if child instanceof Array
+      child.forEach (node) => @append node
+      return @
+    else
+      @each (node, i) =>
+        if typeof child is "string"
+          node.insertAdjacentHTML "beforeend", child
+        else if child instanceof HTMLElement
+          node.appendChild (if i is 0 then child else @__cloneNode child)
 
   ###*
    * Inserts a node or HTML before the set of matched elements. If the node is a
    * HTMLElement then new copies are created when there're more than 1 item in
-   * the set. If the node is a DfDomElement instance, the first node of its set
-   * of matched elements is used.
+   * the set. If the node is a DfDomElement instance, all its matched elements
+   * are inserted before the current set.
    *
    * @public
    * @param  {DfDomElement|HTMLElement|string} child Stuff to be inserted.
    * @return {DfDomElement}                          The current instance.
   ###
   before: (sibling) ->
-    sibling = (sibling.get 0) if sibling instanceof DfDomElement
-    if sibling?
+    if sibling instanceof DfDomElement
+      sibling = sibling.get()
+    if sibling instanceof Array
+      sibling.forEach (node) => @before node
+      return @
+    else
       @each (node, i) =>
         if typeof sibling is "string"
           node.insertAdjacentHTML  "beforebegin", sibling
         else if sibling instanceof HTMLElement
           newSibling = (if i is 0 then sibling else @__cloneNode sibling)
           node.parentElement.insertBefore newSibling, node
-    return this
 
   ###*
    * Inserts a node or HTML after the set of matched elements. If the node is a
    * HTMLElement then new copies are created when there're more than 1 item in
-   * the set. If the node is a DfDomElement instance, the first node of its set
-   * of matched elements is used.
+   * the set. If the node is a DfDomElement instance, all its matched elements
+   * are inserted before the current set.
    *
    * @public
    * @param  {DfDomElement|HTMLElement|string} child Stuff to be inserted.
    * @return {DfDomElement}                          The current instance.
   ###
   after: (sibling) ->
-    sibling = (sibling.get 0) if sibling instanceof DfDomElement
-    if sibling?
+    if sibling instanceof DfDomElement
+      sibling = sibling.get()
+    if sibling instanceof Array
+      sibling.forEach (node) => @after node
+      return @
+    else
       @each (node, i) =>
         if typeof sibling is "string"
           node.insertAdjacentHTML  "afterend", sibling
         else if sibling instanceof HTMLElement
           newSibling = (if i is 0 then sibling else @__cloneNode sibling)
           node.parentElement.insertBefore newSibling, node.nextSibling
-    return this
 
   ###*
    * Empties the nodes in the set of matched elements so there's no HTML inside.
+   * @public
    * @return {DfDomElement} Current instance.
   ###
-  empty: -> @html ""
+  empty: ->
+    @html ""
+
+  ###*
+   * Removes the nodes in the set of matched elements.
+   * @public
+   * @return {DfDomElement} Current instance.
+  ###
+  remove: ->
+    @each (node) -> node.parentNode?.removeChild node
 
   #
   # Tag Attributes, Classes, Values
@@ -371,7 +393,6 @@ class DfDomElement
   attr: (name, value) ->
     if value?
       @each (node) -> node.setAttribute name, value
-      return this
     else
       @_first()?.getAttribute name
 
@@ -383,7 +404,6 @@ class DfDomElement
   ###
   removeAttr: (name) ->
     @each (node) -> node.removeAttribute name
-    return this
 
   ###*
    * Checks whether all the elements in the set of matched elements have certain
@@ -407,7 +427,8 @@ class DfDomElement
    * @return {DfDomElement|string|null} Current instance on set,
    *                                    data-attribute value on get.
   ###
-  data: (name, value) -> @attr "data-#{name}", value
+  data: (name, value) ->
+    @attr "data-#{name}", value
 
   ###*
    * Sets the value of the elements in the set of matched elements whose
@@ -424,7 +445,6 @@ class DfDomElement
     if value?
       @each (node) ->
         node.value = value if node.__proto__.hasOwnProperty "value"
-      return this
     else if (node = @_first())?.__proto__.hasOwnProperty "value"
       node.value
     else
@@ -437,7 +457,6 @@ class DfDomElement
   ###
   addClass: (className) ->
     @each (node) -> node.classList.add className
-    return this
 
   ###*
    * Checks whether all elements in the set of matched elements have a certain
@@ -456,7 +475,6 @@ class DfDomElement
   ###
   removeClass: (className) ->
     @each (node) -> node.classList.remove className
-    return this
 
   ###*
    * Toggles the presence of certain class name for the elements in the set of
@@ -467,9 +485,33 @@ class DfDomElement
   ###
   toggleClass: (className) ->
     @each (node) -> node.classList.toggle className
-    return this
 
-  # STYLES
+  #
+  # Styles
+  #
+
+  # TODO(@carlosescri): I'm here!
+
+  __css: (node, propertyName) ->
+    (getComputedStyle node).getPropertyValue propertyName
+
+  css: (propertyName, value) ->
+    if value?
+      @each (node) -> node.style[propertyName] = value
+    else if (node = @get 0)?
+      @__css node, propertyName
+    else
+      null
+
+  hide: ->
+    @css "display", "none"
+
+  show: ->
+    @each (node) -> node.style.removeProperty "display"
+
+  #
+  # Measurements
+  #
 
   width: () ->
     @_first()?.offsetWidth
@@ -500,23 +542,10 @@ class DfDomElement
   scrollLeft: () ->
     @_first().scrollLeft
 
-  css: (key, value) ->
-    @each (elem) ->
-      elem.style[key] = value
-    return getComputedStyle(@_first())[key]
+  #
+  # Events
+  #
 
-  hide: () ->
-    @css "display", "none"
-
-  show: () ->
-    @css "display", "block"
-
-  remove: () ->
-    first = @_first()
-    if first? and first.parentNode?
-      first.parentNode.removeChild(@_first())
-
-  # EVENTS
   on: (arg1, arg2, arg3) ->
     if arg3?
       @each (elem) ->
@@ -526,7 +555,7 @@ class DfDomElement
       @each (elem) ->
         if elem?
           bean.on(elem, arg1, arg2)
-    return this
+
 
   one: (arg1, arg2, arg3) ->
     if arg3?
@@ -537,19 +566,19 @@ class DfDomElement
       @each (elem) ->
         if elem?
           bean.one(elem, arg1, arg2)
-    return this
+    return @
 
   trigger: (event, params) ->
     @each (elem) ->
       if elem?
         bean.fire(elem, event, params)
-    return this
+    return @
 
   off: (event) ->
     @each (elem) ->
       if elem?
         bean.off(elem, event)
-    return this
+    return @
 
   focus: () ->
     if @_first()?

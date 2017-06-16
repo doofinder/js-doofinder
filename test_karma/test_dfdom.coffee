@@ -373,6 +373,14 @@ describe "dfdom tests:", ->
         (dfdom "body").empty().html().should.equal ""
         done()
 
+      it "can remove the nodes in the set of matched elements", (done) ->
+        removedContainers = (dfdom ".container").remove()
+        removedContainers.len.should.equal 2
+        (dfdom ".container").len.should.equal 0
+        ((dfdom "body").append removedContainers).len.should.eq 1
+        (dfdom ".container").len.should.equal 2
+        done()
+
     context "Tag Attributes Methods", ->
       beforeEach ->
         insertHTML """
@@ -460,6 +468,56 @@ describe "dfdom tests:", ->
         (((dfdom ".foo").toggleClass "foo").hasClass "foo").should.be.false
         done()
 
+    context "Style-related Methods", ->
+      it "can set style properties and get computed style values", (done) ->
+        insertHTML """<div class="customcss"></div>"""
+        (dfdom ".customcss, .doesnotexist").css "width", "10rem"
+        ((dfdom ".customcss").css "width").should.equal "160px"
+        expect((dfdom ".doesnotexist").css "width").to.be.null
+        done()
+
+      it "can manage visibility of elements via their CSS display property", (done) ->
+        insertHTML """
+          <style>
+            .inline { display: inline; }
+            .block  { display: block;  }
+          </style>
+          <div class="inline"></div>
+          <div class="nostyle"></div>
+          <span class="block"></span>
+          <span class="nostyle"></span>
+        """
+        (((dfdom ".block").hide()).css "display").should.equal "none"
+        (((dfdom ".block").show()).css "display").should.equal "block"
+
+        (((dfdom ".inline").hide()).css "display").should.equal "none"
+        (((dfdom ".inline").show()).css "display").should.equal "inline"
+
+        (((dfdom "div.nostyle").hide()).css "display").should.equal "none"
+        (((dfdom "div.nostyle").show()).css "display").should.equal "block"
+
+        (((dfdom "span.nostyle").hide()).css "display").should.equal "none"
+        (((dfdom "span.nostyle").show()).css "display").should.equal "inline"
+        done()
+
+      it "hide", (done) ->
+        insertHTML """
+          <div class="foo"></div>
+          <style>
+          .foo{
+            display: block;
+          }
+          </style>
+        """
+        foo = dfdom(".foo")
+        getComputedStyle(foo._first())["display"]
+          .should.equal("block")
+        foo.hide()
+        getComputedStyle(foo._first())["display"]
+          .should.equal("none")
+        done()
+
+
     context "Position, style and CSS classes management", ->
       beforeEach ->
         resetBody()
@@ -532,50 +590,6 @@ describe "dfdom tests:", ->
         dfdom(el).scrollLeft().should.equal(0)
         el.scrollLeft = 500
         dfdom(el).scrollLeft().should.equal(500)
-        done()
-
-      it "css", (done) ->
-        insertHTML """
-        <div class="foo"></div>
-        """
-        foo = dfdom(".foo")
-        foo.height().should.equal(0)
-        foo.css("height", "10rem").should.equal("160px")
-        foo.height().should.equal(160)
-        done()
-
-      it "show", (done) ->
-        insertHTML """
-          <div class="foo"></div>
-          <style>
-          .foo{
-            display: none;
-          }
-          </style>
-        """
-        foo = dfdom(".foo")
-        getComputedStyle(foo._first())["display"]
-          .should.equal("none")
-        foo.show()
-        getComputedStyle(foo._first())["display"]
-          .should.equal("block")
-        done()
-
-      it "hide", (done) ->
-        insertHTML """
-          <div class="foo"></div>
-          <style>
-          .foo{
-            display: block;
-          }
-          </style>
-        """
-        foo = dfdom(".foo")
-        getComputedStyle(foo._first())["display"]
-          .should.equal("block")
-        foo.hide()
-        getComputedStyle(foo._first())["display"]
-          .should.equal("none")
         done()
 
     context "Event management", ->

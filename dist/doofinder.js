@@ -1328,7 +1328,8 @@ author: @ecoslado
      */
 
     DfDomElement.prototype.each = function(callback) {
-      return this.element.forEach(callback);
+      this.element.forEach(callback);
+      return this;
     };
 
 
@@ -1510,10 +1511,9 @@ author: @ecoslado
 
     DfDomElement.prototype.html = function(htmlContent) {
       if (htmlContent != null) {
-        this.each(function(node) {
+        return this.each(function(node) {
           return node.innerHTML = htmlContent;
         });
-        return this;
       } else {
         return this._first().innerHTML;
       }
@@ -1540,40 +1540,10 @@ author: @ecoslado
 
 
     /**
-     * Appends a node or HTML into the set of matched elements. If the child is a
-     * HTMLElement then new copies are created when there're more than 1 item in
-     * the set. If the child is a DfDomElement instance, the first node of its set
-     * of matched elements is used.
-     *
-     * @public
-     * @param  {DfDomElement|HTMLElement|string} child Stuff to be appended.
-     * @return {DfDomElement}                          The current instance.
-     */
-
-    DfDomElement.prototype.append = function(child) {
-      if (child instanceof DfDomElement) {
-        child = child.get(0);
-      }
-      if (child != null) {
-        this.each((function(_this) {
-          return function(node, i) {
-            if (typeof child === "string") {
-              return node.insertAdjacentHTML("beforeend", child);
-            } else if (child instanceof HTMLElement) {
-              return node.appendChild((i === 0 ? child : _this.__cloneNode(child)));
-            }
-          };
-        })(this));
-      }
-      return this;
-    };
-
-
-    /**
      * Prepends a node or HTML into the set of matched elements. If the child is a
      * HTMLElement then new copies are created when there're more than 1 item in
-     * the set. If the child is a DfDomElement instance, the first node of its set
-     * of matched elements is used.
+     * the set. If the child is a DfDomElement instance, all its matched elements
+     * are "prepended" individually.
      *
      * @public
      * @param  {DfDomElement|HTMLElement|string} child Stuff to be prepended.
@@ -1582,10 +1552,17 @@ author: @ecoslado
 
     DfDomElement.prototype.prepend = function(child) {
       if (child instanceof DfDomElement) {
-        child = child.get(0);
+        child = child.get();
       }
-      if (child != null) {
-        this.each((function(_this) {
+      if (child instanceof Array) {
+        child.forEach((function(_this) {
+          return function(node) {
+            return _this.prepend(node);
+          };
+        })(this));
+        return this;
+      } else {
+        return this.each((function(_this) {
           return function(node, i) {
             var newChild, ref;
             if (typeof child === "string") {
@@ -1601,15 +1578,50 @@ author: @ecoslado
           };
         })(this));
       }
-      return this;
+    };
+
+
+    /**
+     * Appends a node or HTML into the set of matched elements. If the child is a
+     * HTMLElement then new copies are created when there're more than 1 item in
+     * the set. If the child is a DfDomElement instance, all its matched elements
+     * are appended individually.
+     *
+     * @public
+     * @param  {DfDomElement|HTMLElement|string} child Stuff to be appended.
+     * @return {DfDomElement}                          The current instance.
+     */
+
+    DfDomElement.prototype.append = function(child) {
+      if (child instanceof DfDomElement) {
+        child = child.get();
+      }
+      if (child instanceof Array) {
+        child.forEach((function(_this) {
+          return function(node) {
+            return _this.append(node);
+          };
+        })(this));
+        return this;
+      } else {
+        return this.each((function(_this) {
+          return function(node, i) {
+            if (typeof child === "string") {
+              return node.insertAdjacentHTML("beforeend", child);
+            } else if (child instanceof HTMLElement) {
+              return node.appendChild((i === 0 ? child : _this.__cloneNode(child)));
+            }
+          };
+        })(this));
+      }
     };
 
 
     /**
      * Inserts a node or HTML before the set of matched elements. If the node is a
      * HTMLElement then new copies are created when there're more than 1 item in
-     * the set. If the node is a DfDomElement instance, the first node of its set
-     * of matched elements is used.
+     * the set. If the node is a DfDomElement instance, all its matched elements
+     * are inserted before the current set.
      *
      * @public
      * @param  {DfDomElement|HTMLElement|string} child Stuff to be inserted.
@@ -1618,10 +1630,17 @@ author: @ecoslado
 
     DfDomElement.prototype.before = function(sibling) {
       if (sibling instanceof DfDomElement) {
-        sibling = sibling.get(0);
+        sibling = sibling.get();
       }
-      if (sibling != null) {
-        this.each((function(_this) {
+      if (sibling instanceof Array) {
+        sibling.forEach((function(_this) {
+          return function(node) {
+            return _this.before(node);
+          };
+        })(this));
+        return this;
+      } else {
+        return this.each((function(_this) {
           return function(node, i) {
             var newSibling;
             if (typeof sibling === "string") {
@@ -1633,15 +1652,14 @@ author: @ecoslado
           };
         })(this));
       }
-      return this;
     };
 
 
     /**
      * Inserts a node or HTML after the set of matched elements. If the node is a
      * HTMLElement then new copies are created when there're more than 1 item in
-     * the set. If the node is a DfDomElement instance, the first node of its set
-     * of matched elements is used.
+     * the set. If the node is a DfDomElement instance, all its matched elements
+     * are inserted before the current set.
      *
      * @public
      * @param  {DfDomElement|HTMLElement|string} child Stuff to be inserted.
@@ -1650,10 +1668,17 @@ author: @ecoslado
 
     DfDomElement.prototype.after = function(sibling) {
       if (sibling instanceof DfDomElement) {
-        sibling = sibling.get(0);
+        sibling = sibling.get();
       }
-      if (sibling != null) {
-        this.each((function(_this) {
+      if (sibling instanceof Array) {
+        sibling.forEach((function(_this) {
+          return function(node) {
+            return _this.after(node);
+          };
+        })(this));
+        return this;
+      } else {
+        return this.each((function(_this) {
           return function(node, i) {
             var newSibling;
             if (typeof sibling === "string") {
@@ -1665,17 +1690,31 @@ author: @ecoslado
           };
         })(this));
       }
-      return this;
     };
 
 
     /**
      * Empties the nodes in the set of matched elements so there's no HTML inside.
+     * @public
      * @return {DfDomElement} Current instance.
      */
 
     DfDomElement.prototype.empty = function() {
       return this.html("");
+    };
+
+
+    /**
+     * Removes the nodes in the set of matched elements.
+     * @public
+     * @return {DfDomElement} Current instance.
+     */
+
+    DfDomElement.prototype.remove = function() {
+      return this.each(function(node) {
+        var ref;
+        return (ref = node.parentNode) != null ? ref.removeChild(node) : void 0;
+      });
     };
 
 
@@ -1693,10 +1732,9 @@ author: @ecoslado
     DfDomElement.prototype.attr = function(name, value) {
       var ref;
       if (value != null) {
-        this.each(function(node) {
+        return this.each(function(node) {
           return node.setAttribute(name, value);
         });
-        return this;
       } else {
         return (ref = this._first()) != null ? ref.getAttribute(name) : void 0;
       }
@@ -1711,10 +1749,9 @@ author: @ecoslado
      */
 
     DfDomElement.prototype.removeAttr = function(name) {
-      this.each(function(node) {
+      return this.each(function(node) {
         return node.removeAttribute(name);
       });
-      return this;
     };
 
 
@@ -1766,12 +1803,11 @@ author: @ecoslado
     DfDomElement.prototype.val = function(value) {
       var node, ref;
       if (value != null) {
-        this.each(function(node) {
+        return this.each(function(node) {
           if (node.__proto__.hasOwnProperty("value")) {
             return node.value = value;
           }
         });
-        return this;
       } else if ((ref = (node = this._first())) != null ? ref.__proto__.hasOwnProperty("value") : void 0) {
         return node.value;
       } else {
@@ -1787,10 +1823,9 @@ author: @ecoslado
      */
 
     DfDomElement.prototype.addClass = function(className) {
-      this.each(function(node) {
+      return this.each(function(node) {
         return node.classList.add(className);
       });
-      return this;
     };
 
 
@@ -1816,10 +1851,9 @@ author: @ecoslado
      */
 
     DfDomElement.prototype.removeClass = function(className) {
-      this.each(function(node) {
+      return this.each(function(node) {
         return node.classList.remove(className);
       });
-      return this;
     };
 
 
@@ -1832,10 +1866,36 @@ author: @ecoslado
      */
 
     DfDomElement.prototype.toggleClass = function(className) {
-      this.each(function(node) {
+      return this.each(function(node) {
         return node.classList.toggle(className);
       });
-      return this;
+    };
+
+    DfDomElement.prototype.__css = function(node, propertyName) {
+      return (getComputedStyle(node)).getPropertyValue(propertyName);
+    };
+
+    DfDomElement.prototype.css = function(propertyName, value) {
+      var node;
+      if (value != null) {
+        return this.each(function(node) {
+          return node.style[propertyName] = value;
+        });
+      } else if ((node = this.get(0)) != null) {
+        return this.__css(node, propertyName);
+      } else {
+        return null;
+      }
+    };
+
+    DfDomElement.prototype.hide = function() {
+      return this.css("display", "none");
+    };
+
+    DfDomElement.prototype.show = function() {
+      return this.each(function(node) {
+        return node.style.removeProperty("display");
+      });
     };
 
     DfDomElement.prototype.width = function() {
@@ -1884,44 +1944,20 @@ author: @ecoslado
       return this._first().scrollLeft;
     };
 
-    DfDomElement.prototype.css = function(key, value) {
-      this.each(function(elem) {
-        return elem.style[key] = value;
-      });
-      return getComputedStyle(this._first())[key];
-    };
-
-    DfDomElement.prototype.hide = function() {
-      return this.css("display", "none");
-    };
-
-    DfDomElement.prototype.show = function() {
-      return this.css("display", "block");
-    };
-
-    DfDomElement.prototype.remove = function() {
-      var first;
-      first = this._first();
-      if ((first != null) && (first.parentNode != null)) {
-        return first.parentNode.removeChild(this._first());
-      }
-    };
-
     DfDomElement.prototype.on = function(arg1, arg2, arg3) {
       if (arg3 != null) {
-        this.each(function(elem) {
+        return this.each(function(elem) {
           if (elem != null) {
             return bean.on(elem, arg1, arg2, arg3);
           }
         });
       } else {
-        this.each(function(elem) {
+        return this.each(function(elem) {
           if (elem != null) {
             return bean.on(elem, arg1, arg2);
           }
         });
       }
-      return this;
     };
 
     DfDomElement.prototype.one = function(arg1, arg2, arg3) {
