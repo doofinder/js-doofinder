@@ -612,10 +612,10 @@ class DfDomElement
 
 
 dfdom = (selector) ->
-  if selector?
-    switch
-      when selector instanceof DfDomElement then selector
-      else new DfDomElement selector
+  switch
+    when selector instanceof DfDomElement then selector
+    when selector? then new DfDomElement selector
+    else null
 
 
 module.exports = dfdom

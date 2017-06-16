@@ -2040,13 +2040,13 @@ author: @ecoslado
   })();
 
   dfdom = function(selector) {
-    if (selector != null) {
-      switch (false) {
-        case !(selector instanceof DfDomElement):
-          return selector;
-        default:
-          return new DfDomElement(selector);
-      }
+    switch (false) {
+      case !(selector instanceof DfDomElement):
+        return selector;
+      case selector == null:
+        return new DfDomElement(selector);
+      default:
+        return null;
     }
   };
 

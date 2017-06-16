@@ -20,6 +20,11 @@ describe "dfdom tests:", ->
         dfdom("div").element.should.be.empty
         done()
 
+      it "returns null when no selector is provided", (done) ->
+        expect(dfdom()).to.be.null
+        expect(dfdom null).to.be.null
+        done()
+
       it "can be instantiated with a CSS selector", (done) ->
         insertHTML """
         <ul class="test"></ul>
