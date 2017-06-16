@@ -1319,6 +1319,18 @@ author: @ecoslado
       return this;
     };
 
+    DfDomElement.prototype.get = function(key) {
+      if (key != null) {
+        return this.element[key] || null;
+      } else {
+        return this.element;
+      }
+    };
+
+    DfDomElement.prototype.first = function() {
+      return new DfDomElement(this.get(0));
+    };
+
 
     /**
      * Iterates over nodes in the store, passing them to the callback.
@@ -1464,31 +1476,8 @@ author: @ecoslado
 
     DfDomElement.prototype.closest = function(selector) {
       return new DfDomElement(this.map(function(item) {
-        return ((new DfDomElement(item)).parents(selector)).first()._get(0);
+        return ((new DfDomElement(item)).parents(selector)).first().get(0);
       }));
-    };
-
-    DfDomElement.prototype._first = function() {
-      return this._get(0);
-    };
-
-    DfDomElement.prototype.first = function() {
-      return new DfDomElement(this._first());
-    };
-
-    DfDomElement.prototype._get = function(key) {
-      if (this.element && this.element.length > key) {
-        return this.element[key];
-      }
-      return this.element;
-    };
-
-    DfDomElement.prototype.get = function(key) {
-      if (key != null) {
-        return this.element[key] || null;
-      } else {
-        return this.element;
-      }
     };
 
 
@@ -1509,7 +1498,7 @@ author: @ecoslado
           return node.innerHTML = htmlContent;
         });
       } else {
-        return this._first().innerHTML;
+        return (this.get(0)).innerHTML;
       }
     };
 
@@ -1730,7 +1719,7 @@ author: @ecoslado
           return node.setAttribute(name, value);
         });
       } else {
-        return (ref = this._first()) != null ? ref.getAttribute(name) : void 0;
+        return (ref = this.get(0)) != null ? ref.getAttribute(name) : void 0;
       }
     };
 
@@ -1802,7 +1791,7 @@ author: @ecoslado
             return node.value = value;
           }
         });
-      } else if ((ref = (node = this._first())) != null ? ref.__proto__.hasOwnProperty("value") : void 0) {
+      } else if ((ref = (node = this.get(0))) != null ? ref.__proto__.hasOwnProperty("value") : void 0) {
         return node.value;
       } else {
         return void 0;
@@ -1921,17 +1910,17 @@ author: @ecoslado
 
     DfDomElement.prototype.width = function() {
       var ref;
-      return (ref = this._first()) != null ? ref.offsetWidth : void 0;
+      return (ref = this.get(0)) != null ? ref.offsetWidth : void 0;
     };
 
     DfDomElement.prototype.height = function() {
       var ref;
-      return (ref = this._first()) != null ? ref.offsetHeight : void 0;
+      return (ref = this.get(0)) != null ? ref.offsetHeight : void 0;
     };
 
     DfDomElement.prototype._clientRect = function() {
       var ref;
-      return (ref = this._first()) != null ? typeof ref.getBoundingClientRect === "function" ? ref.getBoundingClientRect() : void 0 : void 0;
+      return (ref = this.get(0)) != null ? typeof ref.getBoundingClientRect === "function" ? ref.getBoundingClientRect() : void 0 : void 0;
     };
 
     DfDomElement.prototype.top = function() {
@@ -1956,13 +1945,13 @@ author: @ecoslado
 
     DfDomElement.prototype.scrollTop = function(value) {
       if (typeof value !== "undefined") {
-        this._first().scrollTop = value;
+        (this.get(0)).scrollTop = value;
       }
-      return this._first().scrollY || this._first().scrollTop;
+      return (this.get(0)).scrollY || (this.get(0)).scrollTop;
     };
 
     DfDomElement.prototype.scrollLeft = function() {
-      return this._first().scrollLeft;
+      return (this.get(0)).scrollLeft;
     };
 
 

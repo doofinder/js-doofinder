@@ -105,6 +105,12 @@ class DfDomElement
   # NODE HIERARCHY MANAGEMENT
   #
 
+  get: (key) ->
+    if key? then @element[key] or null else @element
+
+  first: () ->
+    return new DfDomElement @get 0
+
   ###*
    * Iterates over nodes in the store, passing them to the callback.
    * @public
@@ -207,25 +213,11 @@ class DfDomElement
   ###
   closest: (selector) ->
     new DfDomElement @map (item) ->
-      ((new DfDomElement item).parents selector).first()._get 0
+      ((new DfDomElement item).parents selector).first().get 0
 
-  # TODO: refactor all these stuff
-
-  _first: () ->
-    @_get(0)
-
-  first: () ->
-    return new DfDomElement @_first()
-
-  _get: (key) ->
-    if @element and @element.length > key
-      return @element[key]
-    return @element
-
-  get: (key) ->
-    if key? then @element[key] or null else @element
-
-  # CONTENT RETRIEVING AND INJECTION
+  #
+  # Content retrieving and injection
+  #
 
   ###*
    * Sets the HTML contents of each element in the set of matched elements. If
@@ -241,7 +233,7 @@ class DfDomElement
     if htmlContent?
       @each (node) -> node.innerHTML = htmlContent
     else
-      @_first().innerHTML
+      (@get 0).innerHTML
 
   ###*
    * Clones a HTMLElement node or returns the same if it's a HTML string.
@@ -387,7 +379,7 @@ class DfDomElement
     if value?
       @each (node) -> node.setAttribute name, value
     else
-      @_first()?.getAttribute name
+      (@get 0)?.getAttribute name
 
   ###*
    * Removes an attribute from the set of matched elements.
@@ -438,7 +430,7 @@ class DfDomElement
     if value?
       @each (node) ->
         node.value = value if node.__proto__.hasOwnProperty "value"
-    else if (node = @_first())?.__proto__.hasOwnProperty "value"
+    else if (node = @get 0)?.__proto__.hasOwnProperty "value"
       node.value
     else
       undefined
@@ -527,13 +519,13 @@ class DfDomElement
   #
 
   width: () ->
-    @_first()?.offsetWidth
+    (@get 0)?.offsetWidth
 
   height: () ->
-    @_first()?.offsetHeight
+    (@get 0)?.offsetHeight
 
   _clientRect: ->
-    @_first()?.getBoundingClientRect?()
+    (@get 0)?.getBoundingClientRect?()
 
   top: ->
     @_clientRect()?.top or 0
@@ -549,11 +541,11 @@ class DfDomElement
 
   scrollTop: (value) ->
     if typeof(value) != "undefined"
-      @_first().scrollTop = value
-    @_first().scrollY || @_first().scrollTop
+      (@get 0).scrollTop = value
+    (@get 0).scrollY or (@get 0).scrollTop
 
   scrollLeft: () ->
-    @_first().scrollLeft
+    (@get 0).scrollLeft
 
   #
   # Events
