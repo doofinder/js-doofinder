@@ -86,7 +86,10 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-version'
 
   grunt.registerTask 'compile', ['coffee:release', 'browserify', 'uglify:release']
-  grunt.registerTask 'release', ['version:library', 'version:bower', 'compile']
   grunt.registerTask 'css', ['copy:build_scss', 'sass:build_scss', 'clean:build_scss']
-  grunt.registerTask 'default', ['compile', 'mochaTest:release', 'copy:karma', 'karma:test', 'clean:karma']
 
+  grunt.registerTask 'testMocha', ['mochaTest:release']
+  grunt.registerTask 'testKarma', ['copy:karma', 'karma:test', 'clean:karma']
+
+  grunt.registerTask 'default', ['compile', 'testMocha', 'testKarma']
+  grunt.registerTask 'release', ['version:library', 'version:bower', 'compile']
