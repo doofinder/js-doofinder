@@ -500,24 +500,6 @@ describe "dfdom tests:", ->
         (((dfdom "span.nostyle").show()).css "display").should.equal "inline"
         done()
 
-      it "hide", (done) ->
-        insertHTML """
-          <div class="foo"></div>
-          <style>
-          .foo{
-            display: block;
-          }
-          </style>
-        """
-        foo = dfdom(".foo")
-        getComputedStyle(foo._first())["display"]
-          .should.equal("block")
-        foo.hide()
-        getComputedStyle(foo._first())["display"]
-          .should.equal("none")
-        done()
-
-
     context "Position, style and CSS classes management", ->
       beforeEach ->
         resetBody()

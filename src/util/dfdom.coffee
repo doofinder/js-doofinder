@@ -16,7 +16,7 @@ MATCHES_SELECTOR_FN = ([
 class DfDomElement
   ###*
    * @public
-   * @param  {string|String|HTMLElement|NodeList|Array} selector
+   * @param  {String|HTMLElement|NodeList|Array} selector
    * @return {DfDomElement}
   ###
   constructor: (selector) ->
@@ -41,8 +41,8 @@ class DfDomElement
    * - Changing the selection query for IDs starting by a number.
    *
    * @protected
-   * @param  {string} selector A CSS selector.
-   * @return {string}
+   * @param  {String} selector A CSS selector.
+   * @return {String}
   ###
   __fixSelector: (selector) ->
     selector = selector.trim()
@@ -74,7 +74,7 @@ class DfDomElement
   ###*
    * Fills the internal store from a selector.
    * @protected
-   * @param  {string|HTMLElement|NodeList|Array} selector
+   * @param  {String|HTMLElement|NodeList|Array} selector
    * @return {Array}     An Array of nodes.
   ###
   __initFromSelector: (selector) ->
@@ -155,7 +155,7 @@ class DfDomElement
    * the store.
    *
    * @public
-   * @param  {string} selector CSS Selector.
+   * @param  {String} selector CSS Selector.
    * @return {DfDomElement}
   ###
   find: (selector) ->
@@ -187,7 +187,7 @@ class DfDomElement
    * selector. Duplicates are removed.
    *
    * @public
-   * @param  {string} selector Optional CSS Selector.
+   * @param  {String} selector Optional CSS Selector.
    * @return {DfDomElement}
   ###
   parents: (selector) ->
@@ -206,7 +206,7 @@ class DfDomElement
    * the selector to be selected.
    *
    * @public
-   * @param  {string} selector Optional CSS Selector.
+   * @param  {String} selector Optional CSS Selector.
    * @return {DfDomElement}
   ###
   closest: (selector) ->
@@ -240,8 +240,8 @@ class DfDomElement
    * of matched elements.
    *
    * @public
-   * @param  {string} htmlContent   HTML source code to insert. Optional.
-   * @return {DfDomElement|string}  The same instance if is a set operation.
+   * @param  {String} htmlContent   HTML source code to insert. Optional.
+   * @return {DfDomElement|String}  The same instance if is a set operation.
    *                                The HTML source code if is get operation.
   ###
   html: (htmlContent) ->
@@ -253,8 +253,8 @@ class DfDomElement
   ###*
    * Clones a HTMLElement node or returns the same if it's a HTML string.
    * @public
-   * @param  {HTMLElement|string} node The node to be cloned.
-   * @return {HTMLElement|string}      The copy or the same string.
+   * @param  {HTMLElement|String} node The node to be cloned.
+   * @return {HTMLElement|String}      The copy or the same string.
   ###
   __cloneNode: (node) ->
     switch
@@ -269,7 +269,7 @@ class DfDomElement
    * are "prepended" individually.
    *
    * @public
-   * @param  {DfDomElement|HTMLElement|string} child Stuff to be prepended.
+   * @param  {DfDomElement|HTMLElement|String} child Stuff to be prepended.
    * @return {DfDomElement}                          The current instance.
   ###
   prepend: (child) ->
@@ -296,7 +296,7 @@ class DfDomElement
    * are appended individually.
    *
    * @public
-   * @param  {DfDomElement|HTMLElement|string} child Stuff to be appended.
+   * @param  {DfDomElement|HTMLElement|String} child Stuff to be appended.
    * @return {DfDomElement}                          The current instance.
   ###
   append: (child) ->
@@ -319,7 +319,7 @@ class DfDomElement
    * are inserted before the current set.
    *
    * @public
-   * @param  {DfDomElement|HTMLElement|string} child Stuff to be inserted.
+   * @param  {DfDomElement|HTMLElement|String} child Stuff to be inserted.
    * @return {DfDomElement}                          The current instance.
   ###
   before: (sibling) ->
@@ -343,7 +343,7 @@ class DfDomElement
    * are inserted before the current set.
    *
    * @public
-   * @param  {DfDomElement|HTMLElement|string} child Stuff to be inserted.
+   * @param  {DfDomElement|HTMLElement|String} child Stuff to be inserted.
    * @return {DfDomElement}                          The current instance.
   ###
   after: (sibling) ->
@@ -385,9 +385,9 @@ class DfDomElement
    * elements or set one or more attributes for every matched element.
    *
    * @public
-   * @param  {string} name              Attribute name.
-   * @param  {string} value             Attribute value.
-   * @return {DfDomElement|string|null} Current instance on set, attribute
+   * @param  {String} name              Attribute name.
+   * @param  {String} value             Attribute value.
+   * @return {DfDomElement|String|null} Current instance on set, attribute
    *                                    value on get.
   ###
   attr: (name, value) ->
@@ -399,8 +399,8 @@ class DfDomElement
   ###*
    * Removes an attribute from the set of matched elements.
    * @public
-   * @param  {string} name          Attribute name.
-   * @return {DfDomElement|string}  Current instance.
+   * @param  {String} name          Attribute name.
+   * @return {DfDomElement|String}  Current instance.
   ###
   removeAttr: (name) ->
     @each (node) -> node.removeAttribute name
@@ -410,7 +410,7 @@ class DfDomElement
    * attribute or not.
    *
    * @public
-   * @param  {string} name  Attribute name.
+   * @param  {String} name  Attribute name.
    * @return {Boolean}      true if the attribute is present.
   ###
   hasAttr: (name) ->
@@ -422,9 +422,9 @@ class DfDomElement
    * in the set.
    *
    * @public
-   * @param  {string} name              Attribute name.
-   * @param  {string} value             Attribute value.
-   * @return {DfDomElement|string|null} Current instance on set,
+   * @param  {String} name              Attribute name.
+   * @param  {String} value             Attribute value.
+   * @return {DfDomElement|String|null} Current instance on set,
    *                                    data-attribute value on get.
   ###
   data: (name, value) ->
@@ -453,7 +453,7 @@ class DfDomElement
   ###*
    * Adds a class name to all the elements in the set of matched elements.
    * @public
-   * @param {string} className
+   * @param {String} className
   ###
   addClass: (className) ->
     @each (node) -> node.classList.add className
@@ -463,7 +463,7 @@ class DfDomElement
    * class name.
    *
    * @public
-   * @param {string} className
+   * @param {String} className
   ###
   hasClass: (className) ->
     (@element.filter (node) -> node.classList.contains className).length > 0
@@ -471,7 +471,7 @@ class DfDomElement
   ###*
    * Removes a class name from all the elements in the set of matched elements.
    * @public
-   * @param {string} className
+   * @param {String} className
   ###
   removeClass: (className) ->
     @each (node) -> node.classList.remove className
@@ -481,7 +481,7 @@ class DfDomElement
    * matched elements.
    *
    * @public
-   * @param {string} className
+   * @param {String} className
   ###
   toggleClass: (className) ->
     @each (node) -> node.classList.toggle className
@@ -490,22 +490,42 @@ class DfDomElement
   # Styles
   #
 
-  # TODO(@carlosescri): I'm here!
-
-  __css: (node, propertyName) ->
-    (getComputedStyle node).getPropertyValue propertyName
-
+  ###*
+   * Gets the value of a computed style property for the first element in the
+   * set of matched elements or set one or more CSS properties for every matched
+   * element.
+   *
+   * @public
+   * @param  {String}         propertyName
+   * @param  {String|Number}  value
+   * @return {DfDomElement|String|null} Current instance on set, value or null
+   *                                    on get.
+  ###
   css: (propertyName, value) ->
     if value?
       @each (node) -> node.style[propertyName] = value
     else if (node = @get 0)?
-      @__css node, propertyName
+      (getComputedStyle node).getPropertyValue propertyName
     else
       null
 
+  ###*
+   * Hides the element in the set of matched elements by setting their display
+   * property to "none".
+   *
+   * @public
+   * @return {DfDomElement} Current instance.
+  ###
   hide: ->
     @css "display", "none"
 
+  ###*
+   * Displays the elements in the set of matched elements by unsetting their
+   * display property.
+   *
+   * @public
+   * @return {DfDomElement} Current instance.
+  ###
   show: ->
     @each (node) -> node.style.removeProperty "display"
 

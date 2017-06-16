@@ -1193,7 +1193,7 @@ author: @ecoslado
 
     /**
      * @public
-     * @param  {string|String|HTMLElement|NodeList|Array} selector
+     * @param  {String|HTMLElement|NodeList|Array} selector
      * @return {DfDomElement}
      */
     function DfDomElement(selector) {
@@ -1227,8 +1227,8 @@ author: @ecoslado
      * - Changing the selection query for IDs starting by a number.
      *
      * @protected
-     * @param  {string} selector A CSS selector.
-     * @return {string}
+     * @param  {String} selector A CSS selector.
+     * @return {String}
      */
 
     DfDomElement.prototype.__fixSelector = function(selector) {
@@ -1276,7 +1276,7 @@ author: @ecoslado
     /**
      * Fills the internal store from a selector.
      * @protected
-     * @param  {string|HTMLElement|NodeList|Array} selector
+     * @param  {String|HTMLElement|NodeList|Array} selector
      * @return {Array}     An Array of nodes.
      */
 
@@ -1380,7 +1380,7 @@ author: @ecoslado
      * the store.
      *
      * @public
-     * @param  {string} selector CSS Selector.
+     * @param  {String} selector CSS Selector.
      * @return {DfDomElement}
      */
 
@@ -1431,7 +1431,7 @@ author: @ecoslado
      * selector. Duplicates are removed.
      *
      * @public
-     * @param  {string} selector Optional CSS Selector.
+     * @param  {String} selector Optional CSS Selector.
      * @return {DfDomElement}
      */
 
@@ -1460,7 +1460,7 @@ author: @ecoslado
      * the selector to be selected.
      *
      * @public
-     * @param  {string} selector Optional CSS Selector.
+     * @param  {String} selector Optional CSS Selector.
      * @return {DfDomElement}
      */
 
@@ -1504,8 +1504,8 @@ author: @ecoslado
      * of matched elements.
      *
      * @public
-     * @param  {string} htmlContent   HTML source code to insert. Optional.
-     * @return {DfDomElement|string}  The same instance if is a set operation.
+     * @param  {String} htmlContent   HTML source code to insert. Optional.
+     * @return {DfDomElement|String}  The same instance if is a set operation.
      *                                The HTML source code if is get operation.
      */
 
@@ -1523,8 +1523,8 @@ author: @ecoslado
     /**
      * Clones a HTMLElement node or returns the same if it's a HTML string.
      * @public
-     * @param  {HTMLElement|string} node The node to be cloned.
-     * @return {HTMLElement|string}      The copy or the same string.
+     * @param  {HTMLElement|String} node The node to be cloned.
+     * @return {HTMLElement|String}      The copy or the same string.
      */
 
     DfDomElement.prototype.__cloneNode = function(node) {
@@ -1546,7 +1546,7 @@ author: @ecoslado
      * are "prepended" individually.
      *
      * @public
-     * @param  {DfDomElement|HTMLElement|string} child Stuff to be prepended.
+     * @param  {DfDomElement|HTMLElement|String} child Stuff to be prepended.
      * @return {DfDomElement}                          The current instance.
      */
 
@@ -1588,7 +1588,7 @@ author: @ecoslado
      * are appended individually.
      *
      * @public
-     * @param  {DfDomElement|HTMLElement|string} child Stuff to be appended.
+     * @param  {DfDomElement|HTMLElement|String} child Stuff to be appended.
      * @return {DfDomElement}                          The current instance.
      */
 
@@ -1624,7 +1624,7 @@ author: @ecoslado
      * are inserted before the current set.
      *
      * @public
-     * @param  {DfDomElement|HTMLElement|string} child Stuff to be inserted.
+     * @param  {DfDomElement|HTMLElement|String} child Stuff to be inserted.
      * @return {DfDomElement}                          The current instance.
      */
 
@@ -1662,7 +1662,7 @@ author: @ecoslado
      * are inserted before the current set.
      *
      * @public
-     * @param  {DfDomElement|HTMLElement|string} child Stuff to be inserted.
+     * @param  {DfDomElement|HTMLElement|String} child Stuff to be inserted.
      * @return {DfDomElement}                          The current instance.
      */
 
@@ -1723,9 +1723,9 @@ author: @ecoslado
      * elements or set one or more attributes for every matched element.
      *
      * @public
-     * @param  {string} name              Attribute name.
-     * @param  {string} value             Attribute value.
-     * @return {DfDomElement|string|null} Current instance on set, attribute
+     * @param  {String} name              Attribute name.
+     * @param  {String} value             Attribute value.
+     * @return {DfDomElement|String|null} Current instance on set, attribute
      *                                    value on get.
      */
 
@@ -1744,8 +1744,8 @@ author: @ecoslado
     /**
      * Removes an attribute from the set of matched elements.
      * @public
-     * @param  {string} name          Attribute name.
-     * @return {DfDomElement|string}  Current instance.
+     * @param  {String} name          Attribute name.
+     * @return {DfDomElement|String}  Current instance.
      */
 
     DfDomElement.prototype.removeAttr = function(name) {
@@ -1760,7 +1760,7 @@ author: @ecoslado
      * attribute or not.
      *
      * @public
-     * @param  {string} name  Attribute name.
+     * @param  {String} name  Attribute name.
      * @return {Boolean}      true if the attribute is present.
      */
 
@@ -1777,9 +1777,9 @@ author: @ecoslado
      * in the set.
      *
      * @public
-     * @param  {string} name              Attribute name.
-     * @param  {string} value             Attribute value.
-     * @return {DfDomElement|string|null} Current instance on set,
+     * @param  {String} name              Attribute name.
+     * @param  {String} value             Attribute value.
+     * @return {DfDomElement|String|null} Current instance on set,
      *                                    data-attribute value on get.
      */
 
@@ -1819,7 +1819,7 @@ author: @ecoslado
     /**
      * Adds a class name to all the elements in the set of matched elements.
      * @public
-     * @param {string} className
+     * @param {String} className
      */
 
     DfDomElement.prototype.addClass = function(className) {
@@ -1834,7 +1834,7 @@ author: @ecoslado
      * class name.
      *
      * @public
-     * @param {string} className
+     * @param {String} className
      */
 
     DfDomElement.prototype.hasClass = function(className) {
@@ -1847,7 +1847,7 @@ author: @ecoslado
     /**
      * Removes a class name from all the elements in the set of matched elements.
      * @public
-     * @param {string} className
+     * @param {String} className
      */
 
     DfDomElement.prototype.removeClass = function(className) {
@@ -1862,7 +1862,7 @@ author: @ecoslado
      * matched elements.
      *
      * @public
-     * @param {string} className
+     * @param {String} className
      */
 
     DfDomElement.prototype.toggleClass = function(className) {
@@ -1871,9 +1871,18 @@ author: @ecoslado
       });
     };
 
-    DfDomElement.prototype.__css = function(node, propertyName) {
-      return (getComputedStyle(node)).getPropertyValue(propertyName);
-    };
+
+    /**
+     * Gets the value of a computed style property for the first element in the
+     * set of matched elements or set one or more CSS properties for every matched
+     * element.
+     *
+     * @public
+     * @param  {String}         propertyName
+     * @param  {String|Number}  value
+     * @return {DfDomElement|String|null} Current instance on set, value or null
+     *                                    on get.
+     */
 
     DfDomElement.prototype.css = function(propertyName, value) {
       var node;
@@ -1882,15 +1891,33 @@ author: @ecoslado
           return node.style[propertyName] = value;
         });
       } else if ((node = this.get(0)) != null) {
-        return this.__css(node, propertyName);
+        return (getComputedStyle(node)).getPropertyValue(propertyName);
       } else {
         return null;
       }
     };
 
+
+    /**
+     * Hides the element in the set of matched elements by setting their display
+     * property to "none".
+     *
+     * @public
+     * @return {DfDomElement} Current instance.
+     */
+
     DfDomElement.prototype.hide = function() {
       return this.css("display", "none");
     };
+
+
+    /**
+     * Displays the elements in the set of matched elements by unsetting their
+     * display property.
+     *
+     * @public
+     * @return {DfDomElement} Current instance.
+     */
 
     DfDomElement.prototype.show = function() {
       return this.each(function(node) {
