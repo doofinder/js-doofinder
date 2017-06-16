@@ -87,78 +87,98 @@ describe "dfdom tests:", ->
         (dfdom selection).should.eql selection
         done()
 
-    # Methods
-    context "Basic DOM Hierarchy Management", ->
-      it "Testing each", (done) ->
+    context "Internal Utilities", ->
+      it "properly iterates each node in the set of matched elements", (done) ->
         insertHTML """
         <ul class="test">
+          <li></li>
           <li>
-          </li>
-          <li>
+            <ul class="test">
+              <li></li>
+              <li></li>
+            </ul>
           </li>
         </ul>
         """
         count = 0
-        dfdom("li").each () ->
+        items = (dfdom "li")
+        items.each (item) ->
+          items.element[count].should.eql item
           count++
-        count.should.equal 2
+        count.should.eq 4
         done()
 
-      it "Find", (done) ->
+      it "properly maps each node in the set of matched elements", (done) ->
         insertHTML """
+        <ul class="test">
+          <li></li>
+          <li>
+            <ul class="test">
+              <li></li>
+              <li></li>
+            </ul>
+          </li>
+        </ul>
+        """
+        items = (dfdom "li")
+        elements = items.map (item) -> item
+        elements.should.eql items.element
+        done()
+
+    # Methods
+    context "Traversing the DOM", ->
+      it "can properly find nodes inside the set of matched elements given a selector", (done) ->
+        insertHTML """
+          <ul>
+            <li></li>
+          </ul>
           <ul class="test">
+            <li></li>
             <li>
-            </li>
-            <li>
+              <ul class="test">
+                <li></li>
+                <li></li>
+              </ul>
             </li>
           </ul>
           <ul class="test">
-            <li>
-            </li>
-            <li>
-            </li>
+            <li></li>
+            <li></li>
           </ul>
         """
-        dfdom(".test").find("li").length().should.equal(4)
-        dfdom(".test").find("div").length().should.equal(0)
+        ((dfdom ".test").find "li").length().should.eq 6
+        ((dfdom ".test").find "div").length().should.eq 0
         done()
 
-      it "Children", (done) ->
+      it "can properly get the direct child nodes of the set of matched elements", (done) ->
         insertHTML """
           <ul class="test">
+            <li></li>
             <li>
-            </li>
-            <li>
-            </li>
-          </ul>
-          <ul class="test">
-            <li>
-            </li>
-            <li>
+              <ul class="test">
+                <li></li>
+                <li></li>
+              </ul>
             </li>
           </ul>
           <div></div>
         """
-        dfdom(".test").children().length().should.equal(4)
-        dfdom("div").children().length().should.equal(0)
+        (dfdom ".test").children().length().should.eq 4
+        (dfdom "div").children().length().should.eq 0
         done()
 
-      it "Parent", (done) ->
+      it "can retrieve the parent node for the set of matched elements", (done) ->
         insertHTML """
           <ul class="test">
-            <li>
-            </li>
-            <li>
-            </li>
+            <li></li>
+            <li></li>
           </ul>
           <ul class="test">
-            <li>
-            </li>
-            <li>
-            </li>
+            <li></li>
+            <li></li>
           </ul>
         """
-        dfdom("li").parent().length().should.equal(2)
+        (dfdom "li").parent().length().should.eq 2
         done()
 
       it "can retrieve all parent nodes for the set of matched elements", (done) ->
@@ -255,16 +275,12 @@ describe "dfdom tests:", ->
       it "Length", (done) ->
         insertHTML """
           <ul class="test">
-            <li>
-            </li>
-            <li>
-            </li>
+            <li></li>
+            <li></li>
           </ul>
           <ul class="test">
-            <li>
-            </li>
-            <li>
-            </li>
+            <li></li>
+            <li></li>
           </ul>
         """
 
