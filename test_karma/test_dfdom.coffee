@@ -574,46 +574,26 @@ describe "dfdom tests:", ->
         dfdom(el).scrollLeft().should.equal(500)
         done()
 
-    context "Event management", ->
-      beforeEach ->
-        insertHTML """
-        <input type=text />
-        """
+    context "Event Management Methods", ->
+      it "can bind, trigger and unbind events", (done) ->
+        insertHTML """<input type="text" id="q">"""
+        input = dfdom "#q"
 
-      it "binding and triggering events", (done) ->
-        input = dfdom("input")
-        executionTimes = 0
-        input.on "df:foo", () ->
-          executionTimes += 1
+        executed = 0
+        input.on "df:foo", (e) -> executed += 1
+        input.one "df:foo", (e) -> executed += 1
+        input
+          .trigger("df:foo")
+          .trigger("df:foo")
+          .trigger("df:foo")
+        executed.should.eq 4
 
-        input.trigger("df:foo")
-        input.trigger("df:foo")
-        input.trigger("df:foo")
-
-        executionTimes.should.equal(3)
-        done()
-
-      it "binding and unbinding events", (done) ->
-        input = dfdom("input")
-        executed = false
-        input.on "df:foo", () ->
-          executed = true
+        executed = 0
         input.off "df:foo"
+        input
+          .trigger("df:foo")
+          .trigger("df:foo")
+          .trigger("df:foo")
+        executed.should.eq 0
 
-        input.trigger "df:foo"
-
-        executed.should.be.false
-        done()
-
-      it "binding events just once", (done) ->
-        input = dfdom("input")
-        executionTimes = 0
-        input.one "df:foo", () ->
-          executionTimes += 1
-
-        input.trigger "df:foo"
-        input.trigger "df:foo"
-        input.trigger "df:foo"
-
-        executionTimes.should.equal(1)
         done()

@@ -1971,67 +1971,68 @@ author: @ecoslado
       return this._first().scrollLeft;
     };
 
-    DfDomElement.prototype.on = function(arg1, arg2, arg3) {
-      if (arg3 != null) {
-        return this.each(function(elem) {
-          if (elem != null) {
-            return bean.on(elem, arg1, arg2, arg3);
-          }
-        });
-      } else {
-        return this.each(function(elem) {
-          if (elem != null) {
-            return bean.on(elem, arg1, arg2);
-          }
-        });
-      }
-    };
 
-    DfDomElement.prototype.one = function(arg1, arg2, arg3) {
-      if (arg3 != null) {
-        this.each(function(elem) {
-          if (elem != null) {
-            return bean.one(elem, arg1, arg2, arg3);
-          }
-        });
-      } else {
-        this.each(function(elem) {
-          if (elem != null) {
-            return bean.one(elem, arg1, arg2);
-          }
-        });
-      }
-      return this;
-    };
+    /**
+     * Proxy method to Bean Framework's on(). Attachs an event handler to each
+     * node in the set of matched elements.
+     *
+     * See: https://github.com/fat/bean#on
+     *
+     * @public
+     */
 
-    DfDomElement.prototype.trigger = function(event, params) {
-      this.each(function(elem) {
-        if (elem != null) {
-          return bean.fire(elem, event, params);
-        }
+    DfDomElement.prototype.on = function(events, selector, fn, args) {
+      return this.each(function(node) {
+        return bean.on(node, events, selector, fn, args);
       });
-      return this;
     };
 
-    DfDomElement.prototype.off = function(event) {
-      this.each(function(elem) {
-        if (elem != null) {
-          return bean.off(elem, event);
-        }
+
+    /**
+     * Proxy method to Bean Framework's one(). Attachs a single-use event handler
+     * to each node in the set of matched elements.
+     *
+     * See: https://github.com/fat/bean#one
+     *
+     * @public
+     */
+
+    DfDomElement.prototype.one = function(events, selector, fn, args) {
+      return this.each(function(node) {
+        return bean.one(node, events, selector, fn, args);
       });
-      return this;
     };
 
-    DfDomElement.prototype.focus = function() {
-      if (this._first() != null) {
-        return this._first().focus();
-      }
+
+    /**
+     * Proxy method to Bean Framework's fire(). Triggers the events provide on
+     * each node in the set of matched elements.
+     *
+     * See: https://github.com/fat/bean#fire
+     *
+     * @public
+     */
+
+    DfDomElement.prototype.trigger = function(events, args) {
+      return this.each(function(node) {
+        return bean.fire(node, events, args);
+      });
     };
 
-    DfDomElement.prototype.blur = function() {
-      if (this._first() != null) {
-        return this._first().blur();
-      }
+
+    /**
+     * Proxy method to Bean Framework's off(). Removes event handlers from each
+     * node in the set of matched elements.
+     *
+     * See: https://github.com/fat/bean#off
+     *
+     * @public
+     */
+
+    DfDomElement.prototype.off = function(events, fn) {
+      return this.each(function(node) {
+        return bean.off(node, events, fn);
+      });
     };
 
     return DfDomElement;

@@ -219,7 +219,7 @@ class DfDomElement
     @_get(0)
 
   first: () ->
-    return  new DfDomElement @_first()
+    return new DfDomElement @_first()
 
   _get: (key) ->
     if @element and @element.length > key
@@ -566,47 +566,49 @@ class DfDomElement
   # Events
   #
 
-  on: (arg1, arg2, arg3) ->
-    if arg3?
-      @each (elem) ->
-        if elem?
-          bean.on(elem, arg1, arg2, arg3)
-    else
-      @each (elem) ->
-        if elem?
-          bean.on(elem, arg1, arg2)
+  ###*
+   * Proxy method to Bean Framework's on(). Attachs an event handler to each
+   * node in the set of matched elements.
+   *
+   * See: https://github.com/fat/bean#on
+   *
+   * @public
+  ###
+  on: (events, selector, fn, args) ->
+    @each (node) -> bean.on node, events, selector, fn, args
 
+  ###*
+   * Proxy method to Bean Framework's one(). Attachs a single-use event handler
+   * to each node in the set of matched elements.
+   *
+   * See: https://github.com/fat/bean#one
+   *
+   * @public
+  ###
+  one: (events, selector, fn, args) ->
+    @each (node) -> bean.one node, events, selector, fn, args
 
-  one: (arg1, arg2, arg3) ->
-    if arg3?
-      @each (elem) ->
-        if elem?
-          bean.one(elem, arg1, arg2, arg3)
-    else
-      @each (elem) ->
-        if elem?
-          bean.one(elem, arg1, arg2)
-    return @
+  ###*
+   * Proxy method to Bean Framework's fire(). Triggers the events provide on
+   * each node in the set of matched elements.
+   *
+   * See: https://github.com/fat/bean#fire
+   *
+   * @public
+  ###
+  trigger: (events, args) ->
+    @each (node) -> bean.fire node, events, args
 
-  trigger: (event, params) ->
-    @each (elem) ->
-      if elem?
-        bean.fire(elem, event, params)
-    return @
-
-  off: (event) ->
-    @each (elem) ->
-      if elem?
-        bean.off(elem, event)
-    return @
-
-  focus: () ->
-    if @_first()?
-      @_first().focus()
-
-  blur: () ->
-    if @_first()?
-      @_first().blur()
+  ###*
+   * Proxy method to Bean Framework's off(). Removes event handlers from each
+   * node in the set of matched elements.
+   *
+   * See: https://github.com/fat/bean#off
+   *
+   * @public
+  ###
+  off: (events, fn) ->
+    @each (node) -> bean.off node, events, fn
 
 
 dfdom = (selector) ->
