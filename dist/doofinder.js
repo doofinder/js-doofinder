@@ -1197,7 +1197,7 @@ author: @ecoslado
      * @return {DfDomElement}
      */
     function DfDomElement(selector) {
-      Object.defineProperty(this, 'len', {
+      Object.defineProperty(this, 'length', {
         get: function() {
           return this.element.length;
         }
@@ -1489,10 +1489,6 @@ author: @ecoslado
       } else {
         return this.element;
       }
-    };
-
-    DfDomElement.prototype.length = function() {
-      return this.element.length;
     };
 
 
@@ -3346,7 +3342,7 @@ author: @ecoslado
             facetName: key,
             facetValue: value,
             selected: !wasSelected,
-            totalSelected: _this.getSelectedElements().length()
+            totalSelected: _this.getSelectedElements().length
           };
           return _this.trigger("df:term_clicked", [eventInfo]);
         };
@@ -3413,7 +3409,7 @@ author: @ecoslado
      */
 
     TermFacet.prototype.countSelectedElements = function() {
-      return this.getSelectedElements().length();
+      return this.getSelectedElements().length;
     };
 
 
@@ -3806,7 +3802,7 @@ replaces the current content.
       } else if (this.element.element[0] === window) {
         this.element = $("body");
       } else {
-        if (!this.element.children().length()) {
+        if (!this.element.children().length) {
           this.element.append(document.createElement('div'));
         }
         this.element = this.element.children().first();

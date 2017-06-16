@@ -20,7 +20,7 @@ class DfDomElement
    * @return {DfDomElement}
   ###
   constructor: (selector) ->
-    Object.defineProperty this, 'len', get: -> @element.length
+    Object.defineProperty this, 'length', get: -> @element.length
 
     if selector instanceof String
       selector = selector.toString()
@@ -224,9 +224,6 @@ class DfDomElement
 
   get: (key) ->
     if key? then @element[key] or null else @element
-
-  length: () ->
-    return @element.length
 
   # CONTENT RETRIEVING AND INJECTION
 

@@ -58,7 +58,7 @@ describe "dfdom tests:", ->
         """
         rawNodes = document.querySelectorAll ".test li"
         selection = (dfdom rawNodes)
-        selection.length().should.eq 2
+        selection.length.should.eq 2
         (selection.element.indexOf rawNodes[0]).should.eq 0
         done()
 
@@ -70,7 +70,7 @@ describe "dfdom tests:", ->
         </ul>
         """
         selection = dfdom ["ul", ".test", ".test > li", "li", document.querySelectorAll "li", []]
-        selection.length().should.eq 3
+        selection.length.should.eq 3
         done()
 
       it "can be instantiated with multiple selectors separated by commas", (done) ->
@@ -81,7 +81,7 @@ describe "dfdom tests:", ->
         </ul>
         """
         selection = dfdom "ul, .test, .test > li, li"
-        selection.length().should.eq 3
+        selection.length.should.eq 3
         done()
 
       it "returns the same DfDomElement instance if passed to the dfdom function", (done) ->
@@ -151,8 +151,8 @@ describe "dfdom tests:", ->
             <li></li>
           </ul>
         """
-        ((dfdom ".test").find "li").length().should.eq 6
-        ((dfdom ".test").find "div").length().should.eq 0
+        ((dfdom ".test").find "li").length.should.eq 6
+        ((dfdom ".test").find "div").length.should.eq 0
         done()
 
       it "can get the direct child nodes of the set of matched elements", (done) ->
@@ -168,8 +168,8 @@ describe "dfdom tests:", ->
           </ul>
           <div></div>
         """
-        (dfdom ".test").children().length().should.eq 4
-        (dfdom "div").children().length().should.eq 0
+        (dfdom ".test").children().length.should.eq 4
+        (dfdom "div").children().length.should.eq 0
         done()
 
       it "can retrieve the parent node for the set of matched elements", (done) ->
@@ -183,7 +183,7 @@ describe "dfdom tests:", ->
             <li></li>
           </ul>
         """
-        (dfdom "li").parent().length().should.eq 2
+        (dfdom "li").parent().length.should.eq 2
         done()
 
       it "can retrieve all parent nodes for the set of matched elements", (done) ->
@@ -199,7 +199,7 @@ describe "dfdom tests:", ->
         </div>
         """
         parents = (dfdom ".child").parents()
-        parents.length().should.eq 5
+        parents.length.should.eq 5
         parents.element[0].should.eql document.getElementById "parent1"
         parents.element[1].should.eql document.getElementById "parent2"
         parents.element[2].should.eql document.body
@@ -221,7 +221,7 @@ describe "dfdom tests:", ->
         </div>
         """
         parents = (dfdom ".child").parents ".parent"
-        parents.length().should.eq 1
+        parents.length.should.eq 1
         parents.element[0].should.eql document.getElementById "parent2"
         done()
 
@@ -238,7 +238,7 @@ describe "dfdom tests:", ->
         </div>
         """
         parents = (dfdom ".child").closest()
-        parents.length().should.eq 2
+        parents.length.should.eq 2
         parents.element[0].should.eql document.getElementById "parent1"
         parents.element[1].should.eql document.getElementById "parent3"
         done()
@@ -256,7 +256,7 @@ describe "dfdom tests:", ->
         </div>
         """
         parents = (dfdom ".child").closest ".parent"
-        parents.length().should.eq 2
+        parents.length.should.eq 2
         parents.element[0].should.eql document.getElementById "parent2"
         parents.element[1].should.eql document.getElementById "parent3"
         done()
@@ -286,57 +286,57 @@ describe "dfdom tests:", ->
           <div class="content"></div>
         """
         containers = ((dfdom ".container").html code)
-        containers.len.should.eq 2
-        containers.children().len.should.eq 4
+        containers.length.should.eq 2
+        containers.children().length.should.eq 4
         containers.html().should.equal code
         done()
 
       it "can append HTML inside the set of matched elements", (done) ->
         (dfdom ".container").append """<div class="content"></div>"""
         contents = (dfdom ".content")
-        contents.len.should.eq 2
-        (contents.parents ".container").len.should.eq 2
+        contents.length.should.eq 2
+        (contents.parents ".container").length.should.eq 2
         done()
 
       it "can append a node inside the set of matched elements", (done) ->
         (dfdom "body").append """<div class="copiedContent"></div>"""
-        (dfdom ".copiedContent").len.should.eq 1
+        (dfdom ".copiedContent").length.should.eq 1
         (dfdom ".container").append ((dfdom ".copiedContent").get 0)
         contents = (dfdom ".copiedContent")
-        contents.len.should.eq 2
-        (contents.parents ".container").len.should.eq 2
+        contents.length.should.eq 2
+        (contents.parents ".container").length.should.eq 2
         done()
 
       it "can prepend HTML inside the set of matched elements", (done) ->
         ((dfdom ".container").prepend """<div></div>""").prepend """<div class="content"></div>"""
         contents = dfdom ".content"
-        contents.len.should.eq 2
-        (contents.parents ".container").len.should.eq 2
+        contents.length.should.eq 2
+        (contents.parents ".container").length.should.eq 2
         done()
 
       it "can prepend a node inside the set of matched elements", (done) ->
         (dfdom "body").prepend """<div class="copiedContent"></div>"""
-        (dfdom ".copiedContent").len.should.eq 1
+        (dfdom ".copiedContent").length.should.eq 1
         ((dfdom ".container").prepend """<div></div>""").prepend (dfdom ".copiedContent").get 0
         contents = (dfdom ".copiedContent")
-        contents.len.should.eq 2
-        (contents.parents ".container").len.should.eq 2
+        contents.length.should.eq 2
+        (contents.parents ".container").length.should.eq 2
         done()
 
       it "can insert HTML after the set of matched elements", (done) ->
         (dfdom ".container").after """<div class="container new"></div>"""
         containers = (dfdom ".container")
-        containers.len.should.eq 4
+        containers.length.should.eq 4
         ((dfdom containers.get 1).hasClass "new").should.be.true
         ((dfdom containers.get 3).hasClass "new").should.be.true
         done()
 
       it "can insert a node after the set of matched elements", (done) ->
         (dfdom "body").prepend """<div class="new"></div>"""
-        (dfdom ".new").len.should.eq 1
+        (dfdom ".new").length.should.eq 1
         (dfdom ".container").after (dfdom ".new").addClass "container"
         containers = (dfdom ".container")
-        containers.len.should.eq 4
+        containers.length.should.eq 4
         ((dfdom containers.get 1).hasClass "new").should.be.true
         ((dfdom containers.get 3).hasClass "new").should.be.true
         done()
@@ -344,17 +344,17 @@ describe "dfdom tests:", ->
       it "can insert HTML before the set of matched elements", (done) ->
         (dfdom ".container").before """<div class="container new"></div>"""
         containers = (dfdom ".container")
-        containers.len.should.eq 4
+        containers.length.should.eq 4
         ((dfdom containers.get 0).hasClass "new").should.be.true
         ((dfdom containers.get 2).hasClass "new").should.be.true
         done()
 
       it "can insert a node before the set of matched elements", (done) ->
         (dfdom "body").append """<div class="new"></div>"""
-        (dfdom ".new").len.should.eq 1
+        (dfdom ".new").length.should.eq 1
         (dfdom ".container").before (dfdom ".new").addClass "container"
         containers = (dfdom ".container")
-        containers.len.should.eq 4
+        containers.length.should.eq 4
         ((dfdom containers.get 0).hasClass "new").should.be.true
         ((dfdom containers.get 2).hasClass "new").should.be.true
         done()
@@ -365,10 +365,10 @@ describe "dfdom tests:", ->
 
       it "can remove the nodes in the set of matched elements", (done) ->
         removedContainers = (dfdom ".container").remove()
-        removedContainers.len.should.equal 2
-        (dfdom ".container").len.should.equal 0
-        ((dfdom "body").append removedContainers).len.should.eq 1
-        (dfdom ".container").len.should.equal 2
+        removedContainers.length.should.equal 2
+        (dfdom ".container").length.should.equal 0
+        ((dfdom "body").append removedContainers).length.should.eq 1
+        (dfdom ".container").length.should.equal 2
         done()
 
     context "Tag Attributes Methods", ->
@@ -385,7 +385,7 @@ describe "dfdom tests:", ->
 
         # Set attribute
         (dfdom "div").attr "foo", "bar"
-        (dfdom "div[foo='bar']").len.should.eq 2
+        (dfdom "div[foo='bar']").length.should.eq 2
 
         # Check and retrieve attribute
         ((dfdom "div").hasAttr "foo").should.be.true
@@ -403,7 +403,7 @@ describe "dfdom tests:", ->
       it "can set and retrieve data attributes", (done) ->
         (expect ((dfdom "div").data "role")).to.be.null
         (dfdom "div").data "role", "presentational"
-        (dfdom "div[data-role='presentational']").len.should.eq 2
+        (dfdom "div[data-role='presentational']").length.should.eq 2
         done()
 
       it "can get and set the value of elements that support it", (done) ->
@@ -429,19 +429,19 @@ describe "dfdom tests:", ->
 
         (dfdom "input[type='radio'][value='hello']").val().should.equal "hello"
         (dfdom "input[type='radio'][value='hello']").val("bye").val().should.equal "bye"
-        (dfdom "input[type='radio'][value='hello']").len.should.eq 0
+        (dfdom "input[type='radio'][value='hello']").length.should.eq 0
 
         (dfdom "input[type='radio'][value='hola']").val().should.equal "hola"
         (dfdom "input[type='radio'][value='hola']").val("adios").val().should.equal "adios"
-        (dfdom "input[type='radio'][value='hola']").len.should.eq 0
+        (dfdom "input[type='radio'][value='hola']").length.should.eq 0
 
         done()
 
       it "can add a class name to the set of matched elements", (done) ->
         (dfdom "div").addClass "foo"
-        (dfdom ".foo").len.should.eq 2
+        (dfdom ".foo").length.should.eq 2
         (dfdom ".foo").addClass "bar"
-        (dfdom ".foo.bar").len.should.eq 2
+        (dfdom ".foo.bar").length.should.eq 2
         done()
 
       it "can check whether the set of matched elements has certain class name", (done) ->
