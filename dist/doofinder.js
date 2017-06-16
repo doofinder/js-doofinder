@@ -1908,50 +1908,131 @@ author: @ecoslado
       });
     };
 
-    DfDomElement.prototype.width = function() {
-      var ref;
-      return (ref = this.get(0)) != null ? ref.offsetWidth : void 0;
-    };
 
-    DfDomElement.prototype.height = function() {
-      var ref;
-      return (ref = this.get(0)) != null ? ref.offsetHeight : void 0;
-    };
+    /**
+     * Returns the size of the first element in the set of matched elements and
+     * its position relative to the viewport.
+     *
+     * @protected
+     * @return {DOMRect} The returned value is a DOMRect object, which contains
+     *                   read-only left, top, right, bottom, x, y, width, height
+     *                   properties describing the border-box in pixels. # MDN #
+     */
 
-    DfDomElement.prototype._clientRect = function() {
+    DfDomElement.prototype.__clientRect = function() {
       var ref;
       return (ref = this.get(0)) != null ? typeof ref.getBoundingClientRect === "function" ? ref.getBoundingClientRect() : void 0 : void 0;
     };
 
+
+    /**
+     * Proxy method for getBoundingClientRect().width. Returns the width of the
+     * first element in the set of matched elements.
+     *
+     * @public
+     * @return {Number} The width of the element.
+     */
+
+    DfDomElement.prototype.width = function() {
+      var ref;
+      return (ref = this.__clientRect()) != null ? ref.width : void 0;
+    };
+
+
+    /**
+     * Proxy method for getBoundingClientRect().height. Returns the height of the
+     * first element in the set of matched elements.
+     *
+     * @public
+     * @return {Number} The height of the element.
+     */
+
+    DfDomElement.prototype.height = function() {
+      var ref;
+      return (ref = this.__clientRect()) != null ? ref.height : void 0;
+    };
+
+
+    /**
+     * Proxy method for getBoundingClientRect().top. Returns the top position of
+     * the first element in the set of matched elements. Position is relative to
+     * the viewport.
+     *
+     * @public
+     * @return {Number} The top position of the element.
+     */
+
     DfDomElement.prototype.top = function() {
       var ref;
-      return ((ref = this._clientRect()) != null ? ref.top : void 0) || 0;
+      return (ref = this.__clientRect()) != null ? ref.top : void 0;
     };
+
+
+    /**
+     * Proxy method for getBoundingClientRect().right. Returns the right position of
+     * the first element in the set of matched elements. Position is relative to
+     * the viewport.
+     *
+     * @public
+     * @return {Number} The right position of the element.
+     */
 
     DfDomElement.prototype.right = function() {
       var ref;
-      return ((ref = this._clientRect()) != null ? ref.right : void 0) || 0;
+      return (ref = this.__clientRect()) != null ? ref.right : void 0;
     };
+
+
+    /**
+     * Proxy method for getBoundingClientRect().bottom. Returns the bottom position of
+     * the first element in the set of matched elements. Position is relative to
+     * the viewport.
+     *
+     * @public
+     * @return {Number} The bottom position of the element.
+     */
 
     DfDomElement.prototype.bottom = function() {
       var ref;
-      return ((ref = this._clientRect()) != null ? ref.bottom : void 0) || 0;
+      return (ref = this.__clientRect()) != null ? ref.bottom : void 0;
     };
+
+
+    /**
+     * Proxy method for getBoundingClientRect().left. Returns the left position of
+     * the first element in the set of matched elements. Position is relative to
+     * the viewport.
+     *
+     * @public
+     * @return {Number} The left position of the element.
+     */
 
     DfDomElement.prototype.left = function() {
       var ref;
-      return ((ref = this._clientRect()) != null ? ref.left : void 0) || 0;
+      return (ref = this.__clientRect()) != null ? ref.left : void 0;
+    };
+
+    DfDomElement.prototype.__scrollProperty = function(node, propertyName, value) {
+      if (value != null) {
+        node[propertyName] = value;
+        return new DfDomElement(node);
+      } else {
+        return node[propertyName];
+      }
     };
 
     DfDomElement.prototype.scrollTop = function(value) {
-      if (typeof value !== "undefined") {
-        (this.get(0)).scrollTop = value;
-      }
-      return (this.get(0)).scrollY || (this.get(0)).scrollTop;
+      var node, propertyName;
+      node = this.get(0);
+      propertyName = node.__proto__.hasOwnProperty("scrollY") ? "scrollY" : "scrollTop";
+      return this.__scrollProperty(node, propertyName, value);
     };
 
-    DfDomElement.prototype.scrollLeft = function() {
-      return (this.get(0)).scrollLeft;
+    DfDomElement.prototype.scrollLeft = function(value) {
+      var node, propertyName;
+      node = this.get(0);
+      propertyName = node.__proto__.hasOwnProperty("scrollX") ? "scrollX" : "scrollLeft";
+      return this.__scrollProperty(node, propertyName, value);
     };
 
 

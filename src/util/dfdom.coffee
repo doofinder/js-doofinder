@@ -108,7 +108,7 @@ class DfDomElement
   get: (key) ->
     if key? then @element[key] or null else @element
 
-  first: () ->
+  first: ->
     return new DfDomElement @get 0
 
   ###*
@@ -515,37 +515,102 @@ class DfDomElement
     @each (node) -> node.style.removeProperty "display"
 
   #
-  # Measurements
+  # Measurement
   #
 
-  width: () ->
-    (@get 0)?.offsetWidth
-
-  height: () ->
-    (@get 0)?.offsetHeight
-
-  _clientRect: ->
+  ###*
+   * Returns the size of the first element in the set of matched elements and
+   * its position relative to the viewport.
+   *
+   * @protected
+   * @return {DOMRect} The returned value is a DOMRect object, which contains
+   *                   read-only left, top, right, bottom, x, y, width, height
+   *                   properties describing the border-box in pixels. # MDN #
+  ###
+  __clientRect: ->
     (@get 0)?.getBoundingClientRect?()
 
+  ###*
+   * Proxy method for getBoundingClientRect().width. Returns the width of the
+   * first element in the set of matched elements.
+   *
+   * @public
+   * @return {Number} The width of the element.
+  ###
+  width: ->
+    @__clientRect()?.width
+
+  ###*
+   * Proxy method for getBoundingClientRect().height. Returns the height of the
+   * first element in the set of matched elements.
+   *
+   * @public
+   * @return {Number} The height of the element.
+  ###
+  height: ->
+    @__clientRect()?.height
+
+  ###*
+   * Proxy method for getBoundingClientRect().top. Returns the top position of
+   * the first element in the set of matched elements. Position is relative to
+   * the viewport.
+   *
+   * @public
+   * @return {Number} The top position of the element.
+  ###
   top: ->
-    @_clientRect()?.top or 0
+    @__clientRect()?.top
 
+  ###*
+   * Proxy method for getBoundingClientRect().right. Returns the right position of
+   * the first element in the set of matched elements. Position is relative to
+   * the viewport.
+   *
+   * @public
+   * @return {Number} The right position of the element.
+  ###
   right: ->
-    @_clientRect()?.right or 0
+    @__clientRect()?.right
 
+  ###*
+   * Proxy method for getBoundingClientRect().bottom. Returns the bottom position of
+   * the first element in the set of matched elements. Position is relative to
+   * the viewport.
+   *
+   * @public
+   * @return {Number} The bottom position of the element.
+  ###
   bottom: ->
-    @_clientRect()?.bottom or 0
+    @__clientRect()?.bottom
 
-  left: () ->
-    @_clientRect()?.left or 0
+  ###*
+   * Proxy method for getBoundingClientRect().left. Returns the left position of
+   * the first element in the set of matched elements. Position is relative to
+   * the viewport.
+   *
+   * @public
+   * @return {Number} The left position of the element.
+  ###
+  left: ->
+    @__clientRect()?.left
+
+  __scrollProperty: (node, propertyName, value) ->
+    if value?
+      node[propertyName] = value
+      return new DfDomElement node
+    else
+      node[propertyName]
 
   scrollTop: (value) ->
-    if typeof(value) != "undefined"
-      (@get 0).scrollTop = value
-    (@get 0).scrollY or (@get 0).scrollTop
+    node = @get 0
+    propertyName = if node.__proto__.hasOwnProperty "scrollY" then "scrollY" else "scrollTop"
+    @__scrollProperty node, propertyName, value
 
-  scrollLeft: () ->
-    (@get 0).scrollLeft
+
+  scrollLeft: (value) ->
+    node = @get 0
+    propertyName = if node.__proto__.hasOwnProperty "scrollX" then "scrollX" else "scrollLeft"
+    @__scrollProperty node, propertyName, value
 
   #
   # Events

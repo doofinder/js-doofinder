@@ -490,78 +490,99 @@ describe "dfdom tests:", ->
         (((dfdom "span.nostyle").show()).css "display").should.equal "inline"
         done()
 
-    context "Position, style and CSS classes management", ->
+    context "Measurement Methods", ->
       beforeEach ->
         resetBody()
 
-      it "width and height", (done) ->
+      it "can measure width and height", (done) ->
         insertHTML """
-        <div class="my-class"></div>
-        <style>
-          .my-class{
-            width: 42px;
-            height: 24px;
-          }
-        </style>
+          <style>
+            .rect {
+              width: 100px;
+              height: 60px;
+              border: 5px solid red;
+              padding: 5px;
+              margin: 5px;
+            }
+          </style>
+          <div class="rect"></div>
         """
-
-        dfdom(".my-class").width().should.equal(42)
-        dfdom(".my-class").height().should.equal(24)
+        rect = dfdom ".rect"
+        rect.css "box-sizing", "content-box"
+        rect.width().should.eq 120
+        rect.height().should.eq 80
+        rect.css "box-sizing", "border-box"
+        rect.width().should.eq 100
+        rect.height().should.eq 60
         done()
 
-      it "top left", (done) ->
+      it "can measure the top and left position of the first element in the set", (done) ->
         insertHTML """
-          <div class="container">
-            <div class="content">
-            </div>
-          </div>
-
           <style>
-          .container {
-            position: absolute;
-            top: 5rem;
-            left: 10rem;
-          }
-          .content {
-            position: relative;
-            margin-top: 15px;
-            margin-left: 5px;
-          }
+            html {
+              font-size: 10px;
+            }
+            body {
+              margin: 0;
+              padding: 1rem;
+            }
+            .container {
+              position: relative;
+              top: 1rem;
+              left: 1rem;
+              border: 10px solid red;
+            }
+            .content {
+              position: absolute;
+              top: 10px;
+              left: 10px;
+            }
+          </style>
+          <div class="container">
+            <div class="content"></div>
+          </div>
+        """
+        container = dfdom ".container"
+        content = dfdom ".content"
+
+        container.top().should.equal 20
+        container.left().should.equal 20
+
+        content.top().should.equal 40
+        content.left().should.equal 40
+        done()
+
+      it "can measure and set the scroll of the first node in the set of matched elements", (done) ->
+        insertHTML """
+          <div id="container">
+            <div id="content"></div>
+          </div>
+          <style>
+            #container {
+              height: 5rem;
+              width: 5rem;
+              overflow: scroll;
+            }
+            #content {
+              height: 50rem;
+              width: 50rem;
+            }
           </style>
         """
-        dfdom(".container").top().should.equal(80)
-        dfdom(".container").left().should.equal(160)
-        dfdom(".content").top().should.equal(95)
-        dfdom(".content").left().should.equal(165)
-        done()
+        container = dfdom "#container"
 
-      it "scroll", (done) ->
-        insertHTML """
-        <div id="container">
-          <div id="content">
-          </div>
-        </div>
-        <style>
-        #container {
-          height: 5rem;
-          width: 5rem;
-          overflow: scroll;
-        }
-        #content {
-          height: 50rem;
-          width: 50rem;
-        }
-        </style>
-        """
-        el = document.getElementById("container")
-        dfdom(el).scrollTop().should.equal(0)
-        el.scrollTop = 500
-        dfdom(el).scrollTop().should.equal(500)
-        dfdom(el).scrollTop(600).should.equal(600)
-        dfdom(el).scrollTop().should.equal(600)
-        dfdom(el).scrollLeft().should.equal(0)
-        el.scrollLeft = 500
-        dfdom(el).scrollLeft().should.equal(500)
+        container.scrollTop().should.eq 0
+        (container.get 0).scrollTop = 500
+        container.scrollTop().should.eq 500
+        container.scrollTop 400
+        container.scrollTop().should.eq 400
+
+        container.scrollLeft().should.eq 0
+        (container.get 0).scrollLeft = 500
+        container.scrollLeft().should.eq 500
+        container.scrollLeft 400
+        container.scrollLeft().should.eq 400
+
         done()
 
     context "Event Management Methods", ->
