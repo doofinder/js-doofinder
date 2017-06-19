@@ -60,6 +60,21 @@ class DfDomElement
     Array.prototype.slice.call nodeList
 
   ###*
+   * Returns true if a DfDomElement instance can be created for the provided
+   * node.
+   *
+   * @protected
+   * @param  {HTMLElement|HTMLDocument|Window} node
+   * @return {Boolean}
+  ###
+  __isValidElementNode: (node) ->
+    switch
+      when node instanceof HTMLElement then true
+      when node instanceof HTMLDocument then true
+      when node instanceof Window then true
+      else false
+
+  ###*
    * Fills the internal store from an array of selectors.
    * @protected
    * @param  {Array} arr An Array of selectors (of all valid types)
@@ -80,7 +95,7 @@ class DfDomElement
   __initFromSelector: (selector) ->
     if typeof selector is "string"
       element = @__fixNodeList document.querySelectorAll @__fixSelector selector
-    else if selector instanceof HTMLElement
+    else if @__isValidElementNode selector
       element = [selector]
     else if selector instanceof NodeList
       element = @__fixNodeList selector
@@ -179,7 +194,8 @@ class DfDomElement
   ###
   find: (selector) ->
     finderFn = (node) =>
-      @__fixNodeList node.querySelectorAll selector
+      src = if node is window then window.document else node
+      @__fixNodeList src.querySelectorAll selector
     new DfDomElement @__find finderFn
 
   ###*

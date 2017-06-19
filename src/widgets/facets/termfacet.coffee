@@ -97,7 +97,7 @@ class TermFacet extends BaseFacet
       termNode = ($ e.target)
       value = termNode.data "value"
       key = termNode.data "facet"
-      wasSelected = e.target.hasAttribute "data-selected"
+      wasSelected = termNode.hasAttr "data-selected"
 
       unless wasSelected
         termNode.attr "data-selected", ""

@@ -49,6 +49,14 @@ describe "dfdom tests:", ->
         (dfdom rawNode).element[0].should.eql rawNode
         done()
 
+      it "can be instantiated with a Window instance", (done) ->
+        (dfdom window).length.should.eq 1
+        done()
+
+      it "can be instantiated with a HTMLDocument instance", (done) ->
+        (dfdom document).length.should.eq 1
+        done()
+
       it "can be instantiated with a NodeList", (done) ->
         insertHTML """
         <ul class="test">
@@ -178,6 +186,11 @@ describe "dfdom tests:", ->
         """
         ((dfdom ".test").find "li").length.should.eq 6
         ((dfdom ".test").find "div").length.should.eq 0
+        done()
+
+      it "can also find nodes from the window", (done) ->
+        insertHTML "<p>Hello</p>"
+        ((dfdom window).find "p").length.should.eq 1
         done()
 
       it "can get the direct child nodes of the set of matched elements", (done) ->

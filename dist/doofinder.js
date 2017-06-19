@@ -1255,6 +1255,29 @@ author: @ecoslado
 
 
     /**
+     * Returns true if a DfDomElement instance can be created for the provided
+     * node.
+     *
+     * @protected
+     * @param  {HTMLElement|HTMLDocument|Window} node
+     * @return {Boolean}
+     */
+
+    DfDomElement.prototype.__isValidElementNode = function(node) {
+      switch (false) {
+        case !(node instanceof HTMLElement):
+          return true;
+        case !(node instanceof HTMLDocument):
+          return true;
+        case !(node instanceof Window):
+          return true;
+        default:
+          return false;
+      }
+    };
+
+
+    /**
      * Fills the internal store from an array of selectors.
      * @protected
      * @param  {Array} arr An Array of selectors (of all valid types)
@@ -1284,7 +1307,7 @@ author: @ecoslado
       var element;
       if (typeof selector === "string") {
         element = this.__fixNodeList(document.querySelectorAll(this.__fixSelector(selector)));
-      } else if (selector instanceof HTMLElement) {
+      } else if (this.__isValidElementNode(selector)) {
         element = [selector];
       } else if (selector instanceof NodeList) {
         element = this.__fixNodeList(selector);
@@ -1424,7 +1447,9 @@ author: @ecoslado
       var finderFn;
       finderFn = (function(_this) {
         return function(node) {
-          return _this.__fixNodeList(node.querySelectorAll(selector));
+          var src;
+          src = node === window ? window.document : node;
+          return _this.__fixNodeList(src.querySelectorAll(selector));
         };
       })(this);
       return new DfDomElement(this.__find(finderFn));
@@ -3467,7 +3492,7 @@ author: @ecoslado
           termNode = $(e.target);
           value = termNode.data("value");
           key = termNode.data("facet");
-          wasSelected = e.target.hasAttribute("data-selected");
+          wasSelected = termNode.hasAttr("data-selected");
           if (!wasSelected) {
             termNode.attr("data-selected", "");
             _this.controller.addFilter(key, value);
