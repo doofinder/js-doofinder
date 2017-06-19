@@ -2131,6 +2131,42 @@ author: @ecoslado
       });
     };
 
+
+    /**
+     * Due to the way focus works this shortcut makes easier triggering the event
+     * from dfdom. The event is triggered only for the first node in the set of
+     * matched elements.
+     *
+     * @public
+     * @return {DfDomElement} Current instance.
+     */
+
+    DfDomElement.prototype.focus = function() {
+      var ref;
+      if ((ref = this.get(0)) != null) {
+        ref.focus();
+      }
+      return this;
+    };
+
+
+    /**
+     * Due to the way blur works this shortcut makes easier triggering the event
+     * from dfdom. The event is triggered only for the first node in the set of
+     * matched elements.
+     *
+     * @public
+     * @return {DfDomElement} Current instance.
+     */
+
+    DfDomElement.prototype.blur = function() {
+      var ref;
+      if ((ref = this.get(0)) != null) {
+        ref.blur();
+      }
+      return this;
+    };
+
     return DfDomElement;
 
   })();

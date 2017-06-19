@@ -633,3 +633,12 @@ describe "dfdom tests:", ->
         executed.should.eq 0
 
         done()
+
+      it "can properly trigger and capture focus/blur events", (done) ->
+        insertHTML """<input type="text" id="q">"""
+        input = dfdom "#q"
+        input.on "focus", (e) -> (dfdom this).val "hola"
+        input.on "blur", (e) ->
+          (dfdom this).val().should.equal "hola"
+          done()
+        input.focus().blur()

@@ -682,6 +682,30 @@ class DfDomElement
   off: (events, fn) ->
     @each (node) -> bean.off node, events, fn
 
+  ###*
+   * Due to the way focus works this shortcut makes easier triggering the event
+   * from dfdom. The event is triggered only for the first node in the set of
+   * matched elements.
+   *
+   * @public
+   * @return {DfDomElement} Current instance.
+  ###
+  focus: ->
+    (@get 0)?.focus()
+    return @
+
+  ###*
+   * Due to the way blur works this shortcut makes easier triggering the event
+   * from dfdom. The event is triggered only for the first node in the set of
+   * matched elements.
+   *
+   * @public
+   * @return {DfDomElement} Current instance.
+  ###
+  blur: ->
+    (@get 0)?.blur()
+    return @
+
 
 dfdom = (selector) ->
   switch
