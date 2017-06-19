@@ -1319,51 +1319,12 @@ author: @ecoslado
       return this;
     };
 
-    DfDomElement.prototype.get = function(key) {
-      if (key != null) {
-        return this.element[key] || null;
-      } else {
-        return this.element;
-      }
-    };
-
-    DfDomElement.prototype.first = function() {
-      return new DfDomElement(this.get(0));
-    };
-
 
     /**
-     * Iterates over nodes in the store, passing them to the callback.
-     * @public
-     * @param  {Function} callback
-     * @return {undefined}
-     */
-
-    DfDomElement.prototype.each = function(callback) {
-      this.element.forEach(callback, this);
-      return this;
-    };
-
-
-    /**
-     * Iterates over nodes in the store, passing them to the callback, and stores
-     * the result of the callback in an array.
-     *
-     * @public
-     * @param  {Function} callback
-     * @return {Array}
-     */
-
-    DfDomElement.prototype.map = function(callback) {
-      return this.element.map(callback, this);
-    };
-
-
-    /**
-     * Iterates over nodes in the store, passing them to a "finder" callback that
-     * should return a NodeList (or compatible object) with nodes found for the
-     * passed item. Found nodes are stored all together and returned at the end
-     * of the function call.
+     * Iterates nodes in the set of matched elements, passing them to a "finder"
+     * callback that should return a NodeList (or compatible object) with nodes
+     * found for the passed item. Found nodes are stored all together and returned
+     * at the end of the function call.
      *
      * @protected
      * @param  {Function} finder Finder function that finds more nodes starting
@@ -1384,6 +1345,71 @@ author: @ecoslado
       return results;
     };
 
+    DfDomElement.prototype.get = function(key) {
+      if (key != null) {
+        return this.element[key] || null;
+      } else {
+        return this.element;
+      }
+    };
+
+    DfDomElement.prototype.first = function() {
+      return new DfDomElement(this.get(0));
+    };
+
+
+    /**
+     * Iterates nodes in the set of matched elements, passing them to the
+     * callback.
+     *
+     * @public
+     * @param  {Function} callback
+     * @return {DfDomElement}
+     */
+
+    DfDomElement.prototype.each = function(callback) {
+      this.element.forEach(callback, this);
+      return this;
+    };
+
+
+    /**
+     * Reduce the set of matched elements to those for which the function doesn't
+     * return null or undefined.
+     *
+     * @public
+     * @param  {Function} callback
+     * @return {DfDomElement}
+     */
+
+    DfDomElement.prototype.map = function(callback) {
+      return new DfDomElement((this.element.map(callback, this)).filter(function(node) {
+        return node != null;
+      }));
+    };
+
+
+    /**
+     * Reduce the set of matched elements to those match the selector or pass the
+     * function's test.
+     *
+     * @public
+     * @param  {Function|String} callback Function
+     * @return {DfDomElement}
+     */
+
+    DfDomElement.prototype.filter = function(callback) {
+      var filterFn;
+      if (typeof callback === "string") {
+        filterFn = function(node) {
+          return node[MATCHES_SELECTOR_FN](callback);
+        };
+      } else {
+        filterFn = callback;
+      }
+      return new DfDomElement(this.element.filter(filterFn, this));
+    };
+
 
     /**
      * Finds nodes that match the passed selector starting from each element in
@@ -1395,16 +1421,18 @@ author: @ecoslado
      */
 
     DfDomElement.prototype.find = function(selector) {
-      return new DfDomElement(this.__find((function(_this) {
-        return function(item) {
-          return _this.__fixNodeList(item.querySelectorAll(selector));
+      var finderFn;
+      finderFn = (function(_this) {
+        return function(node) {
+          return _this.__fixNodeList(node.querySelectorAll(selector));
         };
-      })(this)));
+      })(this);
+      return new DfDomElement(this.__find(finderFn));
     };
 
 
     /**
-     * Returns all the children of the elements in the store in a DfDomElement
+     * Returns all the children of the elements in the set of matched elements in a DfDomElement
      * instance.
      *
      * @public
@@ -1412,11 +1440,13 @@ author: @ecoslado
      */
 
     DfDomElement.prototype.children = function() {
-      return new DfDomElement(this.__find((function(_this) {
-        return function(item) {
-          return _this.__fixNodeList(item.children);
+      var finderFn;
+      finderFn = (function(_this) {
+        return function(node) {
+          return _this.__fixNodeList(node.children);
         };
-      })(this)));
+      })(this);
+      return new DfDomElement(this.__find(finderFn));
     };
 
 
@@ -1429,16 +1459,16 @@ author: @ecoslado
      */
 
     DfDomElement.prototype.parent = function() {
-      return new DfDomElement(this.map(function(item) {
-        return item.parentElement;
-      }));
+      return new DfDomElement(this.element.map((function(node) {
+        return node.parentElement;
+      }), this));
     };
 
 
     /**
      * Returns a DfDomElement instance that contains all the parents of all the
-     * elements in the store. Can be limited to nodes that match the provided
-     * selector. Duplicates are removed.
+     * elements in the set of matched elements. Can be limited to nodes that match
+     * the provided selector. Duplicates are removed.
      *
      * @public
      * @param  {String} selector Optional CSS Selector.
@@ -1466,8 +1496,8 @@ author: @ecoslado
 
     /**
      * Returns a DfDomElement instance that contains the closest parent of all
-     * the elements in the store. If a selector is provided, nodes must match
-     * the selector to be selected.
+     * the elements in the set of matched elements. If a selector is provided,
+     * nodes must match the selector to be selected.
      *
      * @public
      * @param  {String} selector Optional CSS Selector.
@@ -1475,9 +1505,11 @@ author: @ecoslado
      */
 
     DfDomElement.prototype.closest = function(selector) {
-      return new DfDomElement(this.map(function(item) {
-        return ((new DfDomElement(item)).parents(selector)).first().get(0);
-      }));
+      var mapperFn;
+      mapperFn = function(node) {
+        return ((new DfDomElement(node)).parents(selector)).first().get(0);
+      };
+      return new DfDomElement(this.element.map(mapperFn, this));
     };
 
 

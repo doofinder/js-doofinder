@@ -105,38 +105,11 @@ class DfDomElement
   # NODE HIERARCHY MANAGEMENT
   #
 
-  get: (key) ->
-    if key? then @element[key] or null else @element
-
-  first: ->
-    return new DfDomElement @get 0
-
   ###*
-   * Iterates over nodes in the store, passing them to the callback.
-   * @public
-   * @param  {Function} callback
-   * @return {undefined}
-  ###
-  each: (callback) ->
-    @element.forEach callback, @
-    return @
-
-  ###*
-   * Iterates over nodes in the store, passing them to the callback, and stores
-   * the result of the callback in an array.
-   *
-   * @public
-   * @param  {Function} callback
-   * @return {Array}
-  ###
-  map: (callback) ->
-    @element.map callback, @
-
-  ###*
-   * Iterates over nodes in the store, passing them to a "finder" callback that
-   * should return a NodeList (or compatible object) with nodes found for the
-   * passed item. Found nodes are stored all together and returned at the end
-   * of the function call.
+   * Iterates nodes in the set of matched elements, passing them to a "finder"
+   * callback that should return a NodeList (or compatible object) with nodes
+   * found for the passed item. Found nodes are stored all together and returned
+   * at the end of the function call.
    *
    * @protected
    * @param  {Function} finder Finder function that finds more nodes starting
@@ -152,6 +125,50 @@ class DfDomElement
       Array.prototype.splice.apply results, args
     results
 
+  get: (key) ->
+    if key? then @element[key] or null else @element
+
+  first: ->
+    new DfDomElement @get 0
+
+  ###*
+   * Iterates nodes in the set of matched elements, passing them to the
+   * callback.
+   *
+   * @public
+   * @param  {Function} callback
+   * @return {DfDomElement}
+  ###
+  each: (callback) ->
+    @element.forEach callback, @
+    return @
+
+  ###*
+   * Reduce the set of matched elements to those for which the function doesn't
+   * return null or undefined.
+   *
+   * @public
+   * @param  {Function} callback
+   * @return {DfDomElement}
+  ###
+  map: (callback) ->
+    new DfDomElement ((@element.map callback, @).filter (node) -> node?)
+
+  ###*
+   * Reduce the set of matched elements to those match the selector or pass the
+   * function's test.
+   *
+   * @public
+   * @param  {Function|String} callback Function
+   * @return {DfDomElement}
+  ###
+  filter: (callback) ->
+    if typeof callback is "string"
+      filterFn = (node) -> node[MATCHES_SELECTOR_FN] callback
+    else
+      filterFn = callback
+    new DfDomElement (@element.filter filterFn, @)
+
   ###*
    * Finds nodes that match the passed selector starting from each element in
    * the store.
@@ -161,17 +178,21 @@ class DfDomElement
    * @return {DfDomElement}
   ###
   find: (selector) ->
-    new DfDomElement @__find (item) => @__fixNodeList item.querySelectorAll selector
+    finderFn = (node) =>
+      @__fixNodeList node.querySelectorAll selector
+    new DfDomElement @__find finderFn
 
   ###*
-   * Returns all the children of the elements in the store in a DfDomElement
+   * Returns all the children of the elements in the set of matched elements in a DfDomElement
    * instance.
    *
    * @public
    * @return {DfDomElement}
   ###
   children: ->
-    new DfDomElement @__find (item) => @__fixNodeList item.children
+    finderFn = (node) =>
+      @__fixNodeList node.children
+    new DfDomElement @__find finderFn
 
   ###*
    * Returns a DfDomElement instance that contains the parent node of all the
@@ -181,12 +202,12 @@ class DfDomElement
    * @return {DfDomElement}
   ###
   parent: ->
-    new DfDomElement @map (item) -> item.parentElement
+    new DfDomElement (@element.map ((node) -> node.parentElement), @)
 
   ###*
    * Returns a DfDomElement instance that contains all the parents of all the
-   * elements in the store. Can be limited to nodes that match the provided
-   * selector. Duplicates are removed.
+   * elements in the set of matched elements. Can be limited to nodes that match
+   * the provided selector. Duplicates are removed.
    *
    * @public
    * @param  {String} selector Optional CSS Selector.
@@ -204,16 +225,17 @@ class DfDomElement
 
   ###*
    * Returns a DfDomElement instance that contains the closest parent of all
-   * the elements in the store. If a selector is provided, nodes must match
-   * the selector to be selected.
+   * the elements in the set of matched elements. If a selector is provided,
+   * nodes must match the selector to be selected.
    *
    * @public
    * @param  {String} selector Optional CSS Selector.
    * @return {DfDomElement}
   ###
   closest: (selector) ->
-    new DfDomElement @map (item) ->
-      ((new DfDomElement item).parents selector).first().get 0
+    mapperFn = (node) ->
+      ((new DfDomElement node).parents selector).first().get 0
+    new DfDomElement (@element.map mapperFn, @)
 
   #
   # Content retrieving and injection
@@ -597,7 +619,7 @@ class DfDomElement
   __scrollProperty: (node, propertyName, value) ->
     if value?
       node[propertyName] = value
-      return new DfDomElement node
+      new DfDomElement node
     else
       node[propertyName]
 

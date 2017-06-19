@@ -92,7 +92,7 @@ describe "dfdom tests:", ->
         (dfdom selection).should.eql selection
         done()
 
-    context "Internal Utilities", ->
+    context "Utilities", ->
       it "can iterate each node in the set of matched elements", (done) ->
         insertHTML """
         <ul class="test">
@@ -113,21 +113,46 @@ describe "dfdom tests:", ->
         count.should.eq 4
         done()
 
-      it "can map each node in the set of matched elements to a new array", (done) ->
+      it "can map nodes in the set of matched elements to a new DfDomElement", (done) ->
         insertHTML """
-        <ul class="test">
-          <li></li>
-          <li>
-            <ul class="test">
-              <li></li>
-              <li></li>
-            </ul>
-          </li>
-        </ul>
+        <div></div>
+        <div class="choose-me"></div>
+        <div></div>
+        <div class="choose-me"></div>
         """
-        items = (dfdom "li")
-        elements = items.map (item) -> item
-        items.element.should.eql elements
+        items = (dfdom "div")
+        mappedItems = items.map ((node) -> node if (dfdom node).hasClass "choose-me")
+        items.length.should.eq 4
+        mappedItems.length.should.eq 2
+        (mappedItems.first().hasClass "choose-me").should.be.true
+        done()
+
+      it "can filter nodes in the set of matched elements via a filterer method", (done) ->
+        insertHTML """
+        <div></div>
+        <div class="choose-me"></div>
+        <div></div>
+        <div class="choose-me"></div>
+        """
+        items = (dfdom "div")
+        filteredItems = items.filter ((node) -> (dfdom node).hasClass "choose-me")
+        items.length.should.eq 4
+        filteredItems.length.should.eq 2
+        (filteredItems.first().hasClass "choose-me").should.be.true
+        done()
+
+      it "can filter nodes in the set of matched elements via a CSS selector", (done) ->
+        insertHTML """
+        <div></div>
+        <div class="choose-me"></div>
+        <div></div>
+        <div class="choose-me"></div>
+        """
+        items = (dfdom "div")
+        filteredItems = items.filter ".choose-me"
+        items.length.should.eq 4
+        filteredItems.length.should.eq 2
+        (filteredItems.first().hasClass "choose-me").should.be.true
         done()
 
     # Methods
