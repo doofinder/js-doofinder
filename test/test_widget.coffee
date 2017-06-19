@@ -14,6 +14,13 @@ service = nock("http://#{host}")
 responseMock = require './util/responsemock'
 
 
+HTMLElement.prototype.insertAdjacentHTML = (position, text) ->
+  if position == "beforeend"
+    @innerHTML += text
+  else if position == "afterbegin"
+    @innerHTML = text + @innerHTML
+
+
 createController = (widgets...) ->
   client = new doofinder.Client hashid, apiKey, 5, null, host
   queryInput = new doofinder.widgets.QueryInput '#query'
@@ -242,7 +249,8 @@ describe 'Widget Tests:', ->
 
       self = this
       resultsContainer2 = $('#scroll2')
-      bean.on resultsWidget2.element._first(), 'df:rendered', (response) ->
+
+      resultsWidget2.element.first().on 'df:rendered', (response) ->
       # resultsWidget2.bind 'df:rendered', (response) ->
         response.results.length.should.equal 2
         resultsContainer2.find('li.custom-template').length.should.be.equal 2
@@ -259,8 +267,8 @@ describe 'Widget Tests:', ->
       # jsdom doesn't update clientHeight nor clientWidth when applying styles
       # this hack is to make dfScroll find proper values when asking the DOM
       # elements for these values
-      @resultsWidget.elementWrapper._first().clientHeight = 800
-      @resultsWidget.element._first().clientHeight = 1200
+      (@resultsWidget.elementWrapper.get 0).clientHeight = 800
+      (@resultsWidget.element.get 0).clientHeight = 1200
 
       self = this
 

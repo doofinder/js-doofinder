@@ -112,7 +112,7 @@ class TermFacet extends BaseFacet
         facetName: key
         facetValue: value
         selected: not wasSelected
-        totalSelected: @getSelectedElements().length()
+        totalSelected: @getSelectedElements().length
 
       @trigger "df:term_clicked", [eventInfo]
 
@@ -170,7 +170,7 @@ class TermFacet extends BaseFacet
    * @return {Number} Number of selected term nodes.
   ###
   countSelectedElements: ->
-    @getSelectedElements().length()
+    @getSelectedElements().length
 
   ###*
    * @param  {Object} res Results response from the server.
