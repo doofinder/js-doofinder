@@ -1532,7 +1532,7 @@ author: @ecoslado
     DfDomElement.prototype.closest = function(selector) {
       var mapperFn;
       mapperFn = function(node) {
-        return ((new DfDomElement(node)).parents(selector)).first().get(0);
+        return ((new DfDomElement(node)).parents(selector)).get(0);
       };
       return new DfDomElement(this.element.map(mapperFn, this));
     };
@@ -2081,15 +2081,19 @@ author: @ecoslado
     DfDomElement.prototype.scrollTop = function(value) {
       var node, propertyName;
       node = this.get(0);
-      propertyName = node.scrollY != null ? "scrollY" : "scrollTop";
-      return this.__scrollProperty(node, propertyName, value);
+      if (node != null) {
+        propertyName = node.scrollY != null ? "scrollY" : "scrollTop";
+        return this.__scrollProperty(node, propertyName, value);
+      }
     };
 
     DfDomElement.prototype.scrollLeft = function(value) {
       var node, propertyName;
       node = this.get(0);
-      propertyName = node.scrollX != null ? "scrollX" : "scrollLeft";
-      return this.__scrollProperty(node, propertyName, value);
+      if (node != null) {
+        propertyName = node.scrollX != null ? "scrollX" : "scrollLeft";
+        return this.__scrollProperty(node, propertyName, value);
+      }
     };
 
 

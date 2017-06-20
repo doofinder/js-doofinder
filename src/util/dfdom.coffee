@@ -250,7 +250,7 @@ class DfDomElement
   ###
   closest: (selector) ->
     mapperFn = (node) ->
-      ((new DfDomElement node).parents selector).first().get 0
+      ((new DfDomElement node).parents selector).get 0
     new DfDomElement (@element.map mapperFn, @)
 
   #
@@ -641,14 +641,16 @@ class DfDomElement
 
   scrollTop: (value) ->
     node = @get 0
-    propertyName = if node.scrollY? then "scrollY" else "scrollTop"
-    @__scrollProperty node, propertyName, value
+    if node?
+      propertyName = if node.scrollY? then "scrollY" else "scrollTop"
+      @__scrollProperty node, propertyName, value
 
 
   scrollLeft: (value) ->
     node = @get 0
-    propertyName = if node.scrollX? then "scrollX" else "scrollLeft"
-    @__scrollProperty node, propertyName, value
+    if node?
+      propertyName = if node.scrollX? then "scrollX" else "scrollLeft"
+      @__scrollProperty node, propertyName, value
 
   #
   # Events
