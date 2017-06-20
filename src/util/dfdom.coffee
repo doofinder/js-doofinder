@@ -16,7 +16,7 @@ MATCHES_SELECTOR_FN = ([
 class DfDomElement
   ###*
    * @public
-   * @param  {String|HTMLElement|NodeList|Array} selector
+   * @param  {String|Element|NodeList|Array} selector
    * @return {DfDomElement}
   ###
   constructor: (selector) ->
@@ -64,12 +64,12 @@ class DfDomElement
    * node.
    *
    * @protected
-   * @param  {HTMLElement|HTMLDocument|Document|Window} node
+   * @param  {Element|HTMLDocument|Document|Window} node
    * @return {Boolean}
   ###
   __isValidElementNode: (node) ->
     switch
-      when node instanceof HTMLElement then true
+      when node instanceof Element then true
       when node instanceof Document then true
       when node instanceof Window then true
       else false
@@ -89,7 +89,7 @@ class DfDomElement
   ###*
    * Fills the internal store from a selector.
    * @protected
-   * @param  {String|HTMLElement|NodeList|Array} selector
+   * @param  {String|Element|NodeList|Array} selector
    * @return {Array}     An Array of nodes.
   ###
   __initFromSelector: (selector) ->
@@ -177,11 +177,11 @@ class DfDomElement
    * @param  {Function|String} callback Function
    * @return {DfDomElement}
   ###
-  filter: (callback) ->
-    if typeof callback is "string"
-      filterFn = (node) -> node[MATCHES_SELECTOR_FN] callback
+  filter: (selector_or_fn) ->
+    if typeof selector_or_fn is "string"
+      filterFn = (node) -> node[MATCHES_SELECTOR_FN] selector_or_fn
     else
-      filterFn = callback
+      filterFn = selector_or_fn
     new DfDomElement (@element.filter filterFn, @)
 
   ###*
@@ -274,25 +274,25 @@ class DfDomElement
       (@get 0).innerHTML
 
   ###*
-   * Clones a HTMLElement node or returns the same if it's a HTML string.
+   * Clones a Element node or returns the same if it's a HTML string.
    * @public
-   * @param  {HTMLElement|String} node The node to be cloned.
-   * @return {HTMLElement|String}      The copy or the same string.
+   * @param  {Element|String} node The node to be cloned.
+   * @return {Element|String}      The copy or the same string.
   ###
   __cloneNode: (node) ->
     switch
       when typeof node is "string" then node
-      when node instanceof HTMLElement then node.cloneNode true
+      when node instanceof Element then node.cloneNode true
       else throw "Invalid argument: #{node}"
 
   ###*
    * Prepends a node or HTML into the set of matched elements. If the child is a
-   * HTMLElement then new copies are created when there're more than 1 item in
+   * Element then new copies are created when there're more than 1 item in
    * the set. If the child is a DfDomElement instance, all its matched elements
    * are "prepended" individually.
    *
    * @public
-   * @param  {DfDomElement|HTMLElement|String} child Stuff to be prepended.
+   * @param  {DfDomElement|Element|String} child Stuff to be prepended.
    * @return {DfDomElement}                          The current instance.
   ###
   prepend: (child) ->
@@ -305,7 +305,7 @@ class DfDomElement
       @each (node, i) =>
         if typeof child is "string"
           node.insertAdjacentHTML "afterbegin", child
-        else if child instanceof HTMLElement
+        else if child instanceof Element
           newChild = (if i is 0 then child else @__cloneNode child)
           if node.children?.length > 0
             node.insertBefore newChild, node.children[0]
@@ -314,12 +314,12 @@ class DfDomElement
 
   ###*
    * Appends a node or HTML into the set of matched elements. If the child is a
-   * HTMLElement then new copies are created when there're more than 1 item in
+   * Element then new copies are created when there're more than 1 item in
    * the set. If the child is a DfDomElement instance, all its matched elements
    * are appended individually.
    *
    * @public
-   * @param  {DfDomElement|HTMLElement|String} child Stuff to be appended.
+   * @param  {DfDomElement|Element|String} child Stuff to be appended.
    * @return {DfDomElement}                          The current instance.
   ###
   append: (child) ->
@@ -332,17 +332,17 @@ class DfDomElement
       @each (node, i) =>
         if typeof child is "string"
           node.insertAdjacentHTML "beforeend", child
-        else if child instanceof HTMLElement
+        else if child instanceof Element
           node.appendChild (if i is 0 then child else @__cloneNode child)
 
   ###*
-   * Inserts a node or HTML before the set of matched elements. If the node is a
-   * HTMLElement then new copies are created when there're more than 1 item in
+   * Inserts a node or HTML before the set of matched elements. If the node is
+   * an Element then new copies are created when there're more than 1 item in
    * the set. If the node is a DfDomElement instance, all its matched elements
    * are inserted before the current set.
    *
    * @public
-   * @param  {DfDomElement|HTMLElement|String} child Stuff to be inserted.
+   * @param  {DfDomElement|Element|String} child Stuff to be inserted.
    * @return {DfDomElement}                          The current instance.
   ###
   before: (sibling) ->
@@ -355,18 +355,18 @@ class DfDomElement
       @each (node, i) =>
         if typeof sibling is "string"
           node.insertAdjacentHTML  "beforebegin", sibling
-        else if sibling instanceof HTMLElement
+        else if sibling instanceof Element
           newSibling = (if i is 0 then sibling else @__cloneNode sibling)
           node.parentElement.insertBefore newSibling, node
 
   ###*
-   * Inserts a node or HTML after the set of matched elements. If the node is a
-   * HTMLElement then new copies are created when there're more than 1 item in
+   * Inserts a node or HTML after the set of matched elements. If the node is
+   * an Element then new copies are created when there're more than 1 item in
    * the set. If the node is a DfDomElement instance, all its matched elements
    * are inserted before the current set.
    *
    * @public
-   * @param  {DfDomElement|HTMLElement|String} child Stuff to be inserted.
+   * @param  {DfDomElement|Element|String} child Stuff to be inserted.
    * @return {DfDomElement}                          The current instance.
   ###
   after: (sibling) ->
@@ -379,7 +379,7 @@ class DfDomElement
       @each (node, i) =>
         if typeof sibling is "string"
           node.insertAdjacentHTML  "afterend", sibling
-        else if sibling instanceof HTMLElement
+        else if sibling instanceof Element
           newSibling = (if i is 0 then sibling else @__cloneNode sibling)
           node.parentElement.insertBefore newSibling, node.nextSibling
 
@@ -721,6 +721,48 @@ class DfDomElement
   blur: ->
     (@get 0)?.blur()
     return @
+
+  #
+  # Tools
+  #
+
+  ###*
+   * Checks the current matched set of elements against a selector or element,
+   * and return true if at least one of these elements matches the given
+   * argument.
+   *
+   * @public
+   * @param  {String|Element} selector_or_element
+   * @return {Boolean}
+  ###
+  is: (selector_or_element) ->
+    if typeof selector_or_element is "string"
+      (@filter selector_or_element).length > 0
+    else
+      (@filter (node) -> node is selector_or_element).length > 0
+
+  ###*
+   * Checks the current matched set of elements against a selector or element,
+   * and return true if none of these elements matches the given argument.
+   *
+   * @public
+   * @param  {String|Element} selector_or_element
+   * @return {Boolean}
+  ###
+  isnt: (selector_or_element) ->
+    not @is selector_or_element
+
+  ###*
+   * Reduces the set of matched elements to the one at the specified index.
+   * Providing a negative number indicates a position starting from the end of
+   * the set, rather than the beginning.
+   *
+   * @public
+   * @param  {Number} index
+   * @return {DfDomElement}
+  ###
+  eq: (index) ->
+    new DfDomElement (@element[if index >= 0 then index else @length + index] or [])
 
 
 dfdom = (selector) ->
