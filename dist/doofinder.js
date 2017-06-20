@@ -1259,7 +1259,7 @@ author: @ecoslado
      * node.
      *
      * @protected
-     * @param  {HTMLElement|HTMLDocument|Window} node
+     * @param  {HTMLElement|HTMLDocument|Document|Window} node
      * @return {Boolean}
      */
 
@@ -1267,7 +1267,7 @@ author: @ecoslado
       switch (false) {
         case !(node instanceof HTMLElement):
           return true;
-        case !(node instanceof HTMLDocument):
+        case !(node instanceof Document):
           return true;
         case !(node instanceof Window):
           return true;
@@ -1844,11 +1844,11 @@ author: @ecoslado
       var node, ref;
       if (value != null) {
         return this.each(function(node) {
-          if (node.__proto__.hasOwnProperty("value")) {
+          if (node.value != null) {
             return node.value = value;
           }
         });
-      } else if ((ref = (node = this.get(0))) != null ? ref.__proto__.hasOwnProperty("value") : void 0) {
+      } else if (((ref = (node = this.get(0))) != null ? ref.value : void 0) != null) {
         return node.value;
       } else {
         return void 0;
@@ -2081,14 +2081,14 @@ author: @ecoslado
     DfDomElement.prototype.scrollTop = function(value) {
       var node, propertyName;
       node = this.get(0);
-      propertyName = node.__proto__.hasOwnProperty("scrollY") ? "scrollY" : "scrollTop";
+      propertyName = node.scrollY != null ? "scrollY" : "scrollTop";
       return this.__scrollProperty(node, propertyName, value);
     };
 
     DfDomElement.prototype.scrollLeft = function(value) {
       var node, propertyName;
       node = this.get(0);
-      propertyName = node.__proto__.hasOwnProperty("scrollX") ? "scrollX" : "scrollLeft";
+      propertyName = node.scrollX != null ? "scrollX" : "scrollLeft";
       return this.__scrollProperty(node, propertyName, value);
     };
 

@@ -64,13 +64,13 @@ class DfDomElement
    * node.
    *
    * @protected
-   * @param  {HTMLElement|HTMLDocument|Window} node
+   * @param  {HTMLElement|HTMLDocument|Document|Window} node
    * @return {Boolean}
   ###
   __isValidElementNode: (node) ->
     switch
       when node instanceof HTMLElement then true
-      when node instanceof HTMLDocument then true
+      when node instanceof Document then true
       when node instanceof Window then true
       else false
 
@@ -467,8 +467,8 @@ class DfDomElement
   val: (value) ->
     if value?
       @each (node) ->
-        node.value = value if node.__proto__.hasOwnProperty "value"
-    else if (node = @get 0)?.__proto__.hasOwnProperty "value"
+        node.value = value if node.value?
+    else if (node = @get 0)?.value?
       node.value
     else
       undefined
@@ -641,13 +641,13 @@ class DfDomElement
 
   scrollTop: (value) ->
     node = @get 0
-    propertyName = if node.__proto__.hasOwnProperty "scrollY" then "scrollY" else "scrollTop"
+    propertyName = if node.scrollY? then "scrollY" else "scrollTop"
     @__scrollProperty node, propertyName, value
 
 
   scrollLeft: (value) ->
     node = @get 0
-    propertyName = if node.__proto__.hasOwnProperty "scrollX" then "scrollX" else "scrollLeft"
+    propertyName = if node.scrollX? then "scrollX" else "scrollLeft"
     @__scrollProperty node, propertyName, value
 
   #
