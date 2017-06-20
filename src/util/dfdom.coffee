@@ -274,7 +274,7 @@ class DfDomElement
       (@get 0).innerHTML
 
   ###*
-   * Clones a Element node or returns the same if it's a HTML string.
+   * Clones an Element node or returns the same if it's a HTML string.
    * @public
    * @param  {Element|String} node The node to be cloned.
    * @return {Element|String}      The copy or the same string.
