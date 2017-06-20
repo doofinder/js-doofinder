@@ -625,7 +625,6 @@ describe "dfdom", ->
       container.scrollLeft().should.eq 500
       container.scrollLeft 400
       container.scrollLeft().should.eq 400
-
       done()
 
   context "[Event Management Methods]", ->
@@ -664,3 +663,35 @@ describe "dfdom", ->
 
       it "can properly trigger and capture blur events", (done) ->
         ((dfdom "#q").on "blur", -> done()).focus().blur()
+
+  context "[Other Tools]", ->
+    beforeEach ->
+      insertHTML """
+        <div class="box"></div>
+        <div id="box"></div>
+        <div></div>
+      """
+
+    it "can reduce the set of matched elements to the one in the provided index", (done) ->
+      ((dfdom "div").eq 3).length.should.eq 0
+      ((dfdom "div").eq 0).length.should.eq 1
+      (((dfdom "div").eq 0).hasClass "box").should.be.true
+      (((dfdom "div").eq -2).get 0).should.equal document.getElementById "box"
+      done()
+
+    it "can detect if the selection matches a selector", (done) ->
+      (((dfdom "div").eq 0).is ".box").should.be.true
+      ((dfdom "div").is ".box").should.be.true
+      ((dfdom "#box").is document.getElementById "box").should.be.true
+      ((dfdom "div").is document.getElementById "box").should.be.true
+      ((dfdom "div").is ".inline").should.be.false
+      done()
+
+    it "can detect if the selection does not match a selector", (done) ->
+      (((dfdom "div").eq 0).isnt ".box").should.be.false
+      ((dfdom "div").isnt ".box").should.be.false
+      ((dfdom "#box").isnt document.getElementById "box").should.be.false
+      ((dfdom "div").isnt document.getElementById "box").should.be.false
+      ((dfdom "div").isnt ".inline").should.be.true
+      done()
+

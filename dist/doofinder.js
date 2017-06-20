@@ -1193,7 +1193,7 @@ author: @ecoslado
 
     /**
      * @public
-     * @param  {String|HTMLElement|NodeList|Array} selector
+     * @param  {String|Element|NodeList|Array} selector
      * @return {DfDomElement}
      */
     function DfDomElement(selector) {
@@ -1259,13 +1259,13 @@ author: @ecoslado
      * node.
      *
      * @protected
-     * @param  {HTMLElement|HTMLDocument|Document|Window} node
+     * @param  {Element|HTMLDocument|Document|Window} node
      * @return {Boolean}
      */
 
     DfDomElement.prototype.__isValidElementNode = function(node) {
       switch (false) {
-        case !(node instanceof HTMLElement):
+        case !(node instanceof Element):
           return true;
         case !(node instanceof Document):
           return true;
@@ -1299,7 +1299,7 @@ author: @ecoslado
     /**
      * Fills the internal store from a selector.
      * @protected
-     * @param  {String|HTMLElement|NodeList|Array} selector
+     * @param  {String|Element|NodeList|Array} selector
      * @return {Array}     An Array of nodes.
      */
 
@@ -1421,14 +1421,14 @@ author: @ecoslado
      * @return {DfDomElement}
      */
 
-    DfDomElement.prototype.filter = function(callback) {
+    DfDomElement.prototype.filter = function(selector_or_fn) {
       var filterFn;
-      if (typeof callback === "string") {
+      if (typeof selector_or_fn === "string") {
         filterFn = function(node) {
-          return node[MATCHES_SELECTOR_FN](callback);
+          return node[MATCHES_SELECTOR_FN](selector_or_fn);
         };
       } else {
-        filterFn = callback;
+        filterFn = selector_or_fn;
       }
       return new DfDomElement(this.element.filter(filterFn, this));
     };
@@ -1532,7 +1532,7 @@ author: @ecoslado
     DfDomElement.prototype.closest = function(selector) {
       var mapperFn;
       mapperFn = function(node) {
-        return ((new DfDomElement(node)).parents(selector)).first().get(0);
+        return ((new DfDomElement(node)).parents(selector)).get(0);
       };
       return new DfDomElement(this.element.map(mapperFn, this));
     };
@@ -1561,17 +1561,17 @@ author: @ecoslado
 
 
     /**
-     * Clones a HTMLElement node or returns the same if it's a HTML string.
+     * Clones an Element node or returns the same if it's a HTML string.
      * @public
-     * @param  {HTMLElement|String} node The node to be cloned.
-     * @return {HTMLElement|String}      The copy or the same string.
+     * @param  {Element|String} node The node to be cloned.
+     * @return {Element|String}      The copy or the same string.
      */
 
     DfDomElement.prototype.__cloneNode = function(node) {
       switch (false) {
         case typeof node !== "string":
           return node;
-        case !(node instanceof HTMLElement):
+        case !(node instanceof Element):
           return node.cloneNode(true);
         default:
           throw "Invalid argument: " + node;
@@ -1581,12 +1581,12 @@ author: @ecoslado
 
     /**
      * Prepends a node or HTML into the set of matched elements. If the child is a
-     * HTMLElement then new copies are created when there're more than 1 item in
+     * Element then new copies are created when there're more than 1 item in
      * the set. If the child is a DfDomElement instance, all its matched elements
      * are "prepended" individually.
      *
      * @public
-     * @param  {DfDomElement|HTMLElement|String} child Stuff to be prepended.
+     * @param  {DfDomElement|Element|String} child Stuff to be prepended.
      * @return {DfDomElement}                          The current instance.
      */
 
@@ -1607,7 +1607,7 @@ author: @ecoslado
             var newChild, ref;
             if (typeof child === "string") {
               return node.insertAdjacentHTML("afterbegin", child);
-            } else if (child instanceof HTMLElement) {
+            } else if (child instanceof Element) {
               newChild = (i === 0 ? child : _this.__cloneNode(child));
               if (((ref = node.children) != null ? ref.length : void 0) > 0) {
                 return node.insertBefore(newChild, node.children[0]);
@@ -1623,12 +1623,12 @@ author: @ecoslado
 
     /**
      * Appends a node or HTML into the set of matched elements. If the child is a
-     * HTMLElement then new copies are created when there're more than 1 item in
+     * Element then new copies are created when there're more than 1 item in
      * the set. If the child is a DfDomElement instance, all its matched elements
      * are appended individually.
      *
      * @public
-     * @param  {DfDomElement|HTMLElement|String} child Stuff to be appended.
+     * @param  {DfDomElement|Element|String} child Stuff to be appended.
      * @return {DfDomElement}                          The current instance.
      */
 
@@ -1648,7 +1648,7 @@ author: @ecoslado
           return function(node, i) {
             if (typeof child === "string") {
               return node.insertAdjacentHTML("beforeend", child);
-            } else if (child instanceof HTMLElement) {
+            } else if (child instanceof Element) {
               return node.appendChild((i === 0 ? child : _this.__cloneNode(child)));
             }
           };
@@ -1658,13 +1658,13 @@ author: @ecoslado
 
 
     /**
-     * Inserts a node or HTML before the set of matched elements. If the node is a
-     * HTMLElement then new copies are created when there're more than 1 item in
+     * Inserts a node or HTML before the set of matched elements. If the node is
+     * an Element then new copies are created when there're more than 1 item in
      * the set. If the node is a DfDomElement instance, all its matched elements
      * are inserted before the current set.
      *
      * @public
-     * @param  {DfDomElement|HTMLElement|String} child Stuff to be inserted.
+     * @param  {DfDomElement|Element|String} child Stuff to be inserted.
      * @return {DfDomElement}                          The current instance.
      */
 
@@ -1685,7 +1685,7 @@ author: @ecoslado
             var newSibling;
             if (typeof sibling === "string") {
               return node.insertAdjacentHTML("beforebegin", sibling);
-            } else if (sibling instanceof HTMLElement) {
+            } else if (sibling instanceof Element) {
               newSibling = (i === 0 ? sibling : _this.__cloneNode(sibling));
               return node.parentElement.insertBefore(newSibling, node);
             }
@@ -1696,13 +1696,13 @@ author: @ecoslado
 
 
     /**
-     * Inserts a node or HTML after the set of matched elements. If the node is a
-     * HTMLElement then new copies are created when there're more than 1 item in
+     * Inserts a node or HTML after the set of matched elements. If the node is
+     * an Element then new copies are created when there're more than 1 item in
      * the set. If the node is a DfDomElement instance, all its matched elements
      * are inserted before the current set.
      *
      * @public
-     * @param  {DfDomElement|HTMLElement|String} child Stuff to be inserted.
+     * @param  {DfDomElement|Element|String} child Stuff to be inserted.
      * @return {DfDomElement}                          The current instance.
      */
 
@@ -1723,7 +1723,7 @@ author: @ecoslado
             var newSibling;
             if (typeof sibling === "string") {
               return node.insertAdjacentHTML("afterend", sibling);
-            } else if (sibling instanceof HTMLElement) {
+            } else if (sibling instanceof Element) {
               newSibling = (i === 0 ? sibling : _this.__cloneNode(sibling));
               return node.parentElement.insertBefore(newSibling, node.nextSibling);
             }
@@ -2081,15 +2081,19 @@ author: @ecoslado
     DfDomElement.prototype.scrollTop = function(value) {
       var node, propertyName;
       node = this.get(0);
-      propertyName = node.scrollY != null ? "scrollY" : "scrollTop";
-      return this.__scrollProperty(node, propertyName, value);
+      if (node != null) {
+        propertyName = node.scrollY != null ? "scrollY" : "scrollTop";
+        return this.__scrollProperty(node, propertyName, value);
+      }
     };
 
     DfDomElement.prototype.scrollLeft = function(value) {
       var node, propertyName;
       node = this.get(0);
-      propertyName = node.scrollX != null ? "scrollX" : "scrollLeft";
-      return this.__scrollProperty(node, propertyName, value);
+      if (node != null) {
+        propertyName = node.scrollX != null ? "scrollX" : "scrollLeft";
+        return this.__scrollProperty(node, propertyName, value);
+      }
     };
 
 
@@ -2190,6 +2194,56 @@ author: @ecoslado
         ref.blur();
       }
       return this;
+    };
+
+
+    /**
+     * Checks the current matched set of elements against a selector or element,
+     * and return true if at least one of these elements matches the given
+     * argument.
+     *
+     * @public
+     * @param  {String|Element} selector_or_element
+     * @return {Boolean}
+     */
+
+    DfDomElement.prototype.is = function(selector_or_element) {
+      if (typeof selector_or_element === "string") {
+        return (this.filter(selector_or_element)).length > 0;
+      } else {
+        return (this.filter(function(node) {
+          return node === selector_or_element;
+        })).length > 0;
+      }
+    };
+
+
+    /**
+     * Checks the current matched set of elements against a selector or element,
+     * and return true if none of these elements matches the given argument.
+     *
+     * @public
+     * @param  {String|Element} selector_or_element
+     * @return {Boolean}
+     */
+
+    DfDomElement.prototype.isnt = function(selector_or_element) {
+      return !this.is(selector_or_element);
+    };
+
+
+    /**
+     * Reduces the set of matched elements to the one at the specified index.
+     * Providing a negative number indicates a position starting from the end of
+     * the set, rather than the beginning.
+     *
+     * @public
+     * @param  {Number} index
+     * @return {DfDomElement}
+     */
+
+    DfDomElement.prototype.eq = function(index) {
+      return new DfDomElement(this.element[index >= 0 ? index : this.length + index] || []);
     };
 
     return DfDomElement;
