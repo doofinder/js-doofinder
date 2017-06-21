@@ -25,9 +25,6 @@ class QueryInput extends Widget
    * this widget instance. A QueryInput widget can be used by more than one
    * controller (is an input widget, so it doesn't render results).
    *
-   * TODO(@carlosescri): Seems that is not clear how the assignment works and
-   * only the first controller is being notified when the user stops typing...
-   *
    * @param  {Controller} controller Doofinder Search controller.
   ###
   init: (controller) ->
@@ -51,9 +48,8 @@ class QueryInput extends Widget
         @options
       dfTypeWatch @element, options
 
-      # Typing stopped event
-      # WTF(@carlosescri): Why we declare @controller as an array and then use
-      # only the first one?
+      # Typing stopped event. We use the first controller (we could use any) to
+      # detect the moment when the user stops typing.
       ctrl = @controller[0]
       ctrl.bind 'df:results_received', (res) ->
         setTimeout (->
@@ -71,7 +67,7 @@ class QueryInput extends Widget
   ###
   clean: ->
     if @cleanInput
-      @element.val('')
+      @element.val ""
       @trigger "df:cleaned"
 
 
