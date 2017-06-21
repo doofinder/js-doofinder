@@ -24,9 +24,14 @@ class DfDomElement
 
     if selector instanceof String
       selector = selector.toString()
+
     if typeof selector is "string"
-      selector = selector.split ","
-      selector = selector[0] if selector.length == 0
+      selector = selector.trim()
+      if selector.length is 0
+        selector = []
+      else
+        selector = (selector.split ",").map (s) -> s.trim()
+
     if selector instanceof Array
       @element = @__initFromSelectorArray selector
     else
@@ -93,7 +98,7 @@ class DfDomElement
    * @return {Array}     An Array of nodes.
   ###
   __initFromSelector: (selector) ->
-    if typeof selector is "string"
+    if typeof selector is "string" and selector.length > 0
       element = @__fixNodeList document.querySelectorAll @__fixSelector selector
     else if @__isValidElementNode selector
       element = [selector]
@@ -767,11 +772,7 @@ class DfDomElement
     new DfDomElement (@element[if index >= 0 then index else @length + index] or [])
 
 
-dfdom = (selector) ->
+module.exports = (selector) ->
   switch
     when selector instanceof DfDomElement then selector
-    when selector? then new DfDomElement selector
-    else null
-
-
-module.exports = dfdom
+    else new DfDomElement selector

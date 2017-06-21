@@ -54,7 +54,4 @@ module.exports = (element, options) ->
         clearTimeout(timer.timer)
         timer.timer = setTimeout timerCallbackFx, delay
 
-  if typeof element is 'string'
-    element = $ element
-
-  return watchElement element
+  return watchElement $ element

@@ -1175,7 +1175,7 @@ author: @ecoslado
 
 },{"./client":1,"./controller":2,"./util/dfdom":4,"./util/helpers":7,"./util/http":8,"./util/introspection":9,"./util/uniqueid":10,"./widget":11,"./widgets/display":12,"./widgets/facets/basefacet":13,"./widgets/facets/facetpanel":14,"./widgets/facets/rangefacet":15,"./widgets/facets/termfacet":16,"./widgets/queryinput":17,"./widgets/results/results":18,"./widgets/results/scrollresults":19,"bean":21,"extend":22,"lodash.throttle":60,"md5":61,"mustache":65,"qs":67}],4:[function(require,module,exports){
 (function() {
-  var DfDomElement, MATCHES_SELECTOR_FN, bean, dfdom;
+  var DfDomElement, MATCHES_SELECTOR_FN, bean;
 
   bean = require("bean");
 
@@ -1206,9 +1206,13 @@ author: @ecoslado
         selector = selector.toString();
       }
       if (typeof selector === "string") {
-        selector = selector.split(",");
+        selector = selector.trim();
         if (selector.length === 0) {
-          selector = selector[0];
+          selector = [];
+        } else {
+          selector = (selector.split(",")).map(function(s) {
+            return s.trim();
+          });
         }
       }
       if (selector instanceof Array) {
@@ -1305,7 +1309,7 @@ author: @ecoslado
 
     DfDomElement.prototype.__initFromSelector = function(selector) {
       var element;
-      if (typeof selector === "string") {
+      if (typeof selector === "string" && selector.length > 0) {
         element = this.__fixNodeList(document.querySelectorAll(this.__fixSelector(selector)));
       } else if (this.__isValidElementNode(selector)) {
         element = [selector];
@@ -2250,18 +2254,14 @@ author: @ecoslado
 
   })();
 
-  dfdom = function(selector) {
+  module.exports = function(selector) {
     switch (false) {
       case !(selector instanceof DfDomElement):
         return selector;
-      case selector == null:
-        return new DfDomElement(selector);
       default:
-        return null;
+        return new DfDomElement(selector);
     }
   };
-
-  module.exports = dfdom;
 
 }).call(this);
 
@@ -2371,10 +2371,7 @@ author: @ecoslado
         });
       }
     };
-    if (typeof element === 'string') {
-      element = $(element);
-    }
-    return watchElement(element);
+    return watchElement($(element));
   };
 
 }).call(this);

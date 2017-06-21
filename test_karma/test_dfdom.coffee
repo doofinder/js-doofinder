@@ -21,13 +21,13 @@ describe "dfdom", ->
     beforeEach ->
       resetBody()
 
-    it "is empty for an element that doesn't exist", (done) ->
-      dfdom("div").element.should.be.empty
-      done()
-
-    it "returns null when no selector is provided", (done) ->
-      expect(dfdom()).to.be.null
-      expect(dfdom null).to.be.null
+    it "is empty for an element that doesn't exist or when no selector is provided", (done) ->
+      dfdom().element.should.be.empty
+      (dfdom null).element.should.be.empty
+      (dfdom "").element.should.be.empty
+      (dfdom []).element.should.be.empty
+      (dfdom ["", ""]).element.should.be.empty
+      (dfdom "div").element.should.be.empty
       done()
 
     it "can be instantiated with a CSS selector", (done) ->
