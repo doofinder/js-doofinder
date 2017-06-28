@@ -339,19 +339,21 @@ class Controller
 
   @api public
   ###
-  registerClick: (productId, arg1, arg2) ->
+  registerClick: (productId, args...) ->
     # Defaults
     callback = ((err, res) ->)
     options = {}
 
     # Check how many args there are
-    if typeof arg2 == 'undefined' and typeof arg1 == 'function'
-      callback = arg1
-    else if typeof arg2 == 'undefined' and typeof arg1 == 'object'
-      options = arg1
-    else if typeof arg2 == 'function' and typeof arg1 == 'object'
-      callback = arg2
-      options = arg1
+    if args.length == 1
+      if typeof args[0] == 'function'
+        callback = args[0]
+      else
+        options = args[0]
+    else if args.length == 2
+      options = args[0]
+      callback = args[1]
+
     # If there's no query in the options, fill in with status
     if not options.query
       options.query = @status.params.query
@@ -382,21 +384,8 @@ class Controller
 
   @api public
   ###
-  registerCheckout: (sessionId, arg1, arg2) ->
-    # Defaults
-    callback = ((err, res) ->)
-    options = {}
-
-    # Check how many args there are
-    if typeof arg2 == 'undefined' and typeof arg1 == 'function'
-      callback = arg1
-    else if typeof arg2 == 'undefined' and typeof arg1 == 'object'
-      options = arg1
-    else if typeof arg2 == 'function' and typeof arg1 == 'object'
-      callback = arg2
-      options = arg1
-
-    @client.registerCheckout(sessionId, options, callback)
+  registerCheckout: (sessionId, callback) ->
+    @client.registerCheckout sessionId, callback
 
   ###
   hit
@@ -417,8 +406,8 @@ class Controller
 
   @param {Function} callback
   ###
-  options: (arg1, arg2) ->
-    @client.options arg1, arg2
+  options: (args...) ->
+    @client.options args...
 
 
   ###
