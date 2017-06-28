@@ -99,23 +99,15 @@ class Client
   @param {Function} callback (err, res)
   @api public
   ###
-  search: (query, arg1, arg2) ->
-
-    # Managing different ways of
-    # calling search
-
-    # dfClient.search(query, callback)
-    if arg1 and arg1.constructor == Function
-      callback = arg1
+  search: (query, args...) ->
+    # Managing different ways of calling search
+    if args.length == 1 # dfClient.search(query, callback)
       params = {}
-
-    # dfClient.search(query, params, callback)
-    else if arg1 and arg2 and arg1.constructor == Object
-      callback = arg2
-      params = arg1
-
-    # Wrong call
-    else
+      callback = args[0]
+    else if args.length == 2 # dfClient.search(query, params, callback)
+      params = args[0]
+      callback = args[1]
+    else # Wrong call
       throw new Error "A callback is required."
 
     # Set default params
@@ -303,20 +295,23 @@ class Client
 
   @api public
   ###  
-  registerClick: (productId, arg1, arg2) ->
+  registerClick: (productId, args...) ->
     # Defaults
     callback = ((err, res) ->)
     options = {}
     # Casting to string (just in case)
     productId += ''
+
     # Check how many args there are
-    if typeof arg2 == 'undefined' and typeof arg1 == 'function'
-      callback = arg1
-    else if typeof arg2 == 'undefined' and typeof arg1 == 'object'
-      options = arg1  
-    else if typeof arg2 == 'function' and typeof arg1 == 'object'
-      callback = arg2
-      options = arg1
+    if args.length == 1
+      if typeof args[0] == 'function' # dfClient.registerClick(query, callback)
+        callback = args[0]
+      else # dfClient.registerClick(query, options)
+        options = args[0]
+    else if args.length == 2 # dfClient.registerClick(query, options, callback)
+      options = args[0]
+      callback = args[1]
+
 
     # doofinder internal id regex
     dfidRe = /\w{32}@[\w_-]+@\w{32}/
@@ -363,19 +358,20 @@ class Client
 
   @api public
   ###
-  registerCheckout: (sessionId, arg1, arg2) ->
+  registerCheckout: (sessionId, args...) ->
     # Defaults
     callback = ((err, res) ->)
     options = {}
 
     # Check how many args there are
-    if typeof arg2 == 'undefined' and typeof arg1 == 'function'
-      callback = arg1
-    else if typeof arg2 == 'undefined' and typeof arg1 == 'object'
-      options = arg1  
-    else if typeof arg2 == 'function' and typeof arg1 == 'object'
-      callback = arg2
-      options = arg1
+    if args.length == 1
+      if typeof args[0] == 'function'
+        callback = args[0]
+      else
+        options = args[0]
+    else if args.length == 2
+      options = args[0]
+      callback = args[1]
 
     path = "/#{@version}/stats/checkout?hashid=#{@hashid}&session_id=#{sessionId}"
     path += "&random=#{new Date().getTime()}"
@@ -421,14 +417,17 @@ class Client
   @param {Function} arg2
   @api public
   ###
-  options: (arg1, arg2) ->
+  options: (args...) ->
     callback = ((err, res) ->)
     # You can send options and callback or just the callback
-    if typeof arg1 == "function" and typeof arg2 == "undefined"
-      callback = arg1
-    else if typeof arg1 == "object" and typeof arg2 == "function"
-      options = arg1
-      callback = arg2
+    if args.length == 1 # dfClient.opitons(query, callback)
+      options = {}
+      callback = args[0]
+    else if args.length == 2 # dfClient.options(query, params, callback)
+      options = args[0]
+      callback = args[1]
+    else # Wrong call
+      throw new Error "A callback is required."
 
     if typeof options != "undefined" and options.querystring
       querystring = "?#{options.querystring}"
@@ -476,7 +475,6 @@ class Client
       return 'api token'
     else
       return 'authorization'
-
 
 # Module exports
 module.exports = Client
