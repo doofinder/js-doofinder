@@ -384,8 +384,8 @@ class Controller
 
   @api public
   ###
-  registerCheckout: (sessionId, args...) ->
-    @client.registerCheckout sessionId, args...
+  registerCheckout: (sessionId, callback) ->
+    @client.registerCheckout sessionId, callback
 
   ###
   hit

@@ -409,21 +409,9 @@ author: @ecoslado
     @api public
      */
 
-    Client.prototype.registerCheckout = function() {
-      var args, callback, options, path, reqOpts, sessionId;
-      sessionId = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      callback = (function(err, res) {});
-      options = {};
-      if (args.length === 1) {
-        if (typeof args[0] === 'function') {
-          callback = args[0];
-        } else {
-          options = args[0];
-        }
-      } else if (args.length === 2) {
-        options = args[0];
-        callback = args[1];
-      }
+    Client.prototype.registerCheckout = function(sessionId, callback) {
+      var path, reqOpts;
+      callback = callback || (function(err, res) {});
       path = "/" + this.version + "/stats/checkout?hashid=" + this.hashid + "&session_id=" + sessionId;
       path += "&random=" + (new Date().getTime());
       reqOpts = this.__requestOptions(path);
@@ -1008,10 +996,8 @@ author: @ecoslado
     @api public
      */
 
-    Controller.prototype.registerCheckout = function() {
-      var args, ref, sessionId;
-      sessionId = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      return (ref = this.client).registerCheckout.apply(ref, [sessionId].concat(slice.call(args)));
+    Controller.prototype.registerCheckout = function(sessionId, callback) {
+      return this.client.registerCheckout(sessionId, callback);
     };
 
 

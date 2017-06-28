@@ -358,20 +358,9 @@ class Client
 
   @api public
   ###
-  registerCheckout: (sessionId, args...) ->
+  registerCheckout: (sessionId, callback) ->
     # Defaults
-    callback = ((err, res) ->)
-    options = {}
-
-    # Check how many args there are
-    if args.length == 1
-      if typeof args[0] == 'function'
-        callback = args[0]
-      else
-        options = args[0]
-    else if args.length == 2
-      options = args[0]
-      callback = args[1]
+    callback = callback || ((err, res) ->)
 
     path = "/#{@version}/stats/checkout?hashid=#{@hashid}&session_id=#{sessionId}"
     path += "&random=#{new Date().getTime()}"
