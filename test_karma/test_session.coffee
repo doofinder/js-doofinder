@@ -35,6 +35,14 @@ describe "Session", ->
 
   context "with invalid session store", ->
     it "fails miserably", (done) ->
-      session = new Session null, {}
+      class BadSessionStore extends doofinder.session.ISessionStore
+        constructor: (@data = {}) ->
+        __getData: -> @data
+        __setData: (@data) ->
+
+      session = new Session null, (new BadSessionStore())
+      session.set 'key', 'value'
+      getter = -> session.get 'key'
+      expect(getter).to.throw()
       expect(session.exists).to.throw()
       done()

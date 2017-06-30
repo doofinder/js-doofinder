@@ -1317,8 +1317,8 @@ author: @ecoslado
       return this.data;
     };
 
-    ObjectSessionStore.prototype.__setData = function(dataObj) {
-      return this.data = dataObj;
+    ObjectSessionStore.prototype.__setData = function(data) {
+      this.data = data;
     };
 
     ObjectSessionStore.prototype["delete"] = function() {
@@ -1540,6 +1540,7 @@ author: @ecoslado
 
   module.exports = {
     Session: Session,
+    ISessionStore: ISessionStore,
     CookieSessionStore: CookieSessionStore,
     ObjectSessionStore: ObjectSessionStore
   };

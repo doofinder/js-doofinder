@@ -98,8 +98,7 @@ class ObjectSessionStore extends ISessionStore
     @data.session_id = @__uniqueId() unless @data.session_id?
     @data
 
-  __setData: (dataObj) ->
-    @data = dataObj
+  __setData: (@data) ->
 
   delete: ->
     @data = {}
@@ -257,5 +256,6 @@ class Session
 
 module.exports =
   Session: Session
+  ISessionStore: ISessionStore
   CookieSessionStore: CookieSessionStore
   ObjectSessionStore: ObjectSessionStore
