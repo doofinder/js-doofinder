@@ -1164,14 +1164,16 @@ author: @ecoslado
       uniqueId: require("./util/uniqueid"),
       buildHelpers: require("./util/helpers")
     },
-    Session: require("./session")
+    session: require("./session")
   };
 
 }).call(this);
 
 },{"./client":1,"./controller":2,"./session":4,"./util/dfdom":5,"./util/helpers":8,"./util/http":9,"./util/introspection":10,"./util/uniqueid":11,"./widget":12,"./widgets/display":13,"./widgets/facets/basefacet":14,"./widgets/facets/facetpanel":15,"./widgets/facets/rangefacet":16,"./widgets/facets/termfacet":17,"./widgets/queryinput":18,"./widgets/results/results":19,"./widgets/results/scrollresults":20,"bean":22,"extend":23,"lodash.throttle":62,"md5":63,"mustache":67,"qs":69}],4:[function(require,module,exports){
 (function() {
-  var Cookies, Session, extend, md5;
+  var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, extend, md5,
+    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
 
   Cookies = require("js-cookie");
 
@@ -1179,9 +1181,221 @@ author: @ecoslado
 
   md5 = require("md5");
 
+  ISessionStore = (function() {
+    function ISessionStore() {}
+
+
+    /**
+     * Gets the value for the specified key.
+     * @public
+     * @param  {String} key
+     * @param  {*}      defaultValue Value to return if the key does not exist.
+     * @return {*}
+     */
+
+    ISessionStore.prototype.get = function(key, defaultValue) {
+      var dataObj;
+      dataObj = this.__getData();
+      if (dataObj.session_id == null) {
+        throw Error("ISessionStore.__getData must ensure session_id exists!");
+      }
+      return dataObj[key] || defaultValue;
+    };
+
+
+    /**
+     * Sets the value for the specified key.
+     * @public
+     * @param  {String} key
+     * @param  {*}      value
+     * @return {Object}       Current data.
+     */
+
+    ISessionStore.prototype.set = function(key, value) {
+      var dataObj;
+      dataObj = this.__getData();
+      dataObj[key] = value;
+      return this.__setData(dataObj);
+    };
+
+
+    /**
+     * Deletes the specified key
+     * @param  {String} key
+     * @return {Object}     Current data.
+     */
+
+    ISessionStore.prototype.del = function(key) {
+      var dataObj;
+      dataObj = this.__getData();
+      delete dataObj[key];
+      return this.__setData(dataObj);
+    };
+
+
+    /**
+     * Returns the current data object and ensures that it contains a session_id
+     * key.
+     *
+     * @protected
+     * @return {Object} Current data.
+     */
+
+    ISessionStore.prototype.__getData = function() {
+      throw Error("ISessionStore.__getData not implemented!");
+    };
+
+
+    /**
+     * Sets the current data object.
+     * @protected
+     * @param  {Object} dataObj New data.
+     * @return {Object}         New data.
+     */
+
+    ISessionStore.prototype.__setData = function(dataObj) {
+      throw Error("ISessionStore.__setData(dataObj) not implemented!");
+    };
+
+
+    /**
+     * Deletes the current data, including session_id.
+     * @public
+     * @return {*}
+     */
+
+    ISessionStore.prototype["delete"] = function() {
+      throw Error("ISessionStore.delete not implemented!");
+    };
+
+
+    /**
+     * Checks whether the session exists or not.
+     * @return {Boolean} `true` if the session exists, `false` otherwise.
+     */
+
+    ISessionStore.prototype.exists = function() {
+      throw Error("ISessionStore.exists not implemented!");
+    };
+
+    return ISessionStore;
+
+  })();
+
 
   /**
-   * Class representing a User session persisted to a Cookie.
+   * Holds session data in a plain object.
+   */
+
+  ObjectSessionStore = (function(superClass) {
+    extend1(ObjectSessionStore, superClass);
+
+
+    /**
+     * @param  {Object} data Session data.
+     */
+
+    function ObjectSessionStore(data) {
+      this.data = data != null ? data : {};
+    }
+
+
+    /**
+    * Generates a unique session ID based on some randomness.
+    * @protected
+    * @return {String} A MD5 hash.
+     */
+
+    ObjectSessionStore.prototype.__uniqueId = function() {
+      return md5([new Date().getTime(), String(Math.floor(Math.random() * 10000))].join(""));
+    };
+
+    ObjectSessionStore.prototype.__getData = function() {
+      if (this.data.session_id == null) {
+        this.data.session_id = this.__uniqueId();
+      }
+      return this.data;
+    };
+
+    ObjectSessionStore.prototype.__setData = function(dataObj) {
+      return this.data = dataObj;
+    };
+
+    ObjectSessionStore.prototype["delete"] = function() {
+      return this.data = {};
+    };
+
+    ObjectSessionStore.prototype.exists = function() {
+      return this.data.session_id != null;
+    };
+
+    return ObjectSessionStore;
+
+  })(ISessionStore);
+
+  CookieSessionStore = (function(superClass) {
+    extend1(CookieSessionStore, superClass);
+
+    function CookieSessionStore(cookieName, options) {
+      var defaults;
+      if (options == null) {
+        options = {};
+      }
+      defaults = {
+        prefix: "",
+        expiry: 1 / 24
+      };
+      options = extend(true, defaults, options || {});
+      this.cookieName = "" + options.prefix + cookieName;
+      this.expiry = options.expiry;
+    }
+
+
+    /**
+     * Generates a unique session ID based on the user's browser, the location and
+     * some randomness.
+     *
+     * @protected
+     * @return {[type]} [description]
+     */
+
+    CookieSessionStore.prototype.__uniqueId = function() {
+      return md5([navigator.userAgent, navigator.language, window.location.host, new Date().getTime(), String(Math.floor(Math.random() * 10000))].join(""));
+    };
+
+    CookieSessionStore.prototype.__getData = function() {
+      var dataObj;
+      dataObj = Cookies.getJSON(this.cookieName);
+      if (dataObj == null) {
+        dataObj = this.__setData({
+          session_id: this.__uniqueId()
+        });
+      }
+      return dataObj;
+    };
+
+    CookieSessionStore.prototype.__setData = function(dataObj) {
+      Cookies.set(this.cookieName, dataObj, {
+        expires: this.expiry
+      });
+      return dataObj;
+    };
+
+    CookieSessionStore.prototype["delete"] = function() {
+      return Cookies.remove(this.cookieName);
+    };
+
+    CookieSessionStore.prototype.exists = function() {
+      return ((Cookies.getJSON(this.cookieName)) || {}).session_id != null;
+    };
+
+    return CookieSessionStore;
+
+  })(ISessionStore);
+
+
+  /**
+   * Class representing a User session persisted somewhere.
    */
 
   Session = (function() {
@@ -1189,27 +1403,70 @@ author: @ecoslado
     /**
      * Creates a Session.
      * @param  {Controller} controller
-     * @param  {Object}     options     prefix: A prefix for the cookie.
-     *                                  expiry: Duration in days. Default: 1h.
+     * @param  {*}          store      A store object which implements:
+     *                                   - get(key, default)
+     *                                   - set(key, value)
+     *                                   - del(key)
+     *                                   - delete()
+     *                                   - exists()
      */
-    function Session(controller, options) {
-      var defaults;
+    function Session(controller, store) {
       this.controller = controller;
-      if (options == null) {
-        options = {};
-      }
-      defaults = {
-        prefix: "doofhit",
-        expiry: 1 / 24
-      };
-      options = extend(true, defaults, options || {});
-      this.cookieName = "" + options.prefix + this.controller.hashid;
-      this.expiry = options.expiry;
+      this.store = store != null ? store : new ObjectSessionStore();
     }
 
 
     /**
-     * Registers a search in the search session.
+     * Gets the value for the specified key.
+     * @public
+     * @param  {String} key
+     * @param  {*}      defaultValue, value to return if the key does not exist.
+     * @return {*}
+     */
+
+    Session.prototype.get = function(key, defaultValue) {
+      return this.store.get(key, defaultValue);
+    };
+
+
+    /**
+     * Sets the value for the specified key.
+     * @public
+     * @param {String} key
+     * @param {*}             value
+     * @return {Object} The current value of the data object.
+     */
+
+    Session.prototype.set = function(key, value) {
+      return this.store.set(key, value);
+    };
+
+    Session.prototype.del = function(key) {
+      return this.store.del(key);
+    };
+
+
+    /**
+     * Finishes the session by removing the cookie.
+     */
+
+    Session.prototype["delete"] = function() {
+      return this.store["delete"]();
+    };
+
+
+    /**
+     * Checks whether the search session exists or not.
+     * @return {Boolean} `true` if the session exists, `false` otherwise.
+     */
+
+    Session.prototype.exists = function() {
+      return this.store.exists();
+    };
+
+
+    /**
+     * Registers a search for the session.
      * Registers the session in Doofinder stats if not already registered.
      *
      * WARNING: This must be called ONLY if the user has performed a search.
@@ -1217,7 +1474,7 @@ author: @ecoslado
      *          typing in the search box.
      *
      * @public
-     * @param  {string} query Search terms.
+     * @param  {String} query Search terms.
      */
 
     Session.prototype.registerSearch = function(query) {
@@ -1232,8 +1489,8 @@ author: @ecoslado
     /**
      * Registers a click on a search result for the specified search query.
      * @public
-     * @param  {string} dfid  Doofinder's internal ID for the result.
-     * @param  {string} query Search terms.
+     * @param  {String} dfid  Doofinder's internal ID for the result.
+     * @param  {String} query Search terms.
      */
 
     Session.prototype.registerClick = function(dfid, query) {
@@ -1250,7 +1507,7 @@ author: @ecoslado
      * provided.
      *
      * @public
-     * @param {string} location The URL to check against the patterns.
+     * @param {String} location The URL to check against the patterns.
      * @param {Array}  patterns A list of regular expressions to test with the
      *                          provided location.
      */
@@ -1277,111 +1534,15 @@ author: @ecoslado
       return false;
     };
 
-
-    /**
-     * Gets all the stored session data as an Object.
-     * Creates a new session cookie if it does not exist.
-     *
-     * @protected
-     * @return {Object}
-     */
-
-    Session.prototype.__getData = function() {
-      var cookieObj;
-      cookieObj = Cookies.getJSON(this.cookieName);
-      if (cookieObj == null) {
-        cookieObj = this.__setData({
-          session_id: this.__uniqueId()
-        });
-      }
-      return cookieObj;
-    };
-
-
-    /**
-     * Sets an object as session data.
-     *
-     * @protected
-     * @return {Object}
-     */
-
-    Session.prototype.__setData = function(cookieObj) {
-      Cookies.set(this.cookieName, cookieObj, {
-        expires: this.expiry
-      });
-      return cookieObj;
-    };
-
-
-    /**
-     * Gets the value for the specified key.
-     * @public
-     * @param  {string} key
-     * @param  {*}      defaultValue, value to return if the key does not exist.
-     * @return {*}
-     */
-
-    Session.prototype.get = function(key, defaultValue) {
-      var cookieObj;
-      cookieObj = this.__getData();
-      return cookieObj[key] || defaultValue;
-    };
-
-
-    /**
-     * Sets the value for the specified key.
-     * @public
-     * @param {string|number} key
-     * @param {*}             value
-     * @return {Object} The current value of the cookie object.
-     */
-
-    Session.prototype.set = function(key, value) {
-      var cookieObj;
-      cookieObj = this.__getData();
-      cookieObj[key] = value;
-      return this.__setData(cookieObj);
-    };
-
-
-    /**
-     * Finishes the session by removing the cookie.
-     */
-
-    Session.prototype["delete"] = function() {
-      return Cookies.remove(this.cookieName);
-    };
-
-
-    /**
-     * Checks whether the search session cookie exists or not.
-     * @return {Boolean} `true` if the cookie exists, `false` otherwise.
-     */
-
-    Session.prototype.exists = function() {
-      if ((Cookies.getJSON(this.cookieName)) != null) {
-        return true;
-      } else {
-        return false;
-      }
-    };
-
-
-    /**
-    * Generate a unique ID based on the user browser, the current host name and
-    * some randomness.
-    * @return {string} A MD5 hash.
-     */
-
-    Session.prototype.__uniqueId = function() {
-      return md5([navigator.userAgent, navigator.language, window.location.host, new Date().getTime(), String(Math.floor(Math.random() * 10000))].join(""));
-    };
-
     return Session;
 
   })();
 
-  module.exports = Session;
+  module.exports = {
+    Session: Session,
+    CookieSessionStore: CookieSessionStore,
+    ObjectSessionStore: ObjectSessionStore
+  };
 
 }).call(this);
 
