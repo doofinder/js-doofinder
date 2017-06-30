@@ -41,7 +41,6 @@ describe "Session", ->
 
       session = new Session null, (new BadSessionStore())
       session.set 'key', 'value'
-      getter = -> session.get 'key'
-      expect(getter).to.throw()
+      expect(-> session.get 'key').to.throw()
       expect(session.exists).to.throw()
       done()
