@@ -9,7 +9,6 @@ describe "Session", ->
     session.del "key"
     (session.get "key", "other").should.eq "other"
     session.exists().should.be.true
-    session.set "key", "value"
     session.delete()
     session.exists().should.be.false
     done()
