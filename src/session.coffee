@@ -165,13 +165,6 @@ class Session
    *                                   - exists()
   ###
   constructor: (@controller, @store = new ObjectSessionStore()) ->
-    # defaults =
-    #   prefix: "doofhit"
-    #   expiry: 1 / 24
-    # options = extend true, defaults, (options or {})
-
-    # @cookieName = "#{options.prefix}#{@controller.hashid}"
-    # @expiry = options.expiry
 
   ###*
    * Gets the value for the specified key.
