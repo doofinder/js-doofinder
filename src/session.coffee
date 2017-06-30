@@ -63,7 +63,7 @@ class Session
     for pattern in patterns
       try
         if pattern.test location
-          @client.registerCheckout sessionId
+          @controller.registerCheckout sessionId
           @delete()
 
           return true
