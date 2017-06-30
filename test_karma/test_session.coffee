@@ -15,8 +15,7 @@ describe "Session", ->
 
   context "with ObjectSessionStore", ->
     it "handles data properly", (done) ->
-      session = new Session()
-      testSessionDataHandling session, done
+      testSessionDataHandling (new Session()), done
 
     it "TODO: registerX methods!!!", (done) ->
       @skip()
