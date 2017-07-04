@@ -1175,13 +1175,22 @@ author: @ecoslado
 
 },{"./client":1,"./controller":2,"./util/dfdom":4,"./util/helpers":7,"./util/http":8,"./util/introspection":9,"./util/uniqueid":10,"./widget":11,"./widgets/display":12,"./widgets/facets/basefacet":13,"./widgets/facets/facetpanel":14,"./widgets/facets/rangefacet":15,"./widgets/facets/termfacet":16,"./widgets/queryinput":17,"./widgets/results/results":18,"./widgets/results/scrollresults":19,"bean":21,"extend":22,"lodash.throttle":60,"md5":61,"mustache":65,"qs":67}],4:[function(require,module,exports){
 (function() {
-  var DfDomElement, MATCHES_SELECTOR_FN, bean;
+  var DfDomElement, MATCHES_SELECTOR_FN, bean, matchesSelectorFn;
 
   bean = require("bean");
 
-  MATCHES_SELECTOR_FN = (['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector', 'matchesSelector'].filter(function(funcName) {
-    return typeof document.body[funcName] === 'function';
-  })).pop();
+  MATCHES_SELECTOR_FN = null;
+
+  matchesSelectorFn = function() {
+    var testNode;
+    if (MATCHES_SELECTOR_FN == null) {
+      testNode = document.querySelector('html, body, head');
+      MATCHES_SELECTOR_FN = (['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector', 'matchesSelector'].filter(function(funcName) {
+        return typeof testNode[funcName] === 'function';
+      })).pop();
+    }
+    return MATCHES_SELECTOR_FN;
+  };
 
 
   /**
@@ -1429,7 +1438,7 @@ author: @ecoslado
       var filterFn;
       if (typeof selector_or_fn === "string") {
         filterFn = function(node) {
-          return node[MATCHES_SELECTOR_FN](selector_or_fn);
+          return node[matchesSelectorFn()](selector_or_fn);
         };
       } else {
         filterFn = selector_or_fn;
@@ -1511,7 +1520,7 @@ author: @ecoslado
           var results;
           results = [];
           while (item.parentElement) {
-            if ((selector == null) || item.parentElement[MATCHES_SELECTOR_FN](selector)) {
+            if ((selector == null) || item.parentElement[matchesSelectorFn()](selector)) {
               results.push(item.parentElement);
             }
             item = item.parentElement;
