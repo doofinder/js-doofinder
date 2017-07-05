@@ -1549,13 +1549,22 @@ author: @ecoslado
 
 },{"extend":23,"js-cookie":61,"md5":63}],5:[function(require,module,exports){
 (function() {
-  var DfDomElement, MATCHES_SELECTOR_FN, bean;
+  var DfDomElement, MATCHES_SELECTOR_FN, bean, matchesSelectorFn;
 
   bean = require("bean");
 
-  MATCHES_SELECTOR_FN = (['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector', 'matchesSelector'].filter(function(funcName) {
-    return typeof document.body[funcName] === 'function';
-  })).pop();
+  MATCHES_SELECTOR_FN = null;
+
+  matchesSelectorFn = function() {
+    var testNode;
+    if (MATCHES_SELECTOR_FN == null) {
+      testNode = document.querySelector('html, body, head');
+      MATCHES_SELECTOR_FN = (['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector', 'matchesSelector'].filter(function(funcName) {
+        return typeof testNode[funcName] === 'function';
+      })).pop();
+    }
+    return MATCHES_SELECTOR_FN;
+  };
 
 
   /**
@@ -1803,7 +1812,7 @@ author: @ecoslado
       var filterFn;
       if (typeof selector_or_fn === "string") {
         filterFn = function(node) {
-          return node[MATCHES_SELECTOR_FN](selector_or_fn);
+          return node[matchesSelectorFn()](selector_or_fn);
         };
       } else {
         filterFn = selector_or_fn;
@@ -1885,7 +1894,7 @@ author: @ecoslado
           var results;
           results = [];
           while (item.parentElement) {
-            if ((selector == null) || item.parentElement[MATCHES_SELECTOR_FN](selector)) {
+            if ((selector == null) || item.parentElement[matchesSelectorFn()](selector)) {
               results.push(item.parentElement);
             }
             item = item.parentElement;
