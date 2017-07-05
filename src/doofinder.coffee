@@ -29,4 +29,4 @@ module.exports =
     http: require "./util/http"
     uniqueId: require "./util/uniqueid"
     buildHelpers: require "./util/helpers"
-  Session: require "./session"
+  session: require "./session"
