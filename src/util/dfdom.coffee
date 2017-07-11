@@ -190,7 +190,7 @@ class DfDomElement
   ###
   filter: (selector_or_fn) ->
     if typeof selector_or_fn is "string"
-      filterFn = (node) -> (matchesSelector node, selector_or_fn)
+      filterFn = (node) -> matchesSelector node, selector_or_fn
     else
       filterFn = selector_or_fn
     new DfDomElement (@element.filter filterFn, @)
@@ -244,7 +244,7 @@ class DfDomElement
     finder = (item) =>
       results = []
       while item.parentElement
-        if not selector? or (matchesSelector item.parentElement, selector)
+        if not selector? or matchesSelector item.parentElement, selector
           results.push item.parentElement
         item = item.parentElement
       results

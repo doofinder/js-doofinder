@@ -1892,7 +1892,7 @@ author: @ecoslado
           var results;
           results = [];
           while (item.parentElement) {
-            if ((selector == null) || (matchesSelector(item.parentElement, selector))) {
+            if ((selector == null) || matchesSelector(item.parentElement, selector)) {
               results.push(item.parentElement);
             }
             item = item.parentElement;
