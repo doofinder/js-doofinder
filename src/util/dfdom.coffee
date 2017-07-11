@@ -2,9 +2,8 @@ bean = require "bean"
 
 MATCHES_SELECTOR_FN = null
 
-matchesSelectorFn = ->
+matchesSelector = (node, selector) ->
   unless MATCHES_SELECTOR_FN?
-    testNode = document.querySelector 'html, body, head'
     MATCHES_SELECTOR_FN = ([
       'matches',
       'webkitMatchesSelector',
@@ -12,8 +11,9 @@ matchesSelectorFn = ->
       'msMatchesSelector',
       'oMatchesSelector',
       'matchesSelector'
-    ].filter (funcName) -> typeof testNode[funcName] is 'function').pop()
-  MATCHES_SELECTOR_FN
+    ].filter (funcName) -> typeof node[funcName] is 'function').pop()
+  node[MATCHES_SELECTOR_FN] selector
+
 
 ###*
  * DfDomElement
@@ -190,7 +190,7 @@ class DfDomElement
   ###
   filter: (selector_or_fn) ->
     if typeof selector_or_fn is "string"
-      filterFn = (node) -> node[matchesSelectorFn()] selector_or_fn
+      filterFn = (node) -> matchesSelector node, selector_or_fn
     else
       filterFn = selector_or_fn
     new DfDomElement (@element.filter filterFn, @)
@@ -244,7 +244,7 @@ class DfDomElement
     finder = (item) =>
       results = []
       while item.parentElement
-        if not selector? or item.parentElement[matchesSelectorFn()] selector
+        if not selector? or matchesSelector item.parentElement, selector
           results.push item.parentElement
         item = item.parentElement
       results
