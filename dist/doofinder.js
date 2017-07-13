@@ -1654,7 +1654,7 @@ author: @ecoslado
           return true;
         case !(node instanceof Document):
           return true;
-        case !(node instanceof Window):
+        case !(node && node.document && node.location && node.alert && node.setInterval):
           return true;
         default:
           return false;
