@@ -82,7 +82,8 @@ class DfDomElement
     switch
       when node instanceof Element then true
       when node instanceof Document then true
-      when node instanceof Window then true
+      when node and node.document and node.location and node.alert and
+        node.setInterval then true # is the window object
       else false
 
   ###*
