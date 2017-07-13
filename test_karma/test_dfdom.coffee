@@ -30,6 +30,11 @@ describe "dfdom", ->
       (dfdom "div").element.should.be.empty
       done()
 
+    it "can be instantiated with the window object", (done) ->
+      selection = (dfdom window)
+      expect(selection.element[0]).to.eql window
+      done()
+
     it "can be instantiated with a CSS selector", (done) ->
       insertHTML """
       <ul class="test"></ul>
