@@ -243,6 +243,28 @@ class Session
     @client.registerCheckout sessionId
     @delete()
 
+  ###*
+   * Method to register banner events
+   * @public
+   *
+   * @param {String} bannerId
+   * @param {Function} callback
+  ###
+  registerBannerDisplay: (bannerId) ->
+    @set "banner_id", bannerId
+    @client.registerBannerEvent("banner_display", bannerId, callback)
+
+  ###*
+   * Method to register banner events
+   * @public
+   *
+   * @param {String} bannerId
+   * @param {Function} callback
+  ###
+  registerBannerClick: () ->
+    bannerId = @get "banner_id"
+    @client.registerBannerEvent("banner_click", bannerId, callback)
+
 
 module.exports =
   Session: Session
