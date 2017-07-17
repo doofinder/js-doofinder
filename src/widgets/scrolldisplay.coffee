@@ -64,7 +64,7 @@ class ScrollDisplay extends Display
     else if @element.element[0] is window
       @element = $ "body"
     else
-      if not @element.children().length()
+      if not @element.children().length
         @element.append (document.createElement 'div')
       @element = @element.children().first()
 
