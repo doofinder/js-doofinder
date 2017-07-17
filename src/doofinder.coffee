@@ -4,7 +4,7 @@ if not JSON.parse and JSON.decode
   JSON.parse = JSON.decode
 
 module.exports =
-  version: "5.1.2"
+  version: "5.1.7"
   Client: require "./client"
   Mustache: require "mustache"
   Widget: require "./widget"
@@ -29,3 +29,4 @@ module.exports =
     http: require "./util/http"
     uniqueId: require "./util/uniqueid"
     buildHelpers: require "./util/helpers"
+  session: require "./session"
