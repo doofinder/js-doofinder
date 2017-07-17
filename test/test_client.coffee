@@ -269,21 +269,6 @@ describe "Client", ->
         res.parameters.should.contain 'query=querystring', 'filter%5Bcolor%5D=blue', 'filter%5Bcolor%5D=red', 'filter%5Bprice%5D%5Bgte%5D=4.36', 'filter%5Bprice%5D%5Blt%5D=99'
         done()
 
-  describe 'hit', ->
-
-    it 'sends dfid, hashid and query parameters', (done) ->
-      response =
-        field: "value"
-      scope = nock('https://fooserver')
-      .filteringPath(/random=[^&]*/g, 'random=XXX')
-      .get('/5/hit/ffffffffffffffffffffffffffffffff/click/ffffffffffffffffffffffffffffffff/666/querystring?random=XXX')
-      .reply(200, response)
-
-      client = new doofinder.Client hashid, api_key, 5, 'product', 'fooserver'
-      client.hit 'ffffffffffffffffffffffffffffffff', 'click', 666, 'querystring', (err, res) ->
-        res.should.to.be.deep.equal response
-        done()
-
   describe 'options', ->
 
     before ()->

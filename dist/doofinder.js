@@ -449,45 +449,6 @@ author: @ecoslado
     hits in a product
     
     @param {String} dfid
-    @param {String} query
-    @param {Function} callback
-    @api public
-     */
-
-    Client.prototype.hit = function(sessionId, eventType, dfid, query, callback) {
-      var headers, path, reqOpts;
-      if (dfid == null) {
-        dfid = "";
-      }
-      if (query == null) {
-        query = "";
-      }
-      if (callback == null) {
-        callback = function(err, res) {};
-      }
-      headers = {};
-      if (this.apiKey) {
-        headers[this.__getAuthHeaderName()] = this.apiKey;
-      }
-      path = "/" + this.version + "/hit/" + sessionId + "/" + eventType + "/" + this.hashid;
-      if (dfid !== "") {
-        path += "/" + dfid;
-      }
-      if (query !== "") {
-        path += "/" + (encodeURIComponent(query));
-      }
-      path = path + "?random=" + (new Date().getTime());
-      reqOpts = this.__requestOptions(path);
-      return this.httpClient.request(reqOpts, callback);
-    };
-
-
-    /*
-    This method calls to /hit
-    service for accounting the
-    hits in a product
-    
-    @param {String} dfid
     @param {Object | Function} arg1
     @param {Function} arg2
     @api public
@@ -1026,47 +987,6 @@ author: @ecoslado
 
 
     /*
-    Method to register banner events
-    
-    @param {String} eventType
-    @param {String} bannerId
-    @param {Function} callback
-    
-    @api public
-     */
-
-    Controller.prototype.registerBannerEvent = function(eventType, bannerId, callback) {
-      if (callback == null) {
-        callback = (function(err, res) {});
-      }
-      return this.client.registerBannerEvent(eventType, bannerId, callback);
-    };
-
-
-    /*
-    hit
-    
-    Increment the hit counter when a product is clicked.
-    
-    @param {String} dfid: the unique identifier present in the search result
-    @param {Function} callback
-     */
-
-    Controller.prototype.hit = function(sessionId, type, dfid, query, callback) {
-      if (dfid == null) {
-        dfid = "";
-      }
-      if (query == null) {
-        query = this.status.params.query;
-      }
-      if (callback == null) {
-        callback = function() {};
-      }
-      return this.client.hit(sessionId, type, dfid, query, callback);
-    };
-
-
-    /*
     options
     
     Retrieves the SearchEngine options
@@ -1179,7 +1099,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "5.1.7",
+    version: "5.2.0",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),

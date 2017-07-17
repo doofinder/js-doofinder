@@ -387,30 +387,6 @@ class Controller
   registerCheckout: (sessionId, callback) ->
     @client.registerCheckout sessionId, callback
 
-  ###
-  Method to register banner events
-
-  @param {String} eventType
-  @param {String} bannerId
-  @param {Function} callback
-
-  @api public
-  ###
-  registerBannerEvent: (eventType, bannerId, callback=((err, res)->)) ->
-    @client.registerBannerEvent(eventType, bannerId, callback)
-
-
-  ###
-  hit
-
-  Increment the hit counter when a product is clicked.
-
-  @param {String} dfid: the unique identifier present in the search result
-  @param {Function} callback
-  ###
-  hit: (sessionId, type, dfid = "", query=@status.params.query, callback=->) ->
-    @client.hit sessionId, type, dfid, query, callback
-
 
   ###
   options
