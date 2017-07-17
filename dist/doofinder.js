@@ -1444,7 +1444,7 @@ author: @ecoslado
 
     /**
      * Creates a Session.
-     * @param  {Controller} controller
+     * @param  {Client}     client
      * @param  {*}          store      A store object which implements:
      *                                   - get(key, default)
      *                                   - set(key, value)
@@ -1452,8 +1452,8 @@ author: @ecoslado
      *                                   - delete()
      *                                   - exists()
      */
-    function Session(controller, store) {
-      this.controller = controller;
+    function Session(client, store) {
+      this.client = client;
       this.store = store != null ? store : new ObjectSessionStore();
     }
 
@@ -1522,7 +1522,7 @@ author: @ecoslado
     Session.prototype.registerSearch = function(query) {
       this.set("query", query);
       if (!this.get("registered", false)) {
-        this.controller.registerSession(this.get("session_id"));
+        this.client.registerSession(this.get("session_id"));
         return this.set("registered", true);
       }
     };
@@ -1537,9 +1537,12 @@ author: @ecoslado
 
     Session.prototype.registerClick = function(dfid, query) {
       this.set("dfid", dfid);
-      this.set("query", query);
-      return this.controller.registerClick(dfid, {
-        sessionId: this.get("session_id")
+      if (query != null) {
+        this.set("query", query);
+      }
+      return this.client.registerClick(dfid, {
+        sessionId: this.get("session_id"),
+        query: this.get("query")
       });
     };
 
@@ -1549,31 +1552,13 @@ author: @ecoslado
      * provided.
      *
      * @public
-     * @param {String} location The URL to check against the patterns.
-     * @param {Array}  patterns A list of regular expressions to test with the
-     *                          provided location.
      */
 
-    Session.prototype.registerCheckout = function(location, patterns) {
-      var e, i, len, pattern, sessionId;
-      if (patterns == null) {
-        patterns = [];
-      }
+    Session.prototype.registerCheckout = function() {
+      var sessionId;
       sessionId = this.get("session_id");
-      for (i = 0, len = patterns.length; i < len; i++) {
-        pattern = patterns[i];
-        try {
-          if (pattern.test(location)) {
-            this.controller.registerCheckout(sessionId);
-            this["delete"]();
-            return true;
-          }
-        } catch (_error) {
-          e = _error;
-          console.error(e.message);
-        }
-      }
-      return false;
+      this.client.registerCheckout(sessionId);
+      return this["delete"]();
     };
 
     return Session;

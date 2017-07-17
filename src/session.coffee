@@ -155,7 +155,7 @@ class CookieSessionStore extends ISessionStore
 class Session
   ###*
    * Creates a Session.
-   * @param  {Controller} controller
+   * @param  {Client}     client
    * @param  {*}          store      A store object which implements:
    *                                   - get(key, default)
    *                                   - set(key, value)
@@ -163,7 +163,7 @@ class Session
    *                                   - delete()
    *                                   - exists()
   ###
-  constructor: (@controller, @store = new ObjectSessionStore()) ->
+  constructor: (@client, @store = new ObjectSessionStore()) ->
 
   ###*
    * Gets the value for the specified key.
@@ -215,7 +215,7 @@ class Session
   registerSearch: (query) ->
     @set "query", query
     unless @get "registered", false
-      @controller.registerSession @get "session_id"
+      @client.registerSession @get "session_id"
       @set "registered", true
 
   ###*
@@ -226,32 +226,22 @@ class Session
   ###
   registerClick: (dfid, query) ->
     @set "dfid", dfid
-    @set "query", query  # not sure this is needed
-    @controller.registerClick dfid, sessionId: @get "session_id"
+    if query?
+      @set "query", query  # not sure this is needed
+    @client.registerClick dfid, 
+      sessionId: @get "session_id"
+      query: @get "query"
 
   ###*
    * Register a checkout when the location passed matches one of the URLs
    * provided.
    *
    * @public
-   * @param {String} location The URL to check against the patterns.
-   * @param {Array}  patterns A list of regular expressions to test with the
-   *                          provided location.
   ###
-  registerCheckout: (location, patterns = []) ->
+  registerCheckout: () ->
     sessionId = @get "session_id"
-
-    for pattern in patterns
-      try
-        if pattern.test location
-          @controller.registerCheckout sessionId
-          @delete()
-
-          return true
-      catch e
-        console.error e.message
-
-    return false
+    @client.registerCheckout sessionId
+    @delete()
 
 
 module.exports =
