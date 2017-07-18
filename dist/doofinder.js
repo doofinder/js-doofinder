@@ -1487,12 +1487,10 @@ author: @ecoslado
      * @public
      *
      * @param {String} bannerId
-     * @param {Function} callback
      */
 
     Session.prototype.registerBannerDisplay = function(bannerId) {
-      this.set("banner_id", bannerId);
-      return this.client.registerBannerEvent("banner_display", bannerId, callback);
+      return this.client.registerBannerEvent("display", bannerId);
     };
 
 
@@ -1501,13 +1499,10 @@ author: @ecoslado
      * @public
      *
      * @param {String} bannerId
-     * @param {Function} callback
      */
 
-    Session.prototype.registerBannerClick = function() {
-      var bannerId;
-      bannerId = this.get("banner_id");
-      return this.client.registerBannerEvent("banner_click", bannerId, callback);
+    Session.prototype.registerBannerClick = function(bannerId) {
+      return this.client.registerBannerEvent("click", bannerId);
     };
 
     return Session;

@@ -248,22 +248,18 @@ class Session
    * @public
    *
    * @param {String} bannerId
-   * @param {Function} callback
   ###
   registerBannerDisplay: (bannerId) ->
-    @set "banner_id", bannerId
-    @client.registerBannerEvent("banner_display", bannerId, callback)
+    @client.registerBannerEvent("display", bannerId)
 
   ###*
    * Method to register banner events
    * @public
    *
    * @param {String} bannerId
-   * @param {Function} callback
   ###
-  registerBannerClick: () ->
-    bannerId = @get "banner_id"
-    @client.registerBannerEvent("banner_click", bannerId, callback)
+  registerBannerClick: (bannerId) ->
+    @client.registerBannerEvent("click", bannerId)
 
 
 module.exports =
