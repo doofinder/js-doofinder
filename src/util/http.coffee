@@ -1,68 +1,33 @@
-###
-client.coffee
-author: @ecoslado
-2017 01 23
-###
+http = require "http"
+https = require "https"
 
-httpLib = require "http"
-httpsLib = require "https"
-
+###*
+ * Commodity API to http and https modules
 ###
-HttpClient
-This class implements a more
-easy API with http module
-###
-
 class HttpClient
-
-  ###
-  Just assigns
-  ###
-  constructor: (ssl) ->
-    @client = if ssl then httpsLib else httpLib
-
+  constructor: (@secure) ->
+    @http = if @secure then https else http
 
   request: (options, callback) ->
     if typeof options == "string"
       options = host: options
-    req = @__makeRequest(options, callback)
-    req.end 
 
-
-  ###
-  Callback function will be passed as argument to search
-  and will be returned with response body
-
-  @param {Object} res: the response
-  @api private
-  ###
-  __processResponse: (callback) ->
-    (res) ->
-      if res.statusCode >= 400
-        return callback res.statusCode, null
-
+    req = @http.get options, (response) ->
+      if response.statusCode isnt 200
+        # consume response data to free up memory
+        response.resume()
+        callback response.statusCode
       else
-        data = ""
-        res.on 'data', (chunk) ->
-          data += chunk
+        response.setEncoding "utf-8"
 
-        res.on 'end', () ->
-          return callback null, JSON.parse(data)
+        rawData = ""
+        response.on "data", (chunk) ->
+          rawData += chunk
 
-        res.on 'error', (err) ->
-          return callback err, null
+        response.on "end", ->
+          callback null, (JSON.parse rawData)
 
-  ###
-  Method to make a secured or not request based on @client
+    req.on "error", (error) ->
+      callback error
 
-  @param (Object) options: request options
-  @param (Function) the callback function to execute with the response as arg
-  @return (Object) the request object.
-  @api private
-  ###
-  __makeRequest: (options, callback) ->
-    @client.get options, @__processResponse(callback)
-
-# Module exports
 module.exports = HttpClient
-    

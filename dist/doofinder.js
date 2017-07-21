@@ -7,63 +7,77 @@ author: @ecoslado
  */
 
 (function() {
-  var Client, HttpClient, md5,
+  var Client, HttpClient, extend, md5,
     slice = [].slice;
 
   HttpClient = require("./util/http");
 
   md5 = require("md5");
 
+  extend = require("extend");
 
-  /*
-  DfClient
-  This class is imported with module
-  requirement. Implements the search request
-  and returns a json object to a callback function
+
+  /**
+   * This class allows searching and sending stats using the Doofinder service.
    */
 
   Client = (function() {
 
-    /*
-    Client constructor
-    
-    @param {String} hashid
-    @param {String} apiKey
-    @param {String} version
-    @param {String} address
-    @api public
+    /**
+     * Constructor
+     * @param  {String}       @hashid  Unique ID of the Search Engine.
+     * @param  {String}       apiKey   Search zone (eu1, us1) or full API key
+     *                                 (eu1-...).
+     * @param  {Number}       @version API version.
+     * @param  {String|Array} @type    Restricts search to one or more data types.
+     * @param  {[type]}       address  Search server endpoint. Used by the
+     *                                 development team.
+     * @public
      */
-    function Client(hashid, apiKey, version, type1, address) {
-      var zone, zoneApiKey;
+    function Client(hashid, zoneOrKey, version, type1, address) {
+      var apiKey, host, port, ref, ref1, zone;
       this.hashid = hashid;
+      this.version = version != null ? version : 5;
       this.type = type1;
-      if (this.version == null) {
-        this.version = version;
+      ref = zoneOrKey != null ? zoneOrKey.split("-") : ["", void 0], zone = ref[0], apiKey = ref[1];
+      if (address == null) {
+        address = zone + "-search.doofinder.com";
       }
-      if (this.version == null) {
-        this.version = 5;
+      ref1 = address.split(":"), host = ref1[0], port = ref1[1];
+      this.defaultOptions = {
+        host: host,
+        port: port,
+        headers: {}
+      };
+      if (apiKey != null) {
+        this.defaultOptions.headers.authorization = apiKey;
       }
       this.params = {};
       this.filters = {};
       this.exclude = {};
-      if (this.url == null) {
-        this.url = address;
-      }
-      if (apiKey) {
-        zoneApiKey = apiKey.split('-');
-        zone = zoneApiKey[0];
-        if (zoneApiKey.length > 1) {
-          this.apiKey = zoneApiKey[1];
-        }
-      } else {
-        zone = "";
-        this.apiKey = "";
-      }
-      this.httpClient = new HttpClient((this.apiKey != null) && this.version !== 4);
-      if (this.url == null) {
-        this.url = zone + "-search.doofinder.com";
-      }
+      this.httpClient = new HttpClient(apiKey != null);
     }
+
+
+    /**
+     * Performs a HTTP request to the endpoint specified with the default options
+     * of the client.
+     *
+     * @param  {String}   url      Endpoint URL.
+     * @param  {Function} callback Callback to be called when the response is
+     *                             received. First param is the error, if any
+     *                             and the second one is the response, if any.
+     * @return {http.ClientRequest}
+     * @public
+     */
+
+    Client.prototype.request = function(url, callback) {
+      var options;
+      options = extend(true, {
+        path: url
+      }, this.defaultOptions);
+      return this.httpClient.request(options, callback);
+    };
 
 
     /*
@@ -123,7 +137,7 @@ author: @ecoslado
      */
 
     Client.prototype.search = function() {
-      var _this, args, callback, params, query;
+      var args, callback, params, query;
       query = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
       if (args.length === 1) {
         params = {};
@@ -140,35 +154,31 @@ author: @ecoslado
       if (params.rpp == null) {
         params.rpp = 10;
       }
-      _this = this;
-      return this._sanitizeQuery(query, function(cleaned) {
-        var filterKey, filterTerms, headers, options, paramKey, paramValue, path, queryString;
-        params.query = cleaned;
-        headers = {};
-        if (_this.apiKey) {
-          headers[_this.__getAuthHeaderName()] = _this.apiKey;
-        }
-        _this.params = {};
-        _this.filters = {};
-        _this.sort = [];
-        for (paramKey in params) {
-          paramValue = params[paramKey];
-          if (paramKey === "filters" || paramKey === "exclude") {
-            for (filterKey in paramValue) {
-              filterTerms = paramValue[filterKey];
-              _this.addFilter(filterKey, filterTerms, paramKey);
+      return this._sanitizeQuery(query, (function(_this) {
+        return function(cleaned) {
+          var filterKey, filterTerms, paramKey, paramValue, path, queryString;
+          params.query = cleaned;
+          _this.params = {};
+          _this.filters = {};
+          _this.sort = [];
+          for (paramKey in params) {
+            paramValue = params[paramKey];
+            if (paramKey === "filters" || paramKey === "exclude") {
+              for (filterKey in paramValue) {
+                filterTerms = paramValue[filterKey];
+                _this.addFilter(filterKey, filterTerms, paramKey);
+              }
+            } else if (paramKey === "sort") {
+              _this.setSort(paramValue);
+            } else {
+              _this.addParam(paramKey, paramValue);
             }
-          } else if (paramKey === "sort") {
-            _this.setSort(paramValue);
-          } else {
-            _this.addParam(paramKey, paramValue);
           }
-        }
-        queryString = _this.makeQueryString();
-        path = "/" + _this.version + "/search?" + queryString;
-        options = _this.__requestOptions(path);
-        return _this.httpClient.request(options, callback);
-      });
+          queryString = _this.makeQueryString();
+          path = "/" + _this.version + "/search?" + queryString;
+          return _this.request(path, callback);
+        };
+      })(this));
     };
 
 
@@ -371,8 +381,7 @@ author: @ecoslado
       query = options.query || "";
       path = "/" + this.version + "/stats/click?dfid=" + dfid + "&session_id=" + sessionId + "&query=" + (encodeURIComponent(query));
       path += "&random=" + (new Date().getTime());
-      options = this.__requestOptions(path);
-      return this.httpClient.request(options, callback);
+      return this.request(path, callback);
     };
 
 
@@ -387,14 +396,13 @@ author: @ecoslado
      */
 
     Client.prototype.registerSession = function(sessionId, callback) {
-      var options, path;
+      var path;
       if (callback == null) {
         callback = (function(err, res) {});
       }
       path = "/" + this.version + "/stats/init?hashid=" + this.hashid + "&session_id=" + sessionId;
       path += "&random=" + (new Date().getTime());
-      options = this.__requestOptions(path);
-      return this.httpClient.request(options, callback);
+      return this.request(path, callback);
     };
 
 
@@ -410,12 +418,11 @@ author: @ecoslado
      */
 
     Client.prototype.registerCheckout = function(sessionId, callback) {
-      var path, reqOpts;
+      var path;
       callback = callback || (function(err, res) {});
       path = "/" + this.version + "/stats/checkout?hashid=" + this.hashid + "&session_id=" + sessionId;
       path += "&random=" + (new Date().getTime());
-      reqOpts = this.__requestOptions(path);
-      return this.httpClient.request(reqOpts, callback);
+      return this.request(path, callback);
     };
 
 
@@ -432,14 +439,13 @@ author: @ecoslado
      */
 
     Client.prototype.registerBannerEvent = function(eventType, bannerId, callback) {
-      var path, reqOpts;
+      var path;
       if (callback == null) {
         callback = (function(err, res) {});
       }
       path = "/" + this.version + "/stats/banner_" + eventType + "?hashid=" + this.hashid + "&banner_id=" + bannerId;
       path += "&random=" + (new Date().getTime());
-      reqOpts = this.__requestOptions(path);
-      return this.httpClient.request(reqOpts, callback);
+      return this.request(path, callback);
     };
 
 
@@ -455,7 +461,7 @@ author: @ecoslado
      */
 
     Client.prototype.options = function() {
-      var args, callback, options, path, querystring, reqOpts;
+      var args, callback, options, path, querystring;
       args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
       callback = (function(err, res) {});
       if (args.length === 1) {
@@ -473,50 +479,7 @@ author: @ecoslado
         querystring = "";
       }
       path = "/" + this.version + "/options/" + this.hashid + querystring;
-      reqOpts = this.__requestOptions(path);
-      return this.httpClient.request(reqOpts, callback);
-    };
-
-
-    /*
-    Method to make the request options
-    
-    @param (String) path: request options
-    @return (Object) the options object.
-    @api private
-     */
-
-    Client.prototype.__requestOptions = function(path) {
-      var headers, options;
-      headers = {};
-      if (this.apiKey) {
-        headers[this.__getAuthHeaderName()] = this.apiKey;
-      }
-      options = {
-        host: this.url,
-        path: path,
-        headers: headers
-      };
-      if (this.url.split(':').length > 1) {
-        options.host = this.url.split(':')[0];
-        options.port = this.url.split(':')[1];
-      }
-      return options;
-    };
-
-
-    /*
-    Method to obtain security header name
-    @return (String) either 'api token' or 'authorization' depending on version
-    @api private
-     */
-
-    Client.prototype.__getAuthHeaderName = function() {
-      if (this.version === 4) {
-        return 'api token';
-      } else {
-        return 'authorization';
-      }
+      return this.request(path, callback);
     };
 
     return Client;
@@ -527,7 +490,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./util/http":9,"md5":64}],2:[function(require,module,exports){
+},{"./util/http":9,"extend":23,"md5":64}],2:[function(require,module,exports){
 
 /*
  * Created by Kike Coslado on 26/10/15.
@@ -2816,34 +2779,22 @@ author: @ecoslado
 }).call(this);
 
 },{"extend":23}],9:[function(require,module,exports){
-
-/*
-client.coffee
-author: @ecoslado
-2017 01 23
- */
-
 (function() {
-  var HttpClient, httpLib, httpsLib;
+  var HttpClient, http, https;
 
-  httpLib = require("http");
+  http = require("http");
 
-  httpsLib = require("https");
+  https = require("https");
 
 
-  /*
-  HttpClient
-  This class implements a more
-  easy API with http module
+  /**
+   * Commodity API to http and https modules
    */
 
   HttpClient = (function() {
-
-    /*
-    Just assigns
-     */
-    function HttpClient(ssl) {
-      this.client = ssl ? httpsLib : httpLib;
+    function HttpClient(secure) {
+      this.secure = secure;
+      this.http = this.secure ? https : http;
     }
 
     HttpClient.prototype.request = function(options, callback) {
@@ -2853,51 +2804,25 @@ author: @ecoslado
           host: options
         };
       }
-      req = this.__makeRequest(options, callback);
-      return req.end;
-    };
-
-
-    /*
-    Callback function will be passed as argument to search
-    and will be returned with response body
-    
-    @param {Object} res: the response
-    @api private
-     */
-
-    HttpClient.prototype.__processResponse = function(callback) {
-      return function(res) {
-        var data;
-        if (res.statusCode >= 400) {
-          return callback(res.statusCode, null);
+      req = this.http.get(options, function(response) {
+        var rawData;
+        if (response.statusCode !== 200) {
+          response.resume();
+          return callback(response.statusCode);
         } else {
-          data = "";
-          res.on('data', function(chunk) {
-            return data += chunk;
+          response.setEncoding("utf-8");
+          rawData = "";
+          response.on("data", function(chunk) {
+            return rawData += chunk;
           });
-          res.on('end', function() {
-            return callback(null, JSON.parse(data));
-          });
-          return res.on('error', function(err) {
-            return callback(err, null);
+          return response.on("end", function() {
+            return callback(null, JSON.parse(rawData));
           });
         }
-      };
-    };
-
-
-    /*
-    Method to make a secured or not request based on @client
-    
-    @param (Object) options: request options
-    @param (Function) the callback function to execute with the response as arg
-    @return (Object) the request object.
-    @api private
-     */
-
-    HttpClient.prototype.__makeRequest = function(options, callback) {
-      return this.client.get(options, this.__processResponse(callback));
+      });
+      return req.on("error", function(error) {
+        return callback(error);
+      });
     };
 
     return HttpClient;

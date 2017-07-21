@@ -6,48 +6,56 @@ author: @ecoslado
 
 HttpClient = require "./util/http"
 md5 = require "md5"
+extend = require "extend"
 
-###
-DfClient
-This class is imported with module
-requirement. Implements the search request
-and returns a json object to a callback function
-###
 
+###*
+ * This class allows searching and sending stats using the Doofinder service.
+###
 class Client
+  ###*
+   * Constructor
+   * @param  {String}       @hashid  Unique ID of the Search Engine.
+   * @param  {String}       apiKey   Search zone (eu1, us1) or full API key
+   *                                 (eu1-...).
+   * @param  {Number}       @version API version.
+   * @param  {String|Array} @type    Restricts search to one or more data types.
+   * @param  {[type]}       address  Search server endpoint. Used by the
+   *                                 development team.
+   * @public
   ###
-  Client constructor
+  constructor: (@hashid, zoneOrKey, @version = 5, @type, address) ->
+    [zone, apiKey] = if zoneOrKey? then zoneOrKey.split "-" else ["", undefined]
+    address ?= "#{zone}-search.doofinder.com"
+    [host, port] = address.split ":"
 
-  @param {String} hashid
-  @param {String} apiKey
-  @param {String} version
-  @param {String} address
-  @api public
-  ###
-  constructor: (@hashid, apiKey, version, @type, address) ->
-    @version ?= version
-    @version ?= 5
+    @defaultOptions =
+      host: host
+      port: port
+      headers: {}
+    @defaultOptions.headers.authorization = apiKey if apiKey?
+
     @params = {}
     @filters = {}
     @exclude = {}
 
+    @httpClient = new HttpClient apiKey?
 
-    @url ?= address
-    # API Key can be two ways:
-    # zone-APIKey
-    # zone
-    # We check if there is a -
-    if apiKey
-      zoneApiKey = apiKey.split('-')
-      zone = zoneApiKey[0]
-      if zoneApiKey.length > 1
-        @apiKey = zoneApiKey[1]
-    else
-      zone = ""
-      @apiKey = ""
+  ###*
+   * Performs a HTTP request to the endpoint specified with the default options
+   * of the client.
+   *
+   * @param  {String}   url      Endpoint URL.
+   * @param  {Function} callback Callback to be called when the response is
+   *                             received. First param is the error, if any
+   *                             and the second one is the response, if any.
+   * @return {http.ClientRequest}
+   * @public
+  ###
+  request: (url, callback) ->
+    options = extend true, path: url, @defaultOptions
+    @httpClient.request options, callback
 
-    @httpClient = new HttpClient(@apiKey? and @version != 4)
-    @url ?= zone + "-search.doofinder.com"
 
   ###
   _sanitizeQuery
@@ -115,38 +123,28 @@ class Client
     params.rpp ?= 10
 
     # Add query to params
-    _this = @
-
-    @_sanitizeQuery query, (cleaned) ->
+    @_sanitizeQuery query, (cleaned) =>
       params.query = cleaned
-      headers = {}
-      if _this.apiKey
-        headers[_this.__getAuthHeaderName()] = _this.apiKey
 
-      _this.params = {}
-      _this.filters = {}
-      _this.sort = []
+      @params = {}
+      @filters = {}
+      @sort = []
 
       for paramKey, paramValue of params
         if paramKey == "filters" or paramKey == "exclude"
           for filterKey, filterTerms of paramValue
-            _this.addFilter(filterKey, filterTerms, paramKey)
+            @addFilter(filterKey, filterTerms, paramKey)
 
         else if paramKey == "sort"
-          _this.setSort(paramValue)
+          @setSort(paramValue)
 
         else
-          _this.addParam(paramKey, paramValue)
+          @addParam(paramKey, paramValue)
 
-      queryString = _this.makeQueryString()
-      path = "/#{_this.version}/search?#{queryString}"
+      queryString = @makeQueryString()
+      path = "/#{@version}/search?#{queryString}"
 
-      # Preparing request variables
-
-      options = _this.__requestOptions(path)
-
-      # Here is where request is done and executed processResponse
-      _this.httpClient.request options, callback
+      @request path, callback
 
   ###
   addParam
@@ -227,8 +225,6 @@ class Client
     else if @params.type and @params.type.constructor == String
       querystring += encodeURI "&type=#{@type}"
 
-    
-
     # Adding params
     for key, value of @params
       if key == "query"
@@ -294,7 +290,7 @@ class Client
   @param {Function} callback
 
   @api public
-  ###  
+  ###
   registerClick: (productId, args...) ->
     # Defaults
     callback = ((err, res) ->)
@@ -318,7 +314,7 @@ class Client
     # You can receive the dfid
     if dfidRe.exec(productId)
       dfid = productId
-    # Or just md5(product_id)  
+    # Or just md5(product_id)
     else
       datatype = options.datatype || "product"
       dfid = "#{@hashid}@#{datatype}@#{md5(productId)}"
@@ -327,9 +323,8 @@ class Client
     query = options.query || ""
     path = "/#{@version}/stats/click?dfid=#{dfid}&session_id=#{sessionId}&query=#{encodeURIComponent(query)}"
     path += "&random=#{new Date().getTime()}"
-    options = @__requestOptions(path)
-    # Here is where request is done and executed processResponse
-    @httpClient.request options, callback
+
+    @request path, callback
 
 
   ###
@@ -344,8 +339,8 @@ class Client
   registerSession: (sessionId, callback=((err, res)->)) ->
     path = "/#{@version}/stats/init?hashid=#{@hashid}&session_id=#{sessionId}"
     path += "&random=#{new Date().getTime()}"
-    options = @__requestOptions(path)
-    @httpClient.request options, callback
+
+    @request path, callback
 
 
   ###
@@ -364,8 +359,8 @@ class Client
 
     path = "/#{@version}/stats/checkout?hashid=#{@hashid}&session_id=#{sessionId}"
     path += "&random=#{new Date().getTime()}"
-    reqOpts = @__requestOptions(path)
-    @httpClient.request reqOpts, callback
+
+    @request path, callback
 
   ###
   This method calls to /stats/banner_<event_type>
@@ -381,8 +376,8 @@ class Client
   registerBannerEvent: (eventType, bannerId, callback=((err, res) ->)) ->
     path = "/#{@version}/stats/banner_#{eventType}?hashid=#{@hashid}&banner_id=#{bannerId}"
     path += "&random=#{new Date().getTime()}"
-    reqOpts = @__requestOptions(path)
-    @httpClient.request reqOpts, callback
+
+    @request path, callback
 
 
   ###
@@ -413,46 +408,8 @@ class Client
       querystring = ""
 
     path = "/#{@version}/options/#{@hashid}#{querystring}"
-    reqOpts = @__requestOptions(path)
 
-    # Here is where request is done and executed processResponse
-    @httpClient.request reqOpts, callback
-
-  ###
-  Method to make the request options
-
-  @param (String) path: request options
-  @return (Object) the options object.
-  @api private
-  ###
-  
-  __requestOptions: (path) ->
-    headers = {}
-    if @apiKey
-        headers[@__getAuthHeaderName()] = @apiKey
-    options =
-        host: @url
-        path: path
-        headers: headers
-
-    # Just for url with host:port
-    if @url.split(':').length > 1
-      options.host = @url.split(':')[0]
-      options.port = @url.split(':')[1]
-
-    return options
+    @request path, callback
 
 
-  ###
-  Method to obtain security header name
-  @return (String) either 'api token' or 'authorization' depending on version
-  @api private
-  ###
-  __getAuthHeaderName: () ->
-    if @version == 4
-      return 'api token'
-    else
-      return 'authorization'
-
-# Module exports
 module.exports = Client
