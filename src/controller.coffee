@@ -373,7 +373,7 @@ class Controller
   registerSession: (sessionId, callback=((err, res)->)) ->
     @client.registerSession(sessionId, callback)
 
-
+  
   ###
   This method calls to /stats/checkout
   service for init a user session
@@ -386,17 +386,6 @@ class Controller
   ###
   registerCheckout: (sessionId, callback) ->
     @client.registerCheckout sessionId, callback
-
-  ###
-  hit
-
-  Increment the hit counter when a product is clicked.
-
-  @param {String} dfid: the unique identifier present in the search result
-  @param {Function} callback
-  ###
-  hit: (sessionId, type, dfid = "", query=@status.params.query, callback=->) ->
-    @client.hit sessionId, type, dfid, query, callback
 
 
   ###

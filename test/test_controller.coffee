@@ -9,7 +9,6 @@ hashid = 'ffffffffffffffffffffffffffffffff'
 
 client_mock =
   search: ()->
-  hit: ()->
   hashid: hashid
 
 widget_mock =
@@ -35,7 +34,6 @@ describe 'doofinder controller: ', ->
     beforeEach ()->
       client_mock =
         search: ()->
-        hit: ()->
         hashid: hashid
 
     it 'df:search is triggered', (done) ->
@@ -78,7 +76,6 @@ describe 'doofinder controller: ', ->
     beforeEach ()->
       client_mock =
         search: ()->
-        hit: ()->
         hashid: hashid
 
     it 'when adding terms filters, filters params change', (done) ->
@@ -159,7 +156,6 @@ describe 'doofinder controller: ', ->
     beforeEach ()->
       client_mock =
         search: ()->
-        hit: ()->
         hashid: hashid
 
 
@@ -201,7 +197,6 @@ describe 'doofinder controller: ', ->
     beforeEach ()->
       client_mock =
         search: ()->
-        hit: ()->
         hashid: hashid
 
 
@@ -253,7 +248,6 @@ describe 'doofinder controller: ', ->
     beforeEach ()->
       client_mock =
         search: ()->
-        hit: ()->
         hashid: hashid
 
     it ' triggers refresh signal and actually do the search', (done) ->
@@ -278,7 +272,6 @@ describe 'doofinder controller: ', ->
     beforeEach ()->
       client_mock =
         search: ()->
-        hit: ()->
         hashid: hashid
 
     it ' should call the widget "init" upon adding', (done) ->
@@ -301,7 +294,6 @@ describe 'doofinder controller: ', ->
     beforeEach ()->
       client_mock =
         search: ()->
-        hit: ()->
         hashid: hashid
 
     it ' bind events to callbacks (duhhh)', (done) ->
@@ -339,23 +331,12 @@ describe 'doofinder controller: ', ->
       controller.nextPage() # to test df:next_page
       controller.getPage 3  # to test df:get_page
 
-  context ' hit and options method ', ->
+  context 'options method ', ->
 
     beforeEach ()->
       client_mock =
         search: ()->
-        hit: ()->
         hashid: hashid
-
-    it 'actually do the hit', (done) ->
-      client_mock.hit = (sessionId, type, dfid, query) ->
-        sessionId.should.be.eql 'sessionId'
-        type.should.be.eql 'product'
-        dfid.should.be.eql 'dfid'
-        query.should.be.eql 'silla'
-        done()
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      controller.hit 'sessionId', 'product', 'dfid', 'silla'
 
     it 'actuallydo the options', (done) ->
       client_mock.options = (arg1, arg2) ->

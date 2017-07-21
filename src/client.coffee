@@ -367,32 +367,21 @@ class Client
     reqOpts = @__requestOptions(path)
     @httpClient.request reqOpts, callback
 
-
   ###
-  This method calls to /hit
-  service for accounting the
-  hits in a product
+  This method calls to /stats/banner_<event_type>
+  service for registering banner events like display
+  or click
 
-  @param {String} dfid
-  @param {String} query
+  @param {String} eventType
+  @param {Object} bannerId
   @param {Function} callback
+
   @api public
   ###
-  hit: (sessionId, eventType, dfid="", query = "", callback = (err, res) ->) ->
-    headers = {}
-
-    if @apiKey
-      headers[@__getAuthHeaderName()] = @apiKey
-    path =  "/#{@version}/hit/#{sessionId}/#{eventType}/#{@hashid}"
-    if dfid != ""
-      path += "/#{dfid}"
-    if query != ""
-      path += "/#{encodeURIComponent(query)}"
-
-    path = "#{path}?random=#{new Date().getTime()}"
+  registerBannerEvent: (eventType, bannerId, callback=((err, res) ->)) ->
+    path = "/#{@version}/stats/banner_#{eventType}?hashid=#{@hashid}&banner_id=#{bannerId}"
+    path += "&random=#{new Date().getTime()}"
     reqOpts = @__requestOptions(path)
-       
-    # Here is where request is done and executed processResponse
     @httpClient.request reqOpts, callback
 
 
