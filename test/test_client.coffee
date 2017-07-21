@@ -182,12 +182,13 @@ describe "Client", ->
         { path: uri, headers: this.req.headers, parameters:querypart.split('&') }
       )
 
-    it 'with version 4, unsecure protocol even with api token', (done) ->
-      client = new doofinder.Client hashid, api_key, 4, null, 'fooserver'
-      client.search 'silla', (err, res) ->
-        res.path.should.contain '/4/' # version 4
-        res.headers.should.have.keys 'api token', 'host'
-        done()
+    # TO REMOVE, https://github.com/doofinder/js-doofinder/issues/93
+    # it 'with version 4, unsecure protocol even with api token', (done) ->
+    #   client = new doofinder.Client hashid, api_key, 4, null, 'fooserver'
+    #   client.search 'silla', (err, res) ->
+    #     res.path.should.contain '/4/' # version 4
+    #     res.headers.should.have.keys 'api token', 'host'
+    #     done()
 
     it 'with no api token, unsecured protocol', (done) ->
       client = new doofinder.Client hashid, 'eu1', 5, null, 'fooserver'
@@ -225,7 +226,7 @@ describe "Client", ->
       client.search 'test', (err, res) ->
         res.parameters.should.contain 'query=test', 'type=product'
         done()
-    ###    
+    ###
     it 'with types, sends several type parameters', (done) ->
       client = new doofinder.Client hashid, api_key, 5, ['product', 'category'], 'fooserver'
       client.search 'test', (err, res) ->

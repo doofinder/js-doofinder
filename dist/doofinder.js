@@ -1513,7 +1513,7 @@ author: @ecoslado
      */
 
     Session.prototype.registerCheckout = function(location, patterns) {
-      var e, i, len, pattern, sessionId;
+      var e, error, i, len, pattern, sessionId;
       if (patterns == null) {
         patterns = [];
       }
@@ -1526,8 +1526,8 @@ author: @ecoslado
             this["delete"]();
             return true;
           }
-        } catch (_error) {
-          e = _error;
+        } catch (error) {
+          e = error;
           console.error(e.message);
         }
       }
