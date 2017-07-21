@@ -63,8 +63,8 @@ class ISessionStore
    * @public
    * @return {*}
   ###
-  delete: ->
-    throw Error "ISessionStore.delete not implemented!"
+  clean: ->
+    throw Error "ISessionStore.clean not implemented!"
 
   ###*
    * Checks whether the session exists or not.
@@ -100,7 +100,7 @@ class ObjectSessionStore extends ISessionStore
 
   __setData: (@data) ->
 
-  delete: ->
+  clean: ->
     @data = {}
 
   exists: ->
@@ -142,7 +142,7 @@ class CookieSessionStore extends ISessionStore
     Cookies.set @cookieName, dataObj, expires: @expiry
     return dataObj
 
-  delete: ->
+  clean: ->
     Cookies.remove @cookieName
 
   exists: ->
@@ -191,8 +191,8 @@ class Session
   ###*
    * Finishes the session by removing the cookie.
   ###
-  delete: ->
-    @store.delete()
+  clean: ->
+    @store.clean()
 
   ###*
    * Checks whether the search session exists or not.
@@ -228,7 +228,7 @@ class Session
     @set "dfid", dfid
     if query?
       @set "query", query  # not sure this is needed
-    @client.registerClick dfid, 
+    @client.registerClick dfid,
       sessionId: @get "session_id"
       query: @get "query"
 
@@ -241,7 +241,7 @@ class Session
   registerCheckout: () ->
     sessionId = @get "session_id"
     @client.registerCheckout sessionId
-    @delete()
+    @clean()
 
   ###*
    * Method to register banner events
