@@ -6,6 +6,8 @@ bean = require "bean"
 extend = require "extend"
 qs = require "qs"
 
+
+
 ###
 Controller
 
@@ -115,10 +117,10 @@ class Controller
         params
       @status.params = extend true, searchParams, params
       @status.params.query = query
-      @status.params.filters = extend true,
+      @status.params.filter = extend true,
         {},
-        @searchParams.filters || {},
-        params.filters
+        @searchParams.filter || {},
+        params.filter
       @status.params.query_counter = queryCounter
 
       if not @searchParams.query_name
@@ -191,29 +193,29 @@ class Controller
     #if value.constructor != Object and value.constructor != String
      # throw Error "wrong value. Object or String expected, #{value.constructor} given"
     @status.currentPage = 1
-    if not @status.params.filters
-      @status.params.filters = {}
+    if not @status.params.filter
+      @status.params.filter = {}
     # Range filters
     if value.constructor == Object
-      @status.params.filters[key] = value
+      @status.params.filter[key] = value
       # Range predefined filters are removed when
       # the user interacts
-      if @searchParams.filters and @searchParams.filters[key]
-        delete @searchParams.filters[key]
+      if @searchParams.filter and @searchParams.filter[key]
+        delete @searchParams.filter[key]
     # Term filter
     else
-      if not @status.params.filters[key]
-        @status.params.filters[key] = []
+      if not @status.params.filter[key]
+        @status.params.filter[key] = []
       if value.constructor != Array
         value = [value]
-      @status.params.filters[key] = @status.params.filters[key].concat value
+      @status.params.filter[key] = @status.params.filter[key].concat value
 
 
   hasFilter: (key) ->
-    @status.params.filters?[key]?
+    @status.params.filter?[key]?
 
   getFilter: (key) ->
-    @status.params.filters?[key]
+    @status.params.filter?[key]
 
   ###
   addParam
@@ -270,28 +272,28 @@ class Controller
   ###
   removeFilter: (key, value) ->
     @status.currentPage = 1
-    if @status.params.filters?[key]?
-      if @status.params.filters[key].constructor == Object
-        delete @status.params.filters[key]
-      else if @status.params.filters[key].constructor == Array
+    if @status.params.filter?[key]?
+      if @status.params.filter[key].constructor == Object
+        delete @status.params.filter[key]
+      else if @status.params.filter[key].constructor == Array
         if value?
-          @__splice @status.params.filters[key], value
-          unless @status.params.filters[key].length > 0
-            delete @status.params.filters[key]
+          @__splice @status.params.filter[key], value
+          unless @status.params.filter[key].length > 0
+            delete @status.params.filter[key]
         else
-          delete @status.params.filters[key]
+          delete @status.params.filter[key]
 
     # Removes a predefined filter when it is deselected.
-    if @searchParams.filters?[key]?
-      if @searchParams.filters[key].constructor == Object
-        delete @searchParams.filters[key]
-      else if @searchParams.filters[key].constructor == Array
+    if @searchParams.filter?[key]?
+      if @searchParams.filter[key].constructor == Object
+        delete @searchParams.filter[key]
+      else if @searchParams.filter[key].constructor == Array
         if value?
-          @__splice @searchParams.filters[key], value
-          unless @searchParams.filters[key].length > 0
-            delete @searchParams.filters[key]
+          @__splice @searchParams.filter[key], value
+          unless @searchParams.filter[key].length > 0
+            delete @searchParams.filter[key]
         else
-          delete @searchParams.filters[key]
+          delete @searchParams.filter[key]
 
   __splice: (list, value) ->
     idx = list.indexOf value
@@ -327,7 +329,6 @@ class Controller
     @widgets.push(widget)
     widget.init(this)
 
-
   ###
   This method calls to /stats/click
   service for accounting the
@@ -360,6 +361,36 @@ class Controller
 
     @client.registerClick(productId, options, callback)
 
+  ###*
+   * Registers a Click
+   * @param  {[type]}   id       [description]
+   * @param  {[type]}   params   [description]
+   *                             params =
+   *                               datatype: 'product'
+   *                               session_id: ''
+   *                               query: ''
+   * @param  {Function} callback [description]
+   * @return {[type]}            [description]
+  ###
+  registerClick: (id, params, callback) ->
+    id = "#{id}"
+
+    if arguments.length is 2
+      if typeof params is 'function'
+        callback = params
+        params = {}
+      else
+        callback = @constructor.cb
+
+    if /^\w{32}@[\w_-]+@\w{32}$/.test id
+      params.dfid = id
+    else if params.datatype?
+      params.dfid = "#{@hashid}@#{params.datatype}@#{md5(id)}"
+      delete params.datatype
+    else
+      throw new Error "#{@constructor.name}: An external id should go with a datatype"
+
+    @stats "click", params, callback
 
   ###
   This method calls to /stats/init_session
@@ -369,11 +400,11 @@ class Controller
   @param {Function} callback
 
   @api public
+  @deprecated You should call directly to Client.stats or use Session
   ###
-  registerSession: (sessionId, callback=((err, res)->)) ->
-    @client.registerSession(sessionId, callback)
+  registerSession: (sessionId, callback) ->
+    @client.stats "init", session_id: sessionId, callback
 
-  
   ###
   This method calls to /stats/checkout
   service for init a user session
@@ -385,8 +416,7 @@ class Controller
   @api public
   ###
   registerCheckout: (sessionId, callback) ->
-    @client.registerCheckout sessionId, callback
-
+    @client.stats "checkout", session_id: sessionId, callback
 
   ###
   options
@@ -397,7 +427,6 @@ class Controller
   ###
   options: (args...) ->
     @client.options args...
-
 
   ###
   bind
@@ -420,8 +449,6 @@ class Controller
   ###
   trigger: (event, params) ->
     bean.fire(this, event, params)
-
-
 
   ###
   setStatusFromString

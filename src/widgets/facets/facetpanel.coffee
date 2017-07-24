@@ -1,4 +1,5 @@
 extend = require "extend"
+
 $ = require "../../util/dfdom"
 Display = require "../display"
 uniqueId = require "../../util/uniqueid"
@@ -22,7 +23,7 @@ class FacetPanel extends Display
    * @param  {Object} options Options object. Empty by default.
   ###
   constructor: (element, options = {}) ->
-    uid = "df-panel-#{uniqueId()}"
+    uid = "df-panel-#{uniqueId.generate.easy()}"
 
     defaults =
       id: uid

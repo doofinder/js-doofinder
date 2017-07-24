@@ -7,14 +7,15 @@ author: @ecoslado
  */
 
 (function() {
-  var Client, HttpClient, extend, md5,
-    slice = [].slice;
+  var Client, HttpClient, extend, md5, qs;
 
-  HttpClient = require("./util/http");
+  extend = require("extend");
 
   md5 = require("md5");
 
-  extend = require("extend");
+  qs = require("qs");
+
+  HttpClient = require("./util/http");
 
 
   /**
@@ -22,6 +23,12 @@ author: @ecoslado
    */
 
   Client = (function() {
+    Client.cb = function(err, response) {};
+
+    Client.prototype.error = function(message) {
+      throw new Error(this.constructor.name + ": " + message);
+    };
+
 
     /**
      * Constructor
@@ -34,6 +41,7 @@ author: @ecoslado
      *                                 development team.
      * @public
      */
+
     function Client(hashid, zoneOrKey, version, type1, address) {
       var apiKey, host, port, ref, ref1, zone;
       this.hashid = hashid;
@@ -52,9 +60,6 @@ author: @ecoslado
       if (apiKey != null) {
         this.defaultOptions.headers.authorization = apiKey;
       }
-      this.params = {};
-      this.filters = {};
-      this.exclude = {};
       this.httpClient = new HttpClient(apiKey != null);
     }
 
@@ -65,7 +70,7 @@ author: @ecoslado
      *
      * @param  {String}   url      Endpoint URL.
      * @param  {Function} callback Callback to be called when the response is
-     *                             received. First param is the error, if any
+     *                             received. First param is the error, if any,
      *                             and the second one is the response, if any.
      * @return {http.ClientRequest}
      * @public
@@ -80,406 +85,147 @@ author: @ecoslado
     };
 
 
-    /*
-    _sanitizeQuery
-    very crude check for bad intentioned queries
-    
-    checks if words are longer than 55 chars and the whole query is longer than 255 chars
-    @param string query
-    @return string query if it's ok, empty space if not
+    /**
+     * Performs a search request.
+     *
+     * @param  {String}   query    Search terms.
+     * @param  {Object}   params   Parameters for the request. Optional.
+     *
+     *                             params =
+     *                               page: Number
+     *                               rpp: Number
+     *                               type: String | [String]
+     *                               filter:
+     *                                 field: [String]
+     *                                 field:
+     *                                   from: Number
+     *                                   to: Number
+     *                               exclude:
+     *                                 field: [String]
+     *                                 field:
+     *                                   from: Number
+     *                                   to: Number
+     *                               sort: String
+     *                               sort:
+     *                                 field: "asc" | "desc"
+     *                               sort: [{field: "asc|desc"}]
+     *
+     * @param  {Function} callback Callback to be called when the response is
+     *                             received. First param is the error, if any,
+     *                             and the second one is the response, if any.
+     * @return {http.ClientRequest}
+     * @public
      */
 
-    Client.prototype._sanitizeQuery = function(query, callback) {
-      var i, maxQueryLength, maxWordLength, ref, x;
-      maxWordLength = 55;
-      maxQueryLength = 255;
-      if (typeof query === "undefined") {
-        throw Error("Query must be a defined");
-      }
-      if (query === null || query.constructor !== String) {
-        throw Error("Query must be a String");
-      }
-      query = query.replace(/ +/g, ' ').replace(/^ +| +$/g, '');
-      if (query.length > maxQueryLength) {
-        throw Error("Maximum query length exceeded: " + maxQueryLength + ".");
-      }
-      ref = query.split(' ');
-      for (i in ref) {
-        x = ref[i];
-        if (x.length > maxWordLength) {
-          throw Error("Maximum word length exceeded: " + maxWordLength + ".");
-        }
-      }
-      return callback(query);
-    };
-
-
-    /*
-    search
-    
-    Method responsible of executing call.
-    
-    @param {Object} params
-      i.e.:
-    
-        query: "value of the query"
-        page: 2
-        rpp: 25
-        filters:
-          brand: ["nike", "adidas"]
-          color: ["blue"]
-          price:
-            from: 40
-            to: 150
-    
-    @param {Function} callback (err, res)
-    @api public
-     */
-
-    Client.prototype.search = function() {
-      var args, callback, params, query;
-      query = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      if (args.length === 1) {
+    Client.prototype.search = function(query, params, callback) {
+      var querystring;
+      if (arguments.length === 2) {
+        callback = params;
         params = {};
-        callback = args[0];
-      } else if (args.length === 2) {
-        params = args[0];
-        callback = args[1];
-      } else {
-        throw new Error("A callback is required.");
       }
-      if (params.page == null) {
-        params.page = 1;
+      query = query.replace(/\s+/g, " ");
+      if (query !== " ") {
+        query = query.trim();
       }
-      if (params.rpp == null) {
-        params.rpp = 10;
-      }
-      return this._sanitizeQuery(query, (function(_this) {
-        return function(cleaned) {
-          var filterKey, filterTerms, paramKey, paramValue, path, queryString;
-          params.query = cleaned;
-          _this.params = {};
-          _this.filters = {};
-          _this.sort = [];
-          for (paramKey in params) {
-            paramValue = params[paramKey];
-            if (paramKey === "filters" || paramKey === "exclude") {
-              for (filterKey in paramValue) {
-                filterTerms = paramValue[filterKey];
-                _this.addFilter(filterKey, filterTerms, paramKey);
-              }
-            } else if (paramKey === "sort") {
-              _this.setSort(paramValue);
-            } else {
-              _this.addParam(paramKey, paramValue);
-            }
-          }
-          queryString = _this.makeQueryString();
-          path = "/" + _this.version + "/search?" + queryString;
-          return _this.request(path, callback);
-        };
-      })(this));
+      querystring = this.__buildSearchQueryString(query, params);
+      return this.request("/" + this.version + "/search?" + querystring, callback);
     };
 
 
-    /*
-    addParam
-    
-    This method set simple params
-    @param {String} name of the param
-    @value {mixed} value of the param
-    @api public
+    /**
+     * Perform a request to get options for a search engine.
+     *
+     * @param  {String}   suffix   Optional suffix to add to the request URL. Can
+     *                             be something like a domain, so the URL looks
+     *                             like /<version>/options/<hashid>?example.com.
+     * @param  {Function} callback Callback to be called when the response is
+     *                             received. First param is the error, if any,
+     *                             and the second one is the response, if any.
+     * @return {http.ClientRequest}
+     * @public
      */
 
-    Client.prototype.addParam = function(param, value) {
-      if (value !== null) {
-        return this.params[param] = value;
-      } else {
-        return this.params[param] = "";
+    Client.prototype.options = function(suffix, callback) {
+      if (arguments.length === 1) {
+        callback = suffix;
+        suffix = "";
       }
+      suffix = suffix ? "?" + suffix : "";
+      return this.request("/" + this.version + "/options/" + this.hashid + suffix, callback);
     };
 
 
-    /*
-    addFilter
-    
-    This method adds a filter to query
-    @param {String} filterKey
-    @param {Array|Object} filterValues
-    @api public
+    /**
+     * Performs a request to submit stats events to Doofinder.
+     *
+     * @param  {String}   type      Type of stats. Configures the endpoint.
+     * @param  {Object}   params    Parameters for the query string.
+     * @param  {Function} callback  Optional callback to be called when the
+     *                              response is received. First param is the
+     *                              error, if any, and the second one is the
+     *                              response, if any. If not provided, it
+     *                              defaults to a foo() callback.
+     * @return {http.ClientRequest}
      */
 
-    Client.prototype.addFilter = function(filterKey, filterValues, type) {
-      if (type == null) {
-        type = "filters";
-      }
-      return this[type][filterKey] = filterValues;
-    };
-
-
-    /*
-    setSort
-    
-    This method adds sort to object
-    from an object or an array
-    
-    @param {Array|Object} sort
-     */
-
-    Client.prototype.setSort = function(sort) {
-      return this.sort = sort;
-    };
-
-
-    /*
-    __escapeChars
-    
-    This method encodes just the chars
-    like &, ?, #.
-    
-    @param {String} word
-     */
-
-    Client.prototype.__escapeChars = function(word) {
-      return word.replace(/\&/g, "%26").replace(/\?/g, "%3F").replace(/\+/g, "%2B").replace(/\#/g, "%23");
-    };
-
-
-    /*
-    makeQueryString
-    
-    This method returns a
-    querystring for adding
-    to Search API request.
-    
-    @returns {String} querystring
-    @api private
-     */
-
-    Client.prototype.makeQueryString = function() {
-      var elem, facet, j, k, key, l, len, len1, len2, m, querystring, ref, ref1, ref2, ref3, ref4, ref5, ref6, segment, term, v, value;
-      querystring = encodeURI("hashid=" + this.hashid);
-      if (this.type && this.type instanceof Array) {
-        ref = this.type;
-        for (key in ref) {
-          value = ref[key];
-          querystring += encodeURI("&type[]=" + value);
-        }
-      } else if (this.type && this.type.constructor === String) {
-        querystring += encodeURI("&type=" + this.type);
-      } else if (this.params.type && this.params.type instanceof Array) {
-        ref1 = this.params.type;
-        for (key in ref1) {
-          value = ref1[key];
-          querystring += encodeURI("&type[]=" + value);
-        }
-      } else if (this.params.type && this.params.type.constructor === String) {
-        querystring += encodeURI("&type=" + this.type);
-      }
-      ref2 = this.params;
-      for (key in ref2) {
-        value = ref2[key];
-        if (key === "query") {
-          querystring += encodeURI("&" + key + "=");
-          querystring += encodeURIComponent(value);
-        } else if (key !== "type") {
-          querystring += encodeURI("&" + key + "=" + value);
-        }
-      }
-      ref3 = this.filters;
-      for (key in ref3) {
-        value = ref3[key];
-        if (value.constructor === Object) {
-          for (k in value) {
-            v = value[k];
-            querystring += encodeURI("&filter[" + key + "][" + k + "]=" + v);
-          }
-        }
-        if (value.constructor === Array) {
-          for (j = 0, len = value.length; j < len; j++) {
-            elem = value[j];
-            segment = this.__escapeChars(encodeURI("filter[" + key + "]=" + elem));
-            querystring += "&" + segment;
-          }
-        }
-      }
-      ref4 = this.exclude;
-      for (key in ref4) {
-        value = ref4[key];
-        if (value.constructor === Object) {
-          for (k in value) {
-            v = value[k];
-            querystring += encodeURI("&exclude[" + key + "][" + k + "]=" + v);
-          }
-        }
-        if (value.constructor === Array) {
-          for (l = 0, len1 = value.length; l < len1; l++) {
-            elem = value[l];
-            segment = this.__escapeChars(encodeURI("exclude[" + key + "]=" + elem));
-            querystring += "&" + segment;
-          }
-        }
-      }
-      if (this.sort && this.sort.constructor === Array) {
-        ref5 = this.sort;
-        for (m = 0, len2 = ref5.length; m < len2; m++) {
-          value = ref5[m];
-          for (facet in value) {
-            term = value[facet];
-            querystring += encodeURI("&sort[" + (this.sort.indexOf(value)) + "][" + facet + "]=" + term);
-          }
-        }
-      } else if (this.sort && this.sort.constructor === String) {
-        querystring += encodeURI("&sort=" + this.sort);
-      } else if (this.sort && this.sort.constructor === Object) {
-        ref6 = this.sort;
-        for (key in ref6) {
-          value = ref6[key];
-          querystring += encodeURI("&sort[" + key + "]=" + value);
-        }
-      }
-      return querystring;
-    };
-
-
-    /*
-    This method calls to /stats/click
-    service for accounting the
-    clicks to a product
-    
-    @param {String} productId
-    @param {Object} options
-    @param {Function} callback
-    
-    @api public
-     */
-
-    Client.prototype.registerClick = function() {
-      var args, callback, datatype, dfid, dfidRe, options, path, productId, query, sessionId;
-      productId = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      callback = (function(err, res) {});
-      options = {};
-      productId += '';
-      if (args.length === 1) {
-        if (typeof args[0] === 'function') {
-          callback = args[0];
-        } else {
-          options = args[0];
-        }
-      } else if (args.length === 2) {
-        options = args[0];
-        callback = args[1];
-      }
-      dfidRe = /\w{32}@[\w_-]+@\w{32}/;
-      if (dfidRe.exec(productId)) {
-        dfid = productId;
-      } else {
-        datatype = options.datatype || "product";
-        dfid = this.hashid + "@" + datatype + "@" + (md5(productId));
-      }
-      sessionId = options.sessionId || "session_id";
-      query = options.query || "";
-      path = "/" + this.version + "/stats/click?dfid=" + dfid + "&session_id=" + sessionId + "&query=" + (encodeURIComponent(query));
-      path += "&random=" + (new Date().getTime());
-      return this.request(path, callback);
-    };
-
-
-    /*
-    This method calls to /stats/init_session
-    service for init a user session
-    
-    @param {String} sessionId
-    @param {Function} callback
-    
-    @api public
-     */
-
-    Client.prototype.registerSession = function(sessionId, callback) {
-      var path;
+    Client.prototype.stats = function(type, params, callback) {
+      var defaultParams, querystring;
       if (callback == null) {
-        callback = (function(err, res) {});
+        callback = this.constructor.cb;
       }
-      path = "/" + this.version + "/stats/init?hashid=" + this.hashid + "&session_id=" + sessionId;
-      path += "&random=" + (new Date().getTime());
-      return this.request(path, callback);
+      defaultParams = {
+        hashid: this.hashid,
+        random: new Date().getTime()
+      };
+      querystring = qs.stringify(extend(true, defaultParams, params || {}));
+      return this.request("/" + this.version + "/stats/" + this.type + querystring, callback);
     };
 
 
-    /*
-    This method calls to /stats/checkout
-    service for init a user session
-    
-    @param {String} sessionId
-    @param {Object} options
-    @param {Function} callback
-    
-    @api public
+    /**
+     * Creates a search query string for the specified query and parameters
+     * intended to be used in the search API endpoint.
+     *
+     * NOTICE:
+     *
+     * - qs library encodes "(" and ")" as "%28" and "%29" although is not
+     *   needed. Encoded parentheses must be supported in the search endpoint.
+     * - Iterating objects doesn't ensure the order of the keys so they can't be
+     *   reliabily used to specify sorting in multiple fields. That's why this
+     *   method validates sorting and raises an exception if the value is not
+     *   valid.
+     *
+     *   - sort: field                                         [OK]
+     *   - sort: {field: 'asc|desc'}                           [OK]
+     *   - sort: [{field1: 'asc|desc'}, {field2: 'asc|desc'}]  [OK]
+     *   - sort: {field1: 'asc|desc', field2: 'asc|desc'}      [ERR]
+     *
+     * @param  {String} query  Cleaned search terms.
+     * @param  {Object} params Search parameters object.
+     * @return {String}        Encoded query string to be used in a search URL.
+     * @protected
      */
 
-    Client.prototype.registerCheckout = function(sessionId, callback) {
-      var path;
-      callback = callback || (function(err, res) {});
-      path = "/" + this.version + "/stats/checkout?hashid=" + this.hashid + "&session_id=" + sessionId;
-      path += "&random=" + (new Date().getTime());
-      return this.request(path, callback);
-    };
-
-
-    /*
-    This method calls to /stats/banner_<event_type>
-    service for registering banner events like display
-    or click
-    
-    @param {String} eventType
-    @param {Object} bannerId
-    @param {Function} callback
-    
-    @api public
-     */
-
-    Client.prototype.registerBannerEvent = function(eventType, bannerId, callback) {
-      var path;
-      if (callback == null) {
-        callback = (function(err, res) {});
+    Client.prototype.__buildSearchQueryString = function(query, params) {
+      var defaultParams, queryParams;
+      defaultParams = {
+        hashid: this.hashid,
+        type: this.type,
+        page: 1,
+        rpp: 10,
+        filter: {},
+        exclude: {},
+        sort: []
+      };
+      queryParams = extend(true, defaultParams, params || {}, {
+        query: query
+      });
+      if (typeof queryParams.sort === "object" && !queryParams.sort instanceof Array && (Object.keys(queryParams.sort)).length > 1) {
+        this.error("To sort by multiple fields use an Array of Objects");
       }
-      path = "/" + this.version + "/stats/banner_" + eventType + "?hashid=" + this.hashid + "&banner_id=" + bannerId;
-      path += "&random=" + (new Date().getTime());
-      return this.request(path, callback);
-    };
-
-
-    /*
-    This method calls to /hit
-    service for accounting the
-    hits in a product
-    
-    @param {String} dfid
-    @param {Object | Function} arg1
-    @param {Function} arg2
-    @api public
-     */
-
-    Client.prototype.options = function() {
-      var args, callback, options, path, querystring;
-      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-      callback = (function(err, res) {});
-      if (args.length === 1) {
-        options = {};
-        callback = args[0];
-      } else if (args.length === 2) {
-        options = args[0];
-        callback = args[1];
-      } else {
-        throw new Error("A callback is required.");
-      }
-      if (typeof options !== "undefined" && options.querystring) {
-        querystring = "?" + options.querystring;
-      } else {
-        querystring = "";
-      }
-      path = "/" + this.version + "/options/" + this.hashid + querystring;
-      return this.request(path, callback);
+      return qs.stringify(queryParams, {
+        skipNulls: true
+      });
     };
 
     return Client;
@@ -490,7 +236,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./util/http":9,"extend":23,"md5":64}],2:[function(require,module,exports){
+},{"./util/http":10,"extend":24,"md5":65,"qs":72}],2:[function(require,module,exports){
 
 /*
  * Created by Kike Coslado on 26/10/15.
@@ -626,7 +372,7 @@ author: @ecoslado
         this.status.params = extend(true, {}, params);
         this.status.params = extend(true, searchParams, params);
         this.status.params.query = query;
-        this.status.params.filters = extend(true, {}, this.searchParams.filters || {}, params.filters);
+        this.status.params.filter = extend(true, {}, this.searchParams.filter || {}, params.filter);
         this.status.params.query_counter = queryCounter;
         if (!this.searchParams.query_name) {
           delete this.status.params.query_name;
@@ -713,33 +459,33 @@ author: @ecoslado
 
     Controller.prototype.addFilter = function(key, value) {
       this.status.currentPage = 1;
-      if (!this.status.params.filters) {
-        this.status.params.filters = {};
+      if (!this.status.params.filter) {
+        this.status.params.filter = {};
       }
       if (value.constructor === Object) {
-        this.status.params.filters[key] = value;
-        if (this.searchParams.filters && this.searchParams.filters[key]) {
-          return delete this.searchParams.filters[key];
+        this.status.params.filter[key] = value;
+        if (this.searchParams.filter && this.searchParams.filter[key]) {
+          return delete this.searchParams.filter[key];
         }
       } else {
-        if (!this.status.params.filters[key]) {
-          this.status.params.filters[key] = [];
+        if (!this.status.params.filter[key]) {
+          this.status.params.filter[key] = [];
         }
         if (value.constructor !== Array) {
           value = [value];
         }
-        return this.status.params.filters[key] = this.status.params.filters[key].concat(value);
+        return this.status.params.filter[key] = this.status.params.filter[key].concat(value);
       }
     };
 
     Controller.prototype.hasFilter = function(key) {
       var ref;
-      return ((ref = this.status.params.filters) != null ? ref[key] : void 0) != null;
+      return ((ref = this.status.params.filter) != null ? ref[key] : void 0) != null;
     };
 
     Controller.prototype.getFilter = function(key) {
       var ref;
-      return (ref = this.status.params.filters) != null ? ref[key] : void 0;
+      return (ref = this.status.params.filter) != null ? ref[key] : void 0;
     };
 
 
@@ -809,31 +555,31 @@ author: @ecoslado
     Controller.prototype.removeFilter = function(key, value) {
       var ref, ref1;
       this.status.currentPage = 1;
-      if (((ref = this.status.params.filters) != null ? ref[key] : void 0) != null) {
-        if (this.status.params.filters[key].constructor === Object) {
-          delete this.status.params.filters[key];
-        } else if (this.status.params.filters[key].constructor === Array) {
+      if (((ref = this.status.params.filter) != null ? ref[key] : void 0) != null) {
+        if (this.status.params.filter[key].constructor === Object) {
+          delete this.status.params.filter[key];
+        } else if (this.status.params.filter[key].constructor === Array) {
           if (value != null) {
-            this.__splice(this.status.params.filters[key], value);
-            if (!(this.status.params.filters[key].length > 0)) {
-              delete this.status.params.filters[key];
+            this.__splice(this.status.params.filter[key], value);
+            if (!(this.status.params.filter[key].length > 0)) {
+              delete this.status.params.filter[key];
             }
           } else {
-            delete this.status.params.filters[key];
+            delete this.status.params.filter[key];
           }
         }
       }
-      if (((ref1 = this.searchParams.filters) != null ? ref1[key] : void 0) != null) {
-        if (this.searchParams.filters[key].constructor === Object) {
-          return delete this.searchParams.filters[key];
-        } else if (this.searchParams.filters[key].constructor === Array) {
+      if (((ref1 = this.searchParams.filter) != null ? ref1[key] : void 0) != null) {
+        if (this.searchParams.filter[key].constructor === Object) {
+          return delete this.searchParams.filter[key];
+        } else if (this.searchParams.filter[key].constructor === Array) {
           if (value != null) {
-            this.__splice(this.searchParams.filters[key], value);
-            if (!(this.searchParams.filters[key].length > 0)) {
-              return delete this.searchParams.filters[key];
+            this.__splice(this.searchParams.filter[key], value);
+            if (!(this.searchParams.filter[key].length > 0)) {
+              return delete this.searchParams.filter[key];
             }
           } else {
-            return delete this.searchParams.filters[key];
+            return delete this.searchParams.filter[key];
           }
         }
       }
@@ -915,6 +661,40 @@ author: @ecoslado
     };
 
 
+    /**
+     * Registers a Click
+     * @param  {[type]}   id       [description]
+     * @param  {[type]}   params   [description]
+     *                             params =
+     *                               datatype: 'product'
+     *                               session_id: ''
+     *                               query: ''
+     * @param  {Function} callback [description]
+     * @return {[type]}            [description]
+     */
+
+    Controller.prototype.registerClick = function(id, params, callback) {
+      id = "" + id;
+      if (arguments.length === 2) {
+        if (typeof params === 'function') {
+          callback = params;
+          params = {};
+        } else {
+          callback = this.constructor.cb;
+        }
+      }
+      if (/^\w{32}@[\w_-]+@\w{32}$/.test(id)) {
+        params.dfid = id;
+      } else if (params.datatype != null) {
+        params.dfid = this.hashid + "@" + params.datatype + "@" + (md5(id));
+        delete params.datatype;
+      } else {
+        throw new Error(this.constructor.name + ": An external id should go with a datatype");
+      }
+      return this.stats("click", params, callback);
+    };
+
+
     /*
     This method calls to /stats/init_session
     service for init a user session
@@ -923,13 +703,13 @@ author: @ecoslado
     @param {Function} callback
     
     @api public
+    @deprecated You should call directly to Client.stats or use Session
      */
 
     Controller.prototype.registerSession = function(sessionId, callback) {
-      if (callback == null) {
-        callback = (function(err, res) {});
-      }
-      return this.client.registerSession(sessionId, callback);
+      return this.client.stats("init", {
+        session_id: sessionId
+      }, callback);
     };
 
 
@@ -945,7 +725,9 @@ author: @ecoslado
      */
 
     Controller.prototype.registerCheckout = function(sessionId, callback) {
-      return this.client.registerCheckout(sessionId, callback);
+      return this.client.stats("checkout", {
+        session_id: sessionId
+      }, callback);
     };
 
 
@@ -1051,7 +833,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"bean":22,"extend":23,"qs":71}],3:[function(require,module,exports){
+},{"bean":23,"extend":24,"qs":72}],3:[function(require,module,exports){
 (function() {
   if (!JSON.stringify && JSON.encode) {
     JSON.stringify = JSON.encode;
@@ -1078,25 +860,26 @@ author: @ecoslado
       FacetPanel: require("./widgets/facets/facetpanel")
     },
     util: {
-      md5: require("md5"),
-      qs: require("qs"),
       bean: require("bean"),
-      extend: require("extend"),
-      introspection: require("./util/introspection"),
+      buildHelpers: require("./util/helpers"),
       dfdom: require("./util/dfdom"),
-      throttle: require("lodash.throttle"),
+      extend: require("extend"),
       http: require("./util/http"),
       uniqueId: require("./util/uniqueid"),
-      buildHelpers: require("./util/helpers")
+      introspection: require("./util/introspection"),
+      md5: require("md5"),
+      qs: require("qs"),
+      throttle: require("lodash.throttle")
     },
-    session: require("./session")
+    session: require("./session"),
+    stats: require("./stats")
   };
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./session":4,"./util/dfdom":5,"./util/helpers":8,"./util/http":9,"./util/introspection":10,"./util/uniqueid":11,"./widget":12,"./widgets/display":13,"./widgets/facets/basefacet":14,"./widgets/facets/facetpanel":15,"./widgets/facets/rangefacet":16,"./widgets/facets/termfacet":17,"./widgets/queryinput":18,"./widgets/results/results":19,"./widgets/results/scrollresults":20,"bean":22,"extend":23,"lodash.throttle":63,"md5":64,"mustache":68,"qs":71}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/helpers":9,"./util/http":10,"./util/introspection":11,"./util/uniqueid":12,"./widget":13,"./widgets/display":14,"./widgets/facets/basefacet":15,"./widgets/facets/facetpanel":16,"./widgets/facets/rangefacet":17,"./widgets/facets/termfacet":18,"./widgets/queryinput":19,"./widgets/results/results":20,"./widgets/results/scrollresults":21,"bean":23,"extend":24,"lodash.throttle":64,"md5":65,"mustache":69,"qs":72}],4:[function(require,module,exports){
 (function() {
-  var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, extend, md5,
+  var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, extend, md5, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -1105,6 +888,8 @@ author: @ecoslado
   extend = require("extend");
 
   md5 = require("md5");
+
+  uniqueId = require("./util/uniqueid");
 
   ISessionStore = (function() {
     function ISessionStore() {}
@@ -1224,20 +1009,9 @@ author: @ecoslado
       this.data = data != null ? data : {};
     }
 
-
-    /**
-    * Generates a unique session ID based on some randomness.
-    * @protected
-    * @return {String} A MD5 hash.
-     */
-
-    ObjectSessionStore.prototype.__uniqueId = function() {
-      return md5([new Date().getTime(), String(Math.floor(Math.random() * 10000))].join(""));
-    };
-
     ObjectSessionStore.prototype.__getData = function() {
       if (this.data.session_id == null) {
-        this.data.session_id = this.__uniqueId();
+        this.data.session_id = uniqueId.generate.hash();
       }
       return this.data;
     };
@@ -1275,25 +1049,12 @@ author: @ecoslado
       this.expiry = options.expiry;
     }
 
-
-    /**
-     * Generates a unique session ID based on the user's browser, the location and
-     * some randomness.
-     *
-     * @protected
-     * @return {[type]} [description]
-     */
-
-    CookieSessionStore.prototype.__uniqueId = function() {
-      return md5([navigator.userAgent, navigator.language, window.location.host, new Date().getTime(), String(Math.floor(Math.random() * 10000))].join(""));
-    };
-
     CookieSessionStore.prototype.__getData = function() {
       var dataObj;
       dataObj = Cookies.getJSON(this.cookieName);
       if (dataObj == null) {
         dataObj = this.__setData({
-          session_id: this.__uniqueId()
+          session_id: uniqueId.generate.browserHash()
         });
       }
       return dataObj;
@@ -1389,85 +1150,6 @@ author: @ecoslado
       return this.store.exists();
     };
 
-
-    /**
-     * Registers a search for the session.
-     * Registers the session in Doofinder stats if not already registered.
-     *
-     * WARNING: This must be called ONLY if the user has performed a search.
-     *          That's why this is usually called when the user has stopped
-     *          typing in the search box.
-     *
-     * @public
-     * @param  {String} query Search terms.
-     */
-
-    Session.prototype.registerSearch = function(query) {
-      this.set("query", query);
-      if (!this.get("registered", false)) {
-        this.client.registerSession(this.get("session_id"));
-        return this.set("registered", true);
-      }
-    };
-
-
-    /**
-     * Registers a click on a search result for the specified search query.
-     * @public
-     * @param  {String} dfid  Doofinder's internal ID for the result.
-     * @param  {String} query Search terms.
-     */
-
-    Session.prototype.registerClick = function(dfid, query) {
-      this.set("dfid", dfid);
-      if (query != null) {
-        this.set("query", query);
-      }
-      return this.client.registerClick(dfid, {
-        sessionId: this.get("session_id"),
-        query: this.get("query")
-      });
-    };
-
-
-    /**
-     * Register a checkout when the location passed matches one of the URLs
-     * provided.
-     *
-     * @public
-     */
-
-    Session.prototype.registerCheckout = function() {
-      var sessionId;
-      sessionId = this.get("session_id");
-      this.client.registerCheckout(sessionId);
-      return this.clean();
-    };
-
-
-    /**
-     * Method to register banner events
-     * @public
-     *
-     * @param {String} bannerId
-     */
-
-    Session.prototype.registerBannerDisplay = function(bannerId) {
-      return this.client.registerBannerEvent("display", bannerId);
-    };
-
-
-    /**
-     * Method to register banner events
-     * @public
-     *
-     * @param {String} bannerId
-     */
-
-    Session.prototype.registerBannerClick = function(bannerId) {
-      return this.client.registerBannerEvent("click", bannerId);
-    };
-
     return Session;
 
   })();
@@ -1481,7 +1163,113 @@ author: @ecoslado
 
 }).call(this);
 
-},{"extend":23,"js-cookie":62,"md5":64}],5:[function(require,module,exports){
+},{"./util/uniqueid":12,"extend":24,"js-cookie":63,"md5":65}],5:[function(require,module,exports){
+(function() {
+  var Stats, uniqueId;
+
+  uniqueId = require("./util/uniqueid");
+
+  Stats = (function() {
+    function Stats(client, session) {
+      this.client = client;
+      this.session = session;
+    }
+
+
+    /**
+     * Registers a search for the session.
+     * Registers the session in Doofinder stats if not already registered.
+     *
+     * WARNING: This must be called ONLY if the user has performed a search.
+     *          That's why this is usually called when the user has stopped
+     *          typing in the search box.
+     *
+     * @public
+     * @param  {String} query Search terms.
+     */
+
+    Stats.prototype.registerSearch = function(query) {
+      this.session.set("query", query);
+      if (!(this.session.get("registered", false))) {
+        return this.registerSession();
+      }
+    };
+
+
+    /**
+     * Registers the session in Doofinder stats and marks the session as
+     * registered.
+     * @public
+     */
+
+    Stats.prototype.registerSession = function() {
+      this.client.stats("init", {
+        session_id: this.session.get("session_id")
+      });
+      return this.session.set("registered", true);
+    };
+
+
+    /**
+     * Registers a click on a search result for the specified search query.
+     * @public
+     * @param  {String} dfid  Doofinder's internal ID for the result.
+     * @param  {String} query Search terms.
+     */
+
+    Stats.prototype.registerClick = function(dfid, query) {
+      var params;
+      dfid = uniqueId.clean.dfid("" + dfid);
+      this.session.set("dfid", dfid);
+      if (query != null) {
+        this.session.set("query", query);
+      }
+      params = {
+        dfid: dfid,
+        session_id: this.session.get("session_id"),
+        query: this.session.get("query")
+      };
+      return this.client.stats("click", params);
+    };
+
+
+    /**
+     * Register a checkout when the location passed matches one of the URLs
+     * provided.
+     *
+     * @public
+     */
+
+    Stats.prototype.registerCheckout = function() {
+      this.client.stats("checkout", {
+        session_id: this.session.get("session_id")
+      });
+      return this.session.clean();
+    };
+
+
+    /**
+     * Method to register banner events
+     * @public
+     *
+     * @param {String} bannerId
+     */
+
+    Stats.prototype.registerBannerEvent = function(eventName, bannerId) {
+      return this.client.stats("banner_" + eventName, {
+        banner_id: bannerId
+      });
+    };
+
+    return Stats;
+
+  })();
+
+  module.exports = Stats;
+
+}).call(this);
+
+},{"./util/uniqueid":12}],6:[function(require,module,exports){
 (function() {
   var DfDomElement, MATCHES_SELECTOR_FN, bean, matchesSelector;
 
@@ -2580,7 +2368,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"bean":22}],6:[function(require,module,exports){
+},{"bean":23}],7:[function(require,module,exports){
 (function() {
   var $, bean, extend, throttle;
 
@@ -2627,7 +2415,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./dfdom":5,"bean":22,"extend":23,"lodash.throttle":63}],7:[function(require,module,exports){
+},{"./dfdom":6,"bean":23,"extend":24,"lodash.throttle":64}],8:[function(require,module,exports){
 (function() {
   var $, extend,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -2691,7 +2479,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./dfdom":5,"extend":23}],8:[function(require,module,exports){
+},{"./dfdom":6,"extend":24}],9:[function(require,module,exports){
 
 /*
  * author: @ecoslado
@@ -2778,7 +2566,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"extend":23}],9:[function(require,module,exports){
+},{"extend":24}],10:[function(require,module,exports){
 (function() {
   var HttpClient, http, https;
 
@@ -2833,7 +2621,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"http":53,"https":30}],10:[function(require,module,exports){
+},{"http":54,"https":31}],11:[function(require,module,exports){
 (function() {
   var isArray, isFunction, isObject, isPlainObject;
 
@@ -2872,35 +2660,51 @@ author: @ecoslado
 
 }).call(this);
 
-},{}],11:[function(require,module,exports){
-
-/**
- * Generates a UID of the given length.
- *
- * @param  {Number} length = 8  Length of the UID.
- * @return {String}             Unique ID as a String.
- */
-
+},{}],12:[function(require,module,exports){
 (function() {
-  var uniqueId;
+  var cleandfid, md5;
 
-  uniqueId = function(length) {
-    var id;
-    if (length == null) {
-      length = 8;
+  md5 = require("md5");
+
+  cleandfid = function(dfid) {
+    if (/^\w{32}@[\w_-]+@\w{32}$/.test(dfid)) {
+      return dfid;
+    } else {
+      throw new Error("dfid: " + dfid + " is not valid.");
     }
-    id = "";
-    while (id.length < length) {
-      id += Math.random().toString(36).substr(2);
-    }
-    return id.substr(0, length);
   };
 
-  module.exports = uniqueId;
+  module.exports = {
+    clean: {
+      dfid: cleandfid
+    },
+    generate: {
+      dfid: function(id, datatype, hashid) {
+        return cleandfid(hashid + "@" + datatype + "@" + (md5(id)));
+      },
+      easy: function(length) {
+        var id;
+        if (length == null) {
+          length = 8;
+        }
+        id = "";
+        while (id.length < length) {
+          id += Math.random().toString(36).substr(2);
+        }
+        return id.substr(0, length);
+      },
+      hash: function() {
+        return md5([new Date().getTime(), String(Math.floor(Math.random() * 10000))].join(""));
+      },
+      browserHash: function() {
+        return md5([navigator.userAgent, navigator.language, window.location.host, new Date().getTime(), String(Math.floor(Math.random() * 10000))].join(""));
+      }
+    }
+  };
 
 }).call(this);
 
-},{}],12:[function(require,module,exports){
+},{"md5":65}],13:[function(require,module,exports){
 (function() {
   var $, Widget, bean;
 
@@ -3056,7 +2860,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./util/dfdom":5,"bean":22}],13:[function(require,module,exports){
+},{"./util/dfdom":6,"bean":23}],14:[function(require,module,exports){
 (function() {
   var Display, Widget, buildHelpers, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3175,7 +2979,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../util/helpers":8,"../widget":12,"extend":23,"mustache":68}],14:[function(require,module,exports){
+},{"../util/helpers":9,"../widget":13,"extend":24,"mustache":69}],15:[function(require,module,exports){
 (function() {
   var BaseFacet, Display, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3251,7 +3055,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../display":13,"extend":23}],15:[function(require,module,exports){
+},{"../display":14,"extend":24}],16:[function(require,module,exports){
 (function() {
   var $, Display, FacetPanel, extend, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3288,7 +3092,7 @@ author: @ecoslado
       if (options == null) {
         options = {};
       }
-      uid = "df-panel-" + (uniqueId());
+      uid = "df-panel-" + (uniqueId.generate.easy());
       defaults = {
         id: uid,
         template: this.constructor.defaultTemplate,
@@ -3446,7 +3250,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../../util/dfdom":5,"../../util/uniqueid":11,"../display":13,"extend":23}],16:[function(require,module,exports){
+},{"../../util/dfdom":6,"../../util/uniqueid":12,"../display":14,"extend":24}],17:[function(require,module,exports){
 (function() {
   var BaseFacet, RangeFacet, extend, noUiSlider,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3700,7 +3504,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./basefacet":14,"extend":23,"nouislider":69}],17:[function(require,module,exports){
+},{"./basefacet":15,"extend":24,"nouislider":70}],18:[function(require,module,exports){
 (function() {
   var $, BaseFacet, TermFacet, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3991,7 +3795,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../../util/dfdom":5,"./basefacet":14,"extend":23}],18:[function(require,module,exports){
+},{"../../util/dfdom":6,"./basefacet":15,"extend":24}],19:[function(require,module,exports){
 (function() {
   var QueryInput, Widget, dfTypeWatch, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -4094,7 +3898,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../util/dftypewatch":7,"../widget":12,"extend":23}],19:[function(require,module,exports){
+},{"../util/dftypewatch":8,"../widget":13,"extend":24}],20:[function(require,module,exports){
 
 /*
 display.coffee
@@ -4152,7 +3956,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../display":13}],20:[function(require,module,exports){
+},{"../display":14}],21:[function(require,module,exports){
 
 /*
 scrollresults.coffee
@@ -4210,7 +4014,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../scrolldisplay":21}],21:[function(require,module,exports){
+},{"../scrolldisplay":22}],22:[function(require,module,exports){
 (function() {
   var $, Display, ScrollDisplay, dfScroll, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -4339,7 +4143,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../util/dfdom":5,"../util/dfscroll":6,"./display":13,"extend":23}],22:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/dfscroll":7,"./display":14,"extend":24}],23:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean
@@ -5082,7 +4886,7 @@ replaces the current content.
   return bean
 });
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 'use strict';
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -5170,9 +4974,9 @@ module.exports = function extend() {
 	return target;
 };
 
-},{}],24:[function(require,module,exports){
-
 },{}],25:[function(require,module,exports){
+
+},{}],26:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -6965,7 +6769,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":26,"ieee754":27,"isarray":28}],26:[function(require,module,exports){
+},{"base64-js":27,"ieee754":28,"isarray":29}],27:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -7081,7 +6885,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -7167,14 +6971,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7478,7 +7282,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -7494,7 +7298,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":53}],31:[function(require,module,exports){
+},{"http":54}],32:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -7519,7 +7323,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],32:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -7542,7 +7346,7 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -7728,7 +7532,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -8265,7 +8069,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8351,7 +8155,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8438,13 +8242,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":35,"./encode":36}],38:[function(require,module,exports){
+},{"./decode":36,"./encode":37}],39:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8569,7 +8373,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":40,"./_stream_writable":42,"core-util-is":46,"inherits":31,"process-nextick-args":48}],39:[function(require,module,exports){
+},{"./_stream_readable":41,"./_stream_writable":43,"core-util-is":47,"inherits":32,"process-nextick-args":49}],40:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8617,7 +8421,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":41,"core-util-is":46,"inherits":31}],40:[function(require,module,exports){
+},{"./_stream_transform":42,"core-util-is":47,"inherits":32}],41:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -9627,7 +9431,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":38,"./internal/streams/BufferList":43,"./internal/streams/destroy":44,"./internal/streams/stream":45,"_process":33,"core-util-is":46,"events":29,"inherits":31,"isarray":47,"process-nextick-args":48,"safe-buffer":49,"string_decoder/":50,"util":24}],41:[function(require,module,exports){
+},{"./_stream_duplex":39,"./internal/streams/BufferList":44,"./internal/streams/destroy":45,"./internal/streams/stream":46,"_process":34,"core-util-is":47,"events":30,"inherits":32,"isarray":48,"process-nextick-args":49,"safe-buffer":50,"string_decoder/":51,"util":25}],42:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9842,7 +9646,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":38,"core-util-is":46,"inherits":31}],42:[function(require,module,exports){
+},{"./_stream_duplex":39,"core-util-is":47,"inherits":32}],43:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10509,7 +10313,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":38,"./internal/streams/destroy":44,"./internal/streams/stream":45,"_process":33,"core-util-is":46,"inherits":31,"process-nextick-args":48,"safe-buffer":49,"util-deprecate":51}],43:[function(require,module,exports){
+},{"./_stream_duplex":39,"./internal/streams/destroy":45,"./internal/streams/stream":46,"_process":34,"core-util-is":47,"inherits":32,"process-nextick-args":49,"safe-buffer":50,"util-deprecate":52}],44:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -10584,7 +10388,7 @@ module.exports = function () {
 
   return BufferList;
 }();
-},{"safe-buffer":49}],44:[function(require,module,exports){
+},{"safe-buffer":50}],45:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -10657,10 +10461,10 @@ module.exports = {
   destroy: destroy,
   undestroy: undestroy
 };
-},{"process-nextick-args":48}],45:[function(require,module,exports){
+},{"process-nextick-args":49}],46:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":29}],46:[function(require,module,exports){
+},{"events":30}],47:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10771,9 +10575,9 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":32}],47:[function(require,module,exports){
-arguments[4][28][0].apply(exports,arguments)
-},{"dup":28}],48:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":33}],48:[function(require,module,exports){
+arguments[4][29][0].apply(exports,arguments)
+},{"dup":29}],49:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -10820,7 +10624,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":33}],49:[function(require,module,exports){
+},{"_process":34}],50:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -10884,7 +10688,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":25}],50:[function(require,module,exports){
+},{"buffer":26}],51:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('safe-buffer').Buffer;
@@ -11157,7 +10961,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":49}],51:[function(require,module,exports){
+},{"safe-buffer":50}],52:[function(require,module,exports){
 (function (global){
 
 /**
@@ -11228,7 +11032,7 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],52:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -11237,7 +11041,7 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":38,"./lib/_stream_passthrough.js":39,"./lib/_stream_readable.js":40,"./lib/_stream_transform.js":41,"./lib/_stream_writable.js":42}],53:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":39,"./lib/_stream_passthrough.js":40,"./lib/_stream_readable.js":41,"./lib/_stream_transform.js":42,"./lib/_stream_writable.js":43}],54:[function(require,module,exports){
 (function (global){
 var ClientRequest = require('./lib/request')
 var extend = require('xtend')
@@ -11319,7 +11123,7 @@ http.METHODS = [
 	'UNSUBSCRIBE'
 ]
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./lib/request":55,"builtin-status-codes":57,"url":59,"xtend":61}],54:[function(require,module,exports){
+},{"./lib/request":56,"builtin-status-codes":58,"url":60,"xtend":62}],55:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
 
@@ -11392,7 +11196,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],55:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -11702,7 +11506,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":54,"./response":56,"_process":33,"buffer":25,"inherits":31,"readable-stream":52,"to-arraybuffer":58}],56:[function(require,module,exports){
+},{"./capability":55,"./response":57,"_process":34,"buffer":26,"inherits":32,"readable-stream":53,"to-arraybuffer":59}],57:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -11888,7 +11692,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":54,"_process":33,"buffer":25,"inherits":31,"readable-stream":52}],57:[function(require,module,exports){
+},{"./capability":55,"_process":34,"buffer":26,"inherits":32,"readable-stream":53}],58:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -11954,7 +11758,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],58:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
 
 module.exports = function (buf) {
@@ -11983,7 +11787,7 @@ module.exports = function (buf) {
 	}
 }
 
-},{"buffer":25}],59:[function(require,module,exports){
+},{"buffer":26}],60:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -12717,7 +12521,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":60,"punycode":34,"querystring":37}],60:[function(require,module,exports){
+},{"./util":61,"punycode":35,"querystring":38}],61:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -12735,7 +12539,7 @@ module.exports = {
   }
 };
 
-},{}],61:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -12756,7 +12560,7 @@ function extend() {
     return target
 }
 
-},{}],62:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 /*!
  * JavaScript Cookie v2.1.4
  * https://github.com/js-cookie/js-cookie
@@ -12923,7 +12727,7 @@ function extend() {
 	return init(function () {});
 }));
 
-},{}],63:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 (function (global){
 /**
  * lodash (Custom Build) <https://lodash.com/>
@@ -13366,7 +13170,7 @@ function toNumber(value) {
 module.exports = throttle;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],64:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 (function(){
   var crypt = require('crypt'),
       utf8 = require('charenc').utf8,
@@ -13528,7 +13332,7 @@ module.exports = throttle;
 
 })();
 
-},{"charenc":65,"crypt":66,"is-buffer":67}],65:[function(require,module,exports){
+},{"charenc":66,"crypt":67,"is-buffer":68}],66:[function(require,module,exports){
 var charenc = {
   // UTF-8 encoding
   utf8: {
@@ -13563,7 +13367,7 @@ var charenc = {
 
 module.exports = charenc;
 
-},{}],66:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 (function() {
   var base64map
       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
@@ -13661,9 +13465,9 @@ module.exports = charenc;
   module.exports = crypt;
 })();
 
-},{}],67:[function(require,module,exports){
-arguments[4][32][0].apply(exports,arguments)
-},{"dup":32}],68:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
+arguments[4][33][0].apply(exports,arguments)
+},{"dup":33}],69:[function(require,module,exports){
 /*!
  * mustache.js - Logic-less {{mustache}} templates with JavaScript
  * http://github.com/janl/mustache.js
@@ -14295,7 +14099,7 @@ arguments[4][32][0].apply(exports,arguments)
   return mustache;
 }));
 
-},{}],69:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 /*! nouislider - 8.5.1 - 2016-04-24 16:00:29 */
 
 (function (factory) {
@@ -16255,7 +16059,7 @@ function closure ( target, options, originalOptions ){
 	};
 
 }));
-},{}],70:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 'use strict';
 
 var replace = String.prototype.replace;
@@ -16275,7 +16079,7 @@ module.exports = {
     RFC3986: 'RFC3986'
 };
 
-},{}],71:[function(require,module,exports){
+},{}],72:[function(require,module,exports){
 'use strict';
 
 var stringify = require('./stringify');
@@ -16288,7 +16092,7 @@ module.exports = {
     stringify: stringify
 };
 
-},{"./formats":70,"./parse":72,"./stringify":73}],72:[function(require,module,exports){
+},{"./formats":71,"./parse":73,"./stringify":74}],73:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -16462,7 +16266,7 @@ module.exports = function (str, opts) {
     return utils.compact(obj);
 };
 
-},{"./utils":74}],73:[function(require,module,exports){
+},{"./utils":75}],74:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -16674,7 +16478,7 @@ module.exports = function (object, opts) {
     return joined.length > 0 ? prefix + joined : '';
 };
 
-},{"./formats":70,"./utils":74}],74:[function(require,module,exports){
+},{"./formats":71,"./utils":75}],75:[function(require,module,exports){
 'use strict';
 
 var has = Object.prototype.hasOwnProperty;
