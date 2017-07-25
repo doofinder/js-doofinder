@@ -28,7 +28,9 @@ module.exports = (grunt) ->
           'jsdom-global/register'
         ]
       release:
-        src: ['test/test_*.coffee']
+        src: [
+          'test/test_client.coffee'
+        ]
 
     uglify:
       release:

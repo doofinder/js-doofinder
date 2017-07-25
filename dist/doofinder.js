@@ -1,11 +1,4 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.doofinder = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-
-/*
-client.coffee
-author: @ecoslado
-2015 04 01
- */
-
 (function() {
   var Client, HttpClient, extend, md5, qs;
 
@@ -23,8 +16,6 @@ author: @ecoslado
    */
 
   Client = (function() {
-    Client.cb = function(err, response) {};
-
     Client.prototype.error = function(message) {
       throw new Error(this.constructor.name + ": " + message);
     };
@@ -32,21 +23,23 @@ author: @ecoslado
 
     /**
      * Constructor
-     * @param  {String}       @hashid  Unique ID of the Search Engine.
-     * @param  {String}       apiKey   Search zone (eu1, us1) or full API key
-     *                                 (eu1-...).
-     * @param  {Number}       @version API version.
-     * @param  {String|Array} @type    Restricts search to one or more data types.
-     * @param  {[type]}       address  Search server endpoint. Used by the
-     *                                 development team.
+     * @param  {String}       hashid  Unique ID of the Search Engine.
+     * @param  {String}       apiKey  Search zone (eu1, us1) or full API key
+     *                                (eu1-...).
+     * @param  {Number}       version API version.
+     * @param  {String|Array} type    Restricts search to one or more data types.
+     * @param  {[type]}       address Search server endpoint. Used by the
+     *                                development team.
      * @public
      */
 
-    function Client(hashid, zoneOrKey, version, type1, address) {
+    function Client(hashid, zoneOrKey, version, type, address) {
       var apiKey, host, port, ref, ref1, zone;
       this.hashid = hashid;
-      this.version = version != null ? version : 5;
-      this.type = type1;
+      if (version == null) {
+        version = 5;
+      }
+      this.type = type;
       ref = zoneOrKey != null ? zoneOrKey.split("-") : ["", void 0], zone = ref[0], apiKey = ref[1];
       if (address == null) {
         address = zone + "-search.doofinder.com";
@@ -60,6 +53,7 @@ author: @ecoslado
       if (apiKey != null) {
         this.defaultOptions.headers.authorization = apiKey;
       }
+      this.version = "" + (parseInt(version, 10));
       this.httpClient = new HttpClient(apiKey != null);
     }
 
@@ -68,7 +62,7 @@ author: @ecoslado
      * Performs a HTTP request to the endpoint specified with the default options
      * of the client.
      *
-     * @param  {String}   url      Endpoint URL.
+     * @param  {String}   resource Resource to be called by GET.
      * @param  {Function} callback Callback to be called when the response is
      *                             received. First param is the error, if any,
      *                             and the second one is the response, if any.
@@ -76,10 +70,10 @@ author: @ecoslado
      * @public
      */
 
-    Client.prototype.request = function(url, callback) {
+    Client.prototype.request = function(resource, callback) {
       var options;
       options = extend(true, {
-        path: url
+        path: resource
       }, this.defaultOptions);
       return this.httpClient.request(options, callback);
     };
@@ -123,10 +117,6 @@ author: @ecoslado
         callback = params;
         params = {};
       }
-      query = query.replace(/\s+/g, " ");
-      if (query !== " ") {
-        query = query.trim();
-      }
       querystring = this.__buildSearchQueryString(query, params);
       return this.request("/" + this.version + "/search?" + querystring, callback);
     };
@@ -158,27 +148,28 @@ author: @ecoslado
     /**
      * Performs a request to submit stats events to Doofinder.
      *
-     * @param  {String}   type      Type of stats. Configures the endpoint.
+     * @param  {String}   eventName Type of stats. Configures the endpoint.
      * @param  {Object}   params    Parameters for the query string.
-     * @param  {Function} callback  Optional callback to be called when the
-     *                              response is received. First param is the
-     *                              error, if any, and the second one is the
-     *                              response, if any. If not provided, it
-     *                              defaults to a foo() callback.
+     * @param  {Function} callback  Callback to be called when the response is
+     *                              received. First param is the error, if any,
+     *                              and the second one is the response, if any.
      * @return {http.ClientRequest}
      */
 
-    Client.prototype.stats = function(type, params, callback) {
+    Client.prototype.stats = function(eventName, params, callback) {
       var defaultParams, querystring;
-      if (callback == null) {
-        callback = this.constructor.cb;
+      if (eventName == null) {
+        eventName = "";
       }
       defaultParams = {
         hashid: this.hashid,
         random: new Date().getTime()
       };
       querystring = qs.stringify(extend(true, defaultParams, params || {}));
-      return this.request("/" + this.version + "/stats/" + this.type + querystring, callback);
+      if (querystring) {
+        querystring = "?" + querystring;
+      }
+      return this.request("/" + this.version + "/stats/" + eventName + querystring, callback);
     };
 
 
@@ -208,6 +199,13 @@ author: @ecoslado
 
     Client.prototype.__buildSearchQueryString = function(query, params) {
       var defaultParams, queryParams;
+      if (query == null) {
+        query = "";
+      }
+      query = query.replace(/\s+/g, " ");
+      if (query !== " ") {
+        query = query.trim();
+      }
       defaultParams = {
         hashid: this.hashid,
         type: this.type,
@@ -220,7 +218,10 @@ author: @ecoslado
       queryParams = extend(true, defaultParams, params || {}, {
         query: query
       });
-      if (typeof queryParams.sort === "object" && !queryParams.sort instanceof Array && (Object.keys(queryParams.sort)).length > 1) {
+      if (queryParams.type instanceof Array && queryParams.type.length === 1) {
+        queryParams.type = queryParams.type[0];
+      }
+      if (typeof queryParams.sort === "object" && !(queryParams.sort instanceof Array) && (Object.keys(queryParams.sort)).length > 1) {
         this.error("To sort by multiple fields use an Array of Objects");
       }
       return qs.stringify(queryParams, {
@@ -2476,10 +2477,24 @@ author: @ecoslado
    */
 
   HttpClient = (function() {
+
+    /**
+     * @param  {Boolean} @secure If true, forces HTTPS.
+     */
     function HttpClient(secure) {
       this.secure = secure;
       this.http = this.secure ? https : http;
     }
+
+
+    /**
+     * Performs a HTTP request expecting JSON to be returned.
+     * @param  {Object}   options  Options needed by http.ClientRequest
+     * @param  {Function} callback Callback to be called when the response is
+     *                             received. First param is the error, if any,
+     *                             and the second one is the response, if any.
+     * @return {http.ClientRequest}
+     */
 
     HttpClient.prototype.request = function(options, callback) {
       var req;
@@ -2487,6 +2502,9 @@ author: @ecoslado
         options = {
           host: options
         };
+      }
+      if (typeof callback !== "function") {
+        throw new Error(this.constructor.name + ": A callback is needed!");
       }
       req = this.http.get(options, function(response) {
         var rawData;
@@ -2500,13 +2518,14 @@ author: @ecoslado
             return rawData += chunk;
           });
           return response.on("end", function() {
-            return callback(null, JSON.parse(rawData));
+            return callback(void 0, JSON.parse(rawData));
           });
         }
       });
-      return req.on("error", function(error) {
+      req.on("error", function(error) {
         return callback(error);
       });
+      return req;
     };
 
     return HttpClient;

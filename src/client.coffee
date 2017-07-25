@@ -1,9 +1,3 @@
-###
-client.coffee
-author: @ecoslado
-2015 04 01
-###
-
 extend = require "extend"
 md5 = require "md5"
 qs = require "qs"
@@ -14,23 +8,21 @@ HttpClient = require "./util/http"
  * This class allows searching and sending stats using the Doofinder service.
 ###
 class Client
-  @cb = (err, response) ->
-
   error: (message) ->
     throw new Error "#{@constructor.name}: #{message}"
 
   ###*
    * Constructor
-   * @param  {String}       @hashid  Unique ID of the Search Engine.
-   * @param  {String}       apiKey   Search zone (eu1, us1) or full API key
-   *                                 (eu1-...).
-   * @param  {Number}       @version API version.
-   * @param  {String|Array} @type    Restricts search to one or more data types.
-   * @param  {[type]}       address  Search server endpoint. Used by the
-   *                                 development team.
+   * @param  {String}       hashid  Unique ID of the Search Engine.
+   * @param  {String}       apiKey  Search zone (eu1, us1) or full API key
+   *                                (eu1-...).
+   * @param  {Number}       version API version.
+   * @param  {String|Array} type    Restricts search to one or more data types.
+   * @param  {[type]}       address Search server endpoint. Used by the
+   *                                development team.
    * @public
   ###
-  constructor: (@hashid, zoneOrKey, @version = 5, @type, address) ->
+  constructor: (@hashid, zoneOrKey, version = 5, @type, address) ->
     [zone, apiKey] = if zoneOrKey? then zoneOrKey.split "-" else ["", undefined]
     address ?= "#{zone}-search.doofinder.com"
     [host, port] = address.split ":"
@@ -40,6 +32,7 @@ class Client
       port: port
       headers: {}
     @defaultOptions.headers.authorization = apiKey if apiKey?
+    @version = "#{parseInt version, 10}"
 
     @httpClient = new HttpClient apiKey?
 
@@ -47,15 +40,15 @@ class Client
    * Performs a HTTP request to the endpoint specified with the default options
    * of the client.
    *
-   * @param  {String}   url      Endpoint URL.
+   * @param  {String}   resource Resource to be called by GET.
    * @param  {Function} callback Callback to be called when the response is
    *                             received. First param is the error, if any,
    *                             and the second one is the response, if any.
    * @return {http.ClientRequest}
    * @public
   ###
-  request: (url, callback) ->
-    options = extend true, path: url, @defaultOptions
+  request: (resource, callback) ->
+    options = extend true, path: resource, @defaultOptions
     @httpClient.request options, callback
 
   #
@@ -97,11 +90,6 @@ class Client
     if arguments.length is 2
       callback = params
       params = {}
-
-    # Basic cleanup
-    query = (query.replace /\s+/g, " ")
-    query = query.trim() unless query is " "
-
     querystring = @__buildSearchQueryString query, params
     @request "/#{@version}/search?#{querystring}", callback
 
@@ -128,21 +116,21 @@ class Client
   ###*
    * Performs a request to submit stats events to Doofinder.
    *
-   * @param  {String}   type      Type of stats. Configures the endpoint.
+   * @param  {String}   eventName Type of stats. Configures the endpoint.
    * @param  {Object}   params    Parameters for the query string.
-   * @param  {Function} callback  Optional callback to be called when the
-   *                              response is received. First param is the
-   *                              error, if any, and the second one is the
-   *                              response, if any. If not provided, it
-   *                              defaults to a foo() callback.
+   * @param  {Function} callback  Callback to be called when the response is
+   *                              received. First param is the error, if any,
+   *                              and the second one is the response, if any.
    * @return {http.ClientRequest}
   ###
-  stats: (type, params, callback = @constructor.cb) ->
+  stats: (eventName, params, callback) ->
+    eventName ?= ""
     defaultParams =
       hashid: @hashid
       random: new Date().getTime()
     querystring = qs.stringify (extend true, defaultParams, (params or {}))
-    @request "/#{@version}/stats/#{@type}#{querystring}", callback
+    querystring = "?#{querystring}" if querystring
+    @request "/#{@version}/stats/#{eventName}#{querystring}", callback
 
   ###*
    * Creates a search query string for the specified query and parameters
@@ -168,6 +156,10 @@ class Client
    * @protected
   ###
   __buildSearchQueryString: (query, params) ->
+    query ?= ""
+    query = (query.replace /\s+/g, " ")
+    query = query.trim() unless query is " "
+
     defaultParams =
       hashid: @hashid
       type: @type
@@ -179,8 +171,11 @@ class Client
 
     queryParams = extend true, defaultParams, (params or {}), query: query
 
+    if queryParams.type instanceof Array and queryParams.type.length is 1
+      queryParams.type = queryParams.type[0]
+
     if typeof queryParams.sort is "object" and
-        not queryParams.sort instanceof Array and
+        not (queryParams.sort instanceof Array) and
         (Object.keys queryParams.sort).length > 1
       @error "To sort by multiple fields use an Array of Objects"
 
