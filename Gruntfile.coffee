@@ -29,7 +29,8 @@ module.exports = (grunt) ->
         ]
       release:
         src: [
-          'test/test_client.coffee'
+          'test/test_client.coffee',
+          'test/test_session.coffee',
         ]
 
     uglify:

@@ -1,22 +1,6 @@
 describe "Session", ->
   Session = doofinder.session.Session
 
-  testSessionDataHandling = (session, done) ->
-    session.exists().should.be.false
-    session.set "key", something: "value"
-    (session.get "key", "other").should.eql something: "value"
-    session.exists().should.be.true
-    session.del "key"
-    (session.get "key", "other").should.eq "other"
-    session.exists().should.be.true
-    session.clean()
-    session.exists().should.be.false
-    done()
-
-  context "with ObjectSessionStore", ->
-    it "handles data properly", (done) ->
-      testSessionDataHandling (new Session()), done
-
   context "with CookieSessionStore", ->
     CookieSessionStore = doofinder.session.CookieSessionStore
 
@@ -24,7 +8,16 @@ describe "Session", ->
       store = new CookieSessionStore "Cookie", prefix: "my"
       session = new Session null, store
       store.cookieName.should.eq "myCookie"
-      testSessionDataHandling session, done
+      session.exists().should.be.false
+      session.set "key", something: "value"
+      (session.get "key", "other").should.eql something: "value"
+      session.exists().should.be.true
+      session.del "key"
+      (session.get "key", "other").should.eq "other"
+      session.exists().should.be.true
+      session.clean()
+      session.exists().should.be.false
+      done()
 
   context "with invalid session store", ->
     it "fails miserably", (done) ->
