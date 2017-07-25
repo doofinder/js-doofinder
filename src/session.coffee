@@ -129,16 +129,9 @@ class CookieSessionStore extends ISessionStore
 ###
 class Session
   ###*
-   * Creates a Session.
-   * @param  {Client}     client
-   * @param  {*}          store      A store object which implements:
-   *                                   - get(key, default)
-   *                                   - set(key, value)
-   *                                   - del(key)
-   *                                   - delete()
-   *                                   - exists()
+   * @param  {ISessionStore} store  Holds session data.
   ###
-  constructor: (@client, @store = new ObjectSessionStore()) ->
+  constructor: (@store = new ObjectSessionStore()) ->
 
   ###*
    * Gets the value for the specified key.

@@ -17,9 +17,6 @@ describe "Session", ->
     it "handles data properly", (done) ->
       testSessionDataHandling (new Session()), done
 
-    it "TODO: registerX methods!!!", (done) ->
-      @skip()
-
   context "with CookieSessionStore", ->
     CookieSessionStore = doofinder.session.CookieSessionStore
 
@@ -29,9 +26,6 @@ describe "Session", ->
       store.cookieName.should.eq "myCookie"
       testSessionDataHandling session, done
 
-    it "TODO: registerX methods!!!", (done) ->
-      @skip()
-
   context "with invalid session store", ->
     it "fails miserably", (done) ->
       class BadSessionStore extends doofinder.session.ISessionStore
@@ -39,7 +33,7 @@ describe "Session", ->
         __getData: -> @data
         __setData: (@data) ->
 
-      session = new Session null, (new BadSessionStore())
+      session = new Session (new BadSessionStore())
       session.set 'key', 'value'
       expect(-> session.get 'key').to.throw()
       expect(session.exists).to.throw()
