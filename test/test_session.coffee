@@ -4,12 +4,12 @@ chai = require "chai"
 # chai
 chai.should()
 
-# the thing being tested
+# required for tests
 session = require "../lib/session"
 Session = session.Session
 ISessionStore = session.ISessionStore
 
-# utils & mocks
+# config, utils & mocks
 class BadSessionStore extends ISessionStore
   constructor: (@data = {}) ->
   __getData: -> @data

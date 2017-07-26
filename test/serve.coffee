@@ -19,7 +19,7 @@ module.exports =
     resource = "#{resource}?#{suffix}" if suffix?
     ((nock cfg.address).get resource).reply 200, "{}"
 
-  search: (params) ->
+  search: (params, response = {}) ->
     resource = "/#{cfg.version}/search"
     defaultParams =
       hashid: cfg.hashid
@@ -27,7 +27,7 @@ module.exports =
       rpp: 10
       query: ''
     params = extend true, defaultParams, (params or {})
-    (((nock cfg.address).get resource).query params).reply 200, '{}'
+    (((nock cfg.address).get resource).query params).reply 200, (JSON.stringify response)
 
   stats: (type, params) ->
     resource = "/#{cfg.version}/stats/#{type}"

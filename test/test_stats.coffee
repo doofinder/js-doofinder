@@ -6,15 +6,13 @@ extend = require "extend"
 chai.should()
 expect = chai.expect
 
-# tests config
+# required for tests
+uniqueId = require "../lib/util/uniqueid"
+Stats = require "../lib/stats"
+
+# config, utils & mocks
 cfg = require "./config"
 serve = require "./serve"
-
-# things we need
-uniqueId = require "../lib/util/uniqueid"
-
-# the thing being tested
-Stats = require "../lib/stats"
 
 getStats = (sessionData) ->
   client = cfg.getClient()

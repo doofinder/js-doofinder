@@ -5,17 +5,13 @@ chai = require "chai"
 chai.should()
 expect = chai.expect
 
-# required for some tests
+# required for tests
 http = require "http"
 https = require "https"
-
-# tests config
-cfg = require "./config"
-
-# the thing being tested
 Client = require "../lib/client"
 
-# utils & mocks
+# config, utils & mocks
+cfg = require "./config"
 serve = require "./serve"
 
 buildQuery = (query, params) ->
