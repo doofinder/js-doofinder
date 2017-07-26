@@ -1,12 +1,8 @@
-###
-# Created by Kike Coslado on 26/10/15.
-# 20160419 REV(@JoeZ99)
-###
 bean = require "bean"
 extend = require "extend"
 qs = require "qs"
 
-
+thing = require "./util/thing"
 
 ###
 Controller
@@ -14,8 +10,6 @@ Controller
 This class uses the client to
 to retrieve the data and the widgets
 to paint them.
-
-TODO(@carlosescri): Use our introspection tool to do some cleanup.
 ###
 class Controller
   ###
@@ -30,7 +24,7 @@ class Controller
     @client = client
     @hashid = client.hashid # Publish hashid
     @widgets = []
-    if widgets instanceof Array
+    if thing.isArray widgets
       for widget in widgets
         @addWidget(widget)
 
@@ -388,21 +382,14 @@ class Controller
   with a queryString
   ###
   statusQueryString: (prefix="#/search/") ->
-    params = extend true,
-      {},
-      @status.params
+    params = extend true, {}, @status.params
 
     delete params.transformer
     delete params.rpp
     delete params.query_counter
     delete params.page
-    # serialization filter. no function is allowed inside querystring params
-    discardQSFunctions = (prefix, value) ->
-      if typeof value == 'function'  # probably some injected function (i.e.: [].each)
-        return
-      return value
 
-    return "#{prefix}#{qs.stringify(params, filter: discardQSFunctions)}"
+    "#{prefix}#{qs.stringify params}"
 
 
 module.exports = Controller

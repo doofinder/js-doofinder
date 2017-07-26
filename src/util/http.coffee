@@ -1,6 +1,8 @@
 http = require "http"
 https = require "https"
 
+thing = require "./thing"
+
 ###*
  * Commodity API to http and https modules
 ###
@@ -20,10 +22,10 @@ class HttpClient
    * @return {http.ClientRequest}
   ###
   request: (options, callback) ->
-    if typeof options == "string"
+    if thing.isStr options
       options = host: options
 
-    if typeof callback isnt "function"
+    if not (thing.isFn callback)
       throw new Error "#{@constructor.name}: A callback is needed!"
 
     req = @http.get options, (response) ->

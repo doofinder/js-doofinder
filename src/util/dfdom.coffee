@@ -1,4 +1,5 @@
 bean = require "bean"
+thing = require "./thing"
 
 MATCHES_SELECTOR_FN = null
 
@@ -11,7 +12,7 @@ matchesSelector = (node, selector) ->
       'msMatchesSelector',
       'oMatchesSelector',
       'matchesSelector'
-    ].filter (funcName) -> typeof node[funcName] is 'function').pop()
+    ].filter (funcName) -> thing.isFn node[funcName]).pop()
   node[MATCHES_SELECTOR_FN] selector
 
 
@@ -31,14 +32,14 @@ class DfDomElement
     if selector instanceof String
       selector = selector.toString()
 
-    if typeof selector is "string"
+    if thing.isStr selector
       selector = selector.trim()
       if selector.length is 0
         selector = []
       else
         selector = (selector.split ",").map (s) -> s.trim()
 
-    if selector instanceof Array
+    if thing.isArray selector
       @element = @__initFromSelectorArray selector
     else
       @element = @__initFromSelector selector
@@ -82,8 +83,7 @@ class DfDomElement
     switch
       when node instanceof Element then true
       when node instanceof Document then true
-      when node and node.document and node.location and node.alert and
-        node.setInterval then true # is the window object
+      when thing.isWindow node then true
       else false
 
   ###*
@@ -105,7 +105,7 @@ class DfDomElement
    * @return {Array}     An Array of nodes.
   ###
   __initFromSelector: (selector) ->
-    if typeof selector is "string" and selector.length > 0
+    if (thing.isStrLiteral selector) and selector.length > 0
       element = @__fixNodeList document.querySelectorAll @__fixSelector selector
     else if @__isValidElementNode selector
       element = [selector]
@@ -190,7 +190,7 @@ class DfDomElement
    * @return {DfDomElement}
   ###
   filter: (selector_or_fn) ->
-    if typeof selector_or_fn is "string"
+    if thing.isStrLiteral selector_or_fn
       filterFn = (node) -> matchesSelector node, selector_or_fn
     else
       filterFn = selector_or_fn
@@ -293,7 +293,7 @@ class DfDomElement
   ###
   __cloneNode: (node) ->
     switch
-      when typeof node is "string" then node
+      when thing.isStr node then node
       when node instanceof Element then node.cloneNode true
       else throw "Invalid argument: #{node}"
 
@@ -310,12 +310,12 @@ class DfDomElement
   prepend: (child) ->
     if child instanceof DfDomElement
       child = child.get()
-    if child instanceof Array
+    if thing.isArray child
       child.forEach (node) => @prepend node
       return @
     else
       @each (node, i) =>
-        if typeof child is "string"
+        if thing.isStr child
           node.insertAdjacentHTML "afterbegin", child
         else if child instanceof Element
           newChild = (if i is 0 then child else @__cloneNode child)
@@ -337,12 +337,12 @@ class DfDomElement
   append: (child) ->
     if child instanceof DfDomElement
       child = child.get()
-    if child instanceof Array
+    if thing.isArray child
       child.forEach (node) => @append node
       return @
     else
       @each (node, i) =>
-        if typeof child is "string"
+        if thing.isStrLiteral child
           node.insertAdjacentHTML "beforeend", child
         else if child instanceof Element
           node.appendChild (if i is 0 then child else @__cloneNode child)
@@ -360,13 +360,13 @@ class DfDomElement
   before: (sibling) ->
     if sibling instanceof DfDomElement
       sibling = sibling.get()
-    if sibling instanceof Array
+    if thing.isArray sibling
       sibling.forEach (node) => @before node
       return @
     else
       @each (node, i) =>
-        if typeof sibling is "string"
-          node.insertAdjacentHTML  "beforebegin", sibling
+        if thing.isStrLiteral sibling
+          node.insertAdjacentHTML "beforebegin", sibling
         else if sibling instanceof Element
           newSibling = (if i is 0 then sibling else @__cloneNode sibling)
           node.parentElement.insertBefore newSibling, node
@@ -384,12 +384,12 @@ class DfDomElement
   after: (sibling) ->
     if sibling instanceof DfDomElement
       sibling = sibling.get()
-    if sibling instanceof Array
+    if thing.isArray sibling
       sibling.forEach (node) => @after node
       return @
     else
       @each (node, i) =>
-        if typeof sibling is "string"
+        if thing.isStrLiteral sibling
           node.insertAdjacentHTML  "afterend", sibling
         else if sibling instanceof Element
           newSibling = (if i is 0 then sibling else @__cloneNode sibling)
@@ -750,7 +750,7 @@ class DfDomElement
    * @return {Boolean}
   ###
   is: (selector_or_element) ->
-    if typeof selector_or_element is "string"
+    if thing.isStrLiteral selector_or_element
       (@filter selector_or_element).length > 0
     else
       (@filter (node) -> node is selector_or_element).length > 0

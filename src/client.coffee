@@ -3,6 +3,7 @@ md5 = require "md5"
 qs = require "qs"
 
 HttpClient = require "./util/http"
+thing = require "./util/thing"
 
 ###*
  * This class allows searching and sending stats using the Doofinder service.
@@ -171,15 +172,14 @@ class Client
 
     queryParams = extend true, defaultParams, (params or {}), query: query
 
-    if queryParams.type instanceof Array and queryParams.type.length is 1
+    if (thing.isArray queryParams.type) and queryParams.type.length is 1
       queryParams.type = queryParams.type[0]
 
-    if typeof queryParams.sort is "object" and
-        not (queryParams.sort instanceof Array) and
+    if (thing.isPlainObj queryParams.sort) and
         (Object.keys queryParams.sort).length > 1
       throw @error "To sort by multiple fields use an Array of Objects"
 
-    return qs.stringify queryParams, skipNulls: true
+    qs.stringify queryParams, skipNulls: true
 
 
 module.exports = Client
