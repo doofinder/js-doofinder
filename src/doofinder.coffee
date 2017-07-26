@@ -25,7 +25,6 @@ module.exports =
     extend: require "extend"
     http: require "./util/http"
     uniqueId: require "./util/uniqueid"
-    introspection: require "./util/introspection"
     md5: require "md5"
     qs: require "qs"
     throttle: require "lodash.throttle"
