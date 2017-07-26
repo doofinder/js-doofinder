@@ -1,10 +1,8 @@
 # required for testing
 chai = require "chai"
-extend = require "extend"
 
 # chai
 chai.should()
-expect = chai.expect
 
 # the thing being tested
 session = require "../lib/session"
@@ -22,8 +20,11 @@ describe "Session", ->
   context "with ObjectSessionStore", ->
     it "handles data properly", (done) ->
       session = new Session()
+      # Session.__getData never accessed
       session.exists().should.be.false
       session.set "key", something: "value"
+      # Session.__getData accessed to set key
+      session.exists().should.be.true
       (session.get "key", "other").should.eql something: "value"
       session.exists().should.be.true
       session.del "key"

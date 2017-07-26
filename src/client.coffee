@@ -9,7 +9,7 @@ HttpClient = require "./util/http"
 ###
 class Client
   error: (message) ->
-    throw new Error "#{@constructor.name}: #{message}"
+    new Error "#{@constructor.name}: #{message}"
 
   ###*
    * Constructor
@@ -177,7 +177,7 @@ class Client
     if typeof queryParams.sort is "object" and
         not (queryParams.sort instanceof Array) and
         (Object.keys queryParams.sort).length > 1
-      @error "To sort by multiple fields use an Array of Objects"
+      throw @error "To sort by multiple fields use an Array of Objects"
 
     return qs.stringify queryParams, skipNulls: true
 
