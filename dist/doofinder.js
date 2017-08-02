@@ -1,6 +1,6 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.doofinder = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function() {
-  var Client, HttpClient, extend, md5, qs, thing;
+  var Client, HttpClient, Thing, extend, md5, qs;
 
   extend = require("extend");
 
@@ -10,7 +10,7 @@
 
   HttpClient = require("./util/http");
 
-  thing = require("./util/thing");
+  Thing = require("./util/thing");
 
 
   /**
@@ -210,20 +210,15 @@
       }
       defaultParams = {
         hashid: this.hashid,
-        type: this.type,
-        page: 1,
-        rpp: 10,
-        filter: {},
-        exclude: {},
-        sort: []
+        type: this.type
       };
       queryParams = extend(true, defaultParams, params || {}, {
         query: query
       });
-      if ((thing.isArray(queryParams.type)) && queryParams.type.length === 1) {
+      if ((Thing.isArray(queryParams.type)) && queryParams.type.length === 1) {
         queryParams.type = queryParams.type[0];
       }
-      if ((thing.isPlainObj(queryParams.sort)) && (Object.keys(queryParams.sort)).length > 1) {
+      if ((Thing.isPlainObj(queryParams.sort)) && (Object.keys(queryParams.sort)).length > 1) {
         throw this.error("To sort by multiple fields use an Array of Objects");
       }
       return qs.stringify(queryParams, {
@@ -239,10 +234,9 @@
 
 }).call(this);
 
-},{"./util/http":10,"./util/thing":11,"extend":24,"md5":65,"qs":72}],2:[function(require,module,exports){
+},{"./util/http":11,"./util/thing":12,"extend":25,"md5":66,"qs":73}],2:[function(require,module,exports){
 (function() {
-  var Controller, bean, extend, qs, thing,
-    slice = [].slice;
+  var Client, Controller, Freezer, Thing, bean, extend, qs;
 
   bean = require("bean");
 
@@ -250,7 +244,11 @@
 
   qs = require("qs");
 
-  thing = require("./util/thing");
+  Client = require("./client");
+
+  Freezer = require("./util/freezer");
+
+  Thing = require("./util/thing");
 
 
   /*
@@ -262,452 +260,437 @@
    */
 
   Controller = (function() {
-
-    /*
-    Controller constructor
-    
-    @param {doofinder.Client} client
-    @param {doofinder.widget | Array} widgets
-    @param {Object} searchParams
-    @api public
-     */
-    function Controller(client, widgets, searchParams1) {
-      var i, len, widget;
-      this.searchParams = searchParams1 != null ? searchParams1 : {};
+    function Controller(client, widgets, defaultParams) {
+      var defaults, i, len, ref, widget;
       this.client = client;
-      this.hashid = client.hashid;
-      this.widgets = [];
-      if (thing.isArray(widgets)) {
-        for (i = 0, len = widgets.length; i < len; i++) {
-          widget = widgets[i];
-          this.addWidget(widget);
-        }
-      } else if (widgets) {
-        this.addWidget(widgets);
+      this.widgets = widgets != null ? widgets : [];
+      if (defaultParams == null) {
+        defaultParams = {};
       }
-      this.status = extend(true, {}, {
-        params: extend(true, {}, this.searchParams)
+      if (!(this.client instanceof Client)) {
+        throw this.error("client must be an instance of Client");
+      }
+      if (!Thing.isArray(this.widgets)) {
+        throw this.error("widgets must be an instance of Array");
+      }
+      if (!Thing.isPlainObj(defaultParams)) {
+        throw this.error("defaultParams must be an instance of Object");
+      }
+      defaults = {
+        query_name: null,
+        page: 1,
+        rpp: 10
+      };
+      this.defaults = this.__fixParams(extend(true, defaults, defaultParams));
+      this.queryCounter = 0;
+      ref = this.widgets;
+      for (i = 0, len = ref.length; i < len; i++) {
+        widget = ref[i];
+        this.addWidget(widget);
+      }
+      Object.defineProperty(this, 'hashid', {
+        get: function() {
+          return this.client.hashid;
+        }
+      });
+      Object.defineProperty(this, 'isFirstPage', {
+        get: function() {
+          return this.requestDone && this.params.page === 1;
+        }
+      });
+      Object.defineProperty(this, 'isLastPage', {
+        get: function() {
+          return this.requestDone && this.params.page === this.lastPage;
+        }
       });
       this.reset();
     }
 
+    Controller.prototype.error = function(message) {
+      return new Error(this.constructor.name + ": " + message);
+    };
 
-    /*
-    __search
-    this method invokes Client's search method for
-    retrieving the data and use widget's replace or
-    append to show them.
-    
-    @param {String} event: the event name
-    @param {Array} params: the params will be passed
-      to the listeners
-    @api private
-     */
-
-    Controller.prototype.__search = function(next) {
-      var _this, params;
-      if (next == null) {
-        next = false;
+    Controller.prototype.deprecate = function(message) {
+      if (typeof console !== "undefined" && console !== null) {
+        return console.warn("[DEPRECATED][" + this.constructor.name + "]: " + message);
       }
-      this.status.params.query_counter++;
-      params = extend(true, {}, this.status.params || {});
-      params.page = this.status.currentPage;
-      _this = this;
-      return this.client.search(params.query, params, function(err, res) {
-        var i, len, ref, results, widget;
-        if (err) {
-          return _this.trigger("df:error_received", [err]);
-        } else if (res) {
-          if (res.results.length < _this.status.params.rpp) {
-            _this.status.lastPageReached = true;
-          }
-          if (!_this.searchParams.query_name) {
-            _this.status.params.query_name = res.query_name;
-          }
-          _this.trigger("df:results_received", [res]);
-          if (res.query_counter === _this.status.params.query_counter) {
-            ref = _this.widgets;
-            results = [];
-            for (i = 0, len = ref.length; i < len; i++) {
-              widget = ref[i];
-              if (next) {
-                results.push(widget.renderNext(res));
-              } else {
-                results.push(widget.render(res));
-              }
-            }
-            return results;
-          }
-        }
-      });
     };
 
 
-    /*
-    __search wrappers
+    /**
+     * Fixes any deprecations in the search parameters.
+     *
+     * - Client now expects "filter" instead of "filters" because the parameters
+     *   are sent "as is" in the querystring, no re-processing is made.
+     *
+     * @param  {Object} params
+     * @return {Object}
+     * @protected
      */
 
+    Controller.prototype.__fixParams = function(params) {
+      if (params.filters != null) {
+        params.filter = params.filters;
+        delete params.filters;
+        this.deprecate("`filters` key is deprecated for search parameters, use `filter` instead");
+      }
+      return params;
+    };
 
-    /*
-    search
-    
-    Takes a new query, initializes status and performs
-    a search
-    
-    @param {String} query: the query term
-    @api public
+
+    /**
+     * Resets status and optionally forces query and params. As it is a reset
+     * aimed to perform a new search, page is forced to 1 in any case.
+     *
+     * - done      - true if at least one request has been sent.
+     * - lastPage  - indicates the number of the last page for the current status.
+     *
+     * @param  {String} query  Search terms.
+     * @param  {Object} params Optional search parameters.
+     * @return {Object}        Updated status.
      */
 
-    Controller.prototype.search = function(query, params) {
-      var queryCounter, searchParams;
+    Controller.prototype.reset = function(query, params) {
+      if (query == null) {
+        query = null;
+      }
       if (params == null) {
         params = {};
       }
-      if (query) {
-        searchParams = extend(true, {}, this.searchParams);
-        queryCounter = this.status.params.query_counter;
-        this.status.params = extend(true, {}, params);
-        this.status.params = extend(true, searchParams, params);
-        this.status.params.query = query;
-        this.status.params.filter = extend(true, {}, this.searchParams.filter || {}, params.filter);
-        this.status.params.query_counter = queryCounter;
-        if (!this.searchParams.query_name) {
-          delete this.status.params.query_name;
-        }
-        this.status.currentPage = 1;
-        this.status.firstQueryTriggered = true;
-        this.status.lastPageReached = false;
-        this.__search();
-      }
-      return this.trigger("df:search", [this.status.params]);
+      this.query = query;
+      this.params = this.__fixParams(extend(true, {}, this.defaults, params, {
+        page: 1
+      }));
+      this.requestDone = false;
+      return this.lastPage = null;
     };
 
 
-    /*
-    nextPage
-    
-    Increments the currentPage and performs a search. Takes
-    the next page results and shows them.
-    
-    @api public
+    /**
+     * Proxy method to get options.
+     * @return {http.ClientRequest}
+     * @public
      */
 
-    Controller.prototype.nextPage = function(replace) {
-      if (replace == null) {
-        replace = false;
-      }
-      if (this.status.firstQueryTriggered && this.status.currentPage > 0 && !this.status.lastPageReached) {
-        this.trigger("df:next_page");
-        this.status.currentPage++;
-        return this.__search(true);
-      }
+    Controller.prototype.options = function(suffix, callback) {
+      return this.client.options(suffix, callback);
     };
 
 
-    /*
-    getPage
-    
-    Set the currentPage with a given value and performs a search.
-    Takes a given page and shows the results.
-    
-    @param {Number} page: the page you are retrieving
-    @api public
+    /**
+     * Performs a request for a new search (resets status).
+     * Page will always be 1 in this case.
+     *
+     * @param  {String} query  Search terms.
+     * @param  {Object} params Search parameters.
+     * @return {http.ClientRequest}
+     * @public
+     */
+
+    Controller.prototype.search = function(query, params) {
+      var request;
+      if (params == null) {
+        params = {};
+      }
+      this.reset(query, params);
+      request = this.getResults();
+      if (this.requestDone) {
+        this.trigger("df:search");
+      }
+      return request;
+    };
+
+
+    /**
+     * Performs a request to get results for a specific page of the current
+     * search. Requires a search being made via `search()` to set a status.
+     *
+     * @param  {Number} page [description]
+     * @return {http.ClientRequest|Boolean} The request or false if can't be made.
+     * @public
      */
 
     Controller.prototype.getPage = function(page) {
-      var self;
-      if (this.status.firstQueryTriggered && this.status.currentPage > 0) {
-        this.trigger("df:get_page");
-        this.status.currentPage = page;
-        self = this;
-        return this.__search();
+      var request;
+      if (this.requestDone) {
+        this.params.page = parseInt(page, 10);
+        request = this.getResults();
+        this.trigger("df:getPage", [this.query, this.params]);
+        return request;
+      } else {
+        return false;
       }
     };
 
 
-    /*
-    refresh
-    
-    Makes a search call with the current status.
-    
-    @api public
+    /**
+     * Performs a request to get results for the next page of the current search,
+     * if the last page was not already reached.
+     *
+     * @return {http.ClientRequest|Boolean} The request or false if can't be made.
+     * @public
+     */
+
+    Controller.prototype.getNextPage = function() {
+      var request;
+      if (!this.isLastPage) {
+        request = this.getPage((this.params.page || 1) + 1);
+        if (request) {
+          this.trigger("df:nextPage", [this.query, this.params]);
+        }
+        return request;
+      } else {
+        return false;
+      }
+    };
+
+
+    /**
+     * Gets the first page for the the current search again.
+     *
+     * @return {http.ClientRequest|Boolean} The request or false if can't be made.
+     * @public
      */
 
     Controller.prototype.refresh = function() {
-      if (this.status.params.query) {
-        this.trigger("df:refresh", [this.status.params]);
-        this.status.currentPage = 1;
-        this.status.firstQueryTriggered = true;
-        this.status.lastPageReached = false;
-        return this.__search();
+      var request;
+      this.params.page = 1;
+      request = this.getResults();
+      this.trigger("df:refresh", [this.query, this.params]);
+      return request;
+    };
+
+
+    /**
+     * Get results for the current search status.
+     *
+     * @return {http.ClientRequest}
+     * @public
+     */
+
+    Controller.prototype.getResults = function() {
+      this.params.query_counter = ++this.queryCounter;
+      if (this.params.page === 1) {
+        this.params.query_name = null;
       }
-    };
-
-
-    /*
-    addFilter
-    
-    Adds new filter criteria.
-    
-    @param {String} key: the facet key you are filtering
-    @param {String | Object} value: the filtering criteria
-    @api public
-     */
-
-    Controller.prototype.addFilter = function(key, value) {
-      this.status.currentPage = 1;
-      if (!this.status.params.filter) {
-        this.status.params.filter = {};
-      }
-      if (value.constructor === Object) {
-        this.status.params.filter[key] = value;
-        if (this.searchParams.filter && this.searchParams.filter[key]) {
-          return delete this.searchParams.filter[key];
-        }
-      } else {
-        if (!this.status.params.filter[key]) {
-          this.status.params.filter[key] = [];
-        }
-        if (value.constructor !== Array) {
-          value = [value];
-        }
-        return this.status.params.filter[key] = this.status.params.filter[key].concat(value);
-      }
-    };
-
-    Controller.prototype.hasFilter = function(key) {
-      var ref;
-      return ((ref = this.status.params.filter) != null ? ref[key] : void 0) != null;
-    };
-
-    Controller.prototype.getFilter = function(key) {
-      var ref;
-      return (ref = this.status.params.filter) != null ? ref[key] : void 0;
-    };
-
-
-    /*
-    addParam
-    
-    Adds new search parameter to the current status.
-    
-    @param {String} key: the facet key you are filtering
-    @param {String | Number} value: the filtering criteria
-    @api public
-     */
-
-    Controller.prototype.addParam = function(key, value) {
-      return this.status.params[key] = value;
-    };
-
-
-    /*
-    clearParam
-    
-    Removes search parameter from current status.
-    
-    @param {String} key: the name of the param
-    @api public
-     */
-
-    Controller.prototype.clearParam = function(key) {
-      return delete this.status.params[key];
-    };
-
-
-    /*
-    reset
-    
-    Reset the params to the initial state.
-    
-    @api public
-     */
-
-    Controller.prototype.reset = function() {
-      var queryCounter;
-      queryCounter = this.status.params.query_counter || 1;
-      this.status = {
-        params: extend(true, {}, this.searchParams),
-        currentPage: 0,
-        firstQueryTriggered: false,
-        lastPageReached: false
-      };
-      this.status.params.query_counter = queryCounter;
-      if (this.searchParams.query) {
-        return this.status.params.query = '';
-      }
-    };
-
-
-    /*
-    removeFilter
-    
-    Removes some filter criteria.
-    
-    @param {String} key: the facet key you are filtering
-    @param {String | Object} value: the filtering criteria you are removing
-    @api public
-     */
-
-    Controller.prototype.removeFilter = function(key, value) {
-      var ref, ref1;
-      this.status.currentPage = 1;
-      if (((ref = this.status.params.filter) != null ? ref[key] : void 0) != null) {
-        if (this.status.params.filter[key].constructor === Object) {
-          delete this.status.params.filter[key];
-        } else if (this.status.params.filter[key].constructor === Array) {
-          if (value != null) {
-            this.__splice(this.status.params.filter[key], value);
-            if (!(this.status.params.filter[key].length > 0)) {
-              delete this.status.params.filter[key];
-            }
+      this.requestDone = true;
+      return this.client.search(this.query, this.params, (function(_this) {
+        return function(err, res) {
+          var base, i, len, ref, widget;
+          if (err) {
+            return _this.trigger("df:errorReceived", [err]);
           } else {
-            delete this.status.params.filter[key];
-          }
-        }
-      }
-      if (((ref1 = this.searchParams.filter) != null ? ref1[key] : void 0) != null) {
-        if (this.searchParams.filter[key].constructor === Object) {
-          return delete this.searchParams.filter[key];
-        } else if (this.searchParams.filter[key].constructor === Array) {
-          if (value != null) {
-            this.__splice(this.searchParams.filter[key], value);
-            if (!(this.searchParams.filter[key].length > 0)) {
-              return delete this.searchParams.filter[key];
+            _this.lastPage = Math.ceil(res.total / res.results_per_page);
+            if ((base = _this.params).query_name == null) {
+              base.query_name = res.query_name;
             }
-          } else {
-            return delete this.searchParams.filter[key];
+            if (res.query_counter === _this.params.query_counter) {
+              ref = _this.widgets;
+              for (i = 0, len = ref.length; i < len; i++) {
+                widget = ref[i];
+                if (res.page === 1) {
+                  widget.render(res);
+                } else {
+                  widget.renderNext(res);
+                }
+              }
+            }
+            return _this.trigger("df:resultsReceived", [res]);
           }
-        }
-      }
+        };
+      })(this));
     };
 
-    Controller.prototype.__splice = function(list, value) {
-      var idx;
-      idx = list.indexOf(value);
-      while (idx >= 0) {
-        list.splice(idx, 1);
-        idx = list.indexOf(value);
-      }
-      return list;
+    Controller.prototype.on = function(eventName, handler, args) {
+      return bean.on(this, eventName, handler, args);
     };
 
-
-    /*
-    setSearchParam
-    
-    Removes some filter criteria.
-    
-    @param {String} key: the param key
-    @param {Mixed} value: the value
-    @api public
-     */
-
-    Controller.prototype.setSearchParam = function(key, value) {
-      return this.searchParams[key] = value;
+    Controller.prototype.one = function(eventName, handler, args) {
+      return bean.one(this, eventName, handler, args);
     };
 
+    Controller.prototype.off = function(eventName, handler) {
+      return bean.off(this, eventName, handler);
+    };
 
-    /*
-    addwidget
-    
-    Adds a new widget to the controller and reference the
-    controller from the widget.
-    
-    @param {doofinder.widget} widget: the widget you are adding.
-    @api public
-     */
+    Controller.prototype.trigger = function(eventName, args) {
+      return bean.fire(this, eventName, args);
+    };
+
+    Controller.prototype.bind = function(eventName, handler) {
+      this.deprecate("`bind()` is deprecated, use `on()` instead");
+      return this.on(eventName, handler);
+    };
 
     Controller.prototype.addWidget = function(widget) {
       this.widgets.push(widget);
       return widget.init(this);
     };
 
+    Controller.prototype.getParam = function(key) {
+      return this.params[key];
+    };
 
-    /*
-    options
-    
-    Retrieves the SearchEngine options
-    
-    @param {Function} callback
-     */
+    Controller.prototype.setParam = function(key, value) {
+      return this.params[key] = value;
+    };
 
-    Controller.prototype.options = function() {
-      var args, ref;
-      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-      return (ref = this.client).options.apply(ref, args);
+    Controller.prototype.removeParam = function(key, value) {
+      return delete this.params[key];
+    };
+
+    Controller.prototype.addParam = function(key, value) {
+      this.deprecate("`addParam()` is deprecated, use `setParam()` instead");
+      return this.setParam(key, value);
     };
 
 
-    /*
-    bind
-    
-    Method to add and event listener
-    @param {String} event
-    @param {Function} callback
-    @api public
+    /**
+     * Gets the value of a filter or undefined if not defined.
+     *
+     * @param  {String} key       Name of the filter.
+     * @param  {String} paramName Name of the parameter ("filter" by default).
+     * @return {*}
+     * @public
      */
 
-    Controller.prototype.bind = function(event, callback) {
-      return bean.on(this, event, callback);
+    Controller.prototype.getFilter = function(key, paramName) {
+      var ref;
+      if (paramName == null) {
+        paramName = "filter";
+      }
+      return (ref = this.params[paramName]) != null ? ref[key] : void 0;
     };
 
 
-    /*
-    trigger
-    
-    Method to trigger an event
-    @param {String} event
-    @param {Array} params
-    @api public
+    /**
+     * Sets the value of a filter.
+     *
+     * @param  {String} key       Name of the filter.
+     * @param  {*}      value     Value of the filter.
+     * @param  {String} paramName Name of the parameter ("filter" by default).
+     * @return {*}
+     * @public
      */
 
-    Controller.prototype.trigger = function(event, params) {
-      return bean.fire(this, event, params);
+    Controller.prototype.setFilter = function(key, value, paramName) {
+      var base;
+      if (paramName == null) {
+        paramName = "filter";
+      }
+      if ((base = this.params)[paramName] == null) {
+        base[paramName] = {};
+      }
+      this.params[paramName][key] = Thing.isStr(value) ? [value] : value;
+      return this.params[paramName][key];
     };
 
 
-    /*
-    setStatusFromString
-    
-    Fills in the status from queryString
-    and searches.
+    /**
+     * Removes a value of a filter. If the filter is an array of strings, removes
+     * the value inside the array. In any other case removes the entire value.
+     *
+     * @param  {String} key       Name of the filter.
+     * @param  {*}      value     Value of the filter.
+     * @param  {String} paramName Name of the parameter ("filter" by default).
+     * @return {*}
+     * @public
      */
 
-    Controller.prototype.setStatusFromString = function(queryString, prefix) {
-      var searchParams;
+    Controller.prototype.removeFilter = function(key, value, paramName) {
+      var pos, ref;
+      if (paramName == null) {
+        paramName = "filter";
+      }
+      if (((ref = this.params[paramName]) != null ? ref[key] : void 0) != null) {
+        if ((value != null) && Thing.isStrArray(this.params[paramName][key])) {
+          pos = this.params[paramName][key].indexOf(value);
+          if (pos >= 0) {
+            this.params[paramName][key].splice(pos, 1);
+          }
+          if (this.params[paramName][key].length === 0) {
+            delete this.params[paramName][key];
+          }
+        } else {
+          delete this.params[paramName][key];
+        }
+        return this.params[paramName][key];
+      }
+    };
+
+
+    /**
+     * Adds a value to a filter. If the value is a String, it's added
+     * @param {[type]} key       [description]
+     * @param {[type]} value     [description]
+     * @param {[type]} paramName =             "filter" [description]
+     */
+
+    Controller.prototype.addFilter = function(key, value, paramName) {
+      var base, base1;
+      if (paramName == null) {
+        paramName = "filter";
+      }
+      if ((base = this.params)[paramName] == null) {
+        base[paramName] = {};
+      }
+      if ((base1 = this.params[paramName])[key] == null) {
+        base1[key] = [];
+      }
+      if (Thing.isStrArray(this.params[paramName][key])) {
+        if (Thing.isStr(value)) {
+          value = [value];
+        }
+        if (Thing.isStrArray(value)) {
+          value = this.params[paramName][key].concat(value);
+        }
+      }
+      return this.setFilter(key, value, paramName);
+    };
+
+    Controller.prototype.getExclusion = function(key) {
+      return this.getFilter(key, "exclude");
+    };
+
+    Controller.prototype.setExclusion = function(key, value) {
+      return this.setFilter(key, value, "exclude");
+    };
+
+    Controller.prototype.removeExclusion = function(key, value) {
+      return this.removeFilter(key, value, "exclude");
+    };
+
+    Controller.prototype.addExclusion = function(key, value) {
+      return this.addFilter(key, value, "exclude");
+    };
+
+    Controller.prototype.serializeStatus = function(prefix) {
+      var i, key, len, params, ref;
       if (prefix == null) {
         prefix = "#/search/";
       }
-      this.status.firstQueryTriggered = true;
-      this.status.lastPageReached = false;
-      searchParams = extend(true, {}, this.searchParams || {});
-      this.status.params = extend(true, searchParams, qs.parse(queryString.replace("" + prefix, "")) || {});
-      this.status.params.query_counter = 1;
-      this.status.currentPage = 1;
-      this.refresh();
-      return this.status.params.query;
-    };
-
-
-    /*
-    statusQueryString
-    
-    Method to represent current status
-    with a queryString
-     */
-
-    Controller.prototype.statusQueryString = function(prefix) {
-      var params;
-      if (prefix == null) {
-        prefix = "#/search/";
+      params = extend(true, {
+        query: this.query
+      }, this.params);
+      ref = ['transformer', 'rpp', 'query_counter', 'page'];
+      for (i = 0, len = ref.length; i < len; i++) {
+        key = ref[i];
+        delete params[key];
       }
-      params = extend(true, {}, this.status.params);
-      delete params.transformer;
-      delete params.rpp;
-      delete params.query_counter;
-      delete params.page;
       return "" + prefix + (qs.stringify(params));
+    };
+
+    Controller.prototype.loadStatus = function(status, prefix) {
+      if (prefix == null) {
+        prefix = "#/search/";
+      }
+      status = (qs.parse(status.replace(prefix, ""))) || {};
+      this.reset();
+      this.query = status.query || "";
+      this.params = extend(true, this.params, status);
+      this.requestDone = true;
+      delete this.params.query;
+      return this.refresh();
     };
 
     return Controller;
@@ -718,7 +701,7 @@
 
 }).call(this);
 
-},{"./util/thing":11,"bean":23,"extend":24,"qs":72}],3:[function(require,module,exports){
+},{"./client":1,"./util/freezer":9,"./util/thing":12,"bean":24,"extend":25,"qs":73}],3:[function(require,module,exports){
 (function() {
   if (!JSON.stringify && JSON.encode) {
     JSON.stringify = JSON.encode;
@@ -761,7 +744,7 @@
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/helpers":9,"./util/http":10,"./util/uniqueid":12,"./widget":13,"./widgets/display":14,"./widgets/facets/basefacet":15,"./widgets/facets/facetpanel":16,"./widgets/facets/rangefacet":17,"./widgets/facets/termfacet":18,"./widgets/queryinput":19,"./widgets/results/results":20,"./widgets/results/scrollresults":21,"bean":23,"extend":24,"lodash.throttle":64,"md5":65,"mustache":69,"qs":72}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/helpers":10,"./util/http":11,"./util/uniqueid":13,"./widget":14,"./widgets/display":15,"./widgets/facets/basefacet":16,"./widgets/facets/facetpanel":17,"./widgets/facets/rangefacet":18,"./widgets/facets/termfacet":19,"./widgets/queryinput":20,"./widgets/results/results":21,"./widgets/results/scrollresults":22,"bean":24,"extend":25,"lodash.throttle":65,"md5":66,"mustache":70,"qs":73}],4:[function(require,module,exports){
 (function() {
   var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, extend, md5, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -1039,7 +1022,7 @@
 
 }).call(this);
 
-},{"./util/uniqueid":12,"extend":24,"js-cookie":63,"md5":65}],5:[function(require,module,exports){
+},{"./util/uniqueid":13,"extend":25,"js-cookie":64,"md5":66}],5:[function(require,module,exports){
 (function() {
   var Client, Session, Stats, uniqueId;
 
@@ -1224,20 +1207,20 @@
 
 }).call(this);
 
-},{"./client":1,"./session":4,"./util/uniqueid":12}],6:[function(require,module,exports){
+},{"./client":1,"./session":4,"./util/uniqueid":13}],6:[function(require,module,exports){
 (function() {
-  var DfDomElement, MATCHES_SELECTOR_FN, bean, matchesSelector, thing;
+  var DfDomElement, MATCHES_SELECTOR_FN, Thing, bean, matchesSelector;
 
   bean = require("bean");
 
-  thing = require("./thing");
+  Thing = require("./thing");
 
   MATCHES_SELECTOR_FN = null;
 
   matchesSelector = function(node, selector) {
     if (MATCHES_SELECTOR_FN == null) {
       MATCHES_SELECTOR_FN = (['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector', 'matchesSelector'].filter(function(funcName) {
-        return thing.isFn(node[funcName]);
+        return Thing.isFn(node[funcName]);
       })).pop();
     }
     return node[MATCHES_SELECTOR_FN](selector);
@@ -1265,7 +1248,7 @@
       if (selector instanceof String) {
         selector = selector.toString();
       }
-      if (thing.isStr(selector)) {
+      if (Thing.isStr(selector)) {
         selector = selector.trim();
         if (selector.length === 0) {
           selector = [];
@@ -1275,7 +1258,7 @@
           });
         }
       }
-      if (thing.isArray(selector)) {
+      if (Thing.isArray(selector)) {
         this.element = this.__initFromSelectorArray(selector);
       } else {
         this.element = this.__initFromSelector(selector);
@@ -1333,7 +1316,7 @@
           return true;
         case !(node instanceof Document):
           return true;
-        case !thing.isWindow(node):
+        case !Thing.isWindow(node):
           return true;
         default:
           return false;
@@ -1369,7 +1352,7 @@
 
     DfDomElement.prototype.__initFromSelector = function(selector) {
       var element;
-      if ((thing.isStrLiteral(selector)) && selector.length > 0) {
+      if ((Thing.isStrLiteral(selector)) && selector.length > 0) {
         element = this.__fixNodeList(document.querySelectorAll(this.__fixSelector(selector)));
       } else if (this.__isValidElementNode(selector)) {
         element = [selector];
@@ -1487,7 +1470,7 @@
 
     DfDomElement.prototype.filter = function(selector_or_fn) {
       var filterFn;
-      if (thing.isStrLiteral(selector_or_fn)) {
+      if (Thing.isStrLiteral(selector_or_fn)) {
         filterFn = function(node) {
           return matchesSelector(node, selector_or_fn);
         };
@@ -1633,7 +1616,7 @@
 
     DfDomElement.prototype.__cloneNode = function(node) {
       switch (false) {
-        case !thing.isStr(node):
+        case !Thing.isStr(node):
           return node;
         case !(node instanceof Element):
           return node.cloneNode(true);
@@ -1658,7 +1641,7 @@
       if (child instanceof DfDomElement) {
         child = child.get();
       }
-      if (thing.isArray(child)) {
+      if (Thing.isArray(child)) {
         child.forEach((function(_this) {
           return function(node) {
             return _this.prepend(node);
@@ -1669,7 +1652,7 @@
         return this.each((function(_this) {
           return function(node, i) {
             var newChild, ref;
-            if (thing.isStr(child)) {
+            if (Thing.isStr(child)) {
               return node.insertAdjacentHTML("afterbegin", child);
             } else if (child instanceof Element) {
               newChild = (i === 0 ? child : _this.__cloneNode(child));
@@ -1700,7 +1683,7 @@
       if (child instanceof DfDomElement) {
         child = child.get();
       }
-      if (thing.isArray(child)) {
+      if (Thing.isArray(child)) {
         child.forEach((function(_this) {
           return function(node) {
             return _this.append(node);
@@ -1710,7 +1693,7 @@
       } else {
         return this.each((function(_this) {
           return function(node, i) {
-            if (thing.isStrLiteral(child)) {
+            if (Thing.isStrLiteral(child)) {
               return node.insertAdjacentHTML("beforeend", child);
             } else if (child instanceof Element) {
               return node.appendChild((i === 0 ? child : _this.__cloneNode(child)));
@@ -1736,7 +1719,7 @@
       if (sibling instanceof DfDomElement) {
         sibling = sibling.get();
       }
-      if (thing.isArray(sibling)) {
+      if (Thing.isArray(sibling)) {
         sibling.forEach((function(_this) {
           return function(node) {
             return _this.before(node);
@@ -1747,7 +1730,7 @@
         return this.each((function(_this) {
           return function(node, i) {
             var newSibling;
-            if (thing.isStrLiteral(sibling)) {
+            if (Thing.isStrLiteral(sibling)) {
               return node.insertAdjacentHTML("beforebegin", sibling);
             } else if (sibling instanceof Element) {
               newSibling = (i === 0 ? sibling : _this.__cloneNode(sibling));
@@ -1774,7 +1757,7 @@
       if (sibling instanceof DfDomElement) {
         sibling = sibling.get();
       }
-      if (thing.isArray(sibling)) {
+      if (Thing.isArray(sibling)) {
         sibling.forEach((function(_this) {
           return function(node) {
             return _this.after(node);
@@ -1785,7 +1768,7 @@
         return this.each((function(_this) {
           return function(node, i) {
             var newSibling;
-            if (thing.isStrLiteral(sibling)) {
+            if (Thing.isStrLiteral(sibling)) {
               return node.insertAdjacentHTML("afterend", sibling);
             } else if (sibling instanceof Element) {
               newSibling = (i === 0 ? sibling : _this.__cloneNode(sibling));
@@ -2272,7 +2255,7 @@
      */
 
     DfDomElement.prototype.is = function(selector_or_element) {
-      if (thing.isStrLiteral(selector_or_element)) {
+      if (Thing.isStrLiteral(selector_or_element)) {
         return (this.filter(selector_or_element)).length > 0;
       } else {
         return (this.filter(function(node) {
@@ -2325,7 +2308,7 @@
 
 }).call(this);
 
-},{"./thing":11,"bean":23}],7:[function(require,module,exports){
+},{"./thing":12,"bean":24}],7:[function(require,module,exports){
 (function() {
   var $, bean, extend, throttle;
 
@@ -2372,7 +2355,7 @@
 
 }).call(this);
 
-},{"./dfdom":6,"bean":23,"extend":24,"lodash.throttle":64}],8:[function(require,module,exports){
+},{"./dfdom":6,"bean":24,"extend":25,"lodash.throttle":65}],8:[function(require,module,exports){
 (function() {
   var $, extend,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -2436,7 +2419,66 @@
 
 }).call(this);
 
-},{"./dfdom":6,"extend":24}],9:[function(require,module,exports){
+},{"./dfdom":6,"extend":25}],9:[function(require,module,exports){
+(function() {
+  var Thing, freeze, freezeProperty;
+
+  Thing = require("./thing");
+
+
+  /**
+   * Recursively freezes an object so it can't be modified in any way (adding or
+   * removing properties, and so on).
+   *
+   * @param  {*} value Any object or primitive
+   * @return {*}       Freezed value.
+   */
+
+  freeze = function(value) {
+    (Object.getOwnPropertyNames(value)).forEach(function(propertyName) {
+      if ((Thing.isObj(value)) && (value[propertyName] !== null) && !(Object.isFrozen(value[propertyName]))) {
+        return freeze(value[propertyName]);
+      }
+    });
+    Object.freeze(value);
+    return value;
+  };
+
+
+  /**
+   * Freezes a property of an Object so it can't be modified.
+   *
+   * @param  {Object} instance      An object's instance.
+   * @param  {String} propertyName  A property name.
+   * @param  {*}      propertyValue An optional value. If not set the current
+   *                                value is used.
+   * @return {Object}               The passed instance.
+   */
+
+  freezeProperty = function(instance, propertyName, propertyValue) {
+    var descriptor;
+    if (propertyValue == null) {
+      propertyValue = instance[propertyName];
+    }
+    descriptor = {
+      value: propertyValue,
+      configurable: false,
+      enumerable: false,
+      writable: false
+    };
+    freeze(propertyValue);
+    Object.defineProperty(instance, propertyName, descriptor);
+    return instance;
+  };
+
+  module.exports = {
+    freeze: freeze,
+    freezeProperty: freezeProperty
+  };
+
+}).call(this);
+
+},{"./thing":12}],10:[function(require,module,exports){
 
 /*
  * author: @ecoslado
@@ -2523,15 +2565,15 @@
 
 }).call(this);
 
-},{"extend":24}],10:[function(require,module,exports){
+},{"extend":25}],11:[function(require,module,exports){
 (function() {
-  var HttpClient, http, https, thing;
+  var HttpClient, Thing, http, https;
 
   http = require("http");
 
   https = require("https");
 
-  thing = require("./thing");
+  Thing = require("./thing");
 
 
   /**
@@ -2560,12 +2602,12 @@
 
     HttpClient.prototype.request = function(options, callback) {
       var req;
-      if (thing.isStr(options)) {
+      if (Thing.isStr(options)) {
         options = {
           host: options
         };
       }
-      if (!(thing.isFn(callback))) {
+      if (!Thing.isFn(callback)) {
         throw new Error(this.constructor.name + ": A callback is needed!");
       }
       req = this.http.get(options, function(response) {
@@ -2598,9 +2640,9 @@
 
 }).call(this);
 
-},{"./thing":11,"http":54,"https":31}],11:[function(require,module,exports){
+},{"./thing":12,"http":55,"https":32}],12:[function(require,module,exports){
 (function() {
-  var isArray, isFunction, isObject, isPrimitive, isString, to_s;
+  var isArray, isFn, isObject, isPrimitive, isStr, to_s;
 
   to_s = Object.prototype.toString;
 
@@ -2612,14 +2654,14 @@
     return (to_s.call(value)) === "[object Array]";
   };
 
-  isFunction = function(value) {
+  isFn = function(value) {
     if ((typeof window !== "undefined" && window !== null) && value === window.alert) {
       return true;
     }
     return (to_s.call(value)) === "[object Function]";
   };
 
-  isString = function(value) {
+  isStr = function(value) {
     return (to_s.call(value)) === "[object String]";
   };
 
@@ -2627,7 +2669,7 @@
     if (!value) {
       return true;
     }
-    if ((typeof value === "object") || (isObject(value)) || (isFunction(value)) || (isArray(value))) {
+    if ((typeof value === "object") || (isObject(value)) || (isFn(value)) || (isArray(value))) {
       return false;
     }
     return true;
@@ -2636,14 +2678,17 @@
   module.exports = {
     isObj: isObject,
     isArray: isArray,
-    isFn: isFunction,
-    isStr: isString,
+    isFn: isFn,
+    isStr: isStr,
     isPrimitive: isPrimitive,
     isPlainObj: function(value) {
       return (isObject(value)) && value.constructor === Object && (!value.nodeType) && (!value.setInterval);
     },
     isStrLiteral: function(value) {
-      return (isString(value)) && (isPrimitive(value));
+      return (isStr(value)) && (isPrimitive(value));
+    },
+    isStrArray: function(value) {
+      return (isArray(value)) && (value.filter(isStr)).length === value.length;
     },
     isWindow: function(value) {
       return value && value.document && value.location && value.alert && value.setInterval;
@@ -2652,7 +2697,7 @@
 
 }).call(this);
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 (function() {
   var cleandfid, md5;
 
@@ -2696,7 +2741,7 @@
 
 }).call(this);
 
-},{"md5":65}],13:[function(require,module,exports){
+},{"md5":66}],14:[function(require,module,exports){
 (function() {
   var $, Widget, bean;
 
@@ -2852,7 +2897,7 @@
 
 }).call(this);
 
-},{"./util/dfdom":6,"bean":23}],14:[function(require,module,exports){
+},{"./util/dfdom":6,"bean":24}],15:[function(require,module,exports){
 (function() {
   var Display, Widget, buildHelpers, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -2971,7 +3016,7 @@
 
 }).call(this);
 
-},{"../util/helpers":9,"../widget":13,"extend":24,"mustache":69}],15:[function(require,module,exports){
+},{"../util/helpers":10,"../widget":14,"extend":25,"mustache":70}],16:[function(require,module,exports){
 (function() {
   var BaseFacet, Display, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3047,7 +3092,7 @@
 
 }).call(this);
 
-},{"../display":14,"extend":24}],16:[function(require,module,exports){
+},{"../display":15,"extend":25}],17:[function(require,module,exports){
 (function() {
   var $, Display, FacetPanel, extend, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3242,7 +3287,7 @@
 
 }).call(this);
 
-},{"../../util/dfdom":6,"../../util/uniqueid":12,"../display":14,"extend":24}],17:[function(require,module,exports){
+},{"../../util/dfdom":6,"../../util/uniqueid":13,"../display":15,"extend":25}],18:[function(require,module,exports){
 (function() {
   var BaseFacet, RangeFacet, extend, noUiSlider,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3496,7 +3541,7 @@
 
 }).call(this);
 
-},{"./basefacet":15,"extend":24,"nouislider":70}],18:[function(require,module,exports){
+},{"./basefacet":16,"extend":25,"nouislider":71}],19:[function(require,module,exports){
 (function() {
   var $, BaseFacet, TermFacet, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3787,7 +3832,7 @@
 
 }).call(this);
 
-},{"../../util/dfdom":6,"./basefacet":15,"extend":24}],19:[function(require,module,exports){
+},{"../../util/dfdom":6,"./basefacet":16,"extend":25}],20:[function(require,module,exports){
 (function() {
   var QueryInput, Widget, dfTypeWatch, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3890,7 +3935,7 @@
 
 }).call(this);
 
-},{"../util/dftypewatch":8,"../widget":13,"extend":24}],20:[function(require,module,exports){
+},{"../util/dftypewatch":8,"../widget":14,"extend":25}],21:[function(require,module,exports){
 
 /*
 display.coffee
@@ -3948,7 +3993,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../display":14}],21:[function(require,module,exports){
+},{"../display":15}],22:[function(require,module,exports){
 
 /*
 scrollresults.coffee
@@ -4006,7 +4051,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../scrolldisplay":22}],22:[function(require,module,exports){
+},{"../scrolldisplay":23}],23:[function(require,module,exports){
 (function() {
   var $, Display, ScrollDisplay, dfScroll, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -4135,7 +4180,7 @@ replaces the current content.
 
 }).call(this);
 
-},{"../util/dfdom":6,"../util/dfscroll":7,"./display":14,"extend":24}],23:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/dfscroll":7,"./display":15,"extend":25}],24:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean
@@ -4878,7 +4923,7 @@ replaces the current content.
   return bean
 });
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 'use strict';
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -4966,9 +5011,9 @@ module.exports = function extend() {
 	return target;
 };
 
-},{}],25:[function(require,module,exports){
-
 },{}],26:[function(require,module,exports){
+
+},{}],27:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -6761,7 +6806,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":27,"ieee754":28,"isarray":29}],27:[function(require,module,exports){
+},{"base64-js":28,"ieee754":29,"isarray":30}],28:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -6877,7 +6922,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -6963,14 +7008,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7274,7 +7319,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -7290,7 +7335,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":54}],32:[function(require,module,exports){
+},{"http":55}],33:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -7315,7 +7360,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -7338,7 +7383,7 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -7524,7 +7569,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -8061,7 +8106,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8147,7 +8192,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8234,13 +8279,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],38:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":36,"./encode":37}],39:[function(require,module,exports){
+},{"./decode":37,"./encode":38}],40:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8365,7 +8410,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":41,"./_stream_writable":43,"core-util-is":47,"inherits":32,"process-nextick-args":49}],40:[function(require,module,exports){
+},{"./_stream_readable":42,"./_stream_writable":44,"core-util-is":48,"inherits":33,"process-nextick-args":50}],41:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8413,7 +8458,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":42,"core-util-is":47,"inherits":32}],41:[function(require,module,exports){
+},{"./_stream_transform":43,"core-util-is":48,"inherits":33}],42:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -9423,7 +9468,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":39,"./internal/streams/BufferList":44,"./internal/streams/destroy":45,"./internal/streams/stream":46,"_process":34,"core-util-is":47,"events":30,"inherits":32,"isarray":48,"process-nextick-args":49,"safe-buffer":50,"string_decoder/":51,"util":25}],42:[function(require,module,exports){
+},{"./_stream_duplex":40,"./internal/streams/BufferList":45,"./internal/streams/destroy":46,"./internal/streams/stream":47,"_process":35,"core-util-is":48,"events":31,"inherits":33,"isarray":49,"process-nextick-args":50,"safe-buffer":51,"string_decoder/":52,"util":26}],43:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9638,7 +9683,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":39,"core-util-is":47,"inherits":32}],43:[function(require,module,exports){
+},{"./_stream_duplex":40,"core-util-is":48,"inherits":33}],44:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10305,7 +10350,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":39,"./internal/streams/destroy":45,"./internal/streams/stream":46,"_process":34,"core-util-is":47,"inherits":32,"process-nextick-args":49,"safe-buffer":50,"util-deprecate":52}],44:[function(require,module,exports){
+},{"./_stream_duplex":40,"./internal/streams/destroy":46,"./internal/streams/stream":47,"_process":35,"core-util-is":48,"inherits":33,"process-nextick-args":50,"safe-buffer":51,"util-deprecate":53}],45:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -10380,7 +10425,7 @@ module.exports = function () {
 
   return BufferList;
 }();
-},{"safe-buffer":50}],45:[function(require,module,exports){
+},{"safe-buffer":51}],46:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -10453,10 +10498,10 @@ module.exports = {
   destroy: destroy,
   undestroy: undestroy
 };
-},{"process-nextick-args":49}],46:[function(require,module,exports){
+},{"process-nextick-args":50}],47:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":30}],47:[function(require,module,exports){
+},{"events":31}],48:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10567,9 +10612,9 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":33}],48:[function(require,module,exports){
-arguments[4][29][0].apply(exports,arguments)
-},{"dup":29}],49:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":34}],49:[function(require,module,exports){
+arguments[4][30][0].apply(exports,arguments)
+},{"dup":30}],50:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -10616,7 +10661,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":34}],50:[function(require,module,exports){
+},{"_process":35}],51:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -10680,7 +10725,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":26}],51:[function(require,module,exports){
+},{"buffer":27}],52:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('safe-buffer').Buffer;
@@ -10953,7 +10998,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":50}],52:[function(require,module,exports){
+},{"safe-buffer":51}],53:[function(require,module,exports){
 (function (global){
 
 /**
@@ -11024,7 +11069,7 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],53:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -11033,7 +11078,7 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":39,"./lib/_stream_passthrough.js":40,"./lib/_stream_readable.js":41,"./lib/_stream_transform.js":42,"./lib/_stream_writable.js":43}],54:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":40,"./lib/_stream_passthrough.js":41,"./lib/_stream_readable.js":42,"./lib/_stream_transform.js":43,"./lib/_stream_writable.js":44}],55:[function(require,module,exports){
 (function (global){
 var ClientRequest = require('./lib/request')
 var extend = require('xtend')
@@ -11115,7 +11160,7 @@ http.METHODS = [
 	'UNSUBSCRIBE'
 ]
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./lib/request":56,"builtin-status-codes":58,"url":60,"xtend":62}],55:[function(require,module,exports){
+},{"./lib/request":57,"builtin-status-codes":59,"url":61,"xtend":63}],56:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
 
@@ -11188,7 +11233,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],56:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -11498,7 +11543,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":55,"./response":57,"_process":34,"buffer":26,"inherits":32,"readable-stream":53,"to-arraybuffer":59}],57:[function(require,module,exports){
+},{"./capability":56,"./response":58,"_process":35,"buffer":27,"inherits":33,"readable-stream":54,"to-arraybuffer":60}],58:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -11684,7 +11729,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":55,"_process":34,"buffer":26,"inherits":32,"readable-stream":53}],58:[function(require,module,exports){
+},{"./capability":56,"_process":35,"buffer":27,"inherits":33,"readable-stream":54}],59:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -11750,7 +11795,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],59:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
 
 module.exports = function (buf) {
@@ -11779,7 +11824,7 @@ module.exports = function (buf) {
 	}
 }
 
-},{"buffer":26}],60:[function(require,module,exports){
+},{"buffer":27}],61:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -12513,7 +12558,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":61,"punycode":35,"querystring":38}],61:[function(require,module,exports){
+},{"./util":62,"punycode":36,"querystring":39}],62:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -12531,7 +12576,7 @@ module.exports = {
   }
 };
 
-},{}],62:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -12552,7 +12597,7 @@ function extend() {
     return target
 }
 
-},{}],63:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 /*!
  * JavaScript Cookie v2.1.4
  * https://github.com/js-cookie/js-cookie
@@ -12719,7 +12764,7 @@ function extend() {
 	return init(function () {});
 }));
 
-},{}],64:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 (function (global){
 /**
  * lodash (Custom Build) <https://lodash.com/>
@@ -13162,7 +13207,7 @@ function toNumber(value) {
 module.exports = throttle;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],65:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 (function(){
   var crypt = require('crypt'),
       utf8 = require('charenc').utf8,
@@ -13324,7 +13369,7 @@ module.exports = throttle;
 
 })();
 
-},{"charenc":66,"crypt":67,"is-buffer":68}],66:[function(require,module,exports){
+},{"charenc":67,"crypt":68,"is-buffer":69}],67:[function(require,module,exports){
 var charenc = {
   // UTF-8 encoding
   utf8: {
@@ -13359,7 +13404,7 @@ var charenc = {
 
 module.exports = charenc;
 
-},{}],67:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 (function() {
   var base64map
       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
@@ -13457,9 +13502,9 @@ module.exports = charenc;
   module.exports = crypt;
 })();
 
-},{}],68:[function(require,module,exports){
-arguments[4][33][0].apply(exports,arguments)
-},{"dup":33}],69:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
+arguments[4][34][0].apply(exports,arguments)
+},{"dup":34}],70:[function(require,module,exports){
 /*!
  * mustache.js - Logic-less {{mustache}} templates with JavaScript
  * http://github.com/janl/mustache.js
@@ -14091,7 +14136,7 @@ arguments[4][33][0].apply(exports,arguments)
   return mustache;
 }));
 
-},{}],70:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 /*! nouislider - 8.5.1 - 2016-04-24 16:00:29 */
 
 (function (factory) {
@@ -16051,7 +16096,7 @@ function closure ( target, options, originalOptions ){
 	};
 
 }));
-},{}],71:[function(require,module,exports){
+},{}],72:[function(require,module,exports){
 'use strict';
 
 var replace = String.prototype.replace;
@@ -16071,7 +16116,7 @@ module.exports = {
     RFC3986: 'RFC3986'
 };
 
-},{}],72:[function(require,module,exports){
+},{}],73:[function(require,module,exports){
 'use strict';
 
 var stringify = require('./stringify');
@@ -16084,7 +16129,7 @@ module.exports = {
     stringify: stringify
 };
 
-},{"./formats":71,"./parse":73,"./stringify":74}],73:[function(require,module,exports){
+},{"./formats":72,"./parse":74,"./stringify":75}],74:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -16258,7 +16303,7 @@ module.exports = function (str, opts) {
     return utils.compact(obj);
 };
 
-},{"./utils":75}],74:[function(require,module,exports){
+},{"./utils":76}],75:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -16470,7 +16515,7 @@ module.exports = function (object, opts) {
     return joined.length > 0 ? prefix + joined : '';
 };
 
-},{"./formats":71,"./utils":75}],75:[function(require,module,exports){
+},{"./formats":72,"./utils":76}],76:[function(require,module,exports){
 'use strict';
 
 var has = Object.prototype.hasOwnProperty;
