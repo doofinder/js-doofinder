@@ -1,4 +1,5 @@
 Client = require "../lib/client"
+Controller = require "../lib/controller"
 session = require "../lib/session"
 ObjectSessionStore = session.ObjectSessionStore
 Session = session.Session
@@ -10,6 +11,16 @@ ZONE = "eu1"
 
 APIKEY = "#{ZONE}-#{AUTH}"
 
+getClient = (type) ->
+  new Client HASHID, APIKEY, undefined, type
+
+getController = (params = {}) ->
+  new Controller getClient(), [], params
+
+getSession = (data) ->
+  store = new ObjectSessionStore data
+  new Session store
+
 module.exports =
   address: "https://#{HOST}"
   apiKey: APIKEY
@@ -19,9 +30,6 @@ module.exports =
   version: 5
   zone: ZONE
 
-  getClient: (type) ->
-    new Client HASHID, APIKEY, undefined, type
-
-  getSession: (data) ->
-    store = new ObjectSessionStore data
-    new Session store
+  getClient: getClient
+  getController: getController
+  getSession: getSession

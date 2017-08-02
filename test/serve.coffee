@@ -5,6 +5,8 @@ deepEqual = require "deep-eql"
 cfg = require "./config"
 
 module.exports =
+  nock: nock
+
   clean: ->
     nock.cleanAll()
 
@@ -23,10 +25,12 @@ module.exports =
     resource = "/#{cfg.version}/search"
     defaultParams =
       hashid: cfg.hashid
-      page: 1
-      rpp: 10
       query: ''
+      # page: 1  # Doofinder assumes this by default
+      # rpp: 10  # Doofinder assumes this by default
     params = extend true, defaultParams, (params or {})
+    response.results_per_page = params.rpp or 10
+    response.query_counter = params.query_counter
     (((nock cfg.address).get resource).query params).reply 200, (JSON.stringify response)
 
   stats: (type, params) ->
