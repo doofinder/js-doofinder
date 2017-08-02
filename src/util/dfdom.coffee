@@ -1,5 +1,5 @@
 bean = require "bean"
-thing = require "./thing"
+Thing = require "./thing"
 
 MATCHES_SELECTOR_FN = null
 
@@ -12,7 +12,7 @@ matchesSelector = (node, selector) ->
       'msMatchesSelector',
       'oMatchesSelector',
       'matchesSelector'
-    ].filter (funcName) -> thing.isFn node[funcName]).pop()
+    ].filter (funcName) -> Thing.isFn node[funcName]).pop()
   node[MATCHES_SELECTOR_FN] selector
 
 
@@ -27,19 +27,19 @@ class DfDomElement
    * @return {DfDomElement}
   ###
   constructor: (selector) ->
-    Object.defineProperty this, 'length', get: -> @element.length
+    Object.defineProperty @, 'length', get: -> @element.length
 
     if selector instanceof String
       selector = selector.toString()
 
-    if thing.isStr selector
+    if Thing.isStr selector
       selector = selector.trim()
       if selector.length is 0
         selector = []
       else
         selector = (selector.split ",").map (s) -> s.trim()
 
-    if thing.isArray selector
+    if Thing.isArray selector
       @element = @__initFromSelectorArray selector
     else
       @element = @__initFromSelector selector
@@ -83,7 +83,7 @@ class DfDomElement
     switch
       when node instanceof Element then true
       when node instanceof Document then true
-      when thing.isWindow node then true
+      when Thing.isWindow node then true
       else false
 
   ###*
@@ -105,7 +105,7 @@ class DfDomElement
    * @return {Array}     An Array of nodes.
   ###
   __initFromSelector: (selector) ->
-    if (thing.isStrLiteral selector) and selector.length > 0
+    if (Thing.isStrLiteral selector) and selector.length > 0
       element = @__fixNodeList document.querySelectorAll @__fixSelector selector
     else if @__isValidElementNode selector
       element = [selector]
@@ -190,7 +190,7 @@ class DfDomElement
    * @return {DfDomElement}
   ###
   filter: (selector_or_fn) ->
-    if thing.isStrLiteral selector_or_fn
+    if Thing.isStrLiteral selector_or_fn
       filterFn = (node) -> matchesSelector node, selector_or_fn
     else
       filterFn = selector_or_fn
@@ -293,7 +293,7 @@ class DfDomElement
   ###
   __cloneNode: (node) ->
     switch
-      when thing.isStr node then node
+      when Thing.isStr node then node
       when node instanceof Element then node.cloneNode true
       else throw "Invalid argument: #{node}"
 
@@ -310,12 +310,12 @@ class DfDomElement
   prepend: (child) ->
     if child instanceof DfDomElement
       child = child.get()
-    if thing.isArray child
+    if Thing.isArray child
       child.forEach (node) => @prepend node
       return @
     else
       @each (node, i) =>
-        if thing.isStr child
+        if Thing.isStr child
           node.insertAdjacentHTML "afterbegin", child
         else if child instanceof Element
           newChild = (if i is 0 then child else @__cloneNode child)
@@ -337,12 +337,12 @@ class DfDomElement
   append: (child) ->
     if child instanceof DfDomElement
       child = child.get()
-    if thing.isArray child
+    if Thing.isArray child
       child.forEach (node) => @append node
       return @
     else
       @each (node, i) =>
-        if thing.isStrLiteral child
+        if Thing.isStrLiteral child
           node.insertAdjacentHTML "beforeend", child
         else if child instanceof Element
           node.appendChild (if i is 0 then child else @__cloneNode child)
@@ -360,12 +360,12 @@ class DfDomElement
   before: (sibling) ->
     if sibling instanceof DfDomElement
       sibling = sibling.get()
-    if thing.isArray sibling
+    if Thing.isArray sibling
       sibling.forEach (node) => @before node
       return @
     else
       @each (node, i) =>
-        if thing.isStrLiteral sibling
+        if Thing.isStrLiteral sibling
           node.insertAdjacentHTML "beforebegin", sibling
         else if sibling instanceof Element
           newSibling = (if i is 0 then sibling else @__cloneNode sibling)
@@ -384,12 +384,12 @@ class DfDomElement
   after: (sibling) ->
     if sibling instanceof DfDomElement
       sibling = sibling.get()
-    if thing.isArray sibling
+    if Thing.isArray sibling
       sibling.forEach (node) => @after node
       return @
     else
       @each (node, i) =>
-        if thing.isStrLiteral sibling
+        if Thing.isStrLiteral sibling
           node.insertAdjacentHTML  "afterend", sibling
         else if sibling instanceof Element
           newSibling = (if i is 0 then sibling else @__cloneNode sibling)
@@ -750,7 +750,7 @@ class DfDomElement
    * @return {Boolean}
   ###
   is: (selector_or_element) ->
-    if thing.isStrLiteral selector_or_element
+    if Thing.isStrLiteral selector_or_element
       (@filter selector_or_element).length > 0
     else
       (@filter (node) -> node is selector_or_element).length > 0
