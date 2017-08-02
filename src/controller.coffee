@@ -2,7 +2,10 @@ bean = require "bean"
 extend = require "extend"
 qs = require "qs"
 
-thing = require "./util/thing"
+Client = require "./client"
+
+Freezer = require "./util/freezer"
+Thing = require "./util/thing"
 
 ###
 Controller
@@ -12,384 +15,324 @@ to retrieve the data and the widgets
 to paint them.
 ###
 class Controller
-  ###
-  Controller constructor
+  constructor: (@client, @widgets = [], defaultParams = {}) ->
+    unless @client instanceof Client
+      throw @error "client must be an instance of Client"
+    unless Thing.isArray @widgets
+      throw @error "widgets must be an instance of Array"
+    unless Thing.isPlainObj defaultParams
+      throw @error "defaultParams must be an instance of Object"
 
-  @param {doofinder.Client} client
-  @param {doofinder.widget | Array} widgets
-  @param {Object} searchParams
-  @api public
-  ###
-  constructor: (client, widgets, @searchParams = {}) ->
-    @client = client
-    @hashid = client.hashid # Publish hashid
-    @widgets = []
-    if thing.isArray widgets
-      for widget in widgets
-        @addWidget(widget)
+    # controller needs page and rpp to do calculations
+    defaults =
+      query_name: null
+      page: 1
+      rpp: 10
 
-    else if widgets
-      @addWidget(widgets)
+    @defaults = @__fixParams (extend true, defaults, defaultParams)
+    @queryCounter = 0
 
-    @status = extend true,
-      {},
-      params: extend true, {}, @searchParams
+    # TODO(@carlosescri): Find a better way to subscribe widgets
+    (@addWidget widget) for widget in @widgets
+
+    Object.defineProperty @, 'hashid', get: -> @client.hashid
+    Object.defineProperty @, 'isFirstPage', get: -> @requestDone and @params.page is 1
+    Object.defineProperty @, 'isLastPage', get: -> @requestDone and @params.page is @lastPage
 
     @reset()
 
+  error: (message) ->
+    new Error "#{@constructor.name}: #{message}"
+
+  deprecate: (message) ->
+    console.warn "[DEPRECATED][#{@constructor.name}]: #{message}" if console?
+
+  #
+  # Status
+  #
+
+  ###*
+   * Fixes any deprecations in the search parameters.
+   *
+   * - Client now expects "filter" instead of "filters" because the parameters
+   *   are sent "as is" in the querystring, no re-processing is made.
+   *
+   * @param  {Object} params
+   * @return {Object}
+   * @protected
   ###
-  __search
-  this method invokes Client's search method for
-  retrieving the data and use widget's replace or
-  append to show them.
+  __fixParams: (params) ->
+    if params.filters?
+      params.filter = params.filters
+      delete params.filters
+      @deprecate "`filters` key is deprecated for search parameters, use `filter` instead"
+    params
 
-  @param {String} event: the event name
-  @param {Array} params: the params will be passed
-    to the listeners
-  @api private
+  ###*
+   * Resets status and optionally forces query and params. As it is a reset
+   * aimed to perform a new search, page is forced to 1 in any case.
+   *
+   * - done      - true if at least one request has been sent.
+   * - lastPage  - indicates the number of the last page for the current status.
+   *
+   * @param  {String} query  Search terms.
+   * @param  {Object} params Optional search parameters.
+   * @return {Object}        Updated status.
   ###
-  __search: (next=false) ->
+  reset: (query = null, params = {}) ->
+    @query = query
+    @params = @__fixParams (extend true, {}, @defaults, params, page: 1)
+    # At least one request sent, to detect if 1st page requested
+    @requestDone = false
+    @lastPage = null
 
-    # To avoid past queries
-    # we'll check the query_counter
-    @status.params.query_counter++
+  #
+  # Options
+  #
 
-    params = extend true,
-      {},
-      @status.params || {}
-
-    params.page = @status.currentPage
-    _this = this
-
-    @client.search params.query, params, (err, res) ->
-      # I check if I reached the last page.
-      if err
-        # Triggers error_received on search error
-        _this.trigger "df:error_received", [err]
-
-      else if res
-        if res.results.length < _this.status.params.rpp
-          _this.status.lastPageReached = true
-        # I set the query_name till next query
-        if not _this.searchParams.query_name
-          _this.status.params.query_name = res.query_name
-        # Triggers results_received
-        _this.trigger "df:results_received", [res]
-        # Whe show the results only when query counter
-        # belongs to a the present request
-        if res.query_counter == _this.status.params.query_counter
-          for widget in _this.widgets
-            if next
-              widget.renderNext res
-            else
-              widget.render res
-          # TODO(@carlosescri): This could trigger an event.
-
+  ###*
+   * Proxy method to get options.
+   * @return {http.ClientRequest}
+   * @public
   ###
-  __search wrappers
+  options: (suffix, callback) ->
+    @client.options suffix, callback
+
+  #
+  # Search
+  #
+
+  ###*
+   * Performs a request for a new search (resets status).
+   * Page will always be 1 in this case.
+   *
+   * @param  {String} query  Search terms.
+   * @param  {Object} params Search parameters.
+   * @return {http.ClientRequest}
+   * @public
   ###
+  search: (query, params = {}) ->
+    @reset query, params
+    request = @getResults()
+    @trigger "df:search" if @requestDone
+    request
 
+  ###*
+   * Performs a request to get results for a specific page of the current
+   * search. Requires a search being made via `search()` to set a status.
+   *
+   * @param  {Number} page [description]
+   * @return {http.ClientRequest|Boolean} The request or false if can't be made.
+   * @public
   ###
-  search
-
-  Takes a new query, initializes status and performs
-  a search
-
-  @param {String} query: the query term
-  @api public
-  ###
-  search: (query, params={}) ->
-    if query
-      searchParams = extend true,
-        {},
-        @searchParams
-      # Saves current query counter
-      queryCounter = @status.params.query_counter
-      # Reset @status.params
-      @status.params = extend true,
-        {},
-        params
-      @status.params = extend true, searchParams, params
-      @status.params.query = query
-      @status.params.filter = extend true,
-        {},
-        @searchParams.filter || {},
-        params.filter
-      @status.params.query_counter = queryCounter
-
-      if not @searchParams.query_name
-        delete @status.params.query_name
-
-      @status.currentPage = 1
-      @status.firstQueryTriggered = true
-      @status.lastPageReached = false
-      @__search()
-
-    @trigger "df:search", [@status.params]
-
-  ###
-  nextPage
-
-  Increments the currentPage and performs a search. Takes
-  the next page results and shows them.
-
-  @api public
-  ###
-  nextPage: (replace = false) ->
-    if @status.firstQueryTriggered and @status.currentPage > 0 and not @status.lastPageReached
-      @trigger "df:next_page"
-      @status.currentPage++
-      @__search(true)
-
-  ###
-  getPage
-
-  Set the currentPage with a given value and performs a search.
-  Takes a given page and shows the results.
-
-  @param {Number} page: the page you are retrieving
-  @api public
-  ###
-
   getPage: (page) ->
-    if @status.firstQueryTriggered and @status.currentPage > 0
-      @trigger "df:get_page"
-      @status.currentPage = page
-      self = this
-      @__search()
-
-  ###
-  refresh
-
-  Makes a search call with the current status.
-
-  @api public
-  ###
-
-  refresh: () ->
-    if @status.params.query
-      @trigger "df:refresh", [@status.params]
-      @status.currentPage = 1
-      @status.firstQueryTriggered = true
-      @status.lastPageReached = false
-      @__search()
-
-  ###
-  addFilter
-
-  Adds new filter criteria.
-
-  @param {String} key: the facet key you are filtering
-  @param {String | Object} value: the filtering criteria
-  @api public
-  ###
-  addFilter: (key, value) ->
-    #if value.constructor != Object and value.constructor != String
-     # throw Error "wrong value. Object or String expected, #{value.constructor} given"
-    @status.currentPage = 1
-    if not @status.params.filter
-      @status.params.filter = {}
-    # Range filters
-    if value.constructor == Object
-      @status.params.filter[key] = value
-      # Range predefined filters are removed when
-      # the user interacts
-      if @searchParams.filter and @searchParams.filter[key]
-        delete @searchParams.filter[key]
-    # Term filter
+    if @requestDone
+      @params.page = parseInt page, 10
+      request = @getResults()
+      @trigger "df:getPage", [@query, @params]
+      request
     else
-      if not @status.params.filter[key]
-        @status.params.filter[key] = []
-      if value.constructor != Array
-        value = [value]
-      @status.params.filter[key] = @status.params.filter[key].concat value
+      false
 
-
-  hasFilter: (key) ->
-    @status.params.filter?[key]?
-
-  getFilter: (key) ->
-    @status.params.filter?[key]
-
+  ###*
+   * Performs a request to get results for the next page of the current search,
+   * if the last page was not already reached.
+   *
+   * @return {http.ClientRequest|Boolean} The request or false if can't be made.
+   * @public
   ###
-  addParam
+  getNextPage: ->
+    unless @isLastPage
+      request = @getPage (@params.page or 1) + 1
+      @trigger "df:nextPage", [@query, @params] if request
+      request
+    else
+      false
 
-  Adds new search parameter to the current status.
-
-  @param {String} key: the facet key you are filtering
-  @param {String | Number} value: the filtering criteria
-  @api public
+  ###*
+   * Gets the first page for the the current search again.
+   *
+   * @return {http.ClientRequest|Boolean} The request or false if can't be made.
+   * @public
   ###
-  addParam: (key, value) ->
-    @status.params[key] = value
+  refresh: ->
+    @params.page = 1
+    request = @getResults()
+    @trigger "df:refresh", [@query, @params]
+    request
 
-
+  ###*
+   * Get results for the current search status.
+   *
+   * @return {http.ClientRequest}
+   * @public
   ###
-  clearParam
+  getResults: ->
+    @params.query_counter = ++@queryCounter
+    @params.query_name = null if @params.page is 1
+    @requestDone = true
 
-  Removes search parameter from current status.
+    @client.search @query, @params, (err, res) =>
+      if err
+        @trigger "df:errorReceived", [err]
+      else
+        @lastPage = Math.ceil (res.total / res.results_per_page)
+        @params.query_name ?= res.query_name
+        if res.query_counter is @params.query_counter
+          for widget in @widgets
+            if res.page is 1 then widget.render res else widget.renderNext res
+        # TODO: Each widget could listen to its controller and render itself
+        @trigger "df:resultsReceived", [res]
 
-  @param {String} key: the name of the param
-  @api public
-  ###
-  clearParam: (key) ->
-    delete @status.params[key]
+  #
+  # Events
+  #
 
-  ###
-  reset
+  on: (eventName, handler, args) ->
+    bean.on @, eventName, handler, args
 
-  Reset the params to the initial state.
+  one: (eventName, handler, args) ->
+    bean.one @, eventName, handler, args
 
-  @api public
-  ###
-  reset: () ->
-    queryCounter = @status.params.query_counter || 1
-    @status =
-      params: extend true, {}, @searchParams
-      currentPage: 0
-      firstQueryTriggered: false
-      lastPageReached: false
+  off: (eventName, handler) ->
+    bean.off @, eventName, handler
 
-    @status.params.query_counter = queryCounter
+  trigger: (eventName, args) ->
+    bean.fire @, eventName, args
 
-    if @searchParams.query
-      @status.params.query = ''
+  bind: (eventName, handler) ->
+    @deprecate "`bind()` is deprecated, use `on()` instead"
+    @on eventName, handler
 
-  ###
-  removeFilter
-
-  Removes some filter criteria.
-
-  @param {String} key: the facet key you are filtering
-  @param {String | Object} value: the filtering criteria you are removing
-  @api public
-  ###
-  removeFilter: (key, value) ->
-    @status.currentPage = 1
-    if @status.params.filter?[key]?
-      if @status.params.filter[key].constructor == Object
-        delete @status.params.filter[key]
-      else if @status.params.filter[key].constructor == Array
-        if value?
-          @__splice @status.params.filter[key], value
-          unless @status.params.filter[key].length > 0
-            delete @status.params.filter[key]
-        else
-          delete @status.params.filter[key]
-
-    # Removes a predefined filter when it is deselected.
-    if @searchParams.filter?[key]?
-      if @searchParams.filter[key].constructor == Object
-        delete @searchParams.filter[key]
-      else if @searchParams.filter[key].constructor == Array
-        if value?
-          @__splice @searchParams.filter[key], value
-          unless @searchParams.filter[key].length > 0
-            delete @searchParams.filter[key]
-        else
-          delete @searchParams.filter[key]
-
-  __splice: (list, value) ->
-    idx = list.indexOf value
-    while idx >= 0
-      list.splice idx, 1
-      idx = list.indexOf value
-    list
-
-
-  ###
-  setSearchParam
-
-  Removes some filter criteria.
-
-  @param {String} key: the param key
-  @param {Mixed} value: the value
-  @api public
-  ###
-  setSearchParam: (key, value) ->
-    @searchParams[key] = value
-
-  ###
-  addwidget
-
-  Adds a new widget to the controller and reference the
-  controller from the widget.
-
-  @param {doofinder.widget} widget: the widget you are adding.
-  @api public
-  ###
+  #
+  # Widgets
+  #
 
   addWidget: (widget) ->
-    @widgets.push(widget)
-    widget.init(this)
+    @widgets.push widget
+    widget.init @
 
+  #
+  # Params
+  #
+
+  getParam: (key) ->
+    @params[key]
+
+  setParam: (key, value) ->
+    @params[key] = value
+
+  removeParam: (key, value) ->
+    delete @params[key]
+
+  addParam: (key, value) ->
+    @deprecate "`addParam()` is deprecated, use `setParam()` instead"
+    @setParam key, value
+
+  #
+  # Filters
+  #
+
+  ###*
+   * Gets the value of a filter or undefined if not defined.
+   *
+   * @param  {String} key       Name of the filter.
+   * @param  {String} paramName Name of the parameter ("filter" by default).
+   * @return {*}
+   * @public
   ###
-  options
+  getFilter: (key, paramName = "filter") ->
+    @params[paramName]?[key]
 
-  Retrieves the SearchEngine options
-
-  @param {Function} callback
+  ###*
+   * Sets the value of a filter.
+   *
+   * @param  {String} key       Name of the filter.
+   * @param  {*}      value     Value of the filter.
+   * @param  {String} paramName Name of the parameter ("filter" by default).
+   * @return {*}
+   * @public
   ###
-  options: (args...) ->
-    @client.options args...
+  setFilter: (key, value, paramName = "filter") ->
+    @params[paramName] ?= {}
+    @params[paramName][key] = if Thing.isStr value then [value] else value
+    @params[paramName][key]
 
+  ###*
+   * Removes a value of a filter. If the filter is an array of strings, removes
+   * the value inside the array. In any other case removes the entire value.
+   *
+   * @param  {String} key       Name of the filter.
+   * @param  {*}      value     Value of the filter.
+   * @param  {String} paramName Name of the parameter ("filter" by default).
+   * @return {*}
+   * @public
   ###
-  bind
+  removeFilter: (key, value, paramName = "filter") ->
+    if @params[paramName]?[key]?
+      if value? and Thing.isStrArray @params[paramName][key]
+        pos = @params[paramName][key].indexOf value
+        (@params[paramName][key].splice pos, 1) if pos >= 0
+        if @params[paramName][key].length is 0
+          delete @params[paramName][key]
+      else
+        delete @params[paramName][key]
+      @params[paramName][key]
 
-  Method to add and event listener
-  @param {String} event
-  @param {Function} callback
-  @api public
+  ###*
+   * Adds a value to a filter. If the value is a String, it's added
+   * @param {[type]} key       [description]
+   * @param {[type]} value     [description]
+   * @param {[type]} paramName =             "filter" [description]
   ###
-  bind: (event, callback) ->
-    bean.on(this, event, callback)
+  addFilter: (key, value, paramName = "filter") ->
+    @params[paramName] ?= {}
+    @params[paramName][key] ?= []
+    if Thing.isStrArray @params[paramName][key]
+      if Thing.isStr value
+        value = [value]
+      if Thing.isStrArray value
+        value = @params[paramName][key].concat value
+    @setFilter key, value, paramName
 
-  ###
-  trigger
+  #
+  # Exclusion Filters
+  #
 
-  Method to trigger an event
-  @param {String} event
-  @param {Array} params
-  @api public
-  ###
-  trigger: (event, params) ->
-    bean.fire(this, event, params)
+  getExclusion: (key) ->
+    @getFilter key, "exclude"
+  setExclusion: (key, value) ->
+    @setFilter key, value, "exclude"
+  removeExclusion: (key, value) ->
+    @removeFilter key, value, "exclude"
+  addExclusion: (key, value) ->
+    @addFilter key, value, "exclude"
 
-  ###
-  setStatusFromString
+  #
+  # Serialization
+  #
 
-  Fills in the status from queryString
-  and searches.
-  ###
-  setStatusFromString: (queryString, prefix="#/search/") ->
-    @status.firstQueryTriggered = true
-    @status.lastPageReached = false
-    searchParams = extend true,
-      {},
-      @searchParams || {}
-    @status.params = extend true,
-      searchParams,
-      qs.parse(queryString.replace("#{prefix}", "")) || {}
-    @status.params.query_counter = 1
-    @status.currentPage = 1
+  serializeStatus: (prefix = "#/search/") ->
+    params = extend true, query: @query, @params
+    delete params[key] for key in [
+      'transformer',
+      'rpp',
+      'query_counter',
+      'page'
+    ]
+    return "#{prefix}#{qs.stringify params}"
+
+  loadStatus: (status, prefix = "#/search/") ->
+    status = (qs.parse (status.replace prefix, "")) or {}
+
+    @reset()
+
+    @query = status.query or ""
+    @params = extend true, @params, status
+    @requestDone = true
+
+    delete @params.query
     @refresh()
-    return @status.params.query
-
-  ###
-  statusQueryString
-
-  Method to represent current status
-  with a queryString
-  ###
-  statusQueryString: (prefix="#/search/") ->
-    params = extend true, {}, @status.params
-
-    delete params.transformer
-    delete params.rpp
-    delete params.query_counter
-    delete params.page
-
-    "#{prefix}#{qs.stringify params}"
 
 
 module.exports = Controller

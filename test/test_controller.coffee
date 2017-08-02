@@ -1,347 +1,224 @@
-chai = require 'chai'
-nock = require 'nock'
+# required for testing
+chai = require "chai"
+extend = require "extend"
 
-should = chai.should()
-assert = chai.assert
+# chai
+chai.should()
 expect = chai.expect
 
-hashid = 'ffffffffffffffffffffffffffffffff'
+# required for tests
+Client = require "../lib/client"
+Controller = require "../lib/controller"
 
-client_mock =
-  search: ()->
-  hashid: hashid
+# config, utils & mocks
+cfg = require "./config"
+serve = require "./serve"
 
-widget_mock =
-  render: () ->
-  renderNext: () ->
-  init: () ->
+servePage = (page, query_counter, totalPages) ->
+  rpp = 10
+  params =
+    page: page
+    rpp: rpp
+    query_counter: query_counter
+    query_name: "match_and"
+  delete params.query_name if page is 1
+  response =
+    page: page
+    query_name: "match_and"
+    total: rpp * totalPages
+  serve.search params, response
 
+testSecondaryPage = (triggerFn, testFn, totalPages) ->
+  scope = servePage 1, 1, totalPages
+  controller = cfg.getController()
 
-# Test doofinder
-describe 'doofinder controller: ', ->
+  controller.one "df:resultsReceived", (res) ->
+    scope.isDone().should.be.true
 
-  beforeEach ->
-    document.body.innerHTML = '<input type="search" id="query" name="query">'
-    global.$ = require "jquery"
-    global.doofinder = require "../lib/doofinder"
+    getPageHandled = false
+    nextPageHandled = false
 
-  afterEach ->
-    delete global.$
-    delete global.doofinder
+    controller.one "df:getPage", (query, params) ->
+      getPageHandled = true
 
-  context 'search method ' , ->
+    controller.one "df:nextPage", (query, params) ->
+      nextPageHandled = true
 
-    beforeEach ()->
-      client_mock =
-        search: ()->
-        hashid: hashid
+    controller.one "df:resultsReceived", (res) ->
+      res.getPageHandled = getPageHandled
+      res.nextPageHandled = nextPageHandled
+      testFn controller, res
 
-    it 'df:search is triggered', (done) ->
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      controller.bind 'df:search', (params) ->
-        params.should.have.keys 'query_counter', 'query', 'filters'
-        done()
-      controller.search 'silla'
+    triggerFn controller
 
-    it 'basic search use right params', (done) ->
-      client_mock.search = (query, params, cb) ->
-        query.should.eql 'silla'
-        params.should.have.keys 'query_counter', 'query', 'filters', 'page'
-        done()
+  controller.search ""
 
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      controller.search 'silla'
+# test
+describe "Controller", ->
+  afterEach: ->
+    serve.clean()
 
-    it 'extra search params can be added in search', (done)->
-      client_mock.search = (query, params, cb)->
-        params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp'
-        params.rpp.should.eql 23
-        params.filters.color.should.eql ['Rojo']
-        done()
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      controller.search 'silla', rpp: 23, filters: color: ['Rojo']
-
-
-    it 'extra search params can be added in constructor', (done)->
-      client_mock.search = (query, params)->
-        params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp'
-        params.rpp.should.eql 11
-        params.filters.color.should.eql ['Azul']
-        done()
-      controller = new doofinder.Controller client_mock, [widget_mock], {rpp: 11, filters: {color: ['Azul']}}
-      controller.search 'silla'
-
-  context 'filters management', ->
-
-    beforeEach ()->
-      client_mock =
-        search: ()->
-        hashid: hashid
-
-    it 'when adding terms filters, filters params change', (done) ->
-      # we need to make a search first in order to "refresh" it with
-      # applied filters
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      # make 1 search to refresh later
-      controller.search 'silla'
-      # prepare for refresh
-      client_mock.search = (query, params, cb) ->
-        params.filters.color.should.be.eql ['Azul', 'Rojo']
-        params.filters.brand.should.be.eql ['Nike']
-        done()
-
-      controller.addFilter 'color', 'Azul'
-      controller.addFilter 'brand', 'Nike'
-      controller.addFilter 'color', 'Rojo'
-
-      # Check filters management
-      controller.hasFilter('color').should.be.true
-      controller.getFilter('color').should.be.eql ['Azul', 'Rojo']
-
-      controller.addFilter 'price', gt: 10
-      controller.hasFilter('price').should.be.true
-      controller.getFilter('price').should.be.eql {gt: 10}
-
-      controller.removeFilter 'price'
-      controller.hasFilter('price').should.be.false
-      should.equal controller.getFilter('price'), undefined
-
-      controller.hasFilter('material').should.be.false
-
-      controller.refresh() # search wigh color: ['Azul', 'Rojo'] and brand: ['Nike']
-
-    it 'when removing terms filters, filters params change', (done) ->
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      # make 1 search to refresh later
-      controller.search 'silla'
-      # add some filters
-      controller.addFilter 'color', 'Azul'
-      controller.addFilter 'brand', 'Nike'
-      controller.addFilter 'color', 'Rojo'
-      # refresh. we're not testing anything yet
-      controller.refresh()
-      # now remove some
-      controller.removeFilter 'color', 'Azul'
-      controller.removeFilter 'brand', 'Nike'
-      # those filters should be removed
-      client_mock.search = (query, params, cb) ->
-        params.filters.should.have.keys 'color'
-        params.filters.color.should.be.eql ['Rojo']
-        done()
-      # go!
-      controller.refresh()
-
-    it 'when adding range filters, filters params change', (done) ->
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      controller.search 'silla'
-      client_mock.search = (query, params, cb) ->
-        params.filters.price.should.be.eql gt: 10
-        done()
-      controller.addFilter 'price', gt: 10
-      controller.refresh()
-
-    it 'when removing range filters, filters params change', (done) ->
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      controller.search 'silla'
-      controller.addFilter 'price', gt: 10
-      controller.refresh()
-      controller.removeFilter 'price', lte: 5
-      client_mock.search = (query, params, cb) ->
-        params.filters.should.be.empty
-        done()
-      controller.refresh()
-
-  context ' pagination methods ', ->
-
-    beforeEach ()->
-      client_mock =
-        search: ()->
-        hashid: hashid
-
-
-    it 'nextPage redo the search with next page', (done) ->
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      # when first search done, try nextPage
-      controller.bind 'df:search', ()->
-        client_mock.search = (query, params, cb) ->
-          # same query
-          params.query.should.eql 'silla'
-          # increased page
-          params.page.should.eql 2
-          done()
-
-        # next page!
-        controller.nextPage()
-
-      # first search
-      controller.search 'silla'
-
-    it 'getPage redo the search with any specified page', (done) ->
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      # when first search done, try getPage
-      controller.bind 'df:search', ()->
-        client_mock.search = (query, params, cb) ->
-          params.query.should.eql 'silla'
-          params.page.should.eql 22
-          done()
-
-        # get page!
-        controller.getPage 22
-
-      # first search
-      controller.search 'silla'
-
-
-  context ' parameter setting methods ', ->
-
-    beforeEach ()->
-      client_mock =
-        search: ()->
-        hashid: hashid
-
-
-    it 'setSearchParam adds parameter to every search', (done) ->
-      client_mock.search = (query, params) ->
-        params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp', 'transformer'
-        params.transformer.should.eql 'testTransformer'
-        params.rpp.should.eql 23
-        # when we search again, the search parameters  must remain
-        client_mock.search = (query, params) ->
-          params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp', 'transformer'
-          params.transformer.should.eql 'testTransformer'
-          params.rpp.should.eql 23
-          done()
-        # second search
-        controller.search 'silla2'
-
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      controller.setSearchParam 'rpp', 23
-      controller.setSearchParam 'transformer', 'testTransformer'
-
-      # first search
-      controller.search 'silla'
-
-    it 'addParam adds parameter to use in refresh', (done)->
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      # when first search done, add params and refresh
-      controller.bind 'df:search', ()->
-        # add new param
-        controller.addParam 'transformer', 'testTransformer'
-        # modify param
-        controller.addParam 'rpp', 32
-        # prepare for refreshing
-        client_mock.search = (query, params, cb) ->
-          # same query
-          params.query.should.eql 'silla'
-          # new params
-          params.should.have.keys 'query_counter', 'query', 'filters', 'page', 'rpp', 'transformer'
-          params.transformer.should.eql 'testTransformer'
-          params.rpp.should.eql 32
-          done()
-        # refresh!
-        controller.refresh()
-      # initial search
-      controller.search 'silla'
-
-  context ' refresh methods ', ->
-
-    beforeEach ()->
-      client_mock =
-        search: ()->
-        hashid: hashid
-
-    it ' triggers refresh signal and actually do the search', (done) ->
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      controller.search 'silla', rpp: 33, filters: color: ['Rojo']
-
-      controller.bind 'df:refresh', (params)->
-        params.query_counter.should.eql 2
-
-      client_mock.search = (query, params, cb) ->
-        query.should.eql 'silla'
-        params.should.have.keys 'rpp', 'filters', 'query', 'query_counter', 'page'
-        params.query_counter.should.eql 3
-        params.filters.should.eql color: ['Rojo']
-        params.rpp.should.eql 33
-        done()
-
-      controller.refresh()
-
-  context ' addWidget method ', ->
-
-    beforeEach ()->
-      client_mock =
-        search: ()->
-        hashid: hashid
-
-    it ' should call the widget "init" upon adding', (done) ->
-      widget_mock.init = ()->
-        true.should.be.true
-        done()
-      controller = new doofinder.Controller client_mock
-      controller.addWidget widget_mock
-
-    it ' should increase the internal widgets list', (done) ->
-      widget_mock.init = ()->
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      controller.widgets.should.have.length 1
-      controller.addWidget widget_mock
-      controller.widgets.should.have.length 2
+  context "Instantiation", ->
+    it "needs a Client instance and can accept widgets and search parameters", (done) ->
+      client = cfg.getClient()
+      (-> new Controller()).should.throw()
+      (-> new Controller client).should.not.throw()
+      (-> new Controller client, 1).should.throw()
+      (-> new Controller client, null, 1).should.throw()
+      (-> new Controller client, [], {}).should.not.throw()
+      # (-> new Controller client, [1], {}).should.throw() # TODO
       done()
 
-  context ' bind method can ', ->
+    it "uses default parameters if none provided", (done) ->
+      client = cfg.getClient()
+      controller = new Controller client
+      controller.hashid.should.equal client.hashid
+      controller.defaults.page.should.equal 1
+      controller.defaults.rpp.should.equal 10
+      controller.queryCounter.should.equal 0
+      done()
 
-    beforeEach ()->
-      client_mock =
-        search: ()->
-        hashid: hashid
-
-    it ' bind events to callbacks (duhhh)', (done) ->
-      res_mock = { results: [1,2,3,4,5,6,7,8,9,10,11], query_name: 'test', query_coounter: 2 }
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      client_mock.search = (query, params, cb)->
-        cb null, res_mock
-      events_count = 0
-      # bind to df:results_received
-      controller.bind 'df:results_received', (res) ->
-        events_count++
-        res.query_name.should.eql 'test'
-        res.results.should.have.length 11
-
-      # bind to df:search
-      controller.bind 'df:search', (params) ->
-        events_count++
-        params.query_counter.should.be.eql 2
-
-      # bind to df:next_page
-      controller.bind 'df:next_page', (e) ->
-        events_count.should.be.eql 2
-        events_count++ # three events triggered, counting this one
-
-      # bind to df:getPage
-      controller.bind 'df:get_page', (e) ->
-        events_count.should.be.eql 3
+  context "Options", ->
+    it "just calls Client's method", (done) ->
+      scope = serve.options()
+      controller = cfg.getController()
+      controller.options null, (err, res) ->
+        (expect err).to.be.undefined
+        scope.isDone().should.be.true
         done()
 
-      controller.search 'silla' # to tests df:search and df:results_received
+  context "Search & Parameters", ->
+    it "can use params and filters", (done) ->
+      params =
+        page: 2
+        filter:
+          brand: ["ADIDAS"]
+        exclude:
+          size: ["XXS"]
 
-      # before getPage and nextPage bindings, turn off searching to not repeat tests
-      client_mock.search = () ->
+      controller = cfg.getController params
 
-      controller.nextPage() # to test df:next_page
-      controller.getPage 3  # to test df:get_page
+      # check initial params
+      controller.params.page.should.equal 1
+      controller.params.filter.brand.length.should.equal 1
+      controller.params.filter.brand[0].should.equal "ADIDAS"
+      controller.params.exclude.size.length.should.equal 1
+      controller.params.exclude.size[0].should.equal "XXS"
 
-  context 'options method ', ->
+      # remove non-existing filter value and add another one
+      controller.removeFilter "brand", "PUMA"
+      controller.addFilter "brand", "NIKE"
 
-    beforeEach ()->
-      client_mock =
-        search: ()->
-        hashid: hashid
+      controller.params.filter.brand.length.should.equal 2
+      controller.params.filter.brand[0].should.equal "ADIDAS"
+      controller.params.filter.brand[1].should.equal "NIKE"
 
-    it 'actuallydo the options', (done) ->
-      client_mock.options = (arg1, arg2) ->
-        arg1.should.be.eql 'arg1'
-        arg2.should.be.eql 'arg2'
+      # remove existing filter value
+      controller.removeFilter "brand", "ADIDAS"
+
+      controller.params.filter.brand.length.should.equal 1
+      controller.params.filter.brand[0].should.equal "NIKE"
+
+      # remove entire filter
+      controller.removeFilter "brand", "NIKE"
+      (expect controller.params.filter.brand).to.be.undefined
+
+      # add new filter, should be added as array
+      controller.addFilter "size", "XXL"
+      controller.params.filter.size.length.should.equal 1
+
+      controller.removeFilter "size"
+      (expect controller.params.filter.size).to.be.undefined
+
+      # add new exclusion, should be added as array
+      controller.addExclusion "brand", "NIKE"
+      controller.params.exclude.brand.length.should.equal 1
+
+      controller.addExclusion "size", ["XS"]
+      controller.params.exclude.size.length.should.equal 2
+
+      controller.addFilter "price", from: 10, to: 100
+      (controller.getFilter "price").should.eql from: 10, to: 100
+      controller.removeFilter "price", "anything"
+      expect(controller.getFilter "price").to.be.undefined
+
+      controller.setParam "nostats", true
+      (controller.getParam "nostats").should.be.true
+      controller.removeParam "nostats"
+      expect(controller.getParam "nostats").to.be.undefined
+
+      done()
+
+    it "can search", (done) ->
+      params =
+        page: 1
+        rpp: 10
+        query_counter: 1
+
+      scope = serve.search params, query_name: "match_and"
+
+      controller = cfg.getController()
+
+      controller.on "df:resultsReceived", (res) ->
+        res.query_name.should.equal "match_and"
+        controller.params.query_name.should.equal "match_and"
+        scope.isDone().should.be.true
         done()
-      controller = new doofinder.Controller client_mock, [widget_mock]
-      controller.options 'arg1', 'arg2'
+
+      controller.search ""
+
+    it "can get the next page in the 2nd request", (done) ->
+      scope = servePage 2, 2, 2
+
+      triggerFn = (controller) ->
+        controller.getNextPage()
+
+      testFn = (controller, res) ->
+        scope.isDone().should.be.true
+
+        res.page.should.equal 2
+        controller.lastPage.should.equal 2
+        controller.isLastPage.should.be.true
+
+        res.getPageHandled.should.be.true
+        res.nextPageHandled.should.be.true
+        done()
+
+      testSecondaryPage triggerFn, testFn, 2
+
+    it "can get 4th page of 5 in the 2nd request", (done) ->
+      scope = servePage 4, 2, 5
+
+      triggerFn = (controller) ->
+        controller.getPage 4
+
+      testFn = (controller, res) ->
+        scope.isDone().should.be.true
+
+        res.getPageHandled.should.be.true
+        res.nextPageHandled.should.be.false
+
+        res.page.should.equal 4
+        res.query_counter.should.equal 2
+        controller.lastPage.should.equal 5
+
+        controller.isLastPage.should.be.false
+        done()
+
+      testSecondaryPage triggerFn, testFn, 5
+
+  context "Widgets", ->
+    it "can register widgets on initialization"
+    it "can register/deregister widgets after initialization"
+
+  context "Events", ->
+    it "triggers df:search"
+    it "triggers df:getPage"
+    it "triggers df:nextPage"
+    it "triggers df:refresh"
+    it "triggers df:errorReceived"
+    it "triggers df:resultsReceived"
+
+  context "Status", ->
+    it "can serialize search status to string"
+    it "can de-serialize search status from string"
