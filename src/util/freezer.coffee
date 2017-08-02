@@ -1,4 +1,4 @@
-thing = require "./thing"
+Thing = require "./thing"
 
 ###*
  * Recursively freezes an object so it can't be modified in any way (adding or
@@ -9,7 +9,7 @@ thing = require "./thing"
 ###
 freeze = (value) ->
   (Object.getOwnPropertyNames value).forEach (propertyName) ->
-    if (thing.isObj value) and (value[propertyName] isnt null) and
+    if (Thing.isObj value) and (value[propertyName] isnt null) and
         not (Object.isFrozen value[propertyName])
       freeze value[propertyName]
   Object.freeze value

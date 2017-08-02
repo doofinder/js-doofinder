@@ -6,7 +6,7 @@ chai.should()
 expect = chai.expect
 
 # required for tests
-freezer = require "../lib/util/freezer"
+Freezer = require "../lib/util/freezer"
 
 class Person
   constructor: (@name, @surname, @age) ->
@@ -21,7 +21,7 @@ describe "Freezer", ->
         age: 40
       email: "info@johnsmith.com"
 
-    freezer.freeze person
+    Freezer.freeze person
 
     person.data.name = "Sarah"
     person.data.age = 20
@@ -37,8 +37,8 @@ describe "Freezer", ->
   it "can freeze a property of an object", (done) ->
     person = new Person "John", "Smith", 40
 
-    freezer.freezeProperty person, "name", "Johnny"
-    freezer.freezeProperty person, "age"
+    Freezer.freezeProperty person, "name", "Johnny"
+    Freezer.freezeProperty person, "age"
     person.name = "John Again"
     person.surname = "Cash"
     person.age = 30
