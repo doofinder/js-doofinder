@@ -31,11 +31,11 @@ This library allows you to make requests to your [Doofinder](http://www.doofinde
 `bower install doofinder`
 
 ### Downloadable minified javascript file
-https://cdn.jsdelivr.net/doofinder/latest/doofinder.min.js
+https://cdn.jsdelivr.net/npm/doofinder@latest/dist/doofinder.min.js
 
 ### CSS
 We offer some simple CSS. You can download it in the link
-https://cdn.jsdelivr.net/doofinder/latest/doofinder.css
+https://cdn.jsdelivr.net/npm/doofinder@latest/dist/doofinder.css
 
 
 ## Quick Start
@@ -48,7 +48,7 @@ Let's begin by showing a simple HTML template (myview.html):
 <html lang="en">
 <head>
 <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-<script type="application/javascript" src="https://cdn.jsdelivr.net/doofinder/latest/doofinder.min.js"></script>
+<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/doofinder@latest/dist/doofinder.min.js"></script>
 <script>
 (function(doofinder, document){
   $(document).ready(function(){
