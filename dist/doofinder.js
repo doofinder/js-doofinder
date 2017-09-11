@@ -281,7 +281,7 @@
         page: 1,
         rpp: 10
       };
-      this.defaults = this.__fixParams(extend(true, defaults, defaultParams));
+      this.defaults = extend(true, defaults, this.__fixParams(defaultParams));
       this.queryCounter = 0;
       ref = this.widgets;
       for (i = 0, len = ref.length; i < len; i++) {
@@ -358,9 +358,9 @@
         params = {};
       }
       this.query = query;
-      this.params = this.__fixParams(extend(true, {}, this.defaults, params, {
+      this.params = extend(true, {}, this.defaults, this.__fixParams(params), {
         page: 1
-      }));
+      });
       this.requestDone = false;
       return this.lastPage = null;
     };
@@ -388,16 +388,12 @@
      */
 
     Controller.prototype.search = function(query, params) {
-      var request;
       if (params == null) {
         params = {};
       }
       this.reset(query, params);
-      request = this.getResults();
-      if (this.requestDone) {
-        this.trigger("df:search");
-      }
-      return request;
+      this.trigger("df:search");
+      return this.getResults();
     };
 
 
@@ -405,18 +401,17 @@
      * Performs a request to get results for a specific page of the current
      * search. Requires a search being made via `search()` to set a status.
      *
-     * @param  {Number} page [description]
+     * @param  {Number} page
      * @return {http.ClientRequest|Boolean} The request or false if can't be made.
      * @public
      */
 
     Controller.prototype.getPage = function(page) {
-      var request;
-      if (this.requestDone) {
-        this.params.page = parseInt(page, 10);
-        request = this.getResults();
+      page = parseInt(page, 10);
+      if (this.requestDone && page <= this.lastPage) {
+        this.params.page = page;
         this.trigger("df:getPage", [this.query, this.params]);
-        return request;
+        return this.getResults();
       } else {
         return false;
       }
@@ -432,16 +427,7 @@
      */
 
     Controller.prototype.getNextPage = function() {
-      var request;
-      if (!this.isLastPage) {
-        request = this.getPage((this.params.page || 1) + 1);
-        if (request) {
-          this.trigger("df:nextPage", [this.query, this.params]);
-        }
-        return request;
-      } else {
-        return false;
-      }
+      return this.getPage(this.params.page + 1);
     };
 
 
@@ -453,11 +439,9 @@
      */
 
     Controller.prototype.refresh = function() {
-      var request;
       this.params.page = 1;
-      request = this.getResults();
       this.trigger("df:refresh", [this.query, this.params]);
-      return request;
+      return this.getResults();
     };
 
 
@@ -469,33 +453,35 @@
      */
 
     Controller.prototype.getResults = function() {
+      var request;
+      this.requestDone = true;
       this.params.query_counter = ++this.queryCounter;
       if (this.params.page === 1) {
         this.params.query_name = null;
       }
-      this.requestDone = true;
-      return this.client.search(this.query, this.params, (function(_this) {
+      return request = this.client.search(this.query, this.params, (function(_this) {
         return function(err, res) {
           var base, i, len, ref, widget;
           if (err) {
             return _this.trigger("df:errorReceived", [err]);
-          } else {
+          } else if (res.query_counter === _this.params.query_counter) {
             _this.lastPage = Math.ceil(res.total / res.results_per_page);
             if ((base = _this.params).query_name == null) {
               base.query_name = res.query_name;
             }
-            if (res.query_counter === _this.params.query_counter) {
-              ref = _this.widgets;
-              for (i = 0, len = ref.length; i < len; i++) {
-                widget = ref[i];
-                if (res.page === 1) {
-                  widget.render(res);
-                } else {
-                  widget.renderNext(res);
-                }
+            ref = _this.widgets;
+            for (i = 0, len = ref.length; i < len; i++) {
+              widget = ref[i];
+              if (res.page === 1) {
+                widget.render(res);
+              } else {
+                widget.renderNext(res);
               }
             }
-            return _this.trigger("df:resultsReceived", [res]);
+            _this.trigger("df:resultsReceived", [res]);
+            if (_this.isLastPage) {
+              return _this.trigger("df:lastPageReached", [res]);
+            }
           }
         };
       })(this));
@@ -2642,16 +2628,12 @@
 
 },{"./thing":12,"http":55,"https":32}],12:[function(require,module,exports){
 (function() {
-  var isArray, isFn, isObject, isPrimitive, isStr, to_s;
+  var isFn, isObject, isPrimitive, isStr, to_s;
 
   to_s = Object.prototype.toString;
 
   isObject = function(value) {
     return (to_s.call(value)) === "[object Object]";
-  };
-
-  isArray = function(value) {
-    return (to_s.call(value)) === "[object Array]";
   };
 
   isFn = function(value) {
@@ -2669,7 +2651,7 @@
     if (!value) {
       return true;
     }
-    if ((typeof value === "object") || (isObject(value)) || (isFn(value)) || (isArray(value))) {
+    if ((typeof value === "object") || (isObject(value)) || (isFn(value)) || (Array.isArray(value))) {
       return false;
     }
     return true;
@@ -2677,7 +2659,9 @@
 
   module.exports = {
     isObj: isObject,
-    isArray: isArray,
+    isArray: function(value) {
+      return Array.isArray(value);
+    },
     isFn: isFn,
     isStr: isStr,
     isPrimitive: isPrimitive,
@@ -2688,7 +2672,7 @@
       return (isStr(value)) && (isPrimitive(value));
     },
     isStrArray: function(value) {
-      return (isArray(value)) && (value.filter(isStr)).length === value.length;
+      return (Array.isArray(value)) && (value.filter(isStr)).length === value.length;
     },
     isWindow: function(value) {
       return value && value.document && value.location && value.alert && value.setInterval;

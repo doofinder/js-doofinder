@@ -53,7 +53,10 @@
   "keywords": [
     "doofinder"
   ],
-  "author": "Kike Coslado",
+  "author": "Doofinder",
+  "contributors": [
+    "Carlos Escribano Rey <carlos@doofinder.com>"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/doofinder/js-doofinder/issues"

@@ -18,8 +18,10 @@ class Controller
   constructor: (@client, @widgets = [], defaultParams = {}) ->
     unless @client instanceof Client
       throw @error "client must be an instance of Client"
+
     unless Thing.isArray @widgets
       throw @error "widgets must be an instance of Array"
+
     unless Thing.isPlainObj defaultParams
       throw @error "defaultParams must be an instance of Object"
 
@@ -29,15 +31,20 @@ class Controller
       page: 1
       rpp: 10
 
-    @defaults = @__fixParams (extend true, defaults, defaultParams)
+    @defaults = extend true, defaults, (@__fixParams defaultParams)
     @queryCounter = 0
 
     # TODO(@carlosescri): Find a better way to subscribe widgets
     (@addWidget widget) for widget in @widgets
 
-    Object.defineProperty @, 'hashid', get: -> @client.hashid
-    Object.defineProperty @, 'isFirstPage', get: -> @requestDone and @params.page is 1
-    Object.defineProperty @, 'isLastPage', get: -> @requestDone and @params.page is @lastPage
+    Object.defineProperty @, 'hashid', get: ->
+      @client.hashid
+
+    Object.defineProperty @, 'isFirstPage', get: ->
+      @requestDone and @params.page is 1
+
+    Object.defineProperty @, 'isLastPage', get: ->
+      @requestDone and @params.page is @lastPage
 
     @reset()
 
@@ -81,7 +88,7 @@ class Controller
   ###
   reset: (query = null, params = {}) ->
     @query = query
-    @params = @__fixParams (extend true, {}, @defaults, params, page: 1)
+    @params = extend true, {}, @defaults, (@__fixParams params), page: 1
     # At least one request sent, to detect if 1st page requested
     @requestDone = false
     @lastPage = null
@@ -113,24 +120,23 @@ class Controller
   ###
   search: (query, params = {}) ->
     @reset query, params
-    request = @getResults()
-    @trigger "df:search" if @requestDone
-    request
+    @trigger "df:search"
+    @getResults()
 
   ###*
    * Performs a request to get results for a specific page of the current
    * search. Requires a search being made via `search()` to set a status.
    *
-   * @param  {Number} page [description]
+   * @param  {Number} page
    * @return {http.ClientRequest|Boolean} The request or false if can't be made.
    * @public
   ###
   getPage: (page) ->
-    if @requestDone
-      @params.page = parseInt page, 10
-      request = @getResults()
+    page = parseInt page, 10
+    if @requestDone and page <= @lastPage
+      @params.page = page
       @trigger "df:getPage", [@query, @params]
-      request
+      @getResults()
     else
       false
 
@@ -142,12 +148,7 @@ class Controller
    * @public
   ###
   getNextPage: ->
-    unless @isLastPage
-      request = @getPage (@params.page or 1) + 1
-      @trigger "df:nextPage", [@query, @params] if request
-      request
-    else
-      false
+    @getPage @params.page + 1
 
   ###*
    * Gets the first page for the the current search again.
@@ -157,9 +158,8 @@ class Controller
   ###
   refresh: ->
     @params.page = 1
-    request = @getResults()
     @trigger "df:refresh", [@query, @params]
-    request
+    @getResults()
 
   ###*
    * Get results for the current search status.
@@ -168,21 +168,23 @@ class Controller
    * @public
   ###
   getResults: ->
+    @requestDone = true
     @params.query_counter = ++@queryCounter
     @params.query_name = null if @params.page is 1
-    @requestDone = true
 
-    @client.search @query, @params, (err, res) =>
+    request = @client.search @query, @params, (err, res) =>
       if err
         @trigger "df:errorReceived", [err]
-      else
+      else if res.query_counter is @params.query_counter
         @lastPage = Math.ceil (res.total / res.results_per_page)
         @params.query_name ?= res.query_name
-        if res.query_counter is @params.query_counter
-          for widget in @widgets
-            if res.page is 1 then widget.render res else widget.renderNext res
+
         # TODO: Each widget could listen to its controller and render itself
+        for widget in @widgets
+          if res.page is 1 then widget.render res else widget.renderNext res
+
         @trigger "df:resultsReceived", [res]
+        @trigger "df:lastPageReached", [res] if @isLastPage
 
   #
   # Events

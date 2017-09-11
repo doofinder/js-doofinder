@@ -35,18 +35,15 @@ testSecondaryPage = (triggerFn, testFn, totalPages) ->
   controller.one "df:resultsReceived", (res) ->
     scope.isDone().should.be.true
 
-    getPageHandled = false
-    nextPageHandled = false
+    pageHandled = false
 
+    # triggered before the request is actually made
     controller.one "df:getPage", (query, params) ->
-      getPageHandled = true
+      pageHandled = params.page
 
-    controller.one "df:nextPage", (query, params) ->
-      nextPageHandled = true
-
+    # triggered after the response is processed
     controller.one "df:resultsReceived", (res) ->
-      res.getPageHandled = getPageHandled
-      res.nextPageHandled = nextPageHandled
+      res.pageHandled = pageHandled
       testFn controller, res
 
     triggerFn controller
@@ -176,12 +173,13 @@ describe "Controller", ->
       testFn = (controller, res) ->
         scope.isDone().should.be.true
 
+        res.query_counter.should.equal 2
         res.page.should.equal 2
+        res.pageHandled.should.equal 2
+
         controller.lastPage.should.equal 2
         controller.isLastPage.should.be.true
 
-        res.getPageHandled.should.be.true
-        res.nextPageHandled.should.be.true
         done()
 
       testSecondaryPage triggerFn, testFn, 2
@@ -195,14 +193,13 @@ describe "Controller", ->
       testFn = (controller, res) ->
         scope.isDone().should.be.true
 
-        res.getPageHandled.should.be.true
-        res.nextPageHandled.should.be.false
-
         res.page.should.equal 4
+        res.pageHandled.should.equal 4
         res.query_counter.should.equal 2
-        controller.lastPage.should.equal 5
 
+        controller.lastPage.should.equal 5
         controller.isLastPage.should.be.false
+
         done()
 
       testSecondaryPage triggerFn, testFn, 5
