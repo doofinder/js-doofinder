@@ -33,6 +33,13 @@ module.exports =
     response.query_counter = params.query_counter
     (((nock cfg.address).get resource).query params).reply 200, (JSON.stringify response)
 
+  forbidden: ->
+    resource = "/#{cfg.version}/search"
+    response =
+      error: "request not authenticated"
+    checkParams = -> true
+    (((nock cfg.address).get resource).query checkParams).reply 403, (JSON.stringify response)
+
   stats: (type, params) ->
     resource = "/#{cfg.version}/stats/#{type}"
     defaultParams =

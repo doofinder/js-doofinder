@@ -120,7 +120,7 @@ class Controller
   ###
   search: (query, params = {}) ->
     @reset query, params
-    @trigger "df:search"
+    @trigger "df:search", [@query, @params]
     @getResults()
 
   ###*

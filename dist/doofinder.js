@@ -392,7 +392,7 @@
         params = {};
       }
       this.reset(query, params);
-      this.trigger("df:search");
+      this.trigger("df:search", [this.query, this.params]);
       return this.getResults();
     };
 

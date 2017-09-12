@@ -14,40 +14,73 @@ Controller = require "../lib/controller"
 cfg = require "./config"
 serve = require "./serve"
 
-servePage = (page, query_counter, totalPages) ->
-  rpp = 10
-  params =
-    page: page
-    rpp: rpp
-    query_counter: query_counter
-    query_name: "match_and"
+###*
+ * Configures nock to serve a search mock for a specific status.
+ *
+ * @param  {Number} page          Page to serve.
+ * @param  {Number} totalPages    Total pages of results for this search.
+ * @param  {Number} queryCounter  Number of queries supposed to have been sent.
+ * @param  {Object} params        Extra parameters for the request and response.
+ * @return {Scope}                nock's Scope.
+###
+serveSearchPage = (page, totalPages, queryCounter, params = {}) ->
+  params = extend true, query: "", rpp: 10, params
+  params.page = page
+  params.query_counter = queryCounter
+  response = extend true, total: params.rpp * totalPages, params
   delete params.query_name if page is 1
-  response =
-    page: page
-    query_name: "match_and"
-    total: rpp * totalPages
+  delete response.rpp
   serve.search params, response
 
-testSecondaryPage = (triggerFn, testFn, totalPages) ->
-  scope = servePage 1, 1, totalPages
+###*
+ * Tests a page obtained after a first page request, via getPage() or
+ * getNextPage().
+ *
+ * @param  {Number}   anotherPage         Page to be tested.
+ * @param  {Number}   totalPages          Total pages of results.
+ * @param  {Number}   anotherQueryCounter Number of queries supposed to have
+ *                                        been sent.
+ * @param  {Function} searchTestFn        Function with extra tests and done().
+ * @return {http.ClientRequest}           First request sent by the controller.
+###
+testAnotherPage = (anotherPage, totalPages, anotherQueryCounter, searchTestFn) ->
+  firstPageRequest = serveSearchPage 1, totalPages, 1
+  anotherPageRequest = serveSearchPage anotherPage, totalPages, anotherQueryCounter
   controller = cfg.getController()
+  pageHandled = false
 
+  # Handler for first page search. It configures handlers for the actual request
+  # we want to test.
   controller.one "df:resultsReceived", (res) ->
-    scope.isDone().should.be.true
+    firstPageRequest.isDone().should.be.true
 
-    pageHandled = false
-
-    # triggered before the request is actually made
+    # Save the page we are requesting in the controller.
+    # It should be equal to the page we want to test.
+    # This event is triggered before the request is actually made.
     controller.one "df:getPage", (query, params) ->
       pageHandled = params.page
+      pageHandled.should.equal anotherPage
 
-    # triggered after the response is processed
+    # One-time handler to get results received by the controller. Some basic
+    # tests are done.
+    # This event is triggered after the response is processed.
     controller.one "df:resultsReceived", (res) ->
-      res.pageHandled = pageHandled
-      testFn controller, res
+      anotherPageRequest.isDone().should.be.true
 
-    triggerFn controller
+      # The response matches the requested page and query counter
+      res.page.should.equal pageHandled
+      res.query_counter.should.equal anotherQueryCounter
 
+      # Perform extra tests outside this wrapper
+      searchTestFn controller, res
+
+    # launch the secondary page request
+    if anotherPage is 2
+      controller.getNextPage()
+    else
+      controller.getPage anotherPage
+
+  # search (first page)
   controller.search ""
 
 # test
@@ -156,65 +189,97 @@ describe "Controller", ->
 
       controller = cfg.getController()
 
-      controller.on "df:resultsReceived", (res) ->
+      searchTriggered = false
+      controller.one "df:search", (query, params) ->
+        # inside controller
+        @query.should.equal query
+        @params.should.eql params
+        searchTriggered = true
+
+      controller.one "df:resultsReceived", (res) ->
+        scope.isDone().should.be.true
+        searchTriggered.should.be.true
+
         res.query_name.should.equal "match_and"
         controller.params.query_name.should.equal "match_and"
-        scope.isDone().should.be.true
         done()
 
       controller.search ""
 
     it "can get the next page in the 2nd request", (done) ->
-      scope = servePage 2, 2, 2
-
-      triggerFn = (controller) ->
-        controller.getNextPage()
-
-      testFn = (controller, res) ->
-        scope.isDone().should.be.true
-
-        res.query_counter.should.equal 2
-        res.page.should.equal 2
-        res.pageHandled.should.equal 2
-
+      testAnotherPage 2, 2, 2, (controller, res) ->
         controller.lastPage.should.equal 2
         controller.isLastPage.should.be.true
-
         done()
-
-      testSecondaryPage triggerFn, testFn, 2
 
     it "can get 4th page of 5 in the 2nd request", (done) ->
-      scope = servePage 4, 2, 5
-
-      triggerFn = (controller) ->
-        controller.getPage 4
-
-      testFn = (controller, res) ->
-        scope.isDone().should.be.true
-
-        res.page.should.equal 4
-        res.pageHandled.should.equal 4
-        res.query_counter.should.equal 2
-
+      testAnotherPage 4, 5, 2, (controller, res) ->
         controller.lastPage.should.equal 5
         controller.isLastPage.should.be.false
-
         done()
 
-      testSecondaryPage triggerFn, testFn, 5
+    it "can refresh current search", (done) ->
+      query = "hola"
+      queryName = "match_and"
+
+      params =
+        query: query
+        query_name: queryName
+
+      firstRequest = serveSearchPage 1, 5, 1, params
+      secondRequest = serveSearchPage 1, 5, 2, params
+      controller = cfg.getController()
+
+      # 1st request handler
+      controller.one "df:resultsReceived", (res) ->
+        firstRequest.isDone().should.be.true
+        secondRequest.isDone().should.be.false
+
+        controller.query.should.equal query
+        controller.params.page.should.equal 1
+        controller.params.query_counter.should.equal 1
+        controller.params.query_name.should.equal queryName
+
+        # 2nd request handler (on request)
+        refreshTriggered = false
+        controller.one "df:refresh", (query, params) ->
+          # inside controller
+          @query.should.equal query
+          @params.should.eql params
+          refreshTriggered = true
+
+        # 2nd request handler (on response)
+        controller.one "df:resultsReceived", (res) ->
+          secondRequest.isDone().should.be.true
+          refreshTriggered.should.be.true
+
+          controller.query.should.equal query
+          controller.params.page.should.equal 1
+          controller.params.query_counter.should.equal 2
+          controller.params.query_name.should.equal queryName
+
+          done()
+
+        # 2nd request
+        controller.refresh()
+
+      # 1st request
+      controller.search query
+
+    it "triggers df:errorReceived in case of error", (done) ->
+      scope = serve.forbidden()
+      controller = cfg.getController()
+
+      controller.one "df:errorReceived", (err) ->
+        scope.isDone().should.be.true
+        err.should.equal 403
+        done()
+
+      controller.search ""
 
   context "Widgets", ->
     it "can register widgets on initialization"
     it "can register/deregister widgets after initialization"
-
-  context "Events", ->
-    it "triggers df:search"
-    it "triggers df:getPage"
-    it "triggers df:nextPage"
-    it "triggers df:refresh"
-    it "triggers df:errorReceived"
-    it "triggers df:resultsReceived"
 
   context "Status", ->
     it "can serialize search status to string"
