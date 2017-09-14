@@ -21,16 +21,19 @@ module.exports =
     resource = "#{resource}?#{suffix}" if suffix?
     ((nock cfg.address).get resource).reply 200, "{}"
 
-  search: (params, response = {}) ->
+  search: (params = {}, response = {}) ->
     resource = "/#{cfg.version}/search"
-    defaultParams =
-      hashid: cfg.hashid
-      query: ''
-      # page: 1  # Doofinder assumes this by default
-      # rpp: 10  # Doofinder assumes this by default
-    params = extend true, defaultParams, (params or {})
-    response.results_per_page = params.rpp or 10
-    response.query_counter = params.query_counter
+
+    params.hashid ?= cfg.hashid
+
+    # forward params from request to response
+    for field in ['hashid', 'query', 'page', 'query_counter', 'query_name', 'rpp']
+      response[field] ?= params[field] if params[field]?
+
+    if response.rpp?
+      response.results_per_page ?= response.rpp
+      delete response.rpp
+
     (((nock cfg.address).get resource).query params).reply 200, (JSON.stringify response)
 
   forbidden: ->

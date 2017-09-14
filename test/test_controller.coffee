@@ -14,22 +14,33 @@ Controller = require "../lib/controller"
 cfg = require "./config"
 serve = require "./serve"
 
+qs = require "qs"
+
 ###*
  * Configures nock to serve a search mock for a specific status.
  *
- * @param  {Number} page          Page to serve.
- * @param  {Number} totalPages    Total pages of results for this search.
- * @param  {Number} queryCounter  Number of queries supposed to have been sent.
- * @param  {Object} params        Extra parameters for the request and response.
- * @return {Scope}                nock's Scope.
+ * @param  {Number}  page          Page to serve.
+ * @param  {Number}  totalPages    Total pages of results for this search.
+ * @param  {Number}  queryCounter  Number of queries supposed to have been sent.
+ * @param  {Boolean} refresh       If this request is a refresh (false by
+ *                                 default). If true, it adds the query_name to
+ *                                 the request params.
+ * @return {Scope}                 nock's Scope.
 ###
-serveSearchPage = (page, totalPages, queryCounter, params = {}) ->
-  params = extend true, query: "", rpp: 10, params
-  params.page = page
-  params.query_counter = queryCounter
-  response = extend true, total: params.rpp * totalPages, params
-  delete params.query_name if page is 1
-  delete response.rpp
+serveSearchPage = (page, totalPages, queryCounter, refresh = false) ->
+  params =
+    page: page
+    rpp: 10
+    query: "something"
+    query_counter: queryCounter
+
+  if page > 1 or refresh
+    params.query_name = "match_and"
+
+  response =
+    query_name: "match_and"
+    total: 10 * totalPages
+
   serve.search params, response
 
 ###*
@@ -81,7 +92,7 @@ testAnotherPage = (anotherPage, totalPages, anotherQueryCounter, searchTestFn) -
       controller.getPage anotherPage
 
   # search (first page)
-  controller.search ""
+  controller.search "something"
 
 # test
 describe "Controller", ->
@@ -181,11 +192,21 @@ describe "Controller", ->
 
     it "can search", (done) ->
       params =
+        query: ""
+        hashid: cfg.hashid
         page: 1
         rpp: 10
         query_counter: 1
 
-      scope = serve.search params, query_name: "match_and"
+      response =
+        query: ""
+        hashid: cfg.hashid
+        page: 1
+        results_per_page: 10
+        query_counter: 1
+        query_name: "match_and"
+
+      scope = serve.search params, response
 
       controller = cfg.getController()
 
@@ -219,15 +240,12 @@ describe "Controller", ->
         done()
 
     it "can refresh current search", (done) ->
-      query = "hola"
+      query = "something"
       queryName = "match_and"
 
-      params =
-        query: query
-        query_name: queryName
+      firstRequest = serveSearchPage 1, 5, 1
+      secondRequest = serveSearchPage 1, 5, 2, true
 
-      firstRequest = serveSearchPage 1, 5, 1, params
-      secondRequest = serveSearchPage 1, 5, 2, params
       controller = cfg.getController()
 
       # 1st request handler
@@ -235,9 +253,11 @@ describe "Controller", ->
         firstRequest.isDone().should.be.true
         secondRequest.isDone().should.be.false
 
+        # test details of the first request
         controller.query.should.equal query
         controller.params.page.should.equal 1
-        controller.params.query_counter.should.equal 1
+        controller.queryCounter.should.equal 1
+        res.query_counter.should.equal 1
         controller.params.query_name.should.equal queryName
 
         # 2nd request handler (on request)
@@ -255,7 +275,8 @@ describe "Controller", ->
 
           controller.query.should.equal query
           controller.params.page.should.equal 1
-          controller.params.query_counter.should.equal 2
+          controller.queryCounter.should.equal 2
+          res.query_counter.should.equal 2
           controller.params.query_name.should.equal queryName
 
           done()
@@ -282,5 +303,46 @@ describe "Controller", ->
     it "can register/deregister widgets after initialization"
 
   context "Status", ->
-    it "can serialize search status to string"
-    it "can de-serialize search status from string"
+    it "can serialize search status to string", (done) ->
+      controller = cfg.getController()
+      controller.serializeStatus().should.equal ""
+      controller.reset "hola", query_name: "match_and", transformer: null, rpp: 10, page: 1
+      controller.serializeStatus().should.equal "query=hola&query_name=match_and"
+      done()
+
+    it "does not perform request when de-serializing empty status", (done) ->
+      controller = cfg.getController()
+      (controller.loadStatus "").should.be.false
+      (expect controller.query).to.be.null
+      (expect controller.params.query_name).to.be.null
+      controller.params.page.should.equal 1
+      controller.params.rpp.should.equal 10
+      controller.params.should.eql controller.defaults
+      controller.requestDone.should.be.false
+      serve.clean()
+      done()
+
+    it "performs a request when de-serializing a non-empty search status from string", (done) ->
+      controller = cfg.getController rpp: 20
+
+      controller.one "df:resultsReceived", (res) ->
+        controller.serializeStatus().should.equal "query=hola&query_name=match_and"
+        scope.isDone().should.be.true
+        done()
+
+      params =
+        query: "hola"
+        query_name: "match_and"
+        rpp: 20
+        page: 1
+        query_counter: 1
+
+      scope = serve.search params
+      request = controller.loadStatus "query=hola&query_name=match_and"
+      request.should.not.be.false
+
+      controller.query.should.equal "hola"
+      controller.params.query_name.should.equal "match_and"
+      controller.params.page.should.equal 1
+      controller.params.rpp.should.equal 20
+      controller.requestDone.should.be.true

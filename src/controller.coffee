@@ -169,15 +169,13 @@ class Controller
   ###
   getResults: ->
     @requestDone = true
-    @params.query_counter = ++@queryCounter
-    @params.query_name = null if @params.page is 1
-
-    request = @client.search @query, @params, (err, res) =>
+    params = extend true, query_counter: ++@queryCounter, @params
+    request = @client.search @query, params, (err, res) =>
       if err
         @trigger "df:errorReceived", [err]
-      else if res.query_counter is @params.query_counter
+      else if res.query_counter is @queryCounter
         @lastPage = Math.ceil (res.total / res.results_per_page)
-        @params.query_name ?= res.query_name
+        @params.query_name = res.query_name
 
         # TODO: Each widget could listen to its controller and render itself
         for widget in @widgets
@@ -314,27 +312,34 @@ class Controller
   # Serialization
   #
 
-  serializeStatus: (prefix = "#/search/") ->
-    params = extend true, query: @query, @params
-    delete params[key] for key in [
+  serializeStatus: ->
+    status = extend true, query: @query, @params
+    delete status[key] for key in [
       'transformer',
       'rpp',
       'query_counter',
       'page'
     ]
-    return "#{prefix}#{qs.stringify params}"
 
-  loadStatus: (status, prefix = "#/search/") ->
-    status = (qs.parse (status.replace prefix, "")) or {}
+    delete status[key] for own key, value of status when not value
 
-    @reset()
+    if (Object.keys status).length > 0
+      qs.stringify status
+    else
+      ""
 
-    @query = status.query or ""
-    @params = extend true, @params, status
-    @requestDone = true
+  loadStatus: (status) ->
+    params = (qs.parse status) or {}
 
-    delete @params.query
-    @refresh()
+    if (Object.keys params).length > 0
+      query = params.query or ""
+      delete params.query
+
+      @reset query, params
+      @requestDone = true
+      @refresh()
+    else
+      false
 
 
 module.exports = Controller
