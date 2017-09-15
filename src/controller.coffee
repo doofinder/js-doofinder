@@ -190,16 +190,16 @@ class Controller
   # Events
   #
 
-  on: (eventName, handler, args) ->
-    bean.on @, eventName, handler, args
+  on: (eventName, handler, args = []) ->
+    bean.on @, eventName, handler, args...
 
-  one: (eventName, handler, args) ->
-    bean.one @, eventName, handler, args
+  one: (eventName, handler, args = []) ->
+    bean.one @, eventName, handler, args...
 
   off: (eventName, handler) ->
     bean.off @, eventName, handler
 
-  trigger: (eventName, args) ->
+  trigger: (eventName, args = []) ->
     bean.fire @, eventName, args
 
   bind: (eventName, handler) ->

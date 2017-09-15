@@ -676,8 +676,8 @@ class DfDomElement
    *
    * @public
   ###
-  on: (events, selector, fn, args) ->
-    @each (node) -> bean.on node, events, selector, fn, args
+  on: (eventName, selector, handler, args = []) ->
+    @each (node) -> bean.on node, eventName, selector, handler, args...
 
   ###*
    * Proxy method to Bean Framework's one(). Attachs a single-use event handler
@@ -687,8 +687,8 @@ class DfDomElement
    *
    * @public
   ###
-  one: (events, selector, fn, args) ->
-    @each (node) -> bean.one node, events, selector, fn, args
+  one: (eventName, selector, handler, args = []) ->
+    @each (node) -> bean.one node, eventName, selector, handler, args...
 
   ###*
    * Proxy method to Bean Framework's fire(). Triggers the events provide on
@@ -698,8 +698,8 @@ class DfDomElement
    *
    * @public
   ###
-  trigger: (events, args) ->
-    @each (node) -> bean.fire node, events, args
+  trigger: (eventName, args = []) ->
+    @each (node) -> bean.fire node, eventName, args
 
   ###*
    * Proxy method to Bean Framework's off(). Removes event handlers from each
@@ -709,8 +709,8 @@ class DfDomElement
    *
    * @public
   ###
-  off: (events, fn) ->
-    @each (node) -> bean.off node, events, fn
+  off: (eventName, handler) ->
+    @each (node) -> bean.off node, eventName, handler
 
   ###*
    * Due to the way focus works this shortcut makes easier triggering the event

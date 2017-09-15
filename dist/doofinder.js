@@ -237,6 +237,7 @@
 },{"./util/http":11,"./util/thing":12,"extend":25,"md5":66,"qs":73}],2:[function(require,module,exports){
 (function() {
   var Client, Controller, Freezer, Thing, bean, extend, qs,
+    slice = [].slice,
     hasProp = {}.hasOwnProperty;
 
   bean = require("bean");
@@ -488,11 +489,17 @@
     };
 
     Controller.prototype.on = function(eventName, handler, args) {
-      return bean.on(this, eventName, handler, args);
+      if (args == null) {
+        args = [];
+      }
+      return bean.on.apply(bean, [this, eventName, handler].concat(slice.call(args)));
     };
 
     Controller.prototype.one = function(eventName, handler, args) {
-      return bean.one(this, eventName, handler, args);
+      if (args == null) {
+        args = [];
+      }
+      return bean.one.apply(bean, [this, eventName, handler].concat(slice.call(args)));
     };
 
     Controller.prototype.off = function(eventName, handler) {
@@ -500,6 +507,9 @@
     };
 
     Controller.prototype.trigger = function(eventName, args) {
+      if (args == null) {
+        args = [];
+      }
       return bean.fire(this, eventName, args);
     };
 
@@ -1211,7 +1221,8 @@
 
 },{"./client":1,"./session":4,"./util/uniqueid":13}],6:[function(require,module,exports){
 (function() {
-  var DfDomElement, MATCHES_SELECTOR_FN, Thing, bean, matchesSelector;
+  var DfDomElement, MATCHES_SELECTOR_FN, Thing, bean, matchesSelector,
+    slice = [].slice;
 
   bean = require("bean");
 
@@ -2155,9 +2166,12 @@
      * @public
      */
 
-    DfDomElement.prototype.on = function(events, selector, fn, args) {
+    DfDomElement.prototype.on = function(eventName, selector, handler, args) {
+      if (args == null) {
+        args = [];
+      }
       return this.each(function(node) {
-        return bean.on(node, events, selector, fn, args);
+        return bean.on.apply(bean, [node, eventName, selector, handler].concat(slice.call(args)));
       });
     };
 
@@ -2171,9 +2185,12 @@
      * @public
      */
 
-    DfDomElement.prototype.one = function(events, selector, fn, args) {
+    DfDomElement.prototype.one = function(eventName, selector, handler, args) {
+      if (args == null) {
+        args = [];
+      }
       return this.each(function(node) {
-        return bean.one(node, events, selector, fn, args);
+        return bean.one.apply(bean, [node, eventName, selector, handler].concat(slice.call(args)));
       });
     };
 
@@ -2187,9 +2204,12 @@
      * @public
      */
 
-    DfDomElement.prototype.trigger = function(events, args) {
+    DfDomElement.prototype.trigger = function(eventName, args) {
+      if (args == null) {
+        args = [];
+      }
       return this.each(function(node) {
-        return bean.fire(node, events, args);
+        return bean.fire(node, eventName, args);
       });
     };
 
@@ -2203,9 +2223,9 @@
      * @public
      */
 
-    DfDomElement.prototype.off = function(events, fn) {
+    DfDomElement.prototype.off = function(eventName, handler) {
       return this.each(function(node) {
-        return bean.off(node, events, fn);
+        return bean.off(node, eventName, handler);
       });
     };
 
@@ -2819,63 +2839,29 @@
 
     Widget.prototype.clean = function() {};
 
-
-    /**
-     * Attachs a single-use event listener to the container element.
-     * @param  {String}   event    Event name.
-     * @param  {Function} callback Function that will be executed in response to
-     *                             the event.
-     */
-
-    Widget.prototype.one = function(event, callback) {
-      return this.element.one(event, callback);
+    Widget.prototype.on = function(eventName, handler, args) {
+      if (args == null) {
+        args = [];
+      }
+      return this.element.on(eventName, handler, args);
     };
 
-
-    /**
-     * Attachs an event listener to the container element.
-     * TODO(@carlosescri): Rename to "on" to unify.
-     *
-     * @param  {String}   event    Event name.
-     * @param  {Function} callback Function that will be executed in response to
-     *                             the event.
-     */
-
-    Widget.prototype.bind = function(event, callback) {
-      return this.element.on(event, callback);
+    Widget.prototype.one = function(eventName, handler, args) {
+      if (args == null) {
+        args = [];
+      }
+      return this.element.one(eventName, handler, args);
     };
 
-
-    /**
-     * Removes an event listener from the container element.
-     * @param  {String}   event    Event name.
-     * @param  {Function} callback Function that won't be executed anymore in
-     *                             response to the event.
-     */
-
-    Widget.prototype.off = function(event, callback) {
-      return this.element.off(event, callback);
+    Widget.prototype.off = function(eventName, handler) {
+      return this.element.off(eventName, handler);
     };
 
-
-    /*
-    trigger
-    
-    Method to trigger an event
-    @param {String} event
-    @param {Array} params
-    @api public
-     */
-
-
-    /**
-     * Triggers an event with the container element as the target of the event.
-     * @param  {String} event  Event name.
-     * @param  {Array}  params Array of parameters to be sent to the handler.
-     */
-
-    Widget.prototype.trigger = function(event, params) {
-      return this.element.trigger(event, params);
+    Widget.prototype.trigger = function(eventName, args) {
+      if (args == null) {
+        args = [];
+      }
+      return this.element.trigger(eventName, args);
     };
 
 

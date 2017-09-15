@@ -55,50 +55,22 @@ class Widget
   ###
   clean: ->
 
-  ###*
-   * Attachs a single-use event listener to the container element.
-   * @param  {String}   event    Event name.
-   * @param  {Function} callback Function that will be executed in response to
-   *                             the event.
-  ###
-  one: (event, callback) ->
-    @element.one event, callback
 
-  ###*
-   * Attachs an event listener to the container element.
-   * TODO(@carlosescri): Rename to "on" to unify.
-   *
-   * @param  {String}   event    Event name.
-   * @param  {Function} callback Function that will be executed in response to
-   *                             the event.
-  ###
-  bind: (event, callback) ->
-    @element.on event, callback
+  #
+  # Events
+  #
 
-  ###*
-   * Removes an event listener from the container element.
-   * @param  {String}   event    Event name.
-   * @param  {Function} callback Function that won't be executed anymore in
-   *                             response to the event.
-  ###
-  off: (event, callback) ->
-    @element.off event, callback
+  on: (eventName, handler, args = []) ->
+    @element.on eventName, handler, args
 
-  ###
-  trigger
+  one: (eventName, handler, args = []) ->
+    @element.one eventName, handler, args
 
-  Method to trigger an event
-  @param {String} event
-  @param {Array} params
-  @api public
-  ###
-  ###*
-   * Triggers an event with the container element as the target of the event.
-   * @param  {String} event  Event name.
-   * @param  {Array}  params Array of parameters to be sent to the handler.
-  ###
-  trigger: (event, params) ->
-    @element.trigger event, params
+  off: (eventName, handler) ->
+    @element.off eventName, handler
+
+  trigger: (eventName, args = []) ->
+    @element.trigger eventName, args
 
   ###*
    * Throws an error that can be captured.
