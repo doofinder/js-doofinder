@@ -9,12 +9,21 @@ expect = chai.expect
 # required for tests
 Client = require "../lib/client"
 Controller = require "../lib/controller"
+Widget = require "../lib/widget"
 
 # config, utils & mocks
 cfg = require "./config"
 serve = require "./serve"
 
 qs = require "qs"
+
+
+class WidgetMock extends Widget
+  setElement: (@element) ->
+  render: (res) ->
+    @rendered = true
+  renderNext: (res) ->
+    @renderedNext = true
 
 ###*
  * Configures nock to serve a search mock for a specific status.
@@ -54,10 +63,9 @@ serveSearchPage = (page, totalPages, queryCounter, refresh = false) ->
  * @param  {Function} searchTestFn        Function with extra tests and done().
  * @return {http.ClientRequest}           First request sent by the controller.
 ###
-testAnotherPage = (anotherPage, totalPages, anotherQueryCounter, searchTestFn) ->
+testAnotherPage = (controller, anotherPage, totalPages, anotherQueryCounter, searchTestFn) ->
   firstPageRequest = serveSearchPage 1, totalPages, 1
   anotherPageRequest = serveSearchPage anotherPage, totalPages, anotherQueryCounter
-  controller = cfg.getController()
   pageHandled = false
 
   # Handler for first page search. It configures handlers for the actual request
@@ -228,13 +236,13 @@ describe "Controller", ->
       controller.search ""
 
     it "can get the next page in the 2nd request", (done) ->
-      testAnotherPage 2, 2, 2, (controller, res) ->
+      testAnotherPage cfg.getController(), 2, 2, 2, (controller, res) ->
         controller.lastPage.should.equal 2
         controller.isLastPage.should.be.true
         done()
 
     it "can get 4th page of 5 in the 2nd request", (done) ->
-      testAnotherPage 4, 5, 2, (controller, res) ->
+      testAnotherPage cfg.getController(), 4, 5, 2, (controller, res) ->
         controller.lastPage.should.equal 5
         controller.isLastPage.should.be.false
         done()
@@ -299,8 +307,39 @@ describe "Controller", ->
       controller.search ""
 
   context "Widgets", ->
-    it "can register widgets on initialization"
-    it "can register/deregister widgets after initialization"
+    it "can register widgets on initialization", (done) ->
+      widget = new WidgetMock()
+      controller = new Controller cfg.getClient(), [widget]
+      controller.widgets.length.should.equal 1
+      controller.widgets[0].should.equal widget
+      widget.controller.should.equal controller
+      done()
+
+    it "can register widgets after initialization", (done) ->
+      widget = new WidgetMock()
+      controller = new Controller cfg.getClient(), [new WidgetMock()]
+      controller.registerWidget widget
+      controller.widgets.length.should.equal 2
+      controller.widgets[0].should.not.equal widget
+      controller.widgets[1].should.equal widget
+      widget.controller.should.equal controller
+      done()
+
+    it "can deregister widgets after initialization", (done) ->
+      widget = new WidgetMock()
+      controller = new Controller cfg.getClient(), [widget]
+      controller.unregisterWidget widget
+      controller.widgets.length.should.equal 0
+      (expect widget.controller).to.be.undefined
+      done()
+
+    it "makes widgets render when a search response is received", (done) ->
+      controller = new Controller cfg.getClient(), [new WidgetMock(), new WidgetMock()]
+      testAnotherPage controller, 4, 5, 2, (controller, res) ->
+        for widget in controller.widgets
+          widget.rendered.should.be.true
+          widget.renderedNext.should.be.true
+        done()
 
   context "Status", ->
     it "can serialize search status to string", (done) ->

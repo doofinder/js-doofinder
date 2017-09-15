@@ -15,11 +15,11 @@ to retrieve the data and the widgets
 to paint them.
 ###
 class Controller
-  constructor: (@client, @widgets = [], defaultParams = {}) ->
+  constructor: (@client, widgets = [], defaultParams = {}) ->
     unless @client instanceof Client
       throw @error "client must be an instance of Client"
 
-    unless Thing.isArray @widgets
+    unless Thing.isArray widgets
       throw @error "widgets must be an instance of Array"
 
     unless Thing.isPlainObj defaultParams
@@ -35,7 +35,8 @@ class Controller
     @queryCounter = 0
 
     # TODO(@carlosescri): Find a better way to subscribe widgets
-    (@addWidget widget) for widget in @widgets
+    @widgets = []
+    (@registerWidget widget) for widget in widgets
 
     Object.defineProperty @, 'hashid', get: ->
       @client.hashid
@@ -177,8 +178,9 @@ class Controller
         @lastPage = Math.ceil (res.total / res.results_per_page)
         @params.query_name = res.query_name
 
-        # TODO: Each widget could listen to its controller and render itself
         for widget in @widgets
+          # TODO: Use only render(), what about getPage? renderNext concept
+          # should be inside render() on widgets that need to handle that.
           if res.page is 1 then widget.render res else widget.renderNext res
 
         @trigger "df:resultsReceived", [res]
@@ -208,9 +210,16 @@ class Controller
   # Widgets
   #
 
-  addWidget: (widget) ->
+  registerWidget: (widget) ->
     @widgets.push widget
+    # TODO(@carlosescri): widget.setController @
     widget.init @
+
+  unregisterWidget: (widget) ->
+    @widgets = @widgets.filter (instance) ->
+      instance isnt widget
+    # TODO(@carlosescri): widget.removeController @
+    widget.controller = undefined
 
   #
   # Params
