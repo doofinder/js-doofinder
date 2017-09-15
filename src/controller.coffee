@@ -2,6 +2,7 @@ bean = require "bean"
 extend = require "extend"
 qs = require "qs"
 
+errors = require "./util/errors"
 Client = require "./client"
 
 Freezer = require "./util/freezer"
@@ -17,13 +18,13 @@ to paint them.
 class Controller
   constructor: (@client, widgets = [], defaultParams = {}) ->
     unless @client instanceof Client
-      throw @error "client must be an instance of Client"
+      throw (errors.error "client must be an instance of Client", @)
 
     unless Thing.isArray widgets
-      throw @error "widgets must be an instance of Array"
+      throw (errors.error "widgets must be an instance of Array", @)
 
     unless Thing.isPlainObj defaultParams
-      throw @error "defaultParams must be an instance of Object"
+      throw (errors.error "defaultParams must be an instance of Object", @)
 
     # controller needs page and rpp to do calculations
     defaults =
@@ -49,12 +50,6 @@ class Controller
 
     @reset()
 
-  error: (message) ->
-    new Error "#{@constructor.name}: #{message}"
-
-  deprecate: (message) ->
-    console.warn "[DEPRECATED][#{@constructor.name}]: #{message}" if console?
-
   #
   # Status
   #
@@ -73,7 +68,7 @@ class Controller
     if params.filters?
       params.filter = params.filters
       delete params.filters
-      @deprecate "`filters` key is deprecated for search parameters, use `filter` instead"
+      errors.warning "`filters` key is deprecated for search parameters, use `filter` instead", @
     params
 
   ###*
@@ -203,7 +198,7 @@ class Controller
     bean.fire @, eventName, args
 
   bind: (eventName, handler) ->
-    @deprecate "`bind()` is deprecated, use `on()` instead"
+    errors.warning "`bind()` is deprecated, use `on()` instead", @
     @on eventName, handler
 
   #
@@ -235,7 +230,7 @@ class Controller
     delete @params[key]
 
   addParam: (key, value) ->
-    @deprecate "`addParam()` is deprecated, use `setParam()` instead"
+    errors.warning "`addParam()` is deprecated, use `setParam()` instead", @
     @setParam key, value
 
   #

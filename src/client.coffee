@@ -2,6 +2,7 @@ extend = require "extend"
 md5 = require "md5"
 qs = require "qs"
 
+errors = require "./util/errors"
 HttpClient = require "./util/http"
 Thing = require "./util/thing"
 
@@ -9,9 +10,6 @@ Thing = require "./util/thing"
  * This class allows searching and sending stats using the Doofinder service.
 ###
 class Client
-  error: (message) ->
-    new Error "#{@constructor.name}: #{message}"
-
   ###*
    * Constructor
    * @param  {String}       hashid  Unique ID of the Search Engine.
@@ -179,7 +177,7 @@ class Client
 
     if (Thing.isPlainObj queryParams.sort) and
         (Object.keys queryParams.sort).length > 1
-      throw @error "To sort by multiple fields use an Array of Objects"
+      throw (errors.error "To sort by multiple fields use an Array of Objects", @)
 
     qs.stringify queryParams, skipNulls: true
 
