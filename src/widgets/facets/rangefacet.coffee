@@ -2,13 +2,13 @@ BaseFacet = require "./basefacet"
 noUiSlider = require "nouislider"
 extend = require "extend"
 
+defaultTemplate = """<div class="{{sliderClassName}}" data-facet="{{name}}"></div>"""
+
 
 ###*
  * Represents a range slider control to filter numbers within a range.
 ###
 class RangeFacet extends BaseFacet
-  @defaultTemplate: """<div class="{{sliderClassName}}" data-facet="{{name}}"></div>"""
-
   ###*
    * Apart from inherited options, this widget accepts these options:
    *
@@ -24,7 +24,9 @@ class RangeFacet extends BaseFacet
    * @param  {Object} options Options object. Empty by default.
   ###
   constructor: (element, name, options = {}) ->
-    super
+    options = extend true, template: defaultTemplate, options
+
+    super element, name, options
 
     @sliderClassName = options.sliderClassName or 'df-slider'
     @sliderSelector =  ".#{@sliderClassName}[data-facet='#{@name}']"
@@ -51,10 +53,9 @@ class RangeFacet extends BaseFacet
     context =
       name: @name
       sliderClassName: @sliderClassName
-    context = extend true, context, @extraContext or {}
 
     # Render template HTML and place it inside the container
-    @element.html @mustache.render @template, context
+    @element.html @renderTemplate context
 
     # Create a node for the the slider and append it to @sliderSelector
     @slider = document.createElement 'div'
@@ -141,7 +142,7 @@ class RangeFacet extends BaseFacet
    * Renders the widget with the data received, by replacing its content.
    *
    * @param {Object} res Search response.
-   * @fires RangeFacet#df:rendered
+   * @fires RangeFacet#df:widget:render
   ###
   render: (res) ->
     # Throws errors if prerrequisites are not accomplished.
@@ -200,7 +201,7 @@ class RangeFacet extends BaseFacet
           100: options.format.to options.range.max
         @__renderPips values
 
-      @trigger "df:rendered", [res]
+      @trigger "df:widget:render", [res]
 
   ###*
    * Cleans the widget by removing all the HTML inside the container element.

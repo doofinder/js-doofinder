@@ -8,81 +8,136 @@
   <style type="text/css">
     * {
       box-sizing: border-box;
+      font-size: 1rem;
+      font-family: -apple-system, system-ui, sans-serif;
     }
 
-    .m {
-      margin-bottom: 1rem;
+    body {
+      margin: 0;
+      padding: 1rem;
     }
 
-    .w {
-      width: 320px;
+    textarea {
+      height: 150px;
     }
 
-    .b {
-      border: 1px solid #ccc;
+    #search {
+      padding: .5rem;
     }
 
-    .q {
-      padding: .25rem;
+    .widget {
+      width: 400px;
+      border: 1px solid #ddd;
+      margin: 0 0 1rem 0;
     }
 
-    .s {
-      position: relative;
-      height: 400px;
-      overflow: auto;
+    .widget:last-child {
+      margin-bottom: 0;
+    }
+
+    .df-results {
+      height: 150px;
     }
 
     .df-term {
       display: block;
+      color: inherit;
+    }
+
+    .df-term[data-selected] {
+      font-weight: bold;
+    }
+
+    .row {
+      display: flex;
+      flex-flow: row nowrap;
+    }
+
+    .col {
+      flex: 0 0 auto;
+    }
+
+    .col + .col {
+      margin-left: 1rem;
     }
   </style>
 
-  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
   <script type="text/javascript" src="dist/doofinder.js"></script>
-  <script type="text/javascript" src="node_modules/bean/bean.js"></script>
 </head>
 <body>
-  <input class="w m q" type="text" id="query" autofocus>
-  <div class="w m b s" id="scroll"></div>
-  <div class="w m b" id="category"></div>
-  <div class="w m b" id="brand"></div>
-  <div class="w m b" id="price"></div>
+  <input class="widget" id="search" type="text" placeholder="Search something">
+  <!-- <textarea class="widget" id="search" placeholder="Search something"></textarea> -->
+
+  <div class="row" data-hashid="e723b503db15fe242b934df14b141ccc">
+    <div class="col">
+
+      <div class="widget df-results">
+        <div class="df-results__content"></div>
+      </div>
+
+    </div>
+    <div class="col" data-role="facetsContainer"></div>
+  </div>
 
   <script type="text/javascript">
-    var client = new doofinder.Client('e723b503db15fe242b934df14b141ccc', 'eu1', null, ['product', 'recipe']);
-    var queryInputWidget = new doofinder.widgets.QueryInput('#query');
-    var resultsWidget = new doofinder.widgets.ScrollResults('#scroll');
-    var priceWidget = new doofinder.widgets.RangeFacet('#price', 'best_price', {
-      templateVars: {label: 'Price'}
-    });
-    var categoryWidget = new doofinder.widgets.TermFacet('#category', 'categories', {
-      templateVars: {label: 'Category'}
-    });
-    var brandWidget = new doofinder.widgets.TermFacet('#brand', 'brand', {
-      templateVars: {label: 'Brand'}
+
+    var $ = doofinder.util.dfdom;
+    var bean = doofinder.util.bean;
+    var input = new doofinder.widgets.QueryInput('#search');
+    var search = [];
+
+    $('[data-hashid]').each(function(row){
+      row = $(row);
+      var facetsContainer = row.find('[data-role="facetsContainer"]');
+
+      var client = new doofinder.Client(row.data('hashid'), 'eu1');
+      var controller = new doofinder.Controller(client);
+
+      client.options(function(err, options){
+        // input
+        controller.registerWidget(input);
+
+        // results
+        var results = new doofinder.widgets.ScrollDisplay(row.find('.df-results'));
+        results.on("df:widget:render", function(res){
+          console.log("[df:widget:render][" + res.hashid + "] query: '" + res.query + "' page: " + res.page);
+        });
+        controller.registerWidget(results);
+
+        // facets
+        options.facets.forEach(function(facet){
+          facetsContainer.append(
+            '<div class="widget" data-facetName="' + facet.name + '" data-facetType="' + facet.type + '"></div>'
+          );
+          if (facet.type === 'terms') {
+            controller.registerWidget(
+              new doofinder.widgets.TermsFacet(
+                row.find('[data-facetName="' + facet.name + '"]'),
+                facet.name,
+                {
+                  size: facet.size,
+                  label: facet.label
+                }
+              )
+            );
+          } else {
+            controller.registerWidget(
+              new doofinder.widgets.RangeFacet(
+                row.find('[data-facetName="' + facet.name + '"]'),
+                facet.name
+              )
+            );
+          }
+        });
+      });
+
+      search.push(controller);
     });
 
-    priceWidget.bind('df:rendered', function(res){
-      console.log(res);
+    input.on("df:input:stop", function(query){
+      console.log("[df:input:stop] " + query);
     });
 
-    controller = new doofinder.Controller(client, [
-      queryInputWidget,
-      resultsWidget,
-      categoryWidget,
-      brandWidget,
-      priceWidget
-    ]);
-
-    client.search('silla', {
-      filter: {
-        brand: ['JANE', 'Bower &#+? Wilkins']
-      },
-      exclude: {
-        brand: ['CONCORD', 'BE COOL']
-      },
-      sort: [{"_score": "desc"}, {"brand": "desc"}]
-    }, function(){})
   </script>
 </body>
 </html>

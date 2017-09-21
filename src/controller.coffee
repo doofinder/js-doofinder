@@ -131,7 +131,7 @@ class Controller
     page = parseInt page, 10
     if @requestDone and page <= @lastPage
       @params.page = page
-      @trigger "df:getPage", [@query, @params]
+      @trigger "df:search:page", [@query, @params]
       @getResults()
     else
       false
@@ -168,18 +168,15 @@ class Controller
     params = extend true, query_counter: ++@queryCounter, @params
     request = @client.search @query, params, (err, res) =>
       if err
-        @trigger "df:errorReceived", [err]
-      else if res.query_counter is @queryCounter
+        @trigger "df:error", [err]
+      else
         @lastPage = Math.ceil (res.total / res.results_per_page)
         @params.query_name = res.query_name
 
-        for widget in @widgets
-          # TODO: Use only render(), what about getPage? renderNext concept
-          # should be inside render() on widgets that need to handle that.
-          if res.page is 1 then widget.render res else widget.renderNext res
+        widget.render res for widget in @widgets
 
-        @trigger "df:resultsReceived", [res]
-        @trigger "df:lastPageReached", [res] if @isLastPage
+        @trigger "df:results", [res]
+        @trigger "df:results:end", [res] if @isLastPage
 
   #
   # Events
@@ -206,15 +203,9 @@ class Controller
   #
 
   registerWidget: (widget) ->
+    widget.setController @
+    widget.init()
     @widgets.push widget
-    # TODO(@carlosescri): widget.setController @
-    widget.init @
-
-  unregisterWidget: (widget) ->
-    @widgets = @widgets.filter (instance) ->
-      instance isnt widget
-    # TODO(@carlosescri): widget.removeController @
-    widget.controller = undefined
 
   #
   # Params

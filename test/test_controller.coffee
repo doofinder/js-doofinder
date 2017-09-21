@@ -9,7 +9,7 @@ expect = chai.expect
 # required for tests
 Client = require "../lib/client"
 Controller = require "../lib/controller"
-Widget = require "../lib/widget"
+Widget = require "../lib/widgets/widget"
 
 # config, utils & mocks
 cfg = require "./config"
@@ -22,8 +22,7 @@ class WidgetMock extends Widget
   setElement: (@element) ->
   render: (res) ->
     @rendered = true
-  renderNext: (res) ->
-    @renderedNext = true
+  trigger: (eventName, args = []) ->
 
 ###*
  * Configures nock to serve a search mock for a specific status.
@@ -70,20 +69,20 @@ testAnotherPage = (controller, anotherPage, totalPages, anotherQueryCounter, sea
 
   # Handler for first page search. It configures handlers for the actual request
   # we want to test.
-  controller.one "df:resultsReceived", (res) ->
+  controller.one "df:results", (res) ->
     firstPageRequest.isDone().should.be.true
 
     # Save the page we are requesting in the controller.
     # It should be equal to the page we want to test.
     # This event is triggered before the request is actually made.
-    controller.one "df:getPage", (query, params) ->
+    controller.one "df:search:page", (query, params) ->
       pageHandled = params.page
       pageHandled.should.equal anotherPage
 
     # One-time handler to get results received by the controller. Some basic
     # tests are done.
     # This event is triggered after the response is processed.
-    controller.one "df:resultsReceived", (res) ->
+    controller.one "df:results", (res) ->
       anotherPageRequest.isDone().should.be.true
 
       # The response matches the requested page and query counter
@@ -225,7 +224,7 @@ describe "Controller", ->
         @params.should.eql params
         searchTriggered = true
 
-      controller.one "df:resultsReceived", (res) ->
+      controller.one "df:results", (res) ->
         scope.isDone().should.be.true
         searchTriggered.should.be.true
 
@@ -257,7 +256,7 @@ describe "Controller", ->
       controller = cfg.getController()
 
       # 1st request handler
-      controller.one "df:resultsReceived", (res) ->
+      controller.one "df:results", (res) ->
         firstRequest.isDone().should.be.true
         secondRequest.isDone().should.be.false
 
@@ -277,7 +276,7 @@ describe "Controller", ->
           refreshTriggered = true
 
         # 2nd request handler (on response)
-        controller.one "df:resultsReceived", (res) ->
+        controller.one "df:results", (res) ->
           secondRequest.isDone().should.be.true
           refreshTriggered.should.be.true
 
@@ -295,11 +294,11 @@ describe "Controller", ->
       # 1st request
       controller.search query
 
-    it "triggers df:errorReceived in case of error", (done) ->
+    it "triggers df:error in case of error", (done) ->
       scope = serve.forbidden()
       controller = cfg.getController()
 
-      controller.one "df:errorReceived", (err) ->
+      controller.one "df:error", (err) ->
         scope.isDone().should.be.true
         err.should.equal 403
         done()
@@ -325,20 +324,11 @@ describe "Controller", ->
       widget.controller.should.equal controller
       done()
 
-    it "can deregister widgets after initialization", (done) ->
-      widget = new WidgetMock()
-      controller = new Controller cfg.getClient(), [widget]
-      controller.unregisterWidget widget
-      controller.widgets.length.should.equal 0
-      (expect widget.controller).to.be.undefined
-      done()
-
     it "makes widgets render when a search response is received", (done) ->
       controller = new Controller cfg.getClient(), [new WidgetMock(), new WidgetMock()]
       testAnotherPage controller, 4, 5, 2, (controller, res) ->
         for widget in controller.widgets
           widget.rendered.should.be.true
-          widget.renderedNext.should.be.true
         done()
 
   context "Status", ->
@@ -364,7 +354,7 @@ describe "Controller", ->
     it "performs a request when de-serializing a non-empty search status from string", (done) ->
       controller = cfg.getController rpp: 20
 
-      controller.one "df:resultsReceived", (res) ->
+      controller.one "df:results", (res) ->
         controller.serializeStatus().should.equal "query=hola&query_name=match_and"
         scope.isDone().should.be.true
         done()

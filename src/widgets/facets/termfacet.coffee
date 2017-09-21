@@ -2,31 +2,33 @@ BaseFacet = require "./basefacet"
 extend = require "extend"
 $ = require "../../util/dfdom"
 
+defaultTemplate = """
+  {{#terms}}
+    <a class="df-term" href="#" data-facet="{{name}}" data-value="{{key}}"
+        {{#extra-content}}{{index}}:{{size}}{{/extra-content}}
+        {{#selected}}data-selected{{/selected}}>
+      {{key}} <span class="df-term__count">{{doc_count}}</span>
+    </a>
+  {{/terms}}
+  {{#show-more-button}}{{terms.length}}:{{size}}{{/show-more-button}}
+"""
+
+defaultButtonTemplate = """
+  <button type="button" data-toggle-extra-content
+      data-text-normal="{{#translate}}{{viewMoreLabel}}{{/translate}}"
+      data-text-toggle="{{#translate}}{{viewLessLabel}}{{/translate}}">
+    {{#translate}}{{viewMoreLabel}}{{/translate}}
+  </button>
+"""
+
+defaultLabelTemplate = "{{label}}{{#total_selected}} ({{total_selected}}){{/total_selected}}"
+
 
 ###*
  * Represents a terms selector control to filter by the possible values of a
  * text field.
 ###
-class TermFacet extends BaseFacet
-  @defaultLabelTemplate: "{{label}}{{#total_selected}} ({{total_selected}}){{/total_selected}}"
-  @defaultTemplate: """
-    {{#terms}}
-      <a class="df-term" href="#" data-facet="{{name}}" data-value="{{key}}"
-          {{#extra-content}}{{index}}:{{size}}{{/extra-content}}
-          {{#selected}}data-selected{{/selected}}>
-        {{key}} <span class="df-term__count">{{doc_count}}</span>
-      </a>
-    {{/terms}}
-    {{#show-more-button}}{{terms.length}}:{{size}}{{/show-more-button}}
-  """
-  @defaultButtonTemplate: """
-    <button type="button" data-toggle-extra-content
-        data-text-normal="{{#translate}}{{viewMoreLabel}}{{/translate}}"
-        data-text-toggle="{{#translate}}{{viewLessLabel}}{{/translate}}">
-      {{#translate}}{{viewMoreLabel}}{{/translate}}
-    </button>
-  """
-
+class TermsFacet extends BaseFacet
   ###*
    * @param  {String|Node|DfDomElement} element  Container node.
    * @param  {String} name    Name of the facet/filter.
@@ -35,7 +37,9 @@ class TermFacet extends BaseFacet
   constructor: (element, name, options = {}) ->
     defaults =
       size: null  # set an int value to enable extra content behavior
-      buttonTemplate: @constructor.defaultButtonTemplate
+      template: defaultTemplate
+      buttonTemplate: defaultButtonTemplate
+      labelTemplate: defaultLabelTemplate
       templateVars:
         viewMoreLabel: "View more..."
         viewLessLabel: "View less..."
@@ -77,7 +81,7 @@ class TermFacet extends BaseFacet
             else
               ""
     options = extend true, defaults, options
-    super
+    super element, name, options
 
   ###*
    * Initializes the object with a controller and attachs event handlers for
@@ -85,74 +89,74 @@ class TermFacet extends BaseFacet
    *
    * @param  {Controller} controller Doofinder Search controller.
   ###
-  init: (controller) ->
-    super
-
-    # Handle clicks on terms by event delegation.
-    # A term has both a data-facet and a data-value attribute (panel could have
-    # a data-facet attribute so we're specific here to avoid strange behaviors).
-    @element.on "click", "[data-facet='#{@name}'][data-value]", (e) =>
-      e.preventDefault()
-
-      termNode = ($ e.target)
-      value = termNode.data "value"
-      key = termNode.data "facet"
-      wasSelected = termNode.hasAttr "data-selected"
-
-      unless wasSelected
-        termNode.attr "data-selected", ""
-        @controller.addFilter key, value
-      else
-        termNode.removeAttr "data-selected"
-        @controller.removeFilter key, value
-
-      @controller.refresh()
-
-      eventInfo =
-        facetName: key
-        facetValue: value
-        selected: not wasSelected
-        totalSelected: @getSelectedElements().length
-
-      @trigger "df:term_clicked", [eventInfo]
-
-    if @options.size != null
-
-      # - Declare the container element to display or hide extra terms when the
-      #   view more button is clicked.
-
-      @element.on "click", "[data-toggle-extra-content]", (e) =>
+  init: ->
+    unless @initialized
+      # Handle clicks on terms by event delegation.
+      # A term has both a data-facet and a data-value attribute (panel could have
+      # a data-facet attribute so we're specific here to avoid strange behaviors).
+      @element.on "click", "[data-facet='#{@name}'][data-value]", (e) =>
         e.preventDefault()
 
-        btn = @getShowMoreButton()
+        termNode = ($ e.target)
+        value = termNode.data "value"
+        key = termNode.data "facet"
+        wasSelected = termNode.hasAttr "data-selected"
 
-        currentText  = btn.textContent.trim()
-        viewMoreText = (btn.getAttribute "data-text-normal").trim()
-        viewLessText = (btn.getAttribute "data-text-toggle").trim()
-
-        if currentText == viewMoreText
-          btn.textContent = viewLessText
-          @element.attr "data-view-extra-content", ""
+        unless wasSelected
+          termNode.attr "data-selected", ""
+          @controller.addFilter key, value
         else
-          btn.textContent = viewMoreText
-          @element.removeAttr "data-view-extra-content"
+          termNode.removeAttr "data-selected"
+          @controller.removeFilter key, value
 
-      # - Fix the "view more" button when the container element is displaying
-      #   extra content but the controller is refreshed and the facet widget is
-      #   rendered again.
+        @controller.refresh()
 
-      @bind "df:rendered", (res) =>
-        if (@element.attr "data-view-extra-content")?
+        # TODO(@carlosescri): attrs should be params of the event handler
+        eventInfo =
+          facetName: key
+          facetValue: value
+          selected: not wasSelected
+          totalSelected: @getSelectedElements().length
+
+        @trigger "df:term:click", [eventInfo]
+
+      if @options.size?
+
+        # - Declare the container element to display or hide extra terms when the
+        #   view more button is clicked.
+
+        @element.on "click", "[data-toggle-extra-content]", (e) =>
+          e.preventDefault()
+
           btn = @getShowMoreButton()
-          btn?.textContent = (btn.getAttribute "data-text-toggle").trim()
 
-      # - Reset also the "view more" state of the container element when the
-      #   widget is reset.
+          currentText  = btn.textContent.trim()
+          viewMoreText = (btn.getAttribute "data-text-normal").trim()
+          viewLessText = (btn.getAttribute "data-text-toggle").trim()
 
-      @bind "df:cleaned", (res) =>
-        @element.removeAttr "data-view-extra-content"
-        btn = @getShowMoreButton()
-        btn?.textContent = (btn.getAttribute "data-text-normal").trim()
+          if currentText == viewMoreText
+            btn.textContent = viewLessText
+            @element.attr "data-view-extra-content", ""
+          else
+            btn.textContent = viewMoreText
+            @element.removeAttr "data-view-extra-content"
+
+        # - Fix the "view more" button when the container element is displaying
+        #   extra content but the controller is refreshed and the facet widget is
+        #   rendered again.
+
+        @on "df:widget:render", (res) =>
+          if (@element.attr "data-view-extra-content")?
+            btn = @getShowMoreButton()
+            btn?.textContent = (btn.getAttribute "data-text-toggle").trim()
+
+        # - Reset also the "view more" state of the container element when the
+        #   widget is reset.
+
+        @on "df:widget:clean", (res) =>
+          @element.removeAttr "data-view-extra-content"
+          btn = @getShowMoreButton()
+          btn?.textContent = (btn.getAttribute "data-text-normal").trim()
 
   ###*
    * @return {HTMLElement} The "show more" button.
@@ -195,44 +199,47 @@ class TermFacet extends BaseFacet
    * Renders the widget with the data received, by replacing its content.
    *
    * @param {Object} res Search response.
-   * @fires TermFacet#df:rendered
+   * @fires TermsFacet#df:widget:render
   ###
   render: (res) ->
-    # Throws errors if pre-requisites are not satisfied.
-    if not res.facets or not res.facets[@name]
-      @raiseError "TermFacet: #{@name} facet is not configured"
-    else if not res.facets[@name].terms.buckets
-      @raiseError "TermFacet: #{@name} facet is not a terms facet"
+    if res.page = 1
+      # Throws errors if pre-requisites are not satisfied.
+      if not res.facets or not res.facets[@name]
+        @raiseError "TermsFacet: #{@name} facet is not configured"
+      else if not res.facets[@name].terms.buckets
+        @raiseError "TermsFacet: #{@name} facet is not a terms facet"
 
-    if res.facets[@name].terms.buckets.length > 0
-      selectedTerms = {}
-      for term in (res.filter?.terms?[@name] or [])
-        selectedTerms[term] = true
-      selectedTerms
+      if res.facets[@name].terms.buckets.length > 0
+        selectedTerms = {}
+        for term in (res.filter?.terms?[@name] or [])
+          selectedTerms[term] = true
+        selectedTerms
 
-      for index, term of res.facets[@name].terms.buckets
-        term.index = index
-        term.name = @name
+        for index, term of res.facets[@name].terms.buckets
+          term.index = index
+          term.name = @name
 
-        if selectedTerms[term.key]
-          term.selected = 1
-        else
-          term.selected = 0
+          if selectedTerms[term.key]
+            term.selected = 1
+          else
+            term.selected = 0
 
-      totalSelected = @countSelectedTerms res
-      context = extend true,
-        any_selected: totalSelected > 0
-        total_selected: totalSelected
-        name: @name
-        terms: res.facets[@name].terms.buckets
+        totalSelected = @countSelectedTerms res
+        context = extend true,
+          any_selected: totalSelected > 0
+          total_selected: totalSelected
+          name: @name
+          terms: res.facets[@name].terms.buckets
 
-      eventInfo =
-        facetName: @name
-        totalSelected: totalSelected
+        eventInfo =
+          facetName: @name
+          totalSelected: totalSelected
 
-      @element.html (@mustache.render @template, (@buildContext context))
-      @trigger "df:rendered", [res, eventInfo]
-    else
-      @clean()
+        # TODO(@carlosescri): pass res extended with {facet: context} and
+        # update default templates ¿?
+        @element.html @renderTemplate context
+        @trigger "df:widget:render", [res, eventInfo]
+      else
+        @clean()
 
-module.exports = TermFacet
+module.exports = TermsFacet

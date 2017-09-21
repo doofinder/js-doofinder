@@ -14,7 +14,7 @@ This library allows you to make requests to your [Doofinder](http://www.doofinde
     * [QueryInput](#widgetsqueryinput)
     * [Results](#widgetsresults)
     * [ScrollResults](#widgetsscrollresults)
-    * [TermFacet](#widgetstermfacet)
+    * [TermsFacet](#widgetstermsfacet)
     * [RangeFacet](#widgetsrangefacet)
     * [FacetPanel](#widgetsfacetpanel)
   * [Client](#client)
@@ -548,7 +548,7 @@ results.bind('df:rendered', function(event, res){
 });
 ```
 
-### widgets.TermFacet
+### widgets.TermsFacet
 
 **Extends:** `widgets.Display`. You can use `bind`, `one`, `off` and `trigger` and listen to `df:rendered` and `df:cleaned`.
 
@@ -609,7 +609,7 @@ Event Name | Callback Arguments | Description
 As an example, we'll print in the console the total results in the `df:rendered` event.
 
 ```javascript
-facet = new doofinder.widgets.TermFacet(container, options);
+facet = new doofinder.widgets.TermsFacet(container, options);
 facet.bind('df:rendered', function(event, res){
    console.log(res.total);
 });
@@ -726,7 +726,7 @@ var panel = new doofinder.widgets.FacetPanel(
 );
 controller.addWidget(panel);
 
-var facetWidget = new doofinder.widgets.TermFacet(
+var facetWidget = new doofinder.widgets.TermsFacet(
   panel.contentElement,
   facetName,
   facetOptions

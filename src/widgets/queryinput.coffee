@@ -1,6 +1,5 @@
 extend = require "extend"
-Widget = require "../widget"
-dfTypeWatch = require "../util/dftypewatch"
+Widget = require "./widget"
 
 
 ###*
@@ -15,10 +14,21 @@ class QueryInput extends Widget
    * @param  {Object} options Options object. Empty by default.
   ###
   constructor: (element, options = {}) ->
-    super element, options
-    @typingTimeout = @options.typingTimeout || 1000
-    @eventsBound = false
-    @cleanInput = if @options.clean? then @options.clean else true
+    defaults =
+      clean: true
+      captureLength: 3
+      typingTimeout: 1000
+      wait: 43
+
+    super element, (extend true, defaults, options)
+
+    @controller = []
+    @timer = null
+    @stopTimer = null
+    @currentValue = @element.val() or ""
+
+  setController: (controller) ->
+    @controller.push controller
 
   ###*
    * Initializes the object with a controller and attachs event handlers for
@@ -27,48 +37,45 @@ class QueryInput extends Widget
    *
    * @param  {Controller} controller Doofinder Search controller.
   ###
-  init: (controller) ->
-    if @controller
-      @controller.push controller
-    else
-      @controller = [controller]
+  init: ->
+    unless @initialized
+      @element.on "input", (=> @scheduleUpdate())
 
-    self = this
+      unless (@element.get 0).tagName.toUpperCase() is "TEXTAREA"
+        @element.on "keydown", (e) =>
+          if e.keyCode? and e.keyCode is 13
+            @scheduleUpdate 0, true
 
-    # Bind events only once
-    if not @eventsBound
-      options = extend true,
-        callback: ->
-          query = self.element.val()
-          self.controller.forEach (controller)->
-            controller.reset()
-            controller.search.call controller, query
-        wait: 43
-        captureLength: 3,
-        @options
-      dfTypeWatch @element, options
+      super
 
-      # Typing stopped event. We use the first controller (we could use any) to
-      # detect the moment when the user stops typing.
-      ctrl = @controller[0]
-      ctrl.bind 'df:results_received', (res) ->
-        setTimeout (->
-          if ctrl.status.params.query_counter == res.query_counter and
-              ctrl.status.currentPage == 1
-            self.trigger('df:typing_stopped', [ctrl.status.params.query])),
-          self.typingTimeout
+  scheduleUpdate: (delay, force) ->
+    clearTimeout @timer
+    clearTimeout @stopTimer
 
-      @eventsBound = true
+    query = @element.val() or ""
+    delay ?= @options.wait
+    force ?= false
+
+    @timer = setTimeout (@updateStatus.bind @), delay, query, force # IE10+
+
+  updateStatus: (query, force) ->
+    valid = query.length >= @options.captureLength
+    changed = query.toUpperCase() != @currentValue
+    if (valid and (changed or force)) or (@currentValue and not query.length)
+      @stopTimer = setTimeout (@trigger.bind @), @options.typingTimeout, "df:input:stop", [query] # IE10+
+      # @stopTimer = setTimeout (=> @trigger "df:input:stop", [query]), @options.typingTimeout
+      @currentValue = query.toUpperCase()
+      @controller.forEach (controller) -> controller.search query
 
   ###*
    * If the widget is configured to be cleaned, empties the value of the input
    * element.
-   * @fires QueryInput#df:cleaned
+   * @fires QueryInput#df:widget:clean
   ###
   clean: ->
-    if @cleanInput
+    if @options.clean
       @element.val ""
-      @trigger "df:cleaned"
+      @trigger "df:widget:clean"
 
 
 module.exports = QueryInput

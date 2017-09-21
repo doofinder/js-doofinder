@@ -4,6 +4,13 @@ $ = require "../../util/dfdom"
 Display = require "../display"
 uniqueId = require "../../util/uniqueid"
 
+defaultTemplate = """
+  <div id="{{id}}" data-role="panel">
+    <a href="#" data-role="panel-label" data-toggle="panel"></a>
+    <div data-role="panel-content"></div>
+  </div>
+"""
+
 
 ###*
  * Collapsible panel that contains a facet widget.
@@ -11,13 +18,6 @@ uniqueId = require "../../util/uniqueid"
  * HTML content.
 ###
 class FacetPanel extends Display
-  @defaultTemplate = """
-    <div id="{{id}}" data-role="panel">
-      <a href="#" data-role="panel-label" data-toggle="panel"></a>
-      <div data-role="panel-content"></div>
-    </div>
-  """
-
   ###*
    * @param  {String|Node|DfDomElement} element  Container node.
    * @param  {Object} options Options object. Empty by default.
@@ -27,7 +27,7 @@ class FacetPanel extends Display
 
     defaults =
       id: uid
-      template: @constructor.defaultTemplate
+      template: defaultTemplate
       startHidden: true     # Hide the panel until the embedded widget has been
                             # rendered.
       startCollapsed: false # Render collapsed instead of expanded.
@@ -38,7 +38,7 @@ class FacetPanel extends Display
     super element, options.template, options
 
     # Render as soon as possible!
-    @element.append (@mustache.render @template, @buildContext())
+    @element.append @renderTemplate()
     # Once appended, change the @element reference to the panel itself instead
     # of the container.
     @setElement "##{@options.id}"
@@ -57,11 +57,12 @@ class FacetPanel extends Display
    *
    * @param  {Controller} controller Doofinder Search controller.
   ###
-  init: (controller) ->
-    super
-    @toggleElement.on "click", (e) =>
-      e.preventDefault()
-      if @isCollapsed() then @expand() else @collapse()
+  init: ->
+    unless @initialized
+      @toggleElement.on "click", (e) =>
+        e.preventDefault()
+        if @isCollapsed() then @expand() else @collapse()
+      super
 
   ###*
    * Checks whether the panel is collapsed or not.
@@ -95,9 +96,9 @@ class FacetPanel extends Display
     else
       @embeddedWidget = embeddedWidget
       # auto-show when the embedded widget is rendered
-      @embeddedWidget.bind "df:rendered", (=> @element.css "display", "inherit")
+      @embeddedWidget.on "df:widget:render", (=> @element.css "display", "inherit")
       # auto-hide when the embedded widget is cleaned
-      @embeddedWidget.bind "df:cleaned", (=> @element.css "display", "none")
+      @embeddedWidget.on "df:widget:clean", (=> @element.css "display", "none")
 
   ###*
    * Called when the "first page" response for a specific search is received.
@@ -106,20 +107,12 @@ class FacetPanel extends Display
    * parts.
    *
    * @param {Object} res Search response.
-   * @fires FacetPanel#df:rendered
+   * @fires FacetPanel#df:widget:render
   ###
   render: (res) ->
     if @embeddedWidget?
       @labelElement.html (@embeddedWidget.renderLabel res)
-      @trigger "df:rendered", [res]
-
-  ###*
-   * Called when subsequent (not "first-page") responses for a specific search
-   * are received. Disabled in this kind of widget.
-   *
-   * @param {Object} res Search response.
-  ###
-  renderNext: (res) ->
+      @trigger "df:widget:render", [res]
 
   ###*
    * Cleans the widget by removing the HTML inside the label element. Also, if
@@ -129,14 +122,14 @@ class FacetPanel extends Display
    * WARNING: DON'T CALL `super()` here. We don't want the panel container to
    * be reset!!!
    *
-   * @fires FacetPanel#df:cleaned
+   * @fires FacetPanel#df:widget:clean
   ###
   clean: ->
     @labelElement.html ""
     if @options.startHidden
       @element.css "display", "none"
     if @options.startCollapsed then @collapse() else @expand()
-    @trigger "df:cleaned"
+    @trigger "df:widget:clean"
 
 
 module.exports = FacetPanel

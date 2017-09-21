@@ -1,5 +1,5 @@
 bean = require "bean"
-$ = require "./util/dfdom"
+$ = require "../util/dfdom"
 
 
 ###*
@@ -18,6 +18,8 @@ class Widget
   ###
   constructor: (element, @options = {}) ->
     @setElement element
+    @controller = null
+    @initialized = false
 
   ###*
    * Assigns the container element to the widget.
@@ -26,13 +28,17 @@ class Widget
   setElement: (element) ->
     @element = ($ element).first()
 
+  setController: (@controller) ->
+
   ###*
    * Initializes the object. Intended to be extended in child classes.
    * You will want to add your own event handlers here.
    *
    * @param  {Controller} controller Doofinder Search controller.
   ###
-  init: (@controller) ->
+  init: ->
+    @initialized = true
+    @trigger "df:widget:init"
 
   ###*
    * Called when the "first page" response for a specific search is received.
@@ -41,36 +47,28 @@ class Widget
    * @param  {Object} res Search response.
   ###
   render: (res) ->
-
-  ###*
-   * Called when subsequent (not "first-page") responses for a specific search
-   * are received. Renders the widget with the data received.
-   *
-   * @param  {Object} res Search response.
-  ###
-  renderNext: (res) ->
+    @trigger "df:widget:render", [res]
 
   ###*
    * Cleans the widget. Intended to be overriden.
   ###
   clean: ->
 
-
   #
   # Events
   #
 
   on: (eventName, handler, args = []) ->
-    @element.on eventName, handler, args
+    bean.on @, eventName, handler, args...
 
   one: (eventName, handler, args = []) ->
-    @element.one eventName, handler, args
+    bean.one @, eventName, handler, args...
 
   off: (eventName, handler) ->
-    @element.off eventName, handler
+    bean.off @, eventName, handler
 
   trigger: (eventName, args = []) ->
-    @element.trigger eventName, args
+    bean.fire @, eventName, args
 
   ###*
    * Throws an error that can be captured.
