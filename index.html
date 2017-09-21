@@ -22,12 +22,16 @@
     }
 
     #search {
+      width: 400px;
       padding: .5rem;
+      border: 1px solid #ddd;
+    }
+
+    #facets {
+      width: 400px;
     }
 
     .widget {
-      width: 400px;
-      border: 1px solid #ddd;
       margin: 0 0 1rem 0;
     }
 
@@ -36,16 +40,9 @@
     }
 
     .df-results {
-      height: 150px;
-    }
-
-    .df-term {
-      display: block;
-      color: inherit;
-    }
-
-    .df-term[data-selected] {
-      font-weight: bold;
+      width: 400px;
+      height: 250px;
+      border: 1px solid #ddd;
     }
 
     .row {
@@ -65,18 +62,20 @@
   <script type="text/javascript" src="dist/doofinder.js"></script>
 </head>
 <body>
-  <input class="widget" id="search" type="text" placeholder="Search something">
+  <input class="widget" id="search" type="text" placeholder="Search something" autofocus="true">
   <!-- <textarea class="widget" id="search" placeholder="Search something"></textarea> -->
 
   <div class="row" data-hashid="e723b503db15fe242b934df14b141ccc">
     <div class="col">
 
-      <div class="widget df-results">
+      <div class="widget df-results" id="results">
         <div class="df-results__content"></div>
       </div>
 
     </div>
-    <div class="col" data-role="facetsContainer"></div>
+    <div class="col" id="facets">
+      <div class="widget" id="price"></div>
+    </div>
   </div>
 
   <script type="text/javascript">
@@ -84,54 +83,66 @@
     var $ = doofinder.util.dfdom;
     var bean = doofinder.util.bean;
     var input = new doofinder.widgets.QueryInput('#search');
-    var search = [];
 
-    $('[data-hashid]').each(function(row){
-      row = $(row);
-      var facetsContainer = row.find('[data-role="facetsContainer"]');
+    var page = $('[data-hashid]');
+    var facets = $('#facets');
 
-      var client = new doofinder.Client(row.data('hashid'), 'eu1');
-      var controller = new doofinder.Controller(client);
+    var client = new doofinder.Client(page.data('hashid'), 'eu1');
+    var controller = new doofinder.Controller(client, [], {rpp: 20});
 
-      client.options(function(err, options){
-        // input
-        controller.registerWidget(input);
+    client.options(function(err, options){
+      controller.registerWidget(input);
 
-        // results
-        var results = new doofinder.widgets.ScrollDisplay(row.find('.df-results'));
-        results.on("df:widget:render", function(res){
-          console.log("[df:widget:render][" + res.hashid + "] query: '" + res.query + "' page: " + res.page);
-        });
-        controller.registerWidget(results);
+      var results = new doofinder.widgets.ScrollDisplay("#results");
+      results.on("df:widget:render", function(res){
+        console.log("[df:widget:render][" + res.hashid + "] query: '" + res.query + "' page: " + res.page);
+      });
+      controller.registerWidget(results);
 
-        // facets
-        options.facets.forEach(function(facet){
-          facetsContainer.append(
-            '<div class="widget" data-facetName="' + facet.name + '" data-facetType="' + facet.type + '"></div>'
-          );
-          if (facet.type === 'terms') {
-            controller.registerWidget(
-              new doofinder.widgets.TermsFacet(
-                row.find('[data-facetName="' + facet.name + '"]'),
-                facet.name,
-                {
-                  size: facet.size,
+      options.facets.forEach(function(facet){
+        if (facet.type === 'terms') {
+          controller.registerWidget(
+            new doofinder.widgets.CollapsiblePanel(
+              facets,
+              function(panel){
+                var widget = new doofinder.widgets.TermsFacet(
+                  panel.contentElement,
+                  facet.name,
+                  {
+                    size: facet.size,
+                    label: facet.label
+                  }
+                );
+
+                widget.on("df:widget:render", function(res){
+                  var html = [facet.label];
+                  var total = this.countSelectedTerms(res);
+
+                  if (total > 0) {
+                    html.push('(' + total + ')');
+                  }
+
+                  panel.labelElement.html(html.join(' '));
+                  console.log("[df:widget:render][" + facet.name + "]");
+                });
+
+                return widget;
+              },
+              {
+                insertionMethod: "prepend",
+                startCollapsed: facet.name === 'categories',
+                templateVars: {
                   label: facet.label
                 }
-              )
-            );
-          } else {
-            controller.registerWidget(
-              new doofinder.widgets.RangeFacet(
-                row.find('[data-facetName="' + facet.name + '"]'),
-                facet.name
-              )
-            );
-          }
-        });
+              }
+            )
+          );
+        } else {
+          controller.registerWidget(
+            new doofinder.widgets.RangeFacet($('#price'), facet.name)
+          );
+        }
       });
-
-      search.push(controller);
     });
 
     input.on("df:input:stop", function(query){

@@ -16,31 +16,68 @@
 }
 
 /* FACETS PANEL */
+.df-panel {
+  margin: 0 0 1rem 0;
+  border: 1px solid #ddd;
+}
+
 .df-panel, .df-panel * {
   box-sizing: border-box;
 }
 
-.df-panel + .df-panel {
-  margin-top: 8px;
+.df-panel:last-child {
+  margin-bottom: 0;
 }
 
-.df-panel__title {
+.df-panel__label {
   display: block;
   padding: 8px;
   margin: 0;
-  background: no-repeat right 8px center;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%20%20%3Cg%20stroke%3D%22none%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M10%207L3%207%203%206%2010%206%2010%207%2010%207Z%22%20fill%3D%22%23000000%22/%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M0%200L12%200%2012%2012%200%2012%200%200Z%22/%3E%0A%20%20%20%20%3C/g%3E%0A%3C/svg%3E%0A");
-  max-height: 30px;
 }
 
 .df-panel__content {
+  border-top: 1px solid #ddd;
   padding: 8px;
 }
 
-.df-panel__content ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.df-panel[data-df-collapse] .df-panel__label {
+  background: no-repeat right 8px center;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%20%20%3Cg%20stroke%3D%22none%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M10%207L3%207%203%206%2010%206%2010%207%2010%207Z%22%20fill%3D%22%23000000%22/%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M0%200L12%200%2012%2012%200%2012%200%200Z%22/%3E%0A%20%20%20%20%3C/g%3E%0A%3C/svg%3E%0A");
+  cursor: pointer;
+}
+
+.df-panel[data-df-collapse="true"] .df-panel__content {
+  display: none;
+}
+
+.df-term {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  color: inherit;
+  cursor: pointer;
+  margin: 0 0 .25rem 0;
+}
+
+.df-term:last-child {
+  margin-bottom: 0;
+}
+
+.df-term__value {
+  flex: 1 1 auto;
+}
+
+.df-term__count {
+  flex: 0 0 auto;
+}
+
+.df-term:hover .df-term__value {
+  text-decoration: underline;
+}
+
+.df-term[data-selected] {
+  font-weight: bold;
 }
 
 /* THIRD PARTY COMPONENTS */

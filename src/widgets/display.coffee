@@ -16,7 +16,9 @@ class Display extends Widget
   ###
   constructor: (element, options = {}) ->
     options = extend true, template: defaultTemplate, options
+
     super element, options
+
     @mustache = require "mustache"
     # TODO(@carlosescri): Remove @extraContext and use @options.templateVars!!!
     @extraContext = {}

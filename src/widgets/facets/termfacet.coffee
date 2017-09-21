@@ -4,11 +4,12 @@ $ = require "../../util/dfdom"
 
 defaultTemplate = """
   {{#terms}}
-    <a class="df-term" href="#" data-facet="{{name}}" data-value="{{key}}"
+    <div class="df-term" data-facet="{{name}}" data-value="{{key}}"
         {{#extra-content}}{{index}}:{{size}}{{/extra-content}}
         {{#selected}}data-selected{{/selected}}>
-      {{key}} <span class="df-term__count">{{doc_count}}</span>
-    </a>
+      <span class="df-term__value">{{key}}</span>
+      <span class="df-term__count">{{doc_count}}</span>
+    </div>
   {{/terms}}
   {{#show-more-button}}{{terms.length}}:{{size}}{{/show-more-button}}
 """
@@ -97,7 +98,7 @@ class TermsFacet extends BaseFacet
       @element.on "click", "[data-facet='#{@name}'][data-value]", (e) =>
         e.preventDefault()
 
-        termNode = ($ e.target)
+        termNode = ($ e.currentTarget)
         value = termNode.data "value"
         key = termNode.data "facet"
         wasSelected = termNode.hasAttr "data-selected"

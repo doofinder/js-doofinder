@@ -231,7 +231,7 @@
 
 }).call(this);
 
-},{"./util/errors":8,"./util/http":11,"./util/thing":12,"extend":23,"md5":64,"qs":71}],2:[function(require,module,exports){
+},{"./util/errors":8,"./util/http":11,"./util/thing":12,"extend":24,"md5":65,"qs":72}],2:[function(require,module,exports){
 (function() {
   var Client, Controller, Freezer, Thing, bean, errors, extend, qs,
     slice = [].slice,
@@ -692,7 +692,7 @@
 
 }).call(this);
 
-},{"./client":1,"./util/errors":8,"./util/freezer":9,"./util/thing":12,"bean":22,"extend":23,"qs":71}],3:[function(require,module,exports){
+},{"./client":1,"./util/errors":8,"./util/freezer":9,"./util/thing":12,"bean":23,"extend":24,"qs":72}],3:[function(require,module,exports){
 (function() {
   if (!JSON.stringify && JSON.encode) {
     JSON.stringify = JSON.encode;
@@ -715,7 +715,8 @@
       BaseFacet: require("./widgets/facets/basefacet"),
       TermsFacet: require("./widgets/facets/termfacet"),
       RangeFacet: require("./widgets/facets/rangefacet"),
-      FacetPanel: require("./widgets/facets/facetpanel")
+      Panel: require("./widgets/panel"),
+      CollapsiblePanel: require("./widgets/collapsiblepanel")
     },
     util: {
       bean: require("bean"),
@@ -734,7 +735,7 @@
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/helpers":10,"./util/http":11,"./util/uniqueid":13,"./widgets/display":14,"./widgets/facets/basefacet":15,"./widgets/facets/facetpanel":16,"./widgets/facets/rangefacet":17,"./widgets/facets/termfacet":18,"./widgets/queryinput":19,"./widgets/scrolldisplay":20,"./widgets/widget":21,"bean":22,"extend":23,"lodash.throttle":63,"md5":64,"mustache":68,"qs":71}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/helpers":10,"./util/http":11,"./util/uniqueid":13,"./widgets/collapsiblepanel":14,"./widgets/display":15,"./widgets/facets/basefacet":16,"./widgets/facets/rangefacet":17,"./widgets/facets/termfacet":18,"./widgets/panel":19,"./widgets/queryinput":20,"./widgets/scrolldisplay":21,"./widgets/widget":22,"bean":23,"extend":24,"lodash.throttle":64,"md5":65,"mustache":69,"qs":72}],4:[function(require,module,exports){
 (function() {
   var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, extend, md5, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -1012,7 +1013,7 @@
 
 }).call(this);
 
-},{"./util/uniqueid":13,"extend":23,"js-cookie":62,"md5":64}],5:[function(require,module,exports){
+},{"./util/uniqueid":13,"extend":24,"js-cookie":63,"md5":65}],5:[function(require,module,exports){
 (function() {
   var Client, Session, Stats, uniqueId;
 
@@ -2308,7 +2309,7 @@
 
 }).call(this);
 
-},{"./thing":12,"bean":22}],7:[function(require,module,exports){
+},{"./thing":12,"bean":23}],7:[function(require,module,exports){
 (function() {
   var $, bean, extend, throttle;
 
@@ -2355,7 +2356,7 @@
 
 }).call(this);
 
-},{"./dfdom":6,"bean":22,"extend":23,"lodash.throttle":63}],8:[function(require,module,exports){
+},{"./dfdom":6,"bean":23,"extend":24,"lodash.throttle":64}],8:[function(require,module,exports){
 (function() {
   var _msg, error, warning,
     slice = [].slice;
@@ -2534,7 +2535,7 @@
 
 }).call(this);
 
-},{"extend":23}],11:[function(require,module,exports){
+},{"extend":24}],11:[function(require,module,exports){
 (function() {
   var HttpClient, Thing, http, https;
 
@@ -2609,7 +2610,7 @@
 
 }).call(this);
 
-},{"./thing":12,"http":53,"https":30}],12:[function(require,module,exports){
+},{"./thing":12,"http":54,"https":31}],12:[function(require,module,exports){
 (function() {
   var isFn, isObject, isPrimitive, isStr, to_s;
 
@@ -2708,7 +2709,85 @@
 
 }).call(this);
 
-},{"md5":64}],14:[function(require,module,exports){
+},{"md5":65}],14:[function(require,module,exports){
+(function() {
+  var CollapsiblePanel, Panel, extend,
+    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  extend = require("extend");
+
+  Panel = require("./panel");
+
+  CollapsiblePanel = (function(superClass) {
+    extend1(CollapsiblePanel, superClass);
+
+    function CollapsiblePanel(element, getWidget, options) {
+      var defaults;
+      if (options == null) {
+        options = {};
+      }
+      defaults = {
+        startCollapsed: false
+      };
+      options = extend(true, defaults, options);
+      CollapsiblePanel.__super__.constructor.apply(this, arguments);
+      Object.defineProperty(this, 'isCollapsed', {
+        get: function() {
+          return (this.panelElement.attr("data-df-collapse")) === "true";
+        }
+      });
+    }
+
+    CollapsiblePanel.prototype.collapse = function() {
+      return this.panelElement.attr("data-df-collapse", "true");
+    };
+
+    CollapsiblePanel.prototype.expand = function() {
+      return this.panelElement.attr("data-df-collapse", "false");
+    };
+
+    CollapsiblePanel.prototype.toggle = function() {
+      if (this.isCollapsed) {
+        return this.expand();
+      } else {
+        return this.collapse();
+      }
+    };
+
+    CollapsiblePanel.prototype.reset = function() {
+      if (this.options.startCollapsed) {
+        return this.collapse();
+      } else {
+        return this.expand();
+      }
+    };
+
+    CollapsiblePanel.prototype.initPanel = function(res) {
+      CollapsiblePanel.__super__.initPanel.apply(this, arguments);
+      this.panelElement.on("click", "#" + this.options.templateVars.labelElement, (function(_this) {
+        return function(e) {
+          e.preventDefault();
+          return _this.toggle();
+        };
+      })(this));
+      return this.reset();
+    };
+
+    CollapsiblePanel.prototype.clean = function() {
+      this.reset();
+      return CollapsiblePanel.__super__.clean.apply(this, arguments);
+    };
+
+    return CollapsiblePanel;
+
+  })(Panel);
+
+  module.exports = CollapsiblePanel;
+
+}).call(this);
+
+},{"./panel":19,"extend":24}],15:[function(require,module,exports){
 (function() {
   var Display, Widget, buildHelpers, defaultTemplate, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -2820,7 +2899,7 @@
 
 }).call(this);
 
-},{"../util/helpers":10,"./widget":21,"extend":23,"mustache":68}],15:[function(require,module,exports){
+},{"../util/helpers":10,"./widget":22,"extend":24,"mustache":69}],16:[function(require,module,exports){
 (function() {
   var BaseFacet, Display, defaultLabelTemplate, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -2884,194 +2963,7 @@
 
 }).call(this);
 
-},{"../display":14,"extend":23}],16:[function(require,module,exports){
-(function() {
-  var $, Display, FacetPanel, defaultTemplate, extend, uniqueId,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  extend = require("extend");
-
-  $ = require("../../util/dfdom");
-
-  Display = require("../display");
-
-  uniqueId = require("../../util/uniqueid");
-
-  defaultTemplate = "<div id=\"{{id}}\" data-role=\"panel\">\n  <a href=\"#\" data-role=\"panel-label\" data-toggle=\"panel\"></a>\n  <div data-role=\"panel-content\"></div>\n</div>";
-
-
-  /**
-   * Collapsible panel that contains a facet widget.
-   * It's always appended to a container element, it does not replace the entire
-   * HTML content.
-   */
-
-  FacetPanel = (function(superClass) {
-    extend1(FacetPanel, superClass);
-
-
-    /**
-     * @param  {String|Node|DfDomElement} element  Container node.
-     * @param  {Object} options Options object. Empty by default.
-     */
-
-    function FacetPanel(element, options) {
-      var defaults, uid;
-      if (options == null) {
-        options = {};
-      }
-      uid = "df-panel-" + (uniqueId.generate.easy());
-      defaults = {
-        id: uid,
-        template: defaultTemplate,
-        startHidden: true,
-        startCollapsed: false,
-        templateVars: {
-          id: options.id || uid
-        }
-      };
-      options = extend(true, defaults, options);
-      FacetPanel.__super__.constructor.call(this, element, options.template, options);
-      this.element.append(this.renderTemplate());
-      this.setElement("#" + this.options.id);
-      this.toggleElement = (this.element.find('[data-toggle="panel"]')).first();
-      this.labelElement = (this.element.find('[data-role="panel-label"]')).first();
-      this.contentElement = (this.element.find('[data-role="panel-content"]')).first();
-      this.clean();
-    }
-
-
-    /**
-     * Initializes the object with a controller and attachs event handlers for
-     * this widget instance.
-     *
-     * @param  {Controller} controller Doofinder Search controller.
-     */
-
-    FacetPanel.prototype.init = function() {
-      if (!this.initialized) {
-        this.toggleElement.on("click", (function(_this) {
-          return function(e) {
-            e.preventDefault();
-            if (_this.isCollapsed()) {
-              return _this.expand();
-            } else {
-              return _this.collapse();
-            }
-          };
-        })(this));
-        return FacetPanel.__super__.init.apply(this, arguments);
-      }
-    };
-
-
-    /**
-     * Checks whether the panel is collapsed or not.
-     * @return {Boolean} `true` if the panel is collapsed, `false` otherwise.
-     */
-
-    FacetPanel.prototype.isCollapsed = function() {
-      return (this.element.attr("data-collapse")) != null;
-    };
-
-
-    /**
-     * Collapses the panel to hide its content.
-     */
-
-    FacetPanel.prototype.collapse = function() {
-      return this.element.attr("data-collapse", "");
-    };
-
-
-    /**
-     * Expands the panel to display its content.
-     */
-
-    FacetPanel.prototype.expand = function() {
-      return this.element.removeAttr("data-collapse");
-    };
-
-
-    /**
-     * Embeds one and only one widget into this panel content. If the panel is
-     * rendered hidden (default), we listen for the first rendering of the
-     * embedded widget and then we display it.
-     *
-     * @param  {Widget} embeddedWidget A (child) instance of `Widget`.
-     */
-
-    FacetPanel.prototype.embedWidget = function(embeddedWidget) {
-      if (this.embeddedWidget != null) {
-        return this.raiseError("You can embed only one item on a `FacetPanel` instance.");
-      } else {
-        this.embeddedWidget = embeddedWidget;
-        this.embeddedWidget.on("df:widget:render", ((function(_this) {
-          return function() {
-            return _this.element.css("display", "inherit");
-          };
-        })(this)));
-        return this.embeddedWidget.on("df:widget:clean", ((function(_this) {
-          return function() {
-            return _this.element.css("display", "none");
-          };
-        })(this)));
-      }
-    };
-
-
-    /**
-     * Called when the "first page" response for a specific search is received.
-     * Renders the panel title with the label obtained from the embedded widget.
-     * This method does not replace its own HTML code, only the HTML of specific
-     * parts.
-     *
-     * @param {Object} res Search response.
-     * @fires FacetPanel#df:widget:render
-     */
-
-    FacetPanel.prototype.render = function(res) {
-      if (this.embeddedWidget != null) {
-        this.labelElement.html(this.embeddedWidget.renderLabel(res));
-        return this.trigger("df:widget:render", [res]);
-      }
-    };
-
-
-    /**
-     * Cleans the widget by removing the HTML inside the label element. Also, if
-     * the panel starts hidden, it's hidden again. If the panel starts collapsed,
-     * it's collapsed again.
-     *
-     * WARNING: DON'T CALL `super()` here. We don't want the panel container to
-     * be reset!!!
-     *
-     * @fires FacetPanel#df:widget:clean
-     */
-
-    FacetPanel.prototype.clean = function() {
-      this.labelElement.html("");
-      if (this.options.startHidden) {
-        this.element.css("display", "none");
-      }
-      if (this.options.startCollapsed) {
-        this.collapse();
-      } else {
-        this.expand();
-      }
-      return this.trigger("df:widget:clean");
-    };
-
-    return FacetPanel;
-
-  })(Display);
-
-  module.exports = FacetPanel;
-
-}).call(this);
-
-},{"../../util/dfdom":6,"../../util/uniqueid":13,"../display":14,"extend":23}],17:[function(require,module,exports){
+},{"../display":15,"extend":24}],17:[function(require,module,exports){
 (function() {
   var BaseFacet, RangeFacet, defaultTemplate, extend, noUiSlider,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3327,7 +3219,7 @@
 
 }).call(this);
 
-},{"./basefacet":15,"extend":23,"nouislider":69}],18:[function(require,module,exports){
+},{"./basefacet":16,"extend":24,"nouislider":70}],18:[function(require,module,exports){
 (function() {
   var $, BaseFacet, TermsFacet, defaultButtonTemplate, defaultLabelTemplate, defaultTemplate, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3339,7 +3231,7 @@
 
   $ = require("../../util/dfdom");
 
-  defaultTemplate = "{{#terms}}\n  <a class=\"df-term\" href=\"#\" data-facet=\"{{name}}\" data-value=\"{{key}}\"\n      {{#extra-content}}{{index}}:{{size}}{{/extra-content}}\n      {{#selected}}data-selected{{/selected}}>\n    {{key}} <span class=\"df-term__count\">{{doc_count}}</span>\n  </a>\n{{/terms}}\n{{#show-more-button}}{{terms.length}}:{{size}}{{/show-more-button}}";
+  defaultTemplate = "{{#terms}}\n  <div class=\"df-term\" data-facet=\"{{name}}\" data-value=\"{{key}}\"\n      {{#extra-content}}{{index}}:{{size}}{{/extra-content}}\n      {{#selected}}data-selected{{/selected}}>\n    <span class=\"df-term__value\">{{key}}</span>\n    <span class=\"df-term__count\">{{doc_count}}</span>\n  </div>\n{{/terms}}\n{{#show-more-button}}{{terms.length}}:{{size}}{{/show-more-button}}";
 
   defaultButtonTemplate = "<button type=\"button\" data-toggle-extra-content\n    data-text-normal=\"{{#translate}}{{viewMoreLabel}}{{/translate}}\"\n    data-text-toggle=\"{{#translate}}{{viewLessLabel}}{{/translate}}\">\n  {{#translate}}{{viewMoreLabel}}{{/translate}}\n</button>";
 
@@ -3446,7 +3338,7 @@
           return function(e) {
             var eventInfo, key, termNode, value, wasSelected;
             e.preventDefault();
-            termNode = $(e.target);
+            termNode = $(e.currentTarget);
             value = termNode.data("value");
             key = termNode.data("facet");
             wasSelected = termNode.hasAttr("data-selected");
@@ -3623,7 +3515,86 @@
 
 }).call(this);
 
-},{"../../util/dfdom":6,"./basefacet":15,"extend":23}],19:[function(require,module,exports){
+},{"../../util/dfdom":6,"./basefacet":16,"extend":24}],19:[function(require,module,exports){
+(function() {
+  var Display, INSERTION_METHODS, Panel, defaultTemplate, extend, uniqueId,
+    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+  extend = require("extend");
+
+  Display = require("./display");
+
+  uniqueId = require("../util/uniqueid");
+
+  INSERTION_METHODS = ["prepend", "append", "before", "after"];
+
+  defaultTemplate = "<div class=\"df-panel\" id=\"{{panelElement}}\">\n  {{#label}}\n  <div class=\"df-panel__label\" id=\"{{labelElement}}\">{{label}}</div>\n  {{/label}}\n  <div class=\"df-panel__content\" id=\"{{contentElement}}\"></div>\n</div>";
+
+  Panel = (function(superClass) {
+    extend1(Panel, superClass);
+
+    function Panel(element, getWidget, options) {
+      var defaults, ref;
+      this.getWidget = getWidget;
+      if (options == null) {
+        options = {};
+      }
+      defaults = {
+        templateVars: {
+          panelElement: "df-" + (uniqueId.generate.easy()),
+          labelElement: "df-" + (uniqueId.generate.easy()),
+          contentElement: "df-" + (uniqueId.generate.easy())
+        },
+        insertionMethod: "html",
+        template: defaultTemplate
+      };
+      options = extend(true, defaults, options);
+      if (ref = options.insertionMethod, indexOf.call(INSERTION_METHODS, ref) < 0) {
+        options.insertionMethod = "html";
+      }
+      Panel.__super__.constructor.call(this, element, options);
+      this.panelElement = null;
+      this.labelElement = null;
+      this.contentElement = null;
+    }
+
+    Panel.prototype.render = function(res) {
+      if (!this.panelElement) {
+        this.element[this.options.insertionMethod](this.renderTemplate(res));
+        this.initPanel(res);
+        this.initContent(res);
+        return this.trigger("df:widget:render", [res]);
+      }
+    };
+
+    Panel.prototype.initPanel = function(res) {
+      this.panelElement = $("#" + this.options.templateVars.panelElement);
+      this.labelElement = $("#" + this.options.templateVars.labelElement);
+      return this.contentElement = $("#" + this.options.templateVars.contentElement);
+    };
+
+    Panel.prototype.initContent = function(res) {
+      var widget;
+      widget = this.getWidget(this);
+      this.controller.registerWidget(widget);
+      return widget.render(res);
+    };
+
+    Panel.prototype.clean = function() {
+      return this.trigger("df:widget:clean");
+    };
+
+    return Panel;
+
+  })(Display);
+
+  module.exports = Panel;
+
+}).call(this);
+
+},{"../util/uniqueid":13,"./display":15,"extend":24}],20:[function(require,module,exports){
 (function() {
   var QueryInput, Widget, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3749,7 +3720,7 @@
 
 }).call(this);
 
-},{"./widget":21,"extend":23}],20:[function(require,module,exports){
+},{"./widget":22,"extend":24}],21:[function(require,module,exports){
 (function() {
   var $, Display, ScrollDisplay, dfScroll, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3876,7 +3847,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"../util/dfscroll":7,"./display":14,"extend":23}],21:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/dfscroll":7,"./display":15,"extend":24}],22:[function(require,module,exports){
 (function() {
   var $, Widget, bean,
     slice = [].slice;
@@ -3998,7 +3969,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"bean":22}],22:[function(require,module,exports){
+},{"../util/dfdom":6,"bean":23}],23:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean
@@ -4741,7 +4712,7 @@
   return bean
 });
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 'use strict';
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -4829,9 +4800,9 @@ module.exports = function extend() {
 	return target;
 };
 
-},{}],24:[function(require,module,exports){
-
 },{}],25:[function(require,module,exports){
+
+},{}],26:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -6624,7 +6595,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":26,"ieee754":27,"isarray":28}],26:[function(require,module,exports){
+},{"base64-js":27,"ieee754":28,"isarray":29}],27:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -6740,7 +6711,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -6826,14 +6797,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7137,7 +7108,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -7153,7 +7124,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":53}],31:[function(require,module,exports){
+},{"http":54}],32:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -7178,7 +7149,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],32:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -7201,7 +7172,7 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -7387,7 +7358,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -7924,7 +7895,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8010,7 +7981,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8097,13 +8068,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":35,"./encode":36}],38:[function(require,module,exports){
+},{"./decode":36,"./encode":37}],39:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8228,7 +8199,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":40,"./_stream_writable":42,"core-util-is":46,"inherits":31,"process-nextick-args":48}],39:[function(require,module,exports){
+},{"./_stream_readable":41,"./_stream_writable":43,"core-util-is":47,"inherits":32,"process-nextick-args":49}],40:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8276,7 +8247,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":41,"core-util-is":46,"inherits":31}],40:[function(require,module,exports){
+},{"./_stream_transform":42,"core-util-is":47,"inherits":32}],41:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -9286,7 +9257,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":38,"./internal/streams/BufferList":43,"./internal/streams/destroy":44,"./internal/streams/stream":45,"_process":33,"core-util-is":46,"events":29,"inherits":31,"isarray":47,"process-nextick-args":48,"safe-buffer":49,"string_decoder/":50,"util":24}],41:[function(require,module,exports){
+},{"./_stream_duplex":39,"./internal/streams/BufferList":44,"./internal/streams/destroy":45,"./internal/streams/stream":46,"_process":34,"core-util-is":47,"events":30,"inherits":32,"isarray":48,"process-nextick-args":49,"safe-buffer":50,"string_decoder/":51,"util":25}],42:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9501,7 +9472,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":38,"core-util-is":46,"inherits":31}],42:[function(require,module,exports){
+},{"./_stream_duplex":39,"core-util-is":47,"inherits":32}],43:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10168,7 +10139,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":38,"./internal/streams/destroy":44,"./internal/streams/stream":45,"_process":33,"core-util-is":46,"inherits":31,"process-nextick-args":48,"safe-buffer":49,"util-deprecate":51}],43:[function(require,module,exports){
+},{"./_stream_duplex":39,"./internal/streams/destroy":45,"./internal/streams/stream":46,"_process":34,"core-util-is":47,"inherits":32,"process-nextick-args":49,"safe-buffer":50,"util-deprecate":52}],44:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -10243,7 +10214,7 @@ module.exports = function () {
 
   return BufferList;
 }();
-},{"safe-buffer":49}],44:[function(require,module,exports){
+},{"safe-buffer":50}],45:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -10316,10 +10287,10 @@ module.exports = {
   destroy: destroy,
   undestroy: undestroy
 };
-},{"process-nextick-args":48}],45:[function(require,module,exports){
+},{"process-nextick-args":49}],46:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":29}],46:[function(require,module,exports){
+},{"events":30}],47:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10430,9 +10401,9 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":32}],47:[function(require,module,exports){
-arguments[4][28][0].apply(exports,arguments)
-},{"dup":28}],48:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":33}],48:[function(require,module,exports){
+arguments[4][29][0].apply(exports,arguments)
+},{"dup":29}],49:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -10479,7 +10450,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":33}],49:[function(require,module,exports){
+},{"_process":34}],50:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -10543,7 +10514,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":25}],50:[function(require,module,exports){
+},{"buffer":26}],51:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('safe-buffer').Buffer;
@@ -10816,7 +10787,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":49}],51:[function(require,module,exports){
+},{"safe-buffer":50}],52:[function(require,module,exports){
 (function (global){
 
 /**
@@ -10887,7 +10858,7 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],52:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -10896,7 +10867,7 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":38,"./lib/_stream_passthrough.js":39,"./lib/_stream_readable.js":40,"./lib/_stream_transform.js":41,"./lib/_stream_writable.js":42}],53:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":39,"./lib/_stream_passthrough.js":40,"./lib/_stream_readable.js":41,"./lib/_stream_transform.js":42,"./lib/_stream_writable.js":43}],54:[function(require,module,exports){
 (function (global){
 var ClientRequest = require('./lib/request')
 var extend = require('xtend')
@@ -10978,7 +10949,7 @@ http.METHODS = [
 	'UNSUBSCRIBE'
 ]
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./lib/request":55,"builtin-status-codes":57,"url":59,"xtend":61}],54:[function(require,module,exports){
+},{"./lib/request":56,"builtin-status-codes":58,"url":60,"xtend":62}],55:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
 
@@ -11051,7 +11022,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],55:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -11361,7 +11332,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":54,"./response":56,"_process":33,"buffer":25,"inherits":31,"readable-stream":52,"to-arraybuffer":58}],56:[function(require,module,exports){
+},{"./capability":55,"./response":57,"_process":34,"buffer":26,"inherits":32,"readable-stream":53,"to-arraybuffer":59}],57:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -11547,7 +11518,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":54,"_process":33,"buffer":25,"inherits":31,"readable-stream":52}],57:[function(require,module,exports){
+},{"./capability":55,"_process":34,"buffer":26,"inherits":32,"readable-stream":53}],58:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -11613,7 +11584,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],58:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
 
 module.exports = function (buf) {
@@ -11642,7 +11613,7 @@ module.exports = function (buf) {
 	}
 }
 
-},{"buffer":25}],59:[function(require,module,exports){
+},{"buffer":26}],60:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -12376,7 +12347,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":60,"punycode":34,"querystring":37}],60:[function(require,module,exports){
+},{"./util":61,"punycode":35,"querystring":38}],61:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -12394,7 +12365,7 @@ module.exports = {
   }
 };
 
-},{}],61:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -12415,7 +12386,7 @@ function extend() {
     return target
 }
 
-},{}],62:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 /*!
  * JavaScript Cookie v2.1.4
  * https://github.com/js-cookie/js-cookie
@@ -12582,7 +12553,7 @@ function extend() {
 	return init(function () {});
 }));
 
-},{}],63:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 (function (global){
 /**
  * lodash (Custom Build) <https://lodash.com/>
@@ -13025,7 +12996,7 @@ function toNumber(value) {
 module.exports = throttle;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],64:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 (function(){
   var crypt = require('crypt'),
       utf8 = require('charenc').utf8,
@@ -13187,7 +13158,7 @@ module.exports = throttle;
 
 })();
 
-},{"charenc":65,"crypt":66,"is-buffer":67}],65:[function(require,module,exports){
+},{"charenc":66,"crypt":67,"is-buffer":68}],66:[function(require,module,exports){
 var charenc = {
   // UTF-8 encoding
   utf8: {
@@ -13222,7 +13193,7 @@ var charenc = {
 
 module.exports = charenc;
 
-},{}],66:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 (function() {
   var base64map
       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
@@ -13320,9 +13291,9 @@ module.exports = charenc;
   module.exports = crypt;
 })();
 
-},{}],67:[function(require,module,exports){
-arguments[4][32][0].apply(exports,arguments)
-},{"dup":32}],68:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
+arguments[4][33][0].apply(exports,arguments)
+},{"dup":33}],69:[function(require,module,exports){
 /*!
  * mustache.js - Logic-less {{mustache}} templates with JavaScript
  * http://github.com/janl/mustache.js
@@ -13954,7 +13925,7 @@ arguments[4][32][0].apply(exports,arguments)
   return mustache;
 }));
 
-},{}],69:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 /*! nouislider - 8.5.1 - 2016-04-24 16:00:29 */
 
 (function (factory) {
@@ -15914,7 +15885,7 @@ function closure ( target, options, originalOptions ){
 	};
 
 }));
-},{}],70:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 'use strict';
 
 var replace = String.prototype.replace;
@@ -15934,7 +15905,7 @@ module.exports = {
     RFC3986: 'RFC3986'
 };
 
-},{}],71:[function(require,module,exports){
+},{}],72:[function(require,module,exports){
 'use strict';
 
 var stringify = require('./stringify');
@@ -15947,7 +15918,7 @@ module.exports = {
     stringify: stringify
 };
 
-},{"./formats":70,"./parse":72,"./stringify":73}],72:[function(require,module,exports){
+},{"./formats":71,"./parse":73,"./stringify":74}],73:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -16121,7 +16092,7 @@ module.exports = function (str, opts) {
     return utils.compact(obj);
 };
 
-},{"./utils":74}],73:[function(require,module,exports){
+},{"./utils":75}],74:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -16333,7 +16304,7 @@ module.exports = function (object, opts) {
     return joined.length > 0 ? prefix + joined : '';
 };
 
-},{"./formats":70,"./utils":74}],74:[function(require,module,exports){
+},{"./formats":71,"./utils":75}],75:[function(require,module,exports){
 'use strict';
 
 var has = Object.prototype.hasOwnProperty;

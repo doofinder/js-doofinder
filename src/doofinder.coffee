@@ -16,7 +16,8 @@ module.exports =
     BaseFacet: require "./widgets/facets/basefacet"
     TermsFacet: require "./widgets/facets/termfacet"
     RangeFacet: require "./widgets/facets/rangefacet"
-    FacetPanel: require "./widgets/facets/facetpanel"
+    Panel: require "./widgets/panel"
+    CollapsiblePanel: require "./widgets/collapsiblepanel"
   util:
     bean: require "bean"
     buildHelpers: require "./util/helpers"
