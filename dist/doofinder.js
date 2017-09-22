@@ -1,522 +1,226 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.doofinder = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-
-/*
-client.coffee
-author: @ecoslado
-2015 04 01
- */
-
 (function() {
-  var Client, HttpClient, md5,
-    slice = [].slice;
+  var Client, HttpClient, Thing, errors, extend, md5, qs;
 
-  HttpClient = require("./util/http");
+  extend = require("extend");
 
   md5 = require("md5");
 
+  qs = require("qs");
 
-  /*
-  DfClient
-  This class is imported with module
-  requirement. Implements the search request
-  and returns a json object to a callback function
+  errors = require("./util/errors");
+
+  HttpClient = require("./util/http");
+
+  Thing = require("./util/thing");
+
+
+  /**
+   * This class allows searching and sending stats using the Doofinder service.
    */
 
   Client = (function() {
 
-    /*
-    Client constructor
-    
-    @param {String} hashid
-    @param {String} apiKey
-    @param {String} version
-    @param {String} address
-    @api public
+    /**
+     * Constructor
+     * @param  {String}       hashid  Unique ID of the Search Engine.
+     * @param  {String}       apiKey  Search zone (eu1, us1) or full API key
+     *                                (eu1-...).
+     * @param  {Number}       version API version.
+     * @param  {String|Array} type    Restricts search to one or more data types.
+     * @param  {[type]}       address Search server endpoint. Used by the
+     *                                development team.
+     * @public
      */
-    function Client(hashid, apiKey, version, type1, address) {
-      var zone, zoneApiKey;
+    function Client(hashid, zoneOrKey, version, type, address) {
+      var apiKey, host, port, ref, ref1, zone;
       this.hashid = hashid;
-      this.type = type1;
-      if (this.version == null) {
-        this.version = version;
+      if (version == null) {
+        version = 5;
       }
-      if (this.version == null) {
-        this.version = 5;
+      this.type = type;
+      ref = zoneOrKey != null ? zoneOrKey.split("-") : ["", void 0], zone = ref[0], apiKey = ref[1];
+      if (address == null) {
+        address = zone + "-search.doofinder.com";
       }
-      this.params = {};
-      this.filters = {};
-      this.exclude = {};
-      if (this.url == null) {
-        this.url = address;
+      ref1 = address.split(":"), host = ref1[0], port = ref1[1];
+      this.defaultOptions = {
+        host: host,
+        port: port,
+        headers: {}
+      };
+      if (apiKey != null) {
+        this.defaultOptions.headers.authorization = apiKey;
       }
-      if (apiKey) {
-        zoneApiKey = apiKey.split('-');
-        zone = zoneApiKey[0];
-        if (zoneApiKey.length > 1) {
-          this.apiKey = zoneApiKey[1];
-        }
-      } else {
-        zone = "";
-        this.apiKey = "";
-      }
-      this.httpClient = new HttpClient((this.apiKey != null) && this.version !== 4);
-      if (this.url == null) {
-        this.url = zone + "-search.doofinder.com";
-      }
+      this.version = "" + (parseInt(version, 10));
+      this.httpClient = new HttpClient(apiKey != null);
     }
 
 
-    /*
-    _sanitizeQuery
-    very crude check for bad intentioned queries
-    
-    checks if words are longer than 55 chars and the whole query is longer than 255 chars
-    @param string query
-    @return string query if it's ok, empty space if not
+    /**
+     * Performs a HTTP request to the endpoint specified with the default options
+     * of the client.
+     *
+     * @param  {String}   resource Resource to be called by GET.
+     * @param  {Function} callback Callback to be called when the response is
+     *                             received. First param is the error, if any,
+     *                             and the second one is the response, if any.
+     * @return {http.ClientRequest}
+     * @public
      */
 
-    Client.prototype._sanitizeQuery = function(query, callback) {
-      var i, maxQueryLength, maxWordLength, ref, x;
-      maxWordLength = 55;
-      maxQueryLength = 255;
-      if (typeof query === "undefined") {
-        throw Error("Query must be a defined");
-      }
-      if (query === null || query.constructor !== String) {
-        throw Error("Query must be a String");
-      }
-      query = query.replace(/ +/g, ' ').replace(/^ +| +$/g, '');
-      if (query.length > maxQueryLength) {
-        throw Error("Maximum query length exceeded: " + maxQueryLength + ".");
-      }
-      ref = query.split(' ');
-      for (i in ref) {
-        x = ref[i];
-        if (x.length > maxWordLength) {
-          throw Error("Maximum word length exceeded: " + maxWordLength + ".");
-        }
-      }
-      return callback(query);
+    Client.prototype.request = function(resource, callback) {
+      var options;
+      options = extend(true, {
+        path: resource
+      }, this.defaultOptions);
+      return this.httpClient.request(options, callback);
     };
 
 
-    /*
-    search
-    
-    Method responsible of executing call.
-    
-    @param {Object} params
-      i.e.:
-    
-        query: "value of the query"
-        page: 2
-        rpp: 25
-        filters:
-          brand: ["nike", "adidas"]
-          color: ["blue"]
-          price:
-            from: 40
-            to: 150
-    
-    @param {Function} callback (err, res)
-    @api public
+    /**
+     * Performs a search request.
+     *
+     * @param  {String}   query    Search terms.
+     * @param  {Object}   params   Parameters for the request. Optional.
+     *
+     *                             params =
+     *                               page: Number
+     *                               rpp: Number
+     *                               type: String | [String]
+     *                               filter:
+     *                                 field: [String]
+     *                                 field:
+     *                                   from: Number
+     *                                   to: Number
+     *                               exclude:
+     *                                 field: [String]
+     *                                 field:
+     *                                   from: Number
+     *                                   to: Number
+     *                               sort: String
+     *                               sort:
+     *                                 field: "asc" | "desc"
+     *                               sort: [{field: "asc|desc"}]
+     *
+     * @param  {Function} callback Callback to be called when the response is
+     *                             received. First param is the error, if any,
+     *                             and the second one is the response, if any.
+     * @return {http.ClientRequest}
+     * @public
      */
 
-    Client.prototype.search = function() {
-      var _this, args, callback, params, query;
-      query = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      if (args.length === 1) {
+    Client.prototype.search = function(query, params, callback) {
+      var querystring;
+      if (arguments.length === 2) {
+        callback = params;
         params = {};
-        callback = args[0];
-      } else if (args.length === 2) {
-        params = args[0];
-        callback = args[1];
-      } else {
-        throw new Error("A callback is required.");
       }
-      if (params.page == null) {
-        params.page = 1;
-      }
-      if (params.rpp == null) {
-        params.rpp = 10;
-      }
-      _this = this;
-      return this._sanitizeQuery(query, function(cleaned) {
-        var filterKey, filterTerms, headers, options, paramKey, paramValue, path, queryString;
-        params.query = cleaned;
-        headers = {};
-        if (_this.apiKey) {
-          headers[_this.__getAuthHeaderName()] = _this.apiKey;
-        }
-        _this.params = {};
-        _this.filters = {};
-        _this.sort = [];
-        for (paramKey in params) {
-          paramValue = params[paramKey];
-          if (paramKey === "filters" || paramKey === "exclude") {
-            for (filterKey in paramValue) {
-              filterTerms = paramValue[filterKey];
-              _this.addFilter(filterKey, filterTerms, paramKey);
-            }
-          } else if (paramKey === "sort") {
-            _this.setSort(paramValue);
-          } else {
-            _this.addParam(paramKey, paramValue);
-          }
-        }
-        queryString = _this.makeQueryString();
-        path = "/" + _this.version + "/search?" + queryString;
-        options = _this.__requestOptions(path);
-        return _this.httpClient.request(options, callback);
-      });
+      querystring = this.__buildSearchQueryString(query, params);
+      return this.request("/" + this.version + "/search?" + querystring, callback);
     };
 
 
-    /*
-    addParam
-    
-    This method set simple params
-    @param {String} name of the param
-    @value {mixed} value of the param
-    @api public
+    /**
+     * Perform a request to get options for a search engine.
+     *
+     * @param  {String}   suffix   Optional suffix to add to the request URL. Can
+     *                             be something like a domain, so the URL looks
+     *                             like /<version>/options/<hashid>?example.com.
+     * @param  {Function} callback Callback to be called when the response is
+     *                             received. First param is the error, if any,
+     *                             and the second one is the response, if any.
+     * @return {http.ClientRequest}
+     * @public
      */
 
-    Client.prototype.addParam = function(param, value) {
-      if (value !== null) {
-        return this.params[param] = value;
-      } else {
-        return this.params[param] = "";
+    Client.prototype.options = function(suffix, callback) {
+      if (arguments.length === 1) {
+        callback = suffix;
+        suffix = "";
       }
+      suffix = suffix ? "?" + suffix : "";
+      return this.request("/" + this.version + "/options/" + this.hashid + suffix, callback);
     };
 
 
-    /*
-    addFilter
-    
-    This method adds a filter to query
-    @param {String} filterKey
-    @param {Array|Object} filterValues
-    @api public
+    /**
+     * Performs a request to submit stats events to Doofinder.
+     *
+     * @param  {String}   eventName Type of stats. Configures the endpoint.
+     * @param  {Object}   params    Parameters for the query string.
+     * @param  {Function} callback  Callback to be called when the response is
+     *                              received. First param is the error, if any,
+     *                              and the second one is the response, if any.
+     * @return {http.ClientRequest}
      */
 
-    Client.prototype.addFilter = function(filterKey, filterValues, type) {
-      if (type == null) {
-        type = "filters";
+    Client.prototype.stats = function(eventName, params, callback) {
+      var defaultParams, querystring;
+      if (eventName == null) {
+        eventName = "";
       }
-      return this[type][filterKey] = filterValues;
-    };
-
-
-    /*
-    setSort
-    
-    This method adds sort to object
-    from an object or an array
-    
-    @param {Array|Object} sort
-     */
-
-    Client.prototype.setSort = function(sort) {
-      return this.sort = sort;
-    };
-
-
-    /*
-    __escapeChars
-    
-    This method encodes just the chars
-    like &, ?, #.
-    
-    @param {String} word
-     */
-
-    Client.prototype.__escapeChars = function(word) {
-      return word.replace(/\&/g, "%26").replace(/\?/g, "%3F").replace(/\+/g, "%2B").replace(/\#/g, "%23");
-    };
-
-
-    /*
-    makeQueryString
-    
-    This method returns a
-    querystring for adding
-    to Search API request.
-    
-    @returns {String} querystring
-    @api private
-     */
-
-    Client.prototype.makeQueryString = function() {
-      var elem, facet, j, k, key, l, len, len1, len2, m, querystring, ref, ref1, ref2, ref3, ref4, ref5, ref6, segment, term, v, value;
-      querystring = encodeURI("hashid=" + this.hashid);
-      if (this.type && this.type instanceof Array) {
-        ref = this.type;
-        for (key in ref) {
-          value = ref[key];
-          querystring += encodeURI("&type[]=" + value);
-        }
-      } else if (this.type && this.type.constructor === String) {
-        querystring += encodeURI("&type=" + this.type);
-      } else if (this.params.type && this.params.type instanceof Array) {
-        ref1 = this.params.type;
-        for (key in ref1) {
-          value = ref1[key];
-          querystring += encodeURI("&type[]=" + value);
-        }
-      } else if (this.params.type && this.params.type.constructor === String) {
-        querystring += encodeURI("&type=" + this.type);
-      }
-      ref2 = this.params;
-      for (key in ref2) {
-        value = ref2[key];
-        if (key === "query") {
-          querystring += encodeURI("&" + key + "=");
-          querystring += encodeURIComponent(value);
-        } else if (key !== "type") {
-          querystring += encodeURI("&" + key + "=" + value);
-        }
-      }
-      ref3 = this.filters;
-      for (key in ref3) {
-        value = ref3[key];
-        if (value.constructor === Object) {
-          for (k in value) {
-            v = value[k];
-            querystring += encodeURI("&filter[" + key + "][" + k + "]=" + v);
-          }
-        }
-        if (value.constructor === Array) {
-          for (j = 0, len = value.length; j < len; j++) {
-            elem = value[j];
-            segment = this.__escapeChars(encodeURI("filter[" + key + "]=" + elem));
-            querystring += "&" + segment;
-          }
-        }
-      }
-      ref4 = this.exclude;
-      for (key in ref4) {
-        value = ref4[key];
-        if (value.constructor === Object) {
-          for (k in value) {
-            v = value[k];
-            querystring += encodeURI("&exclude[" + key + "][" + k + "]=" + v);
-          }
-        }
-        if (value.constructor === Array) {
-          for (l = 0, len1 = value.length; l < len1; l++) {
-            elem = value[l];
-            segment = this.__escapeChars(encodeURI("exclude[" + key + "]=" + elem));
-            querystring += "&" + segment;
-          }
-        }
-      }
-      if (this.sort && this.sort.constructor === Array) {
-        ref5 = this.sort;
-        for (m = 0, len2 = ref5.length; m < len2; m++) {
-          value = ref5[m];
-          for (facet in value) {
-            term = value[facet];
-            querystring += encodeURI("&sort[" + (this.sort.indexOf(value)) + "][" + facet + "]=" + term);
-          }
-        }
-      } else if (this.sort && this.sort.constructor === String) {
-        querystring += encodeURI("&sort=" + this.sort);
-      } else if (this.sort && this.sort.constructor === Object) {
-        ref6 = this.sort;
-        for (key in ref6) {
-          value = ref6[key];
-          querystring += encodeURI("&sort[" + key + "]=" + value);
-        }
-      }
-      return querystring;
-    };
-
-
-    /*
-    This method calls to /stats/click
-    service for accounting the
-    clicks to a product
-    
-    @param {String} productId
-    @param {Object} options
-    @param {Function} callback
-    
-    @api public
-     */
-
-    Client.prototype.registerClick = function() {
-      var args, callback, datatype, dfid, dfidRe, options, path, productId, query, sessionId;
-      productId = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      callback = (function(err, res) {});
-      options = {};
-      productId += '';
-      if (args.length === 1) {
-        if (typeof args[0] === 'function') {
-          callback = args[0];
-        } else {
-          options = args[0];
-        }
-      } else if (args.length === 2) {
-        options = args[0];
-        callback = args[1];
-      }
-      dfidRe = /\w{32}@[\w_-]+@\w{32}/;
-      if (dfidRe.exec(productId)) {
-        dfid = productId;
-      } else {
-        datatype = options.datatype || "product";
-        dfid = this.hashid + "@" + datatype + "@" + (md5(productId));
-      }
-      sessionId = options.sessionId || "session_id";
-      query = options.query || "";
-      path = "/" + this.version + "/stats/click?dfid=" + dfid + "&session_id=" + sessionId + "&query=" + (encodeURIComponent(query));
-      path += "&random=" + (new Date().getTime());
-      options = this.__requestOptions(path);
-      return this.httpClient.request(options, callback);
-    };
-
-
-    /*
-    This method calls to /stats/init_session
-    service for init a user session
-    
-    @param {String} sessionId
-    @param {Function} callback
-    
-    @api public
-     */
-
-    Client.prototype.registerSession = function(sessionId, callback) {
-      var options, path;
-      if (callback == null) {
-        callback = (function(err, res) {});
-      }
-      path = "/" + this.version + "/stats/init?hashid=" + this.hashid + "&session_id=" + sessionId;
-      path += "&random=" + (new Date().getTime());
-      options = this.__requestOptions(path);
-      return this.httpClient.request(options, callback);
-    };
-
-
-    /*
-    This method calls to /stats/checkout
-    service for init a user session
-    
-    @param {String} sessionId
-    @param {Object} options
-    @param {Function} callback
-    
-    @api public
-     */
-
-    Client.prototype.registerCheckout = function(sessionId, callback) {
-      var path, reqOpts;
-      callback = callback || (function(err, res) {});
-      path = "/" + this.version + "/stats/checkout?hashid=" + this.hashid + "&session_id=" + sessionId;
-      path += "&random=" + (new Date().getTime());
-      reqOpts = this.__requestOptions(path);
-      return this.httpClient.request(reqOpts, callback);
-    };
-
-
-    /*
-    This method calls to /stats/banner_<event_type>
-    service for registering banner events like display
-    or click
-    
-    @param {String} eventType
-    @param {Object} bannerId
-    @param {Function} callback
-    
-    @api public
-     */
-
-    Client.prototype.registerBannerEvent = function(eventType, bannerId, callback) {
-      var path, reqOpts;
-      if (callback == null) {
-        callback = (function(err, res) {});
-      }
-      path = "/" + this.version + "/stats/banner_" + eventType + "?hashid=" + this.hashid + "&banner_id=" + bannerId;
-      path += "&random=" + (new Date().getTime());
-      reqOpts = this.__requestOptions(path);
-      return this.httpClient.request(reqOpts, callback);
-    };
-
-
-    /*
-    This method calls to /hit
-    service for accounting the
-    hits in a product
-    
-    @param {String} dfid
-    @param {Object | Function} arg1
-    @param {Function} arg2
-    @api public
-     */
-
-    Client.prototype.options = function() {
-      var args, callback, options, path, querystring, reqOpts;
-      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-      callback = (function(err, res) {});
-      if (args.length === 1) {
-        options = {};
-        callback = args[0];
-      } else if (args.length === 2) {
-        options = args[0];
-        callback = args[1];
-      } else {
-        throw new Error("A callback is required.");
-      }
-      if (typeof options !== "undefined" && options.querystring) {
-        querystring = "?" + options.querystring;
-      } else {
-        querystring = "";
-      }
-      path = "/" + this.version + "/options/" + this.hashid + querystring;
-      reqOpts = this.__requestOptions(path);
-      return this.httpClient.request(reqOpts, callback);
-    };
-
-
-    /*
-    Method to make the request options
-    
-    @param (String) path: request options
-    @return (Object) the options object.
-    @api private
-     */
-
-    Client.prototype.__requestOptions = function(path) {
-      var headers, options;
-      headers = {};
-      if (this.apiKey) {
-        headers[this.__getAuthHeaderName()] = this.apiKey;
-      }
-      options = {
-        host: this.url,
-        path: path,
-        headers: headers
+      defaultParams = {
+        hashid: this.hashid,
+        random: new Date().getTime()
       };
-      if (this.url.split(':').length > 1) {
-        options.host = this.url.split(':')[0];
-        options.port = this.url.split(':')[1];
+      querystring = qs.stringify(extend(true, defaultParams, params || {}));
+      if (querystring) {
+        querystring = "?" + querystring;
       }
-      return options;
+      return this.request("/" + this.version + "/stats/" + eventName + querystring, callback);
     };
 
 
-    /*
-    Method to obtain security header name
-    @return (String) either 'api token' or 'authorization' depending on version
-    @api private
+    /**
+     * Creates a search query string for the specified query and parameters
+     * intended to be used in the search API endpoint.
+     *
+     * NOTICE:
+     *
+     * - qs library encodes "(" and ")" as "%28" and "%29" although is not
+     *   needed. Encoded parentheses must be supported in the search endpoint.
+     * - Iterating objects doesn't ensure the order of the keys so they can't be
+     *   reliabily used to specify sorting in multiple fields. That's why this
+     *   method validates sorting and raises an exception if the value is not
+     *   valid.
+     *
+     *   - sort: field                                         [OK]
+     *   - sort: {field: 'asc|desc'}                           [OK]
+     *   - sort: [{field1: 'asc|desc'}, {field2: 'asc|desc'}]  [OK]
+     *   - sort: {field1: 'asc|desc', field2: 'asc|desc'}      [ERR]
+     *
+     * @param  {String} query  Cleaned search terms.
+     * @param  {Object} params Search parameters object.
+     * @return {String}        Encoded query string to be used in a search URL.
+     * @protected
      */
 
-    Client.prototype.__getAuthHeaderName = function() {
-      if (this.version === 4) {
-        return 'api token';
-      } else {
-        return 'authorization';
+    Client.prototype.__buildSearchQueryString = function(query, params) {
+      var defaultParams, queryParams;
+      if (query == null) {
+        query = "";
       }
+      query = query.replace(/\s+/g, " ");
+      if (query !== " ") {
+        query = query.trim();
+      }
+      defaultParams = {
+        hashid: this.hashid,
+        type: this.type
+      };
+      queryParams = extend(true, defaultParams, params || {}, {
+        query: query
+      });
+      if ((Thing.isArray(queryParams.type)) && queryParams.type.length === 1) {
+        queryParams.type = queryParams.type[0];
+      }
+      if ((Thing.isPlainObj(queryParams.sort)) && (Object.keys(queryParams.sort)).length > 1) {
+        throw errors.error("To sort by multiple fields use an Array of Objects", this);
+      }
+      return qs.stringify(queryParams, {
+        skipNulls: true
+      });
     };
 
     return Client;
@@ -527,22 +231,25 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./util/http":9,"md5":64}],2:[function(require,module,exports){
-
-/*
- * Created by Kike Coslado on 26/10/15.
- * 20160419 REV(@JoeZ99)
- */
-
+},{"./util/errors":8,"./util/http":11,"./util/thing":12,"extend":23,"md5":64,"qs":71}],2:[function(require,module,exports){
 (function() {
-  var Controller, bean, extend, qs,
-    slice = [].slice;
+  var Client, Controller, Freezer, Thing, bean, errors, extend, qs,
+    slice = [].slice,
+    hasProp = {}.hasOwnProperty;
 
   bean = require("bean");
 
   extend = require("extend");
 
   qs = require("qs");
+
+  errors = require("./util/errors");
+
+  Client = require("./client");
+
+  Freezer = require("./util/freezer");
+
+  Thing = require("./util/thing");
 
 
   /*
@@ -551,533 +258,441 @@ author: @ecoslado
   This class uses the client to
   to retrieve the data and the widgets
   to paint them.
-  
-  TODO(@carlosescri): Use our introspection tool to do some cleanup.
    */
 
   Controller = (function() {
-
-    /*
-    Controller constructor
-    
-    @param {doofinder.Client} client
-    @param {doofinder.widget | Array} widgets
-    @param {Object} searchParams
-    @api public
-     */
-    function Controller(client, widgets, searchParams1) {
-      var i, len, widget;
-      this.searchParams = searchParams1 != null ? searchParams1 : {};
+    function Controller(client, widgets, defaultParams) {
+      var defaults, i, len, widget;
       this.client = client;
-      this.hashid = client.hashid;
-      this.widgets = [];
-      if (widgets instanceof Array) {
-        for (i = 0, len = widgets.length; i < len; i++) {
-          widget = widgets[i];
-          this.addWidget(widget);
-        }
-      } else if (widgets) {
-        this.addWidget(widgets);
+      if (widgets == null) {
+        widgets = [];
       }
-      this.status = extend(true, {}, {
-        params: extend(true, {}, this.searchParams)
+      if (defaultParams == null) {
+        defaultParams = {};
+      }
+      if (!(this.client instanceof Client)) {
+        throw errors.error("client must be an instance of Client", this);
+      }
+      if (!Thing.isArray(widgets)) {
+        throw errors.error("widgets must be an instance of Array", this);
+      }
+      if (!Thing.isPlainObj(defaultParams)) {
+        throw errors.error("defaultParams must be an instance of Object", this);
+      }
+      defaults = {
+        query_name: null,
+        page: 1,
+        rpp: 10
+      };
+      this.defaults = extend(true, defaults, this.__fixParams(defaultParams));
+      this.queryCounter = 0;
+      this.widgets = [];
+      for (i = 0, len = widgets.length; i < len; i++) {
+        widget = widgets[i];
+        this.registerWidget(widget);
+      }
+      Object.defineProperty(this, 'hashid', {
+        get: function() {
+          return this.client.hashid;
+        }
+      });
+      Object.defineProperty(this, 'isFirstPage', {
+        get: function() {
+          return this.requestDone && this.params.page === 1;
+        }
+      });
+      Object.defineProperty(this, 'isLastPage', {
+        get: function() {
+          return this.requestDone && this.params.page === this.lastPage;
+        }
       });
       this.reset();
     }
 
 
-    /*
-    __search
-    this method invokes Client's search method for
-    retrieving the data and use widget's replace or
-    append to show them.
-    
-    @param {String} event: the event name
-    @param {Array} params: the params will be passed
-      to the listeners
-    @api private
+    /**
+     * Fixes any deprecations in the search parameters.
+     *
+     * - Client now expects "filter" instead of "filters" because the parameters
+     *   are sent "as is" in the querystring, no re-processing is made.
+     *
+     * @param  {Object} params
+     * @return {Object}
+     * @protected
      */
 
-    Controller.prototype.__search = function(next) {
-      var _this, params;
-      if (next == null) {
-        next = false;
+    Controller.prototype.__fixParams = function(params) {
+      if (params.filters != null) {
+        params.filter = params.filters;
+        delete params.filters;
+        errors.warning("`filters` key is deprecated for search parameters, use `filter` instead", this);
       }
-      this.status.params.query_counter++;
-      params = extend(true, {}, this.status.params || {});
-      params.page = this.status.currentPage;
-      _this = this;
-      return this.client.search(params.query, params, function(err, res) {
-        var i, len, ref, results, widget;
-        if (err) {
-          return _this.trigger("df:error_received", [err]);
-        } else if (res) {
-          if (res.results.length < _this.status.params.rpp) {
-            _this.status.lastPageReached = true;
-          }
-          if (!_this.searchParams.query_name) {
-            _this.status.params.query_name = res.query_name;
-          }
-          _this.trigger("df:results_received", [res]);
-          if (res.query_counter === _this.status.params.query_counter) {
-            ref = _this.widgets;
-            results = [];
-            for (i = 0, len = ref.length; i < len; i++) {
-              widget = ref[i];
-              if (next) {
-                results.push(widget.renderNext(res));
-              } else {
-                results.push(widget.render(res));
-              }
-            }
-            return results;
-          }
-        }
-      });
+      return params;
     };
 
 
-    /*
-    __search wrappers
+    /**
+     * Resets status and optionally forces query and params. As it is a reset
+     * aimed to perform a new search, page is forced to 1 in any case.
+     *
+     * - done      - true if at least one request has been sent.
+     * - lastPage  - indicates the number of the last page for the current status.
+     *
+     * @param  {String} query  Search terms.
+     * @param  {Object} params Optional search parameters.
+     * @return {Object}        Updated status.
      */
 
-
-    /*
-    search
-    
-    Takes a new query, initializes status and performs
-    a search
-    
-    @param {String} query: the query term
-    @api public
-     */
-
-    Controller.prototype.search = function(query, params) {
-      var queryCounter, searchParams;
+    Controller.prototype.reset = function(query, params) {
+      if (query == null) {
+        query = null;
+      }
       if (params == null) {
         params = {};
       }
-      if (query) {
-        searchParams = extend(true, {}, this.searchParams);
-        queryCounter = this.status.params.query_counter;
-        this.status.params = extend(true, {}, params);
-        this.status.params = extend(true, searchParams, params);
-        this.status.params.query = query;
-        this.status.params.filters = extend(true, {}, this.searchParams.filters || {}, params.filters);
-        this.status.params.query_counter = queryCounter;
-        if (!this.searchParams.query_name) {
-          delete this.status.params.query_name;
-        }
-        this.status.currentPage = 1;
-        this.status.firstQueryTriggered = true;
-        this.status.lastPageReached = false;
-        this.__search();
-      }
-      return this.trigger("df:search", [this.status.params]);
+      this.query = query;
+      this.params = extend(true, {}, this.defaults, this.__fixParams(params), {
+        page: 1
+      });
+      this.requestDone = false;
+      return this.lastPage = null;
+    };
+
+    Controller.prototype.clean = function() {
+      this.reset();
+      return this.cleanWidgets();
     };
 
 
-    /*
-    nextPage
-    
-    Increments the currentPage and performs a search. Takes
-    the next page results and shows them.
-    
-    @api public
+    /**
+     * Proxy method to get options.
+     * @return {http.ClientRequest}
+     * @public
      */
 
-    Controller.prototype.nextPage = function(replace) {
-      if (replace == null) {
-        replace = false;
-      }
-      if (this.status.firstQueryTriggered && this.status.currentPage > 0 && !this.status.lastPageReached) {
-        this.trigger("df:next_page");
-        this.status.currentPage++;
-        return this.__search(true);
-      }
+    Controller.prototype.options = function(suffix, callback) {
+      return this.client.options(suffix, callback);
     };
 
 
-    /*
-    getPage
-    
-    Set the currentPage with a given value and performs a search.
-    Takes a given page and shows the results.
-    
-    @param {Number} page: the page you are retrieving
-    @api public
+    /**
+     * Performs a request for a new search (resets status).
+     * Page will always be 1 in this case.
+     *
+     * @param  {String} query  Search terms.
+     * @param  {Object} params Search parameters.
+     * @return {http.ClientRequest}
+     * @public
+     */
+
+    Controller.prototype.search = function(query, params) {
+      if (params == null) {
+        params = {};
+      }
+      this.reset(query, params);
+      this.trigger("df:search", [this.query, this.params]);
+      return this.getResults();
+    };
+
+
+    /**
+     * Performs a request to get results for a specific page of the current
+     * search. Requires a search being made via `search()` to set a status.
+     *
+     * @param  {Number} page
+     * @return {http.ClientRequest|Boolean} The request or false if can't be made.
+     * @public
      */
 
     Controller.prototype.getPage = function(page) {
-      var self;
-      if (this.status.firstQueryTriggered && this.status.currentPage > 0) {
-        this.trigger("df:get_page");
-        this.status.currentPage = page;
-        self = this;
-        return this.__search();
+      page = parseInt(page, 10);
+      if (this.requestDone && page <= this.lastPage) {
+        this.params.page = page;
+        this.trigger("df:search:page", [this.query, this.params]);
+        return this.getResults();
+      } else {
+        return false;
       }
     };
 
 
-    /*
-    refresh
-    
-    Makes a search call with the current status.
-    
-    @api public
+    /**
+     * Performs a request to get results for the next page of the current search,
+     * if the last page was not already reached.
+     *
+     * @return {http.ClientRequest|Boolean} The request or false if can't be made.
+     * @public
+     */
+
+    Controller.prototype.getNextPage = function() {
+      return this.getPage(this.params.page + 1);
+    };
+
+
+    /**
+     * Gets the first page for the the current search again.
+     *
+     * @return {http.ClientRequest|Boolean} The request or false if can't be made.
+     * @public
      */
 
     Controller.prototype.refresh = function() {
-      if (this.status.params.query) {
-        this.trigger("df:refresh", [this.status.params]);
-        this.status.currentPage = 1;
-        this.status.firstQueryTriggered = true;
-        this.status.lastPageReached = false;
-        return this.__search();
-      }
+      this.params.page = 1;
+      this.trigger("df:refresh", [this.query, this.params]);
+      return this.getResults();
     };
 
 
-    /*
-    addFilter
-    
-    Adds new filter criteria.
-    
-    @param {String} key: the facet key you are filtering
-    @param {String | Object} value: the filtering criteria
-    @api public
+    /**
+     * Get results for the current search status.
+     *
+     * @return {http.ClientRequest}
+     * @public
      */
 
-    Controller.prototype.addFilter = function(key, value) {
-      this.status.currentPage = 1;
-      if (!this.status.params.filters) {
-        this.status.params.filters = {};
+    Controller.prototype.getResults = function() {
+      var params, request;
+      this.requestDone = true;
+      params = extend(true, {
+        query_counter: ++this.queryCounter
+      }, this.params);
+      return request = this.client.search(this.query, params, (function(_this) {
+        return function(err, res) {
+          var i, len, ref, widget;
+          if (err) {
+            return _this.trigger("df:error", [err]);
+          } else {
+            _this.lastPage = Math.ceil(res.total / res.results_per_page);
+            _this.params.query_name = res.query_name;
+            ref = _this.widgets;
+            for (i = 0, len = ref.length; i < len; i++) {
+              widget = ref[i];
+              widget.render(res);
+            }
+            _this.trigger("df:results", [res]);
+            if (_this.isLastPage) {
+              return _this.trigger("df:results:end", [res]);
+            }
+          }
+        };
+      })(this));
+    };
+
+    Controller.prototype.on = function(eventName, handler, args) {
+      if (args == null) {
+        args = [];
       }
-      if (value.constructor === Object) {
-        this.status.params.filters[key] = value;
-        if (this.searchParams.filters && this.searchParams.filters[key]) {
-          return delete this.searchParams.filters[key];
-        }
-      } else {
-        if (!this.status.params.filters[key]) {
-          this.status.params.filters[key] = [];
-        }
-        if (value.constructor !== Array) {
-          value = [value];
-        }
-        return this.status.params.filters[key] = this.status.params.filters[key].concat(value);
+      return bean.on.apply(bean, [this, eventName, handler].concat(slice.call(args)));
+    };
+
+    Controller.prototype.one = function(eventName, handler, args) {
+      if (args == null) {
+        args = [];
       }
+      return bean.one.apply(bean, [this, eventName, handler].concat(slice.call(args)));
     };
 
-    Controller.prototype.hasFilter = function(key) {
-      var ref;
-      return ((ref = this.status.params.filters) != null ? ref[key] : void 0) != null;
+    Controller.prototype.off = function(eventName, handler) {
+      return bean.off(this, eventName, handler);
     };
 
-    Controller.prototype.getFilter = function(key) {
-      var ref;
-      return (ref = this.status.params.filters) != null ? ref[key] : void 0;
+    Controller.prototype.trigger = function(eventName, args) {
+      if (args == null) {
+        args = [];
+      }
+      return bean.fire(this, eventName, args);
     };
 
+    Controller.prototype.bind = function(eventName, handler) {
+      errors.warning("`bind()` is deprecated, use `on()` instead", this);
+      return this.on(eventName, handler);
+    };
 
-    /*
-    addParam
-    
-    Adds new search parameter to the current status.
-    
-    @param {String} key: the facet key you are filtering
-    @param {String | Number} value: the filtering criteria
-    @api public
-     */
+    Controller.prototype.registerWidget = function(widget) {
+      widget.setController(this);
+      widget.init();
+      return this.widgets.push(widget);
+    };
+
+    Controller.prototype.cleanWidgets = function() {
+      return this.widgets.forEach(function(widget) {
+        return widget.clean();
+      });
+    };
+
+    Controller.prototype.getParam = function(key) {
+      return this.params[key];
+    };
+
+    Controller.prototype.setParam = function(key, value) {
+      return this.params[key] = value;
+    };
+
+    Controller.prototype.removeParam = function(key, value) {
+      return delete this.params[key];
+    };
 
     Controller.prototype.addParam = function(key, value) {
-      return this.status.params[key] = value;
+      errors.warning("`addParam()` is deprecated, use `setParam()` instead", this);
+      return this.setParam(key, value);
     };
 
 
-    /*
-    clearParam
-    
-    Removes search parameter from current status.
-    
-    @param {String} key: the name of the param
-    @api public
+    /**
+     * Gets the value of a filter or undefined if not defined.
+     *
+     * @param  {String} key       Name of the filter.
+     * @param  {String} paramName Name of the parameter ("filter" by default).
+     * @return {*}
+     * @public
      */
 
-    Controller.prototype.clearParam = function(key) {
-      return delete this.status.params[key];
-    };
-
-
-    /*
-    reset
-    
-    Reset the params to the initial state.
-    
-    @api public
-     */
-
-    Controller.prototype.reset = function() {
-      var queryCounter;
-      queryCounter = this.status.params.query_counter || 1;
-      this.status = {
-        params: extend(true, {}, this.searchParams),
-        currentPage: 0,
-        firstQueryTriggered: false,
-        lastPageReached: false
-      };
-      this.status.params.query_counter = queryCounter;
-      if (this.searchParams.query) {
-        return this.status.params.query = '';
+    Controller.prototype.getFilter = function(key, paramName) {
+      var ref;
+      if (paramName == null) {
+        paramName = "filter";
       }
+      return (ref = this.params[paramName]) != null ? ref[key] : void 0;
     };
 
 
-    /*
-    removeFilter
-    
-    Removes some filter criteria.
-    
-    @param {String} key: the facet key you are filtering
-    @param {String | Object} value: the filtering criteria you are removing
-    @api public
+    /**
+     * Sets the value of a filter.
+     *
+     * @param  {String} key       Name of the filter.
+     * @param  {*}      value     Value of the filter.
+     * @param  {String} paramName Name of the parameter ("filter" by default).
+     * @return {*}
+     * @public
      */
 
-    Controller.prototype.removeFilter = function(key, value) {
-      var ref, ref1;
-      this.status.currentPage = 1;
-      if (((ref = this.status.params.filters) != null ? ref[key] : void 0) != null) {
-        if (this.status.params.filters[key].constructor === Object) {
-          delete this.status.params.filters[key];
-        } else if (this.status.params.filters[key].constructor === Array) {
-          if (value != null) {
-            this.__splice(this.status.params.filters[key], value);
-            if (!(this.status.params.filters[key].length > 0)) {
-              delete this.status.params.filters[key];
-            }
-          } else {
-            delete this.status.params.filters[key];
+    Controller.prototype.setFilter = function(key, value, paramName) {
+      var base;
+      if (paramName == null) {
+        paramName = "filter";
+      }
+      if ((base = this.params)[paramName] == null) {
+        base[paramName] = {};
+      }
+      this.params[paramName][key] = Thing.isStr(value) ? [value] : value;
+      return this.params[paramName][key];
+    };
+
+
+    /**
+     * Removes a value of a filter. If the filter is an array of strings, removes
+     * the value inside the array. In any other case removes the entire value.
+     *
+     * @param  {String} key       Name of the filter.
+     * @param  {*}      value     Value of the filter.
+     * @param  {String} paramName Name of the parameter ("filter" by default).
+     * @return {*}
+     * @public
+     */
+
+    Controller.prototype.removeFilter = function(key, value, paramName) {
+      var pos, ref;
+      if (paramName == null) {
+        paramName = "filter";
+      }
+      if (((ref = this.params[paramName]) != null ? ref[key] : void 0) != null) {
+        if ((value != null) && Thing.isStrArray(this.params[paramName][key])) {
+          pos = this.params[paramName][key].indexOf(value);
+          if (pos >= 0) {
+            this.params[paramName][key].splice(pos, 1);
           }
-        }
-      }
-      if (((ref1 = this.searchParams.filters) != null ? ref1[key] : void 0) != null) {
-        if (this.searchParams.filters[key].constructor === Object) {
-          return delete this.searchParams.filters[key];
-        } else if (this.searchParams.filters[key].constructor === Array) {
-          if (value != null) {
-            this.__splice(this.searchParams.filters[key], value);
-            if (!(this.searchParams.filters[key].length > 0)) {
-              return delete this.searchParams.filters[key];
-            }
-          } else {
-            return delete this.searchParams.filters[key];
+          if (this.params[paramName][key].length === 0) {
+            delete this.params[paramName][key];
           }
-        }
-      }
-    };
-
-    Controller.prototype.__splice = function(list, value) {
-      var idx;
-      idx = list.indexOf(value);
-      while (idx >= 0) {
-        list.splice(idx, 1);
-        idx = list.indexOf(value);
-      }
-      return list;
-    };
-
-
-    /*
-    setSearchParam
-    
-    Removes some filter criteria.
-    
-    @param {String} key: the param key
-    @param {Mixed} value: the value
-    @api public
-     */
-
-    Controller.prototype.setSearchParam = function(key, value) {
-      return this.searchParams[key] = value;
-    };
-
-
-    /*
-    addwidget
-    
-    Adds a new widget to the controller and reference the
-    controller from the widget.
-    
-    @param {doofinder.widget} widget: the widget you are adding.
-    @api public
-     */
-
-    Controller.prototype.addWidget = function(widget) {
-      this.widgets.push(widget);
-      return widget.init(this);
-    };
-
-
-    /*
-    This method calls to /stats/click
-    service for accounting the
-    clicks to a product
-    
-    @param {String} productId
-    @param {Object} options
-    @param {Function} callback
-    
-    @api public
-     */
-
-    Controller.prototype.registerClick = function() {
-      var args, callback, options, productId;
-      productId = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      callback = (function(err, res) {});
-      options = {};
-      if (args.length === 1) {
-        if (typeof args[0] === 'function') {
-          callback = args[0];
         } else {
-          options = args[0];
+          delete this.params[paramName][key];
         }
-      } else if (args.length === 2) {
-        options = args[0];
-        callback = args[1];
+        return this.params[paramName][key];
       }
-      if (!options.query) {
-        options.query = this.status.params.query;
+    };
+
+
+    /**
+     * Adds a value to a filter. If the value is a String, it's added
+     * @param {[type]} key       [description]
+     * @param {[type]} value     [description]
+     * @param {[type]} paramName =             "filter" [description]
+     */
+
+    Controller.prototype.addFilter = function(key, value, paramName) {
+      var base, base1;
+      if (paramName == null) {
+        paramName = "filter";
       }
-      return this.client.registerClick(productId, options, callback);
-    };
-
-
-    /*
-    This method calls to /stats/init_session
-    service for init a user session
-    
-    @param {String} sessionId
-    @param {Function} callback
-    
-    @api public
-     */
-
-    Controller.prototype.registerSession = function(sessionId, callback) {
-      if (callback == null) {
-        callback = (function(err, res) {});
+      if ((base = this.params)[paramName] == null) {
+        base[paramName] = {};
       }
-      return this.client.registerSession(sessionId, callback);
-    };
-
-
-    /*
-    This method calls to /stats/checkout
-    service for init a user session
-    
-    @param {String} sessionId
-    @param {Object} options
-    @param {Function} callback
-    
-    @api public
-     */
-
-    Controller.prototype.registerCheckout = function(sessionId, callback) {
-      return this.client.registerCheckout(sessionId, callback);
-    };
-
-
-    /*
-    options
-    
-    Retrieves the SearchEngine options
-    
-    @param {Function} callback
-     */
-
-    Controller.prototype.options = function() {
-      var args, ref;
-      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-      return (ref = this.client).options.apply(ref, args);
-    };
-
-
-    /*
-    bind
-    
-    Method to add and event listener
-    @param {String} event
-    @param {Function} callback
-    @api public
-     */
-
-    Controller.prototype.bind = function(event, callback) {
-      return bean.on(this, event, callback);
-    };
-
-
-    /*
-    trigger
-    
-    Method to trigger an event
-    @param {String} event
-    @param {Array} params
-    @api public
-     */
-
-    Controller.prototype.trigger = function(event, params) {
-      return bean.fire(this, event, params);
-    };
-
-
-    /*
-    setStatusFromString
-    
-    Fills in the status from queryString
-    and searches.
-     */
-
-    Controller.prototype.setStatusFromString = function(queryString, prefix) {
-      var searchParams;
-      if (prefix == null) {
-        prefix = "#/search/";
+      if ((base1 = this.params[paramName])[key] == null) {
+        base1[key] = [];
       }
-      this.status.firstQueryTriggered = true;
-      this.status.lastPageReached = false;
-      searchParams = extend(true, {}, this.searchParams || {});
-      this.status.params = extend(true, searchParams, qs.parse(queryString.replace("" + prefix, "")) || {});
-      this.status.params.query_counter = 1;
-      this.status.currentPage = 1;
-      this.refresh();
-      return this.status.params.query;
-    };
-
-
-    /*
-    statusQueryString
-    
-    Method to represent current status
-    with a queryString
-     */
-
-    Controller.prototype.statusQueryString = function(prefix) {
-      var discardQSFunctions, params;
-      if (prefix == null) {
-        prefix = "#/search/";
-      }
-      params = extend(true, {}, this.status.params);
-      delete params.transformer;
-      delete params.rpp;
-      delete params.query_counter;
-      delete params.page;
-      discardQSFunctions = function(prefix, value) {
-        if (typeof value === 'function') {
-          return;
+      if (Thing.isStrArray(this.params[paramName][key])) {
+        if (Thing.isStr(value)) {
+          value = [value];
         }
-        return value;
-      };
-      return "" + prefix + (qs.stringify(params, {
-        filter: discardQSFunctions
-      }));
+        if (Thing.isStrArray(value)) {
+          value = this.params[paramName][key].concat(value);
+        }
+      }
+      return this.setFilter(key, value, paramName);
+    };
+
+    Controller.prototype.getExclusion = function(key) {
+      return this.getFilter(key, "exclude");
+    };
+
+    Controller.prototype.setExclusion = function(key, value) {
+      return this.setFilter(key, value, "exclude");
+    };
+
+    Controller.prototype.removeExclusion = function(key, value) {
+      return this.removeFilter(key, value, "exclude");
+    };
+
+    Controller.prototype.addExclusion = function(key, value) {
+      return this.addFilter(key, value, "exclude");
+    };
+
+    Controller.prototype.serializeStatus = function() {
+      var i, key, len, ref, status, value;
+      status = extend(true, {
+        query: this.query
+      }, this.params);
+      ref = ['transformer', 'rpp', 'query_counter', 'page'];
+      for (i = 0, len = ref.length; i < len; i++) {
+        key = ref[i];
+        delete status[key];
+      }
+      for (key in status) {
+        if (!hasProp.call(status, key)) continue;
+        value = status[key];
+        if (!value) {
+          delete status[key];
+        }
+      }
+      if ((Object.keys(status)).length > 0) {
+        return qs.stringify(status);
+      } else {
+        return "";
+      }
+    };
+
+    Controller.prototype.loadStatus = function(status) {
+      var params, query;
+      params = (qs.parse(status)) || {};
+      if ((Object.keys(params)).length > 0) {
+        query = params.query || "";
+        delete params.query;
+        this.reset(query, params);
+        this.requestDone = true;
+        return this.refresh();
+      } else {
+        return false;
+      }
     };
 
     return Controller;
@@ -1088,52 +703,43 @@ author: @ecoslado
 
 }).call(this);
 
-},{"bean":22,"extend":23,"qs":71}],3:[function(require,module,exports){
+},{"./client":1,"./util/errors":8,"./util/freezer":9,"./util/thing":12,"bean":22,"extend":23,"qs":71}],3:[function(require,module,exports){
 (function() {
-  if (!JSON.stringify && JSON.encode) {
-    JSON.stringify = JSON.encode;
-  }
-
-  if (!JSON.parse && JSON.decode) {
-    JSON.parse = JSON.decode;
-  }
-
   module.exports = {
     version: "5.2.0",
     Client: require("./client"),
     Mustache: require("mustache"),
-    Widget: require("./widget"),
     Controller: require("./controller"),
     widgets: {
+      CollapsiblePanel: require("./widgets/collapsiblepanel"),
       Display: require("./widgets/display"),
-      Results: require("./widgets/results/results"),
-      ScrollResults: require("./widgets/results/scrollresults"),
+      Panel: require("./widgets/panel"),
       QueryInput: require("./widgets/queryinput"),
-      BaseFacet: require("./widgets/facets/basefacet"),
-      TermFacet: require("./widgets/facets/termfacet"),
       RangeFacet: require("./widgets/facets/rangefacet"),
-      FacetPanel: require("./widgets/facets/facetpanel")
+      ScrollDisplay: require("./widgets/scrolldisplay"),
+      TermsFacet: require("./widgets/facets/termfacet"),
+      Widget: require("./widgets/widget")
     },
     util: {
+      addHelpers: require("./util/helpers"),
+      bean: require("bean"),
+      dfdom: require("./util/dfdom"),
+      extend: require("extend"),
+      http: require("./util/http"),
       md5: require("md5"),
       qs: require("qs"),
-      bean: require("bean"),
-      extend: require("extend"),
-      introspection: require("./util/introspection"),
-      dfdom: require("./util/dfdom"),
       throttle: require("lodash.throttle"),
-      http: require("./util/http"),
-      uniqueId: require("./util/uniqueid"),
-      buildHelpers: require("./util/helpers")
+      uniqueId: require("./util/uniqueid")
     },
-    session: require("./session")
+    session: require("./session"),
+    stats: require("./stats")
   };
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./session":4,"./util/dfdom":5,"./util/helpers":8,"./util/http":9,"./util/introspection":10,"./util/uniqueid":11,"./widget":12,"./widgets/display":13,"./widgets/facets/basefacet":14,"./widgets/facets/facetpanel":15,"./widgets/facets/rangefacet":16,"./widgets/facets/termfacet":17,"./widgets/queryinput":18,"./widgets/results/results":19,"./widgets/results/scrollresults":20,"bean":22,"extend":23,"lodash.throttle":63,"md5":64,"mustache":68,"qs":71}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/helpers":10,"./util/http":11,"./util/uniqueid":13,"./widgets/collapsiblepanel":14,"./widgets/display":15,"./widgets/facets/rangefacet":16,"./widgets/facets/termfacet":17,"./widgets/panel":18,"./widgets/queryinput":19,"./widgets/scrolldisplay":20,"./widgets/widget":21,"bean":22,"extend":23,"lodash.throttle":63,"md5":64,"mustache":68,"qs":71}],4:[function(require,module,exports){
 (function() {
-  var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, extend, md5,
+  var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, extend, md5, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -1142,6 +748,8 @@ author: @ecoslado
   extend = require("extend");
 
   md5 = require("md5");
+
+  uniqueId = require("./util/uniqueid");
 
   ISessionStore = (function() {
     function ISessionStore() {}
@@ -1261,20 +869,9 @@ author: @ecoslado
       this.data = data != null ? data : {};
     }
 
-
-    /**
-    * Generates a unique session ID based on some randomness.
-    * @protected
-    * @return {String} A MD5 hash.
-     */
-
-    ObjectSessionStore.prototype.__uniqueId = function() {
-      return md5([new Date().getTime(), String(Math.floor(Math.random() * 10000))].join(""));
-    };
-
     ObjectSessionStore.prototype.__getData = function() {
       if (this.data.session_id == null) {
-        this.data.session_id = this.__uniqueId();
+        this.data.session_id = uniqueId.generate.hash();
       }
       return this.data;
     };
@@ -1312,25 +909,12 @@ author: @ecoslado
       this.expiry = options.expiry;
     }
 
-
-    /**
-     * Generates a unique session ID based on the user's browser, the location and
-     * some randomness.
-     *
-     * @protected
-     * @return {[type]} [description]
-     */
-
-    CookieSessionStore.prototype.__uniqueId = function() {
-      return md5([navigator.userAgent, navigator.language, window.location.host, new Date().getTime(), String(Math.floor(Math.random() * 10000))].join(""));
-    };
-
     CookieSessionStore.prototype.__getData = function() {
       var dataObj;
       dataObj = Cookies.getJSON(this.cookieName);
       if (dataObj == null) {
         dataObj = this.__setData({
-          session_id: this.__uniqueId()
+          session_id: uniqueId.generate.browserHash()
         });
       }
       return dataObj;
@@ -1363,17 +947,9 @@ author: @ecoslado
   Session = (function() {
 
     /**
-     * Creates a Session.
-     * @param  {Client}     client
-     * @param  {*}          store      A store object which implements:
-     *                                   - get(key, default)
-     *                                   - set(key, value)
-     *                                   - del(key)
-     *                                   - delete()
-     *                                   - exists()
+     * @param  {ISessionStore} store  Holds session data.
      */
-    function Session(client, store) {
-      this.client = client;
+    function Session(store) {
       this.store = store != null ? store : new ObjectSessionStore();
     }
 
@@ -1426,85 +1002,6 @@ author: @ecoslado
       return this.store.exists();
     };
 
-
-    /**
-     * Registers a search for the session.
-     * Registers the session in Doofinder stats if not already registered.
-     *
-     * WARNING: This must be called ONLY if the user has performed a search.
-     *          That's why this is usually called when the user has stopped
-     *          typing in the search box.
-     *
-     * @public
-     * @param  {String} query Search terms.
-     */
-
-    Session.prototype.registerSearch = function(query) {
-      this.set("query", query);
-      if (!this.get("registered", false)) {
-        this.client.registerSession(this.get("session_id"));
-        return this.set("registered", true);
-      }
-    };
-
-
-    /**
-     * Registers a click on a search result for the specified search query.
-     * @public
-     * @param  {String} dfid  Doofinder's internal ID for the result.
-     * @param  {String} query Search terms.
-     */
-
-    Session.prototype.registerClick = function(dfid, query) {
-      this.set("dfid", dfid);
-      if (query != null) {
-        this.set("query", query);
-      }
-      return this.client.registerClick(dfid, {
-        sessionId: this.get("session_id"),
-        query: this.get("query")
-      });
-    };
-
-
-    /**
-     * Register a checkout when the location passed matches one of the URLs
-     * provided.
-     *
-     * @public
-     */
-
-    Session.prototype.registerCheckout = function() {
-      var sessionId;
-      sessionId = this.get("session_id");
-      this.client.registerCheckout(sessionId);
-      return this.clean();
-    };
-
-
-    /**
-     * Method to register banner events
-     * @public
-     *
-     * @param {String} bannerId
-     */
-
-    Session.prototype.registerBannerDisplay = function(bannerId) {
-      return this.client.registerBannerEvent("display", bannerId);
-    };
-
-
-    /**
-     * Method to register banner events
-     * @public
-     *
-     * @param {String} bannerId
-     */
-
-    Session.prototype.registerBannerClick = function(bannerId) {
-      return this.client.registerBannerEvent("click", bannerId);
-    };
-
     return Session;
 
   })();
@@ -1518,18 +1015,206 @@ author: @ecoslado
 
 }).call(this);
 
-},{"extend":23,"js-cookie":62,"md5":64}],5:[function(require,module,exports){
+},{"./util/uniqueid":13,"extend":23,"js-cookie":62,"md5":64}],5:[function(require,module,exports){
 (function() {
-  var DfDomElement, MATCHES_SELECTOR_FN, bean, matchesSelector;
+  var Client, Session, Stats, uniqueId;
+
+  uniqueId = require("./util/uniqueid");
+
+  Client = require("./client");
+
+  Session = (require("./session")).Session;
+
+  Stats = (function() {
+    function Stats(client, session) {
+      this.client = client;
+      this.session = session;
+      if (!(this.client instanceof Client)) {
+        throw this.error("Invalid Client");
+      }
+      if (!(this.session instanceof Session)) {
+        throw this.error("Invalid Session");
+      }
+    }
+
+    Stats.prototype.error = function(message) {
+      return new Error(this.constructor.name + ": " + message);
+    };
+
+
+    /**
+     * Registers the session in Doofinder stats if not already registered.
+     * It marks the session as registered synchronously to short-circuit other
+     * attempts while the request is in progress. If an error occurs in the
+     * stats request the session is marked as unregistered again.
+     *
+     * WARNING: This should be called ONLY if the user has performed a search.
+     *          That's why this is usually called when the user has stopped
+     *          typing in the search box.
+     *
+     *
+     * @param  {Function} callback Optional callback to be called when the
+     *                             response is received. First param is the
+     *                             error, if any, and the second one is the
+     *                             response, if any.
+     * @return {Boolean}           Whether the stats request has been done or
+     *                             not (doesn't check if it was successful).
+     * @public
+     */
+
+    Stats.prototype.registerSession = function(callback) {
+      var alreadyRegistered;
+      alreadyRegistered = this.session.get("registered", false);
+      if (!alreadyRegistered) {
+        this.session.set("registered", true);
+        this.client.stats("init", {
+          session_id: this.session.get("session_id")
+        }, function(err, res) {
+          if (err != null) {
+            this.session.set("registered", false);
+          }
+          if (callback != null) {
+            return callback(err, res);
+          }
+        });
+      }
+      return !alreadyRegistered;
+    };
+
+
+    /**
+     * Registers a search for the session.
+     *
+     * WARNING: This should be called ONLY if the user has performed a search.
+     *          That's why this is usually called when the user has stopped
+     *          typing in the search box.
+     *
+     * @public
+     * @param  {String} query Search terms.
+     */
+
+    Stats.prototype.registerSearch = function(query) {
+      return this.session.set("query", query);
+    };
+
+
+    /**
+     * Registers a click on a search result for the specified search query.
+     *
+     * @param  {String}   dfid      Doofinder's internal ID for the result.
+     * @param  {String}   query     Search terms.
+     * @param  {Function} callback  Optional callback to be called when the
+     *                              response is received. First param is the
+     *                              error, if any, and the second one is the
+     *                              response, if any.
+     * @public
+     */
+
+    Stats.prototype.registerClick = function(dfid, query, callback) {
+      var params;
+      dfid = uniqueId.clean.dfid("" + dfid);
+      this.session.set("dfid", dfid);
+      if (query != null) {
+        this.session.set("query", query);
+      }
+      params = {
+        dfid: dfid,
+        session_id: this.session.get("session_id"),
+        query: this.session.get("query")
+      };
+      return this.client.stats("click", params, function(err, res) {
+        if (callback != null) {
+          return callback(err, res);
+        }
+      });
+    };
+
+
+    /**
+     * Registers a checkout if session exists.
+     * @param  {Function} callback Optional callback to be called when the
+     *                             response is received. First param is the
+     *                             error, if any, and the second one is the
+     *                             response, if any.
+     * @return {Boolean}           true if session exists and the request is
+     *                             made (doesn't check request success).
+     * @public
+     */
+
+    Stats.prototype.registerCheckout = function(callback) {
+      var sessionExists;
+      sessionExists = this.session.exists();
+      if (sessionExists) {
+        this.client.stats("checkout", {
+          session_id: this.session.get("session_id")
+        }, (function(_this) {
+          return function(err, res) {
+            if (err == null) {
+              _this.session.clean();
+            }
+            if (callback != null) {
+              return callback(err, res);
+            }
+          };
+        })(this));
+      }
+      return sessionExists;
+    };
+
+
+    /**
+     * Registers an event for a banner
+     * @param  {String}   eventName Name of the event.
+     *                              - display
+     *                              - click
+     * @param  {*}        bannerId  Id of the banner.
+     * @param  {Function} callback  Optional callback to be called when the
+     *                              response is received. First param is the
+     *                              error, if any, and the second one is the
+     *                              response, if any.
+     * @return {undefined}
+     * @public
+     */
+
+    Stats.prototype.registerBannerEvent = function(eventName, bannerId, callback) {
+      if (eventName == null) {
+        throw this.error("eventName is required");
+      }
+      if (bannerId == null) {
+        throw this.error("bannerId is required");
+      }
+      return this.client.stats("banner_" + eventName, {
+        banner_id: "" + bannerId
+      }, function(err, res) {
+        if (callback != null) {
+          return callback(err, res);
+        }
+      });
+    };
+
+    return Stats;
+
+  })();
+
+  module.exports = Stats;
+
+}).call(this);
+
+},{"./client":1,"./session":4,"./util/uniqueid":13}],6:[function(require,module,exports){
+(function() {
+  var DfDomElement, MATCHES_SELECTOR_FN, Thing, bean, matchesSelector,
+    slice = [].slice;
 
   bean = require("bean");
+
+  Thing = require("./thing");
 
   MATCHES_SELECTOR_FN = null;
 
   matchesSelector = function(node, selector) {
     if (MATCHES_SELECTOR_FN == null) {
       MATCHES_SELECTOR_FN = (['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector', 'matchesSelector'].filter(function(funcName) {
-        return typeof node[funcName] === 'function';
+        return Thing.isFn(node[funcName]);
       })).pop();
     }
     return node[MATCHES_SELECTOR_FN](selector);
@@ -1557,7 +1242,7 @@ author: @ecoslado
       if (selector instanceof String) {
         selector = selector.toString();
       }
-      if (typeof selector === "string") {
+      if (Thing.isStr(selector)) {
         selector = selector.trim();
         if (selector.length === 0) {
           selector = [];
@@ -1567,7 +1252,7 @@ author: @ecoslado
           });
         }
       }
-      if (selector instanceof Array) {
+      if (Thing.isArray(selector)) {
         this.element = this.__initFromSelectorArray(selector);
       } else {
         this.element = this.__initFromSelector(selector);
@@ -1625,7 +1310,7 @@ author: @ecoslado
           return true;
         case !(node instanceof Document):
           return true;
-        case !(node && node.document && node.location && node.alert && node.setInterval):
+        case !Thing.isWindow(node):
           return true;
         default:
           return false;
@@ -1661,7 +1346,7 @@ author: @ecoslado
 
     DfDomElement.prototype.__initFromSelector = function(selector) {
       var element;
-      if (typeof selector === "string" && selector.length > 0) {
+      if ((Thing.isStrLiteral(selector)) && selector.length > 0) {
         element = this.__fixNodeList(document.querySelectorAll(this.__fixSelector(selector)));
       } else if (this.__isValidElementNode(selector)) {
         element = [selector];
@@ -1779,7 +1464,7 @@ author: @ecoslado
 
     DfDomElement.prototype.filter = function(selector_or_fn) {
       var filterFn;
-      if (typeof selector_or_fn === "string") {
+      if (Thing.isStrLiteral(selector_or_fn)) {
         filterFn = function(node) {
           return matchesSelector(node, selector_or_fn);
         };
@@ -1925,7 +1610,7 @@ author: @ecoslado
 
     DfDomElement.prototype.__cloneNode = function(node) {
       switch (false) {
-        case typeof node !== "string":
+        case !Thing.isStr(node):
           return node;
         case !(node instanceof Element):
           return node.cloneNode(true);
@@ -1950,7 +1635,7 @@ author: @ecoslado
       if (child instanceof DfDomElement) {
         child = child.get();
       }
-      if (child instanceof Array) {
+      if (Thing.isArray(child)) {
         child.forEach((function(_this) {
           return function(node) {
             return _this.prepend(node);
@@ -1961,7 +1646,7 @@ author: @ecoslado
         return this.each((function(_this) {
           return function(node, i) {
             var newChild, ref;
-            if (typeof child === "string") {
+            if (Thing.isStr(child)) {
               return node.insertAdjacentHTML("afterbegin", child);
             } else if (child instanceof Element) {
               newChild = (i === 0 ? child : _this.__cloneNode(child));
@@ -1992,7 +1677,7 @@ author: @ecoslado
       if (child instanceof DfDomElement) {
         child = child.get();
       }
-      if (child instanceof Array) {
+      if (Thing.isArray(child)) {
         child.forEach((function(_this) {
           return function(node) {
             return _this.append(node);
@@ -2002,7 +1687,7 @@ author: @ecoslado
       } else {
         return this.each((function(_this) {
           return function(node, i) {
-            if (typeof child === "string") {
+            if (Thing.isStrLiteral(child)) {
               return node.insertAdjacentHTML("beforeend", child);
             } else if (child instanceof Element) {
               return node.appendChild((i === 0 ? child : _this.__cloneNode(child)));
@@ -2028,7 +1713,7 @@ author: @ecoslado
       if (sibling instanceof DfDomElement) {
         sibling = sibling.get();
       }
-      if (sibling instanceof Array) {
+      if (Thing.isArray(sibling)) {
         sibling.forEach((function(_this) {
           return function(node) {
             return _this.before(node);
@@ -2039,7 +1724,7 @@ author: @ecoslado
         return this.each((function(_this) {
           return function(node, i) {
             var newSibling;
-            if (typeof sibling === "string") {
+            if (Thing.isStrLiteral(sibling)) {
               return node.insertAdjacentHTML("beforebegin", sibling);
             } else if (sibling instanceof Element) {
               newSibling = (i === 0 ? sibling : _this.__cloneNode(sibling));
@@ -2066,7 +1751,7 @@ author: @ecoslado
       if (sibling instanceof DfDomElement) {
         sibling = sibling.get();
       }
-      if (sibling instanceof Array) {
+      if (Thing.isArray(sibling)) {
         sibling.forEach((function(_this) {
           return function(node) {
             return _this.after(node);
@@ -2077,7 +1762,7 @@ author: @ecoslado
         return this.each((function(_this) {
           return function(node, i) {
             var newSibling;
-            if (typeof sibling === "string") {
+            if (Thing.isStrLiteral(sibling)) {
               return node.insertAdjacentHTML("afterend", sibling);
             } else if (sibling instanceof Element) {
               newSibling = (i === 0 ? sibling : _this.__cloneNode(sibling));
@@ -2462,9 +2147,12 @@ author: @ecoslado
      * @public
      */
 
-    DfDomElement.prototype.on = function(events, selector, fn, args) {
+    DfDomElement.prototype.on = function(eventName, selector, handler, args) {
+      if (args == null) {
+        args = [];
+      }
       return this.each(function(node) {
-        return bean.on(node, events, selector, fn, args);
+        return bean.on.apply(bean, [node, eventName, selector, handler].concat(slice.call(args)));
       });
     };
 
@@ -2478,9 +2166,12 @@ author: @ecoslado
      * @public
      */
 
-    DfDomElement.prototype.one = function(events, selector, fn, args) {
+    DfDomElement.prototype.one = function(eventName, selector, handler, args) {
+      if (args == null) {
+        args = [];
+      }
       return this.each(function(node) {
-        return bean.one(node, events, selector, fn, args);
+        return bean.one.apply(bean, [node, eventName, selector, handler].concat(slice.call(args)));
       });
     };
 
@@ -2494,9 +2185,12 @@ author: @ecoslado
      * @public
      */
 
-    DfDomElement.prototype.trigger = function(events, args) {
+    DfDomElement.prototype.trigger = function(eventName, args) {
+      if (args == null) {
+        args = [];
+      }
       return this.each(function(node) {
-        return bean.fire(node, events, args);
+        return bean.fire(node, eventName, args);
       });
     };
 
@@ -2510,9 +2204,9 @@ author: @ecoslado
      * @public
      */
 
-    DfDomElement.prototype.off = function(events, fn) {
+    DfDomElement.prototype.off = function(eventName, handler) {
       return this.each(function(node) {
-        return bean.off(node, events, fn);
+        return bean.off(node, eventName, handler);
       });
     };
 
@@ -2564,7 +2258,7 @@ author: @ecoslado
      */
 
     DfDomElement.prototype.is = function(selector_or_element) {
-      if (typeof selector_or_element === "string") {
+      if (Thing.isStrLiteral(selector_or_element)) {
         return (this.filter(selector_or_element)).length > 0;
       } else {
         return (this.filter(function(node) {
@@ -2617,7 +2311,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"bean":22}],6:[function(require,module,exports){
+},{"./thing":12,"bean":22}],7:[function(require,module,exports){
 (function() {
   var $, bean, extend, throttle;
 
@@ -2664,110 +2358,126 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./dfdom":5,"bean":22,"extend":23,"lodash.throttle":63}],7:[function(require,module,exports){
+},{"./dfdom":6,"bean":22,"extend":23,"lodash.throttle":63}],8:[function(require,module,exports){
 (function() {
-  var $, extend,
-    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+  var _msg, error, warning,
+    slice = [].slice;
 
-  extend = require('extend');
+  _msg = function() {
+    var args, msg, obj;
+    args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+    msg = args[0], obj = args[1];
+    return "[doofinder]" + (obj != null ? "[" + obj.constructor.name + "]" : "") + ": " + msg;
+  };
 
-  $ = require('./dfdom');
+  error = function() {
+    var args;
+    args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+    return new Error(_msg.apply(null, args));
+  };
 
-  module.exports = function(element, options) {
-    var _supportedInputTypes, checkElement, defaults, watchElement;
-    _supportedInputTypes = ['TEXT', 'TEXTAREA', 'PASSWORD', 'TEL', 'SEARCH', 'URL', 'EMAIL', 'DATETIME', 'DATE', 'MONTH', 'WEEK', 'TIME', 'DATETIME-LOCAL', 'NUMBER', 'RANGE'];
-    defaults = {
-      wait: 750,
-      callback: function() {},
-      highlight: true,
-      captureLength: 2,
-      inputTypes: _supportedInputTypes
-    };
-    options = extend(true, {}, defaults, options);
-    checkElement = function(timer, override) {
-      var value;
-      value = timer.el.val() || '';
-      if (value.length >= options.captureLength && value.toUpperCase() !== timer.text || override && value.length >= options.captureLength || value.length === 0 && timer.text) {
-        timer.text = value.toUpperCase();
-        return timer.cb.call(timer.el, value);
-      }
-    };
-    watchElement = function(elem) {
-      var inputType, ref, timer;
-      inputType = elem.attr('type');
-      if (!inputType) {
-        inputType = 'text';
-      }
-      if (ref = inputType.toUpperCase(), indexOf.call(options.inputTypes, ref) >= 0) {
-        timer = {
-          timer: null,
-          text: elem.value || '',
-          cb: options.callback,
-          wait: options.wait,
-          el: elem
-        };
-        return elem.on('keydown paste cut input change', function(e) {
-          var delay, override, timerCallbackFx;
-          delay = timer.wait;
-          override = false;
-          inputType = this.type.toUpperCase();
-          if ((e.keyCode != null) && e.keyCode === 13 && inputType !== 'TEXTAREA' && indexOf.call(options.inputTypes, inputType) >= 0) {
-            delay = 1;
-            override = true;
-          }
-          timerCallbackFx = function() {
-            return checkElement(timer, override);
-          };
-          clearTimeout(timer.timer);
-          return timer.timer = setTimeout(timerCallbackFx, delay);
-        });
-      }
-    };
-    return watchElement($(element));
+  warning = function() {
+    var args;
+    args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+    if (typeof console !== "undefined" && console !== null) {
+      return console.warn(_msg.apply(null, args));
+    }
+  };
+
+  module.exports = {
+    error: error,
+    warning: warning
   };
 
 }).call(this);
 
-},{"./dfdom":5,"extend":23}],8:[function(require,module,exports){
-
-/*
- * author: @ecoslado
- * 2015 09 30
- */
-
+},{}],9:[function(require,module,exports){
 (function() {
-  var extend;
+  var Thing, freeze, freezeProperty;
+
+  Thing = require("./thing");
+
+
+  /**
+   * Recursively freezes an object so it can't be modified in any way (adding or
+   * removing properties, and so on).
+   *
+   * @param  {*} value Any object or primitive
+   * @return {*}       Freezed value.
+   */
+
+  freeze = function(value) {
+    (Object.getOwnPropertyNames(value)).forEach(function(propertyName) {
+      if ((Thing.isObj(value)) && (value[propertyName] !== null) && !(Object.isFrozen(value[propertyName]))) {
+        return freeze(value[propertyName]);
+      }
+    });
+    Object.freeze(value);
+    return value;
+  };
+
+
+  /**
+   * Freezes a property of an Object so it can't be modified.
+   *
+   * @param  {Object} instance      An object's instance.
+   * @param  {String} propertyName  A property name.
+   * @param  {*}      propertyValue An optional value. If not set the current
+   *                                value is used.
+   * @return {Object}               The passed instance.
+   */
+
+  freezeProperty = function(instance, propertyName, propertyValue) {
+    var descriptor;
+    if (propertyValue == null) {
+      propertyValue = instance[propertyName];
+    }
+    descriptor = {
+      value: propertyValue,
+      configurable: false,
+      enumerable: false,
+      writable: false
+    };
+    freeze(propertyValue);
+    Object.defineProperty(instance, propertyName, descriptor);
+    return instance;
+  };
+
+  module.exports = {
+    freeze: freeze,
+    freezeProperty: freezeProperty
+  };
+
+}).call(this);
+
+},{"./thing":12}],10:[function(require,module,exports){
+(function() {
+  var defaultCurrency, extend,
+    hasProp = {}.hasOwnProperty;
 
   extend = require("extend");
 
-  module.exports = function(context, parameters, currency, translations) {
+  defaultCurrency = {
+    symbol: '€',
+    format: '%v%s',
+    decimal: ',',
+    thousand: '.',
+    precision: 2
+  };
+
+  module.exports = function(context) {
     var helpers;
-    if (parameters == null) {
-      parameters = {};
-    }
-    if (currency == null) {
-      currency = null;
-    }
-    if (translations == null) {
-      translations = {};
-    }
-    if (!currency) {
-      currency = {
-        symbol: '&euro;',
-        format: '%v%s',
-        decimal: ',',
-        thousand: '.',
-        precision: 2
-      };
-    }
     helpers = {
-      'url-params': function() {
+      "url-params": function() {
+        var parameters;
+        parameters = context.urlParams || {};
         return function(text, render) {
           var glue, key, params, url;
           url = (render(text)).trim();
           if (url.length > 0) {
             params = [];
             for (key in parameters) {
+              if (!hasProp.call(parameters, key)) continue;
               params.push(key + "=" + parameters[key]);
             }
             if (params.length > 0) {
@@ -2779,125 +2489,123 @@ author: @ecoslado
           return url;
         };
       },
-      'remove-protocol': function() {
+      "remove-protocol": function() {
         return function(text, render) {
-          var url;
-          url = render(text);
-          return url.replace(/^https?:/, '');
+          return (render(text)).replace(/^https?:/, "");
         };
       },
-      'format-currency': function() {
+      "format-currency": function() {
+        var currency;
+        currency = context.currency || defaultCurrency;
         return function(text, render) {
-          var base, mod, neg, number, power, price, value;
-          price = render(text);
-          value = parseFloat(price);
-          if (!value && value !== 0) {
-            return '';
+          var bas, dec, mod, neg, num, pow, val;
+          val = parseFloat(render(text), 10);
+          if (isNaN(val)) {
+            return "";
           }
-          power = Math.pow(10, currency.precision);
-          number = (Math.round(value * power) / power).toFixed(currency.precision);
-          neg = number < 0 ? '-' : '';
-          base = '' + parseInt(Math.abs(number || 0).toFixed(currency.precision), 10);
-          mod = base.length > 3 ? base.length % 3 : 0;
-          number = neg + (mod ? base.substr(0, mod) + currency.thousand : '') + base.substr(mod).replace(/(\d{3})(?=\d)/g, '$1' + currency.thousand) + (currency.precision ? currency.decimal + Math.abs(number).toFixed(currency.precision).split('.')[1] : '');
-          return currency.format.replace(/%s/g, currency.symbol).replace(/%v/g, number);
+          neg = val < 0;
+          val = Math.abs(val);
+          pow = Math.pow(10, currency.precision);
+          val = ((Math.round(val * pow)) / pow).toFixed(currency.precision);
+          bas = (parseInt(val, 10)).toString();
+          mod = bas.length > 3 ? bas.length % 3 : 0;
+          num = [];
+          if (mod > 0) {
+            num.push("" + (bas.substr(0, mod)) + currency.thousand);
+          }
+          num.push((bas.substr(mod)).replace(/(\d{3})(?=\d)/g, "$1" + currency.thousand));
+          if (currency.precision > 0) {
+            dec = (val.split("."))[1];
+            if (dec != null) {
+              num.push("" + currency.decimal + dec);
+            }
+          }
+          num = (currency.format.replace(/%s/g, currency.symbol)).replace(/%v/g, num.join(""));
+          if (neg) {
+            num = "-" + num;
+          }
+          return num;
         };
       },
-      'translate': function() {
+      "translate": function() {
+        var translations;
+        translations = context.translations || {};
         return function(text, render) {
           text = render(text);
           return translations[text] || text;
         };
       }
     };
-    return extend(context, helpers);
+    return extend(true, {}, context, helpers);
   };
 
 }).call(this);
 
-},{"extend":23}],9:[function(require,module,exports){
-
-/*
-client.coffee
-author: @ecoslado
-2017 01 23
- */
-
+},{"extend":23}],11:[function(require,module,exports){
 (function() {
-  var HttpClient, httpLib, httpsLib;
+  var HttpClient, Thing, http, https;
 
-  httpLib = require("http");
+  http = require("http");
 
-  httpsLib = require("https");
+  https = require("https");
+
+  Thing = require("./thing");
 
 
-  /*
-  HttpClient
-  This class implements a more
-  easy API with http module
+  /**
+   * Commodity API to http and https modules
    */
 
   HttpClient = (function() {
 
-    /*
-    Just assigns
+    /**
+     * @param  {Boolean} @secure If true, forces HTTPS.
      */
-    function HttpClient(ssl) {
-      this.client = ssl ? httpsLib : httpLib;
+    function HttpClient(secure) {
+      this.secure = secure;
+      this.http = this.secure ? https : http;
     }
+
+
+    /**
+     * Performs a HTTP request expecting JSON to be returned.
+     * @param  {Object}   options  Options needed by http.ClientRequest
+     * @param  {Function} callback Callback to be called when the response is
+     *                             received. First param is the error, if any,
+     *                             and the second one is the response, if any.
+     * @return {http.ClientRequest}
+     */
 
     HttpClient.prototype.request = function(options, callback) {
       var req;
-      if (typeof options === "string") {
+      if (Thing.isStr(options)) {
         options = {
           host: options
         };
       }
-      req = this.__makeRequest(options, callback);
-      return req.end;
-    };
-
-
-    /*
-    Callback function will be passed as argument to search
-    and will be returned with response body
-    
-    @param {Object} res: the response
-    @api private
-     */
-
-    HttpClient.prototype.__processResponse = function(callback) {
-      return function(res) {
-        var data;
-        if (res.statusCode >= 400) {
-          return callback(res.statusCode, null);
+      if (!Thing.isFn(callback)) {
+        throw new Error(this.constructor.name + ": A callback is needed!");
+      }
+      req = this.http.get(options, function(response) {
+        var rawData;
+        if (response.statusCode !== 200) {
+          response.resume();
+          return callback(response.statusCode);
         } else {
-          data = "";
-          res.on('data', function(chunk) {
-            return data += chunk;
+          response.setEncoding("utf-8");
+          rawData = "";
+          response.on("data", function(chunk) {
+            return rawData += chunk;
           });
-          res.on('end', function() {
-            return callback(null, JSON.parse(data));
-          });
-          return res.on('error', function(err) {
-            return callback(err, null);
+          return response.on("end", function() {
+            return callback(void 0, JSON.parse(rawData));
           });
         }
-      };
-    };
-
-
-    /*
-    Method to make a secured or not request based on @client
-    
-    @param (Object) options: request options
-    @param (Function) the callback function to execute with the response as arg
-    @return (Object) the request object.
-    @api private
-     */
-
-    HttpClient.prototype.__makeRequest = function(options, callback) {
-      return this.client.get(options, this.__processResponse(callback));
+      });
+      req.on("error", function(error) {
+        return callback(error);
+      });
+      return req;
     };
 
     return HttpClient;
@@ -2908,240 +2616,196 @@ author: @ecoslado
 
 }).call(this);
 
-},{"http":53,"https":30}],10:[function(require,module,exports){
+},{"./thing":12,"http":53,"https":30}],12:[function(require,module,exports){
 (function() {
-  var isArray, isFunction, isObject, isPlainObject;
+  var isFn, isObject, isPrimitive, isStr, to_s;
 
-  isFunction = function(obj) {
-    return typeof obj === 'function' || false;
+  to_s = Object.prototype.toString;
+
+  isObject = function(value) {
+    return (to_s.call(value)) === "[object Object]";
   };
 
-  isObject = function(obj) {
-    var type;
-    type = typeof obj;
-    return type === 'function' || type === 'object' && !!obj;
-  };
-
-  isArray = Array.isArray || function(obj) {
-    return toString.call(obj) === '[object Array]';
-  };
-
-  isPlainObject = function(obj) {
-    var proto;
-    if (typeof obj === 'object' && obj !== null) {
-      if (typeof Object.getPrototypeOf === 'function') {
-        proto = Object.getPrototypeOf(obj);
-        return proto === Object.prototype || proto === null;
-      }
-      return Object.prototype.toString.call(obj) === '[object Object]';
+  isFn = function(value) {
+    if ((typeof window !== "undefined" && window !== null) && value === window.alert) {
+      return true;
     }
-    return false;
+    return (to_s.call(value)) === "[object Function]";
+  };
+
+  isStr = function(value) {
+    return (to_s.call(value)) === "[object String]";
+  };
+
+  isPrimitive = function(value) {
+    if (!value) {
+      return true;
+    }
+    if ((typeof value === "object") || (isObject(value)) || (isFn(value)) || (Array.isArray(value))) {
+      return false;
+    }
+    return true;
   };
 
   module.exports = {
-    isArray: isArray,
-    isFunction: isFunction,
-    isObject: isObject,
-    isPlainObject: isPlainObject
+    isObj: isObject,
+    isArray: function(value) {
+      return Array.isArray(value);
+    },
+    isFn: isFn,
+    isStr: isStr,
+    isPrimitive: isPrimitive,
+    isPlainObj: function(value) {
+      return (isObject(value)) && value.constructor === Object && (!value.nodeType) && (!value.setInterval);
+    },
+    isStrLiteral: function(value) {
+      return (isStr(value)) && (isPrimitive(value));
+    },
+    isStrArray: function(value) {
+      return (Array.isArray(value)) && (value.filter(isStr)).length === value.length;
+    },
+    isWindow: function(value) {
+      return value && value.document && value.location && value.alert && value.setInterval;
+    }
   };
 
 }).call(this);
 
-},{}],11:[function(require,module,exports){
-
-/**
- * Generates a UID of the given length.
- *
- * @param  {Number} length = 8  Length of the UID.
- * @return {String}             Unique ID as a String.
- */
-
+},{}],13:[function(require,module,exports){
 (function() {
-  var uniqueId;
+  var cleandfid, md5;
 
-  uniqueId = function(length) {
-    var id;
-    if (length == null) {
-      length = 8;
+  md5 = require("md5");
+
+  cleandfid = function(dfid) {
+    if (/^\w{32}@[\w_-]+@\w{32}$/.test(dfid)) {
+      return dfid;
+    } else {
+      throw new Error("dfid: " + dfid + " is not valid.");
     }
-    id = "";
-    while (id.length < length) {
-      id += Math.random().toString(36).substr(2);
-    }
-    return id.substr(0, length);
   };
 
-  module.exports = uniqueId;
-
-}).call(this);
-
-},{}],12:[function(require,module,exports){
-(function() {
-  var $, Widget, bean;
-
-  bean = require("bean");
-
-  $ = require("./util/dfdom");
-
-
-  /**
-   * Base class for a Widget, a class that paints itself given a search response.
-   *
-   * A widget knows how to:
-   *
-   * - Render and clean itself.
-   * - Bind handlers to/trigger events on the main element node.
-   */
-
-  Widget = (function() {
-
-    /**
-     * @param  {String|Node|DfDomElement} element   Container node.
-     * @param  {Object} @options = {}               Options for the widget.
-     */
-    function Widget(element, options) {
-      this.options = options != null ? options : {};
-      this.setElement(element);
+  module.exports = {
+    clean: {
+      dfid: cleandfid
+    },
+    generate: {
+      dfid: function(id, datatype, hashid) {
+        return cleandfid(hashid + "@" + datatype + "@" + (md5(id)));
+      },
+      easy: function(length) {
+        var id;
+        if (length == null) {
+          length = 8;
+        }
+        id = "";
+        while (id.length < length) {
+          id += Math.random().toString(36).substr(2);
+        }
+        return id.substr(0, length);
+      },
+      hash: function() {
+        return md5([new Date().getTime(), String(Math.floor(Math.random() * 10000))].join(""));
+      },
+      browserHash: function() {
+        return md5([navigator.userAgent, navigator.language, window.location.host, new Date().getTime(), String(Math.floor(Math.random() * 10000))].join(""));
+      }
     }
-
-
-    /**
-     * Assigns the container element to the widget.
-     * @param  {String|Node|DfDomElement} element   Container node.
-     */
-
-    Widget.prototype.setElement = function(element) {
-      return this.element = ($(element)).first();
-    };
-
-
-    /**
-     * Initializes the object. Intended to be extended in child classes.
-     * You will want to add your own event handlers here.
-     *
-     * @param  {Controller} controller Doofinder Search controller.
-     */
-
-    Widget.prototype.init = function(controller) {
-      this.controller = controller;
-    };
-
-
-    /**
-     * Called when the "first page" response for a specific search is received.
-     * Renders the widget with the data received.
-     *
-     * @param  {Object} res Search response.
-     */
-
-    Widget.prototype.render = function(res) {};
-
-
-    /**
-     * Called when subsequent (not "first-page") responses for a specific search
-     * are received. Renders the widget with the data received.
-     *
-     * @param  {Object} res Search response.
-     */
-
-    Widget.prototype.renderNext = function(res) {};
-
-
-    /**
-     * Cleans the widget. Intended to be overriden.
-     */
-
-    Widget.prototype.clean = function() {};
-
-
-    /**
-     * Attachs a single-use event listener to the container element.
-     * @param  {String}   event    Event name.
-     * @param  {Function} callback Function that will be executed in response to
-     *                             the event.
-     */
-
-    Widget.prototype.one = function(event, callback) {
-      return this.element.one(event, callback);
-    };
-
-
-    /**
-     * Attachs an event listener to the container element.
-     * TODO(@carlosescri): Rename to "on" to unify.
-     *
-     * @param  {String}   event    Event name.
-     * @param  {Function} callback Function that will be executed in response to
-     *                             the event.
-     */
-
-    Widget.prototype.bind = function(event, callback) {
-      return this.element.on(event, callback);
-    };
-
-
-    /**
-     * Removes an event listener from the container element.
-     * @param  {String}   event    Event name.
-     * @param  {Function} callback Function that won't be executed anymore in
-     *                             response to the event.
-     */
-
-    Widget.prototype.off = function(event, callback) {
-      return this.element.off(event, callback);
-    };
-
-
-    /*
-    trigger
-    
-    Method to trigger an event
-    @param {String} event
-    @param {Array} params
-    @api public
-     */
-
-
-    /**
-     * Triggers an event with the container element as the target of the event.
-     * @param  {String} event  Event name.
-     * @param  {Array}  params Array of parameters to be sent to the handler.
-     */
-
-    Widget.prototype.trigger = function(event, params) {
-      return this.element.trigger(event, params);
-    };
-
-
-    /**
-     * Throws an error that can be captured.
-     * @param  {String} message Error message.
-     * @throws {Error}
-     */
-
-    Widget.prototype.raiseError = function(message) {
-      throw Error("[Doofinder] " + message);
-    };
-
-    return Widget;
-
-  })();
-
-  module.exports = Widget;
+  };
 
 }).call(this);
 
-},{"./util/dfdom":5,"bean":22}],13:[function(require,module,exports){
+},{"md5":64}],14:[function(require,module,exports){
 (function() {
-  var Display, Widget, buildHelpers, extend,
+  var CollapsiblePanel, Panel, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  Widget = require("../widget");
+  extend = require("extend");
 
-  buildHelpers = require("../util/helpers");
+  Panel = require("./panel");
+
+  CollapsiblePanel = (function(superClass) {
+    extend1(CollapsiblePanel, superClass);
+
+    function CollapsiblePanel(element, getWidget, options) {
+      var defaults;
+      if (options == null) {
+        options = {};
+      }
+      defaults = {
+        startCollapsed: false
+      };
+      options = extend(true, defaults, options);
+      CollapsiblePanel.__super__.constructor.apply(this, arguments);
+      Object.defineProperty(this, 'isCollapsed', {
+        get: function() {
+          return (this.panelElement.attr("data-df-collapse")) === "true";
+        }
+      });
+    }
+
+    CollapsiblePanel.prototype.collapse = function() {
+      return this.panelElement.attr("data-df-collapse", "true");
+    };
+
+    CollapsiblePanel.prototype.expand = function() {
+      return this.panelElement.attr("data-df-collapse", "false");
+    };
+
+    CollapsiblePanel.prototype.toggle = function() {
+      if (this.isCollapsed) {
+        return this.expand();
+      } else {
+        return this.collapse();
+      }
+    };
+
+    CollapsiblePanel.prototype.reset = function() {
+      if (this.options.startCollapsed) {
+        return this.collapse();
+      } else {
+        return this.expand();
+      }
+    };
+
+    CollapsiblePanel.prototype.initPanel = function(res) {
+      CollapsiblePanel.__super__.initPanel.apply(this, arguments);
+      this.panelElement.on("click", "#" + this.options.templateVars.labelElement, (function(_this) {
+        return function(e) {
+          e.preventDefault();
+          return _this.toggle();
+        };
+      })(this));
+      return this.reset();
+    };
+
+    CollapsiblePanel.prototype.clean = function() {
+      this.reset();
+      return CollapsiblePanel.__super__.clean.apply(this, arguments);
+    };
+
+    return CollapsiblePanel;
+
+  })(Panel);
+
+  module.exports = CollapsiblePanel;
+
+}).call(this);
+
+},{"./panel":18,"extend":23}],15:[function(require,module,exports){
+(function() {
+  var Display, Widget, addHelpers, defaultTemplate, extend,
+    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
 
   extend = require("extend");
+
+  Widget = require("./widget");
+
+  addHelpers = require("../util/helpers");
+
+  defaultTemplate = "{{#results}}\n  <a href=\"{{link}}\" class=\"df-card\">{{title}}</a>\n{{/results}}";
 
 
   /**
@@ -3158,14 +2822,20 @@ author: @ecoslado
      * @param  {Objects}                  options  Options for the widget.
      */
 
-    function Display(element, template, options) {
-      this.template = template;
+    function Display(element, options) {
+      var defaults;
       if (options == null) {
         options = {};
       }
-      this.mustache = require("mustache");
-      this.extraContext = {};
+      defaults = {
+        template: defaultTemplate,
+        queryParam: void 0,
+        urlParams: {}
+      };
+      options = extend(true, defaults, options);
       Display.__super__.constructor.call(this, element, options);
+      this.mustache = require("mustache");
+      this.currentContext = {};
     }
 
 
@@ -3175,20 +2845,30 @@ author: @ecoslado
      * @return {Object}               Extended context.
      */
 
-    Display.prototype.buildContext = function(context) {
-      var ref, ref1, urlParams;
-      if (context == null) {
-        context = {};
+    Display.prototype.buildContext = function(res) {
+      var context, defaults, overrides;
+      if (res == null) {
+        res = {};
       }
-      context = extend(true, context, this.options.templateVars, this.options.templateFunctions, {
-        is_first: context.page === 1,
-        is_last: (ref = this.controller) != null ? (ref1 = ref.status) != null ? ref1.lastPageReached : void 0 : void 0
-      }, this.extraContext);
-      urlParams = extend(true, {}, this.options.urlParams || {});
+      defaults = {
+        query: "",
+        urlParams: this.options.urlParams
+      };
+      overrides = {
+        is_first: res.page === 1,
+        is_last: res.page === Math.ceil(res.total / res.results_per_page),
+        currency: this.options.currency,
+        translations: this.options.translations
+      };
+      context = extend(true, {}, defaults, res, this.options.templateVars, this.options.templateFunctions, overrides);
       if (this.options.queryParam) {
-        urlParams[this.options.queryParam] = context.query || "";
+        context.urlParams[this.options.queryParam] = context.query;
       }
-      return buildHelpers(context, urlParams, this.options.currency, this.options.translations);
+      return this.currentContext = addHelpers(context);
+    };
+
+    Display.prototype.renderTemplate = function(res) {
+      return this.mustache.render(this.options.template, this.buildContext(res));
     };
 
 
@@ -3197,49 +2877,23 @@ author: @ecoslado
      * Renders the widget with the data received, by replacing its content.
      *
      * @param {Object} res Search response.
-     * @fires Display#df:rendered
+     * @fires Display#df:widget:render
      */
 
     Display.prototype.render = function(res) {
-      this.element.html(this.mustache.render(this.template, this.buildContext(res)));
-      return this.trigger("df:rendered", [res]);
-    };
-
-
-    /**
-     * Called when subsequent (not "first-page") responses for a specific search
-     * are received. Renders the widget with the data received, by replacing its
-     * content.
-     *
-     * @param {Object} res Search response.
-     * @fires Display#df:rendered
-     */
-
-    Display.prototype.renderNext = function(res) {
-      this.element.html(this.mustache.render(this.template, this.buildContext(res)));
-      return this.trigger("df:rendered", [res]);
+      this.element.html(this.renderTemplate(res));
+      return Display.__super__.render.apply(this, arguments);
     };
 
 
     /**
      * Cleans the widget by removing all the HTML inside the container element.
-     * @fires Display#df:cleaned
+     * @fires Display#df:widget:clean
      */
 
     Display.prototype.clean = function() {
       this.element.html("");
-      return this.trigger("df:cleaned");
-    };
-
-
-    /**
-     * Adds extra context to be used when rendering a search response.
-     * @param {String} key   Name of the variable to be used in the template.
-     * @param {*}      value Value of the variable.
-     */
-
-    Display.prototype.addExtraContext = function(key, value) {
-      return this.extraContext[key] = value;
+      return this.trigger("df:widget:clean");
     };
 
     return Display;
@@ -3250,288 +2904,19 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../util/helpers":8,"../widget":12,"extend":23,"mustache":68}],14:[function(require,module,exports){
+},{"../util/helpers":10,"./widget":21,"extend":23,"mustache":68}],16:[function(require,module,exports){
 (function() {
-  var BaseFacet, Display, extend,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  Display = require("../display");
-
-  extend = require("extend");
-
-
-  /**
-   * Base class that represents a widget that renders a facet/filter control.
-   */
-
-  BaseFacet = (function(superClass) {
-    extend1(BaseFacet, superClass);
-
-    BaseFacet.defaultLabelTemplate = "{{label}}";
-
-
-    /**
-     * @param  {String|Node|DfDomElement} element  Container node.
-     * @param  {String} name    Name of the facet/filter.
-     * @param  {Object} options Options object. Empty by default.
-     */
-
-    function BaseFacet(element, name, options) {
-      var defaults;
-      this.name = name;
-      if (options == null) {
-        options = {};
-      }
-      defaults = {
-        templateVars: {
-          label: options.label || this.name
-        },
-        labelTemplate: this.constructor.defaultLabelTemplate,
-        template: this.constructor.defaultTemplate
-      };
-      options = extend(true, defaults, options);
-      BaseFacet.__super__.constructor.call(this, element, options.template, options);
-    }
-
-
-    /**
-     * Renders the label of the facet widget based on the given search response,
-     * within the configured label template.
-     *
-     * @param  {Object} res Search response.
-     * @return {String}     The rendered label.
-     */
-
-    BaseFacet.prototype.renderLabel = function(res) {
-      return this.mustache.render(this.options.labelTemplate, this.buildContext(res));
-    };
-
-
-    /**
-     * Called when subsequent (not "first-page") responses for a specific search
-     * are received. Usually not used in this kind of widgets. Here is overwritten
-     * to avoid strange behavior.
-     *
-     * @param {Object} res Search response.
-     */
-
-    BaseFacet.prototype.renderNext = function(res) {};
-
-    return BaseFacet;
-
-  })(Display);
-
-  module.exports = BaseFacet;
-
-}).call(this);
-
-},{"../display":13,"extend":23}],15:[function(require,module,exports){
-(function() {
-  var $, Display, FacetPanel, extend, uniqueId,
+  var Display, RangeFacet, defaultTemplate, extend, noUiSlider,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   extend = require("extend");
-
-  $ = require("../../util/dfdom");
-
-  Display = require("../display");
-
-  uniqueId = require("../../util/uniqueid");
-
-
-  /**
-   * Collapsible panel that contains a facet widget.
-   * It's always appended to a container element, it does not replace the entire
-   * HTML content.
-   */
-
-  FacetPanel = (function(superClass) {
-    extend1(FacetPanel, superClass);
-
-    FacetPanel.defaultTemplate = "<div id=\"{{id}}\" data-role=\"panel\">\n  <a href=\"#\" data-role=\"panel-label\" data-toggle=\"panel\"></a>\n  <div data-role=\"panel-content\"></div>\n</div>";
-
-
-    /**
-     * @param  {String|Node|DfDomElement} element  Container node.
-     * @param  {Object} options Options object. Empty by default.
-     */
-
-    function FacetPanel(element, options) {
-      var defaults, uid;
-      if (options == null) {
-        options = {};
-      }
-      uid = "df-panel-" + (uniqueId());
-      defaults = {
-        id: uid,
-        template: this.constructor.defaultTemplate,
-        startHidden: true,
-        startCollapsed: false,
-        templateVars: {
-          id: options.id || uid
-        }
-      };
-      options = extend(true, defaults, options);
-      FacetPanel.__super__.constructor.call(this, element, options.template, options);
-      this.element.append(this.mustache.render(this.template, this.buildContext()));
-      this.setElement("#" + this.options.id);
-      this.toggleElement = (this.element.find('[data-toggle="panel"]')).first();
-      this.labelElement = (this.element.find('[data-role="panel-label"]')).first();
-      this.contentElement = (this.element.find('[data-role="panel-content"]')).first();
-      this.clean();
-    }
-
-
-    /**
-     * Initializes the object with a controller and attachs event handlers for
-     * this widget instance.
-     *
-     * @param  {Controller} controller Doofinder Search controller.
-     */
-
-    FacetPanel.prototype.init = function(controller) {
-      FacetPanel.__super__.init.apply(this, arguments);
-      return this.toggleElement.on("click", (function(_this) {
-        return function(e) {
-          e.preventDefault();
-          if (_this.isCollapsed()) {
-            return _this.expand();
-          } else {
-            return _this.collapse();
-          }
-        };
-      })(this));
-    };
-
-
-    /**
-     * Checks whether the panel is collapsed or not.
-     * @return {Boolean} `true` if the panel is collapsed, `false` otherwise.
-     */
-
-    FacetPanel.prototype.isCollapsed = function() {
-      return (this.element.attr("data-collapse")) != null;
-    };
-
-
-    /**
-     * Collapses the panel to hide its content.
-     */
-
-    FacetPanel.prototype.collapse = function() {
-      return this.element.attr("data-collapse", "");
-    };
-
-
-    /**
-     * Expands the panel to display its content.
-     */
-
-    FacetPanel.prototype.expand = function() {
-      return this.element.removeAttr("data-collapse");
-    };
-
-
-    /**
-     * Embeds one and only one widget into this panel content. If the panel is
-     * rendered hidden (default), we listen for the first rendering of the
-     * embedded widget and then we display it.
-     *
-     * @param  {Widget} embeddedWidget A (child) instance of `Widget`.
-     */
-
-    FacetPanel.prototype.embedWidget = function(embeddedWidget) {
-      if (this.embeddedWidget != null) {
-        return this.raiseError("You can embed only one item on a `FacetPanel` instance.");
-      } else {
-        this.embeddedWidget = embeddedWidget;
-        this.embeddedWidget.bind("df:rendered", ((function(_this) {
-          return function() {
-            return _this.element.css("display", "inherit");
-          };
-        })(this)));
-        return this.embeddedWidget.bind("df:cleaned", ((function(_this) {
-          return function() {
-            return _this.element.css("display", "none");
-          };
-        })(this)));
-      }
-    };
-
-
-    /**
-     * Called when the "first page" response for a specific search is received.
-     * Renders the panel title with the label obtained from the embedded widget.
-     * This method does not replace its own HTML code, only the HTML of specific
-     * parts.
-     *
-     * @param {Object} res Search response.
-     * @fires FacetPanel#df:rendered
-     */
-
-    FacetPanel.prototype.render = function(res) {
-      if (this.embeddedWidget != null) {
-        this.labelElement.html(this.embeddedWidget.renderLabel(res));
-        return this.trigger("df:rendered", [res]);
-      }
-    };
-
-
-    /**
-     * Called when subsequent (not "first-page") responses for a specific search
-     * are received. Disabled in this kind of widget.
-     *
-     * @param {Object} res Search response.
-     */
-
-    FacetPanel.prototype.renderNext = function(res) {};
-
-
-    /**
-     * Cleans the widget by removing the HTML inside the label element. Also, if
-     * the panel starts hidden, it's hidden again. If the panel starts collapsed,
-     * it's collapsed again.
-     *
-     * WARNING: DON'T CALL `super()` here. We don't want the panel container to
-     * be reset!!!
-     *
-     * @fires FacetPanel#df:cleaned
-     */
-
-    FacetPanel.prototype.clean = function() {
-      this.labelElement.html("");
-      if (this.options.startHidden) {
-        this.element.css("display", "none");
-      }
-      if (this.options.startCollapsed) {
-        this.collapse();
-      } else {
-        this.expand();
-      }
-      return this.trigger("df:cleaned");
-    };
-
-    return FacetPanel;
-
-  })(Display);
-
-  module.exports = FacetPanel;
-
-}).call(this);
-
-},{"../../util/dfdom":5,"../../util/uniqueid":11,"../display":13,"extend":23}],16:[function(require,module,exports){
-(function() {
-  var BaseFacet, RangeFacet, extend, noUiSlider,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  BaseFacet = require("./basefacet");
 
   noUiSlider = require("nouislider");
 
-  extend = require("extend");
+  Display = require("../display");
+
+  defaultTemplate = "<div class=\"{{sliderClassName}}\" data-facet=\"{{name}}\"></div>";
 
 
   /**
@@ -3540,8 +2925,6 @@ author: @ecoslado
 
   RangeFacet = (function(superClass) {
     extend1(RangeFacet, superClass);
-
-    RangeFacet.defaultTemplate = "<div class=\"{{sliderClassName}}\" data-facet=\"{{name}}\"></div>";
 
 
     /**
@@ -3560,10 +2943,14 @@ author: @ecoslado
      */
 
     function RangeFacet(element, name, options) {
+      this.name = name;
       if (options == null) {
         options = {};
       }
-      RangeFacet.__super__.constructor.apply(this, arguments);
+      options = extend(true, {
+        template: defaultTemplate
+      }, options);
+      RangeFacet.__super__.constructor.call(this, element, options);
       this.sliderClassName = options.sliderClassName || 'df-slider';
       this.sliderSelector = "." + this.sliderClassName + "[data-facet='" + this.name + "']";
       if (this.options.format) {
@@ -3592,8 +2979,7 @@ author: @ecoslado
         name: this.name,
         sliderClassName: this.sliderClassName
       };
-      context = extend(true, context, this.extraContext || {});
-      this.element.html(this.mustache.render(this.template, context));
+      this.element.html(this.renderTemplate(context));
       this.slider = document.createElement('div');
       this.element.find(this.sliderSelector).append(this.slider);
       noUiSlider.create(this.slider, options);
@@ -3693,17 +3079,11 @@ author: @ecoslado
      * Renders the widget with the data received, by replacing its content.
      *
      * @param {Object} res Search response.
-     * @fires RangeFacet#df:rendered
+     * @fires RangeFacet#df:widget:render
      */
 
     RangeFacet.prototype.render = function(res) {
-      var options, self, start, values;
-      if (!res.facets || !res.facets[this.name]) {
-        this.raiseError("RangeFacet: " + this.name + " facet is not configured");
-      } else if (!res.facets[this.name].range) {
-        this.raiseError("RangeFacet: " + this.name + " facet is not a range facet");
-      }
-      self = this;
+      var options, start, values;
       this.range = this.__getRangeFromResponse(res);
       if (this.range.min === this.range.max) {
         return this.clean();
@@ -3714,19 +3094,23 @@ author: @ecoslado
           connect: true,
           tooltips: true,
           format: {
-            to: function(value) {
-              var formattedValue;
-              if (value != null) {
-                formattedValue = self.format(value);
-                self.values[formattedValue] = parseFloat(value, 10);
+            to: (function(_this) {
+              return function(value) {
+                var formattedValue;
+                if (value != null) {
+                  formattedValue = _this.format(value);
+                  _this.values[formattedValue] = parseFloat(value, 10);
+                  return formattedValue;
+                } else {
+                  return "";
+                }
+              };
+            })(this),
+            from: (function(_this) {
+              return function(formattedValue) {
                 return formattedValue;
-              } else {
-                return "";
-              }
-            },
-            from: function(formattedValue) {
-              return formattedValue;
-            }
+              };
+            })(this)
           }
         };
         if (res && res.filter && res.filter.range && res.filter.range[this.name]) {
@@ -3751,7 +3135,7 @@ author: @ecoslado
           };
           this.__renderPips(values);
         }
-        return this.trigger("df:rendered", [res]);
+        return this.trigger("df:widget:render", [res]);
       }
     };
 
@@ -3769,23 +3153,28 @@ author: @ecoslado
 
     return RangeFacet;
 
-  })(BaseFacet);
+  })(Display);
 
   module.exports = RangeFacet;
 
 }).call(this);
 
-},{"./basefacet":14,"extend":23,"nouislider":69}],17:[function(require,module,exports){
+},{"../display":15,"extend":23,"nouislider":69}],17:[function(require,module,exports){
 (function() {
-  var $, BaseFacet, TermFacet, extend,
+  var $, Display, TermsFacet, defaultButtonTemplate, defaultTemplate, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  BaseFacet = require("./basefacet");
+    hasProp = {}.hasOwnProperty,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   extend = require("extend");
 
+  Display = require("../display");
+
   $ = require("../../util/dfdom");
+
+  defaultTemplate = "{{#terms}}\n  <div class=\"df-term\" data-facet=\"{{name}}\" data-value=\"{{key}}\"\n      {{#extra-content}}{{index}}{{/extra-content}}\n      {{#selected}}data-selected{{/selected}}>\n    <span class=\"df-term__value\">{{key}}</span>\n    <span class=\"df-term__count\">{{doc_count}}</span>\n  </div>\n{{/terms}}\n{{#show-more-button}}{{terms.length}}{{/show-more-button}}";
+
+  defaultButtonTemplate = "<div>\n  <button type=\"button\" data-toggle-extra-content\n      data-text-normal=\"{{#translate}}{{viewMoreLabel}}{{/translate}}\"\n      data-text-toggle=\"{{#translate}}{{viewLessLabel}}{{/translate}}\">\n    {{#translate}}\n      {{#collapsed}}{{viewMoreLabel}}{{/collapsed}}\n      {{^collapsed}}{{viewLessLabel}}{{/collapsed}}\n    {{/translate}}\n  </button>\n</div>";
 
 
   /**
@@ -3793,14 +3182,8 @@ author: @ecoslado
    * text field.
    */
 
-  TermFacet = (function(superClass) {
-    extend1(TermFacet, superClass);
-
-    TermFacet.defaultLabelTemplate = "{{label}}{{#total_selected}} ({{total_selected}}){{/total_selected}}";
-
-    TermFacet.defaultTemplate = "{{#terms}}\n  <a class=\"df-term\" href=\"#\" data-facet=\"{{name}}\" data-value=\"{{key}}\"\n      {{#extra-content}}{{index}}:{{size}}{{/extra-content}}\n      {{#selected}}data-selected{{/selected}}>\n    {{key}} <span class=\"df-term__count\">{{doc_count}}</span>\n  </a>\n{{/terms}}\n{{#show-more-button}}{{terms.length}}:{{size}}{{/show-more-button}}";
-
-    TermFacet.defaultButtonTemplate = "<button type=\"button\" data-toggle-extra-content\n    data-text-normal=\"{{#translate}}{{viewMoreLabel}}{{/translate}}\"\n    data-text-toggle=\"{{#translate}}{{viewLessLabel}}{{/translate}}\">\n  {{#translate}}{{viewMoreLabel}}{{/translate}}\n</button>";
+  TermsFacet = (function(superClass) {
+    extend1(TermsFacet, superClass);
 
 
     /**
@@ -3809,17 +3192,19 @@ author: @ecoslado
      * @param  {Object} options Options object. Empty by default.
      */
 
-    function TermFacet(element, name, options) {
+    function TermsFacet(element, name, options) {
       var defaults;
+      this.name = name;
       if (options == null) {
         options = {};
       }
       defaults = {
         size: null,
-        buttonTemplate: this.constructor.defaultButtonTemplate,
+        template: defaultTemplate,
+        buttonTemplate: defaultButtonTemplate,
         templateVars: {
-          viewMoreLabel: "View more...",
-          viewLessLabel: "View less..."
+          viewMoreLabel: "View more…",
+          viewLessLabel: "View less…"
         },
         templateFunctions: {
           "extra-content": (function(_this) {
@@ -3838,9 +3223,9 @@ author: @ecoslado
                * @return {string}   "data-extra-content" or ""
                */
               return function(text, render) {
-                var index, ref, size;
-                ref = (render(text)).split(":"), index = ref[0], size = ref[1];
-                if ((parseInt(index.trim(), 10)) >= (parseInt(size.trim(), 10))) {
+                var i;
+                i = parseInt(render(text), 10);
+                if ((_this.options.size != null) && i >= _this.options.size) {
                   return "data-extra-content";
                 } else {
                   return "";
@@ -3862,10 +3247,13 @@ author: @ecoslado
                * @return {string}   Rendered button or "".
                */
               return function(text, render) {
-                var length, ref, size;
-                ref = (render(text)).split(":"), length = ref[0], size = ref[1];
-                if ((parseInt(length.trim(), 10)) > (parseInt(size.trim(), 10))) {
-                  return _this.mustache.render(_this.options.buttonTemplate, _this.buildContext());
+                var context, len;
+                len = parseInt(render(text), 10);
+                if ((_this.options.size != null) && len > _this.options.size) {
+                  context = extend(true, {
+                    collapsed: _this.collapsed
+                  }, _this.currentContext);
+                  return _this.mustache.render(_this.options.buttonTemplate, context);
                 } else {
                   return "";
                 }
@@ -3874,8 +3262,8 @@ author: @ecoslado
           })(this)
         }
       };
-      options = extend(true, defaults, options);
-      TermFacet.__super__.constructor.apply(this, arguments);
+      TermsFacet.__super__.constructor.call(this, element, extend(true, defaults, options));
+      this.collapsed = this.options.size != null;
     }
 
 
@@ -3886,69 +3274,50 @@ author: @ecoslado
      * @param  {Controller} controller Doofinder Search controller.
      */
 
-    TermFacet.prototype.init = function(controller) {
-      TermFacet.__super__.init.apply(this, arguments);
-      this.element.on("click", "[data-facet='" + this.name + "'][data-value]", (function(_this) {
-        return function(e) {
-          var eventInfo, key, termNode, value, wasSelected;
-          e.preventDefault();
-          termNode = $(e.target);
-          value = termNode.data("value");
-          key = termNode.data("facet");
-          wasSelected = termNode.hasAttr("data-selected");
-          if (!wasSelected) {
-            termNode.attr("data-selected", "");
-            _this.controller.addFilter(key, value);
-          } else {
-            termNode.removeAttr("data-selected");
-            _this.controller.removeFilter(key, value);
-          }
-          _this.controller.refresh();
-          eventInfo = {
-            facetName: key,
-            facetValue: value,
-            selected: !wasSelected,
-            totalSelected: _this.getSelectedElements().length
-          };
-          return _this.trigger("df:term_clicked", [eventInfo]);
-        };
-      })(this));
-      if (this.options.size !== null) {
-        this.element.on("click", "[data-toggle-extra-content]", (function(_this) {
+    TermsFacet.prototype.init = function() {
+      if (!this.initialized) {
+        this.element.on("click", "[data-facet='" + this.name + "'][data-value]", (function(_this) {
           return function(e) {
-            var btn, currentText, viewLessText, viewMoreText;
+            var facetName, facetValue, isSelected, termNode;
             e.preventDefault();
-            btn = _this.getShowMoreButton();
-            currentText = btn.textContent.trim();
-            viewMoreText = (btn.getAttribute("data-text-normal")).trim();
-            viewLessText = (btn.getAttribute("data-text-toggle")).trim();
-            if (currentText === viewMoreText) {
-              btn.textContent = viewLessText;
-              return _this.element.attr("data-view-extra-content", "");
+            termNode = $(e.currentTarget);
+            facetName = termNode.data("facet");
+            facetValue = termNode.data("value");
+            isSelected = !termNode.hasAttr("data-selected");
+            if (isSelected) {
+              termNode.attr("data-selected", "");
+              _this.controller.addFilter(facetName, facetValue);
             } else {
-              btn.textContent = viewMoreText;
-              return _this.element.removeAttr("data-view-extra-content");
+              termNode.removeAttr("data-selected");
+              _this.controller.removeFilter(facetName, facetValue);
             }
+            _this.controller.refresh();
+            return _this.trigger("df:term:click", [facetName, facetValue, isSelected]);
           };
         })(this));
-        this.bind("df:rendered", (function(_this) {
-          return function(res) {
-            var btn;
-            if ((_this.element.attr("data-view-extra-content")) != null) {
-              btn = _this.getShowMoreButton();
-              return btn != null ? btn.textContent = (btn.getAttribute("data-text-toggle")).trim() : void 0;
-            }
-          };
-        })(this));
-        return this.bind("df:cleaned", (function(_this) {
-          return function(res) {
-            var btn;
-            _this.element.removeAttr("data-view-extra-content");
-            btn = _this.getShowMoreButton();
-            return btn != null ? btn.textContent = (btn.getAttribute("data-text-normal")).trim() : void 0;
-          };
-        })(this));
+        if (this.options.size != null) {
+          return this.element.on("click", "[data-toggle-extra-content]", (function(_this) {
+            return function(e) {
+              e.preventDefault();
+              _this.updateButton();
+              return _this.collapsed = !_this.collapsed;
+            };
+          })(this));
+        }
       }
+    };
+
+    TermsFacet.prototype.updateButton = function() {
+      var btn, labelAttr;
+      if (this.collapsed) {
+        labelAttr = "data-text-toggle";
+        this.element.attr("data-view-extra-content", "");
+      } else {
+        labelAttr = "data-text-normal";
+        this.element.removeAttr("data-view-extra-content");
+      }
+      btn = this.getButton();
+      return (btn.get(0)).textContent = (btn.attr(labelAttr)).trim();
     };
 
 
@@ -3956,26 +3325,13 @@ author: @ecoslado
      * @return {HTMLElement} The "show more" button.
      */
 
-    TermFacet.prototype.getShowMoreButton = function() {
-      return (this.element.find("[data-toggle-extra-content]")).element[0];
+    TermsFacet.prototype.getButton = function() {
+      return (this.element.find("[data-toggle-extra-content]")).first();
     };
 
-
-    /**
-     * @return {DfDomElement} Collection of selected term nodes.
-     */
-
-    TermFacet.prototype.getSelectedElements = function() {
-      return this.element.find("[data-facet][data-selected]");
-    };
-
-
-    /**
-     * @return {Number} Number of selected term nodes.
-     */
-
-    TermFacet.prototype.countSelectedElements = function() {
-      return this.getSelectedElements().length;
+    TermsFacet.prototype.getSelectedTerms = function(res) {
+      var ref, ref1;
+      return (res != null ? (ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.name] : void 0 : void 0 : void 0) || [];
     };
 
 
@@ -3984,25 +3340,8 @@ author: @ecoslado
      * @return {Number}     Total terms used for filter.
      */
 
-    TermFacet.prototype.countSelectedTerms = function(res) {
-      var ref, ref1;
-      return (((ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.name] : void 0 : void 0) || []).length;
-    };
-
-
-    /**
-     * Renders the label of the facet widget based on the given search response,
-     * within the configured label template. The number of selected terms is
-     * passed to the context so it can be used in the template.
-     *
-     * @param  {Object} res Search response.
-     * @return {String}     The rendered label.
-     */
-
-    TermFacet.prototype.renderLabel = function(res) {
-      return TermFacet.__super__.renderLabel.call(this, extend(true, res, {
-        total_selected: this.countSelectedTerms(res)
-      }));
+    TermsFacet.prototype.countSelectedTerms = function(res) {
+      return (this.getSelectedTerms(res)).length;
     };
 
 
@@ -4011,72 +3350,129 @@ author: @ecoslado
      * Renders the widget with the data received, by replacing its content.
      *
      * @param {Object} res Search response.
-     * @fires TermFacet#df:rendered
+     * @fires TermsFacet#df:widget:render
      */
 
-    TermFacet.prototype.render = function(res) {
-      var context, eventInfo, i, index, len, ref, ref1, ref2, ref3, selectedTerms, term, totalSelected;
-      if (!res.facets || !res.facets[this.name]) {
-        this.raiseError("TermFacet: " + this.name + " facet is not configured");
-      } else if (!res.facets[this.name].terms.buckets) {
-        this.raiseError("TermFacet: " + this.name + " facet is not a terms facet");
-      }
-      if (res.facets[this.name].terms.buckets.length > 0) {
-        selectedTerms = {};
-        ref2 = ((ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.name] : void 0 : void 0) || [];
-        for (i = 0, len = ref2.length; i < len; i++) {
-          term = ref2[i];
-          selectedTerms[term] = true;
-        }
-        selectedTerms;
-        ref3 = res.facets[this.name].terms.buckets;
-        for (index in ref3) {
-          term = ref3[index];
-          term.index = index;
-          term.name = this.name;
-          if (selectedTerms[term.key]) {
-            term.selected = 1;
-          } else {
-            term.selected = 0;
+    TermsFacet.prototype.render = function(res) {
+      var context, index, ref, selected, term, terms;
+      if (res.page = 1) {
+        terms = res.facets[this.name].terms.buckets;
+        if (terms.length > 0) {
+          selected = this.getSelectedTerms(res);
+          for (index in terms) {
+            term = terms[index];
+            term.index = index;
+            term.name = this.name;
+            term.selected = (ref = term.key, indexOf.call(selected, ref) >= 0);
           }
+          context = {
+            name: this.name,
+            terms: terms,
+            size: this.options.size
+          };
+          return TermsFacet.__super__.render.call(this, extend(true, {}, res, context));
+        } else {
+          return this.clean();
         }
-        totalSelected = this.countSelectedTerms(res);
-        context = extend(true, {
-          any_selected: totalSelected > 0,
-          total_selected: totalSelected,
-          name: this.name,
-          terms: res.facets[this.name].terms.buckets
-        });
-        eventInfo = {
-          facetName: this.name,
-          totalSelected: totalSelected
-        };
-        this.element.html(this.mustache.render(this.template, this.buildContext(context)));
-        return this.trigger("df:rendered", [res, eventInfo]);
-      } else {
-        return this.clean();
       }
     };
 
-    return TermFacet;
+    return TermsFacet;
 
-  })(BaseFacet);
+  })(Display);
 
-  module.exports = TermFacet;
+  module.exports = TermsFacet;
 
 }).call(this);
 
-},{"../../util/dfdom":5,"./basefacet":14,"extend":23}],18:[function(require,module,exports){
+},{"../../util/dfdom":6,"../display":15,"extend":23}],18:[function(require,module,exports){
 (function() {
-  var QueryInput, Widget, dfTypeWatch, extend,
+  var Display, INSERTION_METHODS, Panel, defaultTemplate, extend, uniqueId,
+    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+  extend = require("extend");
+
+  Display = require("./display");
+
+  uniqueId = require("../util/uniqueid");
+
+  INSERTION_METHODS = ["prepend", "append", "before", "after"];
+
+  defaultTemplate = "<div class=\"df-panel\" id=\"{{panelElement}}\">\n  {{#label}}\n  <div class=\"df-panel__label\" id=\"{{labelElement}}\">{{label}}</div>\n  {{/label}}\n  <div class=\"df-panel__content\" id=\"{{contentElement}}\"></div>\n</div>";
+
+  Panel = (function(superClass) {
+    extend1(Panel, superClass);
+
+    function Panel(element, getWidget, options) {
+      var defaults, ref;
+      this.getWidget = getWidget;
+      if (options == null) {
+        options = {};
+      }
+      defaults = {
+        templateVars: {
+          panelElement: "df-" + (uniqueId.generate.easy()),
+          labelElement: "df-" + (uniqueId.generate.easy()),
+          contentElement: "df-" + (uniqueId.generate.easy())
+        },
+        insertionMethod: "html",
+        template: defaultTemplate
+      };
+      options = extend(true, defaults, options);
+      if (ref = options.insertionMethod, indexOf.call(INSERTION_METHODS, ref) < 0) {
+        options.insertionMethod = "html";
+      }
+      Panel.__super__.constructor.call(this, element, options);
+      this.panelElement = null;
+      this.labelElement = null;
+      this.contentElement = null;
+    }
+
+    Panel.prototype.render = function(res) {
+      if (!this.panelElement) {
+        this.element[this.options.insertionMethod](this.renderTemplate(res));
+        this.initPanel(res);
+        this.initContent(res);
+        return this.trigger("df:widget:render", [res]);
+      }
+    };
+
+    Panel.prototype.initPanel = function(res) {
+      this.panelElement = $("#" + this.options.templateVars.panelElement);
+      this.labelElement = $("#" + this.options.templateVars.labelElement);
+      return this.contentElement = $("#" + this.options.templateVars.contentElement);
+    };
+
+    Panel.prototype.initContent = function(res) {
+      var widget;
+      widget = this.getWidget(this);
+      this.controller.registerWidget(widget);
+      return widget.render(res);
+    };
+
+    Panel.prototype.clean = function() {
+      return this.trigger("df:widget:clean");
+    };
+
+    return Panel;
+
+  })(Display);
+
+  module.exports = Panel;
+
+}).call(this);
+
+},{"../util/uniqueid":13,"./display":15,"extend":23}],19:[function(require,module,exports){
+(function() {
+  var QueryInput, Widget, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   extend = require("extend");
 
-  Widget = require("../widget");
-
-  dfTypeWatch = require("../util/dftypewatch");
+  Widget = require("./widget");
 
 
   /**
@@ -4095,14 +3491,26 @@ author: @ecoslado
      */
 
     function QueryInput(element, options) {
+      var defaults;
       if (options == null) {
         options = {};
       }
-      QueryInput.__super__.constructor.call(this, element, options);
-      this.typingTimeout = this.options.typingTimeout || 1000;
-      this.eventsBound = false;
-      this.cleanInput = this.options.clean != null ? this.options.clean : true;
+      defaults = {
+        clean: true,
+        captureLength: 3,
+        typingTimeout: 1000,
+        wait: 43
+      };
+      QueryInput.__super__.constructor.call(this, element, extend(true, defaults, options));
+      this.controller = [];
+      this.timer = null;
+      this.stopTimer = null;
+      this.currentValue = this.element.val() || "";
     }
+
+    QueryInput.prototype.setController = function(controller) {
+      return this.controller.push(controller);
+    };
 
 
     /**
@@ -4113,37 +3521,50 @@ author: @ecoslado
      * @param  {Controller} controller Doofinder Search controller.
      */
 
-    QueryInput.prototype.init = function(controller) {
-      var ctrl, options, self;
-      if (this.controller) {
-        this.controller.push(controller);
-      } else {
-        this.controller = [controller];
+    QueryInput.prototype.init = function() {
+      if (!this.initialized) {
+        this.element.on("input", ((function(_this) {
+          return function() {
+            return _this.scheduleUpdate();
+          };
+        })(this)));
+        if ((this.element.get(0)).tagName.toUpperCase() !== "TEXTAREA") {
+          this.element.on("keydown", (function(_this) {
+            return function(e) {
+              if ((e.keyCode != null) && e.keyCode === 13) {
+                return _this.scheduleUpdate(0, true);
+              }
+            };
+          })(this));
+        }
+        return QueryInput.__super__.init.apply(this, arguments);
       }
-      self = this;
-      if (!this.eventsBound) {
-        options = extend(true, {
-          callback: function() {
-            var query;
-            query = self.element.val();
-            return self.controller.forEach(function(controller) {
-              controller.reset();
-              return controller.search.call(controller, query);
-            });
-          },
-          wait: 43,
-          captureLength: 3
-        }, this.options);
-        dfTypeWatch(this.element, options);
-        ctrl = this.controller[0];
-        ctrl.bind('df:results_received', function(res) {
-          return setTimeout((function() {
-            if (ctrl.status.params.query_counter === res.query_counter && ctrl.status.currentPage === 1) {
-              return self.trigger('df:typing_stopped', [ctrl.status.params.query]);
-            }
-          }), self.typingTimeout);
+    };
+
+    QueryInput.prototype.scheduleUpdate = function(delay, force) {
+      var query;
+      clearTimeout(this.timer);
+      clearTimeout(this.stopTimer);
+      query = this.element.val() || "";
+      if (delay == null) {
+        delay = this.options.wait;
+      }
+      if (force == null) {
+        force = false;
+      }
+      return this.timer = setTimeout(this.updateStatus.bind(this), delay, query, force);
+    };
+
+    QueryInput.prototype.updateStatus = function(query, force) {
+      var changed, valid;
+      valid = query.length >= this.options.captureLength;
+      changed = query.toUpperCase() !== this.currentValue;
+      if ((valid && (changed || force)) || (this.currentValue && !query.length)) {
+        this.stopTimer = setTimeout(this.trigger.bind(this), this.options.typingTimeout, "df:input:stop", [query]);
+        this.currentValue = query.toUpperCase();
+        return this.controller.forEach(function(controller) {
+          return controller.search(query);
         });
-        return this.eventsBound = true;
       }
     };
 
@@ -4151,13 +3572,13 @@ author: @ecoslado
     /**
      * If the widget is configured to be cleaned, empties the value of the input
      * element.
-     * @fires QueryInput#df:cleaned
+     * @fires QueryInput#df:widget:clean
      */
 
     QueryInput.prototype.clean = function() {
-      if (this.cleanInput) {
+      if (this.options.clean) {
         this.element.val("");
-        return this.trigger("df:cleaned");
+        return this.trigger("df:widget:clean");
       }
     };
 
@@ -4169,123 +3590,7 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../util/dftypewatch":7,"../widget":12,"extend":23}],19:[function(require,module,exports){
-
-/*
-display.coffee
-author: @ecoslado
-2015 11 10
- */
-
-
-/*
-Display
-This class receives the search
-results and paint them in a container
-shaped by template. Every new page
-replaces the current content.
- */
-
-(function() {
-  var Display, Results,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  Display = require('../display');
-
-  Results = (function(superClass) {
-    extend(Results, superClass);
-
-
-    /*
-    constructor
-    
-    @param {String} container
-    @param {String|Function} template
-    @param {Object} extraOptions
-    @api public
-     */
-
-    function Results(container, options) {
-      var template;
-      if (options == null) {
-        options = {};
-      }
-      if (!options.template) {
-        template = "<ul>\n  {{#results}}\n    <li>\n      <b>{{title}}</b>: {{description}}\n    </li>\n  {{/results}}\n</ul>";
-      } else {
-        template = options.template;
-      }
-      Results.__super__.constructor.call(this, container, template, options);
-    }
-
-    return Results;
-
-  })(Display);
-
-  module.exports = Results;
-
-}).call(this);
-
-},{"../display":13}],20:[function(require,module,exports){
-
-/*
-scrollresults.coffee
-author: @ecoslado
-2015 11 10
- */
-
-
-/*
-Display
-This class receives the search
-results and paint them in a container
-shaped by template. Every new page
-replaces the current content.
- */
-
-(function() {
-  var ScrollDisplay, ScrollResults,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  ScrollDisplay = require('../scrolldisplay');
-
-  ScrollResults = (function(superClass) {
-    extend(ScrollResults, superClass);
-
-
-    /*
-    constructor
-    
-    @param {String} element
-    @param {String|Function} template
-    @param {Object} extraOptions
-    @api public
-     */
-
-    function ScrollResults(element, options) {
-      var template;
-      if (options == null) {
-        options = {};
-      }
-      if (!options.template) {
-        template = "<ul>\n  {{#results}}\n    <li>\n      <b>{{title}}</b>: {{description}}\n    </li>\n  {{/results}}\n</ul>";
-      } else {
-        template = options.template;
-      }
-      ScrollResults.__super__.constructor.call(this, element, template, options);
-    }
-
-    return ScrollResults;
-
-  })(ScrollDisplay);
-
-  module.exports = ScrollResults;
-
-}).call(this);
-
-},{"../scrolldisplay":21}],21:[function(require,module,exports){
+},{"./widget":21,"extend":23}],20:[function(require,module,exports){
 (function() {
   var $, Display, ScrollDisplay, dfScroll, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -4335,38 +3640,40 @@ replaces the current content.
      * @return {[type]}          [description]
      */
 
-    function ScrollDisplay(element, template, options) {
-      var scrollOptions, self;
+    function ScrollDisplay(element, options) {
+      var scrollCallback, scrollOptions;
       ScrollDisplay.__super__.constructor.apply(this, arguments);
       if (this.element.element[0] === window && (options.contentNode == null)) {
         throw "when the wrapper is window you must set contentNode option.";
       }
-      self = this;
-      scrollOptions = {
-        callback: function() {
-          if ((self.controller != null) && !self.pageRequested) {
-            self.pageRequested = true;
-            setTimeout(function() {
-              return self.pageRequested = false;
-            }, 5000);
-            return self.controller.nextPage.call(self.controller);
+      scrollCallback = (function(_this) {
+        return function() {
+          if ((_this.controller != null) && !_this.pageRequested) {
+            _this.pageRequested = true;
+            setTimeout((function() {
+              return _this.pageRequested = false;
+            }), 5000);
+            return _this.controller.getNextPage();
           }
-        }
+        };
+      })(this);
+      scrollOptions = {
+        callback: scrollCallback
       };
-      if (options.scrollOffset != null) {
-        scrollOptions.scrollOffset = options.scrollOffset;
+      if (this.options.scrollOffset != null) {
+        scrollOptions.scrollOffset = this.options.scrollOffset;
       }
-      if (options.contentWrapper != null) {
-        scrollOptions.content = options.contentWrapper;
+      if (this.options.contentWrapper != null) {
+        scrollOptions.content = this.options.contentWrapper;
       }
       this.elementWrapper = this.element;
-      if (options.contentNode != null) {
-        this.element = $(options.contentNode);
-      } else if (this.element.element[0] === window) {
+      if (this.options.contentNode != null) {
+        this.element = $(this.options.contentNode);
+      } else if (this.element.get(0) === window) {
         this.element = $("body");
       } else {
         if (!this.element.children().length) {
-          this.element.append(document.createElement('div'));
+          this.element.append('div');
         }
         this.element = this.element.children().first();
       }
@@ -4381,29 +3688,25 @@ replaces the current content.
      * @param  {Controller} controller Doofinder Search controller.
      */
 
-    ScrollDisplay.prototype.init = function(controller) {
-      ScrollDisplay.__super__.init.apply(this, arguments);
-      return this.controller.bind('df:search df:refresh', (function(_this) {
-        return function(params) {
-          return _this.elementWrapper.scrollTop(0);
-        };
-      })(this));
+    ScrollDisplay.prototype.init = function() {
+      if (!this.initialized) {
+        this.controller.on("df:search df:refresh", (function(_this) {
+          return function(query, params) {
+            return _this.elementWrapper.scrollTop(0);
+          };
+        })(this));
+        return ScrollDisplay.__super__.init.apply(this, arguments);
+      }
     };
 
-
-    /**
-     * Called when subsequent (not "first-page") responses for a specific search
-     * are received. Renders the widget with the data received, by appending
-     * content after the last content received.
-     *
-     * @param {Object} res Search response.
-     * @fires ScrollDisplay#df:rendered
-     */
-
-    ScrollDisplay.prototype.renderNext = function(res) {
-      this.pageRequested = false;
-      this.element.append(this.mustache.render(this.template, this.buildContext(res)));
-      return this.trigger("df:rendered", [res]);
+    ScrollDisplay.prototype.render = function(res) {
+      if (res.page === 1) {
+        return ScrollDisplay.__super__.render.apply(this, arguments);
+      } else {
+        this.pageRequested = false;
+        this.element.append(this.renderTemplate(res));
+        return this.trigger("df:widget:render", [res]);
+      }
     };
 
     return ScrollDisplay;
@@ -4414,7 +3717,118 @@ replaces the current content.
 
 }).call(this);
 
-},{"../util/dfdom":5,"../util/dfscroll":6,"./display":13,"extend":23}],22:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/dfscroll":7,"./display":15,"extend":23}],21:[function(require,module,exports){
+(function() {
+  var $, Widget, bean,
+    slice = [].slice;
+
+  bean = require("bean");
+
+  $ = require("../util/dfdom");
+
+
+  /**
+   * Base class for a Widget, a class that paints itself given a search response.
+   *
+   * A widget knows how to:
+   *
+   * - Render and clean itself.
+   * - Bind handlers to/trigger events on the main element node.
+   */
+
+  Widget = (function() {
+
+    /**
+     * @param  {String|Node|DfDomElement} element   Container node.
+     * @param  {Object} @options = {}               Options for the widget.
+     */
+    function Widget(element, options) {
+      this.options = options != null ? options : {};
+      this.setElement(element);
+      this.controller = null;
+      this.initialized = false;
+    }
+
+
+    /**
+     * Assigns the container element to the widget.
+     * @param  {String|Node|DfDomElement} element   Container node.
+     */
+
+    Widget.prototype.setElement = function(element) {
+      return this.element = ($(element)).first();
+    };
+
+    Widget.prototype.setController = function(controller) {
+      this.controller = controller;
+    };
+
+
+    /**
+     * Initializes the object. Intended to be extended in child classes.
+     * You will want to add your own event handlers here.
+     *
+     * @param  {Controller} controller Doofinder Search controller.
+     */
+
+    Widget.prototype.init = function() {
+      this.initialized = true;
+      return this.trigger("df:widget:init");
+    };
+
+
+    /**
+     * Called when the "first page" response for a specific search is received.
+     * Renders the widget with the data received.
+     *
+     * @param  {Object} res Search response.
+     */
+
+    Widget.prototype.render = function(res) {
+      return this.trigger("df:widget:render", [res]);
+    };
+
+
+    /**
+     * Cleans the widget. Intended to be overriden.
+     */
+
+    Widget.prototype.clean = function() {};
+
+    Widget.prototype.on = function(eventName, handler, args) {
+      if (args == null) {
+        args = [];
+      }
+      return bean.on.apply(bean, [this, eventName, handler].concat(slice.call(args)));
+    };
+
+    Widget.prototype.one = function(eventName, handler, args) {
+      if (args == null) {
+        args = [];
+      }
+      return bean.one.apply(bean, [this, eventName, handler].concat(slice.call(args)));
+    };
+
+    Widget.prototype.off = function(eventName, handler) {
+      return bean.off(this, eventName, handler);
+    };
+
+    Widget.prototype.trigger = function(eventName, args) {
+      if (args == null) {
+        args = [];
+      }
+      return bean.fire(this, eventName, args);
+    };
+
+    return Widget;
+
+  })();
+
+  module.exports = Widget;
+
+}).call(this);
+
+},{"../util/dfdom":6,"bean":22}],22:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean

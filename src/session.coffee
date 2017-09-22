@@ -2,6 +2,8 @@ Cookies = require "js-cookie"
 extend = require "extend"
 md5 = require "md5"
 
+uniqueId = require "./util/uniqueid"
+
 
 class ISessionStore
   ###*
@@ -83,19 +85,8 @@ class ObjectSessionStore extends ISessionStore
   ###
   constructor: (@data = {}) ->
 
-  ###*
-  * Generates a unique session ID based on some randomness.
-  * @protected
-  * @return {String} A MD5 hash.
-  ###
-  __uniqueId: ->
-    md5 [
-      new Date().getTime(),
-      String(Math.floor(Math.random() * 10000))
-    ].join ""
-
   __getData: ->
-    @data.session_id = @__uniqueId() unless @data.session_id?
+    @data.session_id = uniqueId.generate.hash() unless @data.session_id?
     @data
 
   __setData: (@data) ->
@@ -116,26 +107,10 @@ class CookieSessionStore extends ISessionStore
     @cookieName = "#{options.prefix}#{cookieName}"
     @expiry = options.expiry
 
-  ###*
-   * Generates a unique session ID based on the user's browser, the location and
-   * some randomness.
-   *
-   * @protected
-   * @return {[type]} [description]
-  ###
-  __uniqueId: ->
-    md5 [
-      navigator.userAgent,
-      navigator.language,
-      window.location.host,
-      new Date().getTime(),
-      String(Math.floor(Math.random() * 10000))
-    ].join ""
-
   __getData: ->
     dataObj = Cookies.getJSON @cookieName
     unless dataObj?
-      dataObj = @__setData session_id: @__uniqueId()
+      dataObj = @__setData session_id: uniqueId.generate.browserHash()
     dataObj
 
   __setData: (dataObj) ->
@@ -154,16 +129,9 @@ class CookieSessionStore extends ISessionStore
 ###
 class Session
   ###*
-   * Creates a Session.
-   * @param  {Client}     client
-   * @param  {*}          store      A store object which implements:
-   *                                   - get(key, default)
-   *                                   - set(key, value)
-   *                                   - del(key)
-   *                                   - delete()
-   *                                   - exists()
+   * @param  {ISessionStore} store  Holds session data.
   ###
-  constructor: (@client, @store = new ObjectSessionStore()) ->
+  constructor: (@store = new ObjectSessionStore()) ->
 
   ###*
    * Gets the value for the specified key.
@@ -200,66 +168,6 @@ class Session
   ###
   exists: ->
     @store.exists()
-
-  ###*
-   * Registers a search for the session.
-   * Registers the session in Doofinder stats if not already registered.
-   *
-   * WARNING: This must be called ONLY if the user has performed a search.
-   *          That's why this is usually called when the user has stopped
-   *          typing in the search box.
-   *
-   * @public
-   * @param  {String} query Search terms.
-  ###
-  registerSearch: (query) ->
-    @set "query", query
-    unless @get "registered", false
-      @client.registerSession @get "session_id"
-      @set "registered", true
-
-  ###*
-   * Registers a click on a search result for the specified search query.
-   * @public
-   * @param  {String} dfid  Doofinder's internal ID for the result.
-   * @param  {String} query Search terms.
-  ###
-  registerClick: (dfid, query) ->
-    @set "dfid", dfid
-    if query?
-      @set "query", query  # not sure this is needed
-    @client.registerClick dfid,
-      sessionId: @get "session_id"
-      query: @get "query"
-
-  ###*
-   * Register a checkout when the location passed matches one of the URLs
-   * provided.
-   *
-   * @public
-  ###
-  registerCheckout: () ->
-    sessionId = @get "session_id"
-    @client.registerCheckout sessionId
-    @clean()
-
-  ###*
-   * Method to register banner events
-   * @public
-   *
-   * @param {String} bannerId
-  ###
-  registerBannerDisplay: (bannerId) ->
-    @client.registerBannerEvent("display", bannerId)
-
-  ###*
-   * Method to register banner events
-   * @public
-   *
-   * @param {String} bannerId
-  ###
-  registerBannerClick: (bannerId) ->
-    @client.registerBannerEvent("click", bannerId)
 
 
 module.exports =

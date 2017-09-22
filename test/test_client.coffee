@@ -1,301 +1,251 @@
-chai = require 'chai'
-nock = require 'nock'
+# required for testing
+chai = require "chai"
 
+# chai
 chai.should()
-assert = chai.assert
 expect = chai.expect
 
-hashid = 'ffffffffffffffffffffffffffffffff'
-api_key = 'eu1-384fd8a73c7ff0859a5891f9f4083b1b9727f9c3'
-mocks =
-  sort:
-    Object:
-      price: "asc"
-      title: "desc"
-      description: "asc"
-    Array: [("title": "asc"), ("description": "desc")]
-    String: "price"
-  params:
-    valid:
-      rpp: 30
-      page: 4
-    null:
-      rpp: null
-  filters:
-    color: ['blue', 'red']
-    price:
-      gte: 4.36
-      lt: 99
+# required for tests
+http = require "http"
+https = require "https"
+Client = require "../lib/client"
 
-# Test doofinder
+# config, utils & mocks
+cfg = require "./config"
+serve = require "./serve"
+
+buildQuery = (query, params) ->
+  cfg.getClient().__buildSearchQueryString query, params
+
+# test
 describe "Client", ->
+  afterEach: ->
+    serve.clean()
 
-  beforeEach ->
-    document.body.innerHTML = '<input type="search" id="query" name="query">'
-    global.$ = require "jquery"
-    global.doofinder = require "../lib/doofinder"
-
-  afterEach ->
-    delete global.$
-    delete global.doofinder
-
-  # Tests the client's stuff
-  context 'makeQueryString method can ', ->
-
-    it 'handle several types', ->
-      # Client for two types by constructor (made make multiple type params)
-      client = new doofinder.Client hashid, api_key, 5, ['product', 'category']
-      querystring = client.makeQueryString()
-      querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&type%5B%5D=product&type%5B%5D=category'
-
-
-    it 'add filters', ->
-      client = new doofinder.Client hashid, api_key
-      mockFilter =
-        price:
-          from: 20
-          to: 50
-      client.addFilter "foo", ["bar"]
-      client.filters.should.have.keys "foo"
-      client.filters.foo.should.have.length 1
-      client.filters.foo[0].should.equal "bar"
-      querystring = client.makeQueryString()
-
-      querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&filter%5Bfoo%5D=bar'
-
-      # Add the same filter again must override last filter
-      client.addFilter "foo", ["beer"]
-      client.filters.should.have.keys "foo"
-      client.filters.foo.should.have.length 1
-      client.filters.foo[0].should.equal "beer"
-      querystring = client.makeQueryString()
-      querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&filter%5Bfoo%5D=beer'
-
-      # test filter with object value
-      delete client.filters['foo']
-      client.filters.should.be.empty
-      client.addFilter 'price', mockFilter.price
-      querystring = client.makeQueryString()
-      client.filters.should.have.keys "price"
-      querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&filter%5Bprice%5D%5Bfrom%5D=20&filter%5Bprice%5D%5Bto%5D=50'
-
-      # test filter with object value and array value
-      client.addFilter 'foo', ['bar']
-      client.filters.should.have.all.keys "foo", "price"
-      client.filters.foo.should.have.length 1
-      querystring = client.makeQueryString()
-      querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&filter%5Bprice%5D%5Bfrom%5D=20&filter%5Bprice%5D%5Bto%5D=50&filter%5Bfoo%5D=bar'
-
-    it 'add params', ->
-      # Client for product type
-      client = new doofinder.Client hashid, api_key, 5
-      client.params.should.be.a 'object'
-      client.params.should.be.empty
-
-      # Adds a new type and a query
-      client.addParam 'type', ['category', 'product']
-      client.addParam 'query', 'testQuery'
-      client.params.should.have.all.keys 'type', 'query'
-      querystring = client.makeQueryString()
-      querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&type%5B%5D=category&type%5B%5D=product&query=testQuery'
-
-      # Override the existent query param
-      client.addParam 'query', 'testQuery2'
-      client.params.query.should.be.equal 'testQuery2'
-      querystring = client.makeQueryString()
-      querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&type%5B%5D=category&type%5B%5D=product&query=testQuery2'
-
-
-    it 'handle sort param in different formats', ->
-      # Test for setSort. Can be setted object, array and string types.
-      client = new doofinder.Client hashid, api_key
-
-      # Test sort with array type
-      # sort: [{price: 'asc'}, {brand: 'desc'}] -> sort[0][price]=asc&sort[1][brand]=desc
-      client.setSort(mocks.sort.Array)
-      querystring = client.makeQueryString()
-      querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&sort%5B0%5D%5Btitle%5D=asc&sort%5B1%5D%5Bdescription%5D=desc'
-
-      # Test sort with object type
-      # sort: {price: 'asc'} -> sort[price]=asc
-      client.setSort(mocks.sort.Object)
-      querystring = client.makeQueryString()
-      querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&sort%5Bprice%5D=asc&sort%5Btitle%5D=desc&sort%5Bdescription%5D=asc'
-
-      # Test with string type
-      # sort: price -> sort=price
-      client.setSort(mocks.sort.String)
-      querystring = client.makeQueryString()
-      querystring.should.be.equal 'hashid=ffffffffffffffffffffffffffffffff&sort=price'
-
-  context 'sanitizeQuery method can ', ->
-
-    beforeEach () ->
-      @client = new doofinder.Client hashid, api_key
-
-    it 'checks valid queries', ->
-      client = @client
-      sanitized = client._sanitizeQuery "hello world", (query) -> return query
-      sanitized.should.be.equal "hello world"
-      #  54 characters word
-      query = "123456789012345678901234567890123456789012345678901234"
-      sanitized = client._sanitizeQuery query, (query) -> return query
-      sanitized.should.be.equal query
-      #  55 characters word
-      query = "1234567890123456789012345678901234567890123456789012345"
-      sanitized = client._sanitizeQuery query, (query) -> return query
-      sanitized.should.be.equal query
-      # checks five words, total 255 characters (whites included)
-      chunk = "12345678901234567890123456789012345678901234567890"
-      query1 = query2 = query3 = query4 = query5 = chunk
-      query5 += '1'
-      query = query1 + ' ' + query2 + ' ' + query3 + ' ' + query4 + ' ' + query5
-      sanitized = client._sanitizeQuery query, (query) -> return query
-      sanitized.should.be.equal query
-
-    it 'forbids too long queries', ->
-      client = @client
-      query1 = query2 = query3 = query4 = "1234567890"
-      # checks five words, query less than 255 characters (whites included), with one invalid word
-      query5 = "12345678901234567890123456789012345678901234567890123456"
-      query = query1 + ' ' + query2 + ' ' + query3 + ' ' + query4 + ' ' + query5
-      foo = () -> client._sanitizeQuery(query, null)
-      expect(foo).to.throw 'Maximum word length exceeded: 55.'
-
-      # checks five words, total 256 characters (whites included)
-      chunk = "12345678901234567890123456789012345678901234567890"
-      query1 = query2 = query3 = query4 = query5 = chunk
-      query5 += '12'
-      query = query1 + ' ' + query2 + ' ' + query3 + ' ' + query4 + ' ' + query5
-      foo = () -> client._sanitizeQuery(query, null)
-      expect(foo).to.throw 'Maximum query length exceeded: 255.'
-
-  context 'unsecured search', ->
-
-    beforeEach () ->
-      @scope = nock('http://fooserver')
-      .filteringPath(/(4|5)/g, 'version')
-      .get('/version/search')
-      .query(true)
-      .reply((uri, requestBody)->
-        querypart = uri.split('?')[1]
-        { path: uri, headers: this.req.headers, parameters:querypart.split('&') }
-      )
-
-    # TO REMOVE, https://github.com/doofinder/js-doofinder/issues/93
-    # it 'with version 4, unsecure protocol even with api token', (done) ->
-    #   client = new doofinder.Client hashid, api_key, 4, null, 'fooserver'
-    #   client.search 'silla', (err, res) ->
-    #     res.path.should.contain '/4/' # version 4
-    #     res.headers.should.have.keys 'api token', 'host'
-    #     done()
-
-    it 'with no api token, unsecured protocol', (done) ->
-      client = new doofinder.Client hashid, 'eu1', 5, null, 'fooserver'
-      client.search 'silla', (err, res) ->
-        res.headers.should.have.keys 'host' # no aouth header
-        res.path.should.contain '/5/' # version 5
+  context "Instantiation", ->
+    context "without API key", ->
+      it "should use regular HTTP library", (done) ->
+        client = new Client cfg.hashid, cfg.zone
+        client.httpClient.secure.should.be.false
+        client.httpClient.http.should.equal http
         done()
 
-  context 'secured search', ->
-
-    beforeEach () ->
-      @scope = nock('https://fooserver')
-      .get('/5/search')
-      .query(true)
-      .reply((uri, requestBody)->
-        querypart = uri.split('?')[1]
-        { path: uri, headers: this.req.headers, parameters:querypart.split('&') }
-      )
-
-    it ' if api token in constructor, then auth header is sent', (done) ->
-      client = new doofinder.Client hashid, api_key, 5, null, 'fooserver'
-      client.search 'silla', (err, res) ->
-        res.headers.should.have.keys 'host', 'authorization'
+    context "with API key", ->
+      it "should use HTTPS", (done) ->
+        client = cfg.getClient()
+        client.httpClient.secure.should.be.true
+        client.httpClient.http.should.equal https
+        client.defaultOptions.headers.authorization.should.equal cfg.auth
         done()
 
-    it 'with no type does not send type parameter', (done) ->
-      client = new doofinder.Client hashid, api_key, 5, null, 'fooserver'
-      client.search '', (err, res) ->
-        res.parameters.should.contain 'query=', 'page=1', 'rpp=10', "hashid=#{ hashid }"
-        res.parameters.should.have.length 4
+    context "API version", ->
+      it "should use default version if not defined", (done) ->
+        client = cfg.getClient()
+        client.version.should.equal "#{cfg.version}"
         done()
 
-    it 'with type, sends type parameter', (done) ->
-      client = new doofinder.Client hashid, api_key, 5, 'product', 'fooserver'
-      client.search 'test', (err, res) ->
-        res.parameters.should.contain 'query=test', 'type=product'
-        done()
-    ###
-    it 'with types, sends several type parameters', (done) ->
-      client = new doofinder.Client hashid, api_key, 5, ['product', 'category'], 'fooserver'
-      client.search 'test', (err, res) ->
-        res.parameters.should.contain 'type=category', 'type=product', 'query=test'
-        done()
-    ###
-    it 'with sort object, sends sort params', (done) ->
-      client = new doofinder.Client hashid, api_key, 5, 'product', 'fooserver'
-      client.search 'querystring', {sort: mocks.sort.Object}, (err, res) ->
-        res.parameters.should.contain 'query=querystring', 'sort%5Bprice%5D=asc', 'sort%5Btitle%5D=desc', 'sort%5Bdescription%5D=asc', 'type=product'
+      it "should use custom version if defined", (done) ->
+        client = new Client cfg.hashid, cfg.apiKey, 6
+        client.version.should.equal "6"
         done()
 
-    it 'with sort array, sends sort params', (done) ->
-      client = new doofinder.Client hashid, api_key, 5, 'product', 'fooserver'
-      client.search 'querystring', {sort: mocks.sort.Array}, (err, res) ->
-        res.parameters.should.contain 'type=product', 'query=querystring', 'sort%5B0%5D%5Btitle%5D=asc', 'sort%5B1%5D%5Bdescription%5D=desc'
+    context "Custom Address", ->
+      it "should use default address if not defined", (done) ->
+        client = cfg.getClient()
+        client.defaultOptions.host.should.equal cfg.host
+        expect(client.defaultOptions.port).to.be.undefined
         done()
 
-    it 'with sort string, sends sort params', (done) ->
-      client = new doofinder.Client hashid, api_key, 5, 'product', 'fooserver'
-      client.search 'querystring', {sort: mocks.sort.String}, (err, res) ->
-        res.parameters.should.contain 'sort=price', 'query=querystring', 'type=product'
+      it "should use custom address if defined", (done) ->
+        client = new Client cfg.hashid, cfg.apiKey, null, null, "localhost:4000"
+        client.defaultOptions.host.should.equal "localhost"
+        client.defaultOptions.port.should.equal "4000"
         done()
 
-    it 'can propagate any valid search param', (done) ->
-      client = new doofinder.Client hashid, api_key, 5, 'product', 'fooserver'
-      client.search 'querystring', mocks.params.valid, (err, res) ->
-        res.parameters.should.contain 'query=querystring', 'rpp=30', 'page=4', 'type=product'
+  context "Request", ->
+    it "needs a path and a callback", (done) ->
+      client = cfg.getClient()
+
+      client.request.should.throw()
+      (-> client.request "/somewhere").should.throw()
+
+      scope = serve.request()
+      (-> client.request "/somewhere", ->).should.not.throw()
+      scope.isDone().should.be.true
+
+      done()
+
+    it "handles request errors via callbacks", (done) ->
+      scope = serve.requestError code: "AWFUL_ERROR"
+      cfg.getClient().request "/somewhere", (err, response) ->
+        err.code.should.equal "AWFUL_ERROR"
+        scope.isDone().should.be.true
         done()
 
-    it 'will not propagate a search param with no valid value', (done) ->
-      client = new doofinder.Client hashid, api_key, 5, 'product', 'fooserver'
-      client.search 'querystring', mocks.params.null, (err, res) ->
-        res.parameters.should.contain 'type=product', 'query=querystring', "hashid=#{hashid}", 'rpp=10', 'page=1'
-        res.parameters.should.have.length 5
+    it "handles response errors via callbacks", (done) ->
+      scope = serve.request 404, 'not found'
+      cfg.getClient().request "/somewhere", (err, response) ->
+        err.should.equal 404
+        (expect response).to.be.undefined
+        scope.isDone().should.be.true
         done()
 
-    it 'can translate filters to params', (done) ->
-      client = new doofinder.Client hashid, api_key, 5, 'product', 'fooserver'
-      client.search 'querystring', {filters: mocks.filters}, (err, res) ->
-        res.parameters.should.contain 'query=querystring', 'filter%5Bcolor%5D=blue', 'filter%5Bcolor%5D=red', 'filter%5Bprice%5D%5Bgte%5D=4.36', 'filter%5Bprice%5D%5Blt%5D=99'
+    it "handles response success via callbacks", (done) ->
+      scope = serve.request()
+      cfg.getClient().request "/somewhere", (err, response) ->
+        (expect err).to.be.undefined
+        response.should.eql {}
+        scope.isDone().should.be.true
         done()
 
-  describe 'options', ->
+  context "Options", ->
+    it "needs a callback", (done) ->
+      client = cfg.getClient()
 
-    before ()->
-      scope = nock('https://fooserver')
-      .persist()
-      .get('/5/options/ffffffffffffffffffffffffffffffff')
-      .reply((uri, requestBody) ->
-        querypart = uri.split('?')[1]
-        { path: uri, headers: this.req.headers, parameters: if querypart? then querypart.split('&') else []}
-        )
+      client.options.should.throw()
+      (-> client.options {}).should.throw()
+      (-> client.options "hello").should.throw()
 
-    beforeEach ->
-      @client = new doofinder.Client hashid, api_key, 5, 'product', 'fooserver'
+      scope = serve.options()
+      (-> client.options ->).should.not.throw()
+      scope.isDone().should.be.true
 
-    after () ->
-      nock.cleanAll()
+      done()
 
-    it 'sends the right authorization header', (done) ->
-
-      @client.options (err, res) ->
-        res.headers.should.have.keys 'authorization', 'host'
-        res.headers['authorization'].should.be.equal api_key.split('-')[1]
+    it "assumes callback and no suffix when called with one arguments", (done) ->
+      scope = serve.options()
+      request = cfg.getClient().options (err, response) ->
+        request.path.should.equal "/#{cfg.version}/options/#{cfg.hashid}"
+        response.should.eql {}
+        scope.isDone().should.be.true
         done()
 
-
-    it 'hits the right url', (done) ->
-      @client.options (err, res) ->
-        res.path.should.contain 'options'
+    it "assumes callback and suffix when called with two arguments", (done) ->
+      scope = serve.options "example.com"
+      request = cfg.getClient().options "example.com", (err, response) ->
+        request.path.should.equal "/#{cfg.version}/options/#{cfg.hashid}?example.com"
+        response.should.eql {}
+        scope.isDone().should.be.true
         done()
+
+  context "Search", ->
+    it "can be called with 2 or 3 arguments; the last one must be a callback", (done) ->
+      client = cfg.getClient()
+
+      client.search.should.throw()
+      (-> (client.search "something")).should.throw()
+      (-> (client.search "something", {})).should.throw()
+
+      scope = serve.search query: "something"
+      (-> (client.search "something", {}, ->)).should.not.throw()
+      scope.isDone().should.be.true
+
+      scope = serve.search query: "something"
+      (-> (client.search "something", ->)).should.not.throw()
+      scope.isDone().should.be.true
+
+      done()
+
+    context "Basic Parameters", ->
+      it "uses default basic parameters if none set", (done) ->
+        querystring = "hashid=#{cfg.hashid}&query="
+        buildQuery().should.equal querystring
+        done()
+
+      it "accepts different basic parameters than the default ones", (done) ->
+        querystring = "hashid=#{cfg.hashid}&page=2&rpp=100&hello=world&query="
+        (buildQuery undefined, page: 2, rpp: 100, hello: "world").should.equal querystring
+        done()
+
+    context "Types", ->
+      it "specifies no type if no specific type was set", (done) ->
+        querystring = "hashid=#{cfg.hashid}&query="
+        (buildQuery undefined, type: undefined).should.equal querystring
+        (buildQuery undefined, type: null).should.equal querystring
+        done()
+
+      it "handles one type if set", (done) ->
+        querystring = "hashid=#{cfg.hashid}&type=product&query="
+        (buildQuery undefined, type: "product").should.equal querystring
+        (buildQuery undefined, type: ["product"]).should.equal querystring
+        done()
+
+      it "handles several types if set", (done) ->
+        querystring = [
+          "hashid=#{cfg.hashid}&type%5B0%5D=product&type%5B1%5D=recipe",
+          "&query="
+        ].join ""
+        (buildQuery undefined, type: ["product", "recipe"]).should.equal querystring
+        done()
+
+    context "Filters", ->
+      # Exclusion filters are the same with a different key so not testing here.
+
+      it "handles terms filters", (done) ->
+        querystring = [
+          "hashid=#{cfg.hashid}&filter%5Bbrand%5D=NIKE",
+          "&filter%5Bcategory%5D%5B0%5D=SHOES&filter%5Bcategory%5D%5B1%5D=SHIRTS",
+          "&query="
+        ].join ""
+        params =
+          filter:
+            brand: "NIKE"
+            category: ["SHOES", "SHIRTS"]
+        (buildQuery undefined, params).should.equal querystring
+        done()
+
+      it "handles range filters", (done) ->
+        querystring = [
+          "hashid=#{cfg.hashid}&filter%5Bprice%5D%5Bfrom%5D=0",
+          "&filter%5Bprice%5D%5Bto%5D=150&query="
+        ].join ""
+        params =
+          filter:
+            price:
+              from: 0
+              to: 150
+        (buildQuery undefined, params).should.equal querystring
+        done()
+
+    context "Sorting", ->
+      it "accepts a single field name to sort on", (done) ->
+        querystring = "hashid=#{cfg.hashid}&sort=brand&query="
+        (buildQuery undefined, sort: "brand").should.equal querystring
+        done()
+
+      it "accepts an object for a single field to sort on", (done) ->
+        querystring = "hashid=#{cfg.hashid}&sort%5Bbrand%5D=desc&query="
+        sorting =
+          brand: "desc"
+        (buildQuery undefined, sort: sorting).should.equal querystring
+        done()
+
+      it "fails with an object for a multiple fields to sort on", (done) ->
+        sorting =
+          "_score": "desc"
+          brand: "asc"
+        (-> (buildQuery undefined, sort: sorting)).should.throw()
+        done()
+
+      it "accepts an array of objects for a multiple fields to sort on", (done) ->
+        querystring = [
+          "hashid=#{cfg.hashid}&sort%5B0%5D%5B_score%5D=desc",
+          "&sort%5B1%5D%5Bbrand%5D=asc&query="
+        ].join ""
+        sorting = [
+            "_score": "desc"
+          ,
+            brand: "asc"
+        ]
+        (buildQuery undefined, sort: sorting).should.equal querystring
+        done()
+
+  context "Stats", ->
+    it "must be called with all arguments, the last one is the callback", (done) ->
+      scope = serve.stats "count"
+      client = cfg.getClient()
+      client.stats.should.throw()
+      (-> (client.stats "count", {})).should.throw()
+      (-> (client.stats "count", {}, ->)).should.not.throw()
+      scope.isDone().should.be.true
+      done()

@@ -35,37 +35,35 @@ class ScrollDisplay extends Display
    * @param  {[type]} options  [description]
    * @return {[type]}          [description]
   ###
-  constructor: (element, template, options) ->
+  constructor: (element, options) ->
     super
 
     if @element.element[0] is window and not options.contentNode?
       throw "when the wrapper is window you must set contentNode option."
 
-    self = this
-    scrollOptions =
-      callback: ->
-        if self.controller? and not self.pageRequested
-          self.pageRequested = true
-          # if page fetch fails...
-          setTimeout ->
-            self.pageRequested = false
-          , 5000
-          self.controller.nextPage.call(self.controller)
+    scrollCallback = =>
+      if @controller? and not @pageRequested
+        @pageRequested = true
+        # if page fetching fails...
+        setTimeout (=> @pageRequested = false), 5000
+        @controller.getNextPage()
 
-    if options.scrollOffset?
-      scrollOptions.scrollOffset = options.scrollOffset
-    if options.contentWrapper?
-      scrollOptions.content = options.contentWrapper
+    scrollOptions =
+      callback: scrollCallback
+    if @options.scrollOffset?
+      scrollOptions.scrollOffset = @options.scrollOffset
+    if @options.contentWrapper?
+      scrollOptions.content = @options.contentWrapper
 
     @elementWrapper = @element
 
-    if options.contentNode?
-      @element = $ options.contentNode
-    else if @element.element[0] is window
+    if @options.contentNode?
+      @element = $ @options.contentNode
+    else if @element.get(0) is window
       @element = $ "body"
     else
       if not @element.children().length
-        @element.append (document.createElement 'div')
+        @element.append 'div'
       @element = @element.children().first()
 
     dfScroll @elementWrapper, scrollOptions
@@ -76,23 +74,19 @@ class ScrollDisplay extends Display
    *
    * @param  {Controller} controller Doofinder Search controller.
   ###
-  init: (controller) ->
-    super
-    @controller.bind 'df:search df:refresh', (params) =>
-      @elementWrapper.scrollTop 0
+  init: ->
+    unless @initialized
+      @controller.on "df:search df:refresh", (query, params) =>
+        @elementWrapper.scrollTop 0
+      super
 
-  ###*
-   * Called when subsequent (not "first-page") responses for a specific search
-   * are received. Renders the widget with the data received, by appending
-   * content after the last content received.
-   *
-   * @param {Object} res Search response.
-   * @fires ScrollDisplay#df:rendered
-  ###
-  renderNext: (res) ->
-    @pageRequested = false
-    @element.append (@mustache.render @template, @buildContext res)
-    @trigger "df:rendered", [res]
+  render: (res) ->
+    if res.page is 1
+      super
+    else
+      @pageRequested = false
+      @element.append @renderTemplate res
+      @trigger "df:widget:render", [res]
 
 
 module.exports = ScrollDisplay

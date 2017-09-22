@@ -1,14 +1,15 @@
-BaseFacet = require "./basefacet"
-noUiSlider = require "nouislider"
 extend = require "extend"
+noUiSlider = require "nouislider"
+Display = require "../display"
+
+
+defaultTemplate = """<div class="{{sliderClassName}}" data-facet="{{name}}"></div>"""
 
 
 ###*
  * Represents a range slider control to filter numbers within a range.
 ###
-class RangeFacet extends BaseFacet
-  @defaultTemplate: """<div class="{{sliderClassName}}" data-facet="{{name}}"></div>"""
-
+class RangeFacet extends Display
   ###*
    * Apart from inherited options, this widget accepts these options:
    *
@@ -23,8 +24,10 @@ class RangeFacet extends BaseFacet
    * @param  {String} name    Name of the facet/filter.
    * @param  {Object} options Options object. Empty by default.
   ###
-  constructor: (element, name, options = {}) ->
-    super
+  constructor: (element, @name, options = {}) ->
+    options = extend true, template: defaultTemplate, options
+
+    super element, options
 
     @sliderClassName = options.sliderClassName or 'df-slider'
     @sliderSelector =  ".#{@sliderClassName}[data-facet='#{@name}']"
@@ -51,10 +54,9 @@ class RangeFacet extends BaseFacet
     context =
       name: @name
       sliderClassName: @sliderClassName
-    context = extend true, context, @extraContext or {}
 
     # Render template HTML and place it inside the container
-    @element.html @mustache.render @template, context
+    @element.html @renderTemplate context
 
     # Create a node for the the slider and append it to @sliderSelector
     @slider = document.createElement 'div'
@@ -141,17 +143,9 @@ class RangeFacet extends BaseFacet
    * Renders the widget with the data received, by replacing its content.
    *
    * @param {Object} res Search response.
-   * @fires RangeFacet#df:rendered
+   * @fires RangeFacet#df:widget:render
   ###
   render: (res) ->
-    # Throws errors if prerrequisites are not accomplished.
-    if not res.facets or not res.facets[@name]
-      @raiseError "RangeFacet: #{@name} facet is not configured"
-    else if not res.facets[@name].range
-      @raiseError "RangeFacet: #{@name} facet is not a range facet"
-
-    self = this
-
     @range = @__getRangeFromResponse(res)
 
     if @range.min == @range.max
@@ -166,17 +160,16 @@ class RangeFacet extends BaseFacet
         connect: true
         tooltips: true  # can't be overriden when options are updated!!!
         format:
-          to: (value) ->
-            # WTF(@ecoslado) noUISlider gets the formatted values
-            # so we maintain an object with key the formatted values
-            # and value the numbers
+          to: (value) =>
+            # noUISlider gets the formatted values so we maintain references to
+            # raw values inside an object.
             if value?
-              formattedValue = self.format value
-              self.values[formattedValue] = parseFloat value, 10
+              formattedValue = @format value
+              @values[formattedValue] = parseFloat value, 10
               formattedValue
             else
               ""
-          from: (formattedValue) ->
+          from: (formattedValue) =>
             formattedValue
 
       # If we have values from search filtering we apply them
@@ -200,7 +193,7 @@ class RangeFacet extends BaseFacet
           100: options.format.to options.range.max
         @__renderPips values
 
-      @trigger "df:rendered", [res]
+      @trigger "df:widget:render", [res]
 
   ###*
    * Cleans the widget by removing all the HTML inside the container element.

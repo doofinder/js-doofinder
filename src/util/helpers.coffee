@@ -1,26 +1,24 @@
-###
-# author: @ecoslado
-# 2015 09 30
-###
-
 extend = require "extend"
 
-module.exports = (context, parameters = {}, currency = null, translations = {}) ->
-  unless currency
-    currency =
-      symbol: '&euro;'
-      format: '%v%s'
-      decimal: ','
-      thousand: '.'
-      precision: 2
 
+defaultCurrency =
+  symbol: '€'
+  format: '%v%s'
+  decimal: ','
+  thousand: '.'
+  precision: 2
+
+
+module.exports = (context) ->
   helpers =
-    'url-params': () ->
+    "url-params": ->
+      parameters = context.urlParams or {}
+
       (text, render) ->
         url = (render text).trim()
         if url.length > 0
           params = []
-          for key of parameters
+          for own key of parameters
             params.push "#{key}=#{parameters[key]}"
           if params.length > 0
             params = params.join "&"
@@ -28,28 +26,42 @@ module.exports = (context, parameters = {}, currency = null, translations = {}) 
             url = "#{url}#{glue}#{params}"
         url
 
-    'remove-protocol': () ->
+    "remove-protocol": ->
       (text, render) ->
-        url = render(text)
-        url.replace /^https?:/, ''
+        (render text).replace /^https?:/, ""
 
-    'format-currency': () ->
+    "format-currency": ->
+      currency = context.currency or defaultCurrency
+
       (text, render) ->
-        price = render(text)
-        value = parseFloat(price)
-        if !value and value != 0
-          return ''
-        power = 10 ** currency.precision
-        number = (Math.round(value * power) / power).toFixed(currency.precision)
-        neg = if number < 0 then '-' else ''
-        base = '' + parseInt(Math.abs(number or 0).toFixed(currency.precision), 10)
-        mod = if base.length > 3 then base.length % 3 else 0
-        number = neg + (if mod then base.substr(0, mod) + currency.thousand else '') + base.substr(mod).replace(/(\d{3})(?=\d)/g, '$1' + currency.thousand) + (if currency.precision then currency.decimal + Math.abs(number).toFixed(currency.precision).split('.')[1] else '')
-        currency.format.replace(/%s/g, currency.symbol).replace /%v/g, number
+        val = parseFloat (render text), 10
+        return "" if isNaN val
 
-    'translate': () ->
+        neg = val < 0
+        val = Math.abs val
+        pow = 10 ** currency.precision
+        val = ((Math.round val * pow) / pow).toFixed(currency.precision)
+
+        bas = (parseInt val, 10).toString()
+        mod = if bas.length > 3 then bas.length % 3 else 0
+
+        num = []
+        (num.push "#{(bas.substr 0, mod)}#{currency.thousand}") if mod > 0
+        (num.push ((bas.substr mod).replace /(\d{3})(?=\d)/g, "$1#{currency.thousand}"))
+        if currency.precision > 0
+          dec = (val.split ".")[1]
+          (num.push "#{currency.decimal}#{dec}") if dec?
+
+        num = ((currency.format.replace /%s/g, currency.symbol).replace /%v/g, num.join "")
+        num = "-#{num}" if neg
+
+        num
+
+    "translate": ->
+      translations = context.translations or {}
+
       (text, render) ->
         text = render text
         translations[text] or text
 
-  extend context, helpers
+  extend true, {}, context, helpers

@@ -9,18 +9,12 @@ patchElementEvent = (element, type) ->
     if document.hasFocus() then _nativeEvent() else (dispatchPatchedEvent element)
 
 describe "dfdom", ->
-  resetBody = ->
-    document.body.innerHTML = ""
-
   insertHTML = (html) ->
     document.body.innerHTML = html
 
   dfdom = doofinder.util.dfdom
 
   context "[Instantiation]", ->
-    beforeEach ->
-      resetBody()
-
     it "is empty for an element that doesn't exist or when no selector is provided", (done) ->
       dfdom().element.should.be.empty
       (dfdom null).element.should.be.empty
@@ -539,9 +533,6 @@ describe "dfdom", ->
       done()
 
   context "[Measurement Methods]", ->
-    beforeEach ->
-      resetBody()
-
     it "can measure width and height", (done) ->
       insertHTML """
         <style>
@@ -699,4 +690,3 @@ describe "dfdom", ->
       ((dfdom "div").isnt document.getElementById "box").should.be.false
       ((dfdom "div").isnt ".inline").should.be.true
       done()
-

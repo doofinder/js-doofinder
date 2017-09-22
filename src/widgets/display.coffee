@@ -1,82 +1,86 @@
-Widget = require "../widget"
-buildHelpers = require "../util/helpers"
 extend = require "extend"
+Widget = require "./widget"
+addHelpers = require "../util/helpers"
+
+
+defaultTemplate = """
+  {{#results}}
+    <a href="{{link}}" class="df-card">{{title}}</a>
+  {{/results}}
+"""
 
 
 ###*
  * Widget that renders a search response within a given template.
 ###
 class Display extends Widget
-
   ###*
    * @param  {String|Node|DfDomElement} element  Container node.
    * @param  {String}                   template Template to paint the response.
    * @param  {Objects}                  options  Options for the widget.
   ###
-  constructor: (element, @template, options = {}) ->
-    @mustache = require "mustache"
-    # TODO(@carlosescri): Remove @extraContext and use @options.templateVars!!!
-    @extraContext = {}
+  constructor: (element, options = {}) ->
+    defaults =
+      template: defaultTemplate
+      queryParam: undefined
+      urlParams: {}
+    options = extend true, defaults, options
+
     super element, options
+
+    @mustache = require "mustache"
+    @currentContext = {}
 
   ###*
    * Adds extra context to the passed context object.
    * @param  {Object} context = {}  Initial context (i.e: a search response).
    * @return {Object}               Extended context.
   ###
-  buildContext: (context = {}) ->
+  buildContext: (res = {}) ->
+    defaults =
+      query: ""
+      urlParams: @options.urlParams
+
+    overrides =
+      is_first: res.page is 1
+      is_last: res.page is Math.ceil (res.total / res.results_per_page)
+      currency: @options.currency
+      translations: @options.translations
+
     context = extend true,
-      context,
+      {},
+      defaults,
+      res,
       @options.templateVars,
       @options.templateFunctions,
-      (is_first: context.page == 1, is_last: @controller?.status?.lastPageReached),
-      @extraContext
+      overrides
 
-    # Compose URL parameters from options and from the query (if configured)
-    urlParams = extend true, {}, (@options.urlParams or {})
     if @options.queryParam
-      urlParams[@options.queryParam] = context.query or ""
+      context.urlParams[@options.queryParam] = context.query
 
-    buildHelpers context, urlParams, @options.currency, @options.translations
+    @currentContext = addHelpers context
+
+  renderTemplate: (res) ->
+    @mustache.render @options.template, @buildContext res
 
   ###*
    * Called when the "first page" response for a specific search is received.
    * Renders the widget with the data received, by replacing its content.
    *
    * @param {Object} res Search response.
-   * @fires Display#df:rendered
+   * @fires Display#df:widget:render
   ###
   render: (res) ->
-    @element.html (@mustache.render @template, @buildContext res)
-    @trigger "df:rendered", [res]
-
-  ###*
-   * Called when subsequent (not "first-page") responses for a specific search
-   * are received. Renders the widget with the data received, by replacing its
-   * content.
-   *
-   * @param {Object} res Search response.
-   * @fires Display#df:rendered
-  ###
-  renderNext: (res) ->
-    @element.html (@mustache.render @template, @buildContext res)
-    @trigger "df:rendered", [res]
+    @element.html @renderTemplate res
+    super
 
   ###*
    * Cleans the widget by removing all the HTML inside the container element.
-   * @fires Display#df:cleaned
+   * @fires Display#df:widget:clean
   ###
   clean: ->
     @element.html ""
-    @trigger "df:cleaned"
-
-  ###*
-   * Adds extra context to be used when rendering a search response.
-   * @param {String} key   Name of the variable to be used in the template.
-   * @param {*}      value Value of the variable.
-  ###
-  addExtraContext: (key, value) ->
-    @extraContext[key] = value
+    @trigger "df:widget:clean"
 
 
 module.exports = Display
