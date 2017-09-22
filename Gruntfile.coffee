@@ -82,17 +82,27 @@ module.exports = (grunt) ->
           prefix: '\"version\":\\s\"'
         src: ['./bower.json']
 
+    watch:
+      coffee:
+        files: ['./src/**/*.coffee']
+        tasks: ['compile']
+      css:
+        files: ['./src/**/*.scss']
+        tasks: ['css']
+
   grunt.loadNpmTasks 'grunt-browserify'
   grunt.loadNpmTasks 'grunt-contrib-clean'
   grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks 'grunt-contrib-copy'
   grunt.loadNpmTasks 'grunt-contrib-uglify'
+  grunt.loadNpmTasks 'grunt-contrib-watch'
   grunt.loadNpmTasks 'grunt-karma'
   grunt.loadNpmTasks 'grunt-mocha-test'
   grunt.loadNpmTasks 'grunt-sass'
   grunt.loadNpmTasks 'grunt-version'
 
   grunt.registerTask 'compile', ['coffee:release', 'browserify', 'uglify:release']
+  grunt.registerTask 'dev', ['compile', 'watch:coffee']
   grunt.registerTask 'css', ['copy:build_scss', 'sass:build_scss', 'clean:build_scss']
 
   grunt.registerTask 'testMocha', ['mochaTest:release']

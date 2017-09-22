@@ -27,7 +27,7 @@
       border: 1px solid #ddd;
     }
 
-    #facets {
+    #aside {
       width: 400px;
     }
 
@@ -66,16 +66,14 @@
   <!-- <textarea class="widget" id="search" placeholder="Search something"></textarea> -->
 
   <div class="row" data-hashid="e723b503db15fe242b934df14b141ccc">
-    <div class="col">
+    <div class="col" id="main">
 
       <div class="widget df-results" id="results">
         <div class="df-results__content"></div>
       </div>
 
     </div>
-    <div class="col" id="facets">
-      <div class="widget" id="price"></div>
-    </div>
+    <div class="col" id="aside"></div>
   </div>
 
   <script type="text/javascript">
@@ -85,7 +83,7 @@
     var input = new doofinder.widgets.QueryInput('#search');
 
     var page = $('[data-hashid]');
-    var facets = $('#facets');
+    var aside = $('#aside');
 
     var client = new doofinder.Client(page.data('hashid'), 'eu1');
     var controller = new doofinder.Controller(client, [], {rpp: 20});
@@ -99,17 +97,19 @@
       });
       controller.registerWidget(results);
 
+      // return;
+
       options.facets.forEach(function(facet){
         if (facet.type === 'terms') {
           controller.registerWidget(
             new doofinder.widgets.CollapsiblePanel(
-              facets,
+              aside,
               function(panel){
                 var widget = new doofinder.widgets.TermsFacet(
                   panel.contentElement,
                   facet.name,
                   {
-                    size: facet.size,
+                    size: 10,
                     label: facet.label
                   }
                 );
@@ -126,10 +126,14 @@
                   console.log("[df:widget:render][" + facet.name + "]");
                 });
 
+                widget.on("df:widget:clean", function(){
+                  console.log("[df:widget:clean][" + facet.name + "]");
+                });
+
                 return widget;
               },
               {
-                insertionMethod: "prepend",
+                insertionMethod: "append",
                 startCollapsed: facet.name === 'categories',
                 templateVars: {
                   label: facet.label
@@ -139,7 +143,18 @@
           );
         } else {
           controller.registerWidget(
-            new doofinder.widgets.RangeFacet($('#price'), facet.name)
+            new doofinder.widgets.Panel(
+              '#main',
+              function(panel){
+                return new doofinder.widgets.RangeFacet(
+                  panel.contentElement,
+                  facet.name
+                );
+              },
+              {
+                insertionMethod: "append"
+              }
+            )
           );
         }
       });

@@ -21,6 +21,23 @@
   margin: 0;
 }
 
+.df-card {
+  display: block;
+  cursor: pointer;
+  padding: .5rem;
+  text-decoration: none;
+  color: inherit;
+  border-bottom: 1px solid #ddd;
+}
+
+.df-card:hover {
+  background-color: #eee;
+}
+
+.df-card:last-child {
+  border-bottom-width: 0;
+}
+
 /* FACETS PANEL */
 
 .df-panel {
@@ -37,10 +54,10 @@
   display: block;
   padding: 8px;
   margin: 0;
+  border-bottom: 1px solid #ddd;
 }
 
 .df-panel__content {
-  border-top: 1px solid #ddd;
   padding: 8px;
 }
 
@@ -48,6 +65,10 @@
   background: no-repeat right 8px center;
   background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%20%20%3Cg%20stroke%3D%22none%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M10%207L3%207%203%206%2010%206%2010%207%2010%207Z%22%20fill%3D%22%23000000%22/%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M0%200L12%200%2012%2012%200%2012%200%200Z%22/%3E%0A%20%20%20%20%3C/g%3E%0A%3C/svg%3E%0A");
   cursor: pointer;
+}
+
+.df-panel[data-df-collapse="true"] .df-panel__label {
+  border-bottom-width: 0;
 }
 
 .df-panel[data-df-collapse="true"] .df-panel__content {
@@ -82,6 +103,10 @@
 
 .df-term[data-selected] {
   font-weight: bold;
+}
+
+:not([data-view-extra-content]) > .df-term[data-extra-content]:not([data-selected]) {
+  display: none;
 }
 
 /* THIRD PARTY COMPONENTS */
@@ -224,46 +249,3 @@
     }
   }
 }
-
-/* THEME */
-
-.df-results {
-  background-color: inherit;
-  padding: 0 8px 8px 8px;
-}
-
-.df-panel {
-  background-color: inherit;
-}
-
-.df-panel__title {
-  color: #333333;
-  font-family: 'Arial', sans-serif;
-  font-weight: bold;
-  font-size: 13px;
-  text-decoration: none;
-  background-color: #ccc;
-}
-
-.df-panel__content {
-  background-color: inherit;
-}
-
-.df-facet {
-  background-color: inherit;
-  font-size: 13px;
-  text-decoration: none;
-  color: #333333;
-
-  &:focus,
-  &:active,
-  &:hover,
-  &.df-facet--active {
-    font-weight: bold;
-  }
-}
-
-.df-facet__count {
-  color: #747474;
-}
-

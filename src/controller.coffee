@@ -89,6 +89,10 @@ class Controller
     @requestDone = false
     @lastPage = null
 
+  clean: ->
+    @reset()
+    @cleanWidgets()
+
   #
   # Options
   #
@@ -206,6 +210,10 @@ class Controller
     widget.setController @
     widget.init()
     @widgets.push widget
+
+  cleanWidgets: ->
+    @widgets.forEach (widget) ->
+      widget.clean()
 
   #
   # Params

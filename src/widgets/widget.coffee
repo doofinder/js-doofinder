@@ -70,12 +70,5 @@ class Widget
   trigger: (eventName, args = []) ->
     bean.fire @, eventName, args
 
-  ###*
-   * Throws an error that can be captured.
-   * @param  {String} message Error message.
-   * @throws {Error}
-  ###
-  raiseError: (message) ->
-    throw Error "[Doofinder] #{message}"
 
 module.exports = Widget

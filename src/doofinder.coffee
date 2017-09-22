@@ -1,32 +1,26 @@
-if not JSON.stringify and JSON.encode
-  JSON.stringify = JSON.encode
-if not JSON.parse and JSON.decode
-  JSON.parse = JSON.decode
-
 module.exports =
   version: "5.2.0"
   Client: require "./client"
   Mustache: require "mustache"
   Controller: require "./controller"
   widgets:
-    Widget: require "./widgets/widget"
-    Display: require "./widgets/display"
-    ScrollDisplay: require "./widgets/scrolldisplay"
-    QueryInput: require "./widgets/queryinput"
-    BaseFacet: require "./widgets/facets/basefacet"
-    TermsFacet: require "./widgets/facets/termfacet"
-    RangeFacet: require "./widgets/facets/rangefacet"
-    Panel: require "./widgets/panel"
     CollapsiblePanel: require "./widgets/collapsiblepanel"
+    Display: require "./widgets/display"
+    Panel: require "./widgets/panel"
+    QueryInput: require "./widgets/queryinput"
+    RangeFacet: require "./widgets/facets/rangefacet"
+    ScrollDisplay: require "./widgets/scrolldisplay"
+    TermsFacet: require "./widgets/facets/termfacet"
+    Widget: require "./widgets/widget"
   util:
+    addHelpers: require "./util/helpers"
     bean: require "bean"
-    buildHelpers: require "./util/helpers"
     dfdom: require "./util/dfdom"
     extend: require "extend"
     http: require "./util/http"
-    uniqueId: require "./util/uniqueid"
     md5: require "md5"
     qs: require "qs"
     throttle: require "lodash.throttle"
+    uniqueId: require "./util/uniqueid"
   session: require "./session"
   stats: require "./stats"

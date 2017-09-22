@@ -231,7 +231,7 @@
 
 }).call(this);
 
-},{"./util/errors":8,"./util/http":11,"./util/thing":12,"extend":24,"md5":65,"qs":72}],2:[function(require,module,exports){
+},{"./util/errors":8,"./util/http":11,"./util/thing":12,"extend":23,"md5":64,"qs":71}],2:[function(require,module,exports){
 (function() {
   var Client, Controller, Freezer, Thing, bean, errors, extend, qs,
     slice = [].slice,
@@ -356,6 +356,11 @@
       });
       this.requestDone = false;
       return this.lastPage = null;
+    };
+
+    Controller.prototype.clean = function() {
+      this.reset();
+      return this.cleanWidgets();
     };
 
 
@@ -507,6 +512,12 @@
       widget.setController(this);
       widget.init();
       return this.widgets.push(widget);
+    };
+
+    Controller.prototype.cleanWidgets = function() {
+      return this.widgets.forEach(function(widget) {
+        return widget.clean();
+      });
     };
 
     Controller.prototype.getParam = function(key) {
@@ -692,42 +703,33 @@
 
 }).call(this);
 
-},{"./client":1,"./util/errors":8,"./util/freezer":9,"./util/thing":12,"bean":23,"extend":24,"qs":72}],3:[function(require,module,exports){
+},{"./client":1,"./util/errors":8,"./util/freezer":9,"./util/thing":12,"bean":22,"extend":23,"qs":71}],3:[function(require,module,exports){
 (function() {
-  if (!JSON.stringify && JSON.encode) {
-    JSON.stringify = JSON.encode;
-  }
-
-  if (!JSON.parse && JSON.decode) {
-    JSON.parse = JSON.decode;
-  }
-
   module.exports = {
     version: "5.2.0",
     Client: require("./client"),
     Mustache: require("mustache"),
     Controller: require("./controller"),
     widgets: {
-      Widget: require("./widgets/widget"),
+      CollapsiblePanel: require("./widgets/collapsiblepanel"),
       Display: require("./widgets/display"),
-      ScrollDisplay: require("./widgets/scrolldisplay"),
-      QueryInput: require("./widgets/queryinput"),
-      BaseFacet: require("./widgets/facets/basefacet"),
-      TermsFacet: require("./widgets/facets/termfacet"),
-      RangeFacet: require("./widgets/facets/rangefacet"),
       Panel: require("./widgets/panel"),
-      CollapsiblePanel: require("./widgets/collapsiblepanel")
+      QueryInput: require("./widgets/queryinput"),
+      RangeFacet: require("./widgets/facets/rangefacet"),
+      ScrollDisplay: require("./widgets/scrolldisplay"),
+      TermsFacet: require("./widgets/facets/termfacet"),
+      Widget: require("./widgets/widget")
     },
     util: {
+      addHelpers: require("./util/helpers"),
       bean: require("bean"),
-      buildHelpers: require("./util/helpers"),
       dfdom: require("./util/dfdom"),
       extend: require("extend"),
       http: require("./util/http"),
-      uniqueId: require("./util/uniqueid"),
       md5: require("md5"),
       qs: require("qs"),
-      throttle: require("lodash.throttle")
+      throttle: require("lodash.throttle"),
+      uniqueId: require("./util/uniqueid")
     },
     session: require("./session"),
     stats: require("./stats")
@@ -735,7 +737,7 @@
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/helpers":10,"./util/http":11,"./util/uniqueid":13,"./widgets/collapsiblepanel":14,"./widgets/display":15,"./widgets/facets/basefacet":16,"./widgets/facets/rangefacet":17,"./widgets/facets/termfacet":18,"./widgets/panel":19,"./widgets/queryinput":20,"./widgets/scrolldisplay":21,"./widgets/widget":22,"bean":23,"extend":24,"lodash.throttle":64,"md5":65,"mustache":69,"qs":72}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/helpers":10,"./util/http":11,"./util/uniqueid":13,"./widgets/collapsiblepanel":14,"./widgets/display":15,"./widgets/facets/rangefacet":16,"./widgets/facets/termfacet":17,"./widgets/panel":18,"./widgets/queryinput":19,"./widgets/scrolldisplay":20,"./widgets/widget":21,"bean":22,"extend":23,"lodash.throttle":63,"md5":64,"mustache":68,"qs":71}],4:[function(require,module,exports){
 (function() {
   var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, extend, md5, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -1013,7 +1015,7 @@
 
 }).call(this);
 
-},{"./util/uniqueid":13,"extend":24,"js-cookie":63,"md5":65}],5:[function(require,module,exports){
+},{"./util/uniqueid":13,"extend":23,"js-cookie":62,"md5":64}],5:[function(require,module,exports){
 (function() {
   var Client, Session, Stats, uniqueId;
 
@@ -2309,7 +2311,7 @@
 
 }).call(this);
 
-},{"./thing":12,"bean":23}],7:[function(require,module,exports){
+},{"./thing":12,"bean":22}],7:[function(require,module,exports){
 (function() {
   var $, bean, extend, throttle;
 
@@ -2356,7 +2358,7 @@
 
 }).call(this);
 
-},{"./dfdom":6,"bean":23,"extend":24,"lodash.throttle":64}],8:[function(require,module,exports){
+},{"./dfdom":6,"bean":22,"extend":23,"lodash.throttle":63}],8:[function(require,module,exports){
 (function() {
   var _msg, error, warning,
     slice = [].slice;
@@ -2449,45 +2451,33 @@
 }).call(this);
 
 },{"./thing":12}],10:[function(require,module,exports){
-
-/*
- * author: @ecoslado
- * 2015 09 30
- */
-
 (function() {
-  var extend;
+  var defaultCurrency, extend,
+    hasProp = {}.hasOwnProperty;
 
   extend = require("extend");
 
-  module.exports = function(context, parameters, currency, translations) {
+  defaultCurrency = {
+    symbol: '€',
+    format: '%v%s',
+    decimal: ',',
+    thousand: '.',
+    precision: 2
+  };
+
+  module.exports = function(context) {
     var helpers;
-    if (parameters == null) {
-      parameters = {};
-    }
-    if (currency == null) {
-      currency = null;
-    }
-    if (translations == null) {
-      translations = {};
-    }
-    if (!currency) {
-      currency = {
-        symbol: '&euro;',
-        format: '%v%s',
-        decimal: ',',
-        thousand: '.',
-        precision: 2
-      };
-    }
     helpers = {
-      'url-params': function() {
+      "url-params": function() {
+        var parameters;
+        parameters = context.urlParams || {};
         return function(text, render) {
           var glue, key, params, url;
           url = (render(text)).trim();
           if (url.length > 0) {
             params = [];
             for (key in parameters) {
+              if (!hasProp.call(parameters, key)) continue;
               params.push(key + "=" + parameters[key]);
             }
             if (params.length > 0) {
@@ -2499,43 +2489,59 @@
           return url;
         };
       },
-      'remove-protocol': function() {
+      "remove-protocol": function() {
         return function(text, render) {
-          var url;
-          url = render(text);
-          return url.replace(/^https?:/, '');
+          return (render(text)).replace(/^https?:/, "");
         };
       },
-      'format-currency': function() {
+      "format-currency": function() {
+        var currency;
+        currency = context.currency || defaultCurrency;
         return function(text, render) {
-          var base, mod, neg, number, power, price, value;
-          price = render(text);
-          value = parseFloat(price);
-          if (!value && value !== 0) {
-            return '';
+          var bas, dec, mod, neg, num, pow, val;
+          val = parseFloat(render(text), 10);
+          if (isNaN(val)) {
+            return "";
           }
-          power = Math.pow(10, currency.precision);
-          number = (Math.round(value * power) / power).toFixed(currency.precision);
-          neg = number < 0 ? '-' : '';
-          base = '' + parseInt(Math.abs(number || 0).toFixed(currency.precision), 10);
-          mod = base.length > 3 ? base.length % 3 : 0;
-          number = neg + (mod ? base.substr(0, mod) + currency.thousand : '') + base.substr(mod).replace(/(\d{3})(?=\d)/g, '$1' + currency.thousand) + (currency.precision ? currency.decimal + Math.abs(number).toFixed(currency.precision).split('.')[1] : '');
-          return currency.format.replace(/%s/g, currency.symbol).replace(/%v/g, number);
+          neg = val < 0;
+          val = Math.abs(val);
+          pow = Math.pow(10, currency.precision);
+          val = ((Math.round(val * pow)) / pow).toFixed(currency.precision);
+          bas = (parseInt(val, 10)).toString();
+          mod = bas.length > 3 ? bas.length % 3 : 0;
+          num = [];
+          if (mod > 0) {
+            num.push("" + (bas.substr(0, mod)) + currency.thousand);
+          }
+          num.push((bas.substr(mod)).replace(/(\d{3})(?=\d)/g, "$1" + currency.thousand));
+          if (currency.precision > 0) {
+            dec = (val.split("."))[1];
+            if (dec != null) {
+              num.push("" + currency.decimal + dec);
+            }
+          }
+          num = (currency.format.replace(/%s/g, currency.symbol)).replace(/%v/g, num.join(""));
+          if (neg) {
+            num = "-" + num;
+          }
+          return num;
         };
       },
-      'translate': function() {
+      "translate": function() {
+        var translations;
+        translations = context.translations || {};
         return function(text, render) {
           text = render(text);
           return translations[text] || text;
         };
       }
     };
-    return extend(context, helpers);
+    return extend(true, {}, context, helpers);
   };
 
 }).call(this);
 
-},{"extend":24}],11:[function(require,module,exports){
+},{"extend":23}],11:[function(require,module,exports){
 (function() {
   var HttpClient, Thing, http, https;
 
@@ -2610,7 +2616,7 @@
 
 }).call(this);
 
-},{"./thing":12,"http":54,"https":31}],12:[function(require,module,exports){
+},{"./thing":12,"http":53,"https":30}],12:[function(require,module,exports){
 (function() {
   var isFn, isObject, isPrimitive, isStr, to_s;
 
@@ -2709,7 +2715,7 @@
 
 }).call(this);
 
-},{"md5":65}],14:[function(require,module,exports){
+},{"md5":64}],14:[function(require,module,exports){
 (function() {
   var CollapsiblePanel, Panel, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -2787,19 +2793,19 @@
 
 }).call(this);
 
-},{"./panel":19,"extend":24}],15:[function(require,module,exports){
+},{"./panel":18,"extend":23}],15:[function(require,module,exports){
 (function() {
-  var Display, Widget, buildHelpers, defaultTemplate, extend,
+  var Display, Widget, addHelpers, defaultTemplate, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  Widget = require("./widget");
-
-  buildHelpers = require("../util/helpers");
-
   extend = require("extend");
 
-  defaultTemplate = "{{#results}}<div>{{title}}</div>{{/results}}";
+  Widget = require("./widget");
+
+  addHelpers = require("../util/helpers");
+
+  defaultTemplate = "{{#results}}\n  <a href=\"{{link}}\" class=\"df-card\">{{title}}</a>\n{{/results}}";
 
 
   /**
@@ -2817,15 +2823,19 @@
      */
 
     function Display(element, options) {
+      var defaults;
       if (options == null) {
         options = {};
       }
-      options = extend(true, {
-        template: defaultTemplate
-      }, options);
+      defaults = {
+        template: defaultTemplate,
+        queryParam: void 0,
+        urlParams: {}
+      };
+      options = extend(true, defaults, options);
       Display.__super__.constructor.call(this, element, options);
       this.mustache = require("mustache");
-      this.extraContext = {};
+      this.currentContext = {};
     }
 
 
@@ -2835,20 +2845,26 @@
      * @return {Object}               Extended context.
      */
 
-    Display.prototype.buildContext = function(context) {
-      var ref, ref1, urlParams;
-      if (context == null) {
-        context = {};
+    Display.prototype.buildContext = function(res) {
+      var context, defaults, overrides;
+      if (res == null) {
+        res = {};
       }
-      context = extend(true, context, this.options.templateVars, this.options.templateFunctions, {
-        is_first: context.page === 1,
-        is_last: (ref = this.controller) != null ? (ref1 = ref.status) != null ? ref1.lastPageReached : void 0 : void 0
-      }, this.extraContext);
-      urlParams = extend(true, {}, this.options.urlParams || {});
+      defaults = {
+        query: "",
+        urlParams: this.options.urlParams
+      };
+      overrides = {
+        is_first: res.page === 1,
+        is_last: res.page === Math.ceil(res.total / res.results_per_page),
+        currency: this.options.currency,
+        translations: this.options.translations
+      };
+      context = extend(true, {}, defaults, res, this.options.templateVars, this.options.templateFunctions, overrides);
       if (this.options.queryParam) {
-        urlParams[this.options.queryParam] = context.query || "";
+        context.urlParams[this.options.queryParam] = context.query;
       }
-      return buildHelpers(context, urlParams, this.options.currency, this.options.translations);
+      return this.currentContext = addHelpers(context);
     };
 
     Display.prototype.renderTemplate = function(res) {
@@ -2880,17 +2896,6 @@
       return this.trigger("df:widget:clean");
     };
 
-
-    /**
-     * Adds extra context to be used when rendering a search response.
-     * @param {String} key   Name of the variable to be used in the template.
-     * @param {*}      value Value of the variable.
-     */
-
-    Display.prototype.addExtraContext = function(key, value) {
-      return this.extraContext[key] = value;
-    };
-
     return Display;
 
   })(Widget);
@@ -2899,81 +2904,17 @@
 
 }).call(this);
 
-},{"../util/helpers":10,"./widget":22,"extend":24,"mustache":69}],16:[function(require,module,exports){
+},{"../util/helpers":10,"./widget":21,"extend":23,"mustache":68}],16:[function(require,module,exports){
 (function() {
-  var BaseFacet, Display, defaultLabelTemplate, extend,
+  var Display, RangeFacet, defaultTemplate, extend, noUiSlider,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
-
-  Display = require("../display");
 
   extend = require("extend");
-
-  defaultLabelTemplate = "{{label}}";
-
-
-  /**
-   * Base class that represents a widget that renders a facet/filter control.
-   */
-
-  BaseFacet = (function(superClass) {
-    extend1(BaseFacet, superClass);
-
-
-    /**
-     * @param  {String|Node|DfDomElement} element  Container node.
-     * @param  {String} name    Name of the facet/filter.
-     * @param  {Object} options Options object. Empty by default.
-     */
-
-    function BaseFacet(element, name, options) {
-      var defaults;
-      this.name = name;
-      if (options == null) {
-        options = {};
-      }
-      defaults = {
-        templateVars: {
-          label: options.label || this.name
-        },
-        labelTemplate: defaultLabelTemplate
-      };
-      options = extend(true, defaults, options);
-      BaseFacet.__super__.constructor.call(this, element, options);
-    }
-
-
-    /**
-     * Renders the label of the facet widget based on the given search response,
-     * within the configured label template.
-     *
-     * @param  {Object} res Search response.
-     * @return {String}     The rendered label.
-     */
-
-    BaseFacet.prototype.renderLabel = function(res) {
-      return this.mustache.render(this.options.labelTemplate, this.buildContext(res));
-    };
-
-    return BaseFacet;
-
-  })(Display);
-
-  module.exports = BaseFacet;
-
-}).call(this);
-
-},{"../display":15,"extend":24}],17:[function(require,module,exports){
-(function() {
-  var BaseFacet, RangeFacet, defaultTemplate, extend, noUiSlider,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  BaseFacet = require("./basefacet");
 
   noUiSlider = require("nouislider");
 
-  extend = require("extend");
+  Display = require("../display");
 
   defaultTemplate = "<div class=\"{{sliderClassName}}\" data-facet=\"{{name}}\"></div>";
 
@@ -3002,13 +2943,14 @@
      */
 
     function RangeFacet(element, name, options) {
+      this.name = name;
       if (options == null) {
         options = {};
       }
       options = extend(true, {
         template: defaultTemplate
       }, options);
-      RangeFacet.__super__.constructor.call(this, element, name, options);
+      RangeFacet.__super__.constructor.call(this, element, options);
       this.sliderClassName = options.sliderClassName || 'df-slider';
       this.sliderSelector = "." + this.sliderClassName + "[data-facet='" + this.name + "']";
       if (this.options.format) {
@@ -3141,13 +3083,7 @@
      */
 
     RangeFacet.prototype.render = function(res) {
-      var options, self, start, values;
-      if (!res.facets || !res.facets[this.name]) {
-        this.raiseError("RangeFacet: " + this.name + " facet is not configured");
-      } else if (!res.facets[this.name].range) {
-        this.raiseError("RangeFacet: " + this.name + " facet is not a range facet");
-      }
-      self = this;
+      var options, start, values;
       this.range = this.__getRangeFromResponse(res);
       if (this.range.min === this.range.max) {
         return this.clean();
@@ -3158,19 +3094,23 @@
           connect: true,
           tooltips: true,
           format: {
-            to: function(value) {
-              var formattedValue;
-              if (value != null) {
-                formattedValue = self.format(value);
-                self.values[formattedValue] = parseFloat(value, 10);
+            to: (function(_this) {
+              return function(value) {
+                var formattedValue;
+                if (value != null) {
+                  formattedValue = _this.format(value);
+                  _this.values[formattedValue] = parseFloat(value, 10);
+                  return formattedValue;
+                } else {
+                  return "";
+                }
+              };
+            })(this),
+            from: (function(_this) {
+              return function(formattedValue) {
                 return formattedValue;
-              } else {
-                return "";
-              }
-            },
-            from: function(formattedValue) {
-              return formattedValue;
-            }
+              };
+            })(this)
           }
         };
         if (res && res.filter && res.filter.range && res.filter.range[this.name]) {
@@ -3213,29 +3153,28 @@
 
     return RangeFacet;
 
-  })(BaseFacet);
+  })(Display);
 
   module.exports = RangeFacet;
 
 }).call(this);
 
-},{"./basefacet":16,"extend":24,"nouislider":70}],18:[function(require,module,exports){
+},{"../display":15,"extend":23,"nouislider":69}],17:[function(require,module,exports){
 (function() {
-  var $, BaseFacet, TermsFacet, defaultButtonTemplate, defaultLabelTemplate, defaultTemplate, extend,
+  var $, Display, TermsFacet, defaultButtonTemplate, defaultTemplate, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  BaseFacet = require("./basefacet");
+    hasProp = {}.hasOwnProperty,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   extend = require("extend");
 
+  Display = require("../display");
+
   $ = require("../../util/dfdom");
 
-  defaultTemplate = "{{#terms}}\n  <div class=\"df-term\" data-facet=\"{{name}}\" data-value=\"{{key}}\"\n      {{#extra-content}}{{index}}:{{size}}{{/extra-content}}\n      {{#selected}}data-selected{{/selected}}>\n    <span class=\"df-term__value\">{{key}}</span>\n    <span class=\"df-term__count\">{{doc_count}}</span>\n  </div>\n{{/terms}}\n{{#show-more-button}}{{terms.length}}:{{size}}{{/show-more-button}}";
+  defaultTemplate = "{{#terms}}\n  <div class=\"df-term\" data-facet=\"{{name}}\" data-value=\"{{key}}\"\n      {{#extra-content}}{{index}}{{/extra-content}}\n      {{#selected}}data-selected{{/selected}}>\n    <span class=\"df-term__value\">{{key}}</span>\n    <span class=\"df-term__count\">{{doc_count}}</span>\n  </div>\n{{/terms}}\n{{#show-more-button}}{{terms.length}}{{/show-more-button}}";
 
-  defaultButtonTemplate = "<button type=\"button\" data-toggle-extra-content\n    data-text-normal=\"{{#translate}}{{viewMoreLabel}}{{/translate}}\"\n    data-text-toggle=\"{{#translate}}{{viewLessLabel}}{{/translate}}\">\n  {{#translate}}{{viewMoreLabel}}{{/translate}}\n</button>";
-
-  defaultLabelTemplate = "{{label}}{{#total_selected}} ({{total_selected}}){{/total_selected}}";
+  defaultButtonTemplate = "<div>\n  <button type=\"button\" data-toggle-extra-content\n      data-text-normal=\"{{#translate}}{{viewMoreLabel}}{{/translate}}\"\n      data-text-toggle=\"{{#translate}}{{viewLessLabel}}{{/translate}}\">\n    {{#translate}}\n      {{#collapsed}}{{viewMoreLabel}}{{/collapsed}}\n      {{^collapsed}}{{viewLessLabel}}{{/collapsed}}\n    {{/translate}}\n  </button>\n</div>";
 
 
   /**
@@ -3255,6 +3194,7 @@
 
     function TermsFacet(element, name, options) {
       var defaults;
+      this.name = name;
       if (options == null) {
         options = {};
       }
@@ -3262,10 +3202,9 @@
         size: null,
         template: defaultTemplate,
         buttonTemplate: defaultButtonTemplate,
-        labelTemplate: defaultLabelTemplate,
         templateVars: {
-          viewMoreLabel: "View more...",
-          viewLessLabel: "View less..."
+          viewMoreLabel: "View more…",
+          viewLessLabel: "View less…"
         },
         templateFunctions: {
           "extra-content": (function(_this) {
@@ -3284,9 +3223,9 @@
                * @return {string}   "data-extra-content" or ""
                */
               return function(text, render) {
-                var index, ref, size;
-                ref = (render(text)).split(":"), index = ref[0], size = ref[1];
-                if ((parseInt(index.trim(), 10)) >= (parseInt(size.trim(), 10))) {
+                var i;
+                i = parseInt(render(text), 10);
+                if ((_this.options.size != null) && i >= _this.options.size) {
                   return "data-extra-content";
                 } else {
                   return "";
@@ -3308,10 +3247,13 @@
                * @return {string}   Rendered button or "".
                */
               return function(text, render) {
-                var length, ref, size;
-                ref = (render(text)).split(":"), length = ref[0], size = ref[1];
-                if ((parseInt(length.trim(), 10)) > (parseInt(size.trim(), 10))) {
-                  return _this.mustache.render(_this.options.buttonTemplate, _this.buildContext());
+                var context, len;
+                len = parseInt(render(text), 10);
+                if ((_this.options.size != null) && len > _this.options.size) {
+                  context = extend(true, {
+                    collapsed: _this.collapsed
+                  }, _this.currentContext);
+                  return _this.mustache.render(_this.options.buttonTemplate, context);
                 } else {
                   return "";
                 }
@@ -3320,8 +3262,8 @@
           })(this)
         }
       };
-      options = extend(true, defaults, options);
-      TermsFacet.__super__.constructor.call(this, element, name, options);
+      TermsFacet.__super__.constructor.call(this, element, extend(true, defaults, options));
+      this.collapsed = this.options.size != null;
     }
 
 
@@ -3336,66 +3278,46 @@
       if (!this.initialized) {
         this.element.on("click", "[data-facet='" + this.name + "'][data-value]", (function(_this) {
           return function(e) {
-            var eventInfo, key, termNode, value, wasSelected;
+            var facetName, facetValue, isSelected, termNode;
             e.preventDefault();
             termNode = $(e.currentTarget);
-            value = termNode.data("value");
-            key = termNode.data("facet");
-            wasSelected = termNode.hasAttr("data-selected");
-            if (!wasSelected) {
+            facetName = termNode.data("facet");
+            facetValue = termNode.data("value");
+            isSelected = !termNode.hasAttr("data-selected");
+            if (isSelected) {
               termNode.attr("data-selected", "");
-              _this.controller.addFilter(key, value);
+              _this.controller.addFilter(facetName, facetValue);
             } else {
               termNode.removeAttr("data-selected");
-              _this.controller.removeFilter(key, value);
+              _this.controller.removeFilter(facetName, facetValue);
             }
             _this.controller.refresh();
-            eventInfo = {
-              facetName: key,
-              facetValue: value,
-              selected: !wasSelected,
-              totalSelected: _this.getSelectedElements().length
-            };
-            return _this.trigger("df:term:click", [eventInfo]);
+            return _this.trigger("df:term:click", [facetName, facetValue, isSelected]);
           };
         })(this));
         if (this.options.size != null) {
-          this.element.on("click", "[data-toggle-extra-content]", (function(_this) {
+          return this.element.on("click", "[data-toggle-extra-content]", (function(_this) {
             return function(e) {
-              var btn, currentText, viewLessText, viewMoreText;
               e.preventDefault();
-              btn = _this.getShowMoreButton();
-              currentText = btn.textContent.trim();
-              viewMoreText = (btn.getAttribute("data-text-normal")).trim();
-              viewLessText = (btn.getAttribute("data-text-toggle")).trim();
-              if (currentText === viewMoreText) {
-                btn.textContent = viewLessText;
-                return _this.element.attr("data-view-extra-content", "");
-              } else {
-                btn.textContent = viewMoreText;
-                return _this.element.removeAttr("data-view-extra-content");
-              }
-            };
-          })(this));
-          this.on("df:widget:render", (function(_this) {
-            return function(res) {
-              var btn;
-              if ((_this.element.attr("data-view-extra-content")) != null) {
-                btn = _this.getShowMoreButton();
-                return btn != null ? btn.textContent = (btn.getAttribute("data-text-toggle")).trim() : void 0;
-              }
-            };
-          })(this));
-          return this.on("df:widget:clean", (function(_this) {
-            return function(res) {
-              var btn;
-              _this.element.removeAttr("data-view-extra-content");
-              btn = _this.getShowMoreButton();
-              return btn != null ? btn.textContent = (btn.getAttribute("data-text-normal")).trim() : void 0;
+              _this.updateButton();
+              return _this.collapsed = !_this.collapsed;
             };
           })(this));
         }
       }
+    };
+
+    TermsFacet.prototype.updateButton = function() {
+      var btn, labelAttr;
+      if (this.collapsed) {
+        labelAttr = "data-text-toggle";
+        this.element.attr("data-view-extra-content", "");
+      } else {
+        labelAttr = "data-text-normal";
+        this.element.removeAttr("data-view-extra-content");
+      }
+      btn = this.getButton();
+      return (btn.get(0)).textContent = (btn.attr(labelAttr)).trim();
     };
 
 
@@ -3403,26 +3325,13 @@
      * @return {HTMLElement} The "show more" button.
      */
 
-    TermsFacet.prototype.getShowMoreButton = function() {
-      return (this.element.find("[data-toggle-extra-content]")).element[0];
+    TermsFacet.prototype.getButton = function() {
+      return (this.element.find("[data-toggle-extra-content]")).first();
     };
 
-
-    /**
-     * @return {DfDomElement} Collection of selected term nodes.
-     */
-
-    TermsFacet.prototype.getSelectedElements = function() {
-      return this.element.find("[data-facet][data-selected]");
-    };
-
-
-    /**
-     * @return {Number} Number of selected term nodes.
-     */
-
-    TermsFacet.prototype.countSelectedElements = function() {
-      return this.getSelectedElements().length;
+    TermsFacet.prototype.getSelectedTerms = function(res) {
+      var ref, ref1;
+      return (res != null ? (ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.name] : void 0 : void 0 : void 0) || [];
     };
 
 
@@ -3432,24 +3341,7 @@
      */
 
     TermsFacet.prototype.countSelectedTerms = function(res) {
-      var ref, ref1;
-      return (((ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.name] : void 0 : void 0) || []).length;
-    };
-
-
-    /**
-     * Renders the label of the facet widget based on the given search response,
-     * within the configured label template. The number of selected terms is
-     * passed to the context so it can be used in the template.
-     *
-     * @param  {Object} res Search response.
-     * @return {String}     The rendered label.
-     */
-
-    TermsFacet.prototype.renderLabel = function(res) {
-      return TermsFacet.__super__.renderLabel.call(this, extend(true, res, {
-        total_selected: this.countSelectedTerms(res)
-      }));
+      return (this.getSelectedTerms(res)).length;
     };
 
 
@@ -3462,45 +3354,23 @@
      */
 
     TermsFacet.prototype.render = function(res) {
-      var context, eventInfo, i, index, len, ref, ref1, ref2, ref3, selectedTerms, term, totalSelected;
+      var context, index, ref, selected, term, terms;
       if (res.page = 1) {
-        if (!res.facets || !res.facets[this.name]) {
-          this.raiseError("TermsFacet: " + this.name + " facet is not configured");
-        } else if (!res.facets[this.name].terms.buckets) {
-          this.raiseError("TermsFacet: " + this.name + " facet is not a terms facet");
-        }
-        if (res.facets[this.name].terms.buckets.length > 0) {
-          selectedTerms = {};
-          ref2 = ((ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.name] : void 0 : void 0) || [];
-          for (i = 0, len = ref2.length; i < len; i++) {
-            term = ref2[i];
-            selectedTerms[term] = true;
-          }
-          selectedTerms;
-          ref3 = res.facets[this.name].terms.buckets;
-          for (index in ref3) {
-            term = ref3[index];
+        terms = res.facets[this.name].terms.buckets;
+        if (terms.length > 0) {
+          selected = this.getSelectedTerms(res);
+          for (index in terms) {
+            term = terms[index];
             term.index = index;
             term.name = this.name;
-            if (selectedTerms[term.key]) {
-              term.selected = 1;
-            } else {
-              term.selected = 0;
-            }
+            term.selected = (ref = term.key, indexOf.call(selected, ref) >= 0);
           }
-          totalSelected = this.countSelectedTerms(res);
-          context = extend(true, {
-            any_selected: totalSelected > 0,
-            total_selected: totalSelected,
+          context = {
             name: this.name,
-            terms: res.facets[this.name].terms.buckets
-          });
-          eventInfo = {
-            facetName: this.name,
-            totalSelected: totalSelected
+            terms: terms,
+            size: this.options.size
           };
-          this.element.html(this.renderTemplate(context));
-          return this.trigger("df:widget:render", [res, eventInfo]);
+          return TermsFacet.__super__.render.call(this, extend(true, {}, res, context));
         } else {
           return this.clean();
         }
@@ -3509,13 +3379,13 @@
 
     return TermsFacet;
 
-  })(BaseFacet);
+  })(Display);
 
   module.exports = TermsFacet;
 
 }).call(this);
 
-},{"../../util/dfdom":6,"./basefacet":16,"extend":24}],19:[function(require,module,exports){
+},{"../../util/dfdom":6,"../display":15,"extend":23}],18:[function(require,module,exports){
 (function() {
   var Display, INSERTION_METHODS, Panel, defaultTemplate, extend, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3594,7 +3464,7 @@
 
 }).call(this);
 
-},{"../util/uniqueid":13,"./display":15,"extend":24}],20:[function(require,module,exports){
+},{"../util/uniqueid":13,"./display":15,"extend":23}],19:[function(require,module,exports){
 (function() {
   var QueryInput, Widget, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3720,7 +3590,7 @@
 
 }).call(this);
 
-},{"./widget":22,"extend":24}],21:[function(require,module,exports){
+},{"./widget":21,"extend":23}],20:[function(require,module,exports){
 (function() {
   var $, Display, ScrollDisplay, dfScroll, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3847,7 +3717,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"../util/dfscroll":7,"./display":15,"extend":24}],22:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/dfscroll":7,"./display":15,"extend":23}],21:[function(require,module,exports){
 (function() {
   var $, Widget, bean,
     slice = [].slice;
@@ -3950,17 +3820,6 @@
       return bean.fire(this, eventName, args);
     };
 
-
-    /**
-     * Throws an error that can be captured.
-     * @param  {String} message Error message.
-     * @throws {Error}
-     */
-
-    Widget.prototype.raiseError = function(message) {
-      throw Error("[Doofinder] " + message);
-    };
-
     return Widget;
 
   })();
@@ -3969,7 +3828,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"bean":23}],23:[function(require,module,exports){
+},{"../util/dfdom":6,"bean":22}],22:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean
@@ -4712,7 +4571,7 @@
   return bean
 });
 
-},{}],24:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 'use strict';
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -4800,9 +4659,9 @@ module.exports = function extend() {
 	return target;
 };
 
-},{}],25:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 
-},{}],26:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -6595,7 +6454,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":27,"ieee754":28,"isarray":29}],27:[function(require,module,exports){
+},{"base64-js":26,"ieee754":27,"isarray":28}],26:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -6711,7 +6570,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],28:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -6797,14 +6656,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],29:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],30:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7108,7 +6967,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],31:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -7124,7 +6983,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":54}],32:[function(require,module,exports){
+},{"http":53}],31:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -7149,7 +7008,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],33:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -7172,7 +7031,7 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],34:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -7358,7 +7217,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],35:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -7895,7 +7754,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],36:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7981,7 +7840,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],37:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8068,13 +7927,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],38:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":36,"./encode":37}],39:[function(require,module,exports){
+},{"./decode":35,"./encode":36}],38:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8199,7 +8058,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":41,"./_stream_writable":43,"core-util-is":47,"inherits":32,"process-nextick-args":49}],40:[function(require,module,exports){
+},{"./_stream_readable":40,"./_stream_writable":42,"core-util-is":46,"inherits":31,"process-nextick-args":48}],39:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8247,7 +8106,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":42,"core-util-is":47,"inherits":32}],41:[function(require,module,exports){
+},{"./_stream_transform":41,"core-util-is":46,"inherits":31}],40:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -9257,7 +9116,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":39,"./internal/streams/BufferList":44,"./internal/streams/destroy":45,"./internal/streams/stream":46,"_process":34,"core-util-is":47,"events":30,"inherits":32,"isarray":48,"process-nextick-args":49,"safe-buffer":50,"string_decoder/":51,"util":25}],42:[function(require,module,exports){
+},{"./_stream_duplex":38,"./internal/streams/BufferList":43,"./internal/streams/destroy":44,"./internal/streams/stream":45,"_process":33,"core-util-is":46,"events":29,"inherits":31,"isarray":47,"process-nextick-args":48,"safe-buffer":49,"string_decoder/":50,"util":24}],41:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9472,7 +9331,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":39,"core-util-is":47,"inherits":32}],43:[function(require,module,exports){
+},{"./_stream_duplex":38,"core-util-is":46,"inherits":31}],42:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10139,7 +9998,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":39,"./internal/streams/destroy":45,"./internal/streams/stream":46,"_process":34,"core-util-is":47,"inherits":32,"process-nextick-args":49,"safe-buffer":50,"util-deprecate":52}],44:[function(require,module,exports){
+},{"./_stream_duplex":38,"./internal/streams/destroy":44,"./internal/streams/stream":45,"_process":33,"core-util-is":46,"inherits":31,"process-nextick-args":48,"safe-buffer":49,"util-deprecate":51}],43:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -10214,7 +10073,7 @@ module.exports = function () {
 
   return BufferList;
 }();
-},{"safe-buffer":50}],45:[function(require,module,exports){
+},{"safe-buffer":49}],44:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -10287,10 +10146,10 @@ module.exports = {
   destroy: destroy,
   undestroy: undestroy
 };
-},{"process-nextick-args":49}],46:[function(require,module,exports){
+},{"process-nextick-args":48}],45:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":30}],47:[function(require,module,exports){
+},{"events":29}],46:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10401,9 +10260,9 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":33}],48:[function(require,module,exports){
-arguments[4][29][0].apply(exports,arguments)
-},{"dup":29}],49:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":32}],47:[function(require,module,exports){
+arguments[4][28][0].apply(exports,arguments)
+},{"dup":28}],48:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -10450,7 +10309,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":34}],50:[function(require,module,exports){
+},{"_process":33}],49:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -10514,7 +10373,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":26}],51:[function(require,module,exports){
+},{"buffer":25}],50:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('safe-buffer').Buffer;
@@ -10787,7 +10646,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":50}],52:[function(require,module,exports){
+},{"safe-buffer":49}],51:[function(require,module,exports){
 (function (global){
 
 /**
@@ -10858,7 +10717,7 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],53:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -10867,7 +10726,7 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":39,"./lib/_stream_passthrough.js":40,"./lib/_stream_readable.js":41,"./lib/_stream_transform.js":42,"./lib/_stream_writable.js":43}],54:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":38,"./lib/_stream_passthrough.js":39,"./lib/_stream_readable.js":40,"./lib/_stream_transform.js":41,"./lib/_stream_writable.js":42}],53:[function(require,module,exports){
 (function (global){
 var ClientRequest = require('./lib/request')
 var extend = require('xtend')
@@ -10949,7 +10808,7 @@ http.METHODS = [
 	'UNSUBSCRIBE'
 ]
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./lib/request":56,"builtin-status-codes":58,"url":60,"xtend":62}],55:[function(require,module,exports){
+},{"./lib/request":55,"builtin-status-codes":57,"url":59,"xtend":61}],54:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
 
@@ -11022,7 +10881,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],56:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -11332,7 +11191,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":55,"./response":57,"_process":34,"buffer":26,"inherits":32,"readable-stream":53,"to-arraybuffer":59}],57:[function(require,module,exports){
+},{"./capability":54,"./response":56,"_process":33,"buffer":25,"inherits":31,"readable-stream":52,"to-arraybuffer":58}],56:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -11518,7 +11377,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":55,"_process":34,"buffer":26,"inherits":32,"readable-stream":53}],58:[function(require,module,exports){
+},{"./capability":54,"_process":33,"buffer":25,"inherits":31,"readable-stream":52}],57:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -11584,7 +11443,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],59:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
 
 module.exports = function (buf) {
@@ -11613,7 +11472,7 @@ module.exports = function (buf) {
 	}
 }
 
-},{"buffer":26}],60:[function(require,module,exports){
+},{"buffer":25}],59:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -12347,7 +12206,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":61,"punycode":35,"querystring":38}],61:[function(require,module,exports){
+},{"./util":60,"punycode":34,"querystring":37}],60:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -12365,7 +12224,7 @@ module.exports = {
   }
 };
 
-},{}],62:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -12386,7 +12245,7 @@ function extend() {
     return target
 }
 
-},{}],63:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 /*!
  * JavaScript Cookie v2.1.4
  * https://github.com/js-cookie/js-cookie
@@ -12553,7 +12412,7 @@ function extend() {
 	return init(function () {});
 }));
 
-},{}],64:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 (function (global){
 /**
  * lodash (Custom Build) <https://lodash.com/>
@@ -12996,7 +12855,7 @@ function toNumber(value) {
 module.exports = throttle;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],65:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 (function(){
   var crypt = require('crypt'),
       utf8 = require('charenc').utf8,
@@ -13158,7 +13017,7 @@ module.exports = throttle;
 
 })();
 
-},{"charenc":66,"crypt":67,"is-buffer":68}],66:[function(require,module,exports){
+},{"charenc":65,"crypt":66,"is-buffer":67}],65:[function(require,module,exports){
 var charenc = {
   // UTF-8 encoding
   utf8: {
@@ -13193,7 +13052,7 @@ var charenc = {
 
 module.exports = charenc;
 
-},{}],67:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 (function() {
   var base64map
       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
@@ -13291,9 +13150,9 @@ module.exports = charenc;
   module.exports = crypt;
 })();
 
-},{}],68:[function(require,module,exports){
-arguments[4][33][0].apply(exports,arguments)
-},{"dup":33}],69:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
+arguments[4][32][0].apply(exports,arguments)
+},{"dup":32}],68:[function(require,module,exports){
 /*!
  * mustache.js - Logic-less {{mustache}} templates with JavaScript
  * http://github.com/janl/mustache.js
@@ -13925,7 +13784,7 @@ arguments[4][33][0].apply(exports,arguments)
   return mustache;
 }));
 
-},{}],70:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 /*! nouislider - 8.5.1 - 2016-04-24 16:00:29 */
 
 (function (factory) {
@@ -15885,7 +15744,7 @@ function closure ( target, options, originalOptions ){
 	};
 
 }));
-},{}],71:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 'use strict';
 
 var replace = String.prototype.replace;
@@ -15905,7 +15764,7 @@ module.exports = {
     RFC3986: 'RFC3986'
 };
 
-},{}],72:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 'use strict';
 
 var stringify = require('./stringify');
@@ -15918,7 +15777,7 @@ module.exports = {
     stringify: stringify
 };
 
-},{"./formats":71,"./parse":73,"./stringify":74}],73:[function(require,module,exports){
+},{"./formats":70,"./parse":72,"./stringify":73}],72:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -16092,7 +15951,7 @@ module.exports = function (str, opts) {
     return utils.compact(obj);
 };
 
-},{"./utils":75}],74:[function(require,module,exports){
+},{"./utils":74}],73:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -16304,7 +16163,7 @@ module.exports = function (object, opts) {
     return joined.length > 0 ? prefix + joined : '';
 };
 
-},{"./formats":71,"./utils":75}],75:[function(require,module,exports){
+},{"./formats":70,"./utils":74}],74:[function(require,module,exports){
 'use strict';
 
 var has = Object.prototype.hasOwnProperty;
