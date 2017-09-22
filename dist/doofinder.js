@@ -3532,7 +3532,8 @@
           this.element.on("keydown", (function(_this) {
             return function(e) {
               if ((e.keyCode != null) && e.keyCode === 13) {
-                return _this.scheduleUpdate(0, true);
+                _this.scheduleUpdate(0, true);
+                return _this.trigger("df:input:submit", [_this.element.val() || ""]);
               }
             };
           })(this));

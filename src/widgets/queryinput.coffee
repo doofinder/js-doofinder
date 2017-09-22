@@ -45,6 +45,7 @@ class QueryInput extends Widget
         @element.on "keydown", (e) =>
           if e.keyCode? and e.keyCode is 13
             @scheduleUpdate 0, true
+            @trigger "df:input:submit", [@element.val() or ""]
 
       super
 
