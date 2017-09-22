@@ -52,17 +52,17 @@
 
 .df-panel__label {
   display: block;
-  padding: 8px;
+  padding: .5rem;
   margin: 0;
   border-bottom: 1px solid #ddd;
 }
 
 .df-panel__content {
-  padding: 8px;
+  padding: .5rem;
 }
 
 .df-panel[data-df-collapse] .df-panel__label {
-  background: no-repeat right 8px center;
+  background: no-repeat right .5rem center;
   background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%20%20%3Cg%20stroke%3D%22none%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M10%207L3%207%203%206%2010%206%2010%207%2010%207Z%22%20fill%3D%22%23000000%22/%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M0%200L12%200%2012%2012%200%2012%200%200Z%22/%3E%0A%20%20%20%20%3C/g%3E%0A%3C/svg%3E%0A");
   cursor: pointer;
 }
@@ -82,7 +82,7 @@
   align-items: flex-start;
   color: inherit;
   cursor: pointer;
-  margin: 0 0 .25rem 0;
+  margin: 0 0 .5rem 0;
 }
 
 .df-term:last-child {
@@ -107,6 +107,20 @@
 
 :not([data-view-extra-content]) > .df-term[data-extra-content]:not([data-selected]) {
   display: none;
+}
+
+button[data-toggle-extra-content] {
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 .5rem 0;
+  padding: .5rem;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  background-color: #f0f0f0;
+}
+
+button[data-toggle-extra-content]:last-child {
+  margin-bottom: 0;
 }
 
 /* THIRD PARTY COMPONENTS */

@@ -15,16 +15,14 @@ defaultTemplate = """
 """
 
 defaultButtonTemplate = """
-  <div>
-    <button type="button" data-toggle-extra-content
-        data-text-normal="{{#translate}}{{viewMoreLabel}}{{/translate}}"
-        data-text-toggle="{{#translate}}{{viewLessLabel}}{{/translate}}">
-      {{#translate}}
-        {{#collapsed}}{{viewMoreLabel}}{{/collapsed}}
-        {{^collapsed}}{{viewLessLabel}}{{/collapsed}}
-      {{/translate}}
-    </button>
-  </div>
+  <button type="button" data-toggle-extra-content
+      data-text-normal="{{#translate}}{{viewMoreLabel}}{{/translate}}"
+      data-text-toggle="{{#translate}}{{viewLessLabel}}{{/translate}}">
+    {{#translate}}
+      {{#collapsed}}{{viewMoreLabel}}{{/collapsed}}
+      {{^collapsed}}{{viewLessLabel}}{{/collapsed}}
+    {{/translate}}
+  </button>
 """
 
 
