@@ -458,17 +458,12 @@
       }, this.params);
       return request = this.client.search(this.query, params, (function(_this) {
         return function(err, res) {
-          var i, len, ref, widget;
           if (err) {
             return _this.trigger("df:error", [err]);
           } else {
             _this.lastPage = Math.ceil(res.total / res.results_per_page);
             _this.params.query_name = res.query_name;
-            ref = _this.widgets;
-            for (i = 0, len = ref.length; i < len; i++) {
-              widget = ref[i];
-              widget.render(res);
-            }
+            _this.renderWidgets(res);
             _this.trigger("df:results", [res]);
             if (_this.isLastPage) {
               return _this.trigger("df:results:end", [res]);
@@ -512,6 +507,12 @@
       widget.setController(this);
       widget.init();
       return this.widgets.push(widget);
+    };
+
+    Controller.prototype.renderWidgets = function(res) {
+      return this.widgets.forEach(function(widget) {
+        return widget.render(res);
+      });
     };
 
     Controller.prototype.cleanWidgets = function() {
@@ -2893,7 +2894,7 @@
 
     Display.prototype.clean = function() {
       this.element.html("");
-      return this.trigger("df:widget:clean");
+      return Display.__super__.clean.apply(this, arguments);
     };
 
     return Display;
@@ -3794,7 +3795,9 @@
      * Cleans the widget. Intended to be overriden.
      */
 
-    Widget.prototype.clean = function() {};
+    Widget.prototype.clean = function() {
+      return this.trigger("df:widget:clean");
+    };
 
     Widget.prototype.on = function(eventName, handler, args) {
       if (args == null) {

@@ -177,7 +177,7 @@ class Controller
         @lastPage = Math.ceil (res.total / res.results_per_page)
         @params.query_name = res.query_name
 
-        widget.render res for widget in @widgets
+        @renderWidgets res
 
         @trigger "df:results", [res]
         @trigger "df:results:end", [res] if @isLastPage
@@ -210,6 +210,10 @@ class Controller
     widget.setController @
     widget.init()
     @widgets.push widget
+
+  renderWidgets: (res) ->
+    @widgets.forEach (widget) ->
+      widget.render res
 
   cleanWidgets: ->
     @widgets.forEach (widget) ->

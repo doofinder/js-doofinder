@@ -89,6 +89,9 @@ module.exports = (grunt) ->
       css:
         files: ['./src/**/*.scss']
         tasks: ['css']
+      karma:
+        files: ['./test_karma/**/test_*.coffee']
+        tasks: ['testKarma']
 
   grunt.loadNpmTasks 'grunt-browserify'
   grunt.loadNpmTasks 'grunt-contrib-clean'

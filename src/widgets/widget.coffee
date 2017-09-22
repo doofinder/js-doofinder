@@ -53,6 +53,7 @@ class Widget
    * Cleans the widget. Intended to be overriden.
   ###
   clean: ->
+    @trigger "df:widget:clean"
 
   #
   # Events

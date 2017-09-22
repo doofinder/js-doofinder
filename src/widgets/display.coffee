@@ -80,7 +80,7 @@ class Display extends Widget
   ###
   clean: ->
     @element.html ""
-    @trigger "df:widget:clean"
+    super
 
 
 module.exports = Display
