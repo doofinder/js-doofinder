@@ -21,8 +21,12 @@ class Display extends Widget
   ###
   constructor: (element, options = {}) ->
     defaults =
-      template: defaultTemplate
+      currency: undefined
       queryParam: undefined
+      template: defaultTemplate
+      templateVars: {}
+      templateFunctions: {}
+      translations: undefined
       urlParams: {}
     options = extend true, defaults, options
 
@@ -39,13 +43,13 @@ class Display extends Widget
   buildContext: (res = {}) ->
     defaults =
       query: ""
-      urlParams: @options.urlParams
 
     overrides =
       is_first: res.page is 1
       is_last: res.page is Math.ceil (res.total / res.results_per_page)
       currency: @options.currency
       translations: @options.translations
+      urlParams: @options.urlParams
 
     context = extend true,
       {},
@@ -55,7 +59,7 @@ class Display extends Widget
       @options.templateFunctions,
       overrides
 
-    if @options.queryParam
+    if @options.queryParam?
       context.urlParams[@options.queryParam] = context.query
 
     @currentContext = addHelpers context

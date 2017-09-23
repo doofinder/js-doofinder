@@ -2453,10 +2453,11 @@
 
 },{"./thing":12}],10:[function(require,module,exports){
 (function() {
-  var defaultCurrency, extend,
-    hasProp = {}.hasOwnProperty;
+  var addHelpers, defaultCurrency, extend, qs;
 
   extend = require("extend");
+
+  qs = require("qs");
 
   defaultCurrency = {
     symbol: '€',
@@ -2466,25 +2467,24 @@
     precision: 2
   };
 
-  module.exports = function(context) {
-    var helpers;
+  addHelpers = function(context) {
+    var defaults, helpers;
+    defaults = {
+      currency: defaultCurrency,
+      translations: {},
+      urlParams: {}
+    };
+    context = extend(true, defaults, context);
     helpers = {
       "url-params": function() {
-        var parameters;
-        parameters = context.urlParams || {};
         return function(text, render) {
-          var glue, key, params, url;
+          var domain, params, ref, url;
           url = (render(text)).trim();
           if (url.length > 0) {
-            params = [];
-            for (key in parameters) {
-              if (!hasProp.call(parameters, key)) continue;
-              params.push(key + "=" + parameters[key]);
-            }
+            ref = url.split("?"), domain = ref[0], params = ref[1];
+            params = qs.stringify(extend(true, params || {}, qs.parse(context.urlParams)));
             if (params.length > 0) {
-              params = params.join("&");
-              glue = url.match(/\?/) ? "&" : "?";
-              url = "" + url + glue + params;
+              url = url + "?" + params;
             }
           }
           return url;
@@ -2492,12 +2492,10 @@
       },
       "remove-protocol": function() {
         return function(text, render) {
-          return (render(text)).replace(/^https?:/, "");
+          return (render(text)).trim().replace(/^https?:/, "");
         };
       },
       "format-currency": function() {
-        var currency;
-        currency = context.currency || defaultCurrency;
         return function(text, render) {
           var bas, dec, mod, neg, num, pow, val;
           val = parseFloat(render(text), 10);
@@ -2506,22 +2504,22 @@
           }
           neg = val < 0;
           val = Math.abs(val);
-          pow = Math.pow(10, currency.precision);
-          val = ((Math.round(val * pow)) / pow).toFixed(currency.precision);
+          pow = Math.pow(10, context.currency.precision);
+          val = ((Math.round(val * pow)) / pow).toFixed(context.currency.precision);
           bas = (parseInt(val, 10)).toString();
           mod = bas.length > 3 ? bas.length % 3 : 0;
           num = [];
           if (mod > 0) {
-            num.push("" + (bas.substr(0, mod)) + currency.thousand);
+            num.push("" + (bas.substr(0, mod)) + context.currency.thousand);
           }
-          num.push((bas.substr(mod)).replace(/(\d{3})(?=\d)/g, "$1" + currency.thousand));
-          if (currency.precision > 0) {
+          num.push((bas.substr(mod)).replace(/(\d{3})(?=\d)/g, "$1" + context.currency.thousand));
+          if (context.currency.precision > 0) {
             dec = (val.split("."))[1];
             if (dec != null) {
-              num.push("" + currency.decimal + dec);
+              num.push("" + context.currency.decimal + dec);
             }
           }
-          num = (currency.format.replace(/%s/g, currency.symbol)).replace(/%v/g, num.join(""));
+          num = (context.currency.format.replace(/%s/g, context.currency.symbol)).replace(/%v/g, num.join(""));
           if (neg) {
             num = "-" + num;
           }
@@ -2529,20 +2527,20 @@
         };
       },
       "translate": function() {
-        var translations;
-        translations = context.translations || {};
         return function(text, render) {
           text = render(text);
-          return translations[text] || text;
+          return context.translations[text] || text;
         };
       }
     };
     return extend(true, {}, context, helpers);
   };
 
+  module.exports = addHelpers;
+
 }).call(this);
 
-},{"extend":23}],11:[function(require,module,exports){
+},{"extend":23,"qs":71}],11:[function(require,module,exports){
 (function() {
   var HttpClient, Thing, http, https;
 
@@ -2829,8 +2827,12 @@
         options = {};
       }
       defaults = {
-        template: defaultTemplate,
+        currency: void 0,
         queryParam: void 0,
+        template: defaultTemplate,
+        templateVars: {},
+        templateFunctions: {},
+        translations: void 0,
         urlParams: {}
       };
       options = extend(true, defaults, options);
@@ -2852,17 +2854,17 @@
         res = {};
       }
       defaults = {
-        query: "",
-        urlParams: this.options.urlParams
+        query: ""
       };
       overrides = {
         is_first: res.page === 1,
         is_last: res.page === Math.ceil(res.total / res.results_per_page),
         currency: this.options.currency,
-        translations: this.options.translations
+        translations: this.options.translations,
+        urlParams: this.options.urlParams
       };
       context = extend(true, {}, defaults, res, this.options.templateVars, this.options.templateFunctions, overrides);
-      if (this.options.queryParam) {
+      if (this.options.queryParam != null) {
         context.urlParams[this.options.queryParam] = context.query;
       }
       return this.currentContext = addHelpers(context);
