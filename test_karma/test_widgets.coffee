@@ -146,3 +146,10 @@ describe "Default Widgets", ->
           precision: 2
         translations:
           "Hello!": "Hola!"
+
+  describe "ScrollDisplay", ->
+  describe "Panel", ->
+  describe "CollapsiblePanel", ->
+  describe "TermsFacet", ->
+  describe "RangeFacet", ->
+  describe "QueryInput", ->
