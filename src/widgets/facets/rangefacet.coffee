@@ -21,16 +21,16 @@ class RangeFacet extends Display
    * displayed. In any other case, noUiSlider is in charge of displaying them.
    *
    * @param  {String|Node|DfDomElement} element  Container node.
-   * @param  {String} name    Name of the facet/filter.
+   * @param  {String} facet    Name of the facet/filter.
    * @param  {Object} options Options object. Empty by default.
   ###
-  constructor: (element, @name, options = {}) ->
+  constructor: (element, @facet, options = {}) ->
     options = extend true, template: defaultTemplate, options
 
     super element, options
 
     @sliderClassName = options.sliderClassName or 'df-slider'
-    @sliderSelector =  ".#{@sliderClassName}[data-facet='#{@name}']"
+    @sliderSelector =  ".#{@sliderClassName}[data-facet='#{@facet}']"
 
     if @options.format
       @format = @options.format
@@ -50,7 +50,7 @@ class RangeFacet extends Display
   __renderSlider: (options) ->
     # Build template context
     context =
-      name: @name
+      name: @facet
       sliderClassName: @sliderClassName
 
     # Render template HTML and place it inside the container
@@ -73,9 +73,9 @@ class RangeFacet extends Display
 
       if @values[min] == @range.min and @values[max] == @range.max
         # No need to filter
-        @controller?.removeFilter @name
+        @controller?.removeFilter @facet
       else
-        @controller?.addFilter @name,
+        @controller?.addFilter @facet,
           gte: @values[min]
           lte: @values[max]
       @controller?.refresh()
@@ -83,12 +83,12 @@ class RangeFacet extends Display
 
       # TODO(@carlosescri)'s proposal:
       # if @values[min] == @range.min and @values[max] == @range.max
-      #   @trigger "df:filter:remove", [@name]
+      #   @trigger "df:filter:remove", [@facet]
       # else
       #   value =
       #     gte: @values[min]
       #     lte: @values[max]
-      #   @trigger "df:filter:add", [@name, value]
+      #   @trigger "df:filter:add", [@facet, value]
       #
       # @trigger "df:slider:change", [@values[min], @values[max]]
       # @values = {}
@@ -146,7 +146,7 @@ class RangeFacet extends Display
    * @return {Object}     Object with `min` and `max` properties.
   ###
   __getRangeFromResponse: (res) ->
-    stats = res.facets[@name].range.buckets[0].stats
+    stats = res.facets[@facet].range.buckets[0].stats
     range =
       min: parseFloat(stats.min || 0, 10)
       max: parseFloat(stats.max || 0, 10)
@@ -186,9 +186,9 @@ class RangeFacet extends Display
             formattedValue
 
       # If we have values from search filtering we apply them
-      if res and res.filter and res.filter.range and res.filter.range[@name]
-        start = [parseFloat(res.filter.range[@name].gte, 10),
-                 parseFloat(res.filter.range[@name].lte, 10)]
+      if res and res.filter and res.filter.range and res.filter.range[@facet]
+        start = [parseFloat(res.filter.range[@facet].gte, 10),
+                 parseFloat(res.filter.range[@facet].lte, 10)]
         options.start[0] = start[0] unless isNaN start[0]
         options.start[1] = start[1] unless isNaN start[1]
 

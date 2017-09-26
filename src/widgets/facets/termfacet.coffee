@@ -33,10 +33,10 @@ defaultButtonTemplate = """
 class TermsFacet extends Display
   ###*
    * @param  {String|Node|DfDomElement} element  Container node.
-   * @param  {String} name    Name of the facet/filter.
+   * @param  {String} facet    Name of the facet/filter.
    * @param  {Object} options Options object. Empty by default.
   ###
-  constructor: (element, @name, options = {}) ->
+  constructor: (element, @facet, options = {}) ->
     defaults =
       size: null  # set an int value to enable extra content behavior
       template: defaultTemplate
@@ -94,7 +94,7 @@ class TermsFacet extends Display
   init: ->
     unless @initialized
       # Handle clicks on terms by event delegation.
-      @element.on "click", "[data-facet='#{@name}'][data-value]", (e) =>
+      @element.on "click", "[data-facet='#{@facet}'][data-value]", (e) =>
         e.preventDefault()
 
         termNode = ($ e.currentTarget)
@@ -150,7 +150,7 @@ class TermsFacet extends Display
     (@element.find "[data-toggle-extra-content]").first()
 
   getSelectedTerms: (res) ->
-    (res?.filter?.terms?[@name]) or []
+    (res?.filter?.terms?[@facet]) or []
 
   ###*
    * @param  {Object} res Results response from the server.
@@ -168,17 +168,17 @@ class TermsFacet extends Display
   ###
   render: (res) ->
     if res.page = 1
-      terms = res.facets[@name].terms.buckets
+      terms = res.facets[@facet].terms.buckets
 
       if terms.length > 0
         selected = @getSelectedTerms res
         for index, term of terms
           term.index = index
-          term.name = @name
+          term.name = @facet
           term.selected = term.key in selected
 
         context =
-          name: @name
+          name: @facet
           terms: terms
           size: @options.size
 

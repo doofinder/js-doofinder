@@ -2941,12 +2941,12 @@
      * displayed. In any other case, noUiSlider is in charge of displaying them.
      *
      * @param  {String|Node|DfDomElement} element  Container node.
-     * @param  {String} name    Name of the facet/filter.
+     * @param  {String} facet    Name of the facet/filter.
      * @param  {Object} options Options object. Empty by default.
      */
 
-    function RangeFacet(element, name, options) {
-      this.name = name;
+    function RangeFacet(element, facet, options) {
+      this.facet = facet;
       if (options == null) {
         options = {};
       }
@@ -2955,7 +2955,7 @@
       }, options);
       RangeFacet.__super__.constructor.call(this, element, options);
       this.sliderClassName = options.sliderClassName || 'df-slider';
-      this.sliderSelector = "." + this.sliderClassName + "[data-facet='" + this.name + "']";
+      this.sliderSelector = "." + this.sliderClassName + "[data-facet='" + this.facet + "']";
       if (this.options.format) {
         this.format = this.options.format;
       } else {
@@ -2978,7 +2978,7 @@
     RangeFacet.prototype.__renderSlider = function(options) {
       var context;
       context = {
-        name: this.name,
+        name: this.facet,
         sliderClassName: this.sliderClassName
       };
       this.element.html(this.renderTemplate(context));
@@ -2991,11 +2991,11 @@
           ref = _this.slider.noUiSlider.get(), min = ref[0], max = ref[1];
           if (_this.values[min] === _this.range.min && _this.values[max] === _this.range.max) {
             if ((ref1 = _this.controller) != null) {
-              ref1.removeFilter(_this.name);
+              ref1.removeFilter(_this.facet);
             }
           } else {
             if ((ref2 = _this.controller) != null) {
-              ref2.addFilter(_this.name, {
+              ref2.addFilter(_this.facet, {
                 gte: _this.values[min],
                 lte: _this.values[max]
               });
@@ -3076,7 +3076,7 @@
 
     RangeFacet.prototype.__getRangeFromResponse = function(res) {
       var range, stats;
-      stats = res.facets[this.name].range.buckets[0].stats;
+      stats = res.facets[this.facet].range.buckets[0].stats;
       return range = {
         min: parseFloat(stats.min || 0, 10),
         max: parseFloat(stats.max || 0, 10)
@@ -3123,8 +3123,8 @@
             })(this)
           }
         };
-        if (res && res.filter && res.filter.range && res.filter.range[this.name]) {
-          start = [parseFloat(res.filter.range[this.name].gte, 10), parseFloat(res.filter.range[this.name].lte, 10)];
+        if (res && res.filter && res.filter.range && res.filter.range[this.facet]) {
+          start = [parseFloat(res.filter.range[this.facet].gte, 10), parseFloat(res.filter.range[this.facet].lte, 10)];
           if (!isNaN(start[0])) {
             options.start[0] = start[0];
           }
@@ -3198,13 +3198,13 @@
 
     /**
      * @param  {String|Node|DfDomElement} element  Container node.
-     * @param  {String} name    Name of the facet/filter.
+     * @param  {String} facet    Name of the facet/filter.
      * @param  {Object} options Options object. Empty by default.
      */
 
-    function TermsFacet(element, name, options) {
+    function TermsFacet(element, facet, options) {
       var defaults;
-      this.name = name;
+      this.facet = facet;
       if (options == null) {
         options = {};
       }
@@ -3286,7 +3286,7 @@
 
     TermsFacet.prototype.init = function() {
       if (!this.initialized) {
-        this.element.on("click", "[data-facet='" + this.name + "'][data-value]", (function(_this) {
+        this.element.on("click", "[data-facet='" + this.facet + "'][data-value]", (function(_this) {
           return function(e) {
             var facetName, facetValue, isSelected, ref, ref1, ref2, termNode;
             e.preventDefault();
@@ -3347,7 +3347,7 @@
 
     TermsFacet.prototype.getSelectedTerms = function(res) {
       var ref, ref1;
-      return (res != null ? (ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.name] : void 0 : void 0 : void 0) || [];
+      return (res != null ? (ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.facet] : void 0 : void 0 : void 0) || [];
     };
 
 
@@ -3372,17 +3372,17 @@
     TermsFacet.prototype.render = function(res) {
       var context, index, ref, selected, term, terms;
       if (res.page = 1) {
-        terms = res.facets[this.name].terms.buckets;
+        terms = res.facets[this.facet].terms.buckets;
         if (terms.length > 0) {
           selected = this.getSelectedTerms(res);
           for (index in terms) {
             term = terms[index];
             term.index = index;
-            term.name = this.name;
+            term.name = this.facet;
             term.selected = (ref = term.key, indexOf.call(selected, ref) >= 0);
           }
           context = {
-            name: this.name,
+            name: this.facet,
             terms: terms,
             size: this.options.size
           };
