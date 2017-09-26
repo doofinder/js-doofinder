@@ -89,6 +89,8 @@ class RangeFacet extends Display
       #     gte: @values[min]
       #     lte: @values[max]
       #   @trigger "df:filter:add", [@name, value]
+      #
+      # @trigger "df:slider:change", [@values[min], @values[max]]
       # @values = {}
 
     undefined
