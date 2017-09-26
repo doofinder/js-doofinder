@@ -73,12 +73,12 @@ class RangeFacet extends Display
 
       if @values[min] == @range.min and @values[max] == @range.max
         # No need to filter
-        @controller?.removeFilter @facet
+        @controller.removeFilter @facet
       else
-        @controller?.addFilter @facet,
+        @controller.addFilter @facet,
           gte: @values[min]
           lte: @values[max]
-      @controller?.refresh()
+      @controller.refresh()
       @values = {}
 
       # TODO(@carlosescri)'s proposal:

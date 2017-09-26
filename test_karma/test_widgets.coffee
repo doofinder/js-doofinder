@@ -6,6 +6,12 @@ describe "Default Widgets", ->
     client = new doofinder.Client "ffffffffffffffffffffffffffffffff"
     new doofinder.Controller client
 
+  getControllerMock = ->
+    mock =
+      addFilter: (key, value) ->
+      removeFilter: (key) ->
+      refresh: ->
+
   $ = doofinder.util.dfdom
   controller = null
 
@@ -153,8 +159,118 @@ describe "Default Widgets", ->
   describe "TermsFacet", ->
     TermsFacet = doofinder.widgets.TermsFacet
 
-    it "renders properly and is not collapsible by default"
-    it "can be collapsible if size option is provided"
+    createWidget = (options) ->
+      insertHTML """<div id="widget"></div>"""
+      widget = new TermsFacet "#widget", "brand", options
+      # code is currently too coupled to controller so we need a mock
+      widget.setController getControllerMock()
+      widget.init()
+      widget
+
+    termsFacetResponse = ->
+      response =
+        page: 1
+        filter: terms: brand: [ 'CONCORD' ]
+        facets: brand: terms: buckets: [
+            key: 'CONCORD'
+            doc_count: 20
+          ,
+            key: 'JANE'
+            doc_count: 10
+          ,
+            key: 'MACLAREN'
+            doc_count: 5
+          ,
+            key: 'BE COOL'
+            doc_count: 2
+        ]
+
+    it "renders properly and is not collapsible by default", (done) ->
+      widget = createWidget()
+
+      widget.on "df:widget:render", (res) ->
+        @collapsed.should.be.false
+
+        res.facets.brand.terms.buckets[0].index.should.equal 0
+        res.facets.brand.terms.buckets[0].name.should.equal widget.facet
+        res.facets.brand.terms.buckets[0].selected.should.be.true
+
+        res.facets.brand.terms.buckets[1].index.should.equal 1
+        res.facets.brand.terms.buckets[1].name.should.equal widget.facet
+        res.facets.brand.terms.buckets[1].selected.should.be.false
+
+        (@element.find "[data-facet]").length.should.equal 4
+        (@element.find "[data-selected]").length.should.equal 1
+        (@element.find "[data-extra-content]").length.should.equal 0
+        @getButton().length.should.equal 0
+
+        selectedTerm = (@element.find "[data-selected]").first()
+        (selectedTerm.find ".df-term__value").html().trim().should.equal "CONCORD"
+        (selectedTerm.find ".df-term__count").html().trim().should.equal "20"
+        done()
+
+      widget.render termsFacetResponse()
+
+    it "unselects selected terms when clicked", (done) ->
+      widget = createWidget()
+
+      widget.on "df:term:click", (facetName, facetValue, isSelected) ->
+        facetName.should.equal "brand"
+        facetValue.should.equal "CONCORD"
+        isSelected.should.be.false
+        done()
+
+      widget.on "df:widget:render", (res) ->
+        (@element.find "[data-facet='brand'][data-value='CONCORD']").trigger "click"
+
+      widget.render termsFacetResponse()
+
+    it "selects not selected terms when clicked", (done) ->
+      widget = createWidget()
+
+      widget.on "df:term:click", (facetName, facetValue, isSelected) ->
+        facetName.should.equal "brand"
+        facetValue.should.equal "CONCORD"
+        isSelected.should.be.true
+        done()
+
+      widget.on "df:widget:render", (res) ->
+        (@element.find "[data-facet='brand'][data-value='CONCORD']").trigger "click"
+
+      response = termsFacetResponse()
+      delete response.filter
+
+      widget.render response
+
+    it "has collapse feature if size option is provided", (done) ->
+      widget = createWidget size: 2
+
+      widget.on "df:widget:render", (res) ->
+        @collapsed.should.be.true
+
+        (@element.find "[data-facet]").length.should.equal 4
+        (@element.find "[data-selected]").length.should.equal 1
+        (@element.find "[data-extra-content]").length.should.equal 2
+        (@element.hasAttr "data-view-extra-content").should.be.false
+
+        button = @getButton()
+        button.length.should.equal 1
+        button.html().trim().should.equal "View more…"
+
+        @on "df:collapse:change", (isCollapsed) =>
+          if not @collapsed
+            (@element.hasAttr "data-view-extra-content").should.be.true
+            button.html().trim().should.equal "View less…"
+            button.trigger "click"
+          else
+            (@element.hasAttr "data-view-extra-content").should.be.false
+            button.html().trim().should.equal "View more…"
+            done()
+
+        button.trigger "click"
+
+      widget.render termsFacetResponse()
+
 
   describe "RangeFacet", ->
     RangeFacet = doofinder.widgets.RangeFacet

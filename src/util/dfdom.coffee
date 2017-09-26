@@ -676,8 +676,8 @@ class DfDomElement
    *
    * @public
   ###
-  on: (eventName, selector, handler, args = []) ->
-    @each (node) -> bean.on node, eventName, selector, handler, args...
+  on: (eventName, selector, handler) ->
+    @each (node) -> bean.on node, eventName, selector, handler
 
   ###*
    * Proxy method to Bean Framework's one(). Attachs a single-use event handler
@@ -687,8 +687,8 @@ class DfDomElement
    *
    * @public
   ###
-  one: (eventName, selector, handler, args = []) ->
-    @each (node) -> bean.one node, eventName, selector, handler, args...
+  one: (eventName, selector, handler) ->
+    @each (node) -> bean.one node, eventName, selector, handler
 
   ###*
    * Proxy method to Bean Framework's fire(). Triggers the events provide on
@@ -698,7 +698,7 @@ class DfDomElement
    *
    * @public
   ###
-  trigger: (eventName, args = []) ->
+  trigger: (eventName, args) ->
     @each (node) -> bean.fire node, eventName, args
 
   ###*

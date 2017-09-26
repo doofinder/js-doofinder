@@ -234,7 +234,6 @@
 },{"./util/errors":8,"./util/http":11,"./util/thing":12,"extend":23,"md5":64,"qs":71}],2:[function(require,module,exports){
 (function() {
   var Client, Controller, Freezer, Thing, bean, errors, extend, qs,
-    slice = [].slice,
     hasProp = {}.hasOwnProperty;
 
   bean = require("bean");
@@ -473,18 +472,12 @@
       })(this));
     };
 
-    Controller.prototype.on = function(eventName, handler, args) {
-      if (args == null) {
-        args = [];
-      }
-      return bean.on.apply(bean, [this, eventName, handler].concat(slice.call(args)));
+    Controller.prototype.on = function(eventName, handler) {
+      return bean.on(this, eventName, handler);
     };
 
-    Controller.prototype.one = function(eventName, handler, args) {
-      if (args == null) {
-        args = [];
-      }
-      return bean.one.apply(bean, [this, eventName, handler].concat(slice.call(args)));
+    Controller.prototype.one = function(eventName, handler) {
+      return bean.one(this, eventName, handler);
     };
 
     Controller.prototype.off = function(eventName, handler) {
@@ -492,9 +485,6 @@
     };
 
     Controller.prototype.trigger = function(eventName, args) {
-      if (args == null) {
-        args = [];
-      }
       return bean.fire(this, eventName, args);
     };
 
@@ -1203,8 +1193,7 @@
 
 },{"./client":1,"./session":4,"./util/uniqueid":13}],6:[function(require,module,exports){
 (function() {
-  var DfDomElement, MATCHES_SELECTOR_FN, Thing, bean, matchesSelector,
-    slice = [].slice;
+  var DfDomElement, MATCHES_SELECTOR_FN, Thing, bean, matchesSelector;
 
   bean = require("bean");
 
@@ -2148,12 +2137,9 @@
      * @public
      */
 
-    DfDomElement.prototype.on = function(eventName, selector, handler, args) {
-      if (args == null) {
-        args = [];
-      }
+    DfDomElement.prototype.on = function(eventName, selector, handler) {
       return this.each(function(node) {
-        return bean.on.apply(bean, [node, eventName, selector, handler].concat(slice.call(args)));
+        return bean.on(node, eventName, selector, handler);
       });
     };
 
@@ -2167,12 +2153,9 @@
      * @public
      */
 
-    DfDomElement.prototype.one = function(eventName, selector, handler, args) {
-      if (args == null) {
-        args = [];
-      }
+    DfDomElement.prototype.one = function(eventName, selector, handler) {
       return this.each(function(node) {
-        return bean.one.apply(bean, [node, eventName, selector, handler].concat(slice.call(args)));
+        return bean.one(node, eventName, selector, handler);
       });
     };
 
@@ -2187,9 +2170,6 @@
      */
 
     DfDomElement.prototype.trigger = function(eventName, args) {
-      if (args == null) {
-        args = [];
-      }
       return this.each(function(node) {
         return bean.fire(node, eventName, args);
       });
@@ -2987,23 +2967,17 @@
       noUiSlider.create(this.slider, options);
       this.slider.noUiSlider.on('change', (function(_this) {
         return function() {
-          var max, min, ref, ref1, ref2, ref3;
+          var max, min, ref;
           ref = _this.slider.noUiSlider.get(), min = ref[0], max = ref[1];
           if (_this.values[min] === _this.range.min && _this.values[max] === _this.range.max) {
-            if ((ref1 = _this.controller) != null) {
-              ref1.removeFilter(_this.facet);
-            }
+            _this.controller.removeFilter(_this.facet);
           } else {
-            if ((ref2 = _this.controller) != null) {
-              ref2.addFilter(_this.facet, {
-                gte: _this.values[min],
-                lte: _this.values[max]
-              });
-            }
+            _this.controller.addFilter(_this.facet, {
+              gte: _this.values[min],
+              lte: _this.values[max]
+            });
           }
-          if ((ref3 = _this.controller) != null) {
-            ref3.refresh();
-          }
+          _this.controller.refresh();
           return _this.values = {};
         };
       })(this));
@@ -3288,7 +3262,7 @@
       if (!this.initialized) {
         this.element.on("click", "[data-facet='" + this.facet + "'][data-value]", (function(_this) {
           return function(e) {
-            var facetName, facetValue, isSelected, ref, ref1, ref2, termNode;
+            var facetName, facetValue, isSelected, termNode;
             e.preventDefault();
             termNode = $(e.currentTarget);
             facetName = termNode.data("facet");
@@ -3296,34 +3270,28 @@
             isSelected = !termNode.hasAttr("data-selected");
             if (isSelected) {
               termNode.attr("data-selected", "");
-              if ((ref = _this.controller) != null) {
-                ref.addFilter(facetName, facetValue);
-              }
+              _this.controller.addFilter(facetName, facetValue);
             } else {
               termNode.removeAttr("data-selected");
-              if ((ref1 = _this.controller) != null) {
-                ref1.removeFilter(facetName, facetValue);
-              }
+              _this.controller.removeFilter(facetName, facetValue);
             }
-            if ((ref2 = _this.controller) != null) {
-              ref2.refresh();
-            }
+            _this.controller.refresh();
             return _this.trigger("df:term:click", [facetName, facetValue, isSelected]);
           };
         })(this));
         if (this.options.size != null) {
-          return this.element.on("click", "[data-toggle-extra-content]", (function(_this) {
+          this.element.on("click", "[data-toggle-extra-content]", (function(_this) {
             return function(e) {
               e.preventDefault();
-              _this.updateButton();
-              return _this.collapsed = !_this.collapsed;
+              return _this.toggleExtraContent();
             };
           })(this));
         }
       }
+      return TermsFacet.__super__.init.apply(this, arguments);
     };
 
-    TermsFacet.prototype.updateButton = function() {
+    TermsFacet.prototype.toggleExtraContent = function() {
       var btn, labelAttr;
       if (this.collapsed) {
         labelAttr = "data-text-toggle";
@@ -3333,7 +3301,9 @@
         this.element.removeAttr("data-view-extra-content");
       }
       btn = this.getButton();
-      return (btn.get(0)).textContent = (btn.attr(labelAttr)).trim();
+      (btn.get(0)).textContent = (btn.attr(labelAttr)).trim();
+      this.collapsed = !this.collapsed;
+      return this.trigger("df:collapse:change", [this.collapsed]);
     };
 
 
@@ -3371,13 +3341,13 @@
 
     TermsFacet.prototype.render = function(res) {
       var context, index, ref, selected, term, terms;
-      if (res.page = 1) {
+      if (res.page === 1) {
         terms = res.facets[this.facet].terms.buckets;
         if (terms.length > 0) {
           selected = this.getSelectedTerms(res);
           for (index in terms) {
             term = terms[index];
-            term.index = index;
+            term.index = parseInt(index, 10);
             term.name = this.facet;
             term.selected = (ref = term.key, indexOf.call(selected, ref) >= 0);
           }
@@ -3736,8 +3706,7 @@
 
 },{"../util/dfdom":6,"../util/dfscroll":7,"./display":15,"extend":23}],21:[function(require,module,exports){
 (function() {
-  var $, Widget, bean,
-    slice = [].slice;
+  var $, Widget, bean;
 
   bean = require("bean");
 
@@ -3814,18 +3783,12 @@
       return this.trigger("df:widget:clean");
     };
 
-    Widget.prototype.on = function(eventName, handler, args) {
-      if (args == null) {
-        args = [];
-      }
-      return bean.on.apply(bean, [this, eventName, handler].concat(slice.call(args)));
+    Widget.prototype.on = function(eventName, handler) {
+      return bean.on(this, eventName, handler);
     };
 
-    Widget.prototype.one = function(eventName, handler, args) {
-      if (args == null) {
-        args = [];
-      }
-      return bean.one.apply(bean, [this, eventName, handler].concat(slice.call(args)));
+    Widget.prototype.one = function(eventName, handler) {
+      return bean.one(this, eventName, handler);
     };
 
     Widget.prototype.off = function(eventName, handler) {
@@ -3833,9 +3796,6 @@
     };
 
     Widget.prototype.trigger = function(eventName, args) {
-      if (args == null) {
-        args = [];
-      }
       return bean.fire(this, eventName, args);
     };
 

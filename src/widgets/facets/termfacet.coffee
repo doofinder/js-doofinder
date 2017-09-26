@@ -108,12 +108,12 @@ class TermsFacet extends Display
 
         if isSelected
           termNode.attr "data-selected", ""
-          @controller?.addFilter facetName, facetValue
+          @controller.addFilter facetName, facetValue
         else
           termNode.removeAttr "data-selected"
-          @controller?.removeFilter facetName, facetValue
+          @controller.removeFilter facetName, facetValue
 
-        @controller?.refresh()
+        @controller.refresh()
         @trigger "df:term:click", [facetName, facetValue, isSelected]
 
         # TODO(@carlosescri)'s proposal:
@@ -129,10 +129,11 @@ class TermsFacet extends Display
       if @options.size?
         @element.on "click", "[data-toggle-extra-content]", (e) =>
           e.preventDefault()
-          @updateButton()
-          @collapsed = not @collapsed
+          @toggleExtraContent()
 
-  updateButton: ->
+    super
+
+  toggleExtraContent: ->
     if @collapsed
       labelAttr = "data-text-toggle"
       @element.attr "data-view-extra-content", ""
@@ -142,6 +143,8 @@ class TermsFacet extends Display
 
     btn = @getButton()
     (btn.get 0).textContent = (btn.attr labelAttr).trim()
+    @collapsed = not @collapsed
+    @trigger "df:collapse:change", [@collapsed]
 
   ###*
    * @return {HTMLElement} The "show more" button.
@@ -167,13 +170,13 @@ class TermsFacet extends Display
    * @fires TermsFacet#df:widget:render
   ###
   render: (res) ->
-    if res.page = 1
+    if res.page is 1
       terms = res.facets[@facet].terms.buckets
 
       if terms.length > 0
         selected = @getSelectedTerms res
         for index, term of terms
-          term.index = index
+          term.index = parseInt index, 10
           term.name = @facet
           term.selected = term.key in selected
 

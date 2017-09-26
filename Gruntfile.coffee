@@ -51,11 +51,11 @@ module.exports = (grunt) ->
         ]
       karma:
         files:
-          'test_karma/doofinder.min.js': 'dist/doofinder.min.js'
+          'test_karma/doofinder.js': 'dist/doofinder.js'
 
     clean:
       build_scss: ['build_scss/']
-      karma: ['test_karma/doofinder.min.js']
+      karma: ['test_karma/doofinder.js']
 
     sass:
       options:
@@ -105,11 +105,13 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-version'
 
   grunt.registerTask 'compile', ['coffee:release', 'browserify', 'uglify:release']
-  grunt.registerTask 'dev', ['compile', 'testMocha', 'watch:coffee']
   grunt.registerTask 'css', ['copy:build_scss', 'sass:build_scss', 'clean:build_scss']
 
   grunt.registerTask 'testMocha', ['mochaTest:release']
   grunt.registerTask 'testKarma', ['copy:karma', 'karma:test', 'clean:karma']
+
+  grunt.registerTask 'dev', ['compile', 'testMocha', 'watch:coffee']
+  grunt.registerTask 'dev:karma', ['testKarma', 'watch:karma']
 
   grunt.registerTask 'default', ['compile', 'testMocha', 'testKarma']
   grunt.registerTask 'release', ['version:library', 'version:bower', 'compile']

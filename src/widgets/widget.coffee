@@ -59,16 +59,16 @@ class Widget
   # Events
   #
 
-  on: (eventName, handler, args = []) ->
-    bean.on @, eventName, handler, args...
+  on: (eventName, handler) ->
+    bean.on @, eventName, handler
 
-  one: (eventName, handler, args = []) ->
-    bean.one @, eventName, handler, args...
+  one: (eventName, handler) ->
+    bean.one @, eventName, handler
 
   off: (eventName, handler) ->
     bean.off @, eventName, handler
 
-  trigger: (eventName, args = []) ->
+  trigger: (eventName, args) ->
     bean.fire @, eventName, args
 
 
