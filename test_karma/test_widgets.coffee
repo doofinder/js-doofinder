@@ -153,6 +153,9 @@ describe "Default Widgets", ->
   describe "TermsFacet", ->
     TermsFacet = doofinder.widgets.TermsFacet
 
+    it "renders properly and is not collapsible by default"
+    it "can be collapsible if size option is provided"
+
   describe "RangeFacet", ->
     RangeFacet = doofinder.widgets.RangeFacet
 
