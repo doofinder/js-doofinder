@@ -211,6 +211,22 @@ describe "Default Widgets", ->
 
       widget.render termsFacetResponse()
 
+    it "cleans itself if there are no terms", (done) ->
+      widget = createWidget()
+
+      widget.on "df:widget:clean", ->
+        widget.element.html().trim().should.equal ""
+        done()
+
+      widget.render
+        page: 1
+        facets: brand: terms: buckets: []
+
+    it "does nothing if response is for a secondary page", (done) ->
+      widget = createWidget()
+      (widget.render page: 2).should.be.false
+      done()
+
     it "unselects selected terms when clicked", (done) ->
       widget = createWidget()
 
@@ -274,6 +290,35 @@ describe "Default Widgets", ->
 
   describe "RangeFacet", ->
     RangeFacet = doofinder.widgets.RangeFacet
+
+    createWidget = (options) ->
+      insertHTML """<div id="widget"></div>"""
+      widget = new RangeFacet "#widget", "best_price", options
+      # code is currently too coupled to controller so we need a mock
+      widget.setController getControllerMock()
+      widget.init()
+      widget
+
+    rangeFacetResponse = ->
+      response =
+        page: 1
+        filter: range: best_price:
+          lte: 1687.038055582841
+          gte: 7.900000095367432
+        facets: best_price:
+          range: buckets: [ {
+            stats:
+              sum: 522389.32065343857
+              min: 7.900000095367432
+              max: 2360.0
+              count: 1687
+              avg: 309.6557917329215
+            key: '0.0-*'
+            from_as_string: '0.0'
+            from: 0.0
+            doc_count: 1687
+          } ]
+          doc_count: 1687
 
   describe "Panel", ->
     Panel = doofinder.widgets.Panel

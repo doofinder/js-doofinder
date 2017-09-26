@@ -188,5 +188,7 @@ class TermsFacet extends Display
         super (extend true, {}, res, context)
       else
         @clean()
+    else
+      false
 
 module.exports = TermsFacet

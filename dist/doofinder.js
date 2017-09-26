@@ -3360,6 +3360,8 @@
         } else {
           return this.clean();
         }
+      } else {
+        return false;
       }
     };
 
