@@ -2725,11 +2725,13 @@
     }
 
     CollapsiblePanel.prototype.collapse = function() {
-      return this.panelElement.attr("data-df-collapse", "true");
+      this.panelElement.attr("data-df-collapse", "true");
+      return this.trigger("df:collapse:change", [true]);
     };
 
     CollapsiblePanel.prototype.expand = function() {
-      return this.panelElement.attr("data-df-collapse", "false");
+      this.panelElement.attr("data-df-collapse", "false");
+      return this.trigger("df:collapse:change", [false]);
     };
 
     CollapsiblePanel.prototype.toggle = function() {
