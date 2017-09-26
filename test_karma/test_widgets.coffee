@@ -124,7 +124,7 @@ describe "Default Widgets", ->
         ($ "b").length.should.equal 1
         ($ "#query").html().should.equal "hola"
         ($ "#greeting").html().should.equal "Hello!"
-        # Mustaches escapes result and there's no unescape option!!!
+        # Mustache escapes result and there's no unescape option!!!
         ($ "#url").html().should.equal "https://www.doofinder.com?source=karma&amp;q=hola"
         ($ "#image").html().should.equal "//www.doofinder.com/image.png"
         ($ "#translate").html().should.equal "Hola!"
@@ -148,8 +148,19 @@ describe "Default Widgets", ->
           "Hello!": "Hola!"
 
   describe "ScrollDisplay", ->
-  describe "Panel", ->
-  describe "CollapsiblePanel", ->
+    ScrollDisplay = doofinder.widgets.ScrollDisplay
+
   describe "TermsFacet", ->
+    TermsFacet = doofinder.widgets.TermsFacet
+
   describe "RangeFacet", ->
+    RangeFacet = doofinder.widgets.RangeFacet
+
+  describe "Panel", ->
+    Panel = doofinder.widgets.Panel
+
+  describe "CollapsiblePanel", ->
+    CollapsiblePanel = doofinder.widgets.CollapsiblePanel
+
   describe "QueryInput", ->
+    QueryInput = doofinder.widgets.QueryInput

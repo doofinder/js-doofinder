@@ -48,8 +48,6 @@ class RangeFacet extends Display
    * @param  {Object} options Slider options.
   ###
   __renderSlider: (options) ->
-    self = this
-
     # Build template context
     context =
       name: @name
@@ -66,19 +64,32 @@ class RangeFacet extends Display
     noUiSlider.create @slider, options
 
     # Listen for the 'change' event so we can query Doofinder with new filters
-    @slider.noUiSlider.on 'change', ->
-      [min, max] = self.slider.noUiSlider.get()
+    @slider.noUiSlider.on 'change', =>
+      [min, max] = @slider.noUiSlider.get()
 
-      if self.values[min] == self.range.min and self.values[max] == self.range.max
+      # TODO(@carlosescri): Probably all this controller stuff shouldn't be
+      # here and the controller should know this is a Filter Widget and
+      # listen for changes to refresh itself.
+
+      if @values[min] == @range.min and @values[max] == @range.max
         # No need to filter
-        self.controller.removeFilter self.name
+        @controller?.removeFilter @name
       else
-        self.controller.addFilter self.name,
-          gte: self.values[min]
-          lte: self.values[max]
+        @controller?.addFilter @name,
+          gte: @values[min]
+          lte: @values[max]
+      @controller?.refresh()
+      @values = {}
 
-      self.controller.refresh()
-      self.values = {}
+      # TODO(@carlosescri)'s proposal:
+      # if @values[min] == @range.min and @values[max] == @range.max
+      #   @trigger "df:filter:remove", [@name]
+      # else
+      #   value =
+      #     gte: @values[min]
+      #     lte: @values[max]
+      #   @trigger "df:filter:add", [@name, value]
+      # @values = {}
 
     undefined
 

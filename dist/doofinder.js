@@ -2976,8 +2976,7 @@
      */
 
     RangeFacet.prototype.__renderSlider = function(options) {
-      var context, self;
-      self = this;
+      var context;
       context = {
         name: this.name,
         sliderClassName: this.sliderClassName
@@ -2986,20 +2985,28 @@
       this.slider = document.createElement('div');
       this.element.find(this.sliderSelector).append(this.slider);
       noUiSlider.create(this.slider, options);
-      this.slider.noUiSlider.on('change', function() {
-        var max, min, ref;
-        ref = self.slider.noUiSlider.get(), min = ref[0], max = ref[1];
-        if (self.values[min] === self.range.min && self.values[max] === self.range.max) {
-          self.controller.removeFilter(self.name);
-        } else {
-          self.controller.addFilter(self.name, {
-            gte: self.values[min],
-            lte: self.values[max]
-          });
-        }
-        self.controller.refresh();
-        return self.values = {};
-      });
+      this.slider.noUiSlider.on('change', (function(_this) {
+        return function() {
+          var max, min, ref, ref1, ref2, ref3;
+          ref = _this.slider.noUiSlider.get(), min = ref[0], max = ref[1];
+          if (_this.values[min] === _this.range.min && _this.values[max] === _this.range.max) {
+            if ((ref1 = _this.controller) != null) {
+              ref1.removeFilter(_this.name);
+            }
+          } else {
+            if ((ref2 = _this.controller) != null) {
+              ref2.addFilter(_this.name, {
+                gte: _this.values[min],
+                lte: _this.values[max]
+              });
+            }
+          }
+          if ((ref3 = _this.controller) != null) {
+            ref3.refresh();
+          }
+          return _this.values = {};
+        };
+      })(this));
       return void 0;
     };
 
@@ -3281,7 +3288,7 @@
       if (!this.initialized) {
         this.element.on("click", "[data-facet='" + this.name + "'][data-value]", (function(_this) {
           return function(e) {
-            var facetName, facetValue, isSelected, termNode;
+            var facetName, facetValue, isSelected, ref, ref1, ref2, termNode;
             e.preventDefault();
             termNode = $(e.currentTarget);
             facetName = termNode.data("facet");
@@ -3289,12 +3296,18 @@
             isSelected = !termNode.hasAttr("data-selected");
             if (isSelected) {
               termNode.attr("data-selected", "");
-              _this.controller.addFilter(facetName, facetValue);
+              if ((ref = _this.controller) != null) {
+                ref.addFilter(facetName, facetValue);
+              }
             } else {
               termNode.removeAttr("data-selected");
-              _this.controller.removeFilter(facetName, facetValue);
+              if ((ref1 = _this.controller) != null) {
+                ref1.removeFilter(facetName, facetValue);
+              }
             }
-            _this.controller.refresh();
+            if ((ref2 = _this.controller) != null) {
+              ref2.refresh();
+            }
             return _this.trigger("df:term:click", [facetName, facetValue, isSelected]);
           };
         })(this));

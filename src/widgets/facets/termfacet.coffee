@@ -102,15 +102,29 @@ class TermsFacet extends Display
         facetValue = termNode.data "value"
         isSelected = not termNode.hasAttr "data-selected"
 
+        # TODO(@carlosescri): Probably all this controller stuff shouldn't be
+        # here and the controller should know this is a Filter Widget and
+        # listen for changes to refresh itself.
+
         if isSelected
           termNode.attr "data-selected", ""
-          @controller.addFilter facetName, facetValue
+          @controller?.addFilter facetName, facetValue
         else
           termNode.removeAttr "data-selected"
-          @controller.removeFilter facetName, facetValue
+          @controller?.removeFilter facetName, facetValue
 
-        @controller.refresh()
+        @controller?.refresh()
         @trigger "df:term:click", [facetName, facetValue, isSelected]
+
+        # TODO(@carlosescri)'s proposal:
+        # if isSelected
+        #   termNode.attr "data-selected", ""
+        #   @trigger "df:filter:add", [facetName, facetValue]
+        # else
+        #   termNode.removeAttr "data-selected"
+        #   @trigger "df:filter:remove", [facetName]
+
+        # @trigger "df:term:click", [facetName, facetValue, isSelected]
 
       if @options.size?
         @element.on "click", "[data-toggle-extra-content]", (e) =>
