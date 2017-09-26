@@ -320,6 +320,16 @@ describe "Default Widgets", ->
           } ]
           doc_count: 1687
 
+    it "renders properly when a min and max values differ"
+    it "cleans itself when min and max values are equal"
+    it "does nothing if response is for a secondary page", (done) ->
+      widget = createWidget()
+      (widget.render page: 2).should.be.false
+      done()
+    it "applies filter values if differ from min and max"
+    it "formats values with the default format if no format specified"
+    it "formats values with custom format function if specified"
+
   describe "Panel", ->
     Panel = doofinder.widgets.Panel
 

@@ -123,7 +123,6 @@ class TermsFacet extends Display
         # else
         #   termNode.removeAttr "data-selected"
         #   @trigger "df:filter:remove", [facetName]
-
         # @trigger "df:term:click", [facetName, facetValue, isSelected]
 
       if @options.size?

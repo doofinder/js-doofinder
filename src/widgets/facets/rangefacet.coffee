@@ -132,7 +132,7 @@ class RangeFacet extends Display
           value = document.createElement 'div'
           value.setAttribute 'class', 'noUi-value noUi-value-horizontal noUi-value-large'
           value.setAttribute 'data-position', pos
-          value.innerHTML = if values? then values[pos+''] else ''
+          value.innerHTML = if values? then values["#{pos}"] else ''
           pips.appendChild value
     else
       # update pip values
@@ -159,54 +159,57 @@ class RangeFacet extends Display
    * @fires RangeFacet#df:widget:render
   ###
   render: (res) ->
-    @range = @__getRangeFromResponse(res)
+    if res.page is 1
+      @range = @__getRangeFromResponse(res)
 
-    if @range.min == @range.max
-      # There's only one or no items with values in the range
-      @clean()
-    else
-      # Update widget if any results found and there are range bounds
-
-      options =
-        start: [@range.min, @range.max]
-        range: @range
-        connect: true
-        tooltips: true  # can't be overriden when options are updated!!!
-        format:
-          to: (value) =>
-            # noUISlider gets the formatted values so we maintain references to
-            # raw values inside an object.
-            if value?
-              formattedValue = @format value
-              @values[formattedValue] = parseFloat value, 10
-              formattedValue
-            else
-              ""
-          from: (formattedValue) =>
-            formattedValue
-
-      # If we have values from search filtering we apply them
-      if res and res.filter and res.filter.range and res.filter.range[@facet]
-        start = [parseFloat(res.filter.range[@facet].gte, 10),
-                 parseFloat(res.filter.range[@facet].lte, 10)]
-        options.start[0] = start[0] unless isNaN start[0]
-        options.start[1] = start[1] unless isNaN start[1]
-
-      if @slider is null
-        @__renderSlider options
+      if @range.min == @range.max
+        # There's only one or no items with values in the range
+        @clean()
       else
-        @slider.noUiSlider.updateOptions options
+        # Update widget if any results found and there are range bounds
 
-      # Pips are buggy in noUiSlider so we are going to paint them ourselves
-      # unless options.pips has a value (either false or real options)
-      unless options.pips?
-        values =
-          0: options.format.to options.range.min
-          50: options.format.to((options.range.min + options.range.max) / 2.0)
-          100: options.format.to options.range.max
-        @__renderPips values
+        options =
+          start: [@range.min, @range.max]
+          range: @range
+          connect: true
+          tooltips: true  # can't be overriden when options are updated!!!
+          format:
+            to: (value) =>
+              # noUISlider gets the formatted values so we maintain references to
+              # raw values inside an object.
+              if value?
+                formattedValue = @format value
+                @values[formattedValue] = parseFloat value, 10
+                formattedValue
+              else
+                ""
+            from: (formattedValue) =>
+              formattedValue
 
-      @trigger "df:widget:render", [res]
+        # If we have values from search filtering we apply them
+        if res?.filter?.range?[@facet]
+          start = [parseFloat(res.filter.range[@facet].gte, 10),
+                   parseFloat(res.filter.range[@facet].lte, 10)]
+          options.start[0] = start[0] unless isNaN start[0]
+          options.start[1] = start[1] unless isNaN start[1]
+
+        if @slider is null
+          @__renderSlider options
+        else
+          @slider.noUiSlider.updateOptions options
+
+        # Pips are buggy in noUiSlider so we are going to paint them ourselves
+        # unless options.pips has a value (either false or real options)
+        unless options.pips?
+          values =
+            0: options.format.to options.range.min
+            50: options.format.to((options.range.min + options.range.max) / 2.0)
+            100: options.format.to options.range.max
+          @__renderPips values
+
+        @trigger "df:widget:render", [res]
+    else
+      false
 
   ###*
    * Cleans the widget by removing all the HTML inside the container element.
