@@ -85,7 +85,7 @@ module.exports = (grunt) ->
     watch:
       coffee:
         files: ['./src/**/*.coffee']
-        tasks: ['compile']
+        tasks: ['compile', 'testMocha']
       css:
         files: ['./src/**/*.scss']
         tasks: ['css']
@@ -105,7 +105,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-version'
 
   grunt.registerTask 'compile', ['coffee:release', 'browserify', 'uglify:release']
-  grunt.registerTask 'dev', ['compile', 'watch:coffee']
+  grunt.registerTask 'dev', ['compile', 'testMocha', 'watch:coffee']
   grunt.registerTask 'css', ['copy:build_scss', 'sass:build_scss', 'clean:build_scss']
 
   grunt.registerTask 'testMocha', ['mochaTest:release']
