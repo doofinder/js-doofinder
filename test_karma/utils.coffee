@@ -17,5 +17,3 @@ getControllerMock = ->
     refresh: -> @refreshDone = true
     addFilter: ->
     removeFilter: ->
-
-

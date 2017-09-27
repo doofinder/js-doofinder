@@ -525,6 +525,18 @@ describe "Default Widgets", ->
       widget.init()
       widget
 
+    createEnterKeydownEvent = ->
+      e = new Event "keydown"
+      e.key = "Enter"
+      e.keyCode = 13
+      e.which = 13
+      e.altKey = false
+      e.ctrlKey = false
+      e.shiftKey = false
+      e.metaKey = false
+      e.bubbles = true
+      e
+
     it "erases input value on clean by default", (done) ->
       controller = getControllerMock()
       widget = createWidget controller, "something"
@@ -572,6 +584,11 @@ describe "Default Widgets", ->
     it "doesn't search if input is not at least 3-char long", (done) ->
       controller = getControllerMock()
       widget = createWidget controller
+
+      widget.on "df:input:stop", (value) ->
+        # this should never be executed
+        (expect true).to.be.false
+
       widget.value = "12"
       setTimeout (->
         controller.searchDone.should.be.false
@@ -592,8 +609,37 @@ describe "Default Widgets", ->
         done()
       widget.value = "123"
 
-    it "triggers a special event for enter key if input is not a textarea"
-    it "doesn't trigger a special event for enter key if input is a textarea"
+    it "triggers a special event for enter key if input is not a textarea", (done) ->
+      controller = getControllerMock()
+      widget = createWidget controller, "something"
+      widget.on "df:input:submit", (value) ->
+        value.should.equal "something"
+      widget.on "df:input:stop", ->
+        controller.searchDone.should.be.true
+        done()
+      (widget.element.get 0).dispatchEvent createEnterKeydownEvent()
+
+    it "doesn't trigger a special event for enter key if input is a textarea", (done) ->
+      insertHTML """<textarea id="widget">something</textarea>"""
+      controller = getControllerMock()
+      widget = new QueryInput "#widget", typingTimeout: 50
+      # code is currently too coupled to controller so we need a mock
+      widget.setController controller
+      widget.init()
+
+      widget.on "df:input:submit", (value) ->
+        # this should never be executed
+        (expect true).to.be.false
+
+      widget.value.should.equal "something"
+      (widget.element.get 0).dispatchEvent createEnterKeydownEvent()
+
+      setTimeout (->
+        widget.value.should.equal "something"
+        controller.searchDone.should.be.false
+        done()
+      ), widget.options.typingTimeout
+
 
   describe "ScrollDisplay", ->
     ScrollDisplay = doofinder.widgets.ScrollDisplay
