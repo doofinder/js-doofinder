@@ -16,6 +16,7 @@ module.exports =
     addHelpers: require "./util/helpers"
     bean: require "bean"
     dfdom: require "./util/dfdom"
+    currency: require "./util/currency"
     extend: require "extend"
     http: require "./util/http"
     md5: require "md5"

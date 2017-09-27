@@ -165,7 +165,12 @@
               function(panel){
                 return new doofinder.widgets.RangeFacet(
                   panel.contentElement,
-                  facet.name
+                  facet.name,
+                  {
+                    format: function(value) {
+                      return doofinder.util.currency.format(value);
+                    }
+                  }
                 );
               },
               {
