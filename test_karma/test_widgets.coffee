@@ -140,9 +140,6 @@ describe "Default Widgets", ->
         translations:
           "Hello!": "Hola!"
 
-  describe "ScrollDisplay", ->
-    ScrollDisplay = doofinder.widgets.ScrollDisplay
-
   describe "TermsFacet", ->
     TermsFacet = doofinder.widgets.TermsFacet
 
@@ -516,3 +513,87 @@ describe "Default Widgets", ->
 
   describe "QueryInput", ->
     QueryInput = doofinder.widgets.QueryInput
+
+    createWidget = (controller, value = "", options = {}) ->
+      insertHTML """<input id="widget" type="text" value="#{value}">"""
+      defaults =
+        typingTimeout: 50
+      options = doofinder.util.extend true, defaults, options
+      widget = new QueryInput "#widget", options
+      # code is currently too coupled to controller so we need a mock
+      widget.setController controller
+      widget.init()
+      widget
+
+    it "erases input value on clean by default", (done) ->
+      controller = getControllerMock()
+      widget = createWidget controller, "something"
+      widget.on "df:widget:render", ->
+        @value.should.equal "something"
+        controller.searchDone.should.be.false
+        @clean()
+      widget.on "df:widget:clean", ->
+        @value.should.equal ""
+        controller.searchDone.should.be.false
+        done()
+      widget.render()
+
+    it "doesn't erase input value on clean if disabled in options", (done) ->
+      controller = getControllerMock()
+      widget = createWidget controller, "something", clean: false
+      widget.on "df:widget:render", ->
+        @value.should.equal "something"
+        controller.searchDone.should.be.false
+        @clean()
+      widget.on "df:widget:clean", ->
+        @value.should.equal "something"
+        controller.searchDone.should.be.false
+        done()
+      widget.render()
+
+    it "searches when input is 3-char length or longer", (done) ->
+      controller = getControllerMock()
+      widget = createWidget controller
+      widget.on "df:input:stop", (value) ->
+        @value.should.equal value
+        controller.searchDone.should.be.true
+        done()
+      widget.value = "123"
+
+    it "can expect a configured minimum input text length", (done) ->
+      controller = getControllerMock()
+      widget = createWidget controller, "", captureLength: 4
+      widget.on "df:input:stop", (value) ->
+        @value.should.equal value
+        controller.searchDone.should.be.true
+        done()
+      widget.value = "1234"
+
+    it "doesn't search if input is not at least 3-char long", (done) ->
+      controller = getControllerMock()
+      widget = createWidget controller
+      widget.value = "12"
+      setTimeout (->
+        controller.searchDone.should.be.false
+        done()
+      ), widget.options.typingTimeout
+
+    it "can use multiple controllers", (done) ->
+      controllers = [
+        getControllerMock(),
+        getControllerMock(),
+        getControllerMock()
+      ]
+      widget = createWidget controllers
+      widget.on "df:input:stop", (value) ->
+        @value.should.equal value
+        controllers.forEach (controller) ->
+          controller.searchDone.should.be.true
+        done()
+      widget.value = "123"
+
+    it "triggers a special event for enter key if input is not a textarea"
+    it "doesn't trigger a special event for enter key if input is a textarea"
+
+  describe "ScrollDisplay", ->
+    ScrollDisplay = doofinder.widgets.ScrollDisplay

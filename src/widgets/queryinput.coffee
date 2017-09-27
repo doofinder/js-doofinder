@@ -1,5 +1,6 @@
 extend = require "extend"
 Widget = require "./widget"
+Thing = require "../util/thing"
 
 
 ###*
@@ -25,10 +26,20 @@ class QueryInput extends Widget
     @controller = []
     @timer = null
     @stopTimer = null
-    @currentValue = @element.val() or ""
+
+    Object.defineProperty @, "value",
+      get: =>
+        @element.val() or ""
+      set: (value) =>
+        @element.val value
+        @scheduleUpdate()
+
+    @previousValue = @value
 
   setController: (controller) ->
-    @controller.push controller
+    if not Thing.isArray controller
+      controller = [controller]
+    @controller = @controller.concat controller
 
   ###*
    * Initializes the object with a controller and attachs event handlers for
@@ -45,28 +56,22 @@ class QueryInput extends Widget
         @element.on "keydown", (e) =>
           if e.keyCode? and e.keyCode is 13
             @scheduleUpdate 0, true
-            @trigger "df:input:submit", [@element.val() or ""]
+            @trigger "df:input:submit", [@value]
 
       super
 
-  scheduleUpdate: (delay, force) ->
+  scheduleUpdate: (delay = @options.wait, force = false) ->
     clearTimeout @timer
     clearTimeout @stopTimer
+    @timer = setTimeout (@updateStatus.bind @), delay, force
 
-    query = @element.val() or ""
-    delay ?= @options.wait
-    force ?= false
-
-    @timer = setTimeout (@updateStatus.bind @), delay, query, force # IE10+
-
-  updateStatus: (query, force) ->
-    valid = query.length >= @options.captureLength
-    changed = query.toUpperCase() != @currentValue
-    if (valid and (changed or force)) or (@currentValue and not query.length)
-      @stopTimer = setTimeout (@trigger.bind @), @options.typingTimeout, "df:input:stop", [query] # IE10+
-      # @stopTimer = setTimeout (=> @trigger "df:input:stop", [query]), @options.typingTimeout
-      @currentValue = query.toUpperCase()
-      @controller.forEach (controller) -> controller.search query
+  updateStatus: (force) ->
+    valid = @value.length >= @options.captureLength
+    changed = @value.toUpperCase() != @previousValue
+    if (valid and (changed or force)) or (@previousValue and not @value.length)
+      @stopTimer = setTimeout (@trigger.bind @), @options.typingTimeout, "df:input:stop", [@value]
+      @previousValue = @value.toUpperCase()
+      @controller.forEach (controller) => controller.search @value
 
   ###*
    * If the widget is configured to be cleaned, empties the value of the input
@@ -75,8 +80,8 @@ class QueryInput extends Widget
   ###
   clean: ->
     if @options.clean
-      @element.val ""
-      @trigger "df:widget:clean"
+      @element.val ""  # don't use @value, we don't want to search on clean
+    super
 
 
 module.exports = QueryInput

@@ -10,7 +10,12 @@ getController = ->
 
 getControllerMock = ->
   mock =
+    refreshDone: false
+    searchDone: false
+    registerWidget: ->
+    search: -> @searchDone = true
+    refresh: -> @refreshDone = true
     addFilter: ->
     removeFilter: ->
-    refresh: ->
-    registerWidget: ->
+
+
