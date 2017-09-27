@@ -1399,9 +1399,9 @@
       return results;
     };
 
-    DfDomElement.prototype.get = function(key) {
-      if (key != null) {
-        return this.element[key] || null;
+    DfDomElement.prototype.get = function(index) {
+      if (index != null) {
+        return this.element[index] || null;
       } else {
         return this.element;
       }
@@ -1409,6 +1409,10 @@
 
     DfDomElement.prototype.first = function() {
       return new DfDomElement(this.get(0));
+    };
+
+    DfDomElement.prototype.item = function(index) {
+      return new DfDomElement(this.get(index));
     };
 
 

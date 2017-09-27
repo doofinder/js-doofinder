@@ -152,11 +152,14 @@ class DfDomElement
       Array.prototype.splice.apply results, args
     results
 
-  get: (key) ->
-    if key? then @element[key] or null else @element
+  get: (index) ->
+    if index? then (@element[index] or null) else @element
 
   first: ->
     new DfDomElement @get 0
+
+  item: (index) ->
+    new DfDomElement @get index
 
   ###*
    * Iterates nodes in the set of matched elements, passing them to the

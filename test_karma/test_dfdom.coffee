@@ -92,6 +92,19 @@ describe "dfdom", ->
       done()
 
   context "[Utilities]", ->
+    it "can filter to get single elements by index", (done) ->
+      insertHTML """
+      <p id="first"></p>
+      <p id="second"></p>
+      <p id="third"></p>
+      """
+      items = (dfdom "p")
+      (items.first().attr "id").should.equal "first"
+      ((items.item 0).attr "id").should.equal "first"
+      ((items.item 1).attr "id").should.equal "second"
+      ((items.item 2).attr "id").should.equal "third"
+      done()
+
     it "can iterate each node in the set of matched elements", (done) ->
       insertHTML """
       <ul class="test">
