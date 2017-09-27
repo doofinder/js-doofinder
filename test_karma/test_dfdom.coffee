@@ -315,6 +315,66 @@ describe "dfdom", ->
       ((dfdom parent1).attr "id").should.equal "parent1"
       done()
 
+    it "can get siblings of a node (excludes the node)", (done) ->
+      insertHTML """
+      <div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+        <div class="node"></div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+      </div>
+      """
+      siblings = (dfdom ".node").siblings()
+      siblings.length.should.equal 5
+      (siblings.filter ".sibling").length.should.equal 5
+      (siblings.filter ".node").length.should.equal 0
+      done()
+
+    it "can get siblings of multiple nodes (excludes the nodes)", (done) ->
+      insertHTML """
+      <div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+        <div class="node"></div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+      </div>
+      <div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+        <div class="node"></div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+      </div>
+      """
+      siblings = (dfdom ".node").siblings()
+      siblings.length.should.equal 10
+      (siblings.filter ".sibling").length.should.equal 10
+      (siblings.filter ".node").length.should.equal 0
+      done()
+
+    it "can get siblings of multiple nodes that are siblings (includes the nodes)", (done) ->
+      insertHTML """
+      <div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+        <div class="node"></div>
+        <div class="sibling"></div>
+        <div class="node"></div>
+        <div class="sibling"></div>
+      </div>
+      """
+      siblings = (dfdom ".node").siblings()
+      siblings.length.should.equal 7
+      (siblings.filter ".sibling").length.should.equal 5
+      (siblings.filter ".node").length.should.equal 2
+      done()
+
   context "[DOM Manipulation Methods]", ->
     beforeEach ->
       insertHTML """

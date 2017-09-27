@@ -1,5 +1,6 @@
 extend = require "extend"
 Display = require "./display"
+$ = require "../util/dfdom"
 uniqueId = require "../util/uniqueid"
 
 

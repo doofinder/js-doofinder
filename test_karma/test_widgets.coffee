@@ -376,10 +376,143 @@ describe "Default Widgets", ->
       widget.render rangeFacetResponse()
 
   describe "Panel", ->
+    Display = doofinder.widgets.Display
     Panel = doofinder.widgets.Panel
 
+    createWidget = (options) ->
+      insertHTML """
+        <div>
+          <div id="widget">
+            <p>HI!</p>
+          </div>
+        </div>
+      """
+      createDisplay = (panel) ->
+        new Display panel.contentElement, template: """HELLO!"""
+      defaults =
+        templateVars:
+          panelElement: "panel"
+          labelElement: "label"
+          contentElement: "content"
+      options = doofinder.util.extend true, defaults, options
+      widget = new Panel "#widget", createDisplay, options
+      # code is currently too coupled to controller so we need a mock
+      widget.setController getControllerMock()
+      widget.init()
+      widget
+
+    it "properly renders itself replacing element content by default", (done) ->
+      widget = createWidget()
+      widget.on "df:widget:render", (res) ->
+        ($ "#widget").html().should.not.equal "<p>HI!</p>"
+        ($ "#panel").length.should.equal 1
+        ($ "#label").length.should.equal 0
+        ($ "#content").length.should.equal 1
+        ($ "#content").html().should.equal "HELLO!"
+        done()
+      widget.render()
+
+    it "can prepend itself inside the element", (done) ->
+      widget = createWidget insertionMethod: "prepend"
+      widget.on "df:widget:render", (res) ->
+        children = ($ "#widget").children()
+        children.length.should.equal 2
+        (children.get 0).should.equal (($ "#panel").get 0)
+        (children.item 1).html().should.equal "HI!"
+        ($ "#content").html().should.equal "HELLO!"
+        done()
+      widget.render()
+
+    it "can append itself inside the element", (done) ->
+      widget = createWidget insertionMethod: "append"
+      widget.on "df:widget:render", (res) ->
+        children = ($ "#widget").children()
+        children.length.should.equal 2
+        (children.item 0).html().should.equal "HI!"
+        (children.get 1).should.equal (($ "#panel").get 0)
+        ($ "#content").html().should.equal "HELLO!"
+        done()
+      widget.render()
+
+    it "can attach itself before the element", (done) ->
+      widget = createWidget insertionMethod: "before"
+      widget.on "df:widget:render", (res) ->
+        children = ($ "#widget").children()
+        children.length.should.equal 1
+        (children.item 0).html().should.equal "HI!"
+        ($ "#widget").siblings().length.should.equal 1
+        ((($ "#widget").siblings().item 0).attr "id").should.equal "panel"
+        done()
+      widget.render()
+
+    it "can attach itself after the element", (done) ->
+      widget = createWidget insertionMethod: "after"
+      widget.on "df:widget:render", (res) ->
+        children = ($ "#widget").children()
+        children.length.should.equal 1
+        (children.item 0).html().should.equal "HI!"
+        ($ "#widget").siblings().length.should.equal 1
+        ((($ "#widget").siblings().item 0).attr "id").should.equal "panel"
+        done()
+      widget.render()
+
   describe "CollapsiblePanel", ->
+    Display = doofinder.widgets.Display
     CollapsiblePanel = doofinder.widgets.CollapsiblePanel
+
+    createWidget = (options) ->
+      insertHTML """<div id="widget"></div>"""
+      createDisplay = (panel) ->
+        new Display panel.contentElement, template: """HELLO!"""
+      defaults =
+        templateVars:
+          panelElement: "panel"
+          labelElement: "label"
+          contentElement: "content"
+      options = doofinder.util.extend true, defaults, options
+      widget = new CollapsiblePanel "#widget", createDisplay, options
+      # code is currently too coupled to controller so we need a mock
+      widget.setController getControllerMock()
+      widget.init()
+      widget
+
+    it "properly renders itself with default options", (done) ->
+      widget = createWidget()
+      widget.on "df:widget:render", (res) ->
+        ($ "#widget").html().should.not.equal ""
+        ($ "#panel").length.should.equal 1
+        ($ "#label").length.should.equal 1
+        ($ "#label").html().should.equal "Untitled"
+        ($ "#content").length.should.equal 1
+        ($ "#content").html().should.equal "HELLO!"
+        @isCollapsed.should.be.false
+        done()
+      widget.render()
+
+    it "properly renders itself with custom options", (done) ->
+      widget = createWidget startCollapsed: true, templateVars: label: "My Panel"
+      widget.on "df:widget:render", (res) ->
+        ($ "#label").html().should.equal "My Panel"
+        @isCollapsed.should.be.true
+        done()
+      widget.render()
+
+    it "toggles content when label is clicked", (done) ->
+      widget = createWidget()
+      widget.on "df:widget:render", (res) ->
+        # 1. starts expanded
+        @isCollapsed.should.be.false
+        @on "df:collapse:change", (collapsed) ->
+          @isCollapsed.should.equal collapsed
+          if collapsed
+            # 3. expand
+            ($ "#label").trigger "click"
+          else
+            # 4. OK!
+            done()
+        # 2. collapse
+        ($ "#label").trigger "click"
+      widget.render()
 
   describe "QueryInput", ->
     QueryInput = doofinder.widgets.QueryInput

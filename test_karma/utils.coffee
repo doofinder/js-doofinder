@@ -10,6 +10,7 @@ getController = ->
 
 getControllerMock = ->
   mock =
-    addFilter: (key, value) ->
-    removeFilter: (key) ->
+    addFilter: ->
+    removeFilter: ->
     refresh: ->
+    registerWidget: ->

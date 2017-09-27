@@ -5,6 +5,8 @@ Panel = require "./panel"
 class CollapsiblePanel extends Panel
   constructor: (element, getWidget, options = {}) ->
     defaults =
+      templateVars:
+        label: "Untitled"
       startCollapsed: false
     options = extend true, defaults, options
 

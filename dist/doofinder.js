@@ -1560,6 +1560,30 @@
 
 
     /**
+     * Returns all the siblings of the elements in the set of matched elements
+     * in a DfDomElement instance.
+     *
+     * @public
+     * @return {DfDomElement}
+     */
+
+    DfDomElement.prototype.siblings = function() {
+      var nodes;
+      nodes = [];
+      this.each(function(x) {
+        var args, n;
+        n = nodes.length;
+        args = ((new DfDomElement(x)).parent().children().filter(function(node) {
+          return node !== x;
+        })).get();
+        args.splice(0, 0, n, 0);
+        return Array.prototype.splice.apply(nodes, args);
+      });
+      return new DfDomElement(nodes);
+    };
+
+
+    /**
      * Returns a DfDomElement instance that contains the parent node of all the
      * elements in the current store. Duplicates are removed.
      *
@@ -1962,9 +1986,11 @@
      */
 
     DfDomElement.prototype.hasClass = function(className) {
+      var x;
+      x = this.length;
       return (this.element.filter(function(node) {
         return node.classList.contains(className);
-      })).length > 0;
+      })).length === x;
     };
 
 
@@ -2738,6 +2764,9 @@
         options = {};
       }
       defaults = {
+        templateVars: {
+          label: "Untitled"
+        },
         startCollapsed: false
       };
       options = extend(true, defaults, options);
@@ -3420,7 +3449,7 @@
 
 },{"../../util/dfdom":7,"../display":16,"extend":24}],19:[function(require,module,exports){
 (function() {
-  var Display, INSERTION_METHODS, Panel, defaultTemplate, extend, uniqueId,
+  var $, Display, INSERTION_METHODS, Panel, defaultTemplate, extend, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -3428,6 +3457,8 @@
   extend = require("extend");
 
   Display = require("./display");
+
+  $ = require("../util/dfdom");
 
   uniqueId = require("../util/uniqueid");
 
@@ -3497,7 +3528,7 @@
 
 }).call(this);
 
-},{"../util/uniqueid":14,"./display":16,"extend":24}],20:[function(require,module,exports){
+},{"../util/dfdom":7,"../util/uniqueid":14,"./display":16,"extend":24}],20:[function(require,module,exports){
 (function() {
   var QueryInput, Widget, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },

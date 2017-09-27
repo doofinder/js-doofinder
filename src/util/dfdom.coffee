@@ -226,6 +226,22 @@ class DfDomElement
     new DfDomElement @__find finderFn
 
   ###*
+   * Returns all the siblings of the elements in the set of matched elements
+   * in a DfDomElement instance.
+   *
+   * @public
+   * @return {DfDomElement}
+  ###
+  siblings: ->
+    nodes = []
+    @each (x) ->
+      n = nodes.length
+      args = ((new DfDomElement x).parent().children().filter (node) -> node isnt x).get()
+      args.splice 0, 0, n, 0
+      Array.prototype.splice.apply nodes, args
+    new DfDomElement nodes
+
+  ###*
    * Returns a DfDomElement instance that contains the parent node of all the
    * elements in the current store. Duplicates are removed.
    *
@@ -504,7 +520,8 @@ class DfDomElement
    * @param {String} className
   ###
   hasClass: (className) ->
-    (@element.filter (node) -> node.classList.contains className).length > 0
+    x = @length
+    (@element.filter (node) -> node.classList.contains className).length is x
 
   ###*
    * Removes a class name from all the elements in the set of matched elements.
