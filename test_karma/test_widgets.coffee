@@ -307,15 +307,61 @@ describe "Default Widgets", ->
           } ]
           doc_count: 1687
 
-    it "renders properly when a min and max values differ"
-    it "cleans itself when min and max values are equal"
+    it "renders properly when a min and max values differ", (done) ->
+      widget = createWidget()
+      widget.on "df:widget:render", (res) ->
+        ($ ".df-slider").length.should.equal 1
+        ($ ".noUi-tooltip").length.should.equal 2
+        (($ ".noUi-tooltip").item 0).html().should.equal "7.9"
+        (($ ".noUi-tooltip").item 1).html().should.equal "2360"
+        ($ ".noUi-value[data-position='0']").html().should.equal "7.9"
+        ($ ".noUi-value[data-position='100']").html().should.equal "2360"
+        done()
+      response = rangeFacetResponse()
+      delete response.filter
+      widget.render response
+
+    it "applies filter values if differ from min and max", (done) ->
+      widget = createWidget()
+      widget.on "df:widget:render", (res) ->
+        (($ ".noUi-tooltip").item 0).html().should.equal "7.9"
+        (($ ".noUi-tooltip").item 1).html().should.equal "1687.04"
+        ($ ".noUi-value[data-position='0']").html().should.equal "7.9"
+        ($ ".noUi-value[data-position='100']").html().should.equal "2360"
+        done()
+      widget.render rangeFacetResponse()
+
+    it "cleans itself when min and max values are equal", (done) ->
+      widget = createWidget()
+      widget.on "df:widget:clean", -> done()
+      response = rangeFacetResponse()
+      delete response.filter
+      value = response.facets.best_price.range.buckets[0].stats.min
+      response.facets.best_price.range.buckets[0].stats.max = value
+      widget.render response
+
     it "does nothing if response is for a secondary page", (done) ->
       widget = createWidget()
       (widget.render page: 2).should.be.false
       done()
-    it "applies filter values if differ from min and max"
-    it "formats values with the default format if no format specified"
-    it "formats values with custom format function if specified"
+
+    it "formats values with custom format function if specified", (done) ->
+      formatFn = (value) ->
+        doofinder.util.currency.format value,
+          symbol: '$'
+          format: '%s%v'
+          decimal: '.'
+          thousand: ','
+          precision: 3
+
+      widget = createWidget format: formatFn
+      widget.on "df:widget:render", (res) ->
+        (($ ".noUi-tooltip").item 0).html().should.equal "$7.900"
+        (($ ".noUi-tooltip").item 1).html().should.equal "$1,687.038"
+        ($ ".noUi-value[data-position='0']").html().should.equal "$7.900"
+        ($ ".noUi-value[data-position='100']").html().should.equal "$2,360"
+        done()
+      widget.render rangeFacetResponse()
 
   describe "Panel", ->
     Panel = doofinder.widgets.Panel
