@@ -2170,9 +2170,13 @@
      */
 
     DfDomElement.prototype.trigger = function(eventName, args) {
-      return this.each(function(node) {
-        return bean.fire(node, eventName, args);
-      });
+      if (eventName === 'focus' || eventName === 'blur') {
+        return this[eventName]();
+      } else {
+        return this.each(function(node) {
+          return bean.fire(node, eventName, args);
+        });
+      }
     };
 
 
@@ -2202,10 +2206,7 @@
      */
 
     DfDomElement.prototype.focus = function() {
-      var ref;
-      if ((ref = this.get(0)) != null) {
-        ref.focus();
-      }
+      this.length && (this.get(0)).focus();
       return this;
     };
 
@@ -2220,10 +2221,7 @@
      */
 
     DfDomElement.prototype.blur = function() {
-      var ref;
-      if ((ref = this.get(0)) != null) {
-        ref.blur();
-      }
+      this.length && (this.get(0)).blur();
       return this;
     };
 

@@ -699,7 +699,10 @@ class DfDomElement
    * @public
   ###
   trigger: (eventName, args) ->
-    @each (node) -> bean.fire node, eventName, args
+    if eventName in ['focus', 'blur']
+      @[eventName]()
+    else
+      @each (node) -> bean.fire node, eventName, args
 
   ###*
    * Proxy method to Bean Framework's off(). Removes event handlers from each
@@ -721,7 +724,7 @@ class DfDomElement
    * @return {DfDomElement} Current instance.
   ###
   focus: ->
-    (@get 0)?.focus()
+    @length and (@get 0).focus()
     return @
 
   ###*
@@ -733,7 +736,7 @@ class DfDomElement
    * @return {DfDomElement} Current instance.
   ###
   blur: ->
-    (@get 0)?.blur()
+    @length and (@get 0).blur()
     return @
 
   #

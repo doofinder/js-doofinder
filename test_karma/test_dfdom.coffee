@@ -635,17 +635,15 @@ describe "dfdom", ->
       done()
 
     context "[Special Events]", ->
-      beforeEach: ->
-        insertHTML """<input type="text" id="q">"""
-        element = document.getElementById "q"
-        patchElementEvent element, "focus"
-        patchElementEvent element, "blur"
-
+      # These events can't be easily debugged in browser, use index.html and a
+      # local webserver to play with dfdom.focus() and dfdom.blur()
       it "can properly trigger and capture focus events", (done) ->
-        ((dfdom "#q").on "focus", -> done()).focus()
+        insertHTML """<input type="text" id="q">"""
+        ((dfdom "#q").on "focus", -> done()).trigger "focus"
 
       it "can properly trigger and capture blur events", (done) ->
-        ((dfdom "#q").on "blur", -> done()).focus().blur()
+        insertHTML """<input type="text" id="q">"""
+        (((dfdom "#q").on "blur", -> done()).trigger "focus").trigger "blur"
 
   context "[Other Tools]", ->
     beforeEach ->

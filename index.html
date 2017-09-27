@@ -64,6 +64,8 @@
 <body>
   <input class="widget" id="search" type="text" placeholder="Search something" autofocus="true">
   <!-- <textarea class="widget" id="search" placeholder="Search something"></textarea> -->
+  <button type="button" id="focus">Test Focus</button>
+  <button type="button" id="blur">Test Blur</button>
 
   <div class="row" data-hashid="e723b503db15fe242b934df14b141ccc">
     <div class="col" id="main">
@@ -80,7 +82,22 @@
 
     var $ = doofinder.util.dfdom;
     var bean = doofinder.util.bean;
-    var input = new doofinder.widgets.QueryInput('#search');
+    var inputNode = $('#search');
+    var input = new doofinder.widgets.QueryInput(inputNode);
+
+    $('#focus').on('click', function(e){
+      inputNode.trigger('focus');
+    });
+
+    $('#blur').on('click', function(e){
+      inputNode.trigger('blur');
+    });
+
+    inputNode.on('focus', function(e){
+      console.log('input focus');
+    }).on('blur', function(e){
+      console.log('input blur');
+    });
 
     var page = $('[data-hashid]');
     var aside = $('#aside');
