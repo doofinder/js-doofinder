@@ -64,35 +64,8 @@ class RangeFacet extends Display
     noUiSlider.create @slider, options
 
     # Listen for the 'change' event so we can query Doofinder with new filters
-    @slider.noUiSlider.on 'change', =>
-      [min, max] = @slider.noUiSlider.get()
-
-      # TODO(@carlosescri): Probably all this controller stuff shouldn't be
-      # here and the controller should know this is a Filter Widget and
-      # listen for changes to refresh itself.
-
-      if @values[min] == @range.min and @values[max] == @range.max
-        # No need to filter
-        @controller.removeFilter @facet
-      else
-        @controller.addFilter @facet,
-          gte: @values[min]
-          lte: @values[max]
-      @controller.refresh()
-      @values = {}
-
-      # TODO(@carlosescri)'s proposal:
-      # if @values[min] == @range.min and @values[max] == @range.max
-      #   @trigger "df:filter:remove", [@facet]
-      # else
-      #   value =
-      #     gte: @values[min]
-      #     lte: @values[max]
-      #   @trigger "df:filter:add", [@facet, value]
-      #
-      # @trigger "df:slider:change", [@values[min], @values[max]]
-      # @values = {}
-
+    # Don't use 'set' event here or you will have problems.
+    @slider.noUiSlider.on 'change', @__sliderChanged.bind @
     undefined
 
   ###
@@ -150,6 +123,48 @@ class RangeFacet extends Display
     range =
       min: parseFloat(stats.min || 0, 10)
       max: parseFloat(stats.max || 0, 10)
+
+  __sliderChanged: ->
+    [min, max] = @slider.noUiSlider.get()
+
+    # TODO(@carlosescri): Probably all this controller stuff shouldn't be
+    # here and the controller should know this is a Filter Widget and
+    # listen for changes to refresh itself.
+
+    if @values[min] == @range.min and @values[max] == @range.max
+      # No need to filter
+      @controller.removeFilter @facet
+    else
+      @controller.addFilter @facet,
+        gte: @values[min]
+        lte: @values[max]
+    @controller.refresh()
+
+    @trigger "df:range:change", [
+        gte: @values[min]
+        lte: @values[max]
+      ,
+        min: @range.min
+        max: @range.max
+    ]
+
+    @values = {}
+
+    # TODO(@carlosescri)'s proposal:
+    # if @values[min] == @range.min and @values[max] == @range.max
+    #   @trigger "df:filter:remove", [@facet]
+    # else
+    #   value =
+    #     gte: @values[min]
+    #     lte: @values[max]
+    #   @trigger "df:filter:add", [@facet, value]
+    #
+    # @trigger "df:slider:change", [@values[min], @values[max]]
+    # @values = {}
+
+  set: (value) ->
+    @slider.noUiSlider.set value
+    @__sliderChanged()
 
   ###*
    * Called when the "first page" response for a specific search is received.

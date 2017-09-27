@@ -2992,22 +2992,7 @@
       this.slider = document.createElement('div');
       this.element.find(this.sliderSelector).append(this.slider);
       noUiSlider.create(this.slider, options);
-      this.slider.noUiSlider.on('change', (function(_this) {
-        return function() {
-          var max, min, ref;
-          ref = _this.slider.noUiSlider.get(), min = ref[0], max = ref[1];
-          if (_this.values[min] === _this.range.min && _this.values[max] === _this.range.max) {
-            _this.controller.removeFilter(_this.facet);
-          } else {
-            _this.controller.addFilter(_this.facet, {
-              gte: _this.values[min],
-              lte: _this.values[max]
-            });
-          }
-          _this.controller.refresh();
-          return _this.values = {};
-        };
-      })(this));
+      this.slider.noUiSlider.on('change', this.__sliderChanged.bind(this));
       return void 0;
     };
 
@@ -3082,6 +3067,35 @@
         min: parseFloat(stats.min || 0, 10),
         max: parseFloat(stats.max || 0, 10)
       };
+    };
+
+    RangeFacet.prototype.__sliderChanged = function() {
+      var max, min, ref;
+      ref = this.slider.noUiSlider.get(), min = ref[0], max = ref[1];
+      if (this.values[min] === this.range.min && this.values[max] === this.range.max) {
+        this.controller.removeFilter(this.facet);
+      } else {
+        this.controller.addFilter(this.facet, {
+          gte: this.values[min],
+          lte: this.values[max]
+        });
+      }
+      this.controller.refresh();
+      this.trigger("df:range:change", [
+        {
+          gte: this.values[min],
+          lte: this.values[max]
+        }, {
+          min: this.range.min,
+          max: this.range.max
+        }
+      ]);
+      return this.values = {};
+    };
+
+    RangeFacet.prototype.set = function(value) {
+      this.slider.noUiSlider.set(value);
+      return this.__sliderChanged();
     };
 
 

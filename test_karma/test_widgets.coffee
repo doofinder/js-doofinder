@@ -331,6 +331,18 @@ describe "Default Widgets", ->
         done()
       widget.render rangeFacetResponse()
 
+    it "refreshes when range changes", (done) ->
+      widget = createWidget()
+      widget.on "df:widget:render", ->
+        @set [100, 1000]
+      widget.on "df:range:change", (value, range) ->
+        value.gte.should.equal 100
+        value.lte.should.equal 1000
+        range.min.should.equal 7.900000095367432
+        range.max.should.equal 2360.0
+        done()
+      widget.render rangeFacetResponse()
+
     it "cleans itself when min and max values are equal", (done) ->
       widget = createWidget()
       widget.on "df:widget:clean", -> done()
