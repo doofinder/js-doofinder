@@ -304,7 +304,7 @@ describe "Default Widgets", ->
           } ]
           doc_count: 1687
 
-    it "renders properly when a min and max values differ", (done) ->
+    it "renders properly when min and max values differ", (done) ->
       widget = createWidget()
       widget.on "df:widget:render", (res) ->
         ($ ".df-slider").length.should.equal 1
