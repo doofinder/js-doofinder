@@ -51,11 +51,12 @@ module.exports = (grunt) ->
         ]
       karma:
         files:
+          'test_karma/doofinder.css': 'dist/doofinder.css'
           'test_karma/doofinder.js': 'dist/doofinder.js'
 
     clean:
       build_scss: ['build_scss/']
-      karma: ['test_karma/doofinder.js']
+      karma: ['test_karma/doofinder.*']
 
     sass:
       options:

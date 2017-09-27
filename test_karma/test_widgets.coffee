@@ -1,17 +1,4 @@
 describe "Default Widgets", ->
-  insertHTML = (html) ->
-    document.body.innerHTML = html
-
-  getController = ->
-    client = new doofinder.Client "ffffffffffffffffffffffffffffffff"
-    new doofinder.Controller client
-
-  getControllerMock = ->
-    mock =
-      addFilter: (key, value) ->
-      removeFilter: (key) ->
-      refresh: ->
-
   $ = doofinder.util.dfdom
   controller = null
 

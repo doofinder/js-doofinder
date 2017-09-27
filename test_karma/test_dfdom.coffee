@@ -1,17 +1,4 @@
-dispatchPatchedEvent = (element, type) ->
-  event = document.createEvent "Event"
-  event.initEvent type, true, true
-  element.dispatchEvent event
-
-patchElementEvent = (element, type) ->
-  _nativeEvent = element[type].bind element
-  element.focus = =>
-    if document.hasFocus() then _nativeEvent() else (dispatchPatchedEvent element)
-
 describe "dfdom", ->
-  insertHTML = (html) ->
-    document.body.innerHTML = html
-
   dfdom = doofinder.util.dfdom
 
   context "[Instantiation]", ->

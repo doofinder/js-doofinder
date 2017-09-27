@@ -25,8 +25,10 @@ module.exports = (config) ->
     singleRun: true
 
     files: [
+      'test_karma/doofinder.css',
       'test_karma/doofinder.js',
-      'test_karma/*.coffee'
+      'test_karma/utils.coffee',
+      'test_karma/test_*.coffee'
     ]
 
     customLaunchers:
