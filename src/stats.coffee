@@ -36,7 +36,7 @@ class Stats
     alreadyRegistered = @session.get "registered", false
     unless alreadyRegistered
       @session.set "registered", true  # sync, short-circuit other attempts
-      @client.stats "init", session_id: (@session.get "session_id"), (err, res) ->
+      @client.stats "init", session_id: (@session.get "session_id"), (err, res) =>
         (@session.set "registered", false) if err? # revert on error
         (callback err, res) if callback?
     not alreadyRegistered
