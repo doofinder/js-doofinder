@@ -175,6 +175,18 @@ describe "dfdom", ->
 
   # Methods
   context "[DOM Traversing Methods]", ->
+    it "can get the first element properly", (done) ->
+      insertHTML """
+        <div class="first"></div>
+        <div class="second"></div>
+      """
+      ((dfdom document).first().get 0).should.equal document
+      ((dfdom document.body).first().get 0).should.equal document.body
+      ((dfdom 'body').first().get 0).should.equal document.body
+      (dfdom 'div').first().length.should.equal 1
+      ((dfdom 'div').first().hasClass 'first').should.be.true
+      done()
+
     it "can find nodes inside the set of matched elements given a selector", (done) ->
       insertHTML """
         <ul>
