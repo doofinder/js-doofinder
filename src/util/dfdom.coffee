@@ -75,12 +75,14 @@ class DfDomElement
    * node.
    *
    * @protected
-   * @param  {Element|HTMLDocument|Document|Window} node
+   * @param  {HTMLElement|HTMLBodyElement|HTMLDocument|Document|Window} node
    * @return {Boolean}
   ###
   __isValidElementNode: (node) ->
     switch
-      when node instanceof Element then true
+      when node instanceof HTMLElement then true
+      when node instanceof HTMLBodyElement then true
+      when node instanceof HTMLDocument then true
       when node instanceof Document then true
       when node and node.document and node.location and node.alert and
         node.setInterval then true # is the window object
