@@ -1137,7 +1137,7 @@ author: @ecoslado
   }
 
   module.exports = {
-    version: "5.1.7",
+    version: "5.1.8",
     Client: require("./client"),
     Mustache: require("mustache"),
     Widget: require("./widget"),
@@ -1644,13 +1644,17 @@ author: @ecoslado
      * node.
      *
      * @protected
-     * @param  {Element|HTMLDocument|Document|Window} node
+     * @param  {HTMLElement|HTMLBodyElement|HTMLDocument|Document|Window} node
      * @return {Boolean}
      */
 
     DfDomElement.prototype.__isValidElementNode = function(node) {
       switch (false) {
-        case !(node instanceof Element):
+        case !(node instanceof HTMLElement):
+          return true;
+        case !(node instanceof HTMLBodyElement):
+          return true;
+        case !(node instanceof HTMLDocument):
           return true;
         case !(node instanceof Document):
           return true;
