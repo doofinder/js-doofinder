@@ -559,8 +559,6 @@ class DfDomElement
       @each (node) -> node.style[propertyName] = value
     else if (node = @get 0)?
       (getComputedStyle node).getPropertyValue propertyName
-    else
-      null
 
   ###*
    * Hides the element in the set of matched elements by setting their display

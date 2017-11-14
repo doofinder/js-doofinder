@@ -129,6 +129,7 @@ button[data-toggle-extra-content]:last-child {
   @include border-box();
 
   padding: 40px 10px;
+  overflow-y: hidden;
 
   $dark: #9AA4AC;
   $light: white;
