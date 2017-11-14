@@ -577,7 +577,7 @@ describe "dfdom", ->
       insertHTML """<div class="customcss"></div>"""
       (dfdom ".customcss, .doesnotexist").css "width", "10rem"
       ((dfdom ".customcss").css "width").should.equal "160px"
-      expect((dfdom ".doesnotexist").css "width").to.be.null
+      expect((dfdom ".doesnotexist").css "width").to.be.undefined
       done()
 
     it "can manage visibility of elements via their CSS display property", (done) ->

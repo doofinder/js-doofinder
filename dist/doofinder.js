@@ -2031,8 +2031,6 @@
         });
       } else if ((node = this.get(0)) != null) {
         return (getComputedStyle(node)).getPropertyValue(propertyName);
-      } else {
-        return null;
       }
     };
 
