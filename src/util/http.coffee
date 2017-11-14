@@ -22,10 +22,10 @@ class HttpClient
    * @return {http.ClientRequest}
   ###
   request: (options, callback) ->
-    if Thing.isStr options
+    if Thing.is.string options
       options = host: options
 
-    unless Thing.isFn callback
+    unless Thing.is.fn callback
       throw new Error "#{@constructor.name}: A callback is needed!"
 
     req = @http.get options, (response) ->

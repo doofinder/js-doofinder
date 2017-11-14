@@ -172,10 +172,10 @@ class Client
 
     queryParams = extend true, defaultParams, (params or {}), query: query
 
-    if (Thing.isArray queryParams.type) and queryParams.type.length is 1
+    if Thing.is.array(queryParams.type) and queryParams.type.length is 1
       queryParams.type = queryParams.type[0]
 
-    if (Thing.isPlainObj queryParams.sort) and
+    if Thing.is.hash(queryParams.sort) and
         (Object.keys queryParams.sort).length > 1
       throw (errors.error "To sort by multiple fields use an Array of Objects", @)
 

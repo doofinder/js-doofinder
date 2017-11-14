@@ -37,7 +37,7 @@ class QueryInput extends Widget
     @previousValue = @value
 
   setController: (controller) ->
-    if not Thing.isArray controller
+    if not Thing.is.array controller
       controller = [controller]
     @controller = @controller.concat controller
 

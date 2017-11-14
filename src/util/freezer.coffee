@@ -9,8 +9,8 @@ Thing = require "./thing"
 ###
 freeze = (value) ->
   (Object.getOwnPropertyNames value).forEach (propertyName) ->
-    if (Thing.isObj value) and (value[propertyName] isnt null) and
-        not (Object.isFrozen value[propertyName])
+    if Thing.is.object(value) and value[propertyName]? and
+        not Object.isFrozen value[propertyName]
       freeze value[propertyName]
   Object.freeze value
   value

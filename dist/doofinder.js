@@ -212,10 +212,10 @@
       queryParams = extend(true, defaultParams, params || {}, {
         query: query
       });
-      if ((Thing.isArray(queryParams.type)) && queryParams.type.length === 1) {
+      if (Thing.is.array(queryParams.type) && queryParams.type.length === 1) {
         queryParams.type = queryParams.type[0];
       }
-      if ((Thing.isPlainObj(queryParams.sort)) && (Object.keys(queryParams.sort)).length > 1) {
+      if (Thing.is.hash(queryParams.sort) && (Object.keys(queryParams.sort)).length > 1) {
         throw errors.error("To sort by multiple fields use an Array of Objects", this);
       }
       return qs.stringify(queryParams, {
@@ -231,7 +231,7 @@
 
 }).call(this);
 
-},{"./util/errors":9,"./util/http":12,"./util/thing":13,"extend":24,"md5":65,"qs":72}],2:[function(require,module,exports){
+},{"./util/errors":9,"./util/http":12,"./util/thing":13,"extend":24,"md5":66,"qs":73}],2:[function(require,module,exports){
 (function() {
   var Client, Controller, Freezer, Thing, bean, errors, extend, qs,
     hasProp = {}.hasOwnProperty;
@@ -272,10 +272,10 @@
       if (!(this.client instanceof Client)) {
         throw errors.error("client must be an instance of Client", this);
       }
-      if (!Thing.isArray(widgets)) {
+      if (!Thing.is.array(widgets)) {
         throw errors.error("widgets must be an instance of Array", this);
       }
-      if (!Thing.isPlainObj(defaultParams)) {
+      if (!Thing.is.hash(defaultParams)) {
         throw errors.error("defaultParams must be an instance of Object", this);
       }
       defaults = {
@@ -565,7 +565,7 @@
       if ((base = this.params)[paramName] == null) {
         base[paramName] = {};
       }
-      this.params[paramName][key] = Thing.isStr(value) ? [value] : value;
+      this.params[paramName][key] = Thing.is.string(value) ? [value] : value;
       return this.params[paramName][key];
     };
 
@@ -587,7 +587,7 @@
         paramName = "filter";
       }
       if (((ref = this.params[paramName]) != null ? ref[key] : void 0) != null) {
-        if ((value != null) && Thing.isStrArray(this.params[paramName][key])) {
+        if ((value != null) && Thing.is.array(this.params[paramName][key])) {
           pos = this.params[paramName][key].indexOf(value);
           if (pos >= 0) {
             this.params[paramName][key].splice(pos, 1);
@@ -621,11 +621,11 @@
       if ((base1 = this.params[paramName])[key] == null) {
         base1[key] = [];
       }
-      if (Thing.isStrArray(this.params[paramName][key])) {
-        if (Thing.isStr(value)) {
+      if (Thing.is.array(this.params[paramName][key])) {
+        if (Thing.is.string(value)) {
           value = [value];
         }
-        if (Thing.isStrArray(value)) {
+        if (Thing.is.array(value)) {
           value = this.params[paramName][key].concat(value);
         }
       }
@@ -694,7 +694,7 @@
 
 }).call(this);
 
-},{"./client":1,"./util/errors":9,"./util/freezer":10,"./util/thing":13,"bean":23,"extend":24,"qs":72}],3:[function(require,module,exports){
+},{"./client":1,"./util/errors":9,"./util/freezer":10,"./util/thing":13,"bean":23,"extend":24,"qs":73}],3:[function(require,module,exports){
 (function() {
   module.exports = {
     version: "5.2.0",
@@ -729,7 +729,7 @@
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/currency":6,"./util/dfdom":7,"./util/helpers":11,"./util/http":12,"./util/uniqueid":14,"./widgets/collapsiblepanel":15,"./widgets/display":16,"./widgets/facets/rangefacet":17,"./widgets/facets/termfacet":18,"./widgets/panel":19,"./widgets/queryinput":20,"./widgets/scrolldisplay":21,"./widgets/widget":22,"bean":23,"extend":24,"lodash.throttle":64,"md5":65,"mustache":69,"qs":72}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/currency":6,"./util/dfdom":7,"./util/helpers":11,"./util/http":12,"./util/uniqueid":14,"./widgets/collapsiblepanel":15,"./widgets/display":16,"./widgets/facets/rangefacet":17,"./widgets/facets/termfacet":18,"./widgets/panel":19,"./widgets/queryinput":20,"./widgets/scrolldisplay":21,"./widgets/widget":22,"bean":23,"extend":24,"lodash.throttle":65,"md5":66,"mustache":70,"qs":73}],4:[function(require,module,exports){
 (function() {
   var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, extend, md5, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -1007,7 +1007,7 @@
 
 }).call(this);
 
-},{"./util/uniqueid":14,"extend":24,"js-cookie":63,"md5":65}],5:[function(require,module,exports){
+},{"./util/uniqueid":14,"extend":24,"js-cookie":64,"md5":66}],5:[function(require,module,exports){
 (function() {
   var Client, Session, Stats, uniqueId;
 
@@ -1061,14 +1061,16 @@
         this.session.set("registered", true);
         this.client.stats("init", {
           session_id: this.session.get("session_id")
-        }, function(err, res) {
-          if (err != null) {
-            this.session.set("registered", false);
-          }
-          if (callback != null) {
-            return callback(err, res);
-          }
-        });
+        }, (function(_this) {
+          return function(err, res) {
+            if (err != null) {
+              _this.session.set("registered", false);
+            }
+            if (callback != null) {
+              return callback(err, res);
+            }
+          };
+        })(this));
       }
       return !alreadyRegistered;
     };
@@ -1253,7 +1255,7 @@
   matchesSelector = function(node, selector) {
     if (MATCHES_SELECTOR_FN == null) {
       MATCHES_SELECTOR_FN = (['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector', 'matchesSelector'].filter(function(funcName) {
-        return Thing.isFn(node[funcName]);
+        return Thing.is.fn(node[funcName]);
       })).pop();
     }
     return node[MATCHES_SELECTOR_FN](selector);
@@ -1278,11 +1280,8 @@
           return this.element.length;
         }
       });
-      if (selector instanceof String) {
-        selector = selector.toString();
-      }
-      if (Thing.isStr(selector)) {
-        selector = selector.trim();
+      if (Thing.is.string(selector)) {
+        selector = selector.toString().trim();
         if (selector.length === 0) {
           selector = [];
         } else {
@@ -1291,7 +1290,7 @@
           });
         }
       }
-      if (Thing.isArray(selector)) {
+      if (Thing.is.array(selector)) {
         this.element = this.__initFromSelectorArray(selector);
       } else {
         this.element = this.__initFromSelector(selector);
@@ -1339,21 +1338,12 @@
      * node.
      *
      * @protected
-     * @param  {Element|HTMLDocument|Document|Window} node
+     * @param  {HTMLElement|HTMLBodyElement|HTMLDocument|Document|Window} node
      * @return {Boolean}
      */
 
     DfDomElement.prototype.__isValidElementNode = function(node) {
-      switch (false) {
-        case !(node instanceof Element):
-          return true;
-        case !(node instanceof Document):
-          return true;
-        case !Thing.isWindow(node):
-          return true;
-        default:
-          return false;
-      }
+      return Thing.is.element(node) || Thing.is.document(node) || Thing.is.window(node);
     };
 
 
@@ -1384,17 +1374,15 @@
      */
 
     DfDomElement.prototype.__initFromSelector = function(selector) {
-      var element;
-      if ((Thing.isStrLiteral(selector)) && selector.length > 0) {
-        element = this.__fixNodeList(document.querySelectorAll(this.__fixSelector(selector)));
+      if (selector instanceof NodeList) {
+        return this.__fixNodeList(selector);
+      } else if (Thing.is.string(selector) && selector.length > 0) {
+        return this.__fixNodeList(document.querySelectorAll(this.__fixSelector(selector)));
       } else if (this.__isValidElementNode(selector)) {
-        element = [selector];
-      } else if (selector instanceof NodeList) {
-        element = this.__fixNodeList(selector);
+        return [selector];
       } else {
-        element = [];
+        return [];
       }
-      return element;
     };
 
 
@@ -1507,12 +1495,12 @@
 
     DfDomElement.prototype.filter = function(selector_or_fn) {
       var filterFn;
-      if (Thing.isStrLiteral(selector_or_fn)) {
+      if (Thing.is.fn(selector_or_fn)) {
+        filterFn = selector_or_fn;
+      } else {
         filterFn = function(node) {
           return matchesSelector(node, selector_or_fn);
         };
-      } else {
-        filterFn = selector_or_fn;
       }
       return new DfDomElement(this.element.filter(filterFn, this));
     };
@@ -1532,7 +1520,7 @@
       finderFn = (function(_this) {
         return function(node) {
           var src;
-          src = node === window ? window.document : node;
+          src = Thing.is.window(node) ? window.document : node;
           return _this.__fixNodeList(src.querySelectorAll(selector));
         };
       })(this);
@@ -1669,20 +1657,21 @@
 
 
     /**
-     * Clones an Element node or returns the same if it's a HTML string.
+     * Clones an Element node or returns a copy of the same value if it's a
+     * HTML string.
+     *
      * @public
      * @param  {Element|String} node The node to be cloned.
      * @return {Element|String}      The copy or the same string.
      */
 
     DfDomElement.prototype.__cloneNode = function(node) {
-      switch (false) {
-        case !Thing.isStr(node):
-          return node;
-        case !(node instanceof Element):
-          return node.cloneNode(true);
-        default:
-          throw "Invalid argument: " + node;
+      if (Thing.is.string(node)) {
+        return node;
+      } else if (Thing.is.element(node)) {
+        return node.cloneNode(true);
+      } else {
+        throw "Invalid argument: " + node;
       }
     };
 
@@ -1702,7 +1691,7 @@
       if (child instanceof DfDomElement) {
         child = child.get();
       }
-      if (Thing.isArray(child)) {
+      if (Thing.is.array(child)) {
         child.forEach((function(_this) {
           return function(node) {
             return _this.prepend(node);
@@ -1712,12 +1701,12 @@
       } else {
         return this.each((function(_this) {
           return function(node, i) {
-            var newChild, ref;
-            if (Thing.isStr(child)) {
+            var newChild;
+            if (Thing.is.string(child)) {
               return node.insertAdjacentHTML("afterbegin", child);
-            } else if (child instanceof Element) {
+            } else if (Thing.is.element(child)) {
               newChild = (i === 0 ? child : _this.__cloneNode(child));
-              if (((ref = node.children) != null ? ref.length : void 0) > 0) {
+              if (node.children.length > 0) {
                 return node.insertBefore(newChild, node.children[0]);
               } else {
                 return node.appendChild(newChild);
@@ -1744,7 +1733,7 @@
       if (child instanceof DfDomElement) {
         child = child.get();
       }
-      if (Thing.isArray(child)) {
+      if (Thing.is.array(child)) {
         child.forEach((function(_this) {
           return function(node) {
             return _this.append(node);
@@ -1754,9 +1743,9 @@
       } else {
         return this.each((function(_this) {
           return function(node, i) {
-            if (Thing.isStrLiteral(child)) {
+            if (Thing.is.string(child)) {
               return node.insertAdjacentHTML("beforeend", child);
-            } else if (child instanceof Element) {
+            } else if (Thing.is.element(child)) {
               return node.appendChild((i === 0 ? child : _this.__cloneNode(child)));
             }
           };
@@ -1780,7 +1769,7 @@
       if (sibling instanceof DfDomElement) {
         sibling = sibling.get();
       }
-      if (Thing.isArray(sibling)) {
+      if (Thing.is.array(sibling)) {
         sibling.forEach((function(_this) {
           return function(node) {
             return _this.before(node);
@@ -1791,9 +1780,9 @@
         return this.each((function(_this) {
           return function(node, i) {
             var newSibling;
-            if (Thing.isStrLiteral(sibling)) {
+            if (Thing.is.string(sibling)) {
               return node.insertAdjacentHTML("beforebegin", sibling);
-            } else if (sibling instanceof Element) {
+            } else if (Thing.is.element(sibling)) {
               newSibling = (i === 0 ? sibling : _this.__cloneNode(sibling));
               return node.parentElement.insertBefore(newSibling, node);
             }
@@ -1818,7 +1807,7 @@
       if (sibling instanceof DfDomElement) {
         sibling = sibling.get();
       }
-      if (Thing.isArray(sibling)) {
+      if (Thing.is.array(sibling)) {
         sibling.forEach((function(_this) {
           return function(node) {
             return _this.after(node);
@@ -1829,9 +1818,9 @@
         return this.each((function(_this) {
           return function(node, i) {
             var newSibling;
-            if (Thing.isStrLiteral(sibling)) {
+            if (Thing.is.string(sibling)) {
               return node.insertAdjacentHTML("afterend", sibling);
-            } else if (sibling instanceof Element) {
+            } else if (Thing.is.element(sibling)) {
               newSibling = (i === 0 ? sibling : _this.__cloneNode(sibling));
               return node.parentElement.insertBefore(newSibling, node.nextSibling);
             }
@@ -2316,7 +2305,7 @@
      */
 
     DfDomElement.prototype.is = function(selector_or_element) {
-      if (Thing.isStrLiteral(selector_or_element)) {
+      if (Thing.is.string(selector_or_element)) {
         return (this.filter(selector_or_element)).length > 0;
       } else {
         return (this.filter(function(node) {
@@ -2416,7 +2405,7 @@
 
 }).call(this);
 
-},{"./dfdom":7,"bean":23,"extend":24,"lodash.throttle":64}],9:[function(require,module,exports){
+},{"./dfdom":7,"bean":23,"extend":24,"lodash.throttle":65}],9:[function(require,module,exports){
 (function() {
   var _msg, error, warning,
     slice = [].slice;
@@ -2466,7 +2455,7 @@
 
   freeze = function(value) {
     (Object.getOwnPropertyNames(value)).forEach(function(propertyName) {
-      if ((Thing.isObj(value)) && (value[propertyName] !== null) && !(Object.isFrozen(value[propertyName]))) {
+      if (Thing.is.object(value) && (value[propertyName] != null) && !Object.isFrozen(value[propertyName])) {
         return freeze(value[propertyName]);
       }
     });
@@ -2571,7 +2560,7 @@
 
 }).call(this);
 
-},{"./currency":6,"extend":24,"qs":72}],12:[function(require,module,exports){
+},{"./currency":6,"extend":24,"qs":73}],12:[function(require,module,exports){
 (function() {
   var HttpClient, Thing, http, https;
 
@@ -2608,12 +2597,12 @@
 
     HttpClient.prototype.request = function(options, callback) {
       var req;
-      if (Thing.isStr(options)) {
+      if (Thing.is.string(options)) {
         options = {
           host: options
         };
       }
-      if (!Thing.isFn(callback)) {
+      if (!Thing.is.fn(callback)) {
         throw new Error(this.constructor.name + ": A callback is needed!");
       }
       req = this.http.get(options, function(response) {
@@ -2648,60 +2637,25 @@
 
 },{"./thing":13,"http":54,"https":31}],13:[function(require,module,exports){
 (function() {
-  var isFn, isObject, isPrimitive, isStr, to_s;
+  var Is;
 
-  to_s = Object.prototype.toString;
+  Is = require("is");
 
-  isObject = function(value) {
-    return (to_s.call(value)) === "[object Object]";
+  Is.window = function(value) {
+    return (value != null) && typeof value === 'object' && 'setInterval' in value;
   };
 
-  isFn = function(value) {
-    if ((typeof window !== "undefined" && window !== null) && value === window.alert) {
-      return true;
-    }
-    return (to_s.call(value)) === "[object Function]";
-  };
-
-  isStr = function(value) {
-    return (to_s.call(value)) === "[object String]";
-  };
-
-  isPrimitive = function(value) {
-    if (!value) {
-      return true;
-    }
-    if ((typeof value === "object") || (isObject(value)) || (isFn(value)) || (Array.isArray(value))) {
-      return false;
-    }
-    return true;
+  Is.document = function(value) {
+    return (value != null) && typeof value.documentElement === 'object';
   };
 
   module.exports = {
-    isObj: isObject,
-    isArray: function(value) {
-      return Array.isArray(value);
-    },
-    isFn: isFn,
-    isStr: isStr,
-    isPrimitive: isPrimitive,
-    isPlainObj: function(value) {
-      return (isObject(value)) && value.constructor === Object && (!value.nodeType) && (!value.setInterval);
-    },
-    isStrLiteral: function(value) {
-      return (isStr(value)) && (isPrimitive(value));
-    },
-    isStrArray: function(value) {
-      return (Array.isArray(value)) && (value.filter(isStr)).length === value.length;
-    },
-    isWindow: function(value) {
-      return value && value.document && value.location && value.alert && value.setInterval;
-    }
+    "is": Is
   };
 
 }).call(this);
 
-},{}],14:[function(require,module,exports){
+},{"is":63}],14:[function(require,module,exports){
 (function() {
   var cleandfid, md5;
 
@@ -2745,7 +2699,7 @@
 
 }).call(this);
 
-},{"md5":65}],15:[function(require,module,exports){
+},{"md5":66}],15:[function(require,module,exports){
 (function() {
   var CollapsiblePanel, Panel, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -2943,7 +2897,7 @@
 
 }).call(this);
 
-},{"../util/helpers":11,"./widget":22,"extend":24,"mustache":69}],17:[function(require,module,exports){
+},{"../util/helpers":11,"./widget":22,"extend":24,"mustache":70}],17:[function(require,module,exports){
 (function() {
   var Display, RangeFacet, defaultTemplate, extend, noUiSlider,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3217,7 +3171,7 @@
 
 }).call(this);
 
-},{"../display":16,"extend":24,"nouislider":70}],18:[function(require,module,exports){
+},{"../display":16,"extend":24,"nouislider":71}],18:[function(require,module,exports){
 (function() {
   var $, Display, TermsFacet, defaultButtonTemplate, defaultTemplate, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3588,7 +3542,7 @@
     }
 
     QueryInput.prototype.setController = function(controller) {
-      if (!Thing.isArray(controller)) {
+      if (!Thing.is.array(controller)) {
         controller = [controller];
       }
       return this.controller = this.controller.concat(controller);
@@ -12321,6 +12275,808 @@ function extend() {
 }
 
 },{}],63:[function(require,module,exports){
+/* globals window, HTMLElement */
+
+'use strict';
+
+/**!
+ * is
+ * the definitive JavaScript type testing library
+ *
+ * @copyright 2013-2014 Enrico Marino / Jordan Harband
+ * @license MIT
+ */
+
+var objProto = Object.prototype;
+var owns = objProto.hasOwnProperty;
+var toStr = objProto.toString;
+var symbolValueOf;
+if (typeof Symbol === 'function') {
+  symbolValueOf = Symbol.prototype.valueOf;
+}
+var isActualNaN = function (value) {
+  return value !== value;
+};
+var NON_HOST_TYPES = {
+  'boolean': 1,
+  number: 1,
+  string: 1,
+  undefined: 1
+};
+
+var base64Regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$/;
+var hexRegex = /^[A-Fa-f0-9]+$/;
+
+/**
+ * Expose `is`
+ */
+
+var is = {};
+
+/**
+ * Test general.
+ */
+
+/**
+ * is.type
+ * Test if `value` is a type of `type`.
+ *
+ * @param {Mixed} value value to test
+ * @param {String} type type
+ * @return {Boolean} true if `value` is a type of `type`, false otherwise
+ * @api public
+ */
+
+is.a = is.type = function (value, type) {
+  return typeof value === type;
+};
+
+/**
+ * is.defined
+ * Test if `value` is defined.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if 'value' is defined, false otherwise
+ * @api public
+ */
+
+is.defined = function (value) {
+  return typeof value !== 'undefined';
+};
+
+/**
+ * is.empty
+ * Test if `value` is empty.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is empty, false otherwise
+ * @api public
+ */
+
+is.empty = function (value) {
+  var type = toStr.call(value);
+  var key;
+
+  if (type === '[object Array]' || type === '[object Arguments]' || type === '[object String]') {
+    return value.length === 0;
+  }
+
+  if (type === '[object Object]') {
+    for (key in value) {
+      if (owns.call(value, key)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  return !value;
+};
+
+/**
+ * is.equal
+ * Test if `value` is equal to `other`.
+ *
+ * @param {Mixed} value value to test
+ * @param {Mixed} other value to compare with
+ * @return {Boolean} true if `value` is equal to `other`, false otherwise
+ */
+
+is.equal = function equal(value, other) {
+  if (value === other) {
+    return true;
+  }
+
+  var type = toStr.call(value);
+  var key;
+
+  if (type !== toStr.call(other)) {
+    return false;
+  }
+
+  if (type === '[object Object]') {
+    for (key in value) {
+      if (!is.equal(value[key], other[key]) || !(key in other)) {
+        return false;
+      }
+    }
+    for (key in other) {
+      if (!is.equal(value[key], other[key]) || !(key in value)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  if (type === '[object Array]') {
+    key = value.length;
+    if (key !== other.length) {
+      return false;
+    }
+    while (key--) {
+      if (!is.equal(value[key], other[key])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  if (type === '[object Function]') {
+    return value.prototype === other.prototype;
+  }
+
+  if (type === '[object Date]') {
+    return value.getTime() === other.getTime();
+  }
+
+  return false;
+};
+
+/**
+ * is.hosted
+ * Test if `value` is hosted by `host`.
+ *
+ * @param {Mixed} value to test
+ * @param {Mixed} host host to test with
+ * @return {Boolean} true if `value` is hosted by `host`, false otherwise
+ * @api public
+ */
+
+is.hosted = function (value, host) {
+  var type = typeof host[value];
+  return type === 'object' ? !!host[value] : !NON_HOST_TYPES[type];
+};
+
+/**
+ * is.instance
+ * Test if `value` is an instance of `constructor`.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an instance of `constructor`
+ * @api public
+ */
+
+is.instance = is['instanceof'] = function (value, constructor) {
+  return value instanceof constructor;
+};
+
+/**
+ * is.nil / is.null
+ * Test if `value` is null.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is null, false otherwise
+ * @api public
+ */
+
+is.nil = is['null'] = function (value) {
+  return value === null;
+};
+
+/**
+ * is.undef / is.undefined
+ * Test if `value` is undefined.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is undefined, false otherwise
+ * @api public
+ */
+
+is.undef = is.undefined = function (value) {
+  return typeof value === 'undefined';
+};
+
+/**
+ * Test arguments.
+ */
+
+/**
+ * is.args
+ * Test if `value` is an arguments object.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an arguments object, false otherwise
+ * @api public
+ */
+
+is.args = is.arguments = function (value) {
+  var isStandardArguments = toStr.call(value) === '[object Arguments]';
+  var isOldArguments = !is.array(value) && is.arraylike(value) && is.object(value) && is.fn(value.callee);
+  return isStandardArguments || isOldArguments;
+};
+
+/**
+ * Test array.
+ */
+
+/**
+ * is.array
+ * Test if 'value' is an array.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an array, false otherwise
+ * @api public
+ */
+
+is.array = Array.isArray || function (value) {
+  return toStr.call(value) === '[object Array]';
+};
+
+/**
+ * is.arguments.empty
+ * Test if `value` is an empty arguments object.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an empty arguments object, false otherwise
+ * @api public
+ */
+is.args.empty = function (value) {
+  return is.args(value) && value.length === 0;
+};
+
+/**
+ * is.array.empty
+ * Test if `value` is an empty array.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an empty array, false otherwise
+ * @api public
+ */
+is.array.empty = function (value) {
+  return is.array(value) && value.length === 0;
+};
+
+/**
+ * is.arraylike
+ * Test if `value` is an arraylike object.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an arguments object, false otherwise
+ * @api public
+ */
+
+is.arraylike = function (value) {
+  return !!value && !is.bool(value)
+    && owns.call(value, 'length')
+    && isFinite(value.length)
+    && is.number(value.length)
+    && value.length >= 0;
+};
+
+/**
+ * Test boolean.
+ */
+
+/**
+ * is.bool
+ * Test if `value` is a boolean.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a boolean, false otherwise
+ * @api public
+ */
+
+is.bool = is['boolean'] = function (value) {
+  return toStr.call(value) === '[object Boolean]';
+};
+
+/**
+ * is.false
+ * Test if `value` is false.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is false, false otherwise
+ * @api public
+ */
+
+is['false'] = function (value) {
+  return is.bool(value) && Boolean(Number(value)) === false;
+};
+
+/**
+ * is.true
+ * Test if `value` is true.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is true, false otherwise
+ * @api public
+ */
+
+is['true'] = function (value) {
+  return is.bool(value) && Boolean(Number(value)) === true;
+};
+
+/**
+ * Test date.
+ */
+
+/**
+ * is.date
+ * Test if `value` is a date.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a date, false otherwise
+ * @api public
+ */
+
+is.date = function (value) {
+  return toStr.call(value) === '[object Date]';
+};
+
+/**
+ * is.date.valid
+ * Test if `value` is a valid date.
+ *
+ * @param {Mixed} value value to test
+ * @returns {Boolean} true if `value` is a valid date, false otherwise
+ */
+is.date.valid = function (value) {
+  return is.date(value) && !isNaN(Number(value));
+};
+
+/**
+ * Test element.
+ */
+
+/**
+ * is.element
+ * Test if `value` is an html element.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an HTML Element, false otherwise
+ * @api public
+ */
+
+is.element = function (value) {
+  return value !== undefined
+    && typeof HTMLElement !== 'undefined'
+    && value instanceof HTMLElement
+    && value.nodeType === 1;
+};
+
+/**
+ * Test error.
+ */
+
+/**
+ * is.error
+ * Test if `value` is an error object.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an error object, false otherwise
+ * @api public
+ */
+
+is.error = function (value) {
+  return toStr.call(value) === '[object Error]';
+};
+
+/**
+ * Test function.
+ */
+
+/**
+ * is.fn / is.function (deprecated)
+ * Test if `value` is a function.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a function, false otherwise
+ * @api public
+ */
+
+is.fn = is['function'] = function (value) {
+  var isAlert = typeof window !== 'undefined' && value === window.alert;
+  if (isAlert) {
+    return true;
+  }
+  var str = toStr.call(value);
+  return str === '[object Function]' || str === '[object GeneratorFunction]' || str === '[object AsyncFunction]';
+};
+
+/**
+ * Test number.
+ */
+
+/**
+ * is.number
+ * Test if `value` is a number.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a number, false otherwise
+ * @api public
+ */
+
+is.number = function (value) {
+  return toStr.call(value) === '[object Number]';
+};
+
+/**
+ * is.infinite
+ * Test if `value` is positive or negative infinity.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is positive or negative Infinity, false otherwise
+ * @api public
+ */
+is.infinite = function (value) {
+  return value === Infinity || value === -Infinity;
+};
+
+/**
+ * is.decimal
+ * Test if `value` is a decimal number.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a decimal number, false otherwise
+ * @api public
+ */
+
+is.decimal = function (value) {
+  return is.number(value) && !isActualNaN(value) && !is.infinite(value) && value % 1 !== 0;
+};
+
+/**
+ * is.divisibleBy
+ * Test if `value` is divisible by `n`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} n dividend
+ * @return {Boolean} true if `value` is divisible by `n`, false otherwise
+ * @api public
+ */
+
+is.divisibleBy = function (value, n) {
+  var isDividendInfinite = is.infinite(value);
+  var isDivisorInfinite = is.infinite(n);
+  var isNonZeroNumber = is.number(value) && !isActualNaN(value) && is.number(n) && !isActualNaN(n) && n !== 0;
+  return isDividendInfinite || isDivisorInfinite || (isNonZeroNumber && value % n === 0);
+};
+
+/**
+ * is.integer
+ * Test if `value` is an integer.
+ *
+ * @param value to test
+ * @return {Boolean} true if `value` is an integer, false otherwise
+ * @api public
+ */
+
+is.integer = is['int'] = function (value) {
+  return is.number(value) && !isActualNaN(value) && value % 1 === 0;
+};
+
+/**
+ * is.maximum
+ * Test if `value` is greater than 'others' values.
+ *
+ * @param {Number} value value to test
+ * @param {Array} others values to compare with
+ * @return {Boolean} true if `value` is greater than `others` values
+ * @api public
+ */
+
+is.maximum = function (value, others) {
+  if (isActualNaN(value)) {
+    throw new TypeError('NaN is not a valid value');
+  } else if (!is.arraylike(others)) {
+    throw new TypeError('second argument must be array-like');
+  }
+  var len = others.length;
+
+  while (--len >= 0) {
+    if (value < others[len]) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+/**
+ * is.minimum
+ * Test if `value` is less than `others` values.
+ *
+ * @param {Number} value value to test
+ * @param {Array} others values to compare with
+ * @return {Boolean} true if `value` is less than `others` values
+ * @api public
+ */
+
+is.minimum = function (value, others) {
+  if (isActualNaN(value)) {
+    throw new TypeError('NaN is not a valid value');
+  } else if (!is.arraylike(others)) {
+    throw new TypeError('second argument must be array-like');
+  }
+  var len = others.length;
+
+  while (--len >= 0) {
+    if (value > others[len]) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+/**
+ * is.nan
+ * Test if `value` is not a number.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is not a number, false otherwise
+ * @api public
+ */
+
+is.nan = function (value) {
+  return !is.number(value) || value !== value;
+};
+
+/**
+ * is.even
+ * Test if `value` is an even number.
+ *
+ * @param {Number} value value to test
+ * @return {Boolean} true if `value` is an even number, false otherwise
+ * @api public
+ */
+
+is.even = function (value) {
+  return is.infinite(value) || (is.number(value) && value === value && value % 2 === 0);
+};
+
+/**
+ * is.odd
+ * Test if `value` is an odd number.
+ *
+ * @param {Number} value value to test
+ * @return {Boolean} true if `value` is an odd number, false otherwise
+ * @api public
+ */
+
+is.odd = function (value) {
+  return is.infinite(value) || (is.number(value) && value === value && value % 2 !== 0);
+};
+
+/**
+ * is.ge
+ * Test if `value` is greater than or equal to `other`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} other value to compare with
+ * @return {Boolean}
+ * @api public
+ */
+
+is.ge = function (value, other) {
+  if (isActualNaN(value) || isActualNaN(other)) {
+    throw new TypeError('NaN is not a valid value');
+  }
+  return !is.infinite(value) && !is.infinite(other) && value >= other;
+};
+
+/**
+ * is.gt
+ * Test if `value` is greater than `other`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} other value to compare with
+ * @return {Boolean}
+ * @api public
+ */
+
+is.gt = function (value, other) {
+  if (isActualNaN(value) || isActualNaN(other)) {
+    throw new TypeError('NaN is not a valid value');
+  }
+  return !is.infinite(value) && !is.infinite(other) && value > other;
+};
+
+/**
+ * is.le
+ * Test if `value` is less than or equal to `other`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} other value to compare with
+ * @return {Boolean} if 'value' is less than or equal to 'other'
+ * @api public
+ */
+
+is.le = function (value, other) {
+  if (isActualNaN(value) || isActualNaN(other)) {
+    throw new TypeError('NaN is not a valid value');
+  }
+  return !is.infinite(value) && !is.infinite(other) && value <= other;
+};
+
+/**
+ * is.lt
+ * Test if `value` is less than `other`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} other value to compare with
+ * @return {Boolean} if `value` is less than `other`
+ * @api public
+ */
+
+is.lt = function (value, other) {
+  if (isActualNaN(value) || isActualNaN(other)) {
+    throw new TypeError('NaN is not a valid value');
+  }
+  return !is.infinite(value) && !is.infinite(other) && value < other;
+};
+
+/**
+ * is.within
+ * Test if `value` is within `start` and `finish`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} start lower bound
+ * @param {Number} finish upper bound
+ * @return {Boolean} true if 'value' is is within 'start' and 'finish'
+ * @api public
+ */
+is.within = function (value, start, finish) {
+  if (isActualNaN(value) || isActualNaN(start) || isActualNaN(finish)) {
+    throw new TypeError('NaN is not a valid value');
+  } else if (!is.number(value) || !is.number(start) || !is.number(finish)) {
+    throw new TypeError('all arguments must be numbers');
+  }
+  var isAnyInfinite = is.infinite(value) || is.infinite(start) || is.infinite(finish);
+  return isAnyInfinite || (value >= start && value <= finish);
+};
+
+/**
+ * Test object.
+ */
+
+/**
+ * is.object
+ * Test if `value` is an object.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an object, false otherwise
+ * @api public
+ */
+is.object = function (value) {
+  return toStr.call(value) === '[object Object]';
+};
+
+/**
+ * is.primitive
+ * Test if `value` is a primitive.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a primitive, false otherwise
+ * @api public
+ */
+is.primitive = function isPrimitive(value) {
+  if (!value) {
+    return true;
+  }
+  if (typeof value === 'object' || is.object(value) || is.fn(value) || is.array(value)) {
+    return false;
+  }
+  return true;
+};
+
+/**
+ * is.hash
+ * Test if `value` is a hash - a plain object literal.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a hash, false otherwise
+ * @api public
+ */
+
+is.hash = function (value) {
+  return is.object(value) && value.constructor === Object && !value.nodeType && !value.setInterval;
+};
+
+/**
+ * Test regexp.
+ */
+
+/**
+ * is.regexp
+ * Test if `value` is a regular expression.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a regexp, false otherwise
+ * @api public
+ */
+
+is.regexp = function (value) {
+  return toStr.call(value) === '[object RegExp]';
+};
+
+/**
+ * Test string.
+ */
+
+/**
+ * is.string
+ * Test if `value` is a string.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if 'value' is a string, false otherwise
+ * @api public
+ */
+
+is.string = function (value) {
+  return toStr.call(value) === '[object String]';
+};
+
+/**
+ * Test base64 string.
+ */
+
+/**
+ * is.base64
+ * Test if `value` is a valid base64 encoded string.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if 'value' is a base64 encoded string, false otherwise
+ * @api public
+ */
+
+is.base64 = function (value) {
+  return is.string(value) && (!value.length || base64Regex.test(value));
+};
+
+/**
+ * Test base64 string.
+ */
+
+/**
+ * is.hex
+ * Test if `value` is a valid hex encoded string.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if 'value' is a hex encoded string, false otherwise
+ * @api public
+ */
+
+is.hex = function (value) {
+  return is.string(value) && (!value.length || hexRegex.test(value));
+};
+
+/**
+ * is.symbol
+ * Test if `value` is an ES6 Symbol
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a Symbol, false otherise
+ * @api public
+ */
+
+is.symbol = function (value) {
+  return typeof Symbol === 'function' && toStr.call(value) === '[object Symbol]' && typeof symbolValueOf.call(value) === 'symbol';
+};
+
+module.exports = is;
+
+},{}],64:[function(require,module,exports){
 /*!
  * JavaScript Cookie v2.1.4
  * https://github.com/js-cookie/js-cookie
@@ -12487,7 +13243,7 @@ function extend() {
 	return init(function () {});
 }));
 
-},{}],64:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 (function (global){
 /**
  * lodash (Custom Build) <https://lodash.com/>
@@ -12930,7 +13686,7 @@ function toNumber(value) {
 module.exports = throttle;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],65:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 (function(){
   var crypt = require('crypt'),
       utf8 = require('charenc').utf8,
@@ -13092,7 +13848,7 @@ module.exports = throttle;
 
 })();
 
-},{"charenc":66,"crypt":67,"is-buffer":68}],66:[function(require,module,exports){
+},{"charenc":67,"crypt":68,"is-buffer":69}],67:[function(require,module,exports){
 var charenc = {
   // UTF-8 encoding
   utf8: {
@@ -13127,7 +13883,7 @@ var charenc = {
 
 module.exports = charenc;
 
-},{}],67:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 (function() {
   var base64map
       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
@@ -13225,9 +13981,9 @@ module.exports = charenc;
   module.exports = crypt;
 })();
 
-},{}],68:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 arguments[4][33][0].apply(exports,arguments)
-},{"dup":33}],69:[function(require,module,exports){
+},{"dup":33}],70:[function(require,module,exports){
 /*!
  * mustache.js - Logic-less {{mustache}} templates with JavaScript
  * http://github.com/janl/mustache.js
@@ -13859,7 +14615,7 @@ arguments[4][33][0].apply(exports,arguments)
   return mustache;
 }));
 
-},{}],70:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 /*! nouislider - 8.5.1 - 2016-04-24 16:00:29 */
 
 (function (factory) {
@@ -15819,7 +16575,7 @@ function closure ( target, options, originalOptions ){
 	};
 
 }));
-},{}],71:[function(require,module,exports){
+},{}],72:[function(require,module,exports){
 'use strict';
 
 var replace = String.prototype.replace;
@@ -15839,7 +16595,7 @@ module.exports = {
     RFC3986: 'RFC3986'
 };
 
-},{}],72:[function(require,module,exports){
+},{}],73:[function(require,module,exports){
 'use strict';
 
 var stringify = require('./stringify');
@@ -15852,7 +16608,7 @@ module.exports = {
     stringify: stringify
 };
 
-},{"./formats":71,"./parse":73,"./stringify":74}],73:[function(require,module,exports){
+},{"./formats":72,"./parse":74,"./stringify":75}],74:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -15901,36 +16657,38 @@ var parseValues = function parseQueryStringValues(str, options) {
     return obj;
 };
 
-var parseObject = function parseObjectRecursive(chain, val, options) {
-    if (!chain.length) {
-        return val;
-    }
+var parseObject = function (chain, val, options) {
+    var leaf = val;
 
-    var root = chain.shift();
+    for (var i = chain.length - 1; i >= 0; --i) {
+        var obj;
+        var root = chain[i];
 
-    var obj;
-    if (root === '[]') {
-        obj = [];
-        obj = obj.concat(parseObject(chain, val, options));
-    } else {
-        obj = options.plainObjects ? Object.create(null) : {};
-        var cleanRoot = root.charAt(0) === '[' && root.charAt(root.length - 1) === ']' ? root.slice(1, -1) : root;
-        var index = parseInt(cleanRoot, 10);
-        if (
-            !isNaN(index)
-            && root !== cleanRoot
-            && String(index) === cleanRoot
-            && index >= 0
-            && (options.parseArrays && index <= options.arrayLimit)
-        ) {
+        if (root === '[]') {
             obj = [];
-            obj[index] = parseObject(chain, val, options);
+            obj = obj.concat(leaf);
         } else {
-            obj[cleanRoot] = parseObject(chain, val, options);
+            obj = options.plainObjects ? Object.create(null) : {};
+            var cleanRoot = root.charAt(0) === '[' && root.charAt(root.length - 1) === ']' ? root.slice(1, -1) : root;
+            var index = parseInt(cleanRoot, 10);
+            if (
+                !isNaN(index)
+                && root !== cleanRoot
+                && String(index) === cleanRoot
+                && index >= 0
+                && (options.parseArrays && index <= options.arrayLimit)
+            ) {
+                obj = [];
+                obj[index] = leaf;
+            } else {
+                obj[cleanRoot] = leaf;
+            }
         }
+
+        leaf = obj;
     }
 
-    return obj;
+    return leaf;
 };
 
 var parseKeys = function parseQueryStringKeys(givenKey, val, options) {
@@ -16026,7 +16784,7 @@ module.exports = function (str, opts) {
     return utils.compact(obj);
 };
 
-},{"./utils":75}],74:[function(require,module,exports){
+},{"./utils":76}],75:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -16168,7 +16926,7 @@ module.exports = function (object, opts) {
     var serializeDate = typeof options.serializeDate === 'function' ? options.serializeDate : defaults.serializeDate;
     var encodeValuesOnly = typeof options.encodeValuesOnly === 'boolean' ? options.encodeValuesOnly : defaults.encodeValuesOnly;
     if (typeof options.format === 'undefined') {
-        options.format = formats.default;
+        options.format = formats['default'];
     } else if (!Object.prototype.hasOwnProperty.call(formats.formatters, options.format)) {
         throw new TypeError('Unknown format option provided.');
     }
@@ -16238,7 +16996,7 @@ module.exports = function (object, opts) {
     return joined.length > 0 ? prefix + joined : '';
 };
 
-},{"./formats":71,"./utils":75}],75:[function(require,module,exports){
+},{"./formats":72,"./utils":76}],76:[function(require,module,exports){
 'use strict';
 
 var has = Object.prototype.hasOwnProperty;
@@ -16252,7 +17010,30 @@ var hexTable = (function () {
     return array;
 }());
 
-exports.arrayToObject = function (source, options) {
+var compactQueue = function compactQueue(queue) {
+    var obj;
+
+    while (queue.length) {
+        var item = queue.pop();
+        obj = item.obj[item.prop];
+
+        if (Array.isArray(obj)) {
+            var compacted = [];
+
+            for (var j = 0; j < obj.length; ++j) {
+                if (typeof obj[j] !== 'undefined') {
+                    compacted.push(obj[j]);
+                }
+            }
+
+            item.obj[item.prop] = compacted;
+        }
+    }
+
+    return obj;
+};
+
+exports.arrayToObject = function arrayToObject(source, options) {
     var obj = options && options.plainObjects ? Object.create(null) : {};
     for (var i = 0; i < source.length; ++i) {
         if (typeof source[i] !== 'undefined') {
@@ -16263,7 +17044,7 @@ exports.arrayToObject = function (source, options) {
     return obj;
 };
 
-exports.merge = function (target, source, options) {
+exports.merge = function merge(target, source, options) {
     if (!source) {
         return target;
     }
@@ -16333,7 +17114,7 @@ exports.decode = function (str) {
     }
 };
 
-exports.encode = function (str) {
+exports.encode = function encode(str) {
     // This code was originally written by Brian White (mscdex) for the io.js core querystring library.
     // It has been adapted here for stricter adherence to RFC 3986
     if (str.length === 0) {
@@ -16347,7 +17128,7 @@ exports.encode = function (str) {
         var c = string.charCodeAt(i);
 
         if (
-            c === 0x2D    // -
+            c === 0x2D // -
             || c === 0x2E // .
             || c === 0x5F // _
             || c === 0x7E // ~
@@ -16385,46 +17166,33 @@ exports.encode = function (str) {
     return out;
 };
 
-exports.compact = function (obj, references) {
-    if (typeof obj !== 'object' || obj === null) {
-        return obj;
-    }
+exports.compact = function compact(value) {
+    var queue = [{ obj: { o: value }, prop: 'o' }];
+    var refs = [];
 
-    var refs = references || [];
-    var lookup = refs.indexOf(obj);
-    if (lookup !== -1) {
-        return refs[lookup];
-    }
+    for (var i = 0; i < queue.length; ++i) {
+        var item = queue[i];
+        var obj = item.obj[item.prop];
 
-    refs.push(obj);
-
-    if (Array.isArray(obj)) {
-        var compacted = [];
-
-        for (var i = 0; i < obj.length; ++i) {
-            if (obj[i] && typeof obj[i] === 'object') {
-                compacted.push(exports.compact(obj[i], refs));
-            } else if (typeof obj[i] !== 'undefined') {
-                compacted.push(obj[i]);
+        var keys = Object.keys(obj);
+        for (var j = 0; j < keys.length; ++j) {
+            var key = keys[j];
+            var val = obj[key];
+            if (typeof val === 'object' && val !== null && refs.indexOf(val) === -1) {
+                queue.push({ obj: obj, prop: key });
+                refs.push(val);
             }
         }
-
-        return compacted;
     }
 
-    var keys = Object.keys(obj);
-    keys.forEach(function (key) {
-        obj[key] = exports.compact(obj[key], refs);
-    });
-
-    return obj;
+    return compactQueue(queue);
 };
 
-exports.isRegExp = function (obj) {
+exports.isRegExp = function isRegExp(obj) {
     return Object.prototype.toString.call(obj) === '[object RegExp]';
 };
 
-exports.isBuffer = function (obj) {
+exports.isBuffer = function isBuffer(obj) {
     if (obj === null || typeof obj === 'undefined') {
         return false;
     }

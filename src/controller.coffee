@@ -20,10 +20,10 @@ class Controller
     unless @client instanceof Client
       throw (errors.error "client must be an instance of Client", @)
 
-    unless Thing.isArray widgets
+    unless Thing.is.array widgets
       throw (errors.error "widgets must be an instance of Array", @)
 
-    unless Thing.isPlainObj defaultParams
+    unless Thing.is.hash defaultParams
       throw (errors.error "defaultParams must be an instance of Object", @)
 
     # controller needs page and rpp to do calculations
@@ -262,7 +262,7 @@ class Controller
   ###
   setFilter: (key, value, paramName = "filter") ->
     @params[paramName] ?= {}
-    @params[paramName][key] = if Thing.isStr value then [value] else value
+    @params[paramName][key] = if Thing.is.string value then [value] else value
     @params[paramName][key]
 
   ###*
@@ -277,7 +277,7 @@ class Controller
   ###
   removeFilter: (key, value, paramName = "filter") ->
     if @params[paramName]?[key]?
-      if value? and Thing.isStrArray @params[paramName][key]
+      if value? and Thing.is.array @params[paramName][key]
         pos = @params[paramName][key].indexOf value
         (@params[paramName][key].splice pos, 1) if pos >= 0
         if @params[paramName][key].length is 0
@@ -295,10 +295,10 @@ class Controller
   addFilter: (key, value, paramName = "filter") ->
     @params[paramName] ?= {}
     @params[paramName][key] ?= []
-    if Thing.isStrArray @params[paramName][key]
-      if Thing.isStr value
+    if Thing.is.array @params[paramName][key]
+      if Thing.is.string value
         value = [value]
-      if Thing.isStrArray value
+      if Thing.is.array value
         value = @params[paramName][key].concat value
     @setFilter key, value, paramName
 
