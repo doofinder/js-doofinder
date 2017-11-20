@@ -79,13 +79,16 @@ class DfDomElement
    * @return {Boolean}
   ###
   __isValidElementNode: (node) ->
+    return false unless node?
     switch
-      when node instanceof HTMLElement then true
-      when node instanceof HTMLBodyElement then true
-      when node instanceof Document then true
-      when HTMLDocument? and node instanceof HTMLDocument then true
-      when node and node.document and node.location and node.alert and
-        node.setInterval then true # is the window object
+      # HTML Element
+      when typeof HTMLElement isnt 'undefined' and
+           node instanceof HTMLElement and
+           node.nodeType is 1 then true
+      # The Window
+      when typeof node is 'object' and 'setInterval' of node then true
+      # The Document
+      when typeof node.documentElement is 'object' then true
       else false
 
   ###*
