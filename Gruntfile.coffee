@@ -1,5 +1,14 @@
 module.exports = (grunt) ->
   grunt.initConfig
+
+    service:
+      http:
+        shellCommand: 'http-server -p 8008 .'
+        generatePID: true
+        pidFile: '/tmp/httpserver-js-doofinder.pid'
+        options:
+          stdio: 'inherit'
+
     coffee:
       release:
         files: [
@@ -84,15 +93,15 @@ module.exports = (grunt) ->
         src: ['./bower.json']
 
     watch:
-      coffee:
+      default:
         files: ['./src/**/*.coffee']
-        tasks: ['compile', 'testMocha']
+        tasks: ['compile']
+      test:
+        files: ['./src/**/*.coffee']
+        tasks: ['compile', 'test']
       css:
         files: ['./src/**/*.scss']
         tasks: ['css']
-      karma:
-        files: ['./test_karma/**/test_*.coffee']
-        tasks: ['testKarma']
 
   grunt.loadNpmTasks 'grunt-browserify'
   grunt.loadNpmTasks 'grunt-contrib-clean'
@@ -103,16 +112,17 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-karma'
   grunt.loadNpmTasks 'grunt-mocha-test'
   grunt.loadNpmTasks 'grunt-sass'
+  grunt.loadNpmTasks 'grunt-service'
   grunt.loadNpmTasks 'grunt-version'
 
   grunt.registerTask 'compile', ['coffee:release', 'browserify', 'uglify:release']
   grunt.registerTask 'css', ['copy:build_scss', 'sass:build_scss', 'clean:build_scss']
 
-  grunt.registerTask 'testMocha', ['mochaTest:release']
-  grunt.registerTask 'testKarma', ['copy:karma', 'karma:test', 'clean:karma']
+  grunt.registerTask 'test:mocha', ['mochaTest:release']
+  grunt.registerTask 'test:karma', ['copy:karma', 'karma:test', 'clean:karma']
+  grunt.registerTask 'test', ['test:mocha', 'test:karma']
 
-  grunt.registerTask 'dev', ['compile', 'testMocha', 'watch:coffee']
-  grunt.registerTask 'dev:karma', ['testKarma', 'watch:karma']
+  grunt.registerTask 'default', ['service:http', 'compile', 'watch:default']
+  grunt.registerTask 'dev:test', ['service:http', 'compile', 'test', 'watch:test']
 
-  grunt.registerTask 'default', ['compile', 'testMocha', 'testKarma']
-  grunt.registerTask 'release', ['version:library', 'version:bower', 'compile']
+  grunt.registerTask 'release', ['version:library', 'version:bower', 'compile', 'test']
