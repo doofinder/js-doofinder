@@ -1,4 +1,5 @@
 bean = require "bean"
+extend = require "extend"
 Thing = require "./thing"
 
 MATCHES_SELECTOR_FN = null
@@ -77,9 +78,9 @@ class DfDomElement
    * @return {Boolean}
   ###
   __isValidElementNode: (node) ->
-    Thing.is.element(node) or
-    Thing.is.document(node) or
-    Thing.is.window(node)
+    (Thing.is.element node) or
+    (Thing.is.document node) or
+    (Thing.is.window node)
 
   ###*
    * Fills the internal store from an array of selectors.
@@ -322,7 +323,7 @@ class DfDomElement
    *
    * @public
    * @param  {DfDomElement|Element|String} child Stuff to be prepended.
-   * @return {DfDomElement}                          The current instance.
+   * @return {DfDomElement}                      The current instance.
   ###
   prepend: (child) ->
     if child instanceof DfDomElement
@@ -558,7 +559,7 @@ class DfDomElement
     if value?
       @each (node) -> node.style[propertyName] = value
     else if (node = @get 0)?
-      (getComputedStyle node).getPropertyValue propertyName
+      (getComputedStyle node)[propertyName]
 
   ###*
    * Hides the element in the set of matched elements by setting their display
@@ -593,8 +594,55 @@ class DfDomElement
    *                   read-only left, top, right, bottom, x, y, width, height
    *                   properties describing the border-box in pixels. # MDN #
   ###
-  __clientRect: ->
-    (@get 0)?.getBoundingClientRect?()
+  box: ->
+    node = @get 0
+    keys = ['left', 'top', 'right', 'bottom', 'width', 'height',
+            'scrollLeft', 'scrollTop', 'scrollWidth', 'scrollHeight']
+
+    # init rect with 0 value for all props
+    rect = {}
+    rect[k] = 0 for k in keys
+
+    if node?
+      if Thing.is.window node
+        doc = @document()
+        rect = extend rect,
+          width:        node.innerWidth
+          height:       node.innerHeight
+          clientWidth:  node.innerWidth
+          clientHeight: node.innerHeight
+          scrollLeft:   node.scrollX
+          scrollTop:    node.scrollY
+          scrollWidth:  doc.scrollWidth
+          scrollHeight: doc.scrollHeight
+      else
+        isDoc = Thing.is.document node
+        isElm = node.getBoundingClientRect?
+
+        if isDoc
+          node = node.documentElement
+          rect = extend rect,
+            width:  node.offsetWidth
+            height: node.offsetHeight
+
+        if isElm
+          box = node.getBoundingClientRect()
+          rect[k] = box[k] for k in keys
+
+        if isDoc or isElm
+          rect = extend rect,
+            clientWidth:  node.clientWidth
+            clientHeight: node.clientHeight
+            scrollLeft:   node.scrollLeft
+            scrollTop:    node.scrollTop
+            scrollWidth:  node.scrollWidth
+            scrollHeight: node.scrollHeight
+      rect
+
+  # TODO: 2 new methods only with these measurements
+  # bottomDistance = bottom
+  # container.get(0).scrollHeight - container.get(0).scrollTop - container.get(0).clientHeight
+  # container.get(0).scrollWidth - container.get(0).scrollLeft - container.get(0).clientWidth
 
   ###*
    * Proxy method for getBoundingClientRect().width. Returns the width of the
@@ -604,7 +652,7 @@ class DfDomElement
    * @return {Number} The width of the element.
   ###
   width: ->
-    @__clientRect()?.width
+    @box()?.width
 
   ###*
    * Proxy method for getBoundingClientRect().height. Returns the height of the
@@ -614,7 +662,7 @@ class DfDomElement
    * @return {Number} The height of the element.
   ###
   height: ->
-    @__clientRect()?.height
+    @box()?.height
 
   ###*
    * Proxy method for getBoundingClientRect().top. Returns the top position of
@@ -625,7 +673,7 @@ class DfDomElement
    * @return {Number} The top position of the element.
   ###
   top: ->
-    @__clientRect()?.top
+    @box()?.top
 
   ###*
    * Proxy method for getBoundingClientRect().right. Returns the right position of
@@ -636,7 +684,7 @@ class DfDomElement
    * @return {Number} The right position of the element.
   ###
   right: ->
-    @__clientRect()?.right
+    @box()?.right
 
   ###*
    * Proxy method for getBoundingClientRect().bottom. Returns the bottom position of
@@ -647,7 +695,7 @@ class DfDomElement
    * @return {Number} The bottom position of the element.
   ###
   bottom: ->
-    @__clientRect()?.bottom
+    @box()?.bottom
 
   ###*
    * Proxy method for getBoundingClientRect().left. Returns the left position of
@@ -658,27 +706,81 @@ class DfDomElement
    * @return {Number} The left position of the element.
   ###
   left: ->
-    @__clientRect()?.left
+    @box()?.left
 
-  __scrollProperty: (node, propertyName, value) ->
-    if value?
-      node[propertyName] = value
-      new DfDomElement node
-    else
-      node[propertyName]
-
+  ###*
+   * Gets scrolling position in the Y axis for the first element in the set of
+   * matched elements. If a value is provided, it's set for all elements in the
+   * set of matched elements.
+   *
+   * @public
+   * @param  {Number} value Optional. Scroll position.
+   * @return {Number}       Scroll position for get operation.
+  ###
   scrollTop: (value) ->
-    node = @get 0
-    if node?
-      propertyName = if node.scrollY? then "scrollY" else "scrollTop"
-      @__scrollProperty node, propertyName, value
+    if value?
+      @each (node) ->
+        if Thing.is.window node
+          node.scrollTo node.scrollX, value
+        else
+          node.scrollTop = value
+    else
+      @box()?.scrollTop
 
-
+  ###*
+   * Gets scrolling position in the X axis for the first element in the set of
+   * matched elements. If a value is provided, it's set for all elements in the
+   * set of matched elements.
+   *
+   * @public
+   * @param  {Number} value Optional. Scroll position.
+   * @return {Number}       Scroll position for get operation.
+  ###
   scrollLeft: (value) ->
+    if value?
+      @each (node) ->
+        if Thing.is.window node
+          node.scrollTo value, node.scrollY
+        else
+          node.scrollLeft = value
+    else
+      @box()?.scrollLeft
+
+  ###*
+   * Sets scrolling at the specified coordinates for the set of matched
+   * elements.
+   *
+   * @public
+   * @param  {Number} x
+   * @param  {Number} y
+  ###
+  scrollTo: (x, y) ->
+    @each (node) ->
+      if Thing.is.window node
+        node.scrollTo x, y
+      else
+        node.scrollLeft = x
+        node.scrollTop = y
+
+  window: ->
     node = @get 0
     if node?
-      propertyName = if node.scrollX? then "scrollX" else "scrollLeft"
-      @__scrollProperty node, propertyName, value
+      if Thing.is.window node
+        node
+      else if Thing.is.document node
+        node.defaultView
+      else if node.ownerDocument?
+        node.ownerDocument.defaultView
+
+  document: ->
+    node = @get 0
+    if node?
+      if Thing.is.window node
+        node.document.documentElement
+      else if Thing.is.document node
+        node.documentElement
+      else if node.ownerDocument?
+        node.ownerDocument.documentElement
 
   #
   # Events

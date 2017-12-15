@@ -231,7 +231,7 @@
 
 }).call(this);
 
-},{"./util/errors":9,"./util/http":12,"./util/thing":13,"extend":24,"md5":66,"qs":73}],2:[function(require,module,exports){
+},{"./util/errors":9,"./util/http":12,"./util/thing":13,"extend":24,"md5":65,"qs":72}],2:[function(require,module,exports){
 (function() {
   var Client, Controller, Freezer, Thing, bean, errors, extend, qs,
     hasProp = {}.hasOwnProperty;
@@ -694,7 +694,7 @@
 
 }).call(this);
 
-},{"./client":1,"./util/errors":9,"./util/freezer":10,"./util/thing":13,"bean":23,"extend":24,"qs":73}],3:[function(require,module,exports){
+},{"./client":1,"./util/errors":9,"./util/freezer":10,"./util/thing":13,"bean":23,"extend":24,"qs":72}],3:[function(require,module,exports){
 (function() {
   module.exports = {
     version: "5.2.0",
@@ -714,13 +714,13 @@
     util: {
       addHelpers: require("./util/helpers"),
       bean: require("bean"),
-      dfdom: require("./util/dfdom"),
       currency: require("./util/currency"),
+      Debouncer: require("./util/debouncer"),
+      dfdom: require("./util/dfdom"),
       extend: require("extend"),
       http: require("./util/http"),
       md5: require("md5"),
       qs: require("qs"),
-      throttle: require("lodash.throttle"),
       uniqueId: require("./util/uniqueid")
     },
     session: require("./session"),
@@ -729,7 +729,7 @@
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/currency":6,"./util/dfdom":7,"./util/helpers":11,"./util/http":12,"./util/uniqueid":14,"./widgets/collapsiblepanel":15,"./widgets/display":16,"./widgets/facets/rangefacet":17,"./widgets/facets/termfacet":18,"./widgets/panel":19,"./widgets/queryinput":20,"./widgets/scrolldisplay":21,"./widgets/widget":22,"bean":23,"extend":24,"lodash.throttle":65,"md5":66,"mustache":70,"qs":73}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/currency":6,"./util/debouncer":7,"./util/dfdom":8,"./util/helpers":11,"./util/http":12,"./util/uniqueid":14,"./widgets/collapsiblepanel":15,"./widgets/display":16,"./widgets/facets/rangefacet":17,"./widgets/facets/termfacet":18,"./widgets/panel":19,"./widgets/queryinput":20,"./widgets/scrolldisplay":21,"./widgets/widget":22,"bean":23,"extend":24,"md5":65,"mustache":69,"qs":72}],4:[function(require,module,exports){
 (function() {
   var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, extend, md5, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -1007,7 +1007,7 @@
 
 }).call(this);
 
-},{"./util/uniqueid":14,"extend":24,"js-cookie":64,"md5":66}],5:[function(require,module,exports){
+},{"./util/uniqueid":14,"extend":24,"js-cookie":64,"md5":65}],5:[function(require,module,exports){
 (function() {
   var Client, Session, Stats, uniqueId;
 
@@ -1244,9 +1244,49 @@
 
 },{}],7:[function(require,module,exports){
 (function() {
-  var DfDomElement, MATCHES_SELECTOR_FN, Thing, bean, matchesSelector;
+  var Debouncer, requestAnimationFrame;
+
+  requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
+
+  Debouncer = (function() {
+    function Debouncer(callback) {
+      this.callback = callback;
+      this.ticking = false;
+    }
+
+    Debouncer.prototype.update = function() {
+      if (typeof this.callback === "function") {
+        this.callback();
+      }
+      return this.ticking = false;
+    };
+
+    Debouncer.prototype.tick = function() {
+      if (!this.ticking) {
+        requestAnimationFrame(this.boundCallback || (this.boundCallback = this.update.bind(this)));
+        return this.ticking = true;
+      }
+    };
+
+    Debouncer.prototype.handleEvent = function() {
+      return this.tick();
+    };
+
+    return Debouncer;
+
+  })();
+
+  module.exports = Debouncer;
+
+}).call(this);
+
+},{}],8:[function(require,module,exports){
+(function() {
+  var DfDomElement, MATCHES_SELECTOR_FN, Thing, bean, extend, matchesSelector;
 
   bean = require("bean");
+
+  extend = require("extend");
 
   Thing = require("./thing");
 
@@ -1343,7 +1383,7 @@
      */
 
     DfDomElement.prototype.__isValidElementNode = function(node) {
-      return Thing.is.element(node) || Thing.is.document(node) || Thing.is.window(node);
+      return (Thing.is.element(node)) || (Thing.is.document(node)) || (Thing.is.window(node));
     };
 
 
@@ -1684,7 +1724,7 @@
      *
      * @public
      * @param  {DfDomElement|Element|String} child Stuff to be prepended.
-     * @return {DfDomElement}                          The current instance.
+     * @return {DfDomElement}                      The current instance.
      */
 
     DfDomElement.prototype.prepend = function(child) {
@@ -2030,7 +2070,7 @@
           return node.style[propertyName] = value;
         });
       } else if ((node = this.get(0)) != null) {
-        return (getComputedStyle(node)).getPropertyValue(propertyName);
+        return (getComputedStyle(node))[propertyName];
       }
     };
 
@@ -2073,9 +2113,58 @@
      *                   properties describing the border-box in pixels. # MDN #
      */
 
-    DfDomElement.prototype.__clientRect = function() {
-      var ref;
-      return (ref = this.get(0)) != null ? typeof ref.getBoundingClientRect === "function" ? ref.getBoundingClientRect() : void 0 : void 0;
+    DfDomElement.prototype.box = function() {
+      var box, doc, isDoc, isElm, j, k, keys, l, len, len1, node, rect;
+      node = this.get(0);
+      keys = ['left', 'top', 'right', 'bottom', 'width', 'height', 'scrollLeft', 'scrollTop', 'scrollWidth', 'scrollHeight'];
+      rect = {};
+      for (j = 0, len = keys.length; j < len; j++) {
+        k = keys[j];
+        rect[k] = 0;
+      }
+      if (node != null) {
+        if (Thing.is.window(node)) {
+          doc = this.document();
+          rect = extend(rect, {
+            width: node.innerWidth,
+            height: node.innerHeight,
+            clientWidth: node.innerWidth,
+            clientHeight: node.innerHeight,
+            scrollLeft: node.scrollX,
+            scrollTop: node.scrollY,
+            scrollWidth: doc.scrollWidth,
+            scrollHeight: doc.scrollHeight
+          });
+        } else {
+          isDoc = Thing.is.document(node);
+          isElm = node.getBoundingClientRect != null;
+          if (isDoc) {
+            node = node.documentElement;
+            rect = extend(rect, {
+              width: node.offsetWidth,
+              height: node.offsetHeight
+            });
+          }
+          if (isElm) {
+            box = node.getBoundingClientRect();
+            for (l = 0, len1 = keys.length; l < len1; l++) {
+              k = keys[l];
+              rect[k] = box[k];
+            }
+          }
+          if (isDoc || isElm) {
+            rect = extend(rect, {
+              clientWidth: node.clientWidth,
+              clientHeight: node.clientHeight,
+              scrollLeft: node.scrollLeft,
+              scrollTop: node.scrollTop,
+              scrollWidth: node.scrollWidth,
+              scrollHeight: node.scrollHeight
+            });
+          }
+        }
+        return rect;
+      }
     };
 
 
@@ -2089,7 +2178,7 @@
 
     DfDomElement.prototype.width = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.width : void 0;
+      return (ref = this.box()) != null ? ref.width : void 0;
     };
 
 
@@ -2103,7 +2192,7 @@
 
     DfDomElement.prototype.height = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.height : void 0;
+      return (ref = this.box()) != null ? ref.height : void 0;
     };
 
 
@@ -2118,7 +2207,7 @@
 
     DfDomElement.prototype.top = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.top : void 0;
+      return (ref = this.box()) != null ? ref.top : void 0;
     };
 
 
@@ -2133,7 +2222,7 @@
 
     DfDomElement.prototype.right = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.right : void 0;
+      return (ref = this.box()) != null ? ref.right : void 0;
     };
 
 
@@ -2148,7 +2237,7 @@
 
     DfDomElement.prototype.bottom = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.bottom : void 0;
+      return (ref = this.box()) != null ? ref.bottom : void 0;
     };
 
 
@@ -2163,33 +2252,107 @@
 
     DfDomElement.prototype.left = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.left : void 0;
+      return (ref = this.box()) != null ? ref.left : void 0;
     };
 
-    DfDomElement.prototype.__scrollProperty = function(node, propertyName, value) {
-      if (value != null) {
-        node[propertyName] = value;
-        return new DfDomElement(node);
-      } else {
-        return node[propertyName];
-      }
-    };
+
+    /**
+     * Gets scrolling position in the Y axis for the first element in the set of
+     * matched elements. If a value is provided, it's set for all elements in the
+     * set of matched elements.
+     *
+     * @public
+     * @param  {Number} value Optional. Scroll position.
+     * @return {Number}       Scroll position for get operation.
+     */
 
     DfDomElement.prototype.scrollTop = function(value) {
-      var node, propertyName;
-      node = this.get(0);
-      if (node != null) {
-        propertyName = node.scrollY != null ? "scrollY" : "scrollTop";
-        return this.__scrollProperty(node, propertyName, value);
+      var ref;
+      if (value != null) {
+        return this.each(function(node) {
+          if (Thing.is.window(node)) {
+            return node.scrollTo(node.scrollX, value);
+          } else {
+            return node.scrollTop = value;
+          }
+        });
+      } else {
+        return (ref = this.box()) != null ? ref.scrollTop : void 0;
       }
     };
 
+
+    /**
+     * Gets scrolling position in the X axis for the first element in the set of
+     * matched elements. If a value is provided, it's set for all elements in the
+     * set of matched elements.
+     *
+     * @public
+     * @param  {Number} value Optional. Scroll position.
+     * @return {Number}       Scroll position for get operation.
+     */
+
     DfDomElement.prototype.scrollLeft = function(value) {
-      var node, propertyName;
+      var ref;
+      if (value != null) {
+        return this.each(function(node) {
+          if (Thing.is.window(node)) {
+            return node.scrollTo(value, node.scrollY);
+          } else {
+            return node.scrollLeft = value;
+          }
+        });
+      } else {
+        return (ref = this.box()) != null ? ref.scrollLeft : void 0;
+      }
+    };
+
+
+    /**
+     * Sets scrolling at the specified coordinates for the set of matched
+     * elements.
+     *
+     * @public
+     * @param  {Number} x
+     * @param  {Number} y
+     */
+
+    DfDomElement.prototype.scrollTo = function(x, y) {
+      return this.each(function(node) {
+        if (Thing.is.window(node)) {
+          return node.scrollTo(x, y);
+        } else {
+          node.scrollLeft = x;
+          return node.scrollTop = y;
+        }
+      });
+    };
+
+    DfDomElement.prototype.window = function() {
+      var node;
       node = this.get(0);
       if (node != null) {
-        propertyName = node.scrollX != null ? "scrollX" : "scrollLeft";
-        return this.__scrollProperty(node, propertyName, value);
+        if (Thing.is.window(node)) {
+          return node;
+        } else if (Thing.is.document(node)) {
+          return node.defaultView;
+        } else if (node.ownerDocument != null) {
+          return node.ownerDocument.defaultView;
+        }
+      }
+    };
+
+    DfDomElement.prototype.document = function() {
+      var node;
+      node = this.get(0);
+      if (node != null) {
+        if (Thing.is.window(node)) {
+          return node.document.documentElement;
+        } else if (Thing.is.document(node)) {
+          return node.documentElement;
+        } else if (node.ownerDocument != null) {
+          return node.ownerDocument.documentElement;
+        }
       }
     };
 
@@ -2356,54 +2519,7 @@
 
 }).call(this);
 
-},{"./thing":13,"bean":23}],8:[function(require,module,exports){
-(function() {
-  var $, bean, extend, throttle;
-
-  $ = require('./dfdom');
-
-  bean = require('bean');
-
-  extend = require('extend');
-
-  throttle = require('lodash.throttle');
-
-  module.exports = function(container, options) {
-    var containerElement, content, defaults, fn;
-    if (options == null) {
-      options = null;
-    }
-    container = $(container);
-    containerElement = container.element[0];
-    defaults = {
-      callback: function() {},
-      scrollOffset: 200,
-      content: containerElement === window ? $("body") : container.children().first(),
-      throttle: 250
-    };
-    options = extend(true, defaults, options || {});
-    content = $(options.content);
-    container.on('df:scroll', function() {
-      var containerHeight, containerScroll, contentHeight, delta;
-      contentHeight = content.height();
-      containerHeight = container.height();
-      containerScroll = container.scrollTop();
-      delta = Math.max(0, contentHeight - containerHeight - containerScroll);
-      if (containerScroll > 0 && delta >= 0 && delta <= options.scrollOffset) {
-        return options.callback();
-      }
-    });
-    fn = function(e) {
-      return bean.fire(container.element[0], 'df:scroll');
-    };
-    return bean.on(containerElement, 'scroll', throttle(fn, options.throttle, {
-      leading: true
-    }));
-  };
-
-}).call(this);
-
-},{"./dfdom":7,"bean":23,"extend":24,"lodash.throttle":65}],9:[function(require,module,exports){
+},{"./thing":13,"bean":23,"extend":24}],9:[function(require,module,exports){
 (function() {
   var _msg, error, warning,
     slice = [].slice;
@@ -2558,7 +2674,7 @@
 
 }).call(this);
 
-},{"./currency":6,"extend":24,"qs":73}],12:[function(require,module,exports){
+},{"./currency":6,"extend":24,"qs":72}],12:[function(require,module,exports){
 (function() {
   var HttpClient, Thing, http, https;
 
@@ -2697,7 +2813,7 @@
 
 }).call(this);
 
-},{"md5":66}],15:[function(require,module,exports){
+},{"md5":65}],15:[function(require,module,exports){
 (function() {
   var CollapsiblePanel, Panel, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -2895,7 +3011,7 @@
 
 }).call(this);
 
-},{"../util/helpers":11,"./widget":22,"extend":24,"mustache":70}],17:[function(require,module,exports){
+},{"../util/helpers":11,"./widget":22,"extend":24,"mustache":69}],17:[function(require,module,exports){
 (function() {
   var Display, RangeFacet, defaultTemplate, extend, noUiSlider,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3169,7 +3285,7 @@
 
 }).call(this);
 
-},{"../display":16,"extend":24,"nouislider":71}],18:[function(require,module,exports){
+},{"../display":16,"extend":24,"nouislider":70}],18:[function(require,module,exports){
 (function() {
   var $, Display, TermsFacet, defaultButtonTemplate, defaultTemplate, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3399,7 +3515,7 @@
 
 }).call(this);
 
-},{"../../util/dfdom":7,"../display":16,"extend":24}],19:[function(require,module,exports){
+},{"../../util/dfdom":8,"../display":16,"extend":24}],19:[function(require,module,exports){
 (function() {
   var $, Display, INSERTION_METHODS, Panel, defaultTemplate, extend, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3480,7 +3596,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":7,"../util/uniqueid":14,"./display":16,"extend":24}],20:[function(require,module,exports){
+},{"../util/dfdom":8,"../util/uniqueid":14,"./display":16,"extend":24}],20:[function(require,module,exports){
 (function() {
   var QueryInput, Thing, Widget, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3627,17 +3743,19 @@
 
 },{"../util/thing":13,"./widget":22,"extend":24}],21:[function(require,module,exports){
 (function() {
-  var $, Display, ScrollDisplay, dfScroll, extend,
+  var $, Debouncer, Display, ScrollDisplay, Thing, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
+  extend = require("extend");
+
+  $ = require("../util/dfdom");
+
+  Debouncer = require("../util/debouncer");
+
+  Thing = require("../util/thing");
+
   Display = require("./display");
-
-  dfScroll = require("../util/dfscroll");
-
-  extend = require('extend');
-
-  $ = require('../util/dfdom');
 
 
   /**
@@ -3651,86 +3769,109 @@
 
 
     /**
+     * @param  {DfDomElement|Element|String} element Will be used as scroller.
+     * @param  {Object} options
+     *
      * Options:
      *
-     * - scrollOffset: 200
-     * - contentNode: Node that holds the results will become the container
-     *   element of the widget.
-     * - contentWrapper: Node that is used for scrolling instead of the first
-     *   child of the container.
+     * - contentElement: By default content will be rendered inside the scroller
+     *     unless this option is set to a valid container. This is optional unless
+     *     the scroller is the window object, in which case this is mandatory.
+     * - offset: Distance to the bottom. If the scroll reaches this point a new
+     *     results page will be requested.
+     * - vertical: True by default. Otherwise scroll is handled horizontally.
+     *
+     * Old Schema, for reference:
+     *
      *
      *  elementWrapper
-     *  -------------------
-     * |  contentWrapper  ^|
-     * |  --------------- !|
-     * | |  element      |!|
-     * | |  ------------ |!|
-     * | | |  items     ||!|
+     *  --------------------
+     * |  contentWrapper   ^|
+     * |  ---------------  !|
+     * | |  element      | !|
+     * | |  ------------ | !|
+     * | | |            || !|
+     * | | | items here || !|
+     * | | |            || !|
+     * | |  ------------ | !|
+     * |  ---------------  !|
+     *  --------------------
      *
-     * TODO(@carlosescri): Document this better!!!
-     *
-     * @param  {[type]} element  [description]
-     * @param  {[type]} template [description]
-     * @param  {[type]} options  [description]
-     * @return {[type]}          [description]
+     * TODO: Check if this can handle all cases (it's supposed to do so because
+     * its not based on content).
+     * TODO: Check how this works when the container is the window object.
      */
 
     function ScrollDisplay(element, options) {
-      var scrollCallback, scrollOptions;
-      ScrollDisplay.__super__.constructor.apply(this, arguments);
-      if (this.element.element[0] === window && (options.contentNode == null)) {
-        throw "when the wrapper is window you must set contentNode option.";
-      }
-      scrollCallback = (function(_this) {
-        return function() {
-          if ((_this.controller != null) && !_this.pageRequested) {
-            _this.pageRequested = true;
-            setTimeout((function() {
-              return _this.pageRequested = false;
-            }), 5000);
-            return _this.controller.getNextPage();
-          }
-        };
-      })(this);
-      scrollOptions = {
-        callback: scrollCallback
+      var defaultOptions, fn;
+      defaultOptions = {
+        contentElement: null,
+        offset: 300,
+        vertical: true
       };
-      if (this.options.scrollOffset != null) {
-        scrollOptions.scrollOffset = this.options.scrollOffset;
-      }
-      if (this.options.contentWrapper != null) {
-        scrollOptions.content = this.options.contentWrapper;
-      }
-      this.elementWrapper = this.element;
-      if (this.options.contentNode != null) {
-        this.element = $(this.options.contentNode);
-      } else if (this.element.get(0) === window) {
-        this.element = $("body");
-      } else {
-        if (!this.element.children().length) {
-          this.element.append('div');
-        }
-        this.element = this.element.children().first();
-      }
-      dfScroll(this.elementWrapper, scrollOptions);
+      options = extend(true, defaultOptions, options);
+      ScrollDisplay.__super__.constructor.apply(this, arguments);
+      this.scroller = this.element;
+      this.setContentElement();
+      fn = this.options.vertical ? this.scrollY : this.scrollX;
+      this.debouncer = new Debouncer(fn.bind(this));
+      this.working = false;
     }
 
 
     /**
-     * Initializes the object with a controller and attachs event handlers for
-     * this widget instance.
-     *
-     * @param  {Controller} controller Doofinder Search controller.
+     * Gets the element that will hold search results.
+     * @return {[type]} [description]
      */
+
+    ScrollDisplay.prototype.setContentElement = function() {
+      if (this.options.contentElement != null) {
+        return this.setElement(this.element.find(this.options.contentElement));
+      } else if (Thing.is.window(this.element.get(0))) {
+        throw "ScrollDisplay: contentElement must be specified when the scroller is the window object";
+      }
+    };
 
     ScrollDisplay.prototype.init = function() {
       if (!this.initialized) {
+        this.scroller.get(0).addEventListener("scroll", this.debouncer);
         this.controller.on("df:search df:refresh", (function(_this) {
           return function(query, params) {
-            return _this.elementWrapper.scrollTop(0);
+            return _this.scroller.scrollTop(0);
           };
         })(this));
         return ScrollDisplay.__super__.init.apply(this, arguments);
+      }
+    };
+
+    ScrollDisplay.prototype.scrollX = function() {
+      var scrolled, width;
+      width = rect.scrollWidth;
+      scrolled = rect.scrollLeft + rect.clientWidth;
+      if (width - scrolled <= this.options.offset) {
+        return this.getNextPage();
+      }
+    };
+
+    ScrollDisplay.prototype.scrollY = function() {
+      var height, rect, scrolled;
+      rect = this.scroller.box();
+      height = rect.scrollHeight;
+      scrolled = rect.scrollTop + rect.clientHeight;
+      if (height - scrolled <= this.options.offset) {
+        return this.getNextPage();
+      }
+    };
+
+    ScrollDisplay.prototype.getNextPage = function() {
+      if ((this.controller != null) && !this.working) {
+        this.working = true;
+        setTimeout(((function(_this) {
+          return function() {
+            return _this.working = false;
+          };
+        })(this)), 2000);
+        return this.controller.getNextPage();
       }
     };
 
@@ -3738,7 +3879,7 @@
       if (res.page === 1) {
         return ScrollDisplay.__super__.render.apply(this, arguments);
       } else {
-        this.pageRequested = false;
+        this.working = false;
         this.element.append(this.renderTemplate(res));
         return this.trigger("df:widget:render", [res]);
       }
@@ -3752,7 +3893,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":7,"../util/dfscroll":8,"./display":16,"extend":24}],22:[function(require,module,exports){
+},{"../util/debouncer":7,"../util/dfdom":8,"../util/thing":13,"./display":16,"extend":24}],22:[function(require,module,exports){
 (function() {
   var $, Widget, bean;
 
@@ -3855,7 +3996,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":7,"bean":23}],23:[function(require,module,exports){
+},{"../util/dfdom":8,"bean":23}],23:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean
@@ -13242,449 +13383,6 @@ module.exports = is;
 }));
 
 },{}],65:[function(require,module,exports){
-(function (global){
-/**
- * lodash (Custom Build) <https://lodash.com/>
- * Build: `lodash modularize exports="npm" -o ./`
- * Copyright jQuery Foundation and other contributors <https://jquery.org/>
- * Released under MIT license <https://lodash.com/license>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- */
-
-/** Used as the `TypeError` message for "Functions" methods. */
-var FUNC_ERROR_TEXT = 'Expected a function';
-
-/** Used as references for various `Number` constants. */
-var NAN = 0 / 0;
-
-/** `Object#toString` result references. */
-var symbolTag = '[object Symbol]';
-
-/** Used to match leading and trailing whitespace. */
-var reTrim = /^\s+|\s+$/g;
-
-/** Used to detect bad signed hexadecimal string values. */
-var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
-
-/** Used to detect binary string values. */
-var reIsBinary = /^0b[01]+$/i;
-
-/** Used to detect octal string values. */
-var reIsOctal = /^0o[0-7]+$/i;
-
-/** Built-in method references without a dependency on `root`. */
-var freeParseInt = parseInt;
-
-/** Detect free variable `global` from Node.js. */
-var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
-
-/** Detect free variable `self`. */
-var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
-
-/** Used as a reference to the global object. */
-var root = freeGlobal || freeSelf || Function('return this')();
-
-/** Used for built-in method references. */
-var objectProto = Object.prototype;
-
-/**
- * Used to resolve the
- * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
- * of values.
- */
-var objectToString = objectProto.toString;
-
-/* Built-in method references for those with the same name as other `lodash` methods. */
-var nativeMax = Math.max,
-    nativeMin = Math.min;
-
-/**
- * Gets the timestamp of the number of milliseconds that have elapsed since
- * the Unix epoch (1 January 1970 00:00:00 UTC).
- *
- * @static
- * @memberOf _
- * @since 2.4.0
- * @category Date
- * @returns {number} Returns the timestamp.
- * @example
- *
- * _.defer(function(stamp) {
- *   console.log(_.now() - stamp);
- * }, _.now());
- * // => Logs the number of milliseconds it took for the deferred invocation.
- */
-var now = function() {
-  return root.Date.now();
-};
-
-/**
- * Creates a debounced function that delays invoking `func` until after `wait`
- * milliseconds have elapsed since the last time the debounced function was
- * invoked. The debounced function comes with a `cancel` method to cancel
- * delayed `func` invocations and a `flush` method to immediately invoke them.
- * Provide `options` to indicate whether `func` should be invoked on the
- * leading and/or trailing edge of the `wait` timeout. The `func` is invoked
- * with the last arguments provided to the debounced function. Subsequent
- * calls to the debounced function return the result of the last `func`
- * invocation.
- *
- * **Note:** If `leading` and `trailing` options are `true`, `func` is
- * invoked on the trailing edge of the timeout only if the debounced function
- * is invoked more than once during the `wait` timeout.
- *
- * If `wait` is `0` and `leading` is `false`, `func` invocation is deferred
- * until to the next tick, similar to `setTimeout` with a timeout of `0`.
- *
- * See [David Corbacho's article](https://css-tricks.com/debouncing-throttling-explained-examples/)
- * for details over the differences between `_.debounce` and `_.throttle`.
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Function
- * @param {Function} func The function to debounce.
- * @param {number} [wait=0] The number of milliseconds to delay.
- * @param {Object} [options={}] The options object.
- * @param {boolean} [options.leading=false]
- *  Specify invoking on the leading edge of the timeout.
- * @param {number} [options.maxWait]
- *  The maximum time `func` is allowed to be delayed before it's invoked.
- * @param {boolean} [options.trailing=true]
- *  Specify invoking on the trailing edge of the timeout.
- * @returns {Function} Returns the new debounced function.
- * @example
- *
- * // Avoid costly calculations while the window size is in flux.
- * jQuery(window).on('resize', _.debounce(calculateLayout, 150));
- *
- * // Invoke `sendMail` when clicked, debouncing subsequent calls.
- * jQuery(element).on('click', _.debounce(sendMail, 300, {
- *   'leading': true,
- *   'trailing': false
- * }));
- *
- * // Ensure `batchLog` is invoked once after 1 second of debounced calls.
- * var debounced = _.debounce(batchLog, 250, { 'maxWait': 1000 });
- * var source = new EventSource('/stream');
- * jQuery(source).on('message', debounced);
- *
- * // Cancel the trailing debounced invocation.
- * jQuery(window).on('popstate', debounced.cancel);
- */
-function debounce(func, wait, options) {
-  var lastArgs,
-      lastThis,
-      maxWait,
-      result,
-      timerId,
-      lastCallTime,
-      lastInvokeTime = 0,
-      leading = false,
-      maxing = false,
-      trailing = true;
-
-  if (typeof func != 'function') {
-    throw new TypeError(FUNC_ERROR_TEXT);
-  }
-  wait = toNumber(wait) || 0;
-  if (isObject(options)) {
-    leading = !!options.leading;
-    maxing = 'maxWait' in options;
-    maxWait = maxing ? nativeMax(toNumber(options.maxWait) || 0, wait) : maxWait;
-    trailing = 'trailing' in options ? !!options.trailing : trailing;
-  }
-
-  function invokeFunc(time) {
-    var args = lastArgs,
-        thisArg = lastThis;
-
-    lastArgs = lastThis = undefined;
-    lastInvokeTime = time;
-    result = func.apply(thisArg, args);
-    return result;
-  }
-
-  function leadingEdge(time) {
-    // Reset any `maxWait` timer.
-    lastInvokeTime = time;
-    // Start the timer for the trailing edge.
-    timerId = setTimeout(timerExpired, wait);
-    // Invoke the leading edge.
-    return leading ? invokeFunc(time) : result;
-  }
-
-  function remainingWait(time) {
-    var timeSinceLastCall = time - lastCallTime,
-        timeSinceLastInvoke = time - lastInvokeTime,
-        result = wait - timeSinceLastCall;
-
-    return maxing ? nativeMin(result, maxWait - timeSinceLastInvoke) : result;
-  }
-
-  function shouldInvoke(time) {
-    var timeSinceLastCall = time - lastCallTime,
-        timeSinceLastInvoke = time - lastInvokeTime;
-
-    // Either this is the first call, activity has stopped and we're at the
-    // trailing edge, the system time has gone backwards and we're treating
-    // it as the trailing edge, or we've hit the `maxWait` limit.
-    return (lastCallTime === undefined || (timeSinceLastCall >= wait) ||
-      (timeSinceLastCall < 0) || (maxing && timeSinceLastInvoke >= maxWait));
-  }
-
-  function timerExpired() {
-    var time = now();
-    if (shouldInvoke(time)) {
-      return trailingEdge(time);
-    }
-    // Restart the timer.
-    timerId = setTimeout(timerExpired, remainingWait(time));
-  }
-
-  function trailingEdge(time) {
-    timerId = undefined;
-
-    // Only invoke if we have `lastArgs` which means `func` has been
-    // debounced at least once.
-    if (trailing && lastArgs) {
-      return invokeFunc(time);
-    }
-    lastArgs = lastThis = undefined;
-    return result;
-  }
-
-  function cancel() {
-    if (timerId !== undefined) {
-      clearTimeout(timerId);
-    }
-    lastInvokeTime = 0;
-    lastArgs = lastCallTime = lastThis = timerId = undefined;
-  }
-
-  function flush() {
-    return timerId === undefined ? result : trailingEdge(now());
-  }
-
-  function debounced() {
-    var time = now(),
-        isInvoking = shouldInvoke(time);
-
-    lastArgs = arguments;
-    lastThis = this;
-    lastCallTime = time;
-
-    if (isInvoking) {
-      if (timerId === undefined) {
-        return leadingEdge(lastCallTime);
-      }
-      if (maxing) {
-        // Handle invocations in a tight loop.
-        timerId = setTimeout(timerExpired, wait);
-        return invokeFunc(lastCallTime);
-      }
-    }
-    if (timerId === undefined) {
-      timerId = setTimeout(timerExpired, wait);
-    }
-    return result;
-  }
-  debounced.cancel = cancel;
-  debounced.flush = flush;
-  return debounced;
-}
-
-/**
- * Creates a throttled function that only invokes `func` at most once per
- * every `wait` milliseconds. The throttled function comes with a `cancel`
- * method to cancel delayed `func` invocations and a `flush` method to
- * immediately invoke them. Provide `options` to indicate whether `func`
- * should be invoked on the leading and/or trailing edge of the `wait`
- * timeout. The `func` is invoked with the last arguments provided to the
- * throttled function. Subsequent calls to the throttled function return the
- * result of the last `func` invocation.
- *
- * **Note:** If `leading` and `trailing` options are `true`, `func` is
- * invoked on the trailing edge of the timeout only if the throttled function
- * is invoked more than once during the `wait` timeout.
- *
- * If `wait` is `0` and `leading` is `false`, `func` invocation is deferred
- * until to the next tick, similar to `setTimeout` with a timeout of `0`.
- *
- * See [David Corbacho's article](https://css-tricks.com/debouncing-throttling-explained-examples/)
- * for details over the differences between `_.throttle` and `_.debounce`.
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Function
- * @param {Function} func The function to throttle.
- * @param {number} [wait=0] The number of milliseconds to throttle invocations to.
- * @param {Object} [options={}] The options object.
- * @param {boolean} [options.leading=true]
- *  Specify invoking on the leading edge of the timeout.
- * @param {boolean} [options.trailing=true]
- *  Specify invoking on the trailing edge of the timeout.
- * @returns {Function} Returns the new throttled function.
- * @example
- *
- * // Avoid excessively updating the position while scrolling.
- * jQuery(window).on('scroll', _.throttle(updatePosition, 100));
- *
- * // Invoke `renewToken` when the click event is fired, but not more than once every 5 minutes.
- * var throttled = _.throttle(renewToken, 300000, { 'trailing': false });
- * jQuery(element).on('click', throttled);
- *
- * // Cancel the trailing throttled invocation.
- * jQuery(window).on('popstate', throttled.cancel);
- */
-function throttle(func, wait, options) {
-  var leading = true,
-      trailing = true;
-
-  if (typeof func != 'function') {
-    throw new TypeError(FUNC_ERROR_TEXT);
-  }
-  if (isObject(options)) {
-    leading = 'leading' in options ? !!options.leading : leading;
-    trailing = 'trailing' in options ? !!options.trailing : trailing;
-  }
-  return debounce(func, wait, {
-    'leading': leading,
-    'maxWait': wait,
-    'trailing': trailing
-  });
-}
-
-/**
- * Checks if `value` is the
- * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
- * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(_.noop);
- * // => true
- *
- * _.isObject(null);
- * // => false
- */
-function isObject(value) {
-  var type = typeof value;
-  return !!value && (type == 'object' || type == 'function');
-}
-
-/**
- * Checks if `value` is object-like. A value is object-like if it's not `null`
- * and has a `typeof` result of "object".
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
- * @example
- *
- * _.isObjectLike({});
- * // => true
- *
- * _.isObjectLike([1, 2, 3]);
- * // => true
- *
- * _.isObjectLike(_.noop);
- * // => false
- *
- * _.isObjectLike(null);
- * // => false
- */
-function isObjectLike(value) {
-  return !!value && typeof value == 'object';
-}
-
-/**
- * Checks if `value` is classified as a `Symbol` primitive or object.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
- * @example
- *
- * _.isSymbol(Symbol.iterator);
- * // => true
- *
- * _.isSymbol('abc');
- * // => false
- */
-function isSymbol(value) {
-  return typeof value == 'symbol' ||
-    (isObjectLike(value) && objectToString.call(value) == symbolTag);
-}
-
-/**
- * Converts `value` to a number.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to process.
- * @returns {number} Returns the number.
- * @example
- *
- * _.toNumber(3.2);
- * // => 3.2
- *
- * _.toNumber(Number.MIN_VALUE);
- * // => 5e-324
- *
- * _.toNumber(Infinity);
- * // => Infinity
- *
- * _.toNumber('3.2');
- * // => 3.2
- */
-function toNumber(value) {
-  if (typeof value == 'number') {
-    return value;
-  }
-  if (isSymbol(value)) {
-    return NAN;
-  }
-  if (isObject(value)) {
-    var other = typeof value.valueOf == 'function' ? value.valueOf() : value;
-    value = isObject(other) ? (other + '') : other;
-  }
-  if (typeof value != 'string') {
-    return value === 0 ? value : +value;
-  }
-  value = value.replace(reTrim, '');
-  var isBinary = reIsBinary.test(value);
-  return (isBinary || reIsOctal.test(value))
-    ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
-    : (reIsBadHex.test(value) ? NAN : +value);
-}
-
-module.exports = throttle;
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],66:[function(require,module,exports){
 (function(){
   var crypt = require('crypt'),
       utf8 = require('charenc').utf8,
@@ -13846,7 +13544,7 @@ module.exports = throttle;
 
 })();
 
-},{"charenc":67,"crypt":68,"is-buffer":69}],67:[function(require,module,exports){
+},{"charenc":66,"crypt":67,"is-buffer":68}],66:[function(require,module,exports){
 var charenc = {
   // UTF-8 encoding
   utf8: {
@@ -13881,7 +13579,7 @@ var charenc = {
 
 module.exports = charenc;
 
-},{}],68:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 (function() {
   var base64map
       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
@@ -13979,9 +13677,9 @@ module.exports = charenc;
   module.exports = crypt;
 })();
 
-},{}],69:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 arguments[4][33][0].apply(exports,arguments)
-},{"dup":33}],70:[function(require,module,exports){
+},{"dup":33}],69:[function(require,module,exports){
 /*!
  * mustache.js - Logic-less {{mustache}} templates with JavaScript
  * http://github.com/janl/mustache.js
@@ -14613,7 +14311,7 @@ arguments[4][33][0].apply(exports,arguments)
   return mustache;
 }));
 
-},{}],71:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 /*! nouislider - 8.5.1 - 2016-04-24 16:00:29 */
 
 (function (factory) {
@@ -16573,7 +16271,7 @@ function closure ( target, options, originalOptions ){
 	};
 
 }));
-},{}],72:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 'use strict';
 
 var replace = String.prototype.replace;
@@ -16593,7 +16291,7 @@ module.exports = {
     RFC3986: 'RFC3986'
 };
 
-},{}],73:[function(require,module,exports){
+},{}],72:[function(require,module,exports){
 'use strict';
 
 var stringify = require('./stringify');
@@ -16606,7 +16304,7 @@ module.exports = {
     stringify: stringify
 };
 
-},{"./formats":72,"./parse":74,"./stringify":75}],74:[function(require,module,exports){
+},{"./formats":71,"./parse":73,"./stringify":74}],73:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -16782,7 +16480,7 @@ module.exports = function (str, opts) {
     return utils.compact(obj);
 };
 
-},{"./utils":76}],75:[function(require,module,exports){
+},{"./utils":75}],74:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -16994,7 +16692,7 @@ module.exports = function (object, opts) {
     return joined.length > 0 ? prefix + joined : '';
 };
 
-},{"./formats":72,"./utils":76}],76:[function(require,module,exports){
+},{"./formats":71,"./utils":75}],75:[function(require,module,exports){
 'use strict';
 
 var has = Object.prototype.hasOwnProperty;

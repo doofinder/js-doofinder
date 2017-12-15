@@ -108,7 +108,9 @@
     client.options(function(err, options){
       controller.registerWidget(input);
 
-      var results = new doofinder.widgets.ScrollDisplay("#results");
+      var results = new doofinder.widgets.ScrollDisplay("#results", {
+        contentElement: ".df-results__content"
+      });
       results.on("df:widget:render", function(res){
         console.log("[df:widget:render][" + res.hashid + "] query: '" + res.query + "' page: " + res.page);
       });

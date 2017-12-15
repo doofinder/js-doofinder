@@ -641,12 +641,12 @@ describe "dfdom", ->
             position: relative;
             top: 1rem;
             left: 1rem;
-            border: 10px solid red;
+            border: 1rem solid red;
           }
           .content {
             position: absolute;
-            top: 10px;
-            left: 10px;
+            top: 1rem;
+            left: 1rem;
           }
         </style>
         <div class="container">
