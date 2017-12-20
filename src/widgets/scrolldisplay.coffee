@@ -24,7 +24,8 @@ class ScrollDisplay extends Display
    *     the scroller is the window object, in which case this is mandatory.
    * - offset: Distance to the bottom. If the scroll reaches this point a new
    *     results page will be requested.
-   * - vertical: True by default. Otherwise scroll is handled horizontally.
+   * - horizontal: False by default. Scroll is handled vertically by default. If
+   *     this options is enabled scroll is handled horizontally.
    *
    * Old Schema, for reference:
    *
@@ -50,7 +51,7 @@ class ScrollDisplay extends Display
     defaultOptions =
       contentElement: null
       offset: 300
-      vertical: true
+      horizontal: false
     options = extend true, defaultOptions, options
 
     super
@@ -58,7 +59,7 @@ class ScrollDisplay extends Display
     @scroller = @element
     @setContentElement()
 
-    fn = if @options.vertical then @scrollY else @scrollX
+    fn = if @options.horizontal then @scrollX else @scrollY
     @debouncer = new Debouncer (fn.bind @)
     @working = false
 

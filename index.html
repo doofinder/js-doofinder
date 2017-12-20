@@ -46,19 +46,33 @@
     }
 
     #resultsX {
+      width: 400px;
+      height: 120px;
+      border: 10px solid #ddd;
+      background-color: #ddd;
+      white-space: nowrap;
       overflow-x: auto;
       overflow-y: hidden;
-    }
-
-    #resultsX .df-results__content {
-      white-space: nowrap;
+      display: flex;
+      flex-flow: row nowrap;
     }
 
     #resultsX a {
-      display: inline-block;
+      display: block;
+      flex: 0 0 auto;
       width: 100px;
+      height: 100px;
+      margin-left: 10px;
+      overflow: hidden;
       white-space: normal;
       vertical-align: top;
+      background-color: #333;
+      color: white;
+      font-size: 11px;
+    }
+
+    #resultsX a:first-child {
+      margin-left: 0;
     }
 
     .row {
@@ -91,10 +105,7 @@
         <div class="df-results__content"></div>
       </div>
 
-      <div class="widget df-results" id="resultsX">
-        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dolor, incidunt saepe in rerum dolores a optio aliquam porro officiis quam rem perferendis excepturi provident libero. In molestiae id cum error!</p>
-        <div class="df-results__content"></div>
-      </div>
+      <div class="widget" id="resultsX"></div>
 
     </div>
     <div class="col" id="aside"></div>
@@ -139,8 +150,8 @@
       controller.registerWidget(resultsY);
 
       var resultsX = new doofinder.widgets.ScrollDisplay("#resultsX", {
-        contentElement: ".df-results__content",
-        vertical: false
+        offset: 200,
+        horizontal: true
       });
       resultsX.on("df:widget:render", function(res){
         console.log("[df:widget:render][" + res.hashid + "] query: '" + res.query + "' page: " + res.page);
