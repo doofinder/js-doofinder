@@ -3845,7 +3845,8 @@
     };
 
     ScrollDisplay.prototype.scrollX = function() {
-      var scrolled, width;
+      var rect, scrolled, width;
+      rect = this.scroller.box();
       width = rect.scrollWidth;
       scrolled = rect.scrollLeft + rect.clientWidth;
       if (width - scrolled <= this.options.offset) {

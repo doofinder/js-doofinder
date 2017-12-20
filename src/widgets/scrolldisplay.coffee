@@ -81,6 +81,7 @@ class ScrollDisplay extends Display
       super
 
   scrollX: ->
+    rect = @scroller.box()
     width = rect.scrollWidth
     scrolled = rect.scrollLeft + rect.clientWidth
     @getNextPage() if width - scrolled <= @options.offset

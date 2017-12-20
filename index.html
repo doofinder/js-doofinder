@@ -45,6 +45,22 @@
       border: 1px solid #ddd;
     }
 
+    #resultsX {
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    #resultsX .df-results__content {
+      white-space: nowrap;
+    }
+
+    #resultsX a {
+      display: inline-block;
+      width: 100px;
+      white-space: normal;
+      vertical-align: top;
+    }
+
     .row {
       display: flex;
       flex-flow: row nowrap;
@@ -70,7 +86,13 @@
   <div class="row" data-hashid="e723b503db15fe242b934df14b141ccc">
     <div class="col" id="main">
 
-      <div class="widget df-results" id="results">
+      <div class="widget df-results" id="resultsY">
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sint illo tempore tenetur perferendis magnam earum impedit fuga ipsa sunt quae consectetur minus consequuntur, velit et debitis, porro molestias! Magni, optio.</p>
+        <div class="df-results__content"></div>
+      </div>
+
+      <div class="widget df-results" id="resultsX">
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dolor, incidunt saepe in rerum dolores a optio aliquam porro officiis quam rem perferendis excepturi provident libero. In molestiae id cum error!</p>
         <div class="df-results__content"></div>
       </div>
 
@@ -108,13 +130,22 @@
     client.options(function(err, options){
       controller.registerWidget(input);
 
-      var results = new doofinder.widgets.ScrollDisplay("#results", {
+      var resultsY = new doofinder.widgets.ScrollDisplay("#resultsY", {
         contentElement: ".df-results__content"
       });
-      results.on("df:widget:render", function(res){
+      resultsY.on("df:widget:render", function(res){
         console.log("[df:widget:render][" + res.hashid + "] query: '" + res.query + "' page: " + res.page);
       });
-      controller.registerWidget(results);
+      controller.registerWidget(resultsY);
+
+      var resultsX = new doofinder.widgets.ScrollDisplay("#resultsX", {
+        contentElement: ".df-results__content",
+        vertical: false
+      });
+      resultsX.on("df:widget:render", function(res){
+        console.log("[df:widget:render][" + res.hashid + "] query: '" + res.query + "' page: " + res.page);
+      });
+      controller.registerWidget(resultsX);
 
       // return;
 
