@@ -26,11 +26,11 @@ describe "util.currency", ->
     (currency.format 1000.01, format).should.equal "$1,000.010"
     done()
 
-  it "can parse numbers provided as string", (done) ->
-    (currency.format "1").should.equal "1€"
-    (currency.format "1000.01").should.equal "1.000,01€"
+  it "can't parse numbers provided as string", (done) ->
+    expect(-> currency.format "1").to.throw()
+    expect(-> currency.format "1000.01").to.throw()
     done()
 
-  it "returns empty string if an invalid string is provided", (done) ->
-    (currency.format "hola").should.equal ""
+  it "throws error if an invalid string is provided", (done) ->
+    expect(-> currency.format "hello").to.throw()
     done()

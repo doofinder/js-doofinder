@@ -1,4 +1,5 @@
 Thing = require "./thing"
+errors = require "./errors"
 
 defaultCurrency =
   symbol: '€'
@@ -27,30 +28,28 @@ defaultCurrency =
  * @return {String}          Formatted value.
 ###
 formatCurrency = (value, currency = defaultCurrency) ->
-  value = (parseFloat value) if Thing.is.string value
+  unless Thing.is.number value
+    throw errors.error "value is not a number!"
 
-  unless isNaN value
-    neg = value < 0
-    val = Math.abs value
+  neg = value < 0
+  val = Math.abs value
 
-    pow = 10 ** currency.precision
-    val = ((Math.round val * pow) / pow).toFixed currency.precision
+  pow = 10 ** currency.precision
+  val = ((Math.round val * pow) / pow).toFixed currency.precision
 
-    bas = (parseInt val, 10).toString()
-    mod = if bas.length > 3 then bas.length % 3 else 0
+  bas = (parseInt val, 10).toString()
+  mod = if bas.length > 3 then bas.length % 3 else 0
 
-    num = []
-    (num.push "#{(bas.substr 0, mod)}#{currency.thousand}") if mod > 0
-    (num.push ((bas.substr mod).replace /(\d{3})(?=\d)/g, "$1#{currency.thousand}"))
-    if currency.precision > 0
-      dec = (val.split ".")[1]
-      (num.push "#{currency.decimal}#{dec}") if (parseInt dec, 10) > 0
+  num = []
+  (num.push "#{(bas.substr 0, mod)}#{currency.thousand}") if mod > 0
+  (num.push ((bas.substr mod).replace /(\d{3})(?=\d)/g, "$1#{currency.thousand}"))
+  if currency.precision > 0
+    dec = (val.split ".")[1]
+    (num.push "#{currency.decimal}#{dec}") if (parseInt dec, 10) > 0
 
-    num = ((currency.format.replace /%s/g, currency.symbol).replace /%v/g, num.join "")
-    num = "-#{num}" if neg
-    num
-  else
-    ""
+  num = ((currency.format.replace /%s/g, currency.symbol).replace /%v/g, num.join "")
+  num = "-#{num}" if neg
+  num
 
 module.exports =
   default: defaultCurrency

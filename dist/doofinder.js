@@ -1196,9 +1196,11 @@
 
 },{"./client":1,"./session":4,"./util/uniqueid":15}],6:[function(require,module,exports){
 (function() {
-  var Thing, defaultCurrency, formatCurrency;
+  var Thing, defaultCurrency, errors, formatCurrency;
 
   Thing = require("./thing");
+
+  errors = require("./errors");
 
   defaultCurrency = {
     symbol: '€',
@@ -1234,35 +1236,31 @@
     if (currency == null) {
       currency = defaultCurrency;
     }
-    if (Thing.is.string(value)) {
-      value = parseFloat(value);
+    if (!Thing.is.number(value)) {
+      throw errors.error("value is not a number!");
     }
-    if (!isNaN(value)) {
-      neg = value < 0;
-      val = Math.abs(value);
-      pow = Math.pow(10, currency.precision);
-      val = ((Math.round(val * pow)) / pow).toFixed(currency.precision);
-      bas = (parseInt(val, 10)).toString();
-      mod = bas.length > 3 ? bas.length % 3 : 0;
-      num = [];
-      if (mod > 0) {
-        num.push("" + (bas.substr(0, mod)) + currency.thousand);
-      }
-      num.push((bas.substr(mod)).replace(/(\d{3})(?=\d)/g, "$1" + currency.thousand));
-      if (currency.precision > 0) {
-        dec = (val.split("."))[1];
-        if ((parseInt(dec, 10)) > 0) {
-          num.push("" + currency.decimal + dec);
-        }
-      }
-      num = (currency.format.replace(/%s/g, currency.symbol)).replace(/%v/g, num.join(""));
-      if (neg) {
-        num = "-" + num;
-      }
-      return num;
-    } else {
-      return "";
+    neg = value < 0;
+    val = Math.abs(value);
+    pow = Math.pow(10, currency.precision);
+    val = ((Math.round(val * pow)) / pow).toFixed(currency.precision);
+    bas = (parseInt(val, 10)).toString();
+    mod = bas.length > 3 ? bas.length % 3 : 0;
+    num = [];
+    if (mod > 0) {
+      num.push("" + (bas.substr(0, mod)) + currency.thousand);
     }
+    num.push((bas.substr(mod)).replace(/(\d{3})(?=\d)/g, "$1" + currency.thousand));
+    if (currency.precision > 0) {
+      dec = (val.split("."))[1];
+      if ((parseInt(dec, 10)) > 0) {
+        num.push("" + currency.decimal + dec);
+      }
+    }
+    num = (currency.format.replace(/%s/g, currency.symbol)).replace(/%v/g, num.join(""));
+    if (neg) {
+      num = "-" + num;
+    }
+    return num;
   };
 
   module.exports = {
@@ -1272,7 +1270,7 @@
 
 }).call(this);
 
-},{"./thing":14}],7:[function(require,module,exports){
+},{"./errors":9,"./thing":14}],7:[function(require,module,exports){
 (function() {
   var Debouncer, requestAnimationFrame;
 
@@ -2684,6 +2682,9 @@
 
   addHelpers = function(context) {
     var defaults, helpers;
+    if (context == null) {
+      context = {};
+    }
     defaults = {
       currency: currency["default"],
       translations: {},
@@ -2691,25 +2692,42 @@
     };
     context = extend(true, defaults, context);
     helpers = {
+
+      /**
+       * Mustache helper to add params from the global context (context.urlParams)
+       * to the provided URL. Params are merged and global context takes
+       * precedence over existing parameters.
+       */
       "url-params": function() {
         return function(text, render) {
-          var domain, params, ref, url;
+          var host, params, ref, url;
           url = (render(text)).trim();
           if (url.length > 0) {
-            ref = url.split("?"), domain = ref[0], params = ref[1];
-            params = qs.stringify(extend(true, params || {}, qs.parse(context.urlParams)));
+            ref = url.split("?"), host = ref[0], params = ref[1];
+            params = extend(true, qs.parse(params), qs.parse(context.urlParams));
+            params = qs.stringify(params);
             if (params.length > 0) {
-              url = url + "?" + params;
+              url = host + "?" + params;
             }
           }
           return url;
         };
       },
+
+      /**
+       * Mustache helper to remove HTTP protocol from the start of URLs so they
+       * are protocol independant.
+       */
       "remove-protocol": function() {
         return function(text, render) {
           return (render(text)).trim().replace(/^https?:/, "");
         };
       },
+
+      /**
+       * Mustache helper to format numbers as currency using the currency spec
+       * found in the context object, or the default one if none defined.
+       */
       "format-currency": function() {
         return function(text, render) {
           var value;
@@ -2721,6 +2739,12 @@
           }
         };
       },
+
+      /**
+       * Mustache helper to translate strings given a translations object in the
+       * global context object. If no translation is found, the source text is
+       * returned.
+       */
       "translate": function() {
         return function(text, render) {
           text = render(text);
