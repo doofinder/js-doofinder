@@ -7,13 +7,13 @@ chai.should()
 expect = chai.expect
 
 # required for tests
-text = require "../lib/util/text"
+Text = require "../lib/util/text"
 
-describe "text tools", ->
+describe "Text Tools", ->
   it "converts camel case to dash case", (done) ->
-    (text.toDashCase "camelCaseCaseCA").should.equal "camel-case-case-c-a"
+    (Text.camel2dash "camelCaseCaseCA").should.equal "camel-case-case-c-a"
     done()
 
   it "converts dash case to camel case", (done) ->
-    (text.toCamelCase "camel-case-case-c-a").should.equal "camelCaseCaseCA"
+    (Text.dash2camel "camel-case-case-c-a").should.equal "camelCaseCaseCA"
     done()

@@ -2133,7 +2133,7 @@
 
     DfDomElement.prototype.css = function(propertyName, value, priority) {
       var node, propName;
-      propName = Text.toDashCase(propertyName);
+      propName = Text.camel2dash(propertyName);
       if (value != null) {
         return this.each(function(node) {
           return node.style.setProperty(propName, value, priority);
@@ -2839,16 +2839,28 @@
 },{"./errors":9,"./thing":14,"http":55,"https":32}],13:[function(require,module,exports){
 (function() {
   module.exports = {
-    toDashCase: function(name) {
-      return name.replace(/[A-Z]/g, (function(m) {
+
+    /**
+     * Converts text in camel case to dash case
+     * @param  {String} text Text in camelCase
+     * @return {String}      Text converted to dash-case
+     */
+    camel2dash: function(text) {
+      return text.replace(/[A-Z]/g, (function(m) {
         return "-" + m.toLowerCase();
       }));
     },
-    toCamelCase: function(name) {
-      name = name.replace(/([-_])([^-_])/g, (function(m, p1, p2) {
+
+    /**
+     * Converts text in dash case to camel case
+     * @param  {String} text Text in dash-case
+     * @return {String}      Text converted to camelCase
+     */
+    dash2camel: function(text) {
+      text = text.replace(/([-_])([^-_])/g, (function(m, p1, p2) {
         return p2.toUpperCase();
       }));
-      return name.replace(/[-_]/g, "");
+      return text.replace(/[-_]/g, "");
     }
   };
 
