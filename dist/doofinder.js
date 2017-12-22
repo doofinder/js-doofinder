@@ -1196,7 +1196,9 @@
 
 },{"./client":1,"./session":4,"./util/uniqueid":15}],6:[function(require,module,exports){
 (function() {
-  var defaultCurrency, formatCurrency;
+  var Thing, defaultCurrency, formatCurrency;
+
+  Thing = require("./thing");
 
   defaultCurrency = {
     symbol: '€',
@@ -1206,33 +1208,61 @@
     precision: 2
   };
 
+
+  /**
+   * Formats a value following the provided currency specification and returns
+   * it as a String.
+   *
+   * If no specification is passed, EUR currency is used by default.
+   *
+   * @param  {Number} value
+   * @param  {Object} currency An object that contains a currency specification.
+   *                           Attributes of the specification are:
+   *                           {
+   *                             symbol: Currency symbol, like "€".
+   *                             format: Template, %s is replaced by the symbol
+   *                                     and %v is replaced by the value.
+   *                             decimal: Character used to separate decimals.
+   *                             thousand: Character used to separate thousands.
+   *                             precision: Number of decimals.
+   *                           }
+   * @return {String}          Formatted value.
+   */
+
   formatCurrency = function(value, currency) {
     var bas, dec, mod, neg, num, pow, val;
     if (currency == null) {
       currency = defaultCurrency;
     }
-    neg = value < 0;
-    val = Math.abs(value);
-    pow = Math.pow(10, currency.precision);
-    val = ((Math.round(val * pow)) / pow).toFixed(currency.precision);
-    bas = (parseInt(val, 10)).toString();
-    mod = bas.length > 3 ? bas.length % 3 : 0;
-    num = [];
-    if (mod > 0) {
-      num.push("" + (bas.substr(0, mod)) + currency.thousand);
+    if (Thing.is.string(value)) {
+      value = parseFloat(value);
     }
-    num.push((bas.substr(mod)).replace(/(\d{3})(?=\d)/g, "$1" + currency.thousand));
-    if (currency.precision > 0) {
-      dec = (val.split("."))[1];
-      if ((parseInt(dec, 10)) > 0) {
-        num.push("" + currency.decimal + dec);
+    if (!isNaN(value)) {
+      neg = value < 0;
+      val = Math.abs(value);
+      pow = Math.pow(10, currency.precision);
+      val = ((Math.round(val * pow)) / pow).toFixed(currency.precision);
+      bas = (parseInt(val, 10)).toString();
+      mod = bas.length > 3 ? bas.length % 3 : 0;
+      num = [];
+      if (mod > 0) {
+        num.push("" + (bas.substr(0, mod)) + currency.thousand);
       }
+      num.push((bas.substr(mod)).replace(/(\d{3})(?=\d)/g, "$1" + currency.thousand));
+      if (currency.precision > 0) {
+        dec = (val.split("."))[1];
+        if ((parseInt(dec, 10)) > 0) {
+          num.push("" + currency.decimal + dec);
+        }
+      }
+      num = (currency.format.replace(/%s/g, currency.symbol)).replace(/%v/g, num.join(""));
+      if (neg) {
+        num = "-" + num;
+      }
+      return num;
+    } else {
+      return "";
     }
-    num = (currency.format.replace(/%s/g, currency.symbol)).replace(/%v/g, num.join(""));
-    if (neg) {
-      num = "-" + num;
-    }
-    return num;
   };
 
   module.exports = {
@@ -1242,7 +1272,7 @@
 
 }).call(this);
 
-},{}],7:[function(require,module,exports){
+},{"./thing":14}],7:[function(require,module,exports){
 (function() {
   var Debouncer, requestAnimationFrame;
 
