@@ -575,8 +575,16 @@ describe "dfdom", ->
   context "[Style-related Methods]", ->
     it "can set style properties and get computed style values", (done) ->
       insertHTML """<div class="customcss"></div>"""
+
+      # set values
       (dfdom ".customcss, .doesnotexist").css "width", "10rem"
+      (dfdom ".customcss, .doesnotexist").css "margin-left", "0rem"
+
+      # get with css()
       ((dfdom ".customcss").css "width").should.equal "160px"
+      ((dfdom ".customcss").css "margin-left").should.equal "0px"
+      ((dfdom ".customcss").css "marginLeft").should.equal "0px"
+
       expect((dfdom ".doesnotexist").css "width").to.be.undefined
       done()
 
@@ -641,12 +649,12 @@ describe "dfdom", ->
             position: relative;
             top: 1rem;
             left: 1rem;
-            border: 10px solid red;
+            border: 1rem solid red;
           }
           .content {
             position: absolute;
-            top: 10px;
-            left: 10px;
+            top: 1rem;
+            left: 1rem;
           }
         </style>
         <div class="container">

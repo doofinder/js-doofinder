@@ -45,6 +45,37 @@
       border: 1px solid #ddd;
     }
 
+    #resultsX {
+      box-sizing: content-box;
+      width: 380px;
+      height: 100px;
+      border: 10px solid #ddd;
+      background-color: #ddd;
+      white-space: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+      display: flex;
+      flex-flow: row nowrap;
+    }
+
+    #resultsX a {
+      display: block;
+      flex: 0 0 auto;
+      width: 100px;
+      height: 100px;
+      margin-left: 10px;
+      overflow: hidden;
+      white-space: normal;
+      vertical-align: top;
+      background-color: #333;
+      color: white;
+      font-size: 11px;
+    }
+
+    #resultsX a:first-child {
+      margin-left: 0;
+    }
+
     .row {
       display: flex;
       flex-flow: row nowrap;
@@ -67,10 +98,13 @@
   <button type="button" id="focus">Test Focus</button>
   <button type="button" id="blur">Test Blur</button>
 
+  <div class="widget" id="resultsX"></div>
+
   <div class="row" data-hashid="e723b503db15fe242b934df14b141ccc">
     <div class="col" id="main">
 
       <div class="widget df-results" id="results">
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sint illo tempore tenetur perferendis magnam earum impedit fuga ipsa sunt quae consectetur minus consequuntur, velit et debitis, porro molestias! Magni, optio.</p>
         <div class="df-results__content"></div>
       </div>
 
@@ -104,15 +138,28 @@
 
     var client = new doofinder.Client(page.data('hashid'), 'eu1');
     var controller = new doofinder.Controller(client, [], {rpp: 20});
+    var controllerX = new doofinder.Controller(client, [], {rpp: 20});
 
     client.options(function(err, options){
       controller.registerWidget(input);
+      controllerX.registerWidget(input);
 
-      var results = new doofinder.widgets.ScrollDisplay("#results");
+      var results = new doofinder.widgets.ScrollDisplay("#results", {
+        contentElement: ".df-results__content"
+      });
       results.on("df:widget:render", function(res){
         console.log("[df:widget:render][" + res.hashid + "] query: '" + res.query + "' page: " + res.page);
       });
       controller.registerWidget(results);
+
+      var resultsX = new doofinder.widgets.ScrollDisplay("#resultsX", {
+        offset: 200,
+        horizontal: true
+      });
+      resultsX.on("df:widget:render", function(res){
+        console.log("[df:widget:render][" + res.hashid + "] query: '" + res.query + "' page: " + res.page);
+      });
+      controllerX.registerWidget(resultsX);
 
       // return;
 

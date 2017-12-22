@@ -231,7 +231,7 @@
 
 }).call(this);
 
-},{"./util/errors":9,"./util/http":12,"./util/thing":13,"extend":24,"md5":66,"qs":73}],2:[function(require,module,exports){
+},{"./util/errors":9,"./util/http":12,"./util/thing":14,"extend":25,"md5":66,"qs":73}],2:[function(require,module,exports){
 (function() {
   var Client, Controller, Freezer, Thing, bean, errors, extend, qs,
     hasProp = {}.hasOwnProperty;
@@ -694,7 +694,7 @@
 
 }).call(this);
 
-},{"./client":1,"./util/errors":9,"./util/freezer":10,"./util/thing":13,"bean":23,"extend":24,"qs":73}],3:[function(require,module,exports){
+},{"./client":1,"./util/errors":9,"./util/freezer":10,"./util/thing":14,"bean":24,"extend":25,"qs":73}],3:[function(require,module,exports){
 (function() {
   module.exports = {
     version: "5.2.0",
@@ -714,13 +714,13 @@
     util: {
       addHelpers: require("./util/helpers"),
       bean: require("bean"),
-      dfdom: require("./util/dfdom"),
       currency: require("./util/currency"),
+      Debouncer: require("./util/debouncer"),
+      dfdom: require("./util/dfdom"),
       extend: require("extend"),
       http: require("./util/http"),
       md5: require("md5"),
       qs: require("qs"),
-      throttle: require("lodash.throttle"),
       uniqueId: require("./util/uniqueid")
     },
     session: require("./session"),
@@ -729,7 +729,7 @@
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/currency":6,"./util/dfdom":7,"./util/helpers":11,"./util/http":12,"./util/uniqueid":14,"./widgets/collapsiblepanel":15,"./widgets/display":16,"./widgets/facets/rangefacet":17,"./widgets/facets/termfacet":18,"./widgets/panel":19,"./widgets/queryinput":20,"./widgets/scrolldisplay":21,"./widgets/widget":22,"bean":23,"extend":24,"lodash.throttle":65,"md5":66,"mustache":70,"qs":73}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/currency":6,"./util/debouncer":7,"./util/dfdom":8,"./util/helpers":11,"./util/http":12,"./util/uniqueid":15,"./widgets/collapsiblepanel":16,"./widgets/display":17,"./widgets/facets/rangefacet":18,"./widgets/facets/termfacet":19,"./widgets/panel":20,"./widgets/queryinput":21,"./widgets/scrolldisplay":22,"./widgets/widget":23,"bean":24,"extend":25,"md5":66,"mustache":70,"qs":73}],4:[function(require,module,exports){
 (function() {
   var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, extend, md5, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -1007,7 +1007,7 @@
 
 }).call(this);
 
-},{"./util/uniqueid":14,"extend":24,"js-cookie":64,"md5":66}],5:[function(require,module,exports){
+},{"./util/uniqueid":15,"extend":25,"js-cookie":65,"md5":66}],5:[function(require,module,exports){
 (function() {
   var Client, Session, Stats, uniqueId;
 
@@ -1194,7 +1194,7 @@
 
 }).call(this);
 
-},{"./client":1,"./session":4,"./util/uniqueid":14}],6:[function(require,module,exports){
+},{"./client":1,"./session":4,"./util/uniqueid":15}],6:[function(require,module,exports){
 (function() {
   var defaultCurrency, formatCurrency;
 
@@ -1244,9 +1244,51 @@
 
 },{}],7:[function(require,module,exports){
 (function() {
-  var DfDomElement, MATCHES_SELECTOR_FN, Thing, bean, matchesSelector;
+  var Debouncer, requestAnimationFrame;
+
+  requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
+
+  Debouncer = (function() {
+    function Debouncer(callback) {
+      this.callback = callback;
+      this.ticking = false;
+    }
+
+    Debouncer.prototype.update = function() {
+      if (typeof this.callback === "function") {
+        this.callback();
+      }
+      return this.ticking = false;
+    };
+
+    Debouncer.prototype.tick = function() {
+      if (!this.ticking) {
+        requestAnimationFrame(this.boundCallback || (this.boundCallback = this.update.bind(this)));
+        return this.ticking = true;
+      }
+    };
+
+    Debouncer.prototype.handleEvent = function() {
+      return this.tick();
+    };
+
+    return Debouncer;
+
+  })();
+
+  module.exports = Debouncer;
+
+}).call(this);
+
+},{}],8:[function(require,module,exports){
+(function() {
+  var DfDomElement, MATCHES_SELECTOR_FN, Text, Thing, bean, extend, getWindow, matchesSelector;
 
   bean = require("bean");
+
+  extend = require("extend");
+
+  Text = require("./text");
 
   Thing = require("./thing");
 
@@ -1259,6 +1301,24 @@
       })).pop();
     }
     return node[MATCHES_SELECTOR_FN](selector);
+  };
+
+  getWindow = function(node) {
+    var view;
+    if (Thing.is.window(node)) {
+      view = node;
+    } else if (Thing.is.document(node)) {
+      view = node.defaultView;
+    } else if (node.ownerDocument != null) {
+      view = node.ownerDocument.defaultView;
+    } else {
+      view = null;
+    }
+    if (view && view.opener) {
+      return view;
+    } else {
+      return window;
+    }
   };
 
 
@@ -1343,7 +1403,7 @@
      */
 
     DfDomElement.prototype.__isValidElementNode = function(node) {
-      return Thing.is.element(node) || Thing.is.document(node) || Thing.is.window(node);
+      return (Thing.is.element(node)) || (Thing.is.document(node)) || (Thing.is.window(node));
     };
 
 
@@ -1684,7 +1744,7 @@
      *
      * @public
      * @param  {DfDomElement|Element|String} child Stuff to be prepended.
-     * @return {DfDomElement}                          The current instance.
+     * @return {DfDomElement}                      The current instance.
      */
 
     DfDomElement.prototype.prepend = function(child) {
@@ -2016,21 +2076,26 @@
      * set of matched elements or set one or more CSS properties for every matched
      * element.
      *
+     * Note: the computed style of an element may not be the same as the value
+     * specified in the style sheet and it depends on the browser's quirks.
+     *
      * @public
      * @param  {String}         propertyName
      * @param  {String|Number}  value
+     * @param  {String}         priority      The proper way to set !important
      * @return {DfDomElement|String|null} Current instance on set, value or null
      *                                    on get.
      */
 
-    DfDomElement.prototype.css = function(propertyName, value) {
-      var node;
+    DfDomElement.prototype.css = function(propertyName, value, priority) {
+      var node, propName;
+      propName = Text.toDashCase(propertyName);
       if (value != null) {
         return this.each(function(node) {
-          return node.style[propertyName] = value;
+          return node.style.setProperty(propName, value, priority);
         });
       } else if ((node = this.get(0)) != null) {
-        return (getComputedStyle(node)).getPropertyValue(propertyName);
+        return ((getWindow(node)).getComputedStyle(node)).getPropertyValue(propName);
       }
     };
 
@@ -2073,9 +2138,58 @@
      *                   properties describing the border-box in pixels. # MDN #
      */
 
-    DfDomElement.prototype.__clientRect = function() {
-      var ref;
-      return (ref = this.get(0)) != null ? typeof ref.getBoundingClientRect === "function" ? ref.getBoundingClientRect() : void 0 : void 0;
+    DfDomElement.prototype.box = function() {
+      var box, doc, isDoc, isElm, j, k, keys, l, len, len1, node, rect;
+      node = this.get(0);
+      keys = ['left', 'top', 'right', 'bottom', 'width', 'height', 'scrollLeft', 'scrollTop', 'scrollWidth', 'scrollHeight'];
+      rect = {};
+      for (j = 0, len = keys.length; j < len; j++) {
+        k = keys[j];
+        rect[k] = 0;
+      }
+      if (node != null) {
+        if (Thing.is.window(node)) {
+          doc = this.document();
+          rect = extend(rect, {
+            width: node.innerWidth,
+            height: node.innerHeight,
+            clientWidth: node.innerWidth,
+            clientHeight: node.innerHeight,
+            scrollLeft: node.scrollX,
+            scrollTop: node.scrollY,
+            scrollWidth: doc.scrollWidth,
+            scrollHeight: doc.scrollHeight
+          });
+        } else {
+          isDoc = Thing.is.document(node);
+          isElm = node.getBoundingClientRect != null;
+          if (isDoc) {
+            node = node.documentElement;
+            rect = extend(rect, {
+              width: node.offsetWidth,
+              height: node.offsetHeight
+            });
+          }
+          if (isElm) {
+            box = node.getBoundingClientRect();
+            for (l = 0, len1 = keys.length; l < len1; l++) {
+              k = keys[l];
+              rect[k] = box[k];
+            }
+          }
+          if (isDoc || isElm) {
+            rect = extend(rect, {
+              clientWidth: node.clientWidth,
+              clientHeight: node.clientHeight,
+              scrollLeft: node.scrollLeft,
+              scrollTop: node.scrollTop,
+              scrollWidth: node.scrollWidth,
+              scrollHeight: node.scrollHeight
+            });
+          }
+        }
+        return rect;
+      }
     };
 
 
@@ -2089,7 +2203,7 @@
 
     DfDomElement.prototype.width = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.width : void 0;
+      return (ref = this.box()) != null ? ref.width : void 0;
     };
 
 
@@ -2103,7 +2217,7 @@
 
     DfDomElement.prototype.height = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.height : void 0;
+      return (ref = this.box()) != null ? ref.height : void 0;
     };
 
 
@@ -2118,7 +2232,7 @@
 
     DfDomElement.prototype.top = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.top : void 0;
+      return (ref = this.box()) != null ? ref.top : void 0;
     };
 
 
@@ -2133,7 +2247,7 @@
 
     DfDomElement.prototype.right = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.right : void 0;
+      return (ref = this.box()) != null ? ref.right : void 0;
     };
 
 
@@ -2148,7 +2262,7 @@
 
     DfDomElement.prototype.bottom = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.bottom : void 0;
+      return (ref = this.box()) != null ? ref.bottom : void 0;
     };
 
 
@@ -2163,33 +2277,97 @@
 
     DfDomElement.prototype.left = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.left : void 0;
+      return (ref = this.box()) != null ? ref.left : void 0;
     };
 
-    DfDomElement.prototype.__scrollProperty = function(node, propertyName, value) {
-      if (value != null) {
-        node[propertyName] = value;
-        return new DfDomElement(node);
-      } else {
-        return node[propertyName];
-      }
-    };
+
+    /**
+     * Gets scrolling position in the Y axis for the first element in the set of
+     * matched elements. If a value is provided, it's set for all elements in the
+     * set of matched elements.
+     *
+     * @public
+     * @param  {Number} value Optional. Scroll position.
+     * @return {Number}       Scroll position for get operation.
+     */
 
     DfDomElement.prototype.scrollTop = function(value) {
-      var node, propertyName;
-      node = this.get(0);
-      if (node != null) {
-        propertyName = node.scrollY != null ? "scrollY" : "scrollTop";
-        return this.__scrollProperty(node, propertyName, value);
+      var ref;
+      if (value != null) {
+        return this.each(function(node) {
+          if (Thing.is.window(node)) {
+            return node.scrollTo(node.scrollX, value);
+          } else {
+            return node.scrollTop = value;
+          }
+        });
+      } else {
+        return (ref = this.box()) != null ? ref.scrollTop : void 0;
       }
     };
 
+
+    /**
+     * Gets scrolling position in the X axis for the first element in the set of
+     * matched elements. If a value is provided, it's set for all elements in the
+     * set of matched elements.
+     *
+     * @public
+     * @param  {Number} value Optional. Scroll position.
+     * @return {Number}       Scroll position for get operation.
+     */
+
     DfDomElement.prototype.scrollLeft = function(value) {
-      var node, propertyName;
+      var ref;
+      if (value != null) {
+        return this.each(function(node) {
+          if (Thing.is.window(node)) {
+            return node.scrollTo(value, node.scrollY);
+          } else {
+            return node.scrollLeft = value;
+          }
+        });
+      } else {
+        return (ref = this.box()) != null ? ref.scrollLeft : void 0;
+      }
+    };
+
+
+    /**
+     * Sets scrolling at the specified coordinates for the set of matched
+     * elements.
+     *
+     * @public
+     * @param  {Number} x
+     * @param  {Number} y
+     */
+
+    DfDomElement.prototype.scrollTo = function(x, y) {
+      return this.each(function(node) {
+        if (Thing.is.window(node)) {
+          return node.scrollTo(x, y);
+        } else {
+          node.scrollLeft = x;
+          return node.scrollTop = y;
+        }
+      });
+    };
+
+    DfDomElement.prototype.window = function() {
+      return getWindow(this.get(0));
+    };
+
+    DfDomElement.prototype.document = function() {
+      var node;
       node = this.get(0);
       if (node != null) {
-        propertyName = node.scrollX != null ? "scrollX" : "scrollLeft";
-        return this.__scrollProperty(node, propertyName, value);
+        if (Thing.is.window(node)) {
+          return node.document.documentElement;
+        } else if (Thing.is.document(node)) {
+          return node.documentElement;
+        } else if (node.ownerDocument != null) {
+          return node.ownerDocument.documentElement;
+        }
       }
     };
 
@@ -2356,54 +2534,7 @@
 
 }).call(this);
 
-},{"./thing":13,"bean":23}],8:[function(require,module,exports){
-(function() {
-  var $, bean, extend, throttle;
-
-  $ = require('./dfdom');
-
-  bean = require('bean');
-
-  extend = require('extend');
-
-  throttle = require('lodash.throttle');
-
-  module.exports = function(container, options) {
-    var containerElement, content, defaults, fn;
-    if (options == null) {
-      options = null;
-    }
-    container = $(container);
-    containerElement = container.element[0];
-    defaults = {
-      callback: function() {},
-      scrollOffset: 200,
-      content: containerElement === window ? $("body") : container.children().first(),
-      throttle: 250
-    };
-    options = extend(true, defaults, options || {});
-    content = $(options.content);
-    container.on('df:scroll', function() {
-      var containerHeight, containerScroll, contentHeight, delta;
-      contentHeight = content.height();
-      containerHeight = container.height();
-      containerScroll = container.scrollTop();
-      delta = Math.max(0, contentHeight - containerHeight - containerScroll);
-      if (containerScroll > 0 && delta >= 0 && delta <= options.scrollOffset) {
-        return options.callback();
-      }
-    });
-    fn = function(e) {
-      return bean.fire(container.element[0], 'df:scroll');
-    };
-    return bean.on(containerElement, 'scroll', throttle(fn, options.throttle, {
-      leading: true
-    }));
-  };
-
-}).call(this);
-
-},{"./dfdom":7,"bean":23,"extend":24,"lodash.throttle":65}],9:[function(require,module,exports){
+},{"./text":13,"./thing":14,"bean":24,"extend":25}],9:[function(require,module,exports){
 (function() {
   var _msg, error, warning,
     slice = [].slice;
@@ -2495,7 +2626,7 @@
 
 }).call(this);
 
-},{"./thing":13}],11:[function(require,module,exports){
+},{"./thing":14}],11:[function(require,module,exports){
 (function() {
   var addHelpers, currency, extend, qs;
 
@@ -2558,7 +2689,7 @@
 
 }).call(this);
 
-},{"./currency":6,"extend":24,"qs":73}],12:[function(require,module,exports){
+},{"./currency":6,"extend":25,"qs":73}],12:[function(require,module,exports){
 (function() {
   var HttpClient, Thing, http, https;
 
@@ -2633,7 +2764,25 @@
 
 }).call(this);
 
-},{"./thing":13,"http":54,"https":31}],13:[function(require,module,exports){
+},{"./thing":14,"http":55,"https":32}],13:[function(require,module,exports){
+(function() {
+  module.exports = {
+    toDashCase: function(name) {
+      return name.replace(/[A-Z]/g, (function(m) {
+        return "-" + m.toLowerCase();
+      }));
+    },
+    toCamelCase: function(name) {
+      name = name.replace(/([-_])([^-_])/g, (function(m, p1, p2) {
+        return p2.toUpperCase();
+      }));
+      return name.replace(/[-_]/g, "");
+    }
+  };
+
+}).call(this);
+
+},{}],14:[function(require,module,exports){
 (function() {
   var Is;
 
@@ -2653,7 +2802,7 @@
 
 }).call(this);
 
-},{"is":63}],14:[function(require,module,exports){
+},{"is":64}],15:[function(require,module,exports){
 (function() {
   var cleandfid, md5;
 
@@ -2697,7 +2846,7 @@
 
 }).call(this);
 
-},{"md5":66}],15:[function(require,module,exports){
+},{"md5":66}],16:[function(require,module,exports){
 (function() {
   var CollapsiblePanel, Panel, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -2780,7 +2929,7 @@
 
 }).call(this);
 
-},{"./panel":19,"extend":24}],16:[function(require,module,exports){
+},{"./panel":20,"extend":25}],17:[function(require,module,exports){
 (function() {
   var Display, Widget, addHelpers, defaultTemplate, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -2895,7 +3044,7 @@
 
 }).call(this);
 
-},{"../util/helpers":11,"./widget":22,"extend":24,"mustache":70}],17:[function(require,module,exports){
+},{"../util/helpers":11,"./widget":23,"extend":25,"mustache":70}],18:[function(require,module,exports){
 (function() {
   var Display, RangeFacet, defaultTemplate, extend, noUiSlider,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3169,7 +3318,7 @@
 
 }).call(this);
 
-},{"../display":16,"extend":24,"nouislider":71}],18:[function(require,module,exports){
+},{"../display":17,"extend":25,"nouislider":71}],19:[function(require,module,exports){
 (function() {
   var $, Display, TermsFacet, defaultButtonTemplate, defaultTemplate, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3399,7 +3548,7 @@
 
 }).call(this);
 
-},{"../../util/dfdom":7,"../display":16,"extend":24}],19:[function(require,module,exports){
+},{"../../util/dfdom":8,"../display":17,"extend":25}],20:[function(require,module,exports){
 (function() {
   var $, Display, INSERTION_METHODS, Panel, defaultTemplate, extend, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3480,7 +3629,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":7,"../util/uniqueid":14,"./display":16,"extend":24}],20:[function(require,module,exports){
+},{"../util/dfdom":8,"../util/uniqueid":15,"./display":17,"extend":25}],21:[function(require,module,exports){
 (function() {
   var QueryInput, Thing, Widget, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3625,19 +3774,21 @@
 
 }).call(this);
 
-},{"../util/thing":13,"./widget":22,"extend":24}],21:[function(require,module,exports){
+},{"../util/thing":14,"./widget":23,"extend":25}],22:[function(require,module,exports){
 (function() {
-  var $, Display, ScrollDisplay, dfScroll, extend,
+  var $, Debouncer, Display, ScrollDisplay, Thing, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
+  extend = require("extend");
+
+  $ = require("../util/dfdom");
+
+  Debouncer = require("../util/debouncer");
+
+  Thing = require("../util/thing");
+
   Display = require("./display");
-
-  dfScroll = require("../util/dfscroll");
-
-  extend = require('extend');
-
-  $ = require('../util/dfdom');
 
 
   /**
@@ -3651,86 +3802,111 @@
 
 
     /**
+     * @param  {DfDomElement|Element|String} element Will be used as scroller.
+     * @param  {Object} options
+     *
      * Options:
      *
-     * - scrollOffset: 200
-     * - contentNode: Node that holds the results will become the container
-     *   element of the widget.
-     * - contentWrapper: Node that is used for scrolling instead of the first
-     *   child of the container.
+     * - contentElement: By default content will be rendered inside the scroller
+     *     unless this option is set to a valid container. This is optional unless
+     *     the scroller is the window object, in which case this is mandatory.
+     * - offset: Distance to the bottom. If the scroll reaches this point a new
+     *     results page will be requested.
+     * - horizontal: False by default. Scroll is handled vertically by default. If
+     *     this options is enabled scroll is handled horizontally.
+     *
+     * Old Schema, for reference:
+     *
      *
      *  elementWrapper
-     *  -------------------
-     * |  contentWrapper  ^|
-     * |  --------------- !|
-     * | |  element      |!|
-     * | |  ------------ |!|
-     * | | |  items     ||!|
+     *  --------------------
+     * |  contentWrapper   ^|
+     * |  ---------------  !|
+     * | |  element      | !|
+     * | |  ------------ | !|
+     * | | |            || !|
+     * | | | items here || !|
+     * | | |            || !|
+     * | |  ------------ | !|
+     * |  ---------------  !|
+     *  --------------------
      *
-     * TODO(@carlosescri): Document this better!!!
-     *
-     * @param  {[type]} element  [description]
-     * @param  {[type]} template [description]
-     * @param  {[type]} options  [description]
-     * @return {[type]}          [description]
+     * TODO: Check if this can handle all cases (it's supposed to do so because
+     * its not based on content).
+     * TODO: Check how this works when the container is the window object.
      */
 
     function ScrollDisplay(element, options) {
-      var scrollCallback, scrollOptions;
-      ScrollDisplay.__super__.constructor.apply(this, arguments);
-      if (this.element.element[0] === window && (options.contentNode == null)) {
-        throw "when the wrapper is window you must set contentNode option.";
-      }
-      scrollCallback = (function(_this) {
-        return function() {
-          if ((_this.controller != null) && !_this.pageRequested) {
-            _this.pageRequested = true;
-            setTimeout((function() {
-              return _this.pageRequested = false;
-            }), 5000);
-            return _this.controller.getNextPage();
-          }
-        };
-      })(this);
-      scrollOptions = {
-        callback: scrollCallback
+      var defaultOptions, fn;
+      defaultOptions = {
+        contentElement: null,
+        offset: 300,
+        horizontal: false
       };
-      if (this.options.scrollOffset != null) {
-        scrollOptions.scrollOffset = this.options.scrollOffset;
-      }
-      if (this.options.contentWrapper != null) {
-        scrollOptions.content = this.options.contentWrapper;
-      }
-      this.elementWrapper = this.element;
-      if (this.options.contentNode != null) {
-        this.element = $(this.options.contentNode);
-      } else if (this.element.get(0) === window) {
-        this.element = $("body");
-      } else {
-        if (!this.element.children().length) {
-          this.element.append('div');
-        }
-        this.element = this.element.children().first();
-      }
-      dfScroll(this.elementWrapper, scrollOptions);
+      options = extend(true, defaultOptions, options);
+      ScrollDisplay.__super__.constructor.apply(this, arguments);
+      this.scroller = this.element;
+      this.setContentElement();
+      fn = this.options.horizontal ? this.scrollX : this.scrollY;
+      this.debouncer = new Debouncer(fn.bind(this));
+      this.working = false;
     }
 
 
     /**
-     * Initializes the object with a controller and attachs event handlers for
-     * this widget instance.
-     *
-     * @param  {Controller} controller Doofinder Search controller.
+     * Gets the element that will hold search results.
+     * @return {[type]} [description]
      */
+
+    ScrollDisplay.prototype.setContentElement = function() {
+      if (this.options.contentElement != null) {
+        return this.setElement(this.element.find(this.options.contentElement));
+      } else if (Thing.is.window(this.element.get(0))) {
+        throw "ScrollDisplay: contentElement must be specified when the scroller is the window object";
+      }
+    };
 
     ScrollDisplay.prototype.init = function() {
       if (!this.initialized) {
+        this.scroller.get(0).addEventListener("scroll", this.debouncer);
         this.controller.on("df:search df:refresh", (function(_this) {
           return function(query, params) {
-            return _this.elementWrapper.scrollTop(0);
+            return _this.scroller.scrollTop(0);
           };
         })(this));
         return ScrollDisplay.__super__.init.apply(this, arguments);
+      }
+    };
+
+    ScrollDisplay.prototype.scrollX = function() {
+      var rect, scrolled, width;
+      rect = this.scroller.box();
+      width = rect.scrollWidth;
+      scrolled = rect.scrollLeft + rect.clientWidth;
+      if (width - scrolled <= this.options.offset) {
+        return this.getNextPage();
+      }
+    };
+
+    ScrollDisplay.prototype.scrollY = function() {
+      var height, rect, scrolled;
+      rect = this.scroller.box();
+      height = rect.scrollHeight;
+      scrolled = rect.scrollTop + rect.clientHeight;
+      if (height - scrolled <= this.options.offset) {
+        return this.getNextPage();
+      }
+    };
+
+    ScrollDisplay.prototype.getNextPage = function() {
+      if ((this.controller != null) && !this.working) {
+        this.working = true;
+        setTimeout(((function(_this) {
+          return function() {
+            return _this.working = false;
+          };
+        })(this)), 2000);
+        return this.controller.getNextPage();
       }
     };
 
@@ -3738,7 +3914,7 @@
       if (res.page === 1) {
         return ScrollDisplay.__super__.render.apply(this, arguments);
       } else {
-        this.pageRequested = false;
+        this.working = false;
         this.element.append(this.renderTemplate(res));
         return this.trigger("df:widget:render", [res]);
       }
@@ -3752,7 +3928,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":7,"../util/dfscroll":8,"./display":16,"extend":24}],22:[function(require,module,exports){
+},{"../util/debouncer":7,"../util/dfdom":8,"../util/thing":14,"./display":17,"extend":25}],23:[function(require,module,exports){
 (function() {
   var $, Widget, bean;
 
@@ -3855,7 +4031,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":7,"bean":23}],23:[function(require,module,exports){
+},{"../util/dfdom":8,"bean":24}],24:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean
@@ -4598,7 +4774,7 @@
   return bean
 });
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 'use strict';
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -4686,9 +4862,9 @@ module.exports = function extend() {
 	return target;
 };
 
-},{}],25:[function(require,module,exports){
-
 },{}],26:[function(require,module,exports){
+
+},{}],27:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -6481,7 +6657,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":27,"ieee754":28,"isarray":29}],27:[function(require,module,exports){
+},{"base64-js":28,"ieee754":29,"isarray":30}],28:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -6597,7 +6773,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -6683,14 +6859,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -6994,7 +7170,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -7010,7 +7186,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":54}],32:[function(require,module,exports){
+},{"http":55}],33:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -7035,7 +7211,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -7058,7 +7234,7 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -7244,7 +7420,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -7781,7 +7957,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7867,7 +8043,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7954,13 +8130,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],38:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":36,"./encode":37}],39:[function(require,module,exports){
+},{"./decode":37,"./encode":38}],40:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8085,7 +8261,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":41,"./_stream_writable":43,"core-util-is":47,"inherits":32,"process-nextick-args":49}],40:[function(require,module,exports){
+},{"./_stream_readable":42,"./_stream_writable":44,"core-util-is":48,"inherits":33,"process-nextick-args":50}],41:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8133,7 +8309,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":42,"core-util-is":47,"inherits":32}],41:[function(require,module,exports){
+},{"./_stream_transform":43,"core-util-is":48,"inherits":33}],42:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -9143,7 +9319,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":39,"./internal/streams/BufferList":44,"./internal/streams/destroy":45,"./internal/streams/stream":46,"_process":34,"core-util-is":47,"events":30,"inherits":32,"isarray":48,"process-nextick-args":49,"safe-buffer":50,"string_decoder/":51,"util":25}],42:[function(require,module,exports){
+},{"./_stream_duplex":40,"./internal/streams/BufferList":45,"./internal/streams/destroy":46,"./internal/streams/stream":47,"_process":35,"core-util-is":48,"events":31,"inherits":33,"isarray":49,"process-nextick-args":50,"safe-buffer":51,"string_decoder/":52,"util":26}],43:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9358,7 +9534,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":39,"core-util-is":47,"inherits":32}],43:[function(require,module,exports){
+},{"./_stream_duplex":40,"core-util-is":48,"inherits":33}],44:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10025,7 +10201,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":39,"./internal/streams/destroy":45,"./internal/streams/stream":46,"_process":34,"core-util-is":47,"inherits":32,"process-nextick-args":49,"safe-buffer":50,"util-deprecate":52}],44:[function(require,module,exports){
+},{"./_stream_duplex":40,"./internal/streams/destroy":46,"./internal/streams/stream":47,"_process":35,"core-util-is":48,"inherits":33,"process-nextick-args":50,"safe-buffer":51,"util-deprecate":53}],45:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -10100,7 +10276,7 @@ module.exports = function () {
 
   return BufferList;
 }();
-},{"safe-buffer":50}],45:[function(require,module,exports){
+},{"safe-buffer":51}],46:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -10173,10 +10349,10 @@ module.exports = {
   destroy: destroy,
   undestroy: undestroy
 };
-},{"process-nextick-args":49}],46:[function(require,module,exports){
+},{"process-nextick-args":50}],47:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":30}],47:[function(require,module,exports){
+},{"events":31}],48:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10287,9 +10463,9 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":33}],48:[function(require,module,exports){
-arguments[4][29][0].apply(exports,arguments)
-},{"dup":29}],49:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":34}],49:[function(require,module,exports){
+arguments[4][30][0].apply(exports,arguments)
+},{"dup":30}],50:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -10336,7 +10512,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":34}],50:[function(require,module,exports){
+},{"_process":35}],51:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -10400,7 +10576,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":26}],51:[function(require,module,exports){
+},{"buffer":27}],52:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('safe-buffer').Buffer;
@@ -10673,7 +10849,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":50}],52:[function(require,module,exports){
+},{"safe-buffer":51}],53:[function(require,module,exports){
 (function (global){
 
 /**
@@ -10744,7 +10920,7 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],53:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -10753,7 +10929,7 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":39,"./lib/_stream_passthrough.js":40,"./lib/_stream_readable.js":41,"./lib/_stream_transform.js":42,"./lib/_stream_writable.js":43}],54:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":40,"./lib/_stream_passthrough.js":41,"./lib/_stream_readable.js":42,"./lib/_stream_transform.js":43,"./lib/_stream_writable.js":44}],55:[function(require,module,exports){
 (function (global){
 var ClientRequest = require('./lib/request')
 var extend = require('xtend')
@@ -10835,7 +11011,7 @@ http.METHODS = [
 	'UNSUBSCRIBE'
 ]
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./lib/request":56,"builtin-status-codes":58,"url":60,"xtend":62}],55:[function(require,module,exports){
+},{"./lib/request":57,"builtin-status-codes":59,"url":61,"xtend":63}],56:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
 
@@ -10908,7 +11084,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],56:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -11218,7 +11394,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":55,"./response":57,"_process":34,"buffer":26,"inherits":32,"readable-stream":53,"to-arraybuffer":59}],57:[function(require,module,exports){
+},{"./capability":56,"./response":58,"_process":35,"buffer":27,"inherits":33,"readable-stream":54,"to-arraybuffer":60}],58:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -11404,7 +11580,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":55,"_process":34,"buffer":26,"inherits":32,"readable-stream":53}],58:[function(require,module,exports){
+},{"./capability":56,"_process":35,"buffer":27,"inherits":33,"readable-stream":54}],59:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -11470,7 +11646,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],59:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
 
 module.exports = function (buf) {
@@ -11499,7 +11675,7 @@ module.exports = function (buf) {
 	}
 }
 
-},{"buffer":26}],60:[function(require,module,exports){
+},{"buffer":27}],61:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -12233,7 +12409,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":61,"punycode":35,"querystring":38}],61:[function(require,module,exports){
+},{"./util":62,"punycode":36,"querystring":39}],62:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -12251,7 +12427,7 @@ module.exports = {
   }
 };
 
-},{}],62:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -12272,7 +12448,7 @@ function extend() {
     return target
 }
 
-},{}],63:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 /* globals window, HTMLElement */
 
 'use strict';
@@ -13074,7 +13250,7 @@ is.symbol = function (value) {
 
 module.exports = is;
 
-},{}],64:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 /*!
  * JavaScript Cookie v2.1.4
  * https://github.com/js-cookie/js-cookie
@@ -13241,449 +13417,6 @@ module.exports = is;
 	return init(function () {});
 }));
 
-},{}],65:[function(require,module,exports){
-(function (global){
-/**
- * lodash (Custom Build) <https://lodash.com/>
- * Build: `lodash modularize exports="npm" -o ./`
- * Copyright jQuery Foundation and other contributors <https://jquery.org/>
- * Released under MIT license <https://lodash.com/license>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- */
-
-/** Used as the `TypeError` message for "Functions" methods. */
-var FUNC_ERROR_TEXT = 'Expected a function';
-
-/** Used as references for various `Number` constants. */
-var NAN = 0 / 0;
-
-/** `Object#toString` result references. */
-var symbolTag = '[object Symbol]';
-
-/** Used to match leading and trailing whitespace. */
-var reTrim = /^\s+|\s+$/g;
-
-/** Used to detect bad signed hexadecimal string values. */
-var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
-
-/** Used to detect binary string values. */
-var reIsBinary = /^0b[01]+$/i;
-
-/** Used to detect octal string values. */
-var reIsOctal = /^0o[0-7]+$/i;
-
-/** Built-in method references without a dependency on `root`. */
-var freeParseInt = parseInt;
-
-/** Detect free variable `global` from Node.js. */
-var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
-
-/** Detect free variable `self`. */
-var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
-
-/** Used as a reference to the global object. */
-var root = freeGlobal || freeSelf || Function('return this')();
-
-/** Used for built-in method references. */
-var objectProto = Object.prototype;
-
-/**
- * Used to resolve the
- * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
- * of values.
- */
-var objectToString = objectProto.toString;
-
-/* Built-in method references for those with the same name as other `lodash` methods. */
-var nativeMax = Math.max,
-    nativeMin = Math.min;
-
-/**
- * Gets the timestamp of the number of milliseconds that have elapsed since
- * the Unix epoch (1 January 1970 00:00:00 UTC).
- *
- * @static
- * @memberOf _
- * @since 2.4.0
- * @category Date
- * @returns {number} Returns the timestamp.
- * @example
- *
- * _.defer(function(stamp) {
- *   console.log(_.now() - stamp);
- * }, _.now());
- * // => Logs the number of milliseconds it took for the deferred invocation.
- */
-var now = function() {
-  return root.Date.now();
-};
-
-/**
- * Creates a debounced function that delays invoking `func` until after `wait`
- * milliseconds have elapsed since the last time the debounced function was
- * invoked. The debounced function comes with a `cancel` method to cancel
- * delayed `func` invocations and a `flush` method to immediately invoke them.
- * Provide `options` to indicate whether `func` should be invoked on the
- * leading and/or trailing edge of the `wait` timeout. The `func` is invoked
- * with the last arguments provided to the debounced function. Subsequent
- * calls to the debounced function return the result of the last `func`
- * invocation.
- *
- * **Note:** If `leading` and `trailing` options are `true`, `func` is
- * invoked on the trailing edge of the timeout only if the debounced function
- * is invoked more than once during the `wait` timeout.
- *
- * If `wait` is `0` and `leading` is `false`, `func` invocation is deferred
- * until to the next tick, similar to `setTimeout` with a timeout of `0`.
- *
- * See [David Corbacho's article](https://css-tricks.com/debouncing-throttling-explained-examples/)
- * for details over the differences between `_.debounce` and `_.throttle`.
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Function
- * @param {Function} func The function to debounce.
- * @param {number} [wait=0] The number of milliseconds to delay.
- * @param {Object} [options={}] The options object.
- * @param {boolean} [options.leading=false]
- *  Specify invoking on the leading edge of the timeout.
- * @param {number} [options.maxWait]
- *  The maximum time `func` is allowed to be delayed before it's invoked.
- * @param {boolean} [options.trailing=true]
- *  Specify invoking on the trailing edge of the timeout.
- * @returns {Function} Returns the new debounced function.
- * @example
- *
- * // Avoid costly calculations while the window size is in flux.
- * jQuery(window).on('resize', _.debounce(calculateLayout, 150));
- *
- * // Invoke `sendMail` when clicked, debouncing subsequent calls.
- * jQuery(element).on('click', _.debounce(sendMail, 300, {
- *   'leading': true,
- *   'trailing': false
- * }));
- *
- * // Ensure `batchLog` is invoked once after 1 second of debounced calls.
- * var debounced = _.debounce(batchLog, 250, { 'maxWait': 1000 });
- * var source = new EventSource('/stream');
- * jQuery(source).on('message', debounced);
- *
- * // Cancel the trailing debounced invocation.
- * jQuery(window).on('popstate', debounced.cancel);
- */
-function debounce(func, wait, options) {
-  var lastArgs,
-      lastThis,
-      maxWait,
-      result,
-      timerId,
-      lastCallTime,
-      lastInvokeTime = 0,
-      leading = false,
-      maxing = false,
-      trailing = true;
-
-  if (typeof func != 'function') {
-    throw new TypeError(FUNC_ERROR_TEXT);
-  }
-  wait = toNumber(wait) || 0;
-  if (isObject(options)) {
-    leading = !!options.leading;
-    maxing = 'maxWait' in options;
-    maxWait = maxing ? nativeMax(toNumber(options.maxWait) || 0, wait) : maxWait;
-    trailing = 'trailing' in options ? !!options.trailing : trailing;
-  }
-
-  function invokeFunc(time) {
-    var args = lastArgs,
-        thisArg = lastThis;
-
-    lastArgs = lastThis = undefined;
-    lastInvokeTime = time;
-    result = func.apply(thisArg, args);
-    return result;
-  }
-
-  function leadingEdge(time) {
-    // Reset any `maxWait` timer.
-    lastInvokeTime = time;
-    // Start the timer for the trailing edge.
-    timerId = setTimeout(timerExpired, wait);
-    // Invoke the leading edge.
-    return leading ? invokeFunc(time) : result;
-  }
-
-  function remainingWait(time) {
-    var timeSinceLastCall = time - lastCallTime,
-        timeSinceLastInvoke = time - lastInvokeTime,
-        result = wait - timeSinceLastCall;
-
-    return maxing ? nativeMin(result, maxWait - timeSinceLastInvoke) : result;
-  }
-
-  function shouldInvoke(time) {
-    var timeSinceLastCall = time - lastCallTime,
-        timeSinceLastInvoke = time - lastInvokeTime;
-
-    // Either this is the first call, activity has stopped and we're at the
-    // trailing edge, the system time has gone backwards and we're treating
-    // it as the trailing edge, or we've hit the `maxWait` limit.
-    return (lastCallTime === undefined || (timeSinceLastCall >= wait) ||
-      (timeSinceLastCall < 0) || (maxing && timeSinceLastInvoke >= maxWait));
-  }
-
-  function timerExpired() {
-    var time = now();
-    if (shouldInvoke(time)) {
-      return trailingEdge(time);
-    }
-    // Restart the timer.
-    timerId = setTimeout(timerExpired, remainingWait(time));
-  }
-
-  function trailingEdge(time) {
-    timerId = undefined;
-
-    // Only invoke if we have `lastArgs` which means `func` has been
-    // debounced at least once.
-    if (trailing && lastArgs) {
-      return invokeFunc(time);
-    }
-    lastArgs = lastThis = undefined;
-    return result;
-  }
-
-  function cancel() {
-    if (timerId !== undefined) {
-      clearTimeout(timerId);
-    }
-    lastInvokeTime = 0;
-    lastArgs = lastCallTime = lastThis = timerId = undefined;
-  }
-
-  function flush() {
-    return timerId === undefined ? result : trailingEdge(now());
-  }
-
-  function debounced() {
-    var time = now(),
-        isInvoking = shouldInvoke(time);
-
-    lastArgs = arguments;
-    lastThis = this;
-    lastCallTime = time;
-
-    if (isInvoking) {
-      if (timerId === undefined) {
-        return leadingEdge(lastCallTime);
-      }
-      if (maxing) {
-        // Handle invocations in a tight loop.
-        timerId = setTimeout(timerExpired, wait);
-        return invokeFunc(lastCallTime);
-      }
-    }
-    if (timerId === undefined) {
-      timerId = setTimeout(timerExpired, wait);
-    }
-    return result;
-  }
-  debounced.cancel = cancel;
-  debounced.flush = flush;
-  return debounced;
-}
-
-/**
- * Creates a throttled function that only invokes `func` at most once per
- * every `wait` milliseconds. The throttled function comes with a `cancel`
- * method to cancel delayed `func` invocations and a `flush` method to
- * immediately invoke them. Provide `options` to indicate whether `func`
- * should be invoked on the leading and/or trailing edge of the `wait`
- * timeout. The `func` is invoked with the last arguments provided to the
- * throttled function. Subsequent calls to the throttled function return the
- * result of the last `func` invocation.
- *
- * **Note:** If `leading` and `trailing` options are `true`, `func` is
- * invoked on the trailing edge of the timeout only if the throttled function
- * is invoked more than once during the `wait` timeout.
- *
- * If `wait` is `0` and `leading` is `false`, `func` invocation is deferred
- * until to the next tick, similar to `setTimeout` with a timeout of `0`.
- *
- * See [David Corbacho's article](https://css-tricks.com/debouncing-throttling-explained-examples/)
- * for details over the differences between `_.throttle` and `_.debounce`.
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Function
- * @param {Function} func The function to throttle.
- * @param {number} [wait=0] The number of milliseconds to throttle invocations to.
- * @param {Object} [options={}] The options object.
- * @param {boolean} [options.leading=true]
- *  Specify invoking on the leading edge of the timeout.
- * @param {boolean} [options.trailing=true]
- *  Specify invoking on the trailing edge of the timeout.
- * @returns {Function} Returns the new throttled function.
- * @example
- *
- * // Avoid excessively updating the position while scrolling.
- * jQuery(window).on('scroll', _.throttle(updatePosition, 100));
- *
- * // Invoke `renewToken` when the click event is fired, but not more than once every 5 minutes.
- * var throttled = _.throttle(renewToken, 300000, { 'trailing': false });
- * jQuery(element).on('click', throttled);
- *
- * // Cancel the trailing throttled invocation.
- * jQuery(window).on('popstate', throttled.cancel);
- */
-function throttle(func, wait, options) {
-  var leading = true,
-      trailing = true;
-
-  if (typeof func != 'function') {
-    throw new TypeError(FUNC_ERROR_TEXT);
-  }
-  if (isObject(options)) {
-    leading = 'leading' in options ? !!options.leading : leading;
-    trailing = 'trailing' in options ? !!options.trailing : trailing;
-  }
-  return debounce(func, wait, {
-    'leading': leading,
-    'maxWait': wait,
-    'trailing': trailing
-  });
-}
-
-/**
- * Checks if `value` is the
- * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
- * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(_.noop);
- * // => true
- *
- * _.isObject(null);
- * // => false
- */
-function isObject(value) {
-  var type = typeof value;
-  return !!value && (type == 'object' || type == 'function');
-}
-
-/**
- * Checks if `value` is object-like. A value is object-like if it's not `null`
- * and has a `typeof` result of "object".
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
- * @example
- *
- * _.isObjectLike({});
- * // => true
- *
- * _.isObjectLike([1, 2, 3]);
- * // => true
- *
- * _.isObjectLike(_.noop);
- * // => false
- *
- * _.isObjectLike(null);
- * // => false
- */
-function isObjectLike(value) {
-  return !!value && typeof value == 'object';
-}
-
-/**
- * Checks if `value` is classified as a `Symbol` primitive or object.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
- * @example
- *
- * _.isSymbol(Symbol.iterator);
- * // => true
- *
- * _.isSymbol('abc');
- * // => false
- */
-function isSymbol(value) {
-  return typeof value == 'symbol' ||
-    (isObjectLike(value) && objectToString.call(value) == symbolTag);
-}
-
-/**
- * Converts `value` to a number.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to process.
- * @returns {number} Returns the number.
- * @example
- *
- * _.toNumber(3.2);
- * // => 3.2
- *
- * _.toNumber(Number.MIN_VALUE);
- * // => 5e-324
- *
- * _.toNumber(Infinity);
- * // => Infinity
- *
- * _.toNumber('3.2');
- * // => 3.2
- */
-function toNumber(value) {
-  if (typeof value == 'number') {
-    return value;
-  }
-  if (isSymbol(value)) {
-    return NAN;
-  }
-  if (isObject(value)) {
-    var other = typeof value.valueOf == 'function' ? value.valueOf() : value;
-    value = isObject(other) ? (other + '') : other;
-  }
-  if (typeof value != 'string') {
-    return value === 0 ? value : +value;
-  }
-  value = value.replace(reTrim, '');
-  var isBinary = reIsBinary.test(value);
-  return (isBinary || reIsOctal.test(value))
-    ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
-    : (reIsBadHex.test(value) ? NAN : +value);
-}
-
-module.exports = throttle;
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],66:[function(require,module,exports){
 (function(){
   var crypt = require('crypt'),
@@ -13980,8 +13713,8 @@ module.exports = charenc;
 })();
 
 },{}],69:[function(require,module,exports){
-arguments[4][33][0].apply(exports,arguments)
-},{"dup":33}],70:[function(require,module,exports){
+arguments[4][34][0].apply(exports,arguments)
+},{"dup":34}],70:[function(require,module,exports){
 /*!
  * mustache.js - Logic-less {{mustache}} templates with JavaScript
  * http://github.com/janl/mustache.js
