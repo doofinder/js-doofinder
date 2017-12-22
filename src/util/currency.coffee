@@ -1,3 +1,6 @@
+Thing = require "./thing"
+errors = require "./errors"
+
 defaultCurrency =
   symbol: '€'
   format: '%v%s'
@@ -5,7 +8,29 @@ defaultCurrency =
   thousand: '.'
   precision: 2
 
+###*
+ * Formats a value following the provided currency specification and returns
+ * it as a String.
+ *
+ * If no specification is passed, EUR currency is used by default.
+ *
+ * @param  {Number} value
+ * @param  {Object} currency An object that contains a currency specification.
+ *                           Attributes of the specification are:
+ *                           {
+ *                             symbol: Currency symbol, like "€".
+ *                             format: Template, %s is replaced by the symbol
+ *                                     and %v is replaced by the value.
+ *                             decimal: Character used to separate decimals.
+ *                             thousand: Character used to separate thousands.
+ *                             precision: Number of decimals.
+ *                           }
+ * @return {String}          Formatted value.
+###
 formatCurrency = (value, currency = defaultCurrency) ->
+  unless Thing.is.number value
+    throw errors.error "value is not a number!"
+
   neg = value < 0
   val = Math.abs value
 

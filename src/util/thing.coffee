@@ -1,3 +1,8 @@
+# Wraps npm "is" package, and allows using it in Coffeescript ("is" is a
+# reserved word).
+#
+# https://www.npmjs.com/package/is
+
 Is = require "is"
 
 Is.window = (value) ->

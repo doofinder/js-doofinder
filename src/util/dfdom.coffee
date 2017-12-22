@@ -571,7 +571,7 @@ class DfDomElement
    *                                    on get.
   ###
   css: (propertyName, value, priority) ->
-    propName = Text.toDashCase propertyName
+    propName = Text.camel2dash propertyName
     if value?
       @each (node) ->
         node.style.setProperty propName, value, priority

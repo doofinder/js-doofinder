@@ -12,7 +12,8 @@ module.exports =
 
   generate:
     dfid: (id, datatype, hashid) ->
-      cleandfid "#{hashid}@#{datatype}@#{md5(id)}"
+      id = md5 "#{id}"
+      cleandfid "#{hashid}@#{datatype}@#{id}"
 
     easy: (length = 8) ->
       id = ""

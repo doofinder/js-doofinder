@@ -1196,7 +1196,11 @@
 
 },{"./client":1,"./session":4,"./util/uniqueid":15}],6:[function(require,module,exports){
 (function() {
-  var defaultCurrency, formatCurrency;
+  var Thing, defaultCurrency, errors, formatCurrency;
+
+  Thing = require("./thing");
+
+  errors = require("./errors");
 
   defaultCurrency = {
     symbol: '€',
@@ -1206,10 +1210,34 @@
     precision: 2
   };
 
+
+  /**
+   * Formats a value following the provided currency specification and returns
+   * it as a String.
+   *
+   * If no specification is passed, EUR currency is used by default.
+   *
+   * @param  {Number} value
+   * @param  {Object} currency An object that contains a currency specification.
+   *                           Attributes of the specification are:
+   *                           {
+   *                             symbol: Currency symbol, like "€".
+   *                             format: Template, %s is replaced by the symbol
+   *                                     and %v is replaced by the value.
+   *                             decimal: Character used to separate decimals.
+   *                             thousand: Character used to separate thousands.
+   *                             precision: Number of decimals.
+   *                           }
+   * @return {String}          Formatted value.
+   */
+
   formatCurrency = function(value, currency) {
     var bas, dec, mod, neg, num, pow, val;
     if (currency == null) {
       currency = defaultCurrency;
+    }
+    if (!Thing.is.number(value)) {
+      throw errors.error("value is not a number!");
     }
     neg = value < 0;
     val = Math.abs(value);
@@ -1242,34 +1270,50 @@
 
 }).call(this);
 
-},{}],7:[function(require,module,exports){
+},{"./errors":9,"./thing":14}],7:[function(require,module,exports){
 (function() {
   var Debouncer, requestAnimationFrame;
 
   requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
 
+
+  /**
+   * Avoids handling an event every time it fires, asking the browser to do it.
+   * Copied and modified from: github:WickyNilliams/headroom.js's Debouncer.js
+   */
+
   Debouncer = (function() {
+
+    /**
+     * Instantiates a new Debouncer.
+     * @param  {Function} callback Event handler to be executed.
+     */
     function Debouncer(callback) {
       this.callback = callback;
       this.ticking = false;
     }
 
-    Debouncer.prototype.update = function() {
-      if (typeof this.callback === "function") {
-        this.callback();
-      }
-      return this.ticking = false;
-    };
 
-    Debouncer.prototype.tick = function() {
+    /**
+     * Event handler method, it's executed always instead of the original
+     * callback.
+     */
+
+    Debouncer.prototype.handleEvent = function() {
       if (!this.ticking) {
         requestAnimationFrame(this.boundCallback || (this.boundCallback = this.update.bind(this)));
         return this.ticking = true;
       }
     };
 
-    Debouncer.prototype.handleEvent = function() {
-      return this.tick();
+
+    /**
+     * Executes the configured callback and re-enables the callback to be queued.
+     */
+
+    Debouncer.prototype.update = function() {
+      this.callback();
+      return this.ticking = false;
     };
 
     return Debouncer;
@@ -2089,7 +2133,7 @@
 
     DfDomElement.prototype.css = function(propertyName, value, priority) {
       var node, propName;
-      propName = Text.toDashCase(propertyName);
+      propName = Text.camel2dash(propertyName);
       if (value != null) {
         return this.each(function(node) {
           return node.style.setProperty(propName, value, priority);
@@ -2638,6 +2682,9 @@
 
   addHelpers = function(context) {
     var defaults, helpers;
+    if (context == null) {
+      context = {};
+    }
     defaults = {
       currency: currency["default"],
       translations: {},
@@ -2645,25 +2692,42 @@
     };
     context = extend(true, defaults, context);
     helpers = {
+
+      /**
+       * Mustache helper to add params from the global context (context.urlParams)
+       * to the provided URL. Params are merged and global context takes
+       * precedence over existing parameters.
+       */
       "url-params": function() {
         return function(text, render) {
-          var domain, params, ref, url;
+          var host, params, ref, url;
           url = (render(text)).trim();
           if (url.length > 0) {
-            ref = url.split("?"), domain = ref[0], params = ref[1];
-            params = qs.stringify(extend(true, params || {}, qs.parse(context.urlParams)));
+            ref = url.split("?"), host = ref[0], params = ref[1];
+            params = extend(true, qs.parse(params), qs.parse(context.urlParams));
+            params = qs.stringify(params);
             if (params.length > 0) {
-              url = url + "?" + params;
+              url = host + "?" + params;
             }
           }
           return url;
         };
       },
+
+      /**
+       * Mustache helper to remove HTTP protocol from the start of URLs so they
+       * are protocol independant.
+       */
       "remove-protocol": function() {
         return function(text, render) {
           return (render(text)).trim().replace(/^https?:/, "");
         };
       },
+
+      /**
+       * Mustache helper to format numbers as currency using the currency spec
+       * found in the context object, or the default one if none defined.
+       */
       "format-currency": function() {
         return function(text, render) {
           var value;
@@ -2675,6 +2739,12 @@
           }
         };
       },
+
+      /**
+       * Mustache helper to translate strings given a translations object in the
+       * global context object. If no translation is found, the source text is
+       * returned.
+       */
       "translate": function() {
         return function(text, render) {
           text = render(text);
@@ -2691,11 +2761,13 @@
 
 },{"./currency":6,"extend":25,"qs":73}],12:[function(require,module,exports){
 (function() {
-  var HttpClient, Thing, http, https;
+  var HttpClient, Thing, errors, http, https;
 
   http = require("http");
 
   https = require("https");
+
+  errors = require("./errors");
 
   Thing = require("./thing");
 
@@ -2732,7 +2804,7 @@
         };
       }
       if (!Thing.is.fn(callback)) {
-        throw new Error(this.constructor.name + ": A callback is needed!");
+        throw errors.error("A callback is needed!", this);
       }
       req = this.http.get(options, function(response) {
         var rawData;
@@ -2764,19 +2836,31 @@
 
 }).call(this);
 
-},{"./thing":14,"http":55,"https":32}],13:[function(require,module,exports){
+},{"./errors":9,"./thing":14,"http":55,"https":32}],13:[function(require,module,exports){
 (function() {
   module.exports = {
-    toDashCase: function(name) {
-      return name.replace(/[A-Z]/g, (function(m) {
+
+    /**
+     * Converts text in camel case to dash case
+     * @param  {String} text Text in camelCase
+     * @return {String}      Text converted to dash-case
+     */
+    camel2dash: function(text) {
+      return text.replace(/[A-Z]/g, (function(m) {
         return "-" + m.toLowerCase();
       }));
     },
-    toCamelCase: function(name) {
-      name = name.replace(/([-_])([^-_])/g, (function(m, p1, p2) {
+
+    /**
+     * Converts text in dash case to camel case
+     * @param  {String} text Text in dash-case
+     * @return {String}      Text converted to camelCase
+     */
+    dash2camel: function(text) {
+      text = text.replace(/([-_])([^-_])/g, (function(m, p1, p2) {
         return p2.toUpperCase();
       }));
-      return name.replace(/[-_]/g, "");
+      return text.replace(/[-_]/g, "");
     }
   };
 
@@ -2822,7 +2906,8 @@
     },
     generate: {
       dfid: function(id, datatype, hashid) {
-        return cleandfid(hashid + "@" + datatype + "@" + (md5(id)));
+        id = md5("" + id);
+        return cleandfid(hashid + "@" + datatype + "@" + id);
       },
       easy: function(length) {
         var id;

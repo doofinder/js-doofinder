@@ -1,6 +1,7 @@
 http = require "http"
 https = require "https"
 
+errors = require "./errors"
 Thing = require "./thing"
 
 ###*
@@ -26,7 +27,7 @@ class HttpClient
       options = host: options
 
     unless Thing.is.fn callback
-      throw new Error "#{@constructor.name}: A callback is needed!"
+      throw (errors.error "A callback is needed!", @)
 
     req = @http.get options, (response) ->
       if response.statusCode isnt 200
