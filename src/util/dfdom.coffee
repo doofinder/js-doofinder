@@ -1,5 +1,6 @@
 bean = require "bean"
 extend = require "extend"
+Text = require "./text"
 Thing = require "./thing"
 
 MATCHES_SELECTOR_FN = null
@@ -16,6 +17,16 @@ matchesSelector = (node, selector) ->
     ].filter (funcName) -> Thing.is.fn node[funcName]).pop()
   node[MATCHES_SELECTOR_FN] selector
 
+getWindow = (node) ->
+  if Thing.is.window node
+    view = node
+  else if Thing.is.document node
+    view = node.defaultView
+  else if node.ownerDocument?
+    view = node.ownerDocument.defaultView
+  else
+    view = null
+  if view and view.opener then view else window
 
 ###*
  * DfDomElement
@@ -549,17 +560,23 @@ class DfDomElement
    * set of matched elements or set one or more CSS properties for every matched
    * element.
    *
+   * Note: the computed style of an element may not be the same as the value
+   * specified in the style sheet and it depends on the browser's quirks.
+   *
    * @public
    * @param  {String}         propertyName
    * @param  {String|Number}  value
+   * @param  {String}         priority      The proper way to set !important
    * @return {DfDomElement|String|null} Current instance on set, value or null
    *                                    on get.
   ###
-  css: (propertyName, value) ->
+  css: (propertyName, value, priority) ->
+    propName = Text.toDashCase propertyName
     if value?
-      @each (node) -> node.style[propertyName] = value
+      @each (node) ->
+        node.style.setProperty propName, value, priority
     else if (node = @get 0)?
-      (getComputedStyle node)[propertyName]
+      ((getWindow node).getComputedStyle node).getPropertyValue propName
 
   ###*
    * Hides the element in the set of matched elements by setting their display
@@ -763,14 +780,7 @@ class DfDomElement
         node.scrollTop = y
 
   window: ->
-    node = @get 0
-    if node?
-      if Thing.is.window node
-        node
-      else if Thing.is.document node
-        node.defaultView
-      else if node.ownerDocument?
-        node.ownerDocument.defaultView
+    getWindow @get 0
 
   document: ->
     node = @get 0
