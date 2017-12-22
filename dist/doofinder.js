@@ -2761,11 +2761,13 @@
 
 },{"./currency":6,"extend":25,"qs":73}],12:[function(require,module,exports){
 (function() {
-  var HttpClient, Thing, http, https;
+  var HttpClient, Thing, errors, http, https;
 
   http = require("http");
 
   https = require("https");
+
+  errors = require("./errors");
 
   Thing = require("./thing");
 
@@ -2802,7 +2804,7 @@
         };
       }
       if (!Thing.is.fn(callback)) {
-        throw new Error(this.constructor.name + ": A callback is needed!");
+        throw errors.error("A callback is needed!", this);
       }
       req = this.http.get(options, function(response) {
         var rawData;
@@ -2834,7 +2836,7 @@
 
 }).call(this);
 
-},{"./thing":14,"http":55,"https":32}],13:[function(require,module,exports){
+},{"./errors":9,"./thing":14,"http":55,"https":32}],13:[function(require,module,exports){
 (function() {
   module.exports = {
     toDashCase: function(name) {
