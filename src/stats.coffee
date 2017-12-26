@@ -1,17 +1,20 @@
+errors = require "./util/errors"
 uniqueId = require "./util/uniqueid"
 
 Client = require "./client"
 Session = (require "./session").Session
 
 class Stats
+  ###*
+   * Stats client constructor.
+   * @param  {Client}   @client  Doofinder's Client instance
+   * @param  {Session}  @session Session instance
+  ###
   constructor: (@client, @session) ->
     unless @client instanceof Client
-      throw @error "Invalid Client"
+      throw errors.error "First parameter must be a Client object!", @
     unless @session instanceof Session
-      throw @error "Invalid Session"
-
-  error: (message) ->
-    new Error "#{@constructor.name}: #{message}"
+      throw errors.error "Second parameter must be a Session object!", @
 
   ###*
    * Registers the session in Doofinder stats if not already registered.

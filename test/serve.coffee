@@ -45,10 +45,7 @@ module.exports =
 
   stats: (type, params) ->
     resource = "/#{cfg.version}/stats/#{type}"
-    defaultParams =
-      hashid: cfg.hashid
-      random: 0
-    params = extend true, defaultParams, (params or {})
+    params = extend true, hashid: cfg.hashid, (params or {}), (random: 0)
     checkParams = (actualParams) ->
       # random comes with, well, a random value so we alter it to make the
       # request match the expected parameters.

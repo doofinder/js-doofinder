@@ -24,4 +24,4 @@ module.exports =
     qs: require "qs"
     uniqueId: require "./util/uniqueid"
   session: require "./session"
-  stats: require "./stats"
+  Stats: require "./stats"

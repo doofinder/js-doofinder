@@ -724,7 +724,7 @@
       uniqueId: require("./util/uniqueid")
     },
     session: require("./session"),
-    stats: require("./stats")
+    Stats: require("./stats")
   };
 
 }).call(this);
@@ -1009,7 +1009,9 @@
 
 },{"./util/uniqueid":15,"extend":25,"js-cookie":65,"md5":66}],5:[function(require,module,exports){
 (function() {
-  var Client, Session, Stats, uniqueId;
+  var Client, Session, Stats, errors, uniqueId;
+
+  errors = require("./util/errors");
 
   uniqueId = require("./util/uniqueid");
 
@@ -1018,20 +1020,22 @@
   Session = (require("./session")).Session;
 
   Stats = (function() {
+
+    /**
+     * Stats client constructor.
+     * @param  {Client}   @client  Doofinder's Client instance
+     * @param  {Session}  @session Session instance
+     */
     function Stats(client, session) {
       this.client = client;
       this.session = session;
       if (!(this.client instanceof Client)) {
-        throw this.error("Invalid Client");
+        throw errors.error("First parameter must be a Client object!", this);
       }
       if (!(this.session instanceof Session)) {
-        throw this.error("Invalid Session");
+        throw errors.error("Second parameter must be a Session object!", this);
       }
     }
-
-    Stats.prototype.error = function(message) {
-      return new Error(this.constructor.name + ": " + message);
-    };
 
 
     /**
@@ -1194,7 +1198,7 @@
 
 }).call(this);
 
-},{"./client":1,"./session":4,"./util/uniqueid":15}],6:[function(require,module,exports){
+},{"./client":1,"./session":4,"./util/errors":9,"./util/uniqueid":15}],6:[function(require,module,exports){
 (function() {
   var Thing, defaultCurrency, errors, formatCurrency;
 
@@ -2579,28 +2583,32 @@
 }).call(this);
 
 },{"./text":13,"./thing":14,"bean":24,"extend":25}],9:[function(require,module,exports){
+
+/**
+ * Helper to compose final error messages
+ * @param  {String} text     Description of the error.
+ * @param  {Object} instance Optional object instance.
+ * @return {String}          Final error message.
+ */
+
 (function() {
-  var _msg, error, warning,
-    slice = [].slice;
+  var _msg, error, warning;
 
-  _msg = function() {
-    var args, msg, obj;
-    args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-    msg = args[0], obj = args[1];
-    return "[doofinder]" + (obj != null ? "[" + obj.constructor.name + "]" : "") + ": " + msg;
+  _msg = function(text, instance) {
+    if (instance != null) {
+      return "[doofinder][" + instance.constructor.name + "]: " + text;
+    } else {
+      return "[doofinder]: " + text;
+    }
   };
 
-  error = function() {
-    var args;
-    args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-    return new Error(_msg.apply(null, args));
+  error = function(text, instance) {
+    return new Error(_msg(text, instance));
   };
 
-  warning = function() {
-    var args;
-    args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+  warning = function(text, instance) {
     if (typeof console !== "undefined" && console !== null) {
-      return console.warn(_msg.apply(null, args));
+      return console.warn(_msg(text, instance));
     }
   };
 
