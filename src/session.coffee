@@ -2,12 +2,16 @@ Cookies = require "js-cookie"
 extend = require "extend"
 md5 = require "md5"
 
+errors = require "./util/errors"
 uniqueId = require "./util/uniqueid"
 
 
+###*
+ * Interface that all storage classes must implement. See Session class.
+###
 class ISessionStore
   ###*
-   * Gets the value for the specified key.
+   * Gets the value for the specified key from the storage.
    * @public
    * @param  {String} key
    * @param  {*}      defaultValue Value to return if the key does not exist.
@@ -16,7 +20,7 @@ class ISessionStore
   get: (key, defaultValue) ->
     dataObj = @__getData()
     unless dataObj.session_id?
-      throw Error "ISessionStore.__getData must ensure session_id exists!"
+      throw (errors.error "__getData must ensure session_id exists!", @)
     dataObj[key] or defaultValue
 
   ###*
@@ -49,7 +53,7 @@ class ISessionStore
    * @return {Object} Current data.
   ###
   __getData: ->
-    throw Error "ISessionStore.__getData not implemented!"
+    throw (errors.error "__getData() not implemented!", @)
 
   ###*
    * Sets the current data object.
@@ -58,7 +62,7 @@ class ISessionStore
    * @return {Object}         New data.
   ###
   __setData: (dataObj) ->
-    throw Error "ISessionStore.__setData(dataObj) not implemented!"
+    throw (errors.error "__setData(dataObj) not implemented!", @)
 
   ###*
    * Deletes the current data, including session_id.
@@ -66,14 +70,14 @@ class ISessionStore
    * @return {*}
   ###
   clean: ->
-    throw Error "ISessionStore.clean not implemented!"
+    throw (errors.error "clean() not implemented!", @)
 
   ###*
    * Checks whether the session exists or not.
    * @return {Boolean} `true` if the session exists, `false` otherwise.
   ###
   exists: ->
-    throw Error "ISessionStore.exists not implemented!"
+    throw (errors.error "exists() not implemented!", @)
 
 
 ###*
@@ -86,6 +90,7 @@ class ObjectSessionStore extends ISessionStore
   constructor: (@data = {}) ->
 
   __getData: ->
+    # ensure session id exists
     @data.session_id = uniqueId.generate.hash() unless @data.session_id?
     @data
 
@@ -98,7 +103,17 @@ class ObjectSessionStore extends ISessionStore
     @data.session_id?
 
 
+###*
+ * Holds session data in a browser cookie.
+###
 class CookieSessionStore extends ISessionStore
+  ###*
+   * @param  {String} cookieName Name for the cookie.
+   * @param  {Object} options    Options object.
+   *                             - prefix: String to be appended to the cookie
+   *                                 name.
+   *                             - expiry: In days, 1 hour by default
+  ###
   constructor: (cookieName, options = {}) ->
     defaults =
       prefix: ""
@@ -110,6 +125,7 @@ class CookieSessionStore extends ISessionStore
   __getData: ->
     dataObj = Cookies.getJSON @cookieName
     unless dataObj?
+      # ensure session id
       dataObj = @__setData session_id: uniqueId.generate.browserHash()
     dataObj
 
@@ -153,11 +169,16 @@ class Session
   set: (key, value) ->
     @store.set key, value
 
+  ###*
+   * Deletes the specified key from the session store.
+   * @param  {String} key
+   * @return {Object} The current value of the data object.
+  ###
   del: (key) ->
     @store.del key
 
   ###*
-   * Finishes the session by removing the cookie.
+   * Finishes the session by removing the stored data.
   ###
   clean: ->
     @store.clean()

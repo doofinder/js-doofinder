@@ -741,7 +741,7 @@
 
 },{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/currency":6,"./util/dfdom":7,"./util/helpers":10,"./util/http":11,"./util/text":12,"./util/uniqueid":14,"./widgets/collapsiblepanel":15,"./widgets/display":16,"./widgets/facets/rangefacet":17,"./widgets/facets/termsfacet":18,"./widgets/panel":19,"./widgets/queryinput":20,"./widgets/scrolldisplay":21,"./widgets/widget":22,"bean":23,"extend":24,"lodash.throttle":65,"md5":66,"mustache":70,"qs":73}],4:[function(require,module,exports){
 (function() {
-  var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, extend, md5, uniqueId,
+  var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, errors, extend, md5, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -751,14 +751,21 @@
 
   md5 = require("md5");
 
+  errors = require("./util/errors");
+
   uniqueId = require("./util/uniqueid");
+
+
+  /**
+   * Interface that all storage classes must implement. See Session class.
+   */
 
   ISessionStore = (function() {
     function ISessionStore() {}
 
 
     /**
-     * Gets the value for the specified key.
+     * Gets the value for the specified key from the storage.
      * @public
      * @param  {String} key
      * @param  {*}      defaultValue Value to return if the key does not exist.
@@ -769,7 +776,7 @@
       var dataObj;
       dataObj = this.__getData();
       if (dataObj.session_id == null) {
-        throw Error("ISessionStore.__getData must ensure session_id exists!");
+        throw errors.error("__getData must ensure session_id exists!", this);
       }
       return dataObj[key] || defaultValue;
     };
@@ -814,7 +821,7 @@
      */
 
     ISessionStore.prototype.__getData = function() {
-      throw Error("ISessionStore.__getData not implemented!");
+      throw errors.error("__getData() not implemented!", this);
     };
 
 
@@ -826,7 +833,7 @@
      */
 
     ISessionStore.prototype.__setData = function(dataObj) {
-      throw Error("ISessionStore.__setData(dataObj) not implemented!");
+      throw errors.error("__setData(dataObj) not implemented!", this);
     };
 
 
@@ -837,7 +844,7 @@
      */
 
     ISessionStore.prototype.clean = function() {
-      throw Error("ISessionStore.clean not implemented!");
+      throw errors.error("clean() not implemented!", this);
     };
 
 
@@ -847,7 +854,7 @@
      */
 
     ISessionStore.prototype.exists = function() {
-      throw Error("ISessionStore.exists not implemented!");
+      throw errors.error("exists() not implemented!", this);
     };
 
     return ISessionStore;
@@ -894,8 +901,22 @@
 
   })(ISessionStore);
 
+
+  /**
+   * Holds session data in a browser cookie.
+   */
+
   CookieSessionStore = (function(superClass) {
     extend1(CookieSessionStore, superClass);
+
+
+    /**
+     * @param  {String} cookieName Name for the cookie.
+     * @param  {Object} options    Options object.
+     *                             - prefix: String to be appended to the cookie
+     *                                 name.
+     *                             - expiry: In days, 1 hour by default
+     */
 
     function CookieSessionStore(cookieName, options) {
       var defaults;
@@ -981,13 +1002,20 @@
       return this.store.set(key, value);
     };
 
+
+    /**
+     * Deletes the specified key from the session store.
+     * @param  {String} key
+     * @return {Object} The current value of the data object.
+     */
+
     Session.prototype.del = function(key) {
       return this.store.del(key);
     };
 
 
     /**
-     * Finishes the session by removing the cookie.
+     * Finishes the session by removing the stored data.
      */
 
     Session.prototype.clean = function() {
@@ -1017,7 +1045,7 @@
 
 }).call(this);
 
-},{"./util/uniqueid":14,"extend":24,"js-cookie":64,"md5":66}],5:[function(require,module,exports){
+},{"./util/errors":8,"./util/uniqueid":14,"extend":24,"js-cookie":64,"md5":66}],5:[function(require,module,exports){
 (function() {
   var Client, Session, Stats, errors, uniqueId;
 
