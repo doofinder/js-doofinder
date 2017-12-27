@@ -223,6 +223,7 @@ class RangeFacet extends Display
           @__renderPips values
 
         @trigger "df:widget:render", [res]
+        @trigger "df:rendered", [res] # DEPRECATED
     else
       false
 

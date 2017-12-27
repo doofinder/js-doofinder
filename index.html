@@ -137,8 +137,8 @@
     var aside = $('#aside');
 
     var client = new doofinder.Client(page.data('hashid'), 'eu1');
-    var controller = new doofinder.Controller(client, [], {rpp: 20});
-    var controllerX = new doofinder.Controller(client, [], {rpp: 20});
+    var controller = new doofinder.Controller(client, {rpp: 20});
+    var controllerX = new doofinder.Controller(client, {rpp: 20});
 
     client.options(function(err, options){
       controller.registerWidget(input);
@@ -233,6 +233,10 @@
 
     input.on("df:input:stop", function(query){
       console.log("[df:input:stop] " + query);
+    });
+
+    input.on("df:typing_stopped", function(query){
+      console.log("[df:typing_stopped] " + query);
     });
 
     input.on("df:input:submit", function(query){

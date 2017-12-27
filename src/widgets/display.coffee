@@ -72,7 +72,7 @@ class Display extends Widget
    * Renders the widget with the data received, by replacing its content.
    *
    * @param {Object} res Search response.
-   * @fires Display#df:widget:render
+   * @fires Widget#df:widget:render
   ###
   render: (res) ->
     @element.html @renderTemplate res
@@ -80,7 +80,7 @@ class Display extends Widget
 
   ###*
    * Cleans the widget by removing all the HTML inside the container element.
-   * @fires Display#df:widget:clean
+   * @fires Widget#df:widget:clean
   ###
   clean: ->
     @element.html ""

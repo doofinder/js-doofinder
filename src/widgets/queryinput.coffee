@@ -70,14 +70,17 @@ class QueryInput extends Widget
     valueChanged = @value.toUpperCase() != @previousValue
 
     if valueOk and (valueChanged or force)
-      @stopTimer = setTimeout (@trigger.bind @), @options.typingTimeout, "df:input:stop", [@value]
+      @stopTimer = setTimeout (=>
+        @trigger "df:input:stop", [@value]
+        @trigger "df:typing_stopped", [@value] # DEPRECATED
+      ), @options.typingTimeout
       @previousValue = @value.toUpperCase()
       @controller.forEach (controller) => controller.search @value
 
   ###*
    * If the widget is configured to be cleaned, empties the value of the input
    * element.
-   * @fires QueryInput#df:widget:clean
+   * @fires Widget#df:widget:clean
   ###
   clean: ->
     if @options.clean

@@ -69,7 +69,7 @@ testAnotherPage = (controller, anotherPage, totalPages, anotherQueryCounter, sea
 
   # Handler for first page search. It configures handlers for the actual request
   # we want to test.
-  controller.one "df:results", (res) ->
+  controller.one "df:results:success", (res) ->
     firstPageRequest.isDone().should.be.true
 
     # Save the page we are requesting in the controller.
@@ -82,7 +82,7 @@ testAnotherPage = (controller, anotherPage, totalPages, anotherQueryCounter, sea
     # One-time handler to get results received by the controller. Some basic
     # tests are done.
     # This event is triggered after the response is processed.
-    controller.one "df:results", (res) ->
+    controller.one "df:results:success", (res) ->
       anotherPageRequest.isDone().should.be.true
 
       # The response matches the requested page and query counter
@@ -222,7 +222,7 @@ describe "Controller", ->
         @params.should.eql params
         searchTriggered = true
 
-      controller.one "df:results", (res) ->
+      controller.one "df:results:success", (res) ->
         scope.isDone().should.be.true
         searchTriggered.should.be.true
 
@@ -254,7 +254,7 @@ describe "Controller", ->
       controller = cfg.getController()
 
       # 1st request handler
-      controller.one "df:results", (res) ->
+      controller.one "df:results:success", (res) ->
         firstRequest.isDone().should.be.true
         secondRequest.isDone().should.be.false
 
@@ -274,7 +274,7 @@ describe "Controller", ->
           refreshTriggered = true
 
         # 2nd request handler (on response)
-        controller.one "df:results", (res) ->
+        controller.one "df:results:success", (res) ->
           secondRequest.isDone().should.be.true
           refreshTriggered.should.be.true
 
@@ -292,11 +292,11 @@ describe "Controller", ->
       # 1st request
       controller.search query
 
-    it "triggers df:error in case of error", (done) ->
+    it "triggers df:results:error in case of error", (done) ->
       scope = serve.forbidden()
       controller = cfg.getController()
 
-      controller.one "df:error", (err) ->
+      controller.one "df:results:error", (err) ->
         scope.isDone().should.be.true
         err.should.equal 403
         done()
@@ -346,7 +346,7 @@ describe "Controller", ->
     it "performs a request when de-serializing a non-empty search status from string", (done) ->
       controller = cfg.getController rpp: 20
 
-      controller.one "df:results", (res) ->
+      controller.one "df:results:success", (res) ->
         controller.serializeStatus().should.equal "query=hola&query_name=match_and"
         scope.isDone().should.be.true
         done()

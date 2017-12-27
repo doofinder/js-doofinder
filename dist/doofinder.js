@@ -450,12 +450,14 @@
       return request = this.client.search(this.query, params, (function(_this) {
         return function(err, res) {
           if (err) {
-            return _this.trigger("df:error", [err]);
+            _this.trigger("df:results:error", [err]);
+            return _this.trigger("df:error_received", [err]);
           } else {
             _this.lastPage = Math.ceil(res.total / res.results_per_page);
             _this.params.query_name = res.query_name;
             _this.renderWidgets(res);
-            _this.trigger("df:results", [res]);
+            _this.trigger("df:results:success", [res]);
+            _this.trigger("df:results_received", [res]);
             if (_this.isLastPage) {
               return _this.trigger("df:results:end", [res]);
             }
@@ -3118,7 +3120,7 @@
      * Renders the widget with the data received, by replacing its content.
      *
      * @param {Object} res Search response.
-     * @fires Display#df:widget:render
+     * @fires Widget#df:widget:render
      */
 
     Display.prototype.render = function(res) {
@@ -3129,7 +3131,7 @@
 
     /**
      * Cleans the widget by removing all the HTML inside the container element.
-     * @fires Display#df:widget:clean
+     * @fires Widget#df:widget:clean
      */
 
     Display.prototype.clean = function() {
@@ -3392,7 +3394,8 @@
             };
             this.__renderPips(values);
           }
-          return this.trigger("df:widget:render", [res]);
+          this.trigger("df:widget:render", [res]);
+          return this.trigger("df:rendered", [res]);
         }
       } else {
         return false;
@@ -3555,7 +3558,15 @@
               _this.controller.removeFilter(facetName, facetValue);
             }
             _this.controller.refresh();
-            return _this.trigger("df:term:click", [facetName, facetValue, isSelected]);
+            _this.trigger("df:term:click", [facetName, facetValue, isSelected]);
+            return _this.trigger("df:term_clicked", [
+              {
+                facetName: facetName,
+                facetValue: facetValue,
+                selected: isSelected,
+                totalSelected: _this.totalSelected
+              }
+            ]);
           };
         })(this));
         if (this.options.size != null) {
@@ -3697,7 +3708,8 @@
         this.element[this.options.insertionMethod](this.renderTemplate(res));
         this.initPanel(res);
         this.initContent(res);
-        return this.trigger("df:widget:render", [res]);
+        this.trigger("df:widget:render", [res]);
+        return this.trigger("df:rendered", [res]);
       }
     };
 
@@ -3715,7 +3727,8 @@
     };
 
     Panel.prototype.clean = function() {
-      return this.trigger("df:widget:clean");
+      this.trigger("df:widget:clean");
+      return this.trigger("df:cleaned");
     };
 
     return Panel;
@@ -3839,7 +3852,12 @@
       valueOk = this.value.length >= this.options.captureLength;
       valueChanged = this.value.toUpperCase() !== this.previousValue;
       if (valueOk && (valueChanged || force)) {
-        this.stopTimer = setTimeout(this.trigger.bind(this), this.options.typingTimeout, "df:input:stop", [this.value]);
+        this.stopTimer = setTimeout(((function(_this) {
+          return function() {
+            _this.trigger("df:input:stop", [_this.value]);
+            return _this.trigger("df:typing_stopped", [_this.value]);
+          };
+        })(this)), this.options.typingTimeout);
         this.previousValue = this.value.toUpperCase();
         return this.controller.forEach((function(_this) {
           return function(controller) {
@@ -3853,7 +3871,7 @@
     /**
      * If the widget is configured to be cleaned, empties the value of the input
      * element.
-     * @fires QueryInput#df:widget:clean
+     * @fires Widget#df:widget:clean
      */
 
     QueryInput.prototype.clean = function() {
@@ -3989,7 +4007,8 @@
       }
       direction = rect.scrollLeft >= this.previousDelta ? "right" : "left";
       this.previousDelta = rect.scrollLeft;
-      return this.trigger("df:widget:scroll", [rect.scrollLeft, direction]);
+      this.trigger("df:widget:scroll", [rect.scrollLeft, direction]);
+      return this.scroller.trigger("df:scroll");
     };
 
     ScrollDisplay.prototype.scrollY = function() {
@@ -4002,7 +4021,8 @@
       }
       direction = rect.scrollTop >= this.previousDelta ? "down" : "up";
       this.previousDelta = rect.scrollTop;
-      return this.trigger("df:widget:scroll", [rect.scrollTop, direction]);
+      this.trigger("df:widget:scroll", [rect.scrollTop, direction]);
+      return this.scroller.trigger("df:scroll");
     };
 
     ScrollDisplay.prototype.getNextPage = function() {
@@ -4023,7 +4043,8 @@
       } else {
         this.working = false;
         this.element.append(this.renderTemplate(res));
-        return this.trigger("df:widget:render", [res]);
+        this.trigger("df:widget:render", [res]);
+        return this.trigger("df:rendered", [res]);
       }
     };
 
@@ -4102,7 +4123,8 @@
      */
 
     Widget.prototype.render = function(res) {
-      return this.trigger("df:widget:render", [res]);
+      this.trigger("df:widget:render", [res]);
+      return this.trigger("df:rendered", [res]);
     };
 
 
@@ -4111,7 +4133,8 @@
      */
 
     Widget.prototype.clean = function() {
-      return this.trigger("df:widget:clean");
+      this.trigger("df:widget:clean");
+      return this.trigger("df:cleaned");
     };
 
     Widget.prototype.on = function(eventName, handler) {

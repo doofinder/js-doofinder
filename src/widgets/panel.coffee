@@ -49,6 +49,7 @@ class Panel extends Display
       @initPanel res
       @initContent res
       @trigger "df:widget:render", [res]
+      @trigger "df:rendered", [res] # DEPRECATED
 
   initPanel: (res) ->
     @panelElement = $ "##{@options.templateVars.panelElement}"
@@ -63,5 +64,6 @@ class Panel extends Display
   clean: ->
     # panels are never erased
     @trigger "df:widget:clean"
+    @trigger "df:cleaned" # DEPRECATED
 
 module.exports = Panel

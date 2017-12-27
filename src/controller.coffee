@@ -168,14 +168,17 @@ class Controller
     params = extend true, query_counter: ++@queryCounter, @params
     request = @client.search @query, params, (err, res) =>
       if err
-        @trigger "df:error", [err]
+        @trigger "df:results:error", [err]
+        @trigger "df:error_received", [err] # DEPRECATED
       else
         @lastPage = Math.ceil (res.total / res.results_per_page)
         @params.query_name = res.query_name
 
         @renderWidgets res
 
-        @trigger "df:results", [res]
+        @trigger "df:results:success", [res]
+        @trigger "df:results_received", [res] # DEPRECATED
+
         @trigger "df:results:end", [res] if @isLastPage
 
   #

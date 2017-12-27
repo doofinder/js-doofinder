@@ -118,6 +118,12 @@ class TermsFacet extends Display
 
         @controller.refresh()
         @trigger "df:term:click", [facetName, facetValue, isSelected]
+        @trigger "df:term_clicked", [
+          facetName: facetName
+          facetValue: facetValue
+          selected: isSelected
+          totalSelected: @totalSelected
+        ] # DEPRECATED
 
       if @options.size?
         @element.on "click", "[data-toggle-extra-content]", (e) =>
