@@ -897,6 +897,22 @@ class DfDomElement
     not @is selector_or_element
 
   ###*
+   * Checks if the first Element in the set of matched elements is the first child
+   * of its container. Doesn't take into account Text nodes.
+   * @return {Boolean} true if the node is the first child.
+  ###
+  isFirstElement: ->
+    @length and not (@get 0).previousElementSibling
+
+  ###*
+   * Checks if the first Element in the set of matched elements is the last child
+   * of its container. Doesn't take into account Text nodes.
+   * @return {Boolean} true if the node is the last child.
+  ###
+  isLastElement: ->
+    @length and not (@get 0).nextElementSibling
+
+  ###*
    * Reduces the set of matched elements to the one at the specified index.
    * Providing a negative number indicates a position starting from the end of
    * the set, rather than the beginning.

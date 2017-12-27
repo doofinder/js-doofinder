@@ -741,30 +741,49 @@ describe "dfdom", ->
   context "[Other Tools]", ->
     beforeEach ->
       insertHTML """
-        <div class="box"></div>
-        <div id="box"></div>
-        <div></div>
+      <div>
+        <p class="box"></p>
+        <p id="box"></p>
+        <p></p>
+      </div>
       """
 
     it "can reduce the set of matched elements to the one in the provided index", (done) ->
-      ((dfdom "div").nth 3).length.should.eq 0
-      ((dfdom "div").nth 0).length.should.eq 1
-      (((dfdom "div").nth 0).hasClass "box").should.be.true
-      (((dfdom "div").nth -2).get 0).should.equal document.getElementById "box"
+      ((dfdom "p").nth 3).length.should.eq 0
+      ((dfdom "p").nth 0).length.should.eq 1
+      (((dfdom "p").nth 0).hasClass "box").should.be.true
+      (((dfdom "p").nth -2).get 0).should.equal document.getElementById "box"
       done()
 
     it "can detect if the selection matches a selector", (done) ->
-      (((dfdom "div").first()).is ".box").should.be.true
-      ((dfdom "div").is ".box").should.be.false
+      (((dfdom "p").first()).is ".box").should.be.true
+      ((dfdom "p").is ".box").should.be.false
       ((dfdom "#box").is document.getElementById "box").should.be.true
-      ((dfdom "div").first().is document.getElementById "box").should.be.false
-      ((dfdom "div").is ".inline").should.be.false
+      ((dfdom "p").first().is document.getElementById "box").should.be.false
+      ((dfdom "p").is ".inline").should.be.false
       done()
 
     it "can detect if the selection does not match a selector", (done) ->
-      (((dfdom "div").first()).isnt ".box").should.be.false
-      ((dfdom "div").isnt ".box").should.be.true
+      (((dfdom "p").first()).isnt ".box").should.be.false
+      ((dfdom "p").isnt ".box").should.be.true
       ((dfdom "#box").isnt document.getElementById "box").should.be.false
-      ((dfdom "div").first().isnt document.getElementById "box").should.be.true
-      ((dfdom "div").isnt ".inline").should.be.true
+      ((dfdom "p").first().isnt document.getElementById "box").should.be.true
+      ((dfdom "p").isnt ".inline").should.be.true
+      done()
+
+    it "can detect if a node is the first child of its container", (done) ->
+      console.log ((dfdom "p").get 0).previousElementSibling
+      (dfdom "p").isFirstElement().should.be.true
+      (dfdom "p").first().isFirstElement().should.be.true
+      ((dfdom "p").nth 2).isFirstElement().should.be.false
+      (dfdom ".box").isFirstElement().should.be.true
+      (dfdom "#box").isFirstElement().should.be.false
+      done()
+
+    it "can detect if a node is the last child of its container", (done) ->
+      (dfdom "p").isLastElement().should.be.false
+      (dfdom "p").first().isLastElement().should.be.false
+      ((dfdom "p").nth 2).isLastElement().should.be.true
+      (dfdom ".box").isLastElement().should.be.false
+      (dfdom "#box").isLastElement().should.be.false
       done()
