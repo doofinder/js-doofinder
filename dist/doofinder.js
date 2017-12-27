@@ -1029,6 +1029,11 @@
 
   Session = (require("./session")).Session;
 
+
+  /**
+   * Helper class to wrap calls to the Doofinder stats API endpoint.
+   */
+
   Stats = (function() {
 
     /**
@@ -1080,9 +1085,7 @@
             if (err != null) {
               _this.session.set("registered", false);
             }
-            if (callback != null) {
-              return callback(err, res);
-            }
+            return typeof callback === "function" ? callback(err, res) : void 0;
           };
         })(this));
       }
@@ -1131,9 +1134,7 @@
         query: this.session.get("query")
       };
       return this.client.stats("click", params, function(err, res) {
-        if (callback != null) {
-          return callback(err, res);
-        }
+        return typeof callback === "function" ? callback(err, res) : void 0;
       });
     };
 
@@ -1160,9 +1161,7 @@
             if (err == null) {
               _this.session.clean();
             }
-            if (callback != null) {
-              return callback(err, res);
-            }
+            return typeof callback === "function" ? callback(err, res) : void 0;
           };
         })(this));
       }
@@ -1194,9 +1193,7 @@
       return this.client.stats("banner_" + eventName, {
         banner_id: "" + bannerId
       }, function(err, res) {
-        if (callback != null) {
-          return callback(err, res);
-        }
+        return typeof callback === "function" ? callback(err, res) : void 0;
       });
     };
 

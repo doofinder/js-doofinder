@@ -4,6 +4,9 @@ uniqueId = require "./util/uniqueid"
 Client = require "./client"
 Session = (require "./session").Session
 
+###*
+ * Helper class to wrap calls to the Doofinder stats API endpoint.
+###
 class Stats
   ###*
    * Stats client constructor.
@@ -41,7 +44,7 @@ class Stats
       @session.set "registered", true  # sync, short-circuit other attempts
       @client.stats "init", session_id: (@session.get "session_id"), (err, res) =>
         (@session.set "registered", false) if err? # revert on error
-        (callback err, res) if callback?
+        callback? err, res
     not alreadyRegistered
 
   ###*
@@ -80,7 +83,7 @@ class Stats
       query: @session.get "query"
 
     @client.stats "click", params, (err, res) ->
-      (callback err, res) if callback?
+      callback? err, res
 
   ###*
    * Registers a checkout if session exists.
@@ -98,7 +101,7 @@ class Stats
       @client.stats "checkout", session_id: (@session.get "session_id"), (err, res) =>
         unless err?
           @session.clean()
-        (callback err, res) if callback?
+        callback? err, res
     sessionExists
 
   ###*
@@ -120,7 +123,7 @@ class Stats
     unless bannerId?
       throw @error "bannerId is required"
     @client.stats "banner_#{eventName}", banner_id: "#{bannerId}", (err, res) ->
-      (callback err, res) if callback?
+      callback? err, res
 
 
 module.exports = Stats
