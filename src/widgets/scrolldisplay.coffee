@@ -86,12 +86,14 @@ class ScrollDisplay extends Display
     width = rect.scrollWidth
     scrolled = rect.scrollLeft + rect.clientWidth
     @getNextPage() if width - scrolled <= @options.offset
+    @trigger "df:widget:scroll"
 
   scrollY: ->
     rect = @scroller.box()
     height = rect.scrollHeight
     scrolled = rect.scrollTop + rect.clientHeight
     @getNextPage() if height - scrolled <= @options.offset
+    @trigger "df:widget:scroll"
 
   getNextPage: ->
     if @controller? and not @working

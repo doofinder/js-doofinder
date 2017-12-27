@@ -873,8 +873,7 @@ class DfDomElement
 
   ###*
    * Checks the current matched set of elements against a selector or element,
-   * and return true if at least one of these elements matches the given
-   * argument.
+   * and return true if all elements match the given argument.
    *
    * @public
    * @param  {String|Element} selector_or_element
@@ -882,9 +881,9 @@ class DfDomElement
   ###
   is: (selector_or_element) ->
     if Thing.is.string selector_or_element
-      (@filter selector_or_element).length > 0
+      (@filter selector_or_element).length == @length
     else
-      (@filter (node) -> node is selector_or_element).length > 0
+      (@filter (node) -> node is selector_or_element).length == @length
 
   ###*
    * Checks the current matched set of elements against a selector or element,
@@ -906,7 +905,7 @@ class DfDomElement
    * @param  {Number} index
    * @return {DfDomElement}
   ###
-  eq: (index) ->
+  nth: (index) ->
     new DfDomElement (@element[if index >= 0 then index else @length + index] or [])
 
 

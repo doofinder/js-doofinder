@@ -747,24 +747,24 @@ describe "dfdom", ->
       """
 
     it "can reduce the set of matched elements to the one in the provided index", (done) ->
-      ((dfdom "div").eq 3).length.should.eq 0
-      ((dfdom "div").eq 0).length.should.eq 1
-      (((dfdom "div").eq 0).hasClass "box").should.be.true
-      (((dfdom "div").eq -2).get 0).should.equal document.getElementById "box"
+      ((dfdom "div").nth 3).length.should.eq 0
+      ((dfdom "div").nth 0).length.should.eq 1
+      (((dfdom "div").nth 0).hasClass "box").should.be.true
+      (((dfdom "div").nth -2).get 0).should.equal document.getElementById "box"
       done()
 
     it "can detect if the selection matches a selector", (done) ->
-      (((dfdom "div").eq 0).is ".box").should.be.true
-      ((dfdom "div").is ".box").should.be.true
+      (((dfdom "div").first()).is ".box").should.be.true
+      ((dfdom "div").is ".box").should.be.false
       ((dfdom "#box").is document.getElementById "box").should.be.true
-      ((dfdom "div").is document.getElementById "box").should.be.true
+      ((dfdom "div").first().is document.getElementById "box").should.be.false
       ((dfdom "div").is ".inline").should.be.false
       done()
 
     it "can detect if the selection does not match a selector", (done) ->
-      (((dfdom "div").eq 0).isnt ".box").should.be.false
-      ((dfdom "div").isnt ".box").should.be.false
+      (((dfdom "div").first()).isnt ".box").should.be.false
+      ((dfdom "div").isnt ".box").should.be.true
       ((dfdom "#box").isnt document.getElementById "box").should.be.false
-      ((dfdom "div").isnt document.getElementById "box").should.be.false
+      ((dfdom "div").first().isnt document.getElementById "box").should.be.true
       ((dfdom "div").isnt ".inline").should.be.true
       done()

@@ -2523,8 +2523,7 @@
 
     /**
      * Checks the current matched set of elements against a selector or element,
-     * and return true if at least one of these elements matches the given
-     * argument.
+     * and return true if all elements match the given argument.
      *
      * @public
      * @param  {String|Element} selector_or_element
@@ -2533,11 +2532,11 @@
 
     DfDomElement.prototype.is = function(selector_or_element) {
       if (Thing.is.string(selector_or_element)) {
-        return (this.filter(selector_or_element)).length > 0;
+        return (this.filter(selector_or_element)).length === this.length;
       } else {
         return (this.filter(function(node) {
           return node === selector_or_element;
-        })).length > 0;
+        })).length === this.length;
       }
     };
 
@@ -2566,7 +2565,7 @@
      * @return {DfDomElement}
      */
 
-    DfDomElement.prototype.eq = function(index) {
+    DfDomElement.prototype.nth = function(index) {
       return new DfDomElement(this.element[index >= 0 ? index : this.length + index] || []);
     };
 
@@ -3996,8 +3995,9 @@
       width = rect.scrollWidth;
       scrolled = rect.scrollLeft + rect.clientWidth;
       if (width - scrolled <= this.options.offset) {
-        return this.getNextPage();
+        this.getNextPage();
       }
+      return this.trigger("df:widget:scroll");
     };
 
     ScrollDisplay.prototype.scrollY = function() {
@@ -4006,8 +4006,9 @@
       height = rect.scrollHeight;
       scrolled = rect.scrollTop + rect.clientHeight;
       if (height - scrolled <= this.options.offset) {
-        return this.getNextPage();
+        this.getNextPage();
       }
+      return this.trigger("df:widget:scroll");
     };
 
     ScrollDisplay.prototype.getNextPage = function() {
