@@ -21,14 +21,14 @@ module.exports =
     addHelpers: require "./util/helpers"
     bean: require "bean"
     currency: require "./util/currency"
-    Debouncer: require "./util/debouncer"
     dfdom: require "./util/dfdom"
     extend: require "extend"
     http: require "./util/http"
     md5: require "md5"
     qs: require "qs"
-    uniqueId: require "./util/uniqueid"
     text: require "./util/text"
+    throttle: require "lodash.throttle"
+    uniqueId: require "./util/uniqueid"
 
   session: require "./session"
 

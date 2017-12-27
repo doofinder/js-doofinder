@@ -1,7 +1,7 @@
 extend = require "extend"
+throttle = require "lodash.throttle"
 
 $ = require "../util/dfdom"
-Debouncer = require "../util/debouncer"
 Thing = require "../util/thing"
 
 Display = require "./display"
@@ -51,6 +51,7 @@ class ScrollDisplay extends Display
     defaultOptions =
       contentElement: null
       offset: 300
+      throttle: 16
       horizontal: false
     options = extend true, defaultOptions, options
 
@@ -59,8 +60,6 @@ class ScrollDisplay extends Display
     @scroller = @element
     @setContentElement()
 
-    fn = if @options.horizontal then @scrollX else @scrollY
-    @debouncer = new Debouncer (fn.bind @)
     @working = false
     @previousDelta = 0
 
@@ -76,8 +75,8 @@ class ScrollDisplay extends Display
 
   init: ->
     unless @initialized
-      # bean doesn't support EventListener interface via objects???
-      @scroller.get(0).addEventListener "scroll", @debouncer
+      fn = if @options.horizontal then @scrollX else @scrollY
+      @scroller.on "scroll", (throttle (fn.bind @), @options.throttle, leading: true)
       @controller.on "df:search df:refresh", (query, params) =>
         @scroller.scrollTop 0
       super
