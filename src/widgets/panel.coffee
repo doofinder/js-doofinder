@@ -4,7 +4,7 @@ $ = require "../util/dfdom"
 uniqueId = require "../util/uniqueid"
 
 
-INSERTION_METHODS = ["prepend", "append", "before", "after"]
+INSERTION_METHODS = ["prepend", "append", "before", "after", "html"]
 
 
 defaultTemplate = """
@@ -21,16 +21,17 @@ class Panel extends Display
   constructor: (element, @getWidget, options = {}) ->
     defaults =
       templateVars:
+        label: null
         panelElement: "df-#{uniqueId.generate.easy()}"
         labelElement: "df-#{uniqueId.generate.easy()}"
         contentElement: "df-#{uniqueId.generate.easy()}"
-      insertionMethod: "html"
+      insertionMethod: "append" # html, append, prepend, before, after
       template: defaultTemplate
 
     options = extend true, defaults, options
 
     unless options.insertionMethod in INSERTION_METHODS
-      options.insertionMethod = "html"
+      options.insertionMethod = "append"
 
     super element, options
 

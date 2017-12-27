@@ -699,8 +699,9 @@
   module.exports = {
     version: "5.2.0",
     Client: require("./client"),
-    Mustache: require("mustache"),
     Controller: require("./controller"),
+    Stats: require("./stats"),
+    Mustache: require("mustache"),
     widgets: {
       CollapsiblePanel: require("./widgets/collapsiblepanel"),
       Display: require("./widgets/display"),
@@ -708,7 +709,7 @@
       QueryInput: require("./widgets/queryinput"),
       RangeFacet: require("./widgets/facets/rangefacet"),
       ScrollDisplay: require("./widgets/scrolldisplay"),
-      TermsFacet: require("./widgets/facets/termfacet"),
+      TermsFacet: require("./widgets/facets/termsfacet"),
       Widget: require("./widgets/widget")
     },
     util: {
@@ -721,15 +722,15 @@
       http: require("./util/http"),
       md5: require("md5"),
       qs: require("qs"),
-      uniqueId: require("./util/uniqueid")
+      uniqueId: require("./util/uniqueid"),
+      text: require("./util/text")
     },
-    session: require("./session"),
-    Stats: require("./stats")
+    session: require("./session")
   };
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/currency":6,"./util/debouncer":7,"./util/dfdom":8,"./util/helpers":11,"./util/http":12,"./util/uniqueid":15,"./widgets/collapsiblepanel":16,"./widgets/display":17,"./widgets/facets/rangefacet":18,"./widgets/facets/termfacet":19,"./widgets/panel":20,"./widgets/queryinput":21,"./widgets/scrolldisplay":22,"./widgets/widget":23,"bean":24,"extend":25,"md5":66,"mustache":70,"qs":73}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/currency":6,"./util/debouncer":7,"./util/dfdom":8,"./util/helpers":11,"./util/http":12,"./util/text":13,"./util/uniqueid":15,"./widgets/collapsiblepanel":16,"./widgets/display":17,"./widgets/facets/rangefacet":18,"./widgets/facets/termsfacet":19,"./widgets/panel":20,"./widgets/queryinput":21,"./widgets/scrolldisplay":22,"./widgets/widget":23,"bean":24,"extend":25,"md5":66,"mustache":70,"qs":73}],4:[function(require,module,exports){
 (function() {
   var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, extend, md5, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -2845,31 +2846,46 @@
 }).call(this);
 
 },{"./errors":9,"./thing":14,"http":55,"https":32}],13:[function(require,module,exports){
+
+/**
+ * Converts text in camel case to dash case
+ * @param  {String} text Text in camelCase
+ * @return {String}      Text converted to dash-case
+ */
+
 (function() {
+  var camel2dash, dash2camel, dash2class;
+
+  camel2dash = function(text) {
+    return text.replace(/[A-Z]/g, (function(m) {
+      return "-" + m.toLowerCase();
+    }));
+  };
+
+
+  /**
+   * Converts text in dash case to camel case
+   * @param  {String} text Text in dash-case
+   * @return {String}      Text converted to camelCase
+   */
+
+  dash2camel = function(text) {
+    text = text.replace(/([-_])([^-_])/g, (function(m, p1, p2) {
+      return p2.toUpperCase();
+    }));
+    return text.replace(/[-_]/g, "");
+  };
+
+  dash2class = function(text) {
+    return (dash2camel(text)).replace(/^./, function(m) {
+      return m.toUpperCase();
+    });
+  };
+
   module.exports = {
-
-    /**
-     * Converts text in camel case to dash case
-     * @param  {String} text Text in camelCase
-     * @return {String}      Text converted to dash-case
-     */
-    camel2dash: function(text) {
-      return text.replace(/[A-Z]/g, (function(m) {
-        return "-" + m.toLowerCase();
-      }));
-    },
-
-    /**
-     * Converts text in dash case to camel case
-     * @param  {String} text Text in dash-case
-     * @return {String}      Text converted to camelCase
-     */
-    dash2camel: function(text) {
-      text = text.replace(/([-_])([^-_])/g, (function(m, p1, p2) {
-        return p2.toUpperCase();
-      }));
-      return text.replace(/[-_]/g, "");
-    }
+    camel2dash: camel2dash,
+    dash2camel: dash2camel,
+    dash2class: dash2class
   };
 
 }).call(this);
@@ -3656,7 +3672,7 @@
 
   uniqueId = require("../util/uniqueid");
 
-  INSERTION_METHODS = ["prepend", "append", "before", "after"];
+  INSERTION_METHODS = ["prepend", "append", "before", "after", "html"];
 
   defaultTemplate = "<div class=\"df-panel\" id=\"{{panelElement}}\">\n  {{#label}}\n  <div class=\"df-panel__label\" id=\"{{labelElement}}\">{{label}}</div>\n  {{/label}}\n  <div class=\"df-panel__content\" id=\"{{contentElement}}\"></div>\n</div>";
 
@@ -3671,16 +3687,17 @@
       }
       defaults = {
         templateVars: {
+          label: null,
           panelElement: "df-" + (uniqueId.generate.easy()),
           labelElement: "df-" + (uniqueId.generate.easy()),
           contentElement: "df-" + (uniqueId.generate.easy())
         },
-        insertionMethod: "html",
+        insertionMethod: "append",
         template: defaultTemplate
       };
       options = extend(true, defaults, options);
       if (ref = options.insertionMethod, indexOf.call(INSERTION_METHODS, ref) < 0) {
-        options.insertionMethod = "html";
+        options.insertionMethod = "append";
       }
       Panel.__super__.constructor.call(this, element, options);
       this.panelElement = null;
