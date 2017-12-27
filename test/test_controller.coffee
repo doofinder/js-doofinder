@@ -367,8 +367,10 @@ describe "Controller", ->
         query_counter: 1
 
       scope = serve.search params
-      request = controller.loadStatus "query=hola&query_name=match_and"
-      request.should.not.be.false
+      status = controller.loadStatus "query=hola&query_name=match_and"
+      status.should.not.be.false
+      status.query.should.equal "hola"
+      status.query_name.should.equal "match_and"
 
       controller.query.should.equal "hola"
       controller.params.query_name.should.equal "match_and"

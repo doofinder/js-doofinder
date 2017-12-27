@@ -339,12 +339,14 @@ class Controller
     params = (qs.parse status) or {}
 
     if (Object.keys params).length > 0
-      query = params.query or ""
-      delete params.query
+      requestParams = extend true, {}, params
+      query = requestParams.query or ""
+      delete requestParams.query
 
-      @reset query, params
+      @reset query, requestParams
       @requestDone = true
       @refresh()
+      params
     else
       false
 
