@@ -1555,12 +1555,45 @@
       }
     };
 
+
+    /**
+     * Reduces the set of matched elements to the first one from the set of
+     * matched elements.
+     *
+     * @public
+     * @return {DfDomElement}
+     */
+
     DfDomElement.prototype.first = function() {
-      return new DfDomElement(this.get(0));
+      return this.item(0);
     };
 
+
+    /**
+     * Reduces the set of matched elements to the last one from the set of
+     * matched elements.
+     *
+     * @public
+     * @return {DfDomElement}
+     */
+
+    DfDomElement.prototype.last = function() {
+      return this.item(-1);
+    };
+
+
+    /**
+     * Reduces the set of matched elements to the one at the specified index.
+     * Providing a negative number indicates a position starting from the end of
+     * the set, rather than the beginning.
+     *
+     * @public
+     * @param  {Number} index
+     * @return {DfDomElement}
+     */
+
     DfDomElement.prototype.item = function(index) {
-      return new DfDomElement(this.get(index));
+      return new DfDomElement(this.element[index >= 0 ? index : this.length + index] || []);
     };
 
 
@@ -2574,21 +2607,6 @@
 
     DfDomElement.prototype.isLastElement = function() {
       return this.length && !(this.get(0)).nextElementSibling;
-    };
-
-
-    /**
-     * Reduces the set of matched elements to the one at the specified index.
-     * Providing a negative number indicates a position starting from the end of
-     * the set, rather than the beginning.
-     *
-     * @public
-     * @param  {Number} index
-     * @return {DfDomElement}
-     */
-
-    DfDomElement.prototype.nth = function(index) {
-      return new DfDomElement(this.element[index >= 0 ? index : this.length + index] || []);
     };
 
     return DfDomElement;

@@ -161,11 +161,35 @@ class DfDomElement
   get: (index) ->
     if index? then (@element[index] or null) else @element
 
-  first: ->
-    new DfDomElement @get 0
+  ###*
+   * Reduces the set of matched elements to the first one from the set of
+   * matched elements.
+   *
+   * @public
+   * @return {DfDomElement}
+  ###
+  first: -> @item 0
 
+  ###*
+   * Reduces the set of matched elements to the last one from the set of
+   * matched elements.
+   *
+   * @public
+   * @return {DfDomElement}
+  ###
+  last: -> @item -1
+
+  ###*
+   * Reduces the set of matched elements to the one at the specified index.
+   * Providing a negative number indicates a position starting from the end of
+   * the set, rather than the beginning.
+   *
+   * @public
+   * @param  {Number} index
+   * @return {DfDomElement}
+  ###
   item: (index) ->
-    new DfDomElement @get index
+    new DfDomElement (@element[if index >= 0 then index else @length + index] or [])
 
   ###*
    * Iterates nodes in the set of matched elements, passing them to the
@@ -911,18 +935,6 @@ class DfDomElement
   ###
   isLastElement: ->
     @length and not (@get 0).nextElementSibling
-
-  ###*
-   * Reduces the set of matched elements to the one at the specified index.
-   * Providing a negative number indicates a position starting from the end of
-   * the set, rather than the beginning.
-   *
-   * @public
-   * @param  {Number} index
-   * @return {DfDomElement}
-  ###
-  nth: (index) ->
-    new DfDomElement (@element[if index >= 0 then index else @length + index] or [])
 
 
 module.exports = (selector) ->

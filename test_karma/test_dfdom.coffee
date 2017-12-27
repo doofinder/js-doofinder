@@ -99,10 +99,20 @@ describe "dfdom", ->
       <p id="third"></p>
       """
       items = (dfdom "p")
+
       (items.first().attr "id").should.equal "first"
+      (items.last().attr "id").should.equal "third"
+
       ((items.item 0).attr "id").should.equal "first"
       ((items.item 1).attr "id").should.equal "second"
       ((items.item 2).attr "id").should.equal "third"
+
+      ((items.item -1).attr "id").should.equal "third"
+      ((items.item -2).attr "id").should.equal "second"
+      ((items.item -3).attr "id").should.equal "first"
+
+      (items.item 4).length.should.equal 0
+      (items.item -4).length.should.equal 0
       done()
 
     it "can iterate each node in the set of matched elements", (done) ->
@@ -748,13 +758,6 @@ describe "dfdom", ->
       </div>
       """
 
-    it "can reduce the set of matched elements to the one in the provided index", (done) ->
-      ((dfdom "p").nth 3).length.should.eq 0
-      ((dfdom "p").nth 0).length.should.eq 1
-      (((dfdom "p").nth 0).hasClass "box").should.be.true
-      (((dfdom "p").nth -2).get 0).should.equal document.getElementById "box"
-      done()
-
     it "can detect if the selection matches a selector", (done) ->
       (((dfdom "p").first()).is ".box").should.be.true
       ((dfdom "p").is ".box").should.be.false
@@ -775,7 +778,7 @@ describe "dfdom", ->
       console.log ((dfdom "p").get 0).previousElementSibling
       (dfdom "p").isFirstElement().should.be.true
       (dfdom "p").first().isFirstElement().should.be.true
-      ((dfdom "p").nth 2).isFirstElement().should.be.false
+      ((dfdom "p").item 2).isFirstElement().should.be.false
       (dfdom ".box").isFirstElement().should.be.true
       (dfdom "#box").isFirstElement().should.be.false
       done()
@@ -783,7 +786,7 @@ describe "dfdom", ->
     it "can detect if a node is the last child of its container", (done) ->
       (dfdom "p").isLastElement().should.be.false
       (dfdom "p").first().isLastElement().should.be.false
-      ((dfdom "p").nth 2).isLastElement().should.be.true
+      ((dfdom "p").item 2).isLastElement().should.be.true
       (dfdom ".box").isLastElement().should.be.false
       (dfdom "#box").isLastElement().should.be.false
       done()
