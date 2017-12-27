@@ -4,45 +4,51 @@ $ = require "../util/dfdom"
 
 ###*
  * Base class for a Widget, a class that paints itself given a search response.
- *
- * A widget knows how to:
- *
- * - Render and clean itself.
- * - Bind handlers to/trigger events on the main element node.
 ###
 class Widget
 
   ###*
-   * @param  {String|Node|DfDomElement} element   Container node.
-   * @param  {Object} @options = {}               Options for the widget.
+   * @param  {(String|Node|DfDomElement)} element
+   * @param  {Object}                     [options = {}]
   ###
   constructor: (element, @options = {}) ->
-    @setElement element
-    @controller = null
     @initialized = false
+    @controller = null
+    @setElement element
 
   ###*
    * Assigns the container element to the widget.
+   *
+   * 99.9% of times this method is used "as is" but can be customized to assign
+   * a different container element to the widget.
+   *
    * @param  {String|Node|DfDomElement} element   Container node.
   ###
   setElement: (element) ->
     @element = ($ element).first()
 
+  ###*
+   * Assigns a controller to the widget so the widget can get access to the
+   * status of the search.
+   *
+   * @param {Controller} controller
+  ###
   setController: (@controller) ->
 
   ###*
-   * Initializes the object. Intended to be extended in child classes.
-   * You will want to add your own event handlers here.
+   * Initializes the object. Intended to be extended in child classes, this
+   * method should be executed only once. This is enforced by the `initialized`
+   * attribute.
    *
-   * @param  {Controller} controller Doofinder Search controller.
+   * You will want to add your own event handlers here.
   ###
   init: ->
-    @initialized = true
-    @trigger "df:widget:init"
+    unless @initialized
+      @initialized = true
+      @trigger "df:widget:init"
 
   ###*
-   * Called when the "first page" response for a specific search is received.
-   * Renders the widget with the data received.
+   * Renders the widget with the search response received from the server.
    *
    * @param  {Object} res Search response.
   ###
