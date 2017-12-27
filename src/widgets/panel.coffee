@@ -39,9 +39,12 @@ class Panel extends Display
     @labelElement = null
     @contentElement = null
 
+    @rendered = false
+
   render: (res) ->
-    unless @panelElement
-      # render template
+    # panels are rendered only once!!!
+    unless @rendered
+      @rendered = true
       @element[@options.insertionMethod] @renderTemplate res
       @initPanel res
       @initContent res
@@ -58,6 +61,7 @@ class Panel extends Display
     widget.render res
 
   clean: ->
+    # panels are never erased
     @trigger "df:widget:clean"
 
 module.exports = Panel

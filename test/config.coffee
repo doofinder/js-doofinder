@@ -15,7 +15,7 @@ getClient = (type) ->
   new Client HASHID, APIKEY, undefined, type
 
 getController = (params = {}) ->
-  new Controller getClient(), [], params
+  new Controller getClient(), params
 
 getSession = (data) ->
   store = new ObjectSessionStore data

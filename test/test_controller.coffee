@@ -112,9 +112,7 @@ describe "Controller", ->
       (-> new Controller()).should.throw()
       (-> new Controller client).should.not.throw()
       (-> new Controller client, 1).should.throw()
-      (-> new Controller client, null, 1).should.throw()
-      (-> new Controller client, [], {}).should.not.throw()
-      # (-> new Controller client, [1], {}).should.throw() # TODO
+      (-> new Controller client, {}).should.not.throw()
       done()
 
     it "uses default parameters if none provided", (done) ->
@@ -306,26 +304,20 @@ describe "Controller", ->
       controller.search ""
 
   context "Widgets", ->
-    it "can register widgets on initialization", (done) ->
+    it "can register widgets after initialization", (done) ->
       widget = new WidgetMock()
-      controller = new Controller cfg.getClient(), [widget]
+      controller = new Controller cfg.getClient()
+      controller.registerWidget widget
       controller.widgets.length.should.equal 1
       controller.widgets[0].should.equal widget
       widget.controller.should.equal controller
-      done()
-
-    it "can register widgets after initialization", (done) ->
-      widget = new WidgetMock()
-      controller = new Controller cfg.getClient(), [new WidgetMock()]
-      controller.registerWidget widget
-      controller.widgets.length.should.equal 2
-      controller.widgets[0].should.not.equal widget
-      controller.widgets[1].should.equal widget
-      widget.controller.should.equal controller
+      controller.registerWidgets [new WidgetMock(), new WidgetMock()]
+      controller.widgets.length.should.equal 3
       done()
 
     it "makes widgets render when a search response is received", (done) ->
-      controller = new Controller cfg.getClient(), [new WidgetMock(), new WidgetMock()]
+      controller = new Controller cfg.getClient()
+      controller.registerWidgets [new WidgetMock(), new WidgetMock()]
       testAnotherPage controller, 4, 5, 2, (controller, res) ->
         for widget in controller.widgets
           widget.rendered.should.be.true

@@ -66,9 +66,10 @@ class QueryInput extends Widget
     @timer = setTimeout (@updateStatus.bind @), delay, force
 
   updateStatus: (force) ->
-    valid = @value.length >= @options.captureLength
-    changed = @value.toUpperCase() != @previousValue
-    if (valid and (changed or force)) or (@previousValue and not @value.length)
+    valueOk = @value.length >= @options.captureLength
+    valueChanged = @value.toUpperCase() != @previousValue
+
+    if valueOk and (valueChanged or force)
       @stopTimer = setTimeout (@trigger.bind @), @options.typingTimeout, "df:input:stop", [@value]
       @previousValue = @value.toUpperCase()
       @controller.forEach (controller) => controller.search @value

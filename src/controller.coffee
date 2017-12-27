@@ -4,6 +4,7 @@ qs = require "qs"
 
 errors = require "./util/errors"
 Client = require "./client"
+Widget = require "./widgets/widget"
 
 Freezer = require "./util/freezer"
 Thing = require "./util/thing"
@@ -16,12 +17,9 @@ to retrieve the data and the widgets
 to paint them.
 ###
 class Controller
-  constructor: (@client, widgets = [], defaultParams = {}) ->
+  constructor: (@client, defaultParams = {}) ->
     unless @client instanceof Client
       throw (errors.error "client must be an instance of Client", @)
-
-    unless Thing.is.array widgets
-      throw (errors.error "widgets must be an instance of Array", @)
 
     unless Thing.is.hash defaultParams
       throw (errors.error "defaultParams must be an instance of Object", @)
@@ -35,9 +33,7 @@ class Controller
     @defaults = extend true, defaults, (@__fixParams defaultParams)
     @queryCounter = 0
 
-    # TODO(@carlosescri): Find a better way to subscribe widgets
     @widgets = []
-    (@registerWidget widget) for widget in widgets
 
     Object.defineProperty @, 'hashid', get: ->
       @client.hashid
@@ -207,9 +203,14 @@ class Controller
   #
 
   registerWidget: (widget) ->
+    unless widget instanceof Widget
+      throw (errors.error "widget must be an instance of Widget", @)
     widget.setController @
     widget.init()
     @widgets.push widget
+
+  registerWidgets: (widgets) ->
+    (@registerWidget widget) for widget in widgets
 
   renderWidgets: (res) ->
     @widgets.forEach (widget) ->

@@ -84,6 +84,7 @@ class TermsFacet extends Display
     super element, (extend true, defaults, options)
 
     @collapsed = @options.size?
+    @totalSelected = 0
 
   ###*
    * Initializes the object with a controller and attachs event handlers for
@@ -107,23 +108,16 @@ class TermsFacet extends Display
         # listen for changes to refresh itself.
 
         if isSelected
+          @totalSelected++
           termNode.attr "data-selected", ""
           @controller.addFilter facetName, facetValue
         else
+          @totalSelected--
           termNode.removeAttr "data-selected"
           @controller.removeFilter facetName, facetValue
 
         @controller.refresh()
         @trigger "df:term:click", [facetName, facetValue, isSelected]
-
-        # TODO(@carlosescri)'s proposal:
-        # if isSelected
-        #   termNode.attr "data-selected", ""
-        #   @trigger "df:filter:add", [facetName, facetValue]
-        # else
-        #   termNode.removeAttr "data-selected"
-        #   @trigger "df:filter:remove", [facetName]
-        # @trigger "df:term:click", [facetName, facetValue, isSelected]
 
       if @options.size?
         @element.on "click", "[data-toggle-extra-content]", (e) =>
@@ -151,18 +145,7 @@ class TermsFacet extends Display
   getButton: ->
     (@element.find "[data-toggle-extra-content]").first()
 
-  getSelectedTerms: (res) ->
-    (res?.filter?.terms?[@facet]) or []
-
   ###*
-   * @param  {Object} res Results response from the server.
-   * @return {Number}     Total terms used for filter.
-  ###
-  countSelectedTerms: (res) ->
-    (@getSelectedTerms res).length
-
-  ###*
-   * Called when the "first page" response for a specific search is received.
    * Renders the widget with the data received, by replacing its content.
    *
    * @param {Object} res Search response.
@@ -173,11 +156,12 @@ class TermsFacet extends Display
       terms = res.facets[@facet].terms.buckets
 
       if terms.length > 0
-        selected = @getSelectedTerms res
+        selectedTerms = (res?.filter?.terms?[@facet]) or []
+        @totalSelected = selectedTerms.length
         for index, term of terms
           term.index = parseInt index, 10
           term.name = @facet
-          term.selected = term.key in selected
+          term.selected = term.key in selectedTerms
 
         context =
           name: @facet
@@ -189,5 +173,9 @@ class TermsFacet extends Display
         @clean()
     else
       false
+
+  clean: ->
+    @totalSelected = 0
+    super
 
 module.exports = TermsFacet

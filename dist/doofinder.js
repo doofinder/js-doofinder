@@ -233,7 +233,7 @@
 
 },{"./util/errors":9,"./util/http":12,"./util/thing":14,"extend":25,"md5":66,"qs":73}],2:[function(require,module,exports){
 (function() {
-  var Client, Controller, Freezer, Thing, bean, errors, extend, qs,
+  var Client, Controller, Freezer, Thing, Widget, bean, errors, extend, qs,
     hasProp = {}.hasOwnProperty;
 
   bean = require("bean");
@@ -245,6 +245,8 @@
   errors = require("./util/errors");
 
   Client = require("./client");
+
+  Widget = require("./widgets/widget");
 
   Freezer = require("./util/freezer");
 
@@ -260,20 +262,14 @@
    */
 
   Controller = (function() {
-    function Controller(client, widgets, defaultParams) {
-      var defaults, i, len, widget;
+    function Controller(client, defaultParams) {
+      var defaults;
       this.client = client;
-      if (widgets == null) {
-        widgets = [];
-      }
       if (defaultParams == null) {
         defaultParams = {};
       }
       if (!(this.client instanceof Client)) {
         throw errors.error("client must be an instance of Client", this);
-      }
-      if (!Thing.is.array(widgets)) {
-        throw errors.error("widgets must be an instance of Array", this);
       }
       if (!Thing.is.hash(defaultParams)) {
         throw errors.error("defaultParams must be an instance of Object", this);
@@ -286,10 +282,6 @@
       this.defaults = extend(true, defaults, this.__fixParams(defaultParams));
       this.queryCounter = 0;
       this.widgets = [];
-      for (i = 0, len = widgets.length; i < len; i++) {
-        widget = widgets[i];
-        this.registerWidget(widget);
-      }
       Object.defineProperty(this, 'hashid', {
         get: function() {
           return this.client.hashid;
@@ -494,9 +486,22 @@
     };
 
     Controller.prototype.registerWidget = function(widget) {
+      if (!(widget instanceof Widget)) {
+        throw errors.error("widget must be an instance of Widget", this);
+      }
       widget.setController(this);
       widget.init();
       return this.widgets.push(widget);
+    };
+
+    Controller.prototype.registerWidgets = function(widgets) {
+      var i, len, results, widget;
+      results = [];
+      for (i = 0, len = widgets.length; i < len; i++) {
+        widget = widgets[i];
+        results.push(this.registerWidget(widget));
+      }
+      return results;
     };
 
     Controller.prototype.renderWidgets = function(res) {
@@ -696,7 +701,7 @@
 
 }).call(this);
 
-},{"./client":1,"./util/errors":9,"./util/freezer":10,"./util/thing":14,"bean":24,"extend":25,"qs":73}],3:[function(require,module,exports){
+},{"./client":1,"./util/errors":9,"./util/freezer":10,"./util/thing":14,"./widgets/widget":23,"bean":24,"extend":25,"qs":73}],3:[function(require,module,exports){
 (function() {
   module.exports = {
     version: "5.2.0",
@@ -3573,6 +3578,7 @@
       };
       TermsFacet.__super__.constructor.call(this, element, extend(true, defaults, options));
       this.collapsed = this.options.size != null;
+      this.totalSelected = 0;
     }
 
 
@@ -3594,9 +3600,11 @@
             facetValue = termNode.data("value");
             isSelected = !termNode.hasAttr("data-selected");
             if (isSelected) {
+              _this.totalSelected++;
               termNode.attr("data-selected", "");
               _this.controller.addFilter(facetName, facetValue);
             } else {
+              _this.totalSelected--;
               termNode.removeAttr("data-selected");
               _this.controller.removeFilter(facetName, facetValue);
             }
@@ -3640,24 +3648,8 @@
       return (this.element.find("[data-toggle-extra-content]")).first();
     };
 
-    TermsFacet.prototype.getSelectedTerms = function(res) {
-      var ref, ref1;
-      return (res != null ? (ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.facet] : void 0 : void 0 : void 0) || [];
-    };
-
 
     /**
-     * @param  {Object} res Results response from the server.
-     * @return {Number}     Total terms used for filter.
-     */
-
-    TermsFacet.prototype.countSelectedTerms = function(res) {
-      return (this.getSelectedTerms(res)).length;
-    };
-
-
-    /**
-     * Called when the "first page" response for a specific search is received.
      * Renders the widget with the data received, by replacing its content.
      *
      * @param {Object} res Search response.
@@ -3665,16 +3657,17 @@
      */
 
     TermsFacet.prototype.render = function(res) {
-      var context, index, ref, selected, term, terms;
+      var context, index, ref, ref1, ref2, selectedTerms, term, terms;
       if (res.page === 1) {
         terms = res.facets[this.facet].terms.buckets;
         if (terms.length > 0) {
-          selected = this.getSelectedTerms(res);
+          selectedTerms = (res != null ? (ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.facet] : void 0 : void 0 : void 0) || [];
+          this.totalSelected = selectedTerms.length;
           for (index in terms) {
             term = terms[index];
             term.index = parseInt(index, 10);
             term.name = this.facet;
-            term.selected = (ref = term.key, indexOf.call(selected, ref) >= 0);
+            term.selected = (ref2 = term.key, indexOf.call(selectedTerms, ref2) >= 0);
           }
           context = {
             name: this.facet,
@@ -3688,6 +3681,11 @@
       } else {
         return false;
       }
+    };
+
+    TermsFacet.prototype.clean = function() {
+      this.totalSelected = 0;
+      return TermsFacet.__super__.clean.apply(this, arguments);
     };
 
     return TermsFacet;
@@ -3744,10 +3742,12 @@
       this.panelElement = null;
       this.labelElement = null;
       this.contentElement = null;
+      this.rendered = false;
     }
 
     Panel.prototype.render = function(res) {
-      if (!this.panelElement) {
+      if (!this.rendered) {
+        this.rendered = true;
         this.element[this.options.insertionMethod](this.renderTemplate(res));
         this.initPanel(res);
         this.initContent(res);
@@ -3889,10 +3889,10 @@
     };
 
     QueryInput.prototype.updateStatus = function(force) {
-      var changed, valid;
-      valid = this.value.length >= this.options.captureLength;
-      changed = this.value.toUpperCase() !== this.previousValue;
-      if ((valid && (changed || force)) || (this.previousValue && !this.value.length)) {
+      var valueChanged, valueOk;
+      valueOk = this.value.length >= this.options.captureLength;
+      valueChanged = this.value.toUpperCase() !== this.previousValue;
+      if (valueOk && (valueChanged || force)) {
         this.stopTimer = setTimeout(this.trigger.bind(this), this.options.typingTimeout, "df:input:stop", [this.value]);
         this.previousValue = this.value.toUpperCase();
         return this.controller.forEach((function(_this) {

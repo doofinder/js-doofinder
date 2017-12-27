@@ -180,7 +180,7 @@
 
                 widget.on("df:widget:render", function(res){
                   var html = [facet.label];
-                  var total = this.countSelectedTerms(res);
+                  var total = this.selectedTerms;
 
                   if (total > 0) {
                     html.push('(' + total + ')');
