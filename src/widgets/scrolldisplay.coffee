@@ -62,6 +62,7 @@ class ScrollDisplay extends Display
     fn = if @options.horizontal then @scrollX else @scrollY
     @debouncer = new Debouncer (fn.bind @)
     @working = false
+    @previousDelta = 0
 
   ###*
    * Gets the element that will hold search results.
@@ -86,14 +87,18 @@ class ScrollDisplay extends Display
     width = rect.scrollWidth
     scrolled = rect.scrollLeft + rect.clientWidth
     @getNextPage() if width - scrolled <= @options.offset
-    @trigger "df:widget:scroll"
+    direction = if rect.scrollLeft >= @previousDelta then "right" else "left"
+    @previousDelta = rect.scrollLeft
+    @trigger "df:widget:scroll", [rect.scrollLeft, direction]
 
   scrollY: ->
     rect = @scroller.box()
     height = rect.scrollHeight
     scrolled = rect.scrollTop + rect.clientHeight
     @getNextPage() if height - scrolled <= @options.offset
-    @trigger "df:widget:scroll"
+    direction = if rect.scrollTop >= @previousDelta then "down" else "up"
+    @previousDelta = rect.scrollTop
+    @trigger "df:widget:scroll", [rect.scrollTop, direction]
 
   getNextPage: ->
     if @controller? and not @working

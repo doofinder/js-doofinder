@@ -4001,6 +4001,7 @@
       fn = this.options.horizontal ? this.scrollX : this.scrollY;
       this.debouncer = new Debouncer(fn.bind(this));
       this.working = false;
+      this.previousDelta = 0;
     }
 
 
@@ -4030,25 +4031,29 @@
     };
 
     ScrollDisplay.prototype.scrollX = function() {
-      var rect, scrolled, width;
+      var direction, rect, scrolled, width;
       rect = this.scroller.box();
       width = rect.scrollWidth;
       scrolled = rect.scrollLeft + rect.clientWidth;
       if (width - scrolled <= this.options.offset) {
         this.getNextPage();
       }
-      return this.trigger("df:widget:scroll");
+      direction = rect.scrollLeft >= this.previousDelta ? "right" : "left";
+      this.previousDelta = rect.scrollLeft;
+      return this.trigger("df:widget:scroll", [rect.scrollLeft, direction]);
     };
 
     ScrollDisplay.prototype.scrollY = function() {
-      var height, rect, scrolled;
+      var direction, height, rect, scrolled;
       rect = this.scroller.box();
       height = rect.scrollHeight;
       scrolled = rect.scrollTop + rect.clientHeight;
       if (height - scrolled <= this.options.offset) {
         this.getNextPage();
       }
-      return this.trigger("df:widget:scroll");
+      direction = rect.scrollTop >= this.previousDelta ? "down" : "up";
+      this.previousDelta = rect.scrollTop;
+      return this.trigger("df:widget:scroll", [rect.scrollTop, direction]);
     };
 
     ScrollDisplay.prototype.getNextPage = function() {
