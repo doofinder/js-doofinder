@@ -49,96 +49,67 @@ describe "Default Widgets", ->
   describe "Display", ->
     Display = doofinder.widgets.Display
 
-    helpersTestTemplate = """
-      {{#query}}
-        <div id="query">{{query}}</div>
-      {{/query}}
-      <div id="url">{{#url-params}}{{url}}{{/url-params}}</div>
-      <div id="image">{{#remove-protocol}}{{image}}{{/remove-protocol}}</div>
-      <div id="translate">{{#translate}}Hello!{{/translate}}</div>
-      <div id="currency">{{#format-currency}}{{price}}{{/format-currency}}</div>
-      {{#is_first}}<div id="first"></div>{{/is_first}}
-      {{#is_last}}<div id="last"></div>{{/is_last}}
-      {{#greeting}}<div id="greeting">{{greeting}}</div>{{/greeting}}
-      {{#bold}}Hola{{/bold}}
-    """
+    context "basic render and clean", ->
+      it "properly renders itself", (done) ->
+        insertHTML """<div id="widget">BYE, BYE</div>"""
+        widget = new Display "#widget", template: "HELLO!"
+        widget.on "df:widget:render", (res) ->
+          ($ "#widget").html().should.equal "HELLO!"
+          done()
+        widget.render()
 
-    it "properly renders itself", (done) ->
-      insertHTML """<div id="widget">BYE, BYE</div>"""
-      widget = new Display "#widget", template: "HELLO!"
-      widget.on "df:widget:render", (res) ->
-        ($ "#widget").html().should.equal "HELLO!"
-        done()
-      widget.render()
+      it "properly cleans itself", (done) ->
+        insertHTML """<div id="widget">BYE, BYE</div>"""
+        widget = new Display "#widget", template: "HELLO!"
+        widget.on "df:widget:clean", (res) ->
+          ($ "#widget").html().should.equal ""
+          done()
+        widget.clean()
 
-    it "properly cleans itself", (done) ->
-      insertHTML """<div id="widget">BYE, BYE</div>"""
-      widget = new Display "#widget", template: "HELLO!"
-      widget.on "df:widget:clean", (res) ->
-        ($ "#widget").html().should.equal ""
-        done()
-      widget.clean()
+    context "render context", ->
+      helpersTestTemplate = """
+        <div id="translate">{{#translate}}Hello!{{/translate}}</div>
+        {{#is_first}}<div id="first"></div>{{/is_first}}
+        {{#is_last}}<div id="last"></div>{{/is_last}}
+        {{#greeting}}<div id="greeting">{{greeting}}</div>{{/greeting}}
+        {{#bold}}Hola{{/bold}}
+      """
 
-    it "properly builds default render context", (done) ->
-      insertHTML """<div id="widget"></div>"""
-      widget = new Display "#widget", template: helpersTestTemplate
-      widget.on "df:widget:render", (res) ->
-        ($ "#first").length.should.equal 0
-        ($ "#last").length.should.equal 0
-        ($ "#query").length.should.equal 0
-        ($ "#greeting").length.should.equal 0
-        ($ "#url").html().should.equal "https://www.doofinder.com"
-        ($ "#image").html().should.equal "//www.doofinder.com/image.png"
-        ($ "#translate").html().should.equal "Hello!"
-        ($ "#currency").html().should.equal "1.000,50€"
-        done()
-      widget.render
-        price: 1000.5
-        url: "https://www.doofinder.com"
-        image: "https://www.doofinder.com/image.png"
+      beforeEach ->
+        insertHTML """<div id="widget"></div>"""
 
-    it "properly builds custom render context", (done) ->
-      insertHTML """<div id="widget"></div>"""
-      options =
-        template: helpersTestTemplate
-        queryParam: "q"
-        urlParams:
-          source: "karma"
-        templateVars:
-          greeting: "Hello!"
-        templateFunctions:
-          bold: ->
-            (text, render) ->
-              "<b>#{render text}</b>"
-      widget = new Display "#widget", options
-      widget.on "df:widget:render", (res) ->
-        ($ "#first").length.should.equal 1
-        ($ "#last").length.should.equal 1
-        ($ "b").length.should.equal 1
-        ($ "#query").html().should.equal "hola"
-        ($ "#greeting").html().should.equal "Hello!"
-        # Mustache escapes result and there's no unescape option!!!
-        ($ "#url").html().should.equal "https://www.doofinder.com?source=karma&amp;q=hola"
-        ($ "#image").html().should.equal "//www.doofinder.com/image.png"
-        ($ "#translate").html().should.equal "Hola!"
-        ($ "#currency").html().should.equal "$1,000.50"
-        done()
-      widget.render
-        price: 1000.5
-        url: "https://www.doofinder.com"
-        image: "https://www.doofinder.com/image.png"
-        query: "hola"
-        page: 1
-        total: 10
-        results_per_page: 10
-        currency:
-          symbol: '$'
-          format: '%s%v'
-          decimal: '.'
-          thousand: ','
-          precision: 2
-        translations:
-          "Hello!": "Hola!"
+      it "properly builds default render context", (done) ->
+        widget = new Display "#widget", template: helpersTestTemplate
+        widget.one "df:widget:render", (res) ->
+          ($ "#first").length.should.equal 0
+          ($ "#last").length.should.equal 0
+          ($ "#greeting").length.should.equal 0
+          ($ "#translate").html().should.equal "Hello!"
+          done()
+        widget.render()
+
+      it "properly builds custom render context", (done) ->
+        widget = new Display "#widget",
+          template: helpersTestTemplate
+          templateVars:
+            greeting: "Hello!"
+          translations:
+            "Hello!": "Hola!"
+          templateFunctions:
+            bold: -> (text, render) -> "<b>#{render text}</b>"
+
+        widget.one "df:widget:render", (res) ->
+          ($ "#first").length.should.equal 1
+          ($ "#last").length.should.equal 1
+          ($ "b").length.should.equal 1
+          ($ "#greeting").html().should.equal "Hello!"
+          ($ "#translate").html().should.equal "Hola!"
+          done()
+
+        widget.render
+          page: 1
+          total: 10
+          results_per_page: 10
 
   describe "TermsFacet", ->
     TermsFacet = doofinder.widgets.TermsFacet
@@ -355,20 +326,12 @@ describe "Default Widgets", ->
       done()
 
     it "formats values with custom format function if specified", (done) ->
-      formatFn = (value) ->
-        doofinder.util.currency.format value,
-          symbol: '$'
-          format: '%s%v'
-          decimal: '.'
-          thousand: ','
-          precision: 3
-
-      widget = createWidget format: formatFn
+      widget = createWidget format: (value) -> "$#{value.toFixed 3}"
       widget.on "df:widget:render", (res) ->
         (($ ".noUi-tooltip").item 0).html().should.equal "$7.900"
-        (($ ".noUi-tooltip").item 1).html().should.equal "$1,687.038"
+        (($ ".noUi-tooltip").item 1).html().should.equal "$1687.038"
         ($ ".noUi-value[data-position='0']").html().should.equal "$7.900"
-        ($ ".noUi-value[data-position='100']").html().should.equal "$2,360"
+        ($ ".noUi-value[data-position='100']").html().should.equal "$2360.000"
         done()
       widget.render rangeFacetResponse()
 

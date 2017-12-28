@@ -163,6 +163,11 @@
 
       // return;
 
+      var translations = {
+        'View more…': 'Ver más…',
+        'View less…': 'Ver menos…'
+      };
+
       options.facets.forEach(function(facet){
         if (facet.type === 'terms') {
           controller.registerWidget(
@@ -174,7 +179,8 @@
                   facet.name,
                   {
                     size: 10,
-                    label: facet.label
+                    label: facet.label,
+                    translations: translations
                   }
                 );
 
@@ -215,7 +221,7 @@
                   facet.name,
                   {
                     format: function(value) {
-                      return doofinder.util.currency.format(value);
+                      return value.toFixed(2) + "€";
                     }
                   }
                 );

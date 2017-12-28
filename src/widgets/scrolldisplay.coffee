@@ -76,7 +76,7 @@ class ScrollDisplay extends Display
   init: ->
     unless @initialized
       fn = if @options.horizontal then @scrollX else @scrollY
-      @scroller.on "scroll", (throttle (fn.bind @), @options.throttle, leading: true)
+      @scroller.on "scroll", (throttle (fn.bind @), @options.throttle)
       @controller.on "df:search df:refresh", (query, params) =>
         @scroller.scrollTop 0
       super

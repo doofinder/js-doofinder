@@ -1,6 +1,6 @@
 extend = require "extend"
 Widget = require "./widget"
-addHelpers = require "../util/helpers"
+helpers = require "../util/helpers"
 
 
 defaultTemplate = """
@@ -20,48 +20,33 @@ class Display extends Widget
   ###
   constructor: (element, options = {}) ->
     defaults =
-      currency: undefined
-      queryParam: undefined
       template: defaultTemplate
-      templateVars: {}
       templateFunctions: {}
-      translations: undefined
-      urlParams: {}
+      templateVars: {}
+      translations: {}
+
     options = extend true, defaults, options
 
     super element, options
+
+    helpers.addTranslateHelper @options.templateFunctions, @options.translations
 
     @mustache = require "mustache"
     @currentContext = {}
 
   ###*
    * Adds extra context to the passed context object.
-   * @param  {Object} context = {}  Initial context (i.e: a search response).
-   * @return {Object}               Extended context.
+   * @param  {Object} response = {} Search response as initial context.
+   * @return {Object}               Extended search response.
   ###
-  buildContext: (res = {}) ->
-    defaults =
-      query: ""
-
-    overrides =
-      is_first: res.page is 1
-      is_last: res.page is Math.ceil (res.total / res.results_per_page)
-      currency: @options.currency
-      translations: @options.translations
-      urlParams: @options.urlParams
-
-    context = extend true,
-      {},
-      defaults,
-      res,
-      @options.templateVars,
-      @options.templateFunctions,
-      overrides
-
-    if @options.queryParam?
-      context.urlParams[@options.queryParam] = context.query
-
-    @currentContext = addHelpers context
+  buildContext: (response = {}) ->
+    @currentContext = extend true,
+                             {},
+                             response,
+                             @options.templateVars,
+                             @options.templateFunctions,
+                             is_first: response.page is 1
+                             is_last: response.page is Math.ceil (response.total / response.results_per_page)
 
   renderTemplate: (res) ->
     @mustache.render @options.template, @buildContext res
