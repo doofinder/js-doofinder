@@ -18,10 +18,8 @@ defaultButtonTemplate = """
   <button type="button" data-toggle-extra-content
       data-text-normal="{{#translate}}{{viewMoreLabel}}{{/translate}}"
       data-text-toggle="{{#translate}}{{viewLessLabel}}{{/translate}}">
-    {{#translate}}
-      {{#collapsed}}{{viewMoreLabel}}{{/collapsed}}
-      {{^collapsed}}{{viewLessLabel}}{{/collapsed}}
-    {{/translate}}
+    {{#collapsed}}{{#translate}}{{viewMoreLabel}}{{/translate}}{{/collapsed}}
+    {{^collapsed}}{{#translate}}{{viewLessLabel}}{{/translate}}{{/collapsed}}
   </button>
 """
 
