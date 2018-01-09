@@ -160,8 +160,7 @@ describe "Client", ->
     context "Types", ->
       it "specifies no type if no specific type was set", (done) ->
         querystring = "hashid=#{cfg.hashid}&query="
-        (buildQuery undefined, type: undefined).should.equal querystring
-        (buildQuery undefined, type: null).should.equal querystring
+        (buildQuery undefined).should.equal querystring
         done()
 
       it "handles one type if set", (done) ->

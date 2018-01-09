@@ -26,7 +26,6 @@ class Controller
 
     # controller needs page and rpp to do calculations
     defaults =
-      query_name: null
       page: 1
       rpp: 10
 

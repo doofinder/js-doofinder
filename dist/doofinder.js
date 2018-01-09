@@ -219,7 +219,7 @@
         throw errors.error("To sort by multiple fields use an Array of Objects", this);
       }
       return qs.stringify(queryParams, {
-        skipNulls: true
+        skipNulls: false
       });
     };
 
@@ -275,7 +275,6 @@
         throw errors.error("defaultParams must be an instance of Object", this);
       }
       defaults = {
-        query_name: null,
         page: 1,
         rpp: 10
       };

@@ -179,7 +179,10 @@ class Client
         (Object.keys queryParams.sort).length > 1
       throw (errors.error "To sort by multiple fields use an Array of Objects", @)
 
-    qs.stringify queryParams, skipNulls: true
+    # if we skip nulls, transformer won't ever be sent as empty!
+    # so, if you don't want a param to be present, just don't add it or set
+    # it as undefined
+    qs.stringify queryParams, skipNulls: false
 
 
 module.exports = Client

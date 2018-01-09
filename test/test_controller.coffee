@@ -335,7 +335,7 @@ describe "Controller", ->
       controller = cfg.getController()
       (controller.loadStatus "").should.be.false
       (expect controller.query).to.be.null
-      (expect controller.params.query_name).to.be.null
+      (expect controller.params.query_name).to.be.undefined
       controller.params.page.should.equal 1
       controller.params.rpp.should.equal 10
       controller.params.should.eql controller.defaults
