@@ -1123,7 +1123,7 @@
 
 
     /**
-     * Registers a search for the session.
+     * Sets current search terms in the search session.
      *
      * WARNING: This should be called ONLY if the user has performed a search.
      *          That's why this is usually called when the user has stopped
@@ -1133,7 +1133,7 @@
      * @param  {String} query Search terms.
      */
 
-    Stats.prototype.registerSearch = function(query) {
+    Stats.prototype.setCurrentQuery = function(query) {
       return this.session.set("query", query);
     };
 
@@ -1162,9 +1162,11 @@
         session_id: this.session.get("session_id"),
         query: this.session.get("query")
       };
-      return this.client.stats("click", params, function(err, res) {
-        return typeof callback === "function" ? callback(err, res) : void 0;
-      });
+      return this.client.stats("click", params, (function(_this) {
+        return function(err, res) {
+          return typeof callback === "function" ? callback(err, res) : void 0;
+        };
+      })(this));
     };
 
 
@@ -1221,9 +1223,11 @@
       }
       return this.client.stats("banner_" + eventName, {
         banner_id: "" + bannerId
-      }, function(err, res) {
-        return typeof callback === "function" ? callback(err, res) : void 0;
-      });
+      }, (function(_this) {
+        return function(err, res) {
+          return typeof callback === "function" ? callback(err, res) : void 0;
+        };
+      })(this));
     };
 
     return Stats;

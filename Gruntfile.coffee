@@ -117,7 +117,8 @@ module.exports = (grunt) ->
   grunt.registerTask 'test:karma', ['copy:karma', 'karma:test', 'clean:karma']
   grunt.registerTask 'test', ['test:mocha', 'test:karma']
 
-  grunt.registerTask 'default', ['service:http', 'compile', 'watch:default']
+  grunt.registerTask 'default', ['dev']
+  grunt.registerTask 'dev', ['service:http', 'compile', 'watch:default']
   grunt.registerTask 'dev:test', ['service:http', 'compile', 'test', 'watch:test']
 
   grunt.registerTask 'release', ['version:library', 'version:bower', 'compile', 'test']

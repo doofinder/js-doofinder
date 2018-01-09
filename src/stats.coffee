@@ -48,7 +48,7 @@ class Stats
     not alreadyRegistered
 
   ###*
-   * Registers a search for the session.
+   * Sets current search terms in the search session.
    *
    * WARNING: This should be called ONLY if the user has performed a search.
    *          That's why this is usually called when the user has stopped
@@ -57,7 +57,7 @@ class Stats
    * @public
    * @param  {String} query Search terms.
   ###
-  registerSearch: (query) ->
+  setCurrentQuery: (query) ->
     @session.set "query", query
 
   ###*
@@ -82,7 +82,7 @@ class Stats
       session_id: @session.get "session_id"
       query: @session.get "query"
 
-    @client.stats "click", params, (err, res) ->
+    @client.stats "click", params, (err, res) =>
       callback? err, res
 
   ###*
@@ -122,7 +122,7 @@ class Stats
       throw @error "eventName is required"
     unless bannerId?
       throw @error "bannerId is required"
-    @client.stats "banner_#{eventName}", banner_id: "#{bannerId}", (err, res) ->
+    @client.stats "banner_#{eventName}", banner_id: "#{bannerId}", (err, res) =>
       callback? err, res
 
 

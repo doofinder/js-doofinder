@@ -54,11 +54,11 @@ describe "Stats", ->
       scope.isDone().should.be.false
       done()
 
-  context "Search Registration", ->
-    it "registers search", (done) ->
+  context "Search Save", ->
+    it "saves current search query", (done) ->
       stats = getStats()
       stats.session.exists().should.be.false
-      stats.registerSearch "something"
+      stats.setCurrentQuery "something"
       (stats.session.get "query").should.equal "something"
       stats.session.exists().should.be.true
       done()
