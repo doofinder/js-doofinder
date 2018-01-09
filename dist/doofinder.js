@@ -2080,12 +2080,14 @@
 
     DfDomElement.prototype.css = function(propertyName, value, priority) {
       var node, propName;
-      propName = Text.camel2dash(propertyName);
       if (value != null) {
+        propName = Text.dash2camel(propertyName);
+        value = priority != null ? value + "!" + priority : "" + value;
         return this.each(function(node) {
-          return node.style.setProperty(propName, value, priority);
+          return node.style[propName] = value;
         });
       } else if ((node = this.get(0)) != null) {
+        propName = Text.camel2dash(propertyName);
         return ((getWindow(node)).getComputedStyle(node)).getPropertyValue(propName);
       }
     };

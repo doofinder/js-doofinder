@@ -595,11 +595,13 @@ class DfDomElement
    *                                    on get.
   ###
   css: (propertyName, value, priority) ->
-    propName = Text.camel2dash propertyName
     if value?
+      propName = Text.dash2camel propertyName
+      value = if priority? then "#{value}!#{priority}" else "#{value}"
       @each (node) ->
-        node.style.setProperty propName, value, priority
+        node.style[propName] = value
     else if (node = @get 0)?
+      propName = Text.camel2dash propertyName
       ((getWindow node).getComputedStyle node).getPropertyValue propName
 
   ###*
