@@ -17,3 +17,8 @@ describe "Text Tools", ->
   it "converts dash case to camel case", (done) ->
     (Text.dash2camel "camel-case-case-c-a").should.equal "camelCaseCaseCA"
     done()
+
+  it "has no effect camel to camel or dash to dash", (done) ->
+    (Text.camel2dash "camel-case-case-c-a").should.equal "camel-case-case-c-a"
+    (Text.dash2camel "camelCaseCaseCA").should.equal "camelCaseCaseCA"
+    done()
