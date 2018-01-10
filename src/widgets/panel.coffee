@@ -47,7 +47,7 @@ class Panel extends Display
       @rendered = true
       @element[@options.insertionMethod] @renderTemplate res
       @initPanel res
-      @initContent res
+      @renderContent res
       @trigger "df:widget:render", [res]
       @trigger "df:rendered", [res] # DEPRECATED
 
@@ -56,14 +56,18 @@ class Panel extends Display
     @labelElement = $ "##{@options.templateVars.labelElement}"
     @contentElement = $ "##{@options.templateVars.contentElement}"
 
-  initContent: (res) ->
+  renderContent: (res) ->
     widget = @getWidget @
+    widget.one "df:widget:render", ((res) ->
+      @trigger "df:widget:renderContent", widget
+    ).bind @
     @controller.registerWidget widget
     widget.render res
 
   clean: ->
-    # panels are never erased
-    @trigger "df:widget:clean"
-    @trigger "df:cleaned" # DEPRECATED
+    if @rendered
+      # panels are never erased, nothing to do here
+      @trigger "df:widget:clean"
+      @trigger "df:cleaned" # DEPRECATED
 
 module.exports = Panel

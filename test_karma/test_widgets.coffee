@@ -372,6 +372,26 @@ describe "Default Widgets", ->
         done()
       widget.render()
 
+    it "properly clears", (done) ->
+      widget = createWidget()
+      cleaned = 0
+
+      widget.on "df:widget:clean", -> cleaned++
+
+      # No render, no clean
+      widget.clean()
+      cleaned.should.eq 0
+
+      # Lets render!
+      widget.render()
+      widget.rendered.should.be.true
+
+      # Ok, lets clean now
+      widget.clean()
+      cleaned.should.eq 1
+
+      done()
+
     it "can prepend itself inside the element", (done) ->
       widget = createWidget insertionMethod: "prepend"
       widget.on "df:widget:render", (res) ->
@@ -473,6 +493,34 @@ describe "Default Widgets", ->
         # 2. collapse
         ($ "#label").trigger "click"
       widget.render()
+
+    it "properly clears", (done) ->
+      widget = createWidget startCollapsed: true
+      cleaned = 0
+
+      widget.on "df:widget:clean", -> cleaned++
+
+      # No render, no clean
+      widget.clean()
+      cleaned.should.eq 0
+
+      # Lets render!
+      widget.render()
+      widget.rendered.should.be.true
+
+      # Started collapsed, so we expand it
+      widget.toggle()
+      widget.isCollapsed.should.be.false
+
+      # Ok, lets clean now
+      widget.clean()
+      cleaned.should.eq 1
+
+      # It's collapsed, as expected
+      widget.isCollapsed.should.be.true
+
+      done()
+
 
   describe "QueryInput", ->
     QueryInput = doofinder.widgets.QueryInput

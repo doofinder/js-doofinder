@@ -16,18 +16,22 @@ class CollapsiblePanel extends Panel
       (@panelElement.attr "data-df-collapse") is "true"
 
   collapse: ->
-    @panelElement.attr "data-df-collapse", "true"
-    @trigger "df:collapse:change", [true]
+    if @rendered
+      @panelElement.attr "data-df-collapse", "true"
+      @trigger "df:collapse:change", [true]
 
   expand: ->
-    @panelElement.attr "data-df-collapse", "false"
-    @trigger "df:collapse:change", [false]
+    if @rendered
+      @panelElement.attr "data-df-collapse", "false"
+      @trigger "df:collapse:change", [false]
 
   toggle: ->
-    if @isCollapsed then @expand() else @collapse()
+    if @rendered
+      if @isCollapsed then @expand() else @collapse()
 
   reset: ->
-    if @options.startCollapsed then @collapse() else @expand()
+    if @rendered
+      if @options.startCollapsed then @collapse() else @expand()
 
   initPanel: (res) ->
     super

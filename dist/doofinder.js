@@ -383,8 +383,8 @@
         params = {};
       }
       this.reset(query, params);
-      this.trigger("df:search", [this.query, this.params]);
-      return this.getResults();
+      this.getResults();
+      return this.trigger("df:search", [this.query, this.params]);
     };
 
 
@@ -401,8 +401,8 @@
       page = parseInt(page, 10);
       if (this.requestDone && page <= this.lastPage) {
         this.params.page = page;
-        this.trigger("df:search:page", [this.query, this.params]);
-        return this.getResults();
+        this.getResults();
+        return this.trigger("df:search:page", [this.query, this.params]);
       } else {
         return false;
       }
@@ -431,8 +431,8 @@
 
     Controller.prototype.refresh = function() {
       this.params.page = 1;
-      this.trigger("df:refresh", [this.query, this.params]);
-      return this.getResults();
+      this.getResults();
+      return this.trigger("df:refresh", [this.query, this.params]);
     };
 
 
@@ -509,15 +509,17 @@
     };
 
     Controller.prototype.renderWidgets = function(res) {
-      return this.widgets.forEach(function(widget) {
+      this.widgets.forEach(function(widget) {
         return widget.render(res);
       });
+      return this.trigger("df:controller:renderWidgets");
     };
 
     Controller.prototype.cleanWidgets = function() {
-      return this.widgets.forEach(function(widget) {
+      this.widgets.forEach(function(widget) {
         return widget.clean();
       });
+      return this.trigger("df:controller:cleanWidgets");
     };
 
     Controller.prototype.getParam = function(key) {
@@ -2882,28 +2884,36 @@
     }
 
     CollapsiblePanel.prototype.collapse = function() {
-      this.panelElement.attr("data-df-collapse", "true");
-      return this.trigger("df:collapse:change", [true]);
+      if (this.rendered) {
+        this.panelElement.attr("data-df-collapse", "true");
+        return this.trigger("df:collapse:change", [true]);
+      }
     };
 
     CollapsiblePanel.prototype.expand = function() {
-      this.panelElement.attr("data-df-collapse", "false");
-      return this.trigger("df:collapse:change", [false]);
+      if (this.rendered) {
+        this.panelElement.attr("data-df-collapse", "false");
+        return this.trigger("df:collapse:change", [false]);
+      }
     };
 
     CollapsiblePanel.prototype.toggle = function() {
-      if (this.isCollapsed) {
-        return this.expand();
-      } else {
-        return this.collapse();
+      if (this.rendered) {
+        if (this.isCollapsed) {
+          return this.expand();
+        } else {
+          return this.collapse();
+        }
       }
     };
 
     CollapsiblePanel.prototype.reset = function() {
-      if (this.options.startCollapsed) {
-        return this.collapse();
-      } else {
-        return this.expand();
+      if (this.rendered) {
+        if (this.options.startCollapsed) {
+          return this.collapse();
+        } else {
+          return this.expand();
+        }
       }
     };
 
@@ -3591,7 +3601,7 @@
         this.rendered = true;
         this.element[this.options.insertionMethod](this.renderTemplate(res));
         this.initPanel(res);
-        this.initContent(res);
+        this.renderContent(res);
         this.trigger("df:widget:render", [res]);
         return this.trigger("df:rendered", [res]);
       }
@@ -3603,16 +3613,21 @@
       return this.contentElement = $("#" + this.options.templateVars.contentElement);
     };
 
-    Panel.prototype.initContent = function(res) {
+    Panel.prototype.renderContent = function(res) {
       var widget;
       widget = this.getWidget(this);
+      widget.one("df:widget:render", (function(res) {
+        return this.trigger("df:widget:renderContent", widget);
+      }).bind(this));
       this.controller.registerWidget(widget);
       return widget.render(res);
     };
 
     Panel.prototype.clean = function() {
-      this.trigger("df:widget:clean");
-      return this.trigger("df:cleaned");
+      if (this.rendered) {
+        this.trigger("df:widget:clean");
+        return this.trigger("df:cleaned");
+      }
     };
 
     return Panel;

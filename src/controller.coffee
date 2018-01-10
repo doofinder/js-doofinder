@@ -115,8 +115,8 @@ class Controller
   ###
   search: (query, params = {}) ->
     @reset query, params
-    @trigger "df:search", [@query, @params]
     @getResults()
+    @trigger "df:search", [@query, @params]
 
   ###*
    * Performs a request to get results for a specific page of the current
@@ -130,8 +130,8 @@ class Controller
     page = parseInt page, 10
     if @requestDone and page <= @lastPage
       @params.page = page
-      @trigger "df:search:page", [@query, @params]
       @getResults()
+      @trigger "df:search:page", [@query, @params]
     else
       false
 
@@ -153,8 +153,8 @@ class Controller
   ###
   refresh: ->
     @params.page = 1
-    @trigger "df:refresh", [@query, @params]
     @getResults()
+    @trigger "df:refresh", [@query, @params]
 
   ###*
    * Get results for the current search status.
@@ -217,10 +217,12 @@ class Controller
   renderWidgets: (res) ->
     @widgets.forEach (widget) ->
       widget.render res
+    @trigger "df:controller:renderWidgets"
 
   cleanWidgets: ->
     @widgets.forEach (widget) ->
       widget.clean()
+    @trigger "df:controller:cleanWidgets"
 
   #
   # Params

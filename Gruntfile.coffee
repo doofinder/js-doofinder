@@ -92,7 +92,11 @@ module.exports = (grunt) ->
         files: ['./src/**/*.coffee']
         tasks: ['compile']
       test:
-        files: ['./src/**/*.coffee']
+        files: [
+          "./src/**/*.coffee",
+          "./test/**/*.coffee",
+          "./test_karma/**/*.coffee"
+        ]
         tasks: ['compile', 'test']
       css:
         files: ['./src/**/*.scss']
