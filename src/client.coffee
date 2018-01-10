@@ -26,6 +26,7 @@ class Client
     address ?= "#{zone}-search.doofinder.com"
     [host, port] = address.split ":"
 
+    @type ?= undefined
     @defaultOptions =
       host: host
       port: port
