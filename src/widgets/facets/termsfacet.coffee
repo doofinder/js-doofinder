@@ -93,7 +93,7 @@ class TermsFacet extends Display
   init: ->
     unless @initialized
       # Handle clicks on terms by event delegation.
-      @element.on "click", "[data-facet='#{@facet}'][data-value]", (e) =>
+      @element.on "click", "[data-facet=\"#{@facet}\"][data-value]", (e) =>
         e.preventDefault()
 
         termNode = ($ e.currentTarget)

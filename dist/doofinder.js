@@ -3106,7 +3106,7 @@
       }, options);
       RangeFacet.__super__.constructor.call(this, element, options);
       this.sliderClassName = options.sliderClassName || 'df-slider';
-      this.sliderSelector = "." + this.sliderClassName + "[data-facet='" + this.facet + "']";
+      this.sliderSelector = "." + this.sliderClassName + "[data-facet=\"" + this.facet + "\"]";
       if (this.options.format) {
         this.format = this.options.format;
       } else {
@@ -3451,7 +3451,7 @@
 
     TermsFacet.prototype.init = function() {
       if (!this.initialized) {
-        this.element.on("click", "[data-facet='" + this.facet + "'][data-value]", (function(_this) {
+        this.element.on("click", "[data-facet=\"" + this.facet + "\"][data-value]", (function(_this) {
           return function(e) {
             var facetName, facetValue, isSelected, termNode;
             e.preventDefault();

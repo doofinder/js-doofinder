@@ -30,7 +30,7 @@ class RangeFacet extends Display
     super element, options
 
     @sliderClassName = options.sliderClassName or 'df-slider'
-    @sliderSelector =  ".#{@sliderClassName}[data-facet='#{@facet}']"
+    @sliderSelector =  ".#{@sliderClassName}[data-facet=\"#{@facet}\"]"
 
     if @options.format
       @format = @options.format
