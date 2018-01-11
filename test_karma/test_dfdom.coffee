@@ -775,7 +775,6 @@ describe "dfdom", ->
       done()
 
     it "can detect if a node is the first child of its container", (done) ->
-      console.log ((dfdom "p").get 0).previousElementSibling
       (dfdom "p").isFirstElement().should.be.true
       (dfdom "p").first().isFirstElement().should.be.true
       ((dfdom "p").item 2).isFirstElement().should.be.false

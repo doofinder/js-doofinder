@@ -18,7 +18,15 @@ dash2camel = (text) ->
 dash2class = (text) ->
   (dash2camel text).replace(/^./, (m) -> m.toUpperCase())
 
+ucwords = (text) ->
+  text.replace /(^|\s)\S/g, (c) -> c.toUpperCase()
+
+ucfirst = (text) ->
+  text.replace /^\S/g, (c) -> c.toUpperCase()
+
 module.exports =
   camel2dash: camel2dash
   dash2camel: dash2camel
   dash2class: dash2class
+  ucwords: ucwords
+  ucfirst: ucfirst

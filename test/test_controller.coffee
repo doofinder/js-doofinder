@@ -289,7 +289,7 @@ describe "Controller", ->
 
       controller.one "df:results:error", (err) ->
         scope.isDone().should.be.true
-        err.should.equal 403
+        err.statusCode.should.equal 403
         done()
 
       controller.search ""

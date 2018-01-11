@@ -22,3 +22,13 @@ describe "Text Tools", ->
     (Text.camel2dash "camel-case-case-c-a").should.equal "camel-case-case-c-a"
     (Text.dash2camel "camelCaseCaseCA").should.equal "camelCaseCaseCA"
     done()
+
+  it "converts first char of all words to uppercase", (done) ->
+    (Text.ucwords "camel camel").should.equal "Camel Camel"
+    (Text.ucwords "Camel Camel").should.equal "Camel Camel"
+    done()
+
+  it "converts first char of first word to uppercase", (done) ->
+    (Text.ucfirst "camel camel").should.equal "Camel camel"
+    (Text.ucfirst "Camel camel").should.equal "Camel camel"
+    done()

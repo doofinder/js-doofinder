@@ -65,27 +65,34 @@ describe "Client", ->
   context "Request", ->
     it "needs a path and a callback", (done) ->
       client = cfg.getClient()
-
       client.request.should.throw()
       (-> client.request "/somewhere").should.throw()
-
       scope = serve.request()
       (-> client.request "/somewhere", ->).should.not.throw()
       scope.isDone().should.be.true
-
       done()
 
     it "handles request errors via callbacks", (done) ->
       scope = serve.requestError code: "AWFUL_ERROR"
       cfg.getClient().request "/somewhere", (err, response) ->
-        err.code.should.equal "AWFUL_ERROR"
+        err.error.code.should.equal "AWFUL_ERROR"
         scope.isDone().should.be.true
         done()
 
-    it "handles response errors via callbacks", (done) ->
-      scope = serve.request 404, 'not found'
+    it "handles response errors via callbacks (1)", (done) ->
+      scope = serve.request 404, '{"error":"search engine not found"}'
       cfg.getClient().request "/somewhere", (err, response) ->
-        err.should.equal 404
+        err.statusCode.should.equal 404
+        err.error.should.equal "search engine not found"
+        (expect response).to.be.undefined
+        scope.isDone().should.be.true
+        done()
+
+    it "handles response errors via callbacks (2)", (done) ->
+      scope = serve.request 503, "Internal Server Error"
+      cfg.getClient().request "/somewhere", (err, response) ->
+        err.statusCode.should.equal 503
+        err.error.should.equal "Internal Server Error"
         (expect response).to.be.undefined
         scope.isDone().should.be.true
         done()

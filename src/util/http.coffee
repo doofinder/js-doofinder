@@ -1,6 +1,8 @@
 http = require "http"
 https = require "https"
 
+extend = require "extend"
+
 errors = require "./errors"
 Thing = require "./thing"
 
@@ -30,22 +32,24 @@ class HttpClient
       throw (errors.error "A callback is needed!", @)
 
     req = @http.get options, (response) ->
-      if response.statusCode isnt 200
-        # consume response data to free up memory
-        response.resume()
-        callback response.statusCode
-      else
-        response.setEncoding "utf-8"
-
-        rawData = ""
-        response.on "data", (chunk) ->
-          rawData += chunk
-
-        response.on "end", ->
-          callback undefined, (JSON.parse rawData)
+      data = ""
+      response.setEncoding "utf-8"
+      response
+        .on "data", ((chunk) -> data += chunk)
+        .on "end", (->
+          if response.statusCode is 200
+            callback undefined, (JSON.parse data)
+          else
+            try
+              error = JSON.parse data
+            catch e
+              error = error: data
+            callback (extend true, (statusCode: response.statusCode), error)
+        )
+      response
 
     req.on "error", (error) ->
-      callback error
+      callback error: error
 
     req
 

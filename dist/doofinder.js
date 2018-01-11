@@ -2654,11 +2654,13 @@
 
 },{"extend":23}],10:[function(require,module,exports){
 (function() {
-  var HttpClient, Thing, errors, http, https;
+  var HttpClient, Thing, errors, extend, http, https;
 
   http = require("http");
 
   https = require("https");
+
+  extend = require("extend");
 
   errors = require("./errors");
 
@@ -2700,23 +2702,35 @@
         throw errors.error("A callback is needed!", this);
       }
       req = this.http.get(options, function(response) {
-        var rawData;
-        if (response.statusCode !== 200) {
-          response.resume();
-          return callback(response.statusCode);
-        } else {
-          response.setEncoding("utf-8");
-          rawData = "";
-          response.on("data", function(chunk) {
-            return rawData += chunk;
-          });
-          return response.on("end", function() {
-            return callback(void 0, JSON.parse(rawData));
-          });
-        }
+        var data;
+        data = "";
+        response.setEncoding("utf-8");
+        response.on("data", (function(chunk) {
+          return data += chunk;
+        })).on("end", (function() {
+          var e, error, error1;
+          if (response.statusCode === 200) {
+            return callback(void 0, JSON.parse(data));
+          } else {
+            try {
+              error = JSON.parse(data);
+            } catch (error1) {
+              e = error1;
+              error = {
+                error: data
+              };
+            }
+            return callback(extend(true, {
+              statusCode: response.statusCode
+            }, error));
+          }
+        }));
+        return response;
       });
       req.on("error", function(error) {
-        return callback(error);
+        return callback({
+          error: error
+        });
       });
       return req;
     };
@@ -2729,7 +2743,7 @@
 
 }).call(this);
 
-},{"./errors":7,"./thing":12,"http":53,"https":30}],11:[function(require,module,exports){
+},{"./errors":7,"./thing":12,"extend":23,"http":53,"https":30}],11:[function(require,module,exports){
 
 /**
  * Converts text in camel case to dash case
@@ -2738,7 +2752,7 @@
  */
 
 (function() {
-  var camel2dash, dash2camel, dash2class;
+  var camel2dash, dash2camel, dash2class, ucfirst, ucwords;
 
   camel2dash = function(text) {
     return text.replace(/[A-Z]/g, (function(m) {
@@ -2766,10 +2780,24 @@
     });
   };
 
+  ucwords = function(text) {
+    return text.replace(/(^|\s)\S/g, function(c) {
+      return c.toUpperCase();
+    });
+  };
+
+  ucfirst = function(text) {
+    return text.replace(/^\S/g, function(c) {
+      return c.toUpperCase();
+    });
+  };
+
   module.exports = {
     camel2dash: camel2dash,
     dash2camel: dash2camel,
-    dash2class: dash2class
+    dash2class: dash2class,
+    ucwords: ucwords,
+    ucfirst: ucfirst
   };
 
 }).call(this);
