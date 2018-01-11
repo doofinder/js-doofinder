@@ -358,17 +358,6 @@
 
 
     /**
-     * Proxy method to get options.
-     * @return {http.ClientRequest}
-     * @public
-     */
-
-    Controller.prototype.options = function(suffix, callback) {
-      return this.client.options(suffix, callback);
-    };
-
-
-    /**
      * Performs a request for a new search (resets status).
      * Page will always be 1 in this case.
      *
@@ -2148,8 +2137,8 @@
         if (Thing.is.window(node)) {
           doc = this.document();
           rect = extend(rect, {
-            width: node.innerWidth,
-            height: node.innerHeight,
+            width: node.outerWidth,
+            height: node.outerHeight,
             clientWidth: node.innerWidth,
             clientHeight: node.innerHeight,
             scrollLeft: node.scrollX,

@@ -89,18 +89,6 @@ class Controller
     @cleanWidgets()
 
   #
-  # Options
-  #
-
-  ###*
-   * Proxy method to get options.
-   * @return {http.ClientRequest}
-   * @public
-  ###
-  options: (suffix, callback) ->
-    @client.options suffix, callback
-
-  #
   # Search
   #
 

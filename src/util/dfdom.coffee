@@ -650,8 +650,8 @@ class DfDomElement
       if Thing.is.window node
         doc = @document()
         rect = extend rect,
-          width:        node.innerWidth
-          height:       node.innerHeight
+          width:        node.outerWidth
+          height:       node.outerHeight
           clientWidth:  node.innerWidth
           clientHeight: node.innerHeight
           scrollLeft:   node.scrollX

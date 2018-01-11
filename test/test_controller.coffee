@@ -124,15 +124,6 @@ describe "Controller", ->
       controller.queryCounter.should.equal 0
       done()
 
-  context "Options", ->
-    it "just calls Client's method", (done) ->
-      scope = serve.options()
-      controller = cfg.getController()
-      controller.options null, (err, res) ->
-        (expect err).to.be.undefined
-        scope.isDone().should.be.true
-        done()
-
   context "Search & Parameters", ->
     it "can use params and filters", (done) ->
       params =
