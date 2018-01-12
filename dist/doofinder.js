@@ -3780,6 +3780,10 @@
             return controller.search(_this.value);
           };
         })(this));
+      } else if (this.previousValue.length > 0 && this.value.length === 0) {
+        if (this.value.length === 0) {
+          return this.trigger("df:input:none");
+        }
       }
     };
 

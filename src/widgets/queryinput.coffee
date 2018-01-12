@@ -76,6 +76,8 @@ class QueryInput extends Widget
       ), @options.typingTimeout
       @previousValue = @value.toUpperCase()
       @controller.forEach (controller) => controller.search @value
+    else if @previousValue.length > 0 and @value.length is 0
+      @trigger "df:input:none" if @value.length is 0
 
   ###*
    * If the widget is configured to be cleaned, empties the value of the input
