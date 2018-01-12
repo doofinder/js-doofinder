@@ -32,3 +32,13 @@ describe "Text Tools", ->
     (Text.ucfirst "camel camel").should.equal "Camel camel"
     (Text.ucfirst "Camel camel").should.equal "Camel camel"
     done()
+
+  it "converts text with spaces to snake case", (done) ->
+    (Text.toSnake "snake    snake snake").should.equal "snake_snake_snake"
+    done()
+
+  it "translates text given a dictionary or returns the same if no translation found", (done) ->
+    translations = "hello world": "hola mundo"
+    (Text.translate "hello world", translations).should.equal "hola mundo"
+    (Text.translate "hello world!", translations).should.equal "hello world!"
+    done()

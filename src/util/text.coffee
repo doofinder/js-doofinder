@@ -24,9 +24,17 @@ ucwords = (text) ->
 ucfirst = (text) ->
   text.replace /^\S/g, (c) -> c.toUpperCase()
 
+toSnake = (text) ->
+  text.replace /\s+/g, '_'
+
+translate = (text, translations) ->
+  translations[text] or text
+
 module.exports =
   camel2dash: camel2dash
   dash2camel: dash2camel
   dash2class: dash2class
   ucwords: ucwords
   ucfirst: ucfirst
+  toSnake: toSnake
+  translate: translate

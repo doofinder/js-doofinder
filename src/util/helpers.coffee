@@ -1,4 +1,5 @@
 extend = require "extend"
+translate = (require "./text").translate
 
 module.exports =
   addTranslateHelper: (context, translations = {}) ->
@@ -9,5 +10,4 @@ module.exports =
     ###
     extend true, context, "translate": ->
       (text, render) ->
-        text = render text
-        translations[text] or text
+        translate (render text), translations

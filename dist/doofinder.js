@@ -2624,9 +2624,11 @@
 
 },{"./thing":12}],9:[function(require,module,exports){
 (function() {
-  var extend;
+  var extend, translate;
 
   extend = require("extend");
+
+  translate = (require("./text")).translate;
 
   module.exports = {
     addTranslateHelper: function(context, translations) {
@@ -2642,8 +2644,7 @@
       return extend(true, context, {
         "translate": function() {
           return function(text, render) {
-            text = render(text);
-            return translations[text] || text;
+            return translate(render(text), translations);
           };
         }
       });
@@ -2652,7 +2653,7 @@
 
 }).call(this);
 
-},{"extend":23}],10:[function(require,module,exports){
+},{"./text":11,"extend":23}],10:[function(require,module,exports){
 (function() {
   var HttpClient, Thing, errors, extend, http, https;
 
@@ -2752,7 +2753,7 @@
  */
 
 (function() {
-  var camel2dash, dash2camel, dash2class, ucfirst, ucwords;
+  var camel2dash, dash2camel, dash2class, toSnake, translate, ucfirst, ucwords;
 
   camel2dash = function(text) {
     return text.replace(/[A-Z]/g, (function(m) {
@@ -2792,12 +2793,22 @@
     });
   };
 
+  toSnake = function(text) {
+    return text.replace(/\s+/g, '_');
+  };
+
+  translate = function(text, translations) {
+    return translations[text] || text;
+  };
+
   module.exports = {
     camel2dash: camel2dash,
     dash2camel: dash2camel,
     dash2class: dash2class,
     ucwords: ucwords,
-    ucfirst: ucfirst
+    ucfirst: ucfirst,
+    toSnake: toSnake,
+    translate: translate
   };
 
 }).call(this);
