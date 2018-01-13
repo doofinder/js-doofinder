@@ -53,9 +53,9 @@ class ScrollDisplay extends Display
       offset: 300
       throttle: 16
       horizontal: false
-    options = extend true, defaultOptions, options
+    options = extend true, defaultOptions, (options or {})
 
-    super
+    super element, options
 
     @scroller = @element
     @setContentElement()

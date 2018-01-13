@@ -10,7 +10,7 @@ class CollapsiblePanel extends Panel
       startCollapsed: false
     options = extend true, defaults, options
 
-    super
+    super element, getWidget, options
 
     Object.defineProperty @, 'isCollapsed', get: ->
       (@panelElement.attr "data-df-collapse") is "true"

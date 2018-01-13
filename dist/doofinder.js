@@ -2903,7 +2903,7 @@
         startCollapsed: false
       };
       options = extend(true, defaults, options);
-      CollapsiblePanel.__super__.constructor.apply(this, arguments);
+      CollapsiblePanel.__super__.constructor.call(this, element, getWidget, options);
       Object.defineProperty(this, 'isCollapsed', {
         get: function() {
           return (this.panelElement.attr("data-df-collapse")) === "true";
@@ -3890,8 +3890,8 @@
         throttle: 16,
         horizontal: false
       };
-      options = extend(true, defaultOptions, options);
-      ScrollDisplay.__super__.constructor.apply(this, arguments);
+      options = extend(true, defaultOptions, options || {});
+      ScrollDisplay.__super__.constructor.call(this, element, options);
       this.scroller = this.element;
       this.setContentElement();
       this.working = false;
