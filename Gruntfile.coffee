@@ -125,4 +125,6 @@ module.exports = (grunt) ->
   grunt.registerTask 'dev', ['service:http', 'compile', 'watch:default']
   grunt.registerTask 'dev:test', ['service:http', 'compile', 'test', 'watch:test']
 
+  grunt.registerTask "serve", ["service:http"]
+
   grunt.registerTask 'release', ['version:library', 'version:bower', 'compile', 'test']

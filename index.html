@@ -5,250 +5,44 @@
   <title>Client</title>
 
   <link rel="stylesheet" type="text/css" href="dist/doofinder.css">
-  <style type="text/css">
-    * {
-      box-sizing: border-box;
-      font-size: 1rem;
-      font-family: -apple-system, system-ui, sans-serif;
-    }
-
-    body {
-      margin: 0;
-      padding: 1rem;
-    }
-
-    textarea {
-      height: 150px;
-    }
-
-    #search {
-      width: 400px;
-      padding: .5rem;
-      border: 1px solid #ddd;
-    }
-
-    #aside {
-      width: 400px;
-    }
-
-    .widget {
-      margin: 0 0 1rem 0;
-    }
-
-    .widget:last-child {
-      margin-bottom: 0;
-    }
-
-    .df-results {
-      width: 400px;
-      height: 250px;
-      border: 1px solid #ddd;
-    }
-
-    #resultsX {
-      box-sizing: content-box;
-      width: 380px;
-      height: 100px;
-      border: 10px solid #ddd;
-      background-color: #ddd;
-      white-space: nowrap;
-      overflow-x: auto;
-      overflow-y: hidden;
-      display: flex;
-      flex-flow: row nowrap;
-    }
-
-    #resultsX a {
-      display: block;
-      flex: 0 0 auto;
-      width: 100px;
-      height: 100px;
-      margin-left: 10px;
-      overflow: hidden;
-      white-space: normal;
-      vertical-align: top;
-      background-color: #333;
-      color: white;
-      font-size: 11px;
-    }
-
-    #resultsX a:first-child {
-      margin-left: 0;
-    }
-
-    .row {
-      display: flex;
-      flex-flow: row nowrap;
-    }
-
-    .col {
-      flex: 0 0 auto;
-    }
-
-    .col + .col {
-      margin-left: 1rem;
-    }
-  </style>
-
+  <link rel="stylesheet" type="text/css" href="demo/demo.css">
   <script src="dist/doofinder.js"></script>
+  <script src="demo/demo.js"></script>
+  <script>
+    var HASHID = "e723b503db15fe242b934df14b141ccc";
+  </script>
 </head>
 <body>
-  <input class="widget" id="search" type="text" placeholder="Search something" autofocus="true">
-  <!-- <textarea class="widget" id="search" placeholder="Search something"></textarea> -->
-  <button type="button" id="focus">Test Focus</button>
-  <button type="button" id="blur">Test Blur</button>
-
-  <div class="widget" id="resultsX"></div>
-
-  <div class="row" data-hashid="e723b503db15fe242b934df14b141ccc">
-    <div class="col" id="main">
-
-      <div class="widget df-results" id="results">
-        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sint illo tempore tenetur perferendis magnam earum impedit fuga ipsa sunt quae consectetur minus consequuntur, velit et debitis, porro molestias! Magni, optio.</p>
-        <div class="df-results__content"></div>
-      </div>
-
+  <h1>Doofinder Library Demo</h1>
+  <div class="page">
+    <div class="example">
+      <h2>Basic Example</h2>
+      <input class="widget" id="basicInput" type="text" placeholder="Search something">
+      <div class="widget df-results" id="basicResults"></div>
     </div>
-    <div class="col" id="aside"></div>
+
+    <div class="example">
+      <h2>Advanced Example</h2>
+      <input class="widget" id="advancedInput" type="text" placeholder="Search something">
+      <div class="row">
+        <div class="col" id="main">
+          <div class="widget df-results" id="advancedResults">
+            <div class="df-results__header">Results:</div>
+            <div class="df-results__content"></div>
+          </div>
+        </div>
+        <div class="col" id="advancedAside">
+          <div class="widget" id="advancedRangeFacet"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="example">
+      <h2>Multiple Controllers with same input</h2>
+      <input class="widget" id="commonInput" type="text" placeholder="Search something">
+      <div class="widget resultsX" id="firstResults"></div>
+      <div class="widget df-results" id="secondResults"></div>
+    </div>
   </div>
-
-  <script type="text/javascript">
-
-    var $ = doofinder.util.dfdom;
-    var bean = doofinder.util.bean;
-    var inputNode = $('#search');
-    var input = new doofinder.widgets.QueryInput(inputNode);
-
-    $('#focus').on('click', function(e){
-      inputNode.trigger('focus');
-    });
-
-    $('#blur').on('click', function(e){
-      inputNode.trigger('blur');
-    });
-
-    inputNode.on('focus', function(e){
-      console.log('input focus');
-    }).on('blur', function(e){
-      console.log('input blur');
-    });
-
-    var page = $('[data-hashid]');
-    var aside = $('#aside');
-
-    var client = new doofinder.Client(page.data('hashid'), 'eu1');
-    var controller = new doofinder.Controller(client, {rpp: 20});
-    var controllerX = new doofinder.Controller(client, {rpp: 20});
-
-    client.options(function(err, options){
-      controller.registerWidget(input);
-      controllerX.registerWidget(input);
-
-      var results = new doofinder.widgets.ScrollDisplay("#results", {
-        contentElement: ".df-results__content"
-      });
-      results.on("df:widget:render", function(res){
-        console.log("[df:widget:render][" + res.hashid + "] query: '" + res.query + "' page: " + res.page);
-      });
-      controller.registerWidget(results);
-
-      var resultsX = new doofinder.widgets.ScrollDisplay("#resultsX", {
-        offset: 200,
-        horizontal: true
-      });
-      resultsX.on("df:widget:render", function(res){
-        console.log("[df:widget:render][" + res.hashid + "] query: '" + res.query + "' page: " + res.page);
-      });
-      controllerX.registerWidget(resultsX);
-
-      // return;
-
-      var translations = {
-        'View more…': 'Ver más…',
-        'View less…': 'Ver menos…'
-      };
-
-      options.facets.forEach(function(facet){
-        if (facet.type === 'terms') {
-          controller.registerWidget(
-            new doofinder.widgets.CollapsiblePanel(
-              aside,
-              function(panel){
-                var widget = new doofinder.widgets.TermsFacet(
-                  panel.contentElement,
-                  facet.name,
-                  {
-                    size: 10,
-                    label: facet.label,
-                    translations: translations
-                  }
-                );
-
-                widget.on("df:widget:render", function(res){
-                  var html = [facet.label];
-                  var total = this.selectedTerms;
-
-                  if (total > 0) {
-                    html.push('(' + total + ')');
-                  }
-
-                  panel.labelElement.html(html.join(' '));
-                  console.log("[df:widget:render][" + facet.name + "]");
-                });
-
-                widget.on("df:widget:clean", function(){
-                  console.log("[df:widget:clean][" + facet.name + "]");
-                });
-
-                return widget;
-              },
-              {
-                insertionMethod: "append",
-                startCollapsed: facet.name === 'categories',
-                templateVars: {
-                  label: facet.label
-                }
-              }
-            )
-          );
-        } else {
-          controller.registerWidget(
-            new doofinder.widgets.Panel(
-              '#main',
-              function(panel){
-                return new doofinder.widgets.RangeFacet(
-                  panel.contentElement,
-                  facet.name,
-                  {
-                    format: function(value) {
-                      return value.toFixed(2) + "€";
-                    }
-                  }
-                );
-              },
-              {
-                insertionMethod: "append"
-              }
-            )
-          );
-        }
-      });
-
-      input.value = "silla de paseo";
-    });
-
-    input.on("df:input:stop", function(query){
-      console.log("[df:input:stop] " + query);
-    });
-
-    input.on("df:typing_stopped", function(query){
-      console.log("[df:typing_stopped] " + query);
-    });
-
-    input.on("df:input:submit", function(query){
-      console.log("[df:input:submit] " + query);
-    });
-
-  </script>
 </body>
 </html>
