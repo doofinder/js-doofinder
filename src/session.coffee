@@ -194,5 +194,5 @@ class Session
 module.exports =
   Session: Session
   ISessionStore: ISessionStore
-  CookieSessionStore: CookieSessionStore
   ObjectSessionStore: ObjectSessionStore
+  CookieSessionStore: CookieSessionStore

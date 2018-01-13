@@ -25,7 +25,7 @@ describe "Client", ->
   context "Instantiation", ->
     context "without API key", ->
       it "should use regular HTTP library", (done) ->
-        client = new Client cfg.hashid, cfg.zone
+        client = new Client cfg.hashid, zone: cfg.zone
         client.httpClient.secure.should.be.false
         client.httpClient.http.should.equal http
         done()
@@ -35,7 +35,18 @@ describe "Client", ->
         client = cfg.getClient()
         client.httpClient.secure.should.be.true
         client.httpClient.http.should.equal https
-        client.defaultOptions.headers.authorization.should.equal cfg.auth
+        client.requestOptions.headers["Authorization"].should.equal cfg.auth
+        done()
+
+    context "with invalid API key", ->
+      it "should break", (done) ->
+        (-> new Client cfg.hashid, apiKey: "abcd").should.throw
+        done()
+
+    context "with API Key and zone", ->
+      it "should use API key's zone", (done) ->
+        client = new Client cfg.hashid, zone: "us1", apiKey: "eu1-abcd"
+        client.requestOptions.host.should.equal "eu1-search.doofinder.com"
         done()
 
     context "API version", ->
@@ -45,21 +56,21 @@ describe "Client", ->
         done()
 
       it "should use custom version if defined", (done) ->
-        client = new Client cfg.hashid, cfg.apiKey, 6
+        client = new Client cfg.hashid, apiKey: cfg.apiKey, version: 6
         client.version.should.equal "6"
         done()
 
     context "Custom Address", ->
       it "should use default address if not defined", (done) ->
         client = cfg.getClient()
-        client.defaultOptions.host.should.equal cfg.host
-        expect(client.defaultOptions.port).to.be.undefined
+        client.requestOptions.host.should.equal cfg.host
+        expect(client.requestOptions.port).to.be.undefined
         done()
 
       it "should use custom address if defined", (done) ->
-        client = new Client cfg.hashid, cfg.apiKey, null, null, "localhost:4000"
-        client.defaultOptions.host.should.equal "localhost"
-        client.defaultOptions.port.should.equal "4000"
+        client = new Client cfg.hashid, (apiKey: cfg.apiKey, address: "localhost:4000")
+        client.requestOptions.host.should.equal "localhost"
+        client.requestOptions.port.should.equal "4000"
         done()
 
   context "Request", ->

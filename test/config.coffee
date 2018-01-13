@@ -11,8 +11,8 @@ ZONE = "eu1"
 
 APIKEY = "#{ZONE}-#{AUTH}"
 
-getClient = (type) ->
-  new Client HASHID, APIKEY, undefined, type
+getClient = ->
+  new Client HASHID, apiKey: APIKEY
 
 getController = (params = {}) ->
   new Controller getClient(), params

@@ -14,7 +14,7 @@
   //
 
   // create a search client
-  var basicClient = new doofinder.Client(HASHID, 'eu1');
+  var basicClient = new doofinder.Client(HASHID, {zone: 'eu1'});
   // create a basic controller, get 20 results per page
   var basicController = new doofinder.Controller(basicClient, {rpp: 20});
   // create an input widget
@@ -29,7 +29,7 @@
   //
 
   // create a search client
-  var advancedClient = new doofinder.Client(HASHID, 'eu1');
+  var advancedClient = new doofinder.Client(HASHID, {zone: 'eu1'});
   // create a new controller
   var advancedController = new doofinder.Controller(advancedClient, {rpp: 50});
   // create an input widget
@@ -101,7 +101,7 @@
   //
 
   // create a search client
-  var commonClient = new doofinder.Client(HASHID, 'eu1');
+  var commonClient = new doofinder.Client(HASHID, {zone: 'eu1'});
   // create an input widget
   var commonInputWidget = new doofinder.widgets.QueryInput("#commonInput");
 

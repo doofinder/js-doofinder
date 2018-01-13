@@ -10,31 +10,56 @@ Thing = require "./util/thing"
  * This class allows searching and sending stats using the Doofinder service.
 ###
 class Client
+  @apiVersion = "5"
+
   ###*
    * Constructor
-   * @param  {String}       hashid  Unique ID of the Search Engine.
-   * @param  {String}       apiKey  Search zone (eu1, us1) or full API key
-   *                                (eu1-...).
-   * @param  {Number}       version API version.
-   * @param  {String|Array} type    Restricts search to one or more data types.
-   * @param  {[type]}       address Search server endpoint. Used by the
-   *                                development team.
+   *
+   * @param  {String} @hashid Unique ID of the Search Engine.
+   * @param  {Object} options Options object.
+   *
+   *                          {
+   *                            zone:    "eu1"            # Search Zone (eu1,
+   *                                                      # us1, ...).
+   *
+   *                            apiKey:  "eu1-abcd..."    # Complete API key,
+   *                                                      # including zone and
+   *                                                      # secret key for auth.
+   *
+   *                            address: "localhost:4000" # Force server address
+   *                                                      # for development
+   *                                                      # purposes.
+   *
+   *                            version: "5"              # API version. Better
+   *                                                      # not to touch this.
+   *                                                      # For development
+   *                                                      # purposes.
+   *                          }
+   *
+   *                          If you use `apiKey` you can omit `zone` but one of
+   *                          them is required.
+   *
    * @public
   ###
-  constructor: (@hashid, zoneOrKey, version = 5, @type, address) ->
-    [zone, apiKey] = if zoneOrKey? then zoneOrKey.split "-" else ["", undefined]
-    address ?= "#{zone}-search.doofinder.com"
-    [host, port] = address.split ":"
+  constructor: (@hashid, options = {}) ->
+    [zone, secret] = (options.apiKey or options.zone or "").split "-"
 
-    @type ?= undefined
-    @defaultOptions =
+    if not zone
+      if secret
+        message = "invalid `apiKey`"
+      else
+        message = "`apiKey` or `zone` must be defined"
+      throw (errors.error message, @)
+
+    [host, port] = (options.address or "#{zone}-search.doofinder.com").split ":"
+
+    @requestOptions =
       host: host
       port: port
       headers: {}
-    @defaultOptions.headers.authorization = apiKey if apiKey?
-    @version = "#{parseInt version, 10}"
-
-    @httpClient = new HttpClient apiKey?
+    @requestOptions.headers["Authorization"] = secret if secret?
+    @httpClient = new HttpClient secret?
+    @version = "#{options.version or @constructor.apiVersion}"
 
   ###*
    * Performs a HTTP request to the endpoint specified with the default options
@@ -48,7 +73,7 @@ class Client
    * @public
   ###
   request: (resource, callback) ->
-    options = extend true, path: resource, @defaultOptions
+    options = extend true, path: resource, @requestOptions
     @httpClient.request options, callback
 
   #
@@ -162,9 +187,9 @@ class Client
 
     defaultParams =
       hashid: @hashid
-      type: @type
       # page: 1  # Doofinder assumes this by default
       # rpp: 10  # Doofinder assumes this by default
+      # type: product or [product, article] ...
       # filter: {}
       # exclude: {}
       # sort: []

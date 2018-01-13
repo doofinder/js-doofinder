@@ -5,7 +5,7 @@ insertHTML = (html) ->
   ].join "\n"
 
 getController = ->
-  client = new doofinder.Client "ffffffffffffffffffffffffffffffff"
+  client = new doofinder.Client "ffffffffffffffffffffffffffffffff", zone: "eu1"
   new doofinder.Controller client
 
 getControllerMock = ->

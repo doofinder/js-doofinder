@@ -3,6 +3,7 @@
   "version": "5.2.0",
   "description": "Javascript Library for Doofinder Search API",
   "main": "lib/doofinder.js",
+  "jsdelivr": "dist/doofinder.min.js",
   "directories": {
     "test": "test"
   },

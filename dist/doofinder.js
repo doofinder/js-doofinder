@@ -20,43 +20,65 @@
    */
 
   Client = (function() {
+    Client.apiVersion = "5";
+
 
     /**
      * Constructor
-     * @param  {String}       hashid  Unique ID of the Search Engine.
-     * @param  {String}       apiKey  Search zone (eu1, us1) or full API key
-     *                                (eu1-...).
-     * @param  {Number}       version API version.
-     * @param  {String|Array} type    Restricts search to one or more data types.
-     * @param  {[type]}       address Search server endpoint. Used by the
-     *                                development team.
+     *
+     * @param  {String} @hashid Unique ID of the Search Engine.
+     * @param  {Object} options Options object.
+     *
+     *                          {
+     *                            zone:    "eu1"            # Search Zone (eu1,
+     *                                                      # us1, ...).
+     *
+     *                            apiKey:  "eu1-abcd..."    # Complete API key,
+     *                                                      # including zone and
+     *                                                      # secret key for auth.
+     *
+     *                            address: "localhost:4000" # Force server address
+     *                                                      # for development
+     *                                                      # purposes.
+     *
+     *                            version: "5"              # API version. Better
+     *                                                      # not to touch this.
+     *                                                      # For development
+     *                                                      # purposes.
+     *                          }
+     *
+     *                          If you use `apiKey` you can omit `zone` but one of
+     *                          them is required.
+     *
      * @public
      */
-    function Client(hashid, zoneOrKey, version, type, address) {
-      var apiKey, host, port, ref, ref1, zone;
+
+    function Client(hashid, options) {
+      var host, message, port, ref, ref1, secret, zone;
       this.hashid = hashid;
-      if (version == null) {
-        version = 5;
+      if (options == null) {
+        options = {};
       }
-      this.type = type;
-      ref = zoneOrKey != null ? zoneOrKey.split("-") : ["", void 0], zone = ref[0], apiKey = ref[1];
-      if (address == null) {
-        address = zone + "-search.doofinder.com";
+      ref = (options.apiKey || options.zone || "").split("-"), zone = ref[0], secret = ref[1];
+      if (!zone) {
+        if (secret) {
+          message = "invalid `apiKey`";
+        } else {
+          message = "`apiKey` or `zone` must be defined";
+        }
+        throw errors.error(message, this);
       }
-      ref1 = address.split(":"), host = ref1[0], port = ref1[1];
-      if (this.type == null) {
-        this.type = void 0;
-      }
-      this.defaultOptions = {
+      ref1 = (options.address || (zone + "-search.doofinder.com")).split(":"), host = ref1[0], port = ref1[1];
+      this.requestOptions = {
         host: host,
         port: port,
         headers: {}
       };
-      if (apiKey != null) {
-        this.defaultOptions.headers.authorization = apiKey;
+      if (secret != null) {
+        this.requestOptions.headers["Authorization"] = secret;
       }
-      this.version = "" + (parseInt(version, 10));
-      this.httpClient = new HttpClient(apiKey != null);
+      this.httpClient = new HttpClient(secret != null);
+      this.version = "" + (options.version || this.constructor.apiVersion);
     }
 
 
@@ -76,7 +98,7 @@
       var options;
       options = extend(true, {
         path: resource
-      }, this.defaultOptions);
+      }, this.requestOptions);
       return this.httpClient.request(options, callback);
     };
 
@@ -209,8 +231,7 @@
         query = query.trim();
       }
       defaultParams = {
-        hashid: this.hashid,
-        type: this.type
+        hashid: this.hashid
       };
       queryParams = extend(true, defaultParams, params || {}, {
         query: query
@@ -1033,8 +1054,8 @@
   module.exports = {
     Session: Session,
     ISessionStore: ISessionStore,
-    CookieSessionStore: CookieSessionStore,
-    ObjectSessionStore: ObjectSessionStore
+    ObjectSessionStore: ObjectSessionStore,
+    CookieSessionStore: CookieSessionStore
   };
 
 }).call(this);
