@@ -81,6 +81,10 @@ class Controller
     @requestDone = false
     @lastPage = null
 
+  ###*
+   * Resets status and clean widgets at the same time.
+   * @public
+  ###
   clean: ->
     @reset()
     @cleanWidgets()
@@ -167,15 +171,54 @@ class Controller
   # Events
   #
 
+  ###*
+   * Registers a function that is executed when certain event is triggered on
+   * the controller.
+   *
+   * @param  {String}   eventName Event name (or multiple events, space
+   *                              separated).
+   * @param  {Function} handler   The callback function.
+   * @public
+  ###
   on: (eventName, handler) ->
     bean.on @, eventName, handler
 
+  ###*
+   * Registers a function that is executed when certain event is triggered on
+   * the controller the first time after this function is executed.
+   *
+   * @param  {String}   eventName Event name (or multiple events, space
+   *                              separated).
+   * @param  {Function} handler   The callback function.
+   * @public
+  ###
   one: (eventName, handler) ->
     bean.one @, eventName, handler
 
+  ###*
+   * Unregisters an event handler of this controller.
+   *
+   * - If no handler is provided, all event handlers for the event name provided
+   *   are unregistered for the current controller.
+   * - If no handler and no event name are provided, all event handlers are
+   *   unregistered for the current controller.
+   *
+   * @param  {String}   eventName Event name (or multiple events, space
+   *                              separated). Optional.
+   * @param  {Function} handler   The callback function. Optional.
+   * @public
+  ###
   off: (eventName, handler) ->
     bean.off @, eventName, handler
 
+  ###*
+   * Triggers an event in the current controller.
+   *
+   * @param  {String} eventName Event name (or multiple events, space
+   *                            separated).
+   * @param  {Array}  args      Array of arguments to pass to the event handler.
+   * @public
+  ###
   trigger: (eventName, args) ->
     bean.fire @, eventName, args
 
@@ -187,6 +230,12 @@ class Controller
   # Widgets
   #
 
+  ###*
+   * Registers a widget in the current controller instance.
+   *
+   * @param  {Widget} widget  An instance of Widget (or any of its subclasses).
+   * @public
+  ###
   registerWidget: (widget) ->
     unless widget instanceof Widget
       throw (errors.error "widget must be an instance of Widget", @)
@@ -194,14 +243,39 @@ class Controller
     widget.init()
     @widgets.push widget
 
+  ###*
+   * Registers multiple widgets at the same time in the current controller
+   * instance.
+   *
+   * @param  {Array} widgets  An array of Widget instances.
+   * @public
+  ###
   registerWidgets: (widgets) ->
     (@registerWidget widget) for widget in widgets
 
+  ###*
+   * Makes registered widgets render themselves with the provided search
+   * response.
+   *
+   * Triggers an event when all widgets' `render()` method have been executed.
+   *
+   * @param {Object} res A search response.
+   * @fires Controller#df:controller:renderWidgets
+   * @public
+  ###
   renderWidgets: (res) ->
     @widgets.forEach (widget) ->
       widget.render res
     @trigger "df:controller:renderWidgets"
 
+  ###*
+   * Makes registered widgets clean themselves.
+   *
+   * Triggers an event when all widgets' `clean()` method have been executed.
+   *
+   * @fires Controller#df:controller:cleanWidgets
+   * @public
+  ###
   cleanWidgets: ->
     @widgets.forEach (widget) ->
       widget.clean()
@@ -211,15 +285,36 @@ class Controller
   # Params
   #
 
+  ###*
+   * Returns the value of a search parameter.
+   *
+   * @param  {String} key
+   * @return {*}
+   * @public
+  ###
   getParam: (key) ->
     @params[key]
 
+  ###*
+   * Sets the value of a search parameter.
+   *
+   * @param {string}  key
+   * @param {*}       value
+   * @public
+  ###
   setParam: (key, value) ->
     @params[key] = value
 
-  removeParam: (key, value) ->
+  ###*
+   * Removes a search parameter.
+   *
+   * @param  {String} key
+   * @public
+  ###
+  removeParam: (key) ->
     delete @params[key]
 
+  # DEPRECATED
   addParam: (key, value) ->
     errors.warning "`addParam()` is deprecated, use `setParam()` instead", @
     @setParam key, value
@@ -364,7 +459,7 @@ class Controller
     extend true, value, newFilter
 
   #
-  # Exclusion Filters
+  # Exclusion Filters (see regular filters documentation)
   #
 
   getExclusion: (key) ->
@@ -380,6 +475,14 @@ class Controller
   # Serialization
   #
 
+  ###*
+   * Returns the current status of the controller as a URL querystring.
+   *
+   * Useful to save it somewhere and recover later.
+   *
+   * @return {String}
+   * @public
+  ###
   serializeStatus: ->
     status = extend true, query: @query, @params
     delete status[key] for key in [
@@ -396,6 +499,14 @@ class Controller
     else
       ""
 
+  ###*
+   * Changes the status of the controller based on the value of the status
+   * parameter.
+   *
+   * @param  {String} status  Status previously obtained with `serializeStatus`.
+   * @return {Object|Boolean} Status parameters as an Object or `false` if
+   *                          status could not be recovered.
+  ###
   loadStatus: (status) ->
     params = (qs.parse status) or {}
 

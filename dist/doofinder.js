@@ -369,6 +369,12 @@
       return this.lastPage = null;
     };
 
+
+    /**
+     * Resets status and clean widgets at the same time.
+     * @public
+     */
+
     Controller.prototype.clean = function() {
       this.reset();
       return this.cleanWidgets();
@@ -473,17 +479,64 @@
       })(this));
     };
 
+
+    /**
+     * Registers a function that is executed when certain event is triggered on
+     * the controller.
+     *
+     * @param  {String}   eventName Event name (or multiple events, space
+     *                              separated).
+     * @param  {Function} handler   The callback function.
+     * @public
+     */
+
     Controller.prototype.on = function(eventName, handler) {
       return bean.on(this, eventName, handler);
     };
+
+
+    /**
+     * Registers a function that is executed when certain event is triggered on
+     * the controller the first time after this function is executed.
+     *
+     * @param  {String}   eventName Event name (or multiple events, space
+     *                              separated).
+     * @param  {Function} handler   The callback function.
+     * @public
+     */
 
     Controller.prototype.one = function(eventName, handler) {
       return bean.one(this, eventName, handler);
     };
 
+
+    /**
+     * Unregisters an event handler of this controller.
+     *
+     * - If no handler is provided, all event handlers for the event name provided
+     *   are unregistered for the current controller.
+     * - If no handler and no event name are provided, all event handlers are
+     *   unregistered for the current controller.
+     *
+     * @param  {String}   eventName Event name (or multiple events, space
+     *                              separated). Optional.
+     * @param  {Function} handler   The callback function. Optional.
+     * @public
+     */
+
     Controller.prototype.off = function(eventName, handler) {
       return bean.off(this, eventName, handler);
     };
+
+
+    /**
+     * Triggers an event in the current controller.
+     *
+     * @param  {String} eventName Event name (or multiple events, space
+     *                            separated).
+     * @param  {Array}  args      Array of arguments to pass to the event handler.
+     * @public
+     */
 
     Controller.prototype.trigger = function(eventName, args) {
       return bean.fire(this, eventName, args);
@@ -494,6 +547,14 @@
       return this.on(eventName, handler);
     };
 
+
+    /**
+     * Registers a widget in the current controller instance.
+     *
+     * @param  {Widget} widget  An instance of Widget (or any of its subclasses).
+     * @public
+     */
+
     Controller.prototype.registerWidget = function(widget) {
       if (!(widget instanceof Widget)) {
         throw errors.error("widget must be an instance of Widget", this);
@@ -502,6 +563,15 @@
       widget.init();
       return this.widgets.push(widget);
     };
+
+
+    /**
+     * Registers multiple widgets at the same time in the current controller
+     * instance.
+     *
+     * @param  {Array} widgets  An array of Widget instances.
+     * @public
+     */
 
     Controller.prototype.registerWidgets = function(widgets) {
       var j, len, results, widget;
@@ -513,12 +583,34 @@
       return results;
     };
 
+
+    /**
+     * Makes registered widgets render themselves with the provided search
+     * response.
+     *
+     * Triggers an event when all widgets' `render()` method have been executed.
+     *
+     * @param {Object} res A search response.
+     * @fires Controller#df:controller:renderWidgets
+     * @public
+     */
+
     Controller.prototype.renderWidgets = function(res) {
       this.widgets.forEach(function(widget) {
         return widget.render(res);
       });
       return this.trigger("df:controller:renderWidgets");
     };
+
+
+    /**
+     * Makes registered widgets clean themselves.
+     *
+     * Triggers an event when all widgets' `clean()` method have been executed.
+     *
+     * @fires Controller#df:controller:cleanWidgets
+     * @public
+     */
 
     Controller.prototype.cleanWidgets = function() {
       this.widgets.forEach(function(widget) {
@@ -527,15 +619,41 @@
       return this.trigger("df:controller:cleanWidgets");
     };
 
+
+    /**
+     * Returns the value of a search parameter.
+     *
+     * @param  {String} key
+     * @return {*}
+     * @public
+     */
+
     Controller.prototype.getParam = function(key) {
       return this.params[key];
     };
+
+
+    /**
+     * Sets the value of a search parameter.
+     *
+     * @param {string}  key
+     * @param {*}       value
+     * @public
+     */
 
     Controller.prototype.setParam = function(key, value) {
       return this.params[key] = value;
     };
 
-    Controller.prototype.removeParam = function(key, value) {
+
+    /**
+     * Removes a search parameter.
+     *
+     * @param  {String} key
+     * @public
+     */
+
+    Controller.prototype.removeParam = function(key) {
       return delete this.params[key];
     };
 
@@ -734,6 +852,16 @@
       return this.addFilter(key, value, "exclude");
     };
 
+
+    /**
+     * Returns the current status of the controller as a URL querystring.
+     *
+     * Useful to save it somewhere and recover later.
+     *
+     * @return {String}
+     * @public
+     */
+
     Controller.prototype.serializeStatus = function() {
       var j, key, len, ref, status, value;
       status = extend(true, {
@@ -757,6 +885,16 @@
         return "";
       }
     };
+
+
+    /**
+     * Changes the status of the controller based on the value of the status
+     * parameter.
+     *
+     * @param  {String} status  Status previously obtained with `serializeStatus`.
+     * @return {Object|Boolean} Status parameters as an Object or `false` if
+     *                          status could not be recovered.
+     */
 
     Controller.prototype.loadStatus = function(status) {
       var params, query, requestParams;

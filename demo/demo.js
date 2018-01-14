@@ -5,6 +5,9 @@
     document.addEventListener('DOMContentLoaded', fn);
   }
 })(function(){
+
+  window.controllers = [];
+
   // some utilities
   var $ = doofinder.util.dfdom;
   var bean = doofinder.util.bean;
@@ -23,6 +26,8 @@
   var basicResultsWidget = new doofinder.widgets.ScrollDisplay("#basicResults");
   // register widgets in the controller
   basicController.registerWidgets([basicInputWidget, basicResultsWidget]);
+
+  window.controllers.push(basicController);
 
   //
   // Advanced
@@ -96,6 +101,8 @@
     });
   });
 
+  window.controllers.push(advancedController);
+
   //
   // Multiple Controllers, same input
   //
@@ -121,4 +128,7 @@
   var secondResultsWidget = new doofinder.widgets.ScrollDisplay("#secondResults");
   // register widgets
   secondController.registerWidgets([commonInputWidget, secondResultsWidget]);
+
+  window.controllers.push(firstController);
+  window.controllers.push(secondController);
 });
