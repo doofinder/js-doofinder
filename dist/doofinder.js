@@ -349,9 +349,6 @@
      * Resets status and optionally forces query and params. As it is a reset
      * aimed to perform a new search, page is forced to 1 in any case.
      *
-     * - done      - true if at least one request has been sent.
-     * - lastPage  - indicates the number of the last page for the current status.
-     *
      * @param  {String} query  Search terms.
      * @param  {Object} params Optional search parameters.
      * @return {Object}        Updated status.
@@ -393,7 +390,7 @@
         params = {};
       }
       this.reset(query, params);
-      this.getResults();
+      this.__getResults();
       return this.trigger("df:search", [this.query, this.params]);
     };
 
@@ -411,10 +408,8 @@
       page = parseInt(page, 10);
       if (this.requestDone && page <= this.lastPage) {
         this.params.page = page;
-        this.getResults();
+        this.__getResults();
         return this.trigger("df:search:page", [this.query, this.params]);
-      } else {
-        return false;
       }
     };
 
@@ -428,7 +423,7 @@
      */
 
     Controller.prototype.getNextPage = function() {
-      return this.getPage(this.params.page + 1);
+      return this.getPage((this.params.page || 1) + 1);
     };
 
 
@@ -441,7 +436,7 @@
 
     Controller.prototype.refresh = function() {
       this.params.page = 1;
-      this.getResults();
+      this.__getResults();
       return this.trigger("df:refresh", [this.query, this.params]);
     };
 
@@ -450,10 +445,10 @@
      * Get results for the current search status.
      *
      * @return {http.ClientRequest}
-     * @public
+     * @protected
      */
 
-    Controller.prototype.getResults = function() {
+    Controller.prototype.__getResults = function() {
       var params, request;
       this.requestDone = true;
       params = extend(true, {
@@ -509,10 +504,10 @@
     };
 
     Controller.prototype.registerWidgets = function(widgets) {
-      var i, len, results, widget;
+      var j, len, results, widget;
       results = [];
-      for (i = 0, len = widgets.length; i < len; i++) {
-        widget = widgets[i];
+      for (j = 0, len = widgets.length; j < len; j++) {
+        widget = widgets[j];
         results.push(this.registerWidget(widget));
       }
       return results;
@@ -551,7 +546,7 @@
 
 
     /**
-     * Gets the value of a filter or undefined if not defined.
+     * Gets the value of a filter
      *
      * @param  {String} key       Name of the filter.
      * @param  {String} paramName Name of the parameter ("filter" by default).
@@ -570,6 +565,8 @@
 
     /**
      * Sets the value of a filter.
+     *
+     * String values are stored inside an array for the given key.
      *
      * @param  {String} key       Name of the filter.
      * @param  {*}      value     Value of the filter.
@@ -592,8 +589,19 @@
 
 
     /**
-     * Removes a value of a filter. If the filter is an array of strings, removes
-     * the value inside the array. In any other case removes the entire value.
+     * Removes a value from a filter.
+     *
+     * - If values are stored in an array:
+     *   - If a single value is passed, removes it from the array, if exists.
+     *   - If an array is passed, removes as much values as it can from the array.
+     * - If values are stored in a plain Object:
+     *   - If a single value is passed, it is considered a key of the filter, so
+     *     direct removal is tried.
+     *   - If a plain Object is passed as a value, removes as much keys as it can
+     *     from the filter.
+     * - If no value is passed, the entire filter is removed.
+     * - In any other case, if the value matches the value of the filter, the
+     *   entire filter is removed.
      *
      * @param  {String} key       Name of the filter.
      * @param  {*}      value     Value of the filter.
@@ -603,20 +611,37 @@
      */
 
     Controller.prototype.removeFilter = function(key, value, paramName) {
-      var pos, ref;
+      var j, len, ref, ref1, x;
       if (paramName == null) {
         paramName = "filter";
       }
       if (((ref = this.params[paramName]) != null ? ref[key] : void 0) != null) {
-        if ((value != null) && Thing.is.array(this.params[paramName][key])) {
-          pos = this.params[paramName][key].indexOf(value);
-          if (pos >= 0) {
-            this.params[paramName][key].splice(pos, 1);
+        if (value == null) {
+          delete this.params[paramName][key];
+        } else if (Thing.is.array(this.params[paramName][key])) {
+          if (!Thing.is.array(value)) {
+            value = [value];
           }
+          this.params[paramName][key] = this.params[paramName][key].filter(function(x, i, arr) {
+            return (value.indexOf(x)) < 0;
+          });
           if (this.params[paramName][key].length === 0) {
             delete this.params[paramName][key];
           }
-        } else {
+        } else if (Thing.is.hash(this.params[paramName][key])) {
+          if (!Thing.is.hash(value)) {
+            delete this.params[paramName][key][value];
+          } else {
+            ref1 = Object.keys(value);
+            for (j = 0, len = ref1.length; j < len; j++) {
+              x = ref1[j];
+              delete this.params[paramName][key][x];
+            }
+          }
+          if (!(Object.keys(this.params[paramName][key])).length) {
+            delete this.params[paramName][key];
+          }
+        } else if (this.params[paramName][key] === value) {
           delete this.params[paramName][key];
         }
         return this.params[paramName][key];
@@ -625,32 +650,64 @@
 
 
     /**
-     * Adds a value to a filter. If the value is a String, it's added
-     * @param {[type]} key       [description]
-     * @param {[type]} value     [description]
-     * @param {[type]} paramName =             "filter" [description]
+     * Adds a value to a filter.
+     *
+     * @param {String}  key       Name of the filter.
+     * @param {*}       value     Value to be added.
+     * @param {String}  paramName = "filter"
      */
 
     Controller.prototype.addFilter = function(key, value, paramName) {
-      var base, base1;
+      var base;
       if (paramName == null) {
         paramName = "filter";
       }
       if ((base = this.params)[paramName] == null) {
         base[paramName] = {};
       }
-      if ((base1 = this.params[paramName])[key] == null) {
-        base1[key] = [];
-      }
       if (Thing.is.array(this.params[paramName][key])) {
-        if (Thing.is.string(value)) {
-          value = [value];
-        }
         if (Thing.is.array(value)) {
-          value = this.params[paramName][key].concat(value);
+          return this.params[paramName][key] = this.params[paramName][key].concat(value);
+        } else {
+          return this.params[paramName][key].push(value);
         }
+      } else if ((Thing.is.hash(this.params[paramName][key])) && (Thing.is.hash(value))) {
+        return this.params[paramName][key] = this.__buildHashFilter(this.params[paramName][key], value);
+      } else {
+        return this.setFilter(key, value, paramName);
       }
-      return this.setFilter(key, value, paramName);
+    };
+
+
+    /**
+     * Fixes filters in case they're range filters so there are no conflicts
+     * between filter properties (for instance, "gt" and "gte" being used in the
+     * same filter).
+     *
+     * @protected
+     * @param  {Object} currentFilter
+     * @param  {Object} newFilter
+     * @return {Object}
+     */
+
+    Controller.prototype.__buildHashFilter = function(currentFilter, newFilter) {
+      var value;
+      if (currentFilter == null) {
+        currentFilter = {};
+      }
+      if (newFilter == null) {
+        newFilter = {};
+      }
+      value = extend(true, {}, currentFilter);
+      if ((newFilter.gt != null) || (newFilter.gte != null)) {
+        delete value.gt;
+        delete value.gte;
+      }
+      if ((newFilter.lt != null) || (newFilter.lte != null)) {
+        delete value.lt;
+        delete value.lte;
+      }
+      return extend(true, value, newFilter);
     };
 
     Controller.prototype.getExclusion = function(key) {
@@ -670,13 +727,13 @@
     };
 
     Controller.prototype.serializeStatus = function() {
-      var i, key, len, ref, status, value;
+      var j, key, len, ref, status, value;
       status = extend(true, {
         query: this.query
       }, this.params);
       ref = ['transformer', 'rpp', 'query_counter', 'page'];
-      for (i = 0, len = ref.length; i < len; i++) {
-        key = ref[i];
+      for (j = 0, len = ref.length; j < len; j++) {
+        key = ref[j];
         delete status[key];
       }
       for (key in status) {
@@ -2846,6 +2903,12 @@
 
   Is.document = function(value) {
     return (value != null) && typeof value.documentElement === 'object';
+  };
+
+  Is.stringArray = function(value) {
+    return (Is.array(value)) && (value.every(function(x) {
+      return Is.string(x);
+    }));
   };
 
   module.exports = {

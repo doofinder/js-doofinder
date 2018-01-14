@@ -70,9 +70,6 @@ class Controller
    * Resets status and optionally forces query and params. As it is a reset
    * aimed to perform a new search, page is forced to 1 in any case.
    *
-   * - done      - true if at least one request has been sent.
-   * - lastPage  - indicates the number of the last page for the current status.
-   *
    * @param  {String} query  Search terms.
    * @param  {Object} params Optional search parameters.
    * @return {Object}        Updated status.
@@ -103,7 +100,7 @@ class Controller
   ###
   search: (query, params = {}) ->
     @reset query, params
-    @getResults()
+    @__getResults()
     @trigger "df:search", [@query, @params]
 
   ###*
@@ -118,10 +115,8 @@ class Controller
     page = parseInt page, 10
     if @requestDone and page <= @lastPage
       @params.page = page
-      @getResults()
+      @__getResults()
       @trigger "df:search:page", [@query, @params]
-    else
-      false
 
   ###*
    * Performs a request to get results for the next page of the current search,
@@ -131,7 +126,7 @@ class Controller
    * @public
   ###
   getNextPage: ->
-    @getPage @params.page + 1
+    @getPage (@params.page or 1) + 1
 
   ###*
    * Gets the first page for the the current search again.
@@ -141,16 +136,16 @@ class Controller
   ###
   refresh: ->
     @params.page = 1
-    @getResults()
+    @__getResults()
     @trigger "df:refresh", [@query, @params]
 
   ###*
    * Get results for the current search status.
    *
    * @return {http.ClientRequest}
-   * @public
+   * @protected
   ###
-  getResults: ->
+  __getResults: ->
     @requestDone = true
     params = extend true, query_counter: ++@queryCounter, @params
     request = @client.search @query, params, (err, res) =>
@@ -234,7 +229,7 @@ class Controller
   #
 
   ###*
-   * Gets the value of a filter or undefined if not defined.
+   * Gets the value of a filter
    *
    * @param  {String} key       Name of the filter.
    * @param  {String} paramName Name of the parameter ("filter" by default).
@@ -246,6 +241,8 @@ class Controller
 
   ###*
    * Sets the value of a filter.
+   *
+   * String values are stored inside an array for the given key.
    *
    * @param  {String} key       Name of the filter.
    * @param  {*}      value     Value of the filter.
@@ -259,8 +256,19 @@ class Controller
     @params[paramName][key]
 
   ###*
-   * Removes a value of a filter. If the filter is an array of strings, removes
-   * the value inside the array. In any other case removes the entire value.
+   * Removes a value from a filter.
+   *
+   * - If values are stored in an array:
+   *   - If a single value is passed, removes it from the array, if exists.
+   *   - If an array is passed, removes as much values as it can from the array.
+   * - If values are stored in a plain Object:
+   *   - If a single value is passed, it is considered a key of the filter, so
+   *     direct removal is tried.
+   *   - If a plain Object is passed as a value, removes as much keys as it can
+   *     from the filter.
+   * - If no value is passed, the entire filter is removed.
+   * - In any other case, if the value matches the value of the filter, the
+   *   entire filter is removed.
    *
    * @param  {String} key       Name of the filter.
    * @param  {*}      value     Value of the filter.
@@ -269,31 +277,87 @@ class Controller
    * @public
   ###
   removeFilter: (key, value, paramName = "filter") ->
+    # remove only if filter exists
     if @params[paramName]?[key]?
-      if value? and Thing.is.array @params[paramName][key]
-        pos = @params[paramName][key].indexOf value
-        (@params[paramName][key].splice pos, 1) if pos >= 0
+      unless value?
+        # delete the entire filter if no specific value received
+        delete @params[paramName][key]
+      else if Thing.is.array @params[paramName][key]
+        # if filter contains an array
+        if not Thing.is.array value
+          value = [value]
+
+        # preserve values not present in the values-to-remove array
+        @params[paramName][key] = @params[paramName][key].filter (x, i, arr) ->
+          (value.indexOf x) < 0
+
+        # if no item remaining in the filter, remove the key
         if @params[paramName][key].length is 0
           delete @params[paramName][key]
-      else
+      else if Thing.is.hash @params[paramName][key]
+        # if the filter is a plain object
+        if not Thing.is.hash value
+          # if value is a scalar, string... means it's a key so we remove it
+          # directly
+          delete @params[paramName][key][value]
+        else
+          # If it is a hash, remove common keys from the filter
+          for x in (Object.keys value)
+            delete @params[paramName][key][x]
+
+        # If the filter has no remaining keys, remove the key
+        if not (Object.keys @params[paramName][key]).length
+          delete @params[paramName][key]
+
+      else if @params[paramName][key] == value
+        # if value of the filter matches passed value, delete the key
         delete @params[paramName][key]
+
       @params[paramName][key]
 
   ###*
-   * Adds a value to a filter. If the value is a String, it's added
-   * @param {[type]} key       [description]
-   * @param {[type]} value     [description]
-   * @param {[type]} paramName =             "filter" [description]
+   * Adds a value to a filter.
+   *
+   * @param {String}  key       Name of the filter.
+   * @param {*}       value     Value to be added.
+   * @param {String}  paramName = "filter"
   ###
   addFilter: (key, value, paramName = "filter") ->
     @params[paramName] ?= {}
-    @params[paramName][key] ?= []
     if Thing.is.array @params[paramName][key]
-      if Thing.is.string value
-        value = [value]
       if Thing.is.array value
-        value = @params[paramName][key].concat value
-    @setFilter key, value, paramName
+        # adding an array to an array concats both
+        @params[paramName][key] = @params[paramName][key].concat value
+      else
+        # otherwise, the value is appended at the end of the array
+        @params[paramName][key].push value
+    else if (Thing.is.hash @params[paramName][key]) and (Thing.is.hash value)
+      # adding a hash to a hash filter extends it, taking care of the
+      # nitty-gritty of range filters
+      @params[paramName][key] = @__buildHashFilter @params[paramName][key], value
+    else
+      # any other case just replaces the existing filter
+      @setFilter key, value, paramName
+
+  ###*
+   * Fixes filters in case they're range filters so there are no conflicts
+   * between filter properties (for instance, "gt" and "gte" being used in the
+   * same filter).
+   *
+   * @protected
+   * @param  {Object} currentFilter
+   * @param  {Object} newFilter
+   * @return {Object}
+  ###
+  __buildHashFilter: (currentFilter = {}, newFilter = {}) ->
+    value = extend true, {}, currentFilter
+    if newFilter.gt? or newFilter.gte?
+      delete value.gt
+      delete value.gte
+    if newFilter.lt? or newFilter.lte?
+      delete value.lt
+      delete value.lte
+    extend true, value, newFilter
 
   #
   # Exclusion Filters

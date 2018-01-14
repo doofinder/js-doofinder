@@ -125,9 +125,9 @@ describe "Controller", ->
       done()
 
   context "Search & Parameters", ->
-    it "can use params and filters", (done) ->
+    it.only "can use params", (done) ->
       params =
-        page: 2
+        page: 1
         filter:
           brand: ["ADIDAS"]
         exclude:
@@ -135,54 +135,118 @@ describe "Controller", ->
 
       controller = cfg.getController params
 
-      # check initial params
-      controller.params.page.should.equal 1
-      controller.params.filter.brand.length.should.equal 1
-      controller.params.filter.brand[0].should.equal "ADIDAS"
-      controller.params.exclude.size.length.should.equal 1
-      controller.params.exclude.size[0].should.equal "XXS"
+      (controller.getParam "page").should.equal 1
+      (controller.getParam "filter").should.eql brand: ["ADIDAS"]
+      (controller.getParam "exclude").should.eql size: ["XXS"]
 
-      # remove non-existing filter value and add another one
+      controller.setParam "page", 2
+      (controller.getParam "page").should.equal 2
+
+      controller.setParam "filter", category: ["RUNNING"]
+      (controller.getParam "filter").should.eql category: ["RUNNING"]
+
+      controller.removeParam "exclude"
+      (expect (controller.getParam "exclude")).to.be.undefined
+
+      done()
+
+    it.only "can use filters", (done) ->
+      params =
+        page: 1
+        filter:
+          brand: ["ADIDAS"]
+
+      controller = cfg.getController params
+
+      # undefined filter
+      expect(controller.getFilter "category").to.be.undefined
+
+      # terms filter
+      (controller.getFilter "brand").should.eql ["ADIDAS"]
+      controller.setFilter "brand", "NIKE"
+      (controller.getFilter "brand").should.eql ["NIKE"]
+      controller.addFilter "brand", ["ADIDAS"]
+      (controller.getFilter "brand").should.eql ["NIKE", "ADIDAS"]
       controller.removeFilter "brand", "PUMA"
-      controller.addFilter "brand", "NIKE"
-
-      controller.params.filter.brand.length.should.equal 2
-      controller.params.filter.brand[0].should.equal "ADIDAS"
-      controller.params.filter.brand[1].should.equal "NIKE"
-
-      # remove existing filter value
-      controller.removeFilter "brand", "ADIDAS"
-
-      controller.params.filter.brand.length.should.equal 1
-      controller.params.filter.brand[0].should.equal "NIKE"
-
-      # remove entire filter
+      (controller.getFilter "brand").should.eql ["NIKE", "ADIDAS"]
       controller.removeFilter "brand", "NIKE"
-      (expect controller.params.filter.brand).to.be.undefined
+      (controller.getFilter "brand").should.eql ["ADIDAS"]
+      controller.removeFilter "brand", "ADIDAS"
+      expect(controller.getFilter "brand").to.be.undefined
 
-      # add new filter, should be added as array
-      controller.addFilter "size", "XXL"
-      controller.params.filter.size.length.should.equal 1
+      # single value filter
+      controller.setFilter "value", 1
+      (controller.getFilter "value").should.equal 1
+      controller.addFilter "value", 2
+      (controller.getFilter "value").should.equal 2
+      controller.removeFilter "value", 1
+      (controller.getFilter "value").should.equal 2
+      controller.removeFilter "value", 2
+      expect(controller.getFilter "value").to.be.undefined
 
-      controller.removeFilter "size"
-      (expect controller.params.filter.size).to.be.undefined
+      # multi-type array filter
+      controller.setFilter "value", [1]
+      (controller.getFilter "value").should.eql [1]
+      controller.addFilter "value", "2"
+      (controller.getFilter "value").should.eql [1, "2"]
+      controller.removeFilter "value", 1
+      (controller.getFilter "value").should.eql ["2"]
+      controller.removeFilter "value", "2"
+      expect(controller.getFilter "value").to.be.undefined
 
-      # add new exclusion, should be added as array
-      controller.addExclusion "brand", "NIKE"
-      controller.params.exclude.brand.length.should.equal 1
+      # when adding must replace (1)
+      controller.setFilter "value", 1
+      controller.addFilter "value", [2]
+      (controller.getFilter "value").should.eql [2]
+      # in this case it should work as a multi-type array filter
+      controller.addFilter "value", hi: "world"
+      (controller.getFilter "value").should.eql [2, hi: "world"]
 
-      controller.addExclusion "size", ["XS"]
-      controller.params.exclude.size.length.should.equal 2
+      # when adding must replace (2)
+      controller.setFilter "value", 1
+      controller.addFilter "value", hi: "world"
+      (controller.getFilter "value").should.eql hi: "world"
+      controller.addFilter "value", 1
+      (controller.getFilter "value").should.equal 1
+      controller.addFilter "value", hi: "world"
+      controller.addFilter "value", [1]
+      (controller.getFilter "value").should.eql [1]
 
-      controller.addFilter "price", from: 10, to: 100
-      (controller.getFilter "price").should.eql from: 10, to: 100
-      controller.removeFilter "price", "anything"
+      # a term is always set as an array of terms
+      controller.setFilter "something", "true"
+      (controller.getFilter "something").should.eql ["true"]
+      # and you can remove a filter entirely by its key
+      controller.removeFilter "something"
+      expect(controller.getFilter "something").to.be.undefined
+
+      # hash filters: ranges
+      controller.setFilter "price", gt: 10
+      (controller.getFilter "price").should.eql gt: 10
+      controller.addFilter "price", lte: 30
+      (controller.getFilter "price").should.eql (gt: 10, lte: 30)
+      # "gt" and "gte" are incompatible, "gt" should be replaced by "gte"
+      controller.addFilter "price", (gte: 5, lt: 20)
+      (controller.getFilter "price").should.eql (gte: 5, lt: 20)
+      # you can add other keys to the filter
+      controller.addFilter "price", (other: true, 2: false)
+      (controller.getFilter "price").should.eql (gte: 5, lt: 20, other: true, 2: false)
+      # and remove specific keys from a hash filter
+      controller.removeFilter "price", "other"
+      controller.removeFilter "price", 2
+      (controller.getFilter "price").should.eql (gte: 5, lt: 20)
+      # hash filters with no keys are removed entirely
+      controller.removeFilter "price", (gte: 5, lt: 20)
       expect(controller.getFilter "price").to.be.undefined
 
-      controller.setParam "nostats", true
-      (controller.getParam "nostats").should.be.true
-      controller.removeParam "nostats"
-      expect(controller.getParam "nostats").to.be.undefined
+      # adding a value to a non existing filter properly sets it
+      controller.addFilter "terms", "good"
+      (controller.getFilter "terms").should.eql ["good"]
+      controller.addFilter "number", 1
+      (controller.getFilter "number").should.equal 1
+      controller.addFilter "arry", [1]
+      (controller.getFilter "arry").should.eql [1]
+      controller.addFilter "obj", value: 1
+      (controller.getFilter "obj").should.eql value: 1
 
       done()
 

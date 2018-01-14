@@ -11,4 +11,7 @@ Is.window = (value) ->
 Is.document = (value) ->
   value? and typeof value.documentElement is 'object'
 
+Is.stringArray = (value) ->
+  (Is.array value) and (value.every (x) -> Is.string x)
+
 module.exports = "is": Is
