@@ -125,7 +125,7 @@ describe "Controller", ->
       done()
 
   context "Search & Parameters", ->
-    it.only "can use params", (done) ->
+    it "can use params", (done) ->
       params =
         page: 1
         filter:
@@ -150,7 +150,7 @@ describe "Controller", ->
 
       done()
 
-    it.only "can use filters", (done) ->
+    it "can use filters", (done) ->
       params =
         page: 1
         filter:

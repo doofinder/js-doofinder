@@ -256,6 +256,30 @@ class Controller
     @params[paramName][key]
 
   ###*
+   * Adds a value to a filter.
+   *
+   * @param {String}  key       Name of the filter.
+   * @param {*}       value     Value to be added.
+   * @param {String}  paramName = "filter"
+  ###
+  addFilter: (key, value, paramName = "filter") ->
+    @params[paramName] ?= {}
+    if Thing.is.array @params[paramName][key]
+      if Thing.is.array value
+        # adding an array to an array concats both
+        @params[paramName][key] = @params[paramName][key].concat value
+      else
+        # otherwise, the value is appended at the end of the array
+        @params[paramName][key].push value
+    else if (Thing.is.hash @params[paramName][key]) and (Thing.is.hash value)
+      # adding a hash to a hash filter extends it, taking care of the
+      # nitty-gritty of range filters
+      @params[paramName][key] = @__buildHashFilter @params[paramName][key], value
+    else
+      # any other case just replaces the existing filter
+      @setFilter key, value, paramName
+
+  ###*
    * Removes a value from a filter.
    *
    * - If values are stored in an array:
@@ -314,30 +338,6 @@ class Controller
         delete @params[paramName][key]
 
       @params[paramName][key]
-
-  ###*
-   * Adds a value to a filter.
-   *
-   * @param {String}  key       Name of the filter.
-   * @param {*}       value     Value to be added.
-   * @param {String}  paramName = "filter"
-  ###
-  addFilter: (key, value, paramName = "filter") ->
-    @params[paramName] ?= {}
-    if Thing.is.array @params[paramName][key]
-      if Thing.is.array value
-        # adding an array to an array concats both
-        @params[paramName][key] = @params[paramName][key].concat value
-      else
-        # otherwise, the value is appended at the end of the array
-        @params[paramName][key].push value
-    else if (Thing.is.hash @params[paramName][key]) and (Thing.is.hash value)
-      # adding a hash to a hash filter extends it, taking care of the
-      # nitty-gritty of range filters
-      @params[paramName][key] = @__buildHashFilter @params[paramName][key], value
-    else
-      # any other case just replaces the existing filter
-      @setFilter key, value, paramName
 
   ###*
    * Fixes filters in case they're range filters so there are no conflicts

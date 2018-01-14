@@ -589,6 +589,36 @@
 
 
     /**
+     * Adds a value to a filter.
+     *
+     * @param {String}  key       Name of the filter.
+     * @param {*}       value     Value to be added.
+     * @param {String}  paramName = "filter"
+     */
+
+    Controller.prototype.addFilter = function(key, value, paramName) {
+      var base;
+      if (paramName == null) {
+        paramName = "filter";
+      }
+      if ((base = this.params)[paramName] == null) {
+        base[paramName] = {};
+      }
+      if (Thing.is.array(this.params[paramName][key])) {
+        if (Thing.is.array(value)) {
+          return this.params[paramName][key] = this.params[paramName][key].concat(value);
+        } else {
+          return this.params[paramName][key].push(value);
+        }
+      } else if ((Thing.is.hash(this.params[paramName][key])) && (Thing.is.hash(value))) {
+        return this.params[paramName][key] = this.__buildHashFilter(this.params[paramName][key], value);
+      } else {
+        return this.setFilter(key, value, paramName);
+      }
+    };
+
+
+    /**
      * Removes a value from a filter.
      *
      * - If values are stored in an array:
@@ -645,36 +675,6 @@
           delete this.params[paramName][key];
         }
         return this.params[paramName][key];
-      }
-    };
-
-
-    /**
-     * Adds a value to a filter.
-     *
-     * @param {String}  key       Name of the filter.
-     * @param {*}       value     Value to be added.
-     * @param {String}  paramName = "filter"
-     */
-
-    Controller.prototype.addFilter = function(key, value, paramName) {
-      var base;
-      if (paramName == null) {
-        paramName = "filter";
-      }
-      if ((base = this.params)[paramName] == null) {
-        base[paramName] = {};
-      }
-      if (Thing.is.array(this.params[paramName][key])) {
-        if (Thing.is.array(value)) {
-          return this.params[paramName][key] = this.params[paramName][key].concat(value);
-        } else {
-          return this.params[paramName][key].push(value);
-        }
-      } else if ((Thing.is.hash(this.params[paramName][key])) && (Thing.is.hash(value))) {
-        return this.params[paramName][key] = this.__buildHashFilter(this.params[paramName][key], value);
-      } else {
-        return this.setFilter(key, value, paramName);
       }
     };
 
