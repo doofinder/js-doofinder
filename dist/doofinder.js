@@ -606,9 +606,15 @@
       }
       if (Thing.is.array(this.params[paramName][key])) {
         if (Thing.is.array(value)) {
-          return this.params[paramName][key] = this.params[paramName][key].concat(value);
+          return this.params[paramName][key] = this.params[paramName][key].concat(value.filter((function(_this) {
+            return function(x, i, arr) {
+              return (_this.params[paramName][key].indexOf(x)) < 0;
+            };
+          })(this)));
         } else {
-          return this.params[paramName][key].push(value);
+          if (!((this.params[paramName][key].indexOf(value)) >= 0)) {
+            return this.params[paramName][key].push(value);
+          }
         }
       } else if ((Thing.is.hash(this.params[paramName][key])) && (Thing.is.hash(value))) {
         return this.params[paramName][key] = this.__buildHashFilter(this.params[paramName][key], value);
@@ -624,11 +630,13 @@
      * - If values are stored in an array:
      *   - If a single value is passed, removes it from the array, if exists.
      *   - If an array is passed, removes as much values as it can from the array.
+     *   - Passing an object is a wrong use case, don't do it.
      * - If values are stored in a plain Object:
      *   - If a single value is passed, it is considered a key of the filter, so
      *     direct removal is tried.
      *   - If a plain Object is passed as a value, removes as much keys as it can
      *     from the filter.
+     *   - Passing an array is a wrong use case, don't do it.
      * - If no value is passed, the entire filter is removed.
      * - In any other case, if the value matches the value of the filter, the
      *   entire filter is removed.

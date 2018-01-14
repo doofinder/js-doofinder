@@ -266,11 +266,13 @@ class Controller
     @params[paramName] ?= {}
     if Thing.is.array @params[paramName][key]
       if Thing.is.array value
-        # adding an array to an array concats both
-        @params[paramName][key] = @params[paramName][key].concat value
+        # adding an array to an array concats both without duplicates
+        @params[paramName][key] = @params[paramName][key].concat (value.filter (x, i, arr) =>
+          (@params[paramName][key].indexOf x) < 0
+        )
       else
         # otherwise, the value is appended at the end of the array
-        @params[paramName][key].push value
+        @params[paramName][key].push value unless (@params[paramName][key].indexOf value) >= 0
     else if (Thing.is.hash @params[paramName][key]) and (Thing.is.hash value)
       # adding a hash to a hash filter extends it, taking care of the
       # nitty-gritty of range filters
@@ -285,11 +287,13 @@ class Controller
    * - If values are stored in an array:
    *   - If a single value is passed, removes it from the array, if exists.
    *   - If an array is passed, removes as much values as it can from the array.
+   *   - Passing an object is a wrong use case, don't do it.
    * - If values are stored in a plain Object:
    *   - If a single value is passed, it is considered a key of the filter, so
    *     direct removal is tried.
    *   - If a plain Object is passed as a value, removes as much keys as it can
    *     from the filter.
+   *   - Passing an array is a wrong use case, don't do it.
    * - If no value is passed, the entire filter is removed.
    * - In any other case, if the value matches the value of the filter, the
    *   entire filter is removed.

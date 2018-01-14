@@ -165,23 +165,33 @@ describe "Controller", ->
       (controller.getFilter "brand").should.eql ["ADIDAS"]
       controller.setFilter "brand", "NIKE"
       (controller.getFilter "brand").should.eql ["NIKE"]
-      controller.addFilter "brand", ["ADIDAS"]
+      # adding an existing value has no effect
+      controller.addFilter "brand", ["ADIDAS", "NIKE"]
       (controller.getFilter "brand").should.eql ["NIKE", "ADIDAS"]
+      # removing a non-existing value has no effect
       controller.removeFilter "brand", "PUMA"
       (controller.getFilter "brand").should.eql ["NIKE", "ADIDAS"]
       controller.removeFilter "brand", "NIKE"
       (controller.getFilter "brand").should.eql ["ADIDAS"]
+      # removing the last value removes the entire filter
       controller.removeFilter "brand", "ADIDAS"
       expect(controller.getFilter "brand").to.be.undefined
 
       # single value filter
       controller.setFilter "value", 1
       (controller.getFilter "value").should.equal 1
+      # adding a new value to a single value filter replaces it
       controller.addFilter "value", 2
       (controller.getFilter "value").should.equal 2
+      # removing a non-matching value in a single value filter has no effect
       controller.removeFilter "value", 1
       (controller.getFilter "value").should.equal 2
+      # if value matches then the filter is removed
       controller.removeFilter "value", 2
+      expect(controller.getFilter "value").to.be.undefined
+      # but it also works to remove with no params
+      controller.setFilter "value", 1
+      controller.removeFilter "value"
       expect(controller.getFilter "value").to.be.undefined
 
       # multi-type array filter
