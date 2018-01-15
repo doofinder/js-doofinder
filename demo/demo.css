@@ -29,6 +29,12 @@ input[type="text"] {
   border: 1px solid #ddd;
 }
 
+pre {
+  font-family: monospace;
+  font-size: 12px;
+  height: 14px;
+}
+
 .widget {
   margin: 0 0 1rem 0;
 }

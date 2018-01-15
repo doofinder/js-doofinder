@@ -31,8 +31,8 @@ defaultButtonTemplate = """
 class TermsFacet extends Display
   ###*
    * @param  {String|Node|DfDomElement} element  Container node.
-   * @param  {String} facet    Name of the facet/filter.
-   * @param  {Object} options Options object. Empty by default.
+   * @param  {String} facet Name of the facet/filter.
+   * @param  {Object} options
   ###
   constructor: (element, @facet, options = {}) ->
     defaults =

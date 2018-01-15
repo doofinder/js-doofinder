@@ -3250,9 +3250,10 @@
      * Adds extra context to the passed context object.
      * @param  {Object} response = {} Search response as initial context.
      * @return {Object}               Extended search response.
+     * @protected
      */
 
-    Display.prototype.buildContext = function(response) {
+    Display.prototype.__buildContext = function(response) {
       if (response == null) {
         response = {};
       }
@@ -3262,8 +3263,16 @@
       });
     };
 
-    Display.prototype.renderTemplate = function(res) {
-      return this.mustache.render(this.options.template, this.buildContext(res));
+
+    /**
+     * Actually renders the template given a search response.
+     * @param  {Object} res Search response.
+     * @return {String}     The rendered HTML code.
+     * @protected
+     */
+
+    Display.prototype.__renderTemplate = function(res) {
+      return this.mustache.render(this.options.template, this.__buildContext(res));
     };
 
 
@@ -3276,7 +3285,7 @@
      */
 
     Display.prototype.render = function(res) {
-      this.element.html(this.renderTemplate(res));
+      this.element.html(this.__renderTemplate(res));
       return Display.__super__.render.apply(this, arguments);
     };
 
@@ -3373,7 +3382,7 @@
         name: this.facet,
         sliderClassName: this.sliderClassName
       };
-      this.element.html(this.renderTemplate(context));
+      this.element.html(this.__renderTemplate(context));
       this.slider = document.createElement('div');
       this.element.find(this.sliderSelector).append(this.slider);
       noUiSlider.create(this.slider, options);
@@ -3603,8 +3612,8 @@
 
     /**
      * @param  {String|Node|DfDomElement} element  Container node.
-     * @param  {String} facet    Name of the facet/filter.
-     * @param  {Object} options Options object. Empty by default.
+     * @param  {String} facet Name of the facet/filter.
+     * @param  {Object} options
      */
 
     function TermsFacet(element, facet, options) {
@@ -3857,7 +3866,7 @@
     Panel.prototype.render = function(res) {
       if (!this.rendered) {
         this.rendered = true;
-        this.element[this.options.insertionMethod](this.renderTemplate(res));
+        this.element[this.options.insertionMethod](this.__renderTemplate(res));
         this.initPanel(res);
         this.renderContent(res);
         this.trigger("df:widget:render", [res]);
@@ -3933,7 +3942,7 @@
         clean: true,
         captureLength: 3,
         typingTimeout: 1000,
-        wait: 43
+        wait: 42
       };
       QueryInput.__super__.constructor.call(this, element, extend(true, defaults, options));
       this.controller = [];
@@ -3948,7 +3957,7 @@
         set: (function(_this) {
           return function(value) {
             _this.element.val(value);
-            return _this.scheduleUpdate();
+            return _this.__scheduleUpdate();
           };
         })(this)
       });
@@ -3975,14 +3984,14 @@
       if (!this.initialized) {
         this.element.on("input", ((function(_this) {
           return function() {
-            return _this.scheduleUpdate();
+            return _this.__scheduleUpdate();
           };
         })(this)));
         if ((this.element.get(0)).tagName.toUpperCase() !== "TEXTAREA") {
           this.element.on("keydown", (function(_this) {
             return function(e) {
               if ((e.keyCode != null) && e.keyCode === 13) {
-                _this.scheduleUpdate(0, true);
+                _this.__scheduleUpdate(0, true);
                 return _this.trigger("df:input:submit", [_this.value]);
               }
             };
@@ -3992,7 +4001,19 @@
       }
     };
 
-    QueryInput.prototype.scheduleUpdate = function(delay, force) {
+
+    /**
+     * Schedules input validation so its done "in the future", giving the user
+     * time to enter a new character (delaying search requests).
+     *
+     * @param  {Number} delay  = @options.wait  Time to wait until update in
+     *                         milliseconds.
+     * @param  {Boolean} force = false  Forces search if value is OK whether
+     *                         value changed or not.
+     * @protected
+     */
+
+    QueryInput.prototype.__scheduleUpdate = function(delay, force) {
       if (delay == null) {
         delay = this.options.wait;
       }
@@ -4001,11 +4022,24 @@
       }
       clearTimeout(this.timer);
       clearTimeout(this.stopTimer);
-      return this.timer = setTimeout(this.updateStatus.bind(this), delay, force);
+      return this.timer = setTimeout(this.__updateStatus.bind(this), delay, force);
     };
 
-    QueryInput.prototype.updateStatus = function(force) {
+
+    /**
+     * Checks current value of the input and, if it is OK and it changed since the
+     * last check, performs a new search in each registered controller.
+     *
+     * @param  {Boolean} force = false If true forces search if value is OK
+     *                         whether value changed or not.
+     * @protected
+     */
+
+    QueryInput.prototype.__updateStatus = function(force) {
       var valueChanged, valueOk;
+      if (force == null) {
+        force = false;
+      }
       valueOk = this.value.length >= this.options.captureLength;
       valueChanged = this.value.toUpperCase() !== this.previousValue;
       if (valueOk && (valueChanged || force)) {
@@ -4083,32 +4117,59 @@
      *
      * Options:
      *
-     * - contentElement: By default content will be rendered inside the scroller
-     *     unless this option is set to a valid container. This is optional unless
-     *     the scroller is the window object, in which case this is mandatory.
-     * - offset: Distance to the bottom. If the scroll reaches this point a new
-     *     results page will be requested.
-     * - horizontal: False by default. Scroll is handled vertically by default. If
-     *     this options is enabled scroll is handled horizontally.
+     * - contentElement:  By default content will be rendered inside the scroller
+     *                    unless this option is set to a valid container. This is
+     *                    optional unless the scroller is the window object, in
+     *                    that case this is mandatory.
+     * - offset:          Distance to the bottom. If the scroll reaches this point a new
+     *                    results page will be requested.
+     * - throttle:        Time in milliseconds to wait between scroll checks. This
+     *                    value limits calculations associated to the scroll event.
+     * - horizontal:      False by default. Scroll is handled vertically by default.
+     *                    If this options is enabled scroll is handled horizontally.
      *
-     * Old Schema, for reference:
+     * Markup:
      *
+     * You can just use a container element. Content will be rendered inside.
      *
-     *  elementWrapper
-     *  --------------------
-     * |  contentWrapper   ^|
-     * |  ---------------  !|
-     * | |  element      | !|
-     * | |  ------------ | !|
-     * | | |            || !|
-     * | | | items here || !|
-     * | | |            || !|
-     * | |  ------------ | !|
-     * |  ---------------  !|
-     *  --------------------
+     *  ______________________
+     * |                      |
+     * |  `element`           |
+     * |  __________________  |
+     * | |                  | |
+     * | | RENDERED CONTENT | |
+     * | |__________________| |
+     * |______________________|
      *
-     * TODO: Check if this can handle all cases (it's supposed to do so because
-     * its not based on content).
+     * If you need to put extra content inside the container, before or after
+     * the rendered results, use the `contentElement` option:
+     *
+     *  __________________________
+     * |                          |
+     * |  `element`               |
+     * |  ______________________  |
+     * | |                      | |
+     * | | HEADER               | |
+     * | |______________________| |
+     * |  ______________________  |
+     * | |                      | |
+     * | | `contentElement`     | |
+     * | |  __________________  | |
+     * | | |                  | | |
+     * | | | RENDERED CONTENT | | |
+     * | | |__________________| | |
+     * | |______________________| |
+     * |  ______________________  |
+     * | |                      | |
+     * | | FOOTER               | |
+     * | |______________________| |
+     * |__________________________|
+     *
+     * IMPORTANT: Don't rely on the `element` attribute to do stuff with the
+     * container, if you use the `contentElement` option, that node will become
+     * the `element` node. To access the container always use the `container`
+     * attribute.
+     *
      * TODO: Check how this works when the container is the window object.
      */
 
@@ -4122,8 +4183,8 @@
       };
       options = extend(true, defaultOptions, options || {});
       ScrollDisplay.__super__.constructor.call(this, element, options);
-      this.scroller = this.element;
-      this.setContentElement();
+      this.container = this.element;
+      this.__setContentElement();
       this.working = false;
       this.previousDelta = 0;
     }
@@ -4131,60 +4192,59 @@
 
     /**
      * Gets the element that will hold search results.
-     * @return {[type]} [description]
      */
 
-    ScrollDisplay.prototype.setContentElement = function() {
+    ScrollDisplay.prototype.__setContentElement = function() {
       if (this.options.contentElement != null) {
         return this.setElement(this.element.find(this.options.contentElement));
       } else if (Thing.is.window(this.element.get(0))) {
-        throw "ScrollDisplay: contentElement must be specified when the scroller is the window object";
+        throw "ScrollDisplay: contentElement must be specified when the container is the window object";
       }
     };
 
     ScrollDisplay.prototype.init = function() {
       var fn;
       if (!this.initialized) {
-        fn = this.options.horizontal ? this.scrollX : this.scrollY;
-        this.scroller.on("scroll", throttle(fn.bind(this), this.options.throttle));
+        fn = this.options.horizontal ? this.__scrollX : this.__scrollY;
+        this.container.on("scroll", throttle(fn.bind(this), this.options.throttle));
         this.controller.on("df:search df:refresh", (function(_this) {
           return function(query, params) {
-            return _this.scroller.scrollTop(0);
+            return _this.container.scrollTop(0);
           };
         })(this));
         return ScrollDisplay.__super__.init.apply(this, arguments);
       }
     };
 
-    ScrollDisplay.prototype.scrollX = function() {
+    ScrollDisplay.prototype.__scrollX = function() {
       var direction, rect, scrolled, width;
-      rect = this.scroller.box();
+      rect = this.container.box();
       width = rect.scrollWidth;
       scrolled = rect.scrollLeft + rect.clientWidth;
       if (width - scrolled <= this.options.offset) {
-        this.getNextPage();
+        this.__getNextPage();
       }
       direction = rect.scrollLeft >= this.previousDelta ? "right" : "left";
       this.previousDelta = rect.scrollLeft;
       this.trigger("df:widget:scroll", [rect.scrollLeft, direction]);
-      return this.scroller.trigger("df:scroll");
+      return this.container.trigger("df:scroll");
     };
 
-    ScrollDisplay.prototype.scrollY = function() {
+    ScrollDisplay.prototype.__scrollY = function() {
       var direction, height, rect, scrolled;
-      rect = this.scroller.box();
+      rect = this.container.box();
       height = rect.scrollHeight;
       scrolled = rect.scrollTop + rect.clientHeight;
       if (height - scrolled <= this.options.offset) {
-        this.getNextPage();
+        this.__getNextPage();
       }
       direction = rect.scrollTop >= this.previousDelta ? "down" : "up";
       this.previousDelta = rect.scrollTop;
       this.trigger("df:widget:scroll", [rect.scrollTop, direction]);
-      return this.scroller.trigger("df:scroll");
+      return this.container.trigger("df:scroll");
     };
 
-    ScrollDisplay.prototype.getNextPage = function() {
+    ScrollDisplay.prototype.__getNextPage = function() {
       if ((this.controller != null) && !this.working) {
         this.working = true;
         setTimeout(((function(_this) {
@@ -4201,7 +4261,7 @@
         return ScrollDisplay.__super__.render.apply(this, arguments);
       } else {
         this.working = false;
-        this.element.append(this.renderTemplate(res));
+        this.element.append(this.__renderTemplate(res));
         this.trigger("df:widget:render", [res]);
         return this.trigger("df:rendered", [res]);
       }
@@ -4257,8 +4317,13 @@
 
 
     /**
-     * Assigns a controller to the widget so the widget can get access to the
-     * status of the search.
+     * Assigns a controller to the widget, so the widget can get access to the
+     * status of the search or directly manipulate the search through the
+     * controller, if needed.
+     *
+     * This method is called by the `Controller` when a widget is registered.
+     * Usually a widget is only registered in one controller but you can extend
+     * this method to change this behavior.
      *
      * @param {Controller} controller
      */
@@ -4269,7 +4334,7 @@
 
 
     /**
-     * Initializes the object. Intended to be extended in child classes, this
+     * Initializes the widget. Intended to be extended in child classes, this
      * method should be executed only once. This is enforced by the `initialized`
      * attribute.
      *

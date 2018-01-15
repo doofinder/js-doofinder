@@ -54,7 +54,7 @@ class RangeFacet extends Display
       sliderClassName: @sliderClassName
 
     # Render template HTML and place it inside the container
-    @element.html @renderTemplate context
+    @element.html @__renderTemplate context
 
     # Create a node for the the slider and append it to @sliderSelector
     @slider = document.createElement 'div'

@@ -18,12 +18,14 @@
     <div class="example">
       <h2>Basic Example</h2>
       <input class="widget" id="basicInput" type="text" placeholder="Search something">
+      <pre id="basicStatus"></pre>
       <div class="widget df-results" id="basicResults"></div>
     </div>
 
     <div class="example">
       <h2>Advanced Example</h2>
       <input class="widget" id="advancedInput" type="text" placeholder="Search something">
+      <pre id="advancedStatus"></pre>
       <div class="row">
         <div class="col" id="main">
           <div class="widget df-results" id="advancedResults">
@@ -40,8 +42,19 @@
     <div class="example">
       <h2>Multiple Controllers with same input</h2>
       <input class="widget" id="commonInput" type="text" placeholder="Search something">
+      <pre id="firstStatus"></pre>
       <div class="widget resultsX" id="firstResults"></div>
+      <pre id="secondStatus"></pre>
       <div class="widget df-results" id="secondResults"></div>
+      <script type="text/x-mustache-template" id="myCustomTemplate">
+        <ul>
+          <li>{{#translate}}Hello!{{/translate}}</li>
+          <li>Meaning of life is {{meaningOfLife}}!</li>
+        {{#results}}
+          <li>{{#bold}}{{title}}{{/bold}}</li>
+        {{/results}}
+        </ul>
+      </script>
     </div>
   </div>
 </body>

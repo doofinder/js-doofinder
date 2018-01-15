@@ -19,32 +19,59 @@ class ScrollDisplay extends Display
    *
    * Options:
    *
-   * - contentElement: By default content will be rendered inside the scroller
-   *     unless this option is set to a valid container. This is optional unless
-   *     the scroller is the window object, in which case this is mandatory.
-   * - offset: Distance to the bottom. If the scroll reaches this point a new
-   *     results page will be requested.
-   * - horizontal: False by default. Scroll is handled vertically by default. If
-   *     this options is enabled scroll is handled horizontally.
+   * - contentElement:  By default content will be rendered inside the scroller
+   *                    unless this option is set to a valid container. This is
+   *                    optional unless the scroller is the window object, in
+   *                    that case this is mandatory.
+   * - offset:          Distance to the bottom. If the scroll reaches this point a new
+   *                    results page will be requested.
+   * - throttle:        Time in milliseconds to wait between scroll checks. This
+   *                    value limits calculations associated to the scroll event.
+   * - horizontal:      False by default. Scroll is handled vertically by default.
+   *                    If this options is enabled scroll is handled horizontally.
    *
-   * Old Schema, for reference:
+   * Markup:
    *
+   * You can just use a container element. Content will be rendered inside.
    *
-   *  elementWrapper
-   *  --------------------
-   * |  contentWrapper   ^|
-   * |  ---------------  !|
-   * | |  element      | !|
-   * | |  ------------ | !|
-   * | | |            || !|
-   * | | | items here || !|
-   * | | |            || !|
-   * | |  ------------ | !|
-   * |  ---------------  !|
-   *  --------------------
+   *  ______________________
+   * |                      |
+   * |  `element`           |
+   * |  __________________  |
+   * | |                  | |
+   * | | RENDERED CONTENT | |
+   * | |__________________| |
+   * |______________________|
    *
-   * TODO: Check if this can handle all cases (it's supposed to do so because
-   * its not based on content).
+   * If you need to put extra content inside the container, before or after
+   * the rendered results, use the `contentElement` option:
+   *
+   *  __________________________
+   * |                          |
+   * |  `element`               |
+   * |  ______________________  |
+   * | |                      | |
+   * | | HEADER               | |
+   * | |______________________| |
+   * |  ______________________  |
+   * | |                      | |
+   * | | `contentElement`     | |
+   * | |  __________________  | |
+   * | | |                  | | |
+   * | | | RENDERED CONTENT | | |
+   * | | |__________________| | |
+   * | |______________________| |
+   * |  ______________________  |
+   * | |                      | |
+   * | | FOOTER               | |
+   * | |______________________| |
+   * |__________________________|
+   *
+   * IMPORTANT: Don't rely on the `element` attribute to do stuff with the
+   * container, if you use the `contentElement` option, that node will become
+   * the `element` node. To access the container always use the `container`
+   * attribute.
+   *
    * TODO: Check how this works when the container is the window object.
   ###
   constructor: (element, options) ->
@@ -57,51 +84,50 @@ class ScrollDisplay extends Display
 
     super element, options
 
-    @scroller = @element
-    @setContentElement()
+    @container = @element
+    @__setContentElement()
 
     @working = false
     @previousDelta = 0
 
   ###*
    * Gets the element that will hold search results.
-   * @return {[type]} [description]
   ###
-  setContentElement: ->
+  __setContentElement: ->
     if @options.contentElement?
       @setElement @element.find @options.contentElement
     else if Thing.is.window @element.get(0)
-      throw "ScrollDisplay: contentElement must be specified when the scroller is the window object"
+      throw "ScrollDisplay: contentElement must be specified when the container is the window object"
 
   init: ->
     unless @initialized
-      fn = if @options.horizontal then @scrollX else @scrollY
-      @scroller.on "scroll", (throttle (fn.bind @), @options.throttle)
+      fn = if @options.horizontal then @__scrollX else @__scrollY
+      @container.on "scroll", (throttle (fn.bind @), @options.throttle)
       @controller.on "df:search df:refresh", (query, params) =>
-        @scroller.scrollTop 0
+        @container.scrollTop 0
       super
 
-  scrollX: ->
-    rect = @scroller.box()
+  __scrollX: ->
+    rect = @container.box()
     width = rect.scrollWidth
     scrolled = rect.scrollLeft + rect.clientWidth
-    @getNextPage() if width - scrolled <= @options.offset
+    @__getNextPage() if width - scrolled <= @options.offset
     direction = if rect.scrollLeft >= @previousDelta then "right" else "left"
     @previousDelta = rect.scrollLeft
     @trigger "df:widget:scroll", [rect.scrollLeft, direction]
-    @scroller.trigger "df:scroll" # DEPRECATED
+    @container.trigger "df:scroll" # DEPRECATED
 
-  scrollY: ->
-    rect = @scroller.box()
+  __scrollY: ->
+    rect = @container.box()
     height = rect.scrollHeight
     scrolled = rect.scrollTop + rect.clientHeight
-    @getNextPage() if height - scrolled <= @options.offset
+    @__getNextPage() if height - scrolled <= @options.offset
     direction = if rect.scrollTop >= @previousDelta then "down" else "up"
     @previousDelta = rect.scrollTop
     @trigger "df:widget:scroll", [rect.scrollTop, direction]
-    @scroller.trigger "df:scroll" # DEPRECATED
+    @container.trigger "df:scroll" # DEPRECATED
 
-  getNextPage: ->
+  __getNextPage: ->
     if @controller? and not @working
       @working = true
       # just in case page fetching fails, revert lock
@@ -113,7 +139,7 @@ class ScrollDisplay extends Display
       super
     else
       @working = false
-      @element.append @renderTemplate res
+      @element.append @__renderTemplate res
       @trigger "df:widget:render", [res]
       @trigger "df:rendered", [res] # DEPRECATED
 

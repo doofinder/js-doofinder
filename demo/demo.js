@@ -12,6 +12,12 @@
   var $ = doofinder.util.dfdom;
   var bean = doofinder.util.bean;
 
+  function configureStatusHandler(controller, container) {
+    controller.on("df:results:success", function(res){
+      $(container).html(this.serializeStatus());
+    });
+  }
+
   //
   // Basic
   //
@@ -26,6 +32,7 @@
   var basicResultsWidget = new doofinder.widgets.ScrollDisplay("#basicResults");
   // register widgets in the controller
   basicController.registerWidgets([basicInputWidget, basicResultsWidget]);
+  configureStatusHandler(basicController, "#basicStatus");
 
   window.controllers.push(basicController);
 
@@ -37,6 +44,7 @@
   var advancedClient = new doofinder.Client(HASHID, {zone: 'eu1'});
   // create a new controller
   var advancedController = new doofinder.Controller(advancedClient, {rpp: 50});
+  configureStatusHandler(advancedController, "#advancedStatus");
   // create an input widget
   var advancedInputWidget = new doofinder.widgets.QueryInput("#advancedInput");
   // create a results widget, results are rendered inside an inner node
@@ -47,7 +55,7 @@
   advancedController.registerWidgets([advancedInputWidget, advancedResultsWidget]);
   // get options from doofinder server, to fetch facets configuration
   advancedClient.options(function(err, options){
-    options.facets.forEach(function(facetOptions){
+    options.facets.reverse().forEach(function(facetOptions){
       switch(facetOptions.type) {
         case 'terms':
           // register a panel widget that will contain the facet widget
@@ -55,11 +63,13 @@
             new doofinder.widgets.CollapsiblePanel(
               "#advancedAside",
               function(panel){
+                var maxVisibleTerms = Math.max(10, Math.round(facetOptions.size / 2));
                 var widget = new doofinder.widgets.TermsFacet(
                   panel.contentElement,
                   facetOptions.name,
                   {
-                    size: 10,
+                    // Display facets for `brand` with no collapsing
+                    size: facetOptions.name == 'brand' ? null : maxVisibleTerms,
                     label: facetOptions.label
                   }
                 );
@@ -114,6 +124,7 @@
 
   // create first controller, get 20 results per page
   var firstController = new doofinder.Controller(commonClient, {rpp: 20});
+  configureStatusHandler(firstController, "#firstStatus");
   // create first results widget (horizontal!)
   var firstResultsWidget = new doofinder.widgets.ScrollDisplay("#firstResults", {
     offset: 200,
@@ -124,8 +135,24 @@
 
   // create second controller, get 20 results per page
   var secondController = new doofinder.Controller(commonClient, {rpp: 20});
+  configureStatusHandler(secondController, "#secondStatus");
   // create second results widget
-  var secondResultsWidget = new doofinder.widgets.ScrollDisplay("#secondResults");
+  var secondResultsWidget = new doofinder.widgets.ScrollDisplay("#secondResults", {
+    template: document.getElementById('myCustomTemplate').innerHTML,
+    templateFunctions: {
+      bold: function() {
+        return function(text, render) {
+          return "<b>" + render(text) + "</b>";
+        }
+      }
+    },
+    templateVars: {
+      meaningOfLife: 42
+    },
+    translations: {
+      "Hello!": "Hola!"
+    }
+  });
   // register widgets
   secondController.registerWidgets([commonInputWidget, secondResultsWidget]);
 

@@ -28,15 +28,20 @@ class Widget
     @element = ($ element).first()
 
   ###*
-   * Assigns a controller to the widget so the widget can get access to the
-   * status of the search.
+   * Assigns a controller to the widget, so the widget can get access to the
+   * status of the search or directly manipulate the search through the
+   * controller, if needed.
+   *
+   * This method is called by the `Controller` when a widget is registered.
+   * Usually a widget is only registered in one controller but you can extend
+   * this method to change this behavior.
    *
    * @param {Controller} controller
   ###
   setController: (@controller) ->
 
   ###*
-   * Initializes the object. Intended to be extended in child classes, this
+   * Initializes the widget. Intended to be extended in child classes, this
    * method should be executed only once. This is enforced by the `initialized`
    * attribute.
    *

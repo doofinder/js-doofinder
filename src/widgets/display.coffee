@@ -38,8 +38,9 @@ class Display extends Widget
    * Adds extra context to the passed context object.
    * @param  {Object} response = {} Search response as initial context.
    * @return {Object}               Extended search response.
+   * @protected
   ###
-  buildContext: (response = {}) ->
+  __buildContext: (response = {}) ->
     @currentContext = extend true,
                              {},
                              response,
@@ -48,8 +49,14 @@ class Display extends Widget
                              is_first: response.page is 1
                              is_last: response.page is Math.ceil (response.total / response.results_per_page)
 
-  renderTemplate: (res) ->
-    @mustache.render @options.template, @buildContext res
+  ###*
+   * Actually renders the template given a search response.
+   * @param  {Object} res Search response.
+   * @return {String}     The rendered HTML code.
+   * @protected
+  ###
+  __renderTemplate: (res) ->
+    @mustache.render @options.template, @__buildContext res
 
   ###*
    * Called when the "first page" response for a specific search is received.
@@ -59,7 +66,7 @@ class Display extends Widget
    * @fires Widget#df:widget:render
   ###
   render: (res) ->
-    @element.html @renderTemplate res
+    @element.html @__renderTemplate res
     super
 
   ###*

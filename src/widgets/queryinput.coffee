@@ -19,7 +19,7 @@ class QueryInput extends Widget
       clean: true
       captureLength: 3
       typingTimeout: 1000
-      wait: 43
+      wait: 42 # meaning of life
 
     super element, (extend true, defaults, options)
 
@@ -32,7 +32,7 @@ class QueryInput extends Widget
         @element.val() or ""
       set: (value) =>
         @element.val value
-        @scheduleUpdate()
+        @__scheduleUpdate()
 
     @previousValue = @value
 
@@ -50,22 +50,40 @@ class QueryInput extends Widget
   ###
   init: ->
     unless @initialized
-      @element.on "input", (=> @scheduleUpdate())
+      @element.on "input", (=> @__scheduleUpdate())
 
       unless (@element.get 0).tagName.toUpperCase() is "TEXTAREA"
         @element.on "keydown", (e) =>
           if e.keyCode? and e.keyCode is 13
-            @scheduleUpdate 0, true
+            @__scheduleUpdate 0, true
             @trigger "df:input:submit", [@value]
 
       super
 
-  scheduleUpdate: (delay = @options.wait, force = false) ->
+  ###*
+   * Schedules input validation so its done "in the future", giving the user
+   * time to enter a new character (delaying search requests).
+   *
+   * @param  {Number} delay  = @options.wait  Time to wait until update in
+   *                         milliseconds.
+   * @param  {Boolean} force = false  Forces search if value is OK whether
+   *                         value changed or not.
+   * @protected
+  ###
+  __scheduleUpdate: (delay = @options.wait, force = false) ->
     clearTimeout @timer
     clearTimeout @stopTimer
-    @timer = setTimeout (@updateStatus.bind @), delay, force
+    @timer = setTimeout (@__updateStatus.bind @), delay, force
 
-  updateStatus: (force) ->
+  ###*
+   * Checks current value of the input and, if it is OK and it changed since the
+   * last check, performs a new search in each registered controller.
+   *
+   * @param  {Boolean} force = false If true forces search if value is OK
+   *                         whether value changed or not.
+   * @protected
+  ###
+  __updateStatus: (force = false) ->
     valueOk = @value.length >= @options.captureLength
     valueChanged = @value.toUpperCase() != @previousValue
 

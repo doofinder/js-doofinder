@@ -45,7 +45,7 @@ class Panel extends Display
     # panels are rendered only once!!!
     unless @rendered
       @rendered = true
-      @element[@options.insertionMethod] @renderTemplate res
+      @element[@options.insertionMethod] @__renderTemplate res
       @initPanel res
       @renderContent res
       @trigger "df:widget:render", [res]
