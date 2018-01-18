@@ -1,26 +1,7 @@
-dispatchPatchedEvent = (element, type) ->
-  event = document.createEvent "Event"
-  event.initEvent type, true, true
-  element.dispatchEvent event
-
-patchElementEvent = (element, type) ->
-  _nativeEvent = element[type].bind element
-  element.focus = =>
-    if document.hasFocus() then _nativeEvent() else (dispatchPatchedEvent element)
-
 describe "dfdom", ->
-  resetBody = ->
-    document.body.innerHTML = ""
-
-  insertHTML = (html) ->
-    document.body.innerHTML = html
-
   dfdom = doofinder.util.dfdom
 
   context "[Instantiation]", ->
-    beforeEach ->
-      resetBody()
-
     it "is empty for an element that doesn't exist or when no selector is provided", (done) ->
       dfdom().element.should.be.empty
       (dfdom null).element.should.be.empty
@@ -111,6 +92,29 @@ describe "dfdom", ->
       done()
 
   context "[Utilities]", ->
+    it "can filter to get single elements by index", (done) ->
+      insertHTML """
+      <p id="first"></p>
+      <p id="second"></p>
+      <p id="third"></p>
+      """
+      items = (dfdom "p")
+
+      (items.first().attr "id").should.equal "first"
+      (items.last().attr "id").should.equal "third"
+
+      ((items.item 0).attr "id").should.equal "first"
+      ((items.item 1).attr "id").should.equal "second"
+      ((items.item 2).attr "id").should.equal "third"
+
+      ((items.item -1).attr "id").should.equal "third"
+      ((items.item -2).attr "id").should.equal "second"
+      ((items.item -3).attr "id").should.equal "first"
+
+      (items.item 4).length.should.equal 0
+      (items.item -4).length.should.equal 0
+      done()
+
     it "can iterate each node in the set of matched elements", (done) ->
       insertHTML """
       <ul class="test">
@@ -175,6 +179,18 @@ describe "dfdom", ->
 
   # Methods
   context "[DOM Traversing Methods]", ->
+    it "can get the first element properly", (done) ->
+      insertHTML """
+        <div class="first"></div>
+        <div class="second"></div>
+      """
+      ((dfdom document).first().get 0).should.equal document
+      ((dfdom document.body).first().get 0).should.equal document.body
+      ((dfdom 'body').first().get 0).should.equal document.body
+      (dfdom 'div').first().length.should.equal 1
+      ((dfdom 'div').first().hasClass 'first').should.be.true
+      done()
+
     it "can find nodes inside the set of matched elements given a selector", (done) ->
       insertHTML """
         <ul>
@@ -319,6 +335,66 @@ describe "dfdom", ->
       """
       parent1 = (dfdom ".parent").get 1
       ((dfdom parent1).attr "id").should.equal "parent1"
+      done()
+
+    it "can get siblings of a node (excludes the node)", (done) ->
+      insertHTML """
+      <div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+        <div class="node"></div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+      </div>
+      """
+      siblings = (dfdom ".node").siblings()
+      siblings.length.should.equal 5
+      (siblings.filter ".sibling").length.should.equal 5
+      (siblings.filter ".node").length.should.equal 0
+      done()
+
+    it "can get siblings of multiple nodes (excludes the nodes)", (done) ->
+      insertHTML """
+      <div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+        <div class="node"></div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+      </div>
+      <div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+        <div class="node"></div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+      </div>
+      """
+      siblings = (dfdom ".node").siblings()
+      siblings.length.should.equal 10
+      (siblings.filter ".sibling").length.should.equal 10
+      (siblings.filter ".node").length.should.equal 0
+      done()
+
+    it "can get siblings of multiple nodes that are siblings (includes the nodes)", (done) ->
+      insertHTML """
+      <div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+        <div class="sibling"></div>
+        <div class="node"></div>
+        <div class="sibling"></div>
+        <div class="node"></div>
+        <div class="sibling"></div>
+      </div>
+      """
+      siblings = (dfdom ".node").siblings()
+      siblings.length.should.equal 7
+      (siblings.filter ".sibling").length.should.equal 5
+      (siblings.filter ".node").length.should.equal 2
       done()
 
   context "[DOM Manipulation Methods]", ->
@@ -509,9 +585,17 @@ describe "dfdom", ->
   context "[Style-related Methods]", ->
     it "can set style properties and get computed style values", (done) ->
       insertHTML """<div class="customcss"></div>"""
+
+      # set values
       (dfdom ".customcss, .doesnotexist").css "width", "10rem"
+      (dfdom ".customcss, .doesnotexist").css "margin-left", "0rem"
+
+      # get with css()
       ((dfdom ".customcss").css "width").should.equal "160px"
-      expect((dfdom ".doesnotexist").css "width").to.be.null
+      ((dfdom ".customcss").css "margin-left").should.equal "0px"
+      ((dfdom ".customcss").css "marginLeft").should.equal "0px"
+
+      expect((dfdom ".doesnotexist").css "width").to.be.undefined
       done()
 
     it "can manage visibility of elements via their CSS display property", (done) ->
@@ -539,9 +623,6 @@ describe "dfdom", ->
       done()
 
   context "[Measurement Methods]", ->
-    beforeEach ->
-      resetBody()
-
     it "can measure width and height", (done) ->
       insertHTML """
         <style>
@@ -578,12 +659,12 @@ describe "dfdom", ->
             position: relative;
             top: 1rem;
             left: 1rem;
-            border: 10px solid red;
+            border: 1rem solid red;
           }
           .content {
             position: absolute;
-            top: 10px;
-            left: 10px;
+            top: 1rem;
+            left: 1rem;
           }
         </style>
         <div class="container">
@@ -657,46 +738,54 @@ describe "dfdom", ->
       done()
 
     context "[Special Events]", ->
-      beforeEach: ->
-        insertHTML """<input type="text" id="q">"""
-        element = document.getElementById "q"
-        patchElementEvent element, "focus"
-        patchElementEvent element, "blur"
-
+      # These events can't be easily debugged in browser, use index.html and a
+      # local webserver to play with dfdom.focus() and dfdom.blur()
       it "can properly trigger and capture focus events", (done) ->
-        ((dfdom "#q").on "focus", -> done()).focus()
+        insertHTML """<input type="text" id="q">"""
+        ((dfdom "#q").on "focus", -> done()).trigger "focus"
 
       it "can properly trigger and capture blur events", (done) ->
-        ((dfdom "#q").on "blur", -> done()).focus().blur()
+        insertHTML """<input type="text" id="q">"""
+        (((dfdom "#q").on "blur", -> done()).trigger "focus").trigger "blur"
 
   context "[Other Tools]", ->
     beforeEach ->
       insertHTML """
-        <div class="box"></div>
-        <div id="box"></div>
-        <div></div>
+      <div>
+        <p class="box"></p>
+        <p id="box"></p>
+        <p></p>
+      </div>
       """
 
-    it "can reduce the set of matched elements to the one in the provided index", (done) ->
-      ((dfdom "div").eq 3).length.should.eq 0
-      ((dfdom "div").eq 0).length.should.eq 1
-      (((dfdom "div").eq 0).hasClass "box").should.be.true
-      (((dfdom "div").eq -2).get 0).should.equal document.getElementById "box"
-      done()
-
     it "can detect if the selection matches a selector", (done) ->
-      (((dfdom "div").eq 0).is ".box").should.be.true
-      ((dfdom "div").is ".box").should.be.true
+      (((dfdom "p").first()).is ".box").should.be.true
+      ((dfdom "p").is ".box").should.be.false
       ((dfdom "#box").is document.getElementById "box").should.be.true
-      ((dfdom "div").is document.getElementById "box").should.be.true
-      ((dfdom "div").is ".inline").should.be.false
+      ((dfdom "p").first().is document.getElementById "box").should.be.false
+      ((dfdom "p").is ".inline").should.be.false
       done()
 
     it "can detect if the selection does not match a selector", (done) ->
-      (((dfdom "div").eq 0).isnt ".box").should.be.false
-      ((dfdom "div").isnt ".box").should.be.false
+      (((dfdom "p").first()).isnt ".box").should.be.false
+      ((dfdom "p").isnt ".box").should.be.true
       ((dfdom "#box").isnt document.getElementById "box").should.be.false
-      ((dfdom "div").isnt document.getElementById "box").should.be.false
-      ((dfdom "div").isnt ".inline").should.be.true
+      ((dfdom "p").first().isnt document.getElementById "box").should.be.true
+      ((dfdom "p").isnt ".inline").should.be.true
       done()
 
+    it "can detect if a node is the first child of its container", (done) ->
+      (dfdom "p").isFirstElement().should.be.true
+      (dfdom "p").first().isFirstElement().should.be.true
+      ((dfdom "p").item 2).isFirstElement().should.be.false
+      (dfdom ".box").isFirstElement().should.be.true
+      (dfdom "#box").isFirstElement().should.be.false
+      done()
+
+    it "can detect if a node is the last child of its container", (done) ->
+      (dfdom "p").isLastElement().should.be.false
+      (dfdom "p").first().isLastElement().should.be.false
+      ((dfdom "p").item 2).isLastElement().should.be.true
+      (dfdom ".box").isLastElement().should.be.false
+      (dfdom "#box").isLastElement().should.be.false
+      done()

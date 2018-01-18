@@ -1,972 +1,1858 @@
 [![Build Status](https://api.travis-ci.org/doofinder/js-doofinder.svg?branch=master)](https://travis-ci.org/doofinder/js-doofinder)
 
-# jsDoofinder
+# Doofinder Library
 
-This library allows you to make requests to your [Doofinder](http://www.doofinder.com) Search Engines and display the results in your website. You'll be able to retrieve and shape your data easily with it.
+A.K.A. `js-doofinder`, or just `doofinder`, this library makes easy to perform requests to Doofinder's search service and customize the way you present results.
 
-## Summary
+<!-- MarkdownTOC depth="2" autolink="true" autoanchor="false" bracket="round" -->
 
-* [Installation](#installation)
-* [Quick Start](#quick-start)
-* [Classes](#classes)
-  * [Controller](#controller)
-  * [Widget](#widget)
-    * [QueryInput](#widgetsqueryinput)
-    * [Results](#widgetsresults)
-    * [ScrollResults](#widgetsscrollresults)
-    * [TermFacet](#widgetstermfacet)
-    * [RangeFacet](#widgetsrangefacet)
-    * [FacetPanel](#widgetsfacetpanel)
-  * [Client](#client)
-* [Examples](#examples)
-  * [Example 1: Create a simple template to show results.](#example-1-create-a-simple-template-to-show-results)
-  * [Example 2: Adding extra info to our template.](#example-2-adding-extra-info-to-our-template)
-  * [Example 3: Create a custom template function.](#example-3-create-a-custom-template-function)
+- [Installation](#installation)
+  - [NPM](#npm)
+  - [Bower](#bower)
+  - [CDN](#cdn)
+- [TL;DR](#tldr)
+- [Quick Start](#quick-start)
+- [Client Reference](#client-reference)
+  - [doofinder.Client](#doofinderclient)
+- [Controller Reference](#controller-reference)
+  - [doofinder.Controller](#doofindercontroller)
+- [Widgets Reference](#widgets-reference)
+  - [doofinder.widgets.Widget](#doofinderwidgetswidget)
+  - [doofinder.widgets.QueryInput](#doofinderwidgetsqueryinput)
+  - [doofinder.widgets.Display](#doofinderwidgetsdisplay)
+  - [doofinder.widgets.ScrollDisplay](#doofinderwidgetsscrolldisplay)
+  - [doofinder.widgets.TermsFacet](#doofinderwidgetstermsfacet)
+  - [doofinder.widgets.CollapsibleTermsFacet](#doofinderwidgetscollapsibletermsfacet)
+  - [doofinder.widgets.RangeFacet](#doofinderwidgetsrangefacet)
+  - [doofinder.widgets.Panel](#doofinderwidgetspanel)
+  - [doofinder.widgets.CollapsiblePanel](#doofinderwidgetscollapsiblepanel)
+- [Session Reference](#session-reference)
+  - [doofinder.session.ISessionStore](#doofindersessionisessionstore)
+  - [doofinder.session.ObjectSessionStore](#doofindersessionobjectsessionstore)
+  - [doofinder.session.CookieSessionStore](#doofindersessioncookiesessionstore)
+  - [doofinder.session.Session](#doofindersessionsession)
+- [Stats Reference](#stats-reference)
+  - [doofinder.Stats](#doofinderstats)
+- [How To](#how-to)
+  - [Configure facet widgets dynamically](#configure-facet-widgets-dynamically)
+
+<!-- /MarkdownTOC -->
+
 
 ## Installation
-### npm
-`npm install doofinder`
 
-### bower
-`bower install doofinder`
+The library can be installed via package managers or directly pointing to a file in jsDelivr's CDN.
 
-### Downloadable minified javascript file
-https://cdn.jsdelivr.net/doofinder/latest/doofinder.min.js
+The package offers simple CSS you can obtain from the `dist` directory. It will help you to build a scaffolding of your project with little effort.
 
-### CSS
-We offer some simple CSS. You can download it in the link
-https://cdn.jsdelivr.net/doofinder/latest/doofinder.css
+### NPM
 
+```shell
+$ npm install doofinder
+```
+
+### Bower
+
+```shell
+$ bower install doofinder
+```
+
+### CDN
+
+You can include the library directly in your website:
+
+```html
+<!-- Javascript -->
+<script src="//cdn.jsdelivr.net/npm/doofinder@latest/dist/doofinder.min.js"></script>
+<!-- CSS -->
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/doofinder@latest/dist/doofinder.css">
+```
+
+## TL;DR
+
+If you only want to know how this is structured, without the details, here we go.
+
+The library provides:
+
+- A `Client` class to perform requests to the [Doofinder] service.
+- A `Controller` class which provides an easy-to-use wrapper for the client and holds `Widget` instances that will process the response from the service.
+- A collection of widgets which render HTML _somewhere_ given a JSON search response, and provide a user interface to present results or refine search.
+- A collection of utilities, like DOM manipulation, introspection, throttling… and that kind of stuff.
 
 ## Quick Start
 
-In this example we'll write a view that will just show results.
+The project includes a demo you can use as inspiration. To take a look and see things you can do with it:
 
-Let's begin by showing a simple HTML template (myview.html):
+1. Download the entire project from Github.
+2. Install [Grunt] if not previously installed.
+3. From the root of the project:
+    1. install dependencies with `$ npm install`.
+    2. Run the demo server with `$ grunt serve`.
+4. Open `http://localhost:8008` in your browser.
+
+The demo markup is inside `index.html` and the related Javascript code can be found at `demo/demo.js`.
+
+**NOTICE:** The demo uses a test search engine but you can use a different one, just change the value of the `HASHID` variable you will find inside `index.html`.
+
+**IMPORTANT:** [Doofinder] protects API calls with [CORS]. If you change the `HASHID` variable defined in `index.html` you will have to allow `localhost` for your search engine in [Doofinder Admin].
+
+## Client Reference
+
+**FOR THE SAKE OF SIMPLICITY THIS REFERENCE ONLY DESCRIBES CHANGES FOR CHILD CLASSES.**
+
+### doofinder.Client
+
+This class just make requests to [Doofinder]'s [Search API].
+
+#### constructor
+
+The client needs to know the search engine to use (`hashid`, the first parameter), and the search zone to use.
+
+If you are using the client in a browser, your requests are protected by [CORS] so you will use the `zone` parameter only.
+
+```javascript
+var client = new doofinder.Client("dd485e41f1758def296e1bc7377f8ea7", {
+  zone: "eu1"
+});
+```
+
+However, if your requests are made server to server, you will have to authenticate requests with an API key which contains both the `zone` and a secret. In that case you can use the `apiKey` option and omit the `zone`.
+
+```javascript
+var client = new doofinder.Client("dd485e41f1758def296e1bc7377f8ea7", {
+  apiKey: "eu1-4d186321c1a7f0f354b297e8914ab240"
+});
+```
+
+To learn more about authentication read the [Search API] documentation.
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `hashid` | Yes | `String` | 32-char, unique id of a search engine. |
+| `options` | Yes | `Object` | 
+
+##### Options
+
+One of `zone` and `apiKey` options are required. If both are set, search zone is extracted from `apiKey`.
+
+| Option | Required | Type | Values | Default | Description |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| `zone` | Yes\* | `String` | `eu1`<br>`us1` || Search zone. | `eu1` |
+| `apiKey` | Yes\* | `String` ||| Secret to authenticate requests. |
+| `address` | No | `String` ||| Search server address.<br>For development purposes. |
+| `version` | No | `String` || `"5"` | Search API version.<br>For development purposes. |
+
+#### Client.request()
+
+Performs a HTTP(S) GET request to the given resource of the [Doofinder] search API and passes any error or response to the provided callback function.
+
+```javascript
+client.request("/5/search?query=something", function(err, res){
+  return (err ? processError(err) : processResponse(res));
+});
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `resource` | Yes | `String` | API endpoint. Parameters are sent in the URL. |
+| `callback` | Yes | `Function` | Callback to be called. |
+
+#### Client.search()
+
+Performs a search request to the [Doofinder] search API and passes any error or response to the provided callback function.
+
+Can be called with 2 or 3 arguments:
+
+```javascript
+client.search("something", processResponse);
+client.search("something", {page: 2}, processResponse);
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description | Sample |
+| :--- | :---: | :---: | :--- | :--- |
+| `query` | Yes | `String` | Search terms |
+| `params` | No | `Object` | Parameters sent in the URL. | `{page: 1, rpp: 20}`
+| `callback` | Yes | `Function` | Callback to be called. |
+
+Read the [Search API] reference to learn more about available parameters.
+
+#### Client.options()
+
+Performs a request to get preferences for the search engine from the [Doofinder] server.
+
+Can be called with 1 or 2 arguments:
+
+```javascript
+client.options(processOptions);
+client.options("localhost", processOptions);
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description | Sample |
+| :--- | :---: | :---: | :--- | :--- |
+| `suffix` | No | `String` | Optional suffix to add to the request URL, like the domain of the current page. | `localhost` |
+| `callback` | Yes | `Function` | Callback to be called. |
+
+#### Client.stats()
+
+Performs a request to submit stats events to Doofinder.
+
+```javascript
+// usage sample
+client.stats("click", {
+  dfid: "4d186321c1a7f0f354b297e8914ab240@product@437b930db84b8079c2dd804a71936b5f",
+  session_id: "21d6f40cfb511982e4424e0e250a9557",
+  query: "something"
+}, processResponse);
+```
+
+**NOTICE:** You may want to use the [stats wrapper](#doofinderstats) included in the library instead of calling this method directly.
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- | :--- |
+| `eventName` | Yes | `String` | Name of the event you want to send. |
+| `params` | Yes* | `Object` | Parameters sent in the URL.<br>Most events need parameters but it depends on the event. |
+| `callback` | No | `Function` | Callback to be called. |
+
+Read the [Search API] reference to learn more about computing stats.
+
+## Controller Reference
+
+### doofinder.Controller
+
+This class is aimed to easily search and display search results in a browser, managing search status and providing search results pagination capabilities.
+
+Search status includes:
+
+- Current page: Is always `1` when a fresh search is done.
+- Last page available for the current query.
+- Query name: Name of the query that Doofinder found that gave the best results so retrieving subsequent pages of results will use the same query.
+- Query counter: to keep track of the requests made and maintain order.
+- Request done: Whether a search request has been made or not.
+
+#### constructor
+
+This class uses a [Client](#doofinderclient) to retrieve search results, and some [widgets](#doofinderwidgetswidget) to paint results in the user interface.
+
+Can be instantiated with a `Client` instance:
+
+```javascript
+controller = new doofinder.Controller(client);
+```
+
+But you can also pass extra parameters that will be sent in search requests:
+
+```javascript
+controller = new doofinder.Controller(client, {rpp: 20});
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `client` | Yes | `doofinder.Client` | Search client instance. |
+| `params` | No | `Object` | Parameters to be added to all requests by default. |
+
+Read the [Search API] reference to learn more about available parameters.
+
+#### Controller.hashid
+
+Shortcut property that returns the `hashid` of the search engine being used.
+
+```javascript
+controller.hashid // "dd485e41f1758def296e1bc7377f8ea7"
+```
+
+#### Controller.isFirstPage
+
+Returns a boolean indicating if the last search performed by the controller was for the first page of results (`false` if no request was done).
+
+```javascript
+controller.isFirstPage // true, false
+```
+
+#### Controller.isLastPage
+
+Returns a boolean indicating if the last search performed by the controller was for the last page of results (`false` if no request was done). If `true`, there's no next page of results for the current set of search parameters.
+
+```javascript
+controller.isLastPage // true, false
+```
+
+#### Controller.lastPage
+
+Number of the last page available for the current search status. If no search was done returns `null`.
+
+#### Controller.search()
+
+Performs a new search request, removing any non-default parameters and resetting parameters to the defaults (like the page number, reset to `1`).
+
+```javascript
+controller.search("shirt", {filter: {brand: "NIKE"}});
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description | Sample |
+| :--- | :---: | :---: | :--- | :--- |
+| `query` | Yes | `String` | Search terms |
+| `params` | No | `Object` | Parameters sent in the URL. | `{page: 1, rpp: 20}`
+
+Read the [Search API] reference to learn more about available parameters.
+
+#### Controller.getNextPage()
+
+Given that a previous search request was done, performs a new search request to get the next page of results for the current status. Useful for infinite scroll behavior.
+
+#### Controller.getPage()
+
+Given that a previous search request was done, performs a new search request to get certain page of results for the current status. Useful for page by page pagination.
+
+##### Arguments
+
+| Argument | Required | Type | Description
+| :--- | :---: | :---: | :--- |
+| `page` | Yes | `Integer` | Number of the page of results to fetch.
+
+#### Controller.refresh()
+
+Given that a previous search request was done, performs a new search request to get the first page of results for the current status. Useful to start over again the current search.
+
+#### Controller.reset()
+
+Resets status and optionally forces search query terms and parameters to be set. Because it is a reset aimed to perform a new search, `page` has always value `1` when executing this.
+
+##### Arguments
+
+| Argument | Required | Type | Description | Sample |
+| :--- | :---: | :---: | :--- | :--- |
+| `query` | No | `String` | Search terms | `"something"`
+| `params` | No | `Object` | Parameters sent in the URL. | `{page: 1, rpp: 20}`
+
+Read the [Search API] reference to learn more about available parameters.
+
+#### Controller.getParam()
+
+Returns the value of a parameter from the status.
+
+```javascript
+controller.getParam("transformer");
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `key` | Yes | `String` | Name of the parameter to retrieve. |
+
+#### Controller.setParam()
+
+Sets the value of a parameter in the status hash.
+
+```javascript
+controller.setParam("transformer", null);
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `key` | Yes | `String` | Name of the parameter to set. |
+| `value` | Yes | `*` | Value of the parameter to set.<br>Can be anything serializable in a URL querystring. |
+
+#### Controller.removeParam()
+
+Removes a parameter from the status hash.
+
+```javascript
+controller.removeParam("transformer");
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `key` | Yes | `String` | Name of the parameter to remove. |
+
+#### Controller.getFilter()
+
+Retrieves the value of a filter or undefined if not defined.
+
+```javascript
+controller.getFilter("brand");
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `key` | Yes | `String` | Filter name. |
+| `paramName` | No | `String` | Name of the parameter that will hold the filters.<br>`"filter"` by default. |
+
+#### Controller.setFilter()
+
+Sets the value of a filter, replacing any existing value.
+
+```javascript
+// terms
+controller.setFilter("brand", "NIKE"); // ["NIKE"]
+controller.setFilter("brand", ["ADIDAS", "PUMA"]) // ["ADIDAS", "PUMA"]
+// range
+controller.setFilter("price", {gte: 10})
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `key` | Yes | `String` | Filter name. |
+| `value` | Yes | `*` | If is a string, it's added as a one-item array.<br>Otherwise, it's added with no modifications. |
+| `paramName` | No | `String` | Name of the parameter that will hold the filters.<br>`"filter"` by default. |
+
+#### Controller.addFilter()
+
+_Extends_ the current value of a filter with the provided value.
+
+This means:
+
+- If the filter does not already exist, the value is added like in `Controller.setFilter()`.
+- If the filter already exists and is an array:
+  + If the value is a single value, it is added to the array if not already there.
+  + If the value is an array, only items not already in the filter are added.
+- If the filter already exists, is a plain object and the value is also a plain object, new value is merged taking care of range incompatibilities.
+- In any other case the new value replaces the existing one.
+
+
+```javascript
+controller.addFilter("brand", "NIKE"); // ["NIKE"]
+controller.addFilter("brand", ["NIKE", "ADIDAS"]);  // ["NIKE", "ADIDAS"]
+controller.addFilter("brand", "PUMA");  // ["NIKE", "ADIDAS", "PUMA"]
+
+controller.addFilter("price", {gt: 10}); // {gt: 10}
+controller.addFilter("price", {gte: 10, lte: 100}); // {gte: 10, lte: 100}
+
+controller.addFilter("price", "ASICS"); // ["ASICS"]
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `key` | Yes | `String` | Filter name. |
+| `value` | Yes | `*` | Value to be added to the filter. |
+| `paramName` | No | `String` | Name of the parameter that will hold the filters.<br>`"filter"` by default. |
+
+#### Controller.removeFilter()
+
+Removes a value from a filter or the entire filter if no value was provided.
+
+- If filter is currently stored in an array:
+  + If a single value is provided, it is removed from the filter if it is in the array.
+  + If an array is provided, all matching values are removed from the filter.
+  + Passing an object is a wrong use case, don't do it.
+- If values are stored in a plain Object:
+  + If a single value is provided, it is considered an existing key of the filter object, and it is removed.
+  + If a plain object is provided, common keys are removed from the filter.
+  + Passing an array is a wrong use case, don't do it.
+- If no value is passed, the entire filter is removed.
+- In any other case, if the value matches the value of the filter, the entire filter is removed.
+- Not found values have no effect.
+
+**NOTICE:** If after removing a value/key, an array/object filter become empty, then the entire filter is removed from the filters list.
+
+```javascript
+controller.setFilter("brand", ["NIKE", "ADIDAS", "PUMA"]);
+controller.removeFilter("brand"); // REMOVED
+
+controller.setFilter("brand", ["NIKE", "ADIDAS", "PUMA"]);
+controller.removeFilter("brand", "NIKE"); // ["ADIDAS", "PUMA"]
+controller.removeFilter("brand", ["ADIDAS", "PUMA"]); // REMOVED
+
+controller.setFilter("price", {gte: 10, lte: 100});
+controller.removeFilter("price", "gte"); // {lte: 100}
+controller.removeFilter("price", {lte: 100}); // REMOVED
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `key` | Yes | `String` | Field name. |
+| `value` | No | `*` | |
+| `paramName` | No | `String` | Name of the parameter that will hold the filters.<br>`"filter"` by default. |
+
+#### Controller.getExclusion()
+
+Works the same as `Controller.getFilter()` but for filters that explicitly exclude results (negative filters).
+
+#### Controller.setExclusion()
+
+Works the same as `Controller.setFilter()` but for filters that explicitly exclude results (negative filters).
+
+#### Controller.addExclusion()
+
+Works the same as `Controller.addFilter()` but for filters that explicitly exclude results (negative filters).
+
+#### Controller.removeExclusion()
+
+Works the same as `Controller.removeFilter()` but for filters that explicitly exclude results (negative filters).
+
+#### Controller.registerWidget()
+
+Registers a widget in the current controller instance.
+
+```javascript
+controller.registerWidget(myWidget);
+```
+
+**NOTICE:** Widget registration is a two-way binding. The widget gets registered in the controller and the controller gets registered in the widget.
+
+##### Arguments
+
+| Argument | Required | Type | Description | 
+| :--- | :---: | :---: | :--- |
+| `widget` | Yes | `Widget` | An instance of `Widget` (or any of its subclasses). |
+
+#### Controller.registerWidgets()
+
+Registers multiple widgets at the same time in the current controller instance.
+
+```javascript
+controller.registerWidgets([myInputWidget, myResultsWidget]);
+```
+
+**NOTICE:** Widget registration is a two-way binding. The widget gets registered in the controller and the controller gets registered in the widget.
+
+##### Arguments
+
+| Argument | Required | Type | Description | Sample |
+| :--- | :---: | :---: | :--- | :--- |
+| `widgets` | Yes | `Array` | An array of `Widget` (or any of its subclasses) instances. |  |
+
+#### Controller.renderWidgets()
+
+Makes registered widgets render themselves with the provided search response.
+
+```javascript
+controller.renderWidgets(response);
+```
+
+**NOTICE:** Triggers a `df:controller:renderWidgets` event on the controller when the `render()` method of all widgets has been executed.
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- | :--- |
+| `response` | Yes | `Object` | A search response from Doofinder service. |
+
+#### Controller.cleanWidgets()
+
+Makes registered widgets clean themselves.
+
+```javascript
+controller.cleanWidgets();
+```
+
+**NOTICE:** Triggers a `df:controller:cleanWidgets` event on the controller when the `clean()` method of all widgets has been executed.
+
+#### Controller.clean()
+
+Resets status and clean widgets at the same time.
+
+```javascript
+controller.clean();
+
+// The same as:
+controller.reset();
+controller.cleanWidgets();
+```
+
+#### Controller.serializeStatus()
+
+Returns the current status of the controller as a URL querystring. Useful to save it somewhere and recover later.
+
+```javascript
+controller.serializeStatus();
+// "query=running&query_name=match_and
+// &filter%5Bcategories%5D%5B0%5D=Cardio&filter%5Bbrand%5D%5B0%5D=BH"
+```
+
+#### Controller.loadStatus()
+
+Changes the status of the controller based on the value of the parameter provided, and performs a search request.
+
+```javascript
+controller.loadStatus(
+  "query=running&query_name=match_and" +
+  "&filter%5Bcategories%5D%5B0%5D=Cardio" +
+  "&filter%5Bbrand%5D%5B0%5D=BH"
+);
+/*
+{
+  filter: {
+    brand: ["BH"],
+    categories: ["Cardio"]
+  },
+  query: "running",
+  query_name: "match_and"
+}
+*/
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description | 
+| :--- | :---: | :---: | :--- |
+| `status` | Yes | `String` | Controller status obtained from `serializeStatus` |
+
+#### Controller.on()
+
+Registers a function that is executed when certain event is triggered on the controller.
+
+```javascript
+controller.on("df:controller:renderWidgets", myHandlerFn);
+controller.on("event1 event2", myHandlerFn);
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `eventName` | Yes | `String` | Event name (or multiple events, space separated). |
+| `handler` | Yes | `Function` | The callback function. |
+
+#### Controller.one()
+
+Registers a function that is executed when certain event is triggered on the controller the first time after this function is executed.
+
+```javascript
+controller.one("df:controller:renderWidgets", myHandlerFn);
+controller.one("event1 event2", myHandlerFn);
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `eventName` | Yes | `String` | Event name (or multiple events, space separated). |
+| `handler` | Yes | `Function` | The callback function. |
+
+#### Controller.off()
+
+Unregisters an event handler of this controller.
+
+- If no handler is provided, all event handlers for the event name provided are unregistered for the current controller.
+- If no handler and no event name are provided, all event handlers are unregistered for the current controller.
+
+```javascript
+controller.off("df:controller:renderWidgets", myHandlerFn);
+controller.off("df:controller:renderWidgets");
+controller.off();
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `eventName` | No | `String` | Event name (or multiple events, space separated). |
+| `handler` | No | `Function` | The callback function. |
+
+#### Controller.trigger()
+
+Triggers an event in the current controller.
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `eventName` | Yes | `String` | Event name (or multiple events, space separated). |
+| `args` | No | `Array` | Array of arguments to pass to the event handler. |
+
+#### Events
+
+You can listen and trigger several events on a `Controller` instance, here's a summary of them.
+
+##### df:search
+
+Triggered when a new search is done.
+
+| Argument | Type | Description |
+| : --- | : --- : | : --- |
+| `query` | `String` | Search terms for the current search. |
+| `params` | `Object` | Search parameters defined in the controller for the new search. |
+
+##### df:search:page
+
+Triggered when a new page for the current search is requested.
+
+| Argument | Type | Description |
+| : --- | : --- : | : --- |
+| `query` | `String` | Search terms for the current search. |
+| `params` | `Object` | Search parameters defined in the controller for the current search. |
+
+##### df:refresh
+
+Triggered when the current search is refreshed to get the first page again.
+
+| Argument | Type | Description |
+| : --- | : --- : | : --- |
+| `query` | `String` | Search terms for the current search. |
+| `params` | `Object` | Search parameters defined in the controller for the current search. |
+
+##### df:results:success
+
+Triggered when a successful search response is received. This event is triggered after the response has been processed.
+
+| Argument | Type | Description |
+| : --- | : --- : | : --- |
+| `response` | `Object` | Valid response from the Doofinder service. |
+
+##### df:results:error
+
+Triggered when there is an error in the search request.
+
+| Argument | Type | Description |
+| : --- | : --- : | : --- |
+| `error` | `Object` | See below for details. |
+
+###### Errors coming from the Doofinder servers
+
+When the error comes from the server, it has a status code and, optionally, a message explaining the error.
+
+```javascript
+{
+    statusCode: 400,
+    error: "Invalid hashid"
+}
+```
+
+###### Errors during the request
+
+ Errors occurred during the request phase have an `error` key containing the instance of `Error` thrown.
+
+ ```javascript
+ {
+    error: new Error("Whatever");
+ }
+ ```
+
+##### df:results:end
+
+Triggered when a successful search response for the last page of the current search is received. This event is triggered after the response has been processed.
+
+| Argument | Type | Description |
+| : --- | : --- : | : --- |
+| `response` | `Object` | Valid response from the Doofinder service. |
+
+##### df:controller:renderWidgets
+
+Triggered when the controller called the `render()` method of all widgets.
+
+##### df:controller:cleanWidgets
+
+Triggered when the controller called the `clean()` method of all widgets.
+
+## Widgets Reference
+
+### doofinder.widgets.Widget
+
+This class provides the scaffolding of any widget, all widgets inherit from this class.
+
+A widget is linked to:
+
+- A DOM element.
+- A `Controller`.
+
+Widgets make extensive use of a DOM manipulation mini-library included in this package and called `dfdom`.
+
+References to a widget's DOM _element_ are stored as an instance of `DfDomElement`.
+
+#### constructor
+
+The constructor receives a reference to a DOM element and an Object with options.
+
+```javascript
+var widget = new doofinder.widgets.Widget("#element", {});
+```
+
+**NOTICE:** Constructor signature and options may vary from a `Widget` subclass to another. Consult the reference of each class to know the proper values of the constructor and options object.
+
+##### Arguments
+
+| Argument | Required | Type | Description | Sample |
+| :--- | :---: | :---: | :--- | :--- |
+| `element` | Yes | `String` | CSS Selector. | `"#widget"` |
+||| `Node` | Direct reference to a DOM Node. | `document.querySelector('#widget')` |
+||| `DfDomElement` | Reference to a DOM node via `dfdom`. | `dfdom('#widget')` |
+| `options` | No | `Object` | Options object. |  |
+
+#### Widget.setElement()
+
+This method is responsible of configuring the `element` passed to the constructor as the `element` attribute of the `Widget`.
+
+```javascript
+widget.setElement("#widget");
+```
+
+99.9% of time this method is used _as is_ but can be customized to assign a different container element to the widget.
+
+##### Arguments
+
+| Argument | Required | Type | Description | Sample |
+| :--- | :---: | :---: | :--- | :--- |
+| `element` | Yes | `String` | CSS Selector. | `"#widget"` |
+||| `Node` | Direct reference to a DOM Node. | `document.querySelector('#widget')` |
+||| `DfDomElement` | Reference to a DOM node via `dfdom`. | `dfdom('#widget')` |
+
+#### Widget.setController()
+
+Assigns a controller to the widget, so the widget can get access to the status of the search or directly manipulate the search through the controller, if needed.
+
+This method is called by the `Controller` when a widget is registered. Usually a widget is only registered in one controller but you can extend this method to change this behavior.
+
+##### Arguments
+
+| Argument | Required | Type | Description | Sample |
+| :--- | :---: | :---: | :--- | :--- |
+| `controller` | Yes | `Controller` |||
+
+
+#### Widget.init()
+
+Initializes the widget. Intended to be extended in child classes, this method should be executed only once. This is enforced by the `initialized` attribute. You will want to add your own event handlers inside this method.
+
+This method is called as part of the widget registration process that happens in the `Controller`.
+
+#### Widget.render()
+
+This method is responsible of the rendering of the widget with the search response received from the server.
+
+The `Widget` base class does not have visual representation by default so this method just triggers the `df:widget:render` event.
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `response` | Yes | `Object` | Valid response from the Doofinder service. |
+
+#### Widget.clean()
+
+This method is responsible of the cleaning the HTML of the widget.
+
+The `Widget` base class does not have visual representation by default so this method just triggers the `df:widget:clean` event.
+
+#### Widget.on()
+
+Registers a function that is executed when certain event is triggered on the widget.
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `eventName` | Yes | `String` | Event name (or multiple events, space separated). |
+| `handler` | Yes | `Function` | The callback function. |
+
+#### Widget.one()
+
+Registers a function that is executed when certain event is triggered on the widget the first time after this function is executed.
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `eventName` | Yes | `String` | Event name (or multiple events, space separated). |
+| `handler` | Yes | `Function` | The callback function. |
+
+#### Widget.off()
+
+Unregisters an event handler of a widget.
+
+- If no handler is provided, all event handlers for the event name provided are unregistered for the current widget.
+- If no handler and no event name are provided, all event handlers are unregistered for the current widget.
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `eventName` | No | `String` | Event name (or multiple events, space separated). |
+| `handler` | No | `Function` | The callback function. |
+
+#### Widget.trigger()
+
+Triggers an event on the widget.
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `eventName` | Yes | `String` | Event name (or multiple events, space separated). |
+| `args` | No | `Array` | Array of arguments to pass to the event handler. |
+
+#### Events
+
+##### df:widget:init
+
+Triggered when the widget has ended its initialization (`init()` method called). The event handler receives no arguments.
+
+##### df:widget:render
+
+Triggered when the widget has finished rendering itself with the provided search response.
+
+```javascript
+widget.on("df:widget:render", function(response){
+  // do something with the response
+});
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `response` | Yes | `Object` | A search response from Doofinder service. |
+
+##### df:widget:clean
+
+Triggered when the widget has finished rendering itself. The event handler receives no arguments.
+
+---
+
+### doofinder.widgets.QueryInput
+
+`Widget < QueryInput`
+
+This is a special widget. It is linked to a HTML text input control and listens the `input` event so, when value changes due to user input, it uses its value to perform a new search via its registered controller(s).
+
+This widget can be registered in multiple controllers at the same time so you could share the same text input and perform the same search in different search engines.
+
+#### constructor
+
+```javascript
+var queryInput = new doofinder.widgets.QueryInput('#search', {
+    captureLength: 4
+});
+```
+
+##### Options
+
+| Option | Required | Type | Values | Default | Description |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| `clean` | No | `Boolean` || `true` | If `true` the input is cleared when the widget is cleaned. |
+| `captureLength` | No | `Number` || `3` | Minimum number of characters to type to perform a search request. |
+| `typingTimeout` | No | `Number` || `1000` | Time in milliseconds the widget waits before triggering the `df:input:stop` event. |
+| `wait` | No | `Number` || `42` | Time in milliseconds the widget waits before checking input to decide whether to perform a search or not.<br>High values (`400`) reduce the number of requests sent. |
+
+#### Events
+
+##### df:input:submit
+
+This event is triggered when the user types <kbd>ENTER</kbd> on the search input control.
+
+**NOTICE:** This event is not triggered for `TEXTAREA` controls.
+
+```javascript
+queryInput.on("df:input:submit", function(value){
+  // do something with value
+});
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `value` | Yes | `String` | Value of the input control. |
+
+##### df:input:stop
+
+This event is triggered after some time determined by the value `typingTimeout` in the widget options, when the user stops typing.
+
+```javascript
+queryInput.on("df:input:stop", function(value){
+  // do something with value
+});
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `value` | Yes | `String` | Value of the input control. |
+
+##### df:input:none
+
+This event is triggered during the value checking process, if the input changed from having a value to being empty. The event handler receives no arguments.
+
+```javascript
+queryInput.on("df:input:none", function(){
+  // hide results?
+});
+```
+
+---
+
+### doofinder.widgets.Display
+
+`Widget < Display`
+
+This is a widget with actual rendering capabilities:
+
+- It renders HTML inside its element node given a search response. Rendering is done with the [Mustache] engine.
+- It populates variables and helpers (default and custom) to be used in the template.
+- It cleans its element from unnecessary HTML code when the widget itself is cleaned.
+
+#### constructor
+
+Constructor now accepts options for templating.
 
 ```html
-<html lang="en">
-<head>
-<script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-<script type="application/javascript" src="https://cdn.jsdelivr.net/doofinder/latest/doofinder.min.js"></script>
-<script>
-(function(doofinder, document){
-  $(document).ready(function(){
-    // Use here your Search Engine hashid and doofinder zone
-    var client = new doofinder.Client('97be6c1016163d7e9bceedb5d9bbc032', 'eu1');
-    // #query is the DOM selector that points to the search box
-    var queryInputWidget = new doofinder.widgets.QueryInput('#query');
-    // #scroll is where we'll display the results
-    var resultsWidget = new doofinder.widgets.ScrollResults('#scroll');
-    // The controller to rule them all
-    var controller = new doofinder.Controller(
-        client,
-        [queryInputWidget, resultsWidget]
-    );
-  });
-})(doofinder, document);
+<script type="text/x-mustache-template" id="myTemplate">
+  <ul>
+    <li>{{#translate}}Hello!{{/translate}}</li>
+    <li>Meaning of life is {{meaningOfLife}}!</li>
+  {{#results}}
+    <li>{{#bold}}{{title}}{{/bold}}</li>
+  {{/results}}
+  </ul>
 </script>
+```
+
+```javascript
+var display = new doofinder.widgets.Display("#myDiv", {
+  template: document.getElementById('myTemplate').innerHTML,
+  templateFunctions: {
+    bold: function() {
+      return function(text, render) {
+        return "<b>" + render(text) + "</b>";
+      }
+    }
+  },
+  templateVars: {
+    meaningOfLife: 42
+  },
+  translations: {
+    "Hello!": "Hola!"
+  }
+});
+```
+
+##### Options
+
+| Option | Required | Type | Default | Description |
+| :--- | :---: | :---: | :---: | :--- |
+| `template` | Yes | `String` || HTML template to render the search response. |
+| `templateFunctions` | No | `String` | `{}` | An Object whose keys are the name of [Mustache] template helpers. |
+| `templateVars` | No | `String` | `{}` | An Object whose keys are the name of [Mustache] variables. |
+| `translations` | No | `String` | `{}` | An Object mapping strings to be replaced by other values when found inside the default `translate` helper. |
+
+##### Default Template
+
+```mustache
+{{#results}}
+  <a href="{{link}}" class="df-card">{{title}}</a>
+{{/results}}
+```
+
+##### Default Template Variables
+
+Some template variables are included by default in the rendering context:
+
+| Variable | Type | Description |
+| : --- | : --- : | : --- |
+| `is_first` | `Boolean` | Indicates if the response being rendered is for the first page of a search. |
+| `is_last` | `Boolean` | Indicates if the response being rendered is for the last page of a search. |
+
+##### Default Template Functions
+
+Some template functions are included by default in the rendering context:
+
+| Function | Description |
+| : --- | : --- |
+| `translate` | If a match is found in the `translations` dictionary of the widget, the text inside the helper is replaced by its translation. |
+
+---
+
+### doofinder.widgets.ScrollDisplay
+
+`Widget < Display < ScrollDisplay`
+
+You can use this class to render subsequent responses for the same search one after another by appending HTML instead of replacing it. HTML is replaced for the first page of a search only.
+
+When the user performs scrolling and reaches the end of the results, a new search page is automatically requested.
+
+**IMPORTANT:** Scrolling content inside a `<div>` (or similar node) requires width / height being restricted so the content overflows the container instead of the latter adapts to its content. Also, setting `overflow-x` and `overflow-y` properties in CSS will enforce these rules.
+
+#### constructor
+
+```mustache
 <style>
-#scroll{
-    position: relative;
-    height: 800px;
-    overflow: auto;
+.container {
+  width: 400px;
+  height: 600px;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 </style>
-</head>
-<body>
-  <input type="text" id="query"/>
-  <div id="scroll">
+<div class="container" id="scroller">
+  <div class="container-header">Search Results</div>
+  <ul class="container-content"></ul>
+</div>
+<script type="text/x-mustache-template" id="scroller-template">
+  {{#results}}
+    <li><a href="{{link}}" class="df-card">{{title}}</a></li>
+  {{/results}}
+</script>
+```
+
+```javascript
+var resultsWidget = new doofinder.widgets.ScrollDisplay("#scroller", {
+  contentElement: ".container-content",
+  template: document.getElementById('scroller-template').innerHTML
+});
+```
+
+##### Options
+
+This widgets receives the same options as `Display`, plus:
+
+| Option | Required | Type |Default | Description |
+| :--- | :---: | :---: | | :--- |
+| `contentElement` | No | `String` | `null` | Reference to a child node of the widget's element. By default the widget's element node contains the HTML rendered by the widget. |
+| `offset` | No | `Number` | `300` | Distance in pixels to the bottom of the content. As soon as the scrolled content reaches this value, a new results page is requested. |
+| `throttle` | No | `Number` | `16` | Time in milliseconds to wait between scroll checks. This value limits calculations associated to the `scroll` event. |
+| `horizontal` | No | `Boolean` | `false` | If `true`, scroll calculations are done for horizontal scrolling. By default calculations are done for vertical scrolling. |
+
+**IMPORTANT:** Don't rely on the widget's `element` attribute to do stuff with the container, if you use the `contentElement` option, that node will internally become the `element` node. To access the container always use the `container` attribute.
+
+#### Events
+
+##### df:widget:scroll
+
+This event is triggered each time scrolling calculations are made.
+
+```javascript
+resultsContainer.on("df:widget:scroll", function(scrollTop, direction){
+  // Do something with scrollTop and direction.
+});
+```
+
+| Argument | Type | Values |Description |
+| : --- | : --- : | : --- : | : --- |
+| `scrollTop` | `Number` || The number of pixels the content is scrolled vertically. |
+| `direction` | `String` | `"up", "down"` | The direction of the scrolling. |
+
+---
+
+### doofinder.widgets.TermsFacet
+
+`Widget < Display < TermsFacet`
+
+This widget allows filtering search results by certain text values of a field. When a term is clicked, the widget forces its controller to perform a new search filtered by the value of the facet.
+
+#### constructor
+
+```javascript
+var facet = new doofinder.widgets.TermsFacet("#brandFilter", "brand");
+```
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `element` | Yes | `String` | CSS Selector. |
+||| `Node` | Direct reference to a DOM Node. |
+||| `DfDomElement` | Reference to a DOM node via `dfdom`. |
+| `facet` | Yes | `String` | Name of the facet as returned by the server in the facet specification. |
+| `options` | No | `Object` | Options object. |
+
+#### Default Templates
+
+###### template
+
+This is the default template of the widget.
+
+```mustache
+{{#terms}}
+  <div class="df-term" data-facet="{{name}}" data-value="{{key}}"
+      {{#selected}}data-selected{{/selected}}>
+    <span class="df-term__value">{{key}}</span>
+    <span class="df-term__count">{{doc_count}}</span>
   </div>
-</body>
+{{/terms}}
 ```
-Note that we are importing two javascript files:
-- jquery.min.js: we use it to make sure that everything is being done when the document is ready.
-- doofinder.min.js: contains doofinder namespace with its classes.
 
-We need to create the inner scroll via css. We get it setting the sroll wrapper's height and overflow as you can see above. It is also necessary set the position to "relative" in order to calculate the scroll position to ask for the next page.
+There're some `data` attributes that must be present for the widget to work properly:
 
-The options we have filled in for the Client:
-* hashid: the unique hashid of your search engine.
-* zone: the zone where your search engine is located (eu1, us1, ...).
+| Attribute | Description |
+| : --- | : --- |
+| `data-facet` | Holds the name of the current facet as defined in Doofinder. |
+| `data-value` | Holds the value of the term. |
+| `data-selected` | Indicates whether the term is selected or not. |
 
-For the QueryInput widget:
-* queryInput selector: the CSS selector of our query input.
+The variables available for each term are:
 
-For the ScrollResults widget:
-* scroll selector: the CSS selector for the scroll wrapper.
+| Variable | Description |
+| : --- | : --- |
+| `name` | Holds the name of the current facet as defined in Doofinder. |
+| `key` | Holds the value of the term. |
+| `selected` | Indicates whether the term is selected or not. |
+| `doc_count` | Indicates the number of results when filtering the current search results by this term. |
 
-**WARNING**: Note that Doofinder Search API is protected with CORS, so
-you must enable the host you are requesting from. You can do this from
-your Doofinder Administration Panel > Configuration > Allowed Domains.
+---
 
-With all this in place you'll have a search box where you can write a query and the results will be shown. Scrolling into the layer you'll see more results.
+### doofinder.widgets.CollapsibleTermsFacet
 
-## Classes
+`Widget < Display < TermsFacet < CollapsibleTermsFacet`
 
-### Controller
-Controller is the class that manages client and widgets. Allows you to make different queries to your index and interact with the different widgets you will instantiate.
+This is a `TermsFacet` widget that provides a collapsing feature _out of the box_ so, if you receive 20 terms to filter, you can display 10 and hide the rest until the user choose to display them by pressing a button.
+
+Check out the advanced example in the [Demo](#quick-start) to see how it works.
+
+**NOTICE:** Collapsing feature is handled in HTML and CSS via HTML data attributes. If you change the template and want to preserve this behavior, remember to use specific CSS found in `doofinder.css` and attributes defined in the default templates.
 
 #### constructor
 
-  Argument | Required | Type | Description
-  -------- | -------- |---- | ---------------------
-  `client`   | Yes | `doofinder.Client` | The Search API wrapper
-  `widgets`  | Yes | `doofinder.Widget` `Array(doofinder.Widget)` | Array of widgets for interacting and rendering the results
-  `searchParameters` | No | `Object` | An object with params that will passed to the client for every search. You can use here all the parameters defined in [Doofinder Search API](https://www.doofinder.com/support/developer/api/search-api).
-
-#### search
-This method makes a query to the Search API and renders the results into the widgets.
-
-  Argument | Required | Type | Description
-  -------- | -------- | ---- | ---------------------
-  `query`    | Yes  | `String` | The query terms.
-  `params`   | No  | `Object` | An object with search parameters. You can use here all the parameters defined in [Doofinder Search API](https://www.doofinder.com/support/developer/api/search-api).
-
-#### nextPage
-Asks for the next page of the previous search done, and sends the response to all widgets to render it.
-
-#### getPage
-Asks for a concrete page. Then pass the response to all widgets to render it.
-
-  Argument | Required  | Type | Description
-  -------- | -------- | ---- | ---------------------
-  `page`     | Yes  | `Number` | The page requested
-
-#### addFilter
-Adds a filter to the currently applied in the search.
-
-  Argument | Required | Type | Description
-  -------- | -------- | ---- | ---------------------
-  `facet`  | Yes | `String` | The name of the facet.
-  `value` | Yes |`String` `Object` | The value the facet should have. This can be a `String`, if the facet is a term facet or an `Object` if it's a range.
-
-#### removeFilter
-Removes a filter from the currently applied.
-
-  Argument | Required | Type | Description
-  -------- | -------- | ---- | ---------------------
-  `facet` | Yes | `String` | The name of the facet.
-  `value` | Yes |`String` `Object` | The value of the facet. This can be a `String`, if the facet is a term facet or an `Object` if it's a range.
-
-#### addParam
-Adds new search parameter to the current status.
-
- Argument | Required | Type | Description
- -------- | -------- | ---- | ---------------------
- `param`  | Yes | `String` | The name of the param.
- `value` | Yes |`Mixed` | The value of the param.
-
-#### clearParam
-Removes a parameter from the current status.
-
-Argument | Required | Type | Description
--------- | -------- | ---- | ---------------------
-`param`  | Yes | `String` | The name of the param.
-
-#### reset
-Gets the params to the initial state.
-
-#### setSearchParam
-Sets a param for every query.
-
-Argument | Required | Type | Description
--------- | -------- | ---- | ---------------------
-`param`  | Yes | `String` | The name of the param.
-`value` | Yes |`Mixed` | The value of the param.
-
-
-#### refresh
-Makes a search with the current filter status. Then, it calls to every widget to render the results.
-
-#### addWidget
-Adds a widget to the controller after the instantiation.
-
- Argument | Required | Type | Description
- -------- | --------- |---- | ---------------------
-  `widget` |  Yes |`doofinder.Widget` | The widget to add.
-
-#### bind
-
-This method adds a callback to an event triggered from the controller. Events are triggered from the controller when a query is going to be done or when results are received.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-`event` |  Yes | `String` | The event name.
-`callback` | Yes | `Function` | The function which receives the API Search response.
-
-The events you can bind to a widget are the described below. Note that each event sends different arguments to the callback in order to implement it properly.
-
-#### Events
-
-Event Name | Callback Arguments | Description
----------- | ------------------ | -----------
-df:search   | <ul><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.search is called.
-df:next_page  | <ul><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.nextPage is called.
-df:get_page   | <ul><li>params`Object`: the object will be send as params to the Search API.</li></ul> | This event is triggered when controller.getPage is called.
-df:results_received | <ul><li>res`Object`: the Search API response</li></ul> | This event is triggered when new results are received from Search API.
-df:error_received | <ul><li>err`Object`: The Error response</li></ul> | This event is triggered when the search server returns an error response.
-
-As an example, we'll print in the console the total results in the `df:results_received` event.
-
 ```javascript
-controller = new doofinder.Controller(client, widgets, options);
-controller.bind('df:results_received', function(event, res){
-   console.log(res.total);
-});
-```
-
-#### registerSession
-Sends a request to the Search API in order to account the sessions in your SearchEngine.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-`sessionId` |  Yes | `String` | A session identifier
-`callback` | No | `Function` | Receives two args: `err` and `response`
-
-#### registerClick
-Sends a request to the Search API in order to account the clicks for a product.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-`id` |  Yes | `String` | Unique identifier of the item in the datafeed
-`options` | No | `Object` | Additional options like `sessionId` (default `"session_id"`), `query` (default `""`), `datatype` (default `"product"`)
-`callback` | No | `Function` | Receives two args: `err` and `response`
-
-#### registerCheckout
-Sends a request to the Search API in order to account the sales for your SearchEngine.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-`sessionId` |  Yes | `String` | A session identifier.
-`options` | No | `Object` | Additional options like `query`
-`callback` | No | `Function` | Receives two args: `err` and `response`
-
-
-### options
-Sends a request to the Search API in order to receive server configuration. The response received is like this:
-
-```javascript
-{"currency":
-  {"format":"%s%v",
-   "symbol":"$",
-   "label":"Hong Kong Dollar",
-   "decimal":".",
-   "thousand":",",
-   "precision":2
-   },
-   "query_limit_reached":false,
-   "mobile":{"endpoint":"mobile.mydomain.com"},
-   "facets":[{"name":"brand",
-   	        "es_definition":{"terms":{"field":"brand.facet","size":20}},
-   	        "label":"Brand","type":"terms","field":"brand.facet","size":20},
-   	     {"name":"sale_price",
-   	      "es_definition":{
-   	      	"range":{
-   	      	"ranges":[{"from":0}],"field":"sale_price"
-   	      	}
-   	      },
-   	      "label":"Sale",
-   	      "type":"range",
-   	      "ranges":[{"from":0}],"field":"sale_price"
-   	      }
-   	     ],
-   "hasMobileEnabled":false
-   	  }
-
-```
-
-### Widget
-
-Widgets are visual elements that take part into the search. They can be search inputs, places where display the results, places to put the facets, etc.
-
-The events you can bind in widget depend on the widget you are instantiating. Above we'll describe all the available widget and theirs correponding events.
-
-### widgets.QueryInput
-
-This widget triggers searches when a user types on it.
-
-#### constructor
-
-Argument | Required | Type | Description
--------- | --------- | ---- | ---------------------
-`selector` |  Yes | `String` | Input CSS selector.
-`options` |  No | `Object` | Options to configure the input.
-
-The options to configure the input are:
-
-Option | Type | Description
------- |  ---- |  --------------
-`wait` | `Number` | milliseconds that the widget waits to check the input content length.
-`captureLength` | `Number` | number of Requireds typed when first search is performed
-`typingTimeout` | `Number` | number of milliseconds the `QueryInput` waits from the user's last character typed till trigger `df:typing_stopped`.
-`clean` | `Boolean` | If `true`, the input is cleared when the `clean()` method is invoked. Otherwise the input retains its value until the user cleans it.
-
-#### bind
-
-This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function which receives the API Search response.
-
-#### one
-Does the same as the `bind` method but the callback is executed only once.
-
-#### off
-Removes an event listener previously defined with `bind`.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function passed to `bind`.
-
-#### trigger
-Triggers an event in the widget instance.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function passed to `bind`.
-
-#### Events
-
-The events you can bind to a `widgets.QueryInput` are:
-
-Event Name | Callback Arguments | Description
----------- | ------------------ | -----------
-`df:typing_stopped`   | <ul><li>query `String`: the query in the input.</li></ul> | This event is triggered when the user has stopped to type for a while (`typingTimeout` property, one second by default).
-`df:cleaned` | | This event is triggered when the input is cleaned (which happens when the `clean` option is `true`).
-
-### widgets.Display
-This widget renders the results in a DOM node. When a new search or filter is done the new content will replace the older. This widget doesn't have paging.
-
-#### constructor
-
-Argument | Required | Type | Description
--------- | --------- | ---- | ---------------------
-`container` |  Yes | `String` | Results container CSS selector.
-`template` | Yes | `String` | Template to shape the response into HTML.
-`options` |  No | `Object` | Options to configure the widget.
-
-##### Options
-
-Option | Type | Description
------- |  ---- |  --------------
-`template` | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
-`templateVars` | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
-`templateFunctions` | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
-
-#### bind
-This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function which receives the API Search response.
-
-#### one
-Does the same as the `bind` method but the callback is executed only once.
-
-#### off
-Removes an event listener previously defined with `bind`.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function passed to `bind`.
-
-#### trigger
-Triggers an event in the widget instance.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function passed to `bind`.
-
-#### Events
-
-The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
-
-Event Name | Callback Arguments | Description
----------- | ------------------ | -----------
-`df:rendered` | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
-`df:cleaned` | | This event is triggered when the widget is cleaned.
-
-As an example, we'll print in the console the total results in the `df:rendered` event.
-
-```javascript
-results = new doofinder.widgets.Display(container, options);
-results.bind('df:rendered', function(event, res){
-   console.log(res.total);
-});
-```
-
-### widgets.Results
-
-**Extends:** `widgets.Display`. You can use `bind`, `one`, `off` and `trigger` and listen to `df:rendered` and `df:cleaned`.
-
-This widget shows the results in a DOM node. When a new search or filter is done or a new page is requested the new content will replace the older.
-
-#### constructor
-
-Argument | Required | Type | Description
--------- | --------- | ---- | ---------------------
-`container` |  Yes | `String` | Results container CSS selector.
-`options` |  No | `Object` | Options to configure the widget.
-
-The options to configure the widget are:
-
-Option | Type | Description
------- |  ---- |  --------------
-`template` | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
-`templateVars` | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
-`templateFunctions` | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
-
-#### bind
-This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function which receives the API Search response.
-
-#### one
-Does the same as the `bind` method but the callback is executed only once.
-
-#### off
-Removes an event listener previously defined with `bind`.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function passed to `bind`.
-
-#### trigger
-Triggers an event in the widget instance.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function passed to `bind`.
-
-#### Events
-
-The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
-
-Event Name | Callback Arguments | Description
----------- | ------------------ | -----------
-`df:rendered` | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
-`df:cleaned` | | This event is triggered when the widget is cleaned.
-
-As an example, we'll print in the console the total results in the `df:rendered` event.
-
-```javascript
-results = new doofinder.widgets.Results(container, options);
-results.bind('df:rendered', function(event, res){
-   console.log(res.total);
-});
-```
-
-### widgets.ScrollResults
-
-**Extends:** `widgets.Display`. You can use `bind`, `one`, `off` and `trigger` and listen to `df:rendered` and `df:cleaned`.
-
-This widget render the results in an DOM node with an inner scroll. So the next page will be requested when scroll reaches the bottom.
-
-#### constructor
-
-Argument | Required | Type | Description
--------- | --------- | ---- | ---------------------
-`container` |  Yes | `String` | Results container CSS selector.
-`options` |  No | `Object` | Options to configure the widget.
-
-##### Options
-
-Option | Type | Description
------- |  ---- |  --------------
-`template` | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
-`templateVars` | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
-`templateFunctions` | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
-`scrollOffset` | `Number` | Distance in pixels to the bottom in scroll when next page is requested. Default 50.
-
-There is some CSS you have to add to your container in order to make the inner scroll to work properly:
-
-```css
-#container {
-  height: 800px;
-  position: relative;
-  overflow: auto;
-}
-```
-
-In the example above `#container` could be your scroll container selector and the height can be set to the value you prefer.
-
-#### bind
-This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function which receives the API Search response.
-
-#### one
-Does the same as the `bind` method but the callback is executed only once.
-
-#### off
-Removes an event listener previously defined with `bind`.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function passed to `bind`.
-
-#### trigger
-Triggers an event in the widget instance.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function passed to `bind`.
-
-#### Events
-
-The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
-
-Event Name | Callback Arguments | Description
----------- | ------------------ | -----------
-`df:rendered` | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
-`df:cleaned` | | This event is triggered when the widget is cleaned.
-
-As an example, we'll print in the console the total results in the `df:rendered` event.
-
-```javascript
-results = new doofinder.widgets.ScrollResults(container, options);
-results.bind('df:rendered', function(event, res){
-   console.log(res.total);
-});
-```
-
-### widgets.TermFacet
-
-**Extends:** `widgets.Display`. You can use `bind`, `one`, `off` and `trigger` and listen to `df:rendered` and `df:cleaned`.
-
-This widget render a term facet in a list of terms.
-
-#### constructor
-
-Argument | Required | Type | Description
--------- | --------- | ---- | ---------------------
-`container` |  Yes | `String` | Results container CSS selector.
-`name` | Yes | `String`| The facet key.
-`options` |  No | `Object` | Options to configure the widget.
-
-##### Options
-
-Option | Type | Description
------- |  ---- |  --------------
-`template` | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
-`templateVars` | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
-`templateFunctions` | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
-
-#### bind
-This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function which receives the API Search response.
-
-#### one
-Does the same as the `bind` method but the callback is executed only once.
-
-#### off
-Removes an event listener previously defined with `bind`.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function passed to `bind`.
-
-#### trigger
-Triggers an event in the widget instance.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function passed to `bind`.
-
-#### Events
-
-The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
-
-Event Name | Callback Arguments | Description
----------- | ------------------ | -----------
-`df:rendered` | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the widget is rendered (when there're terms to render, otherwise the widget will be cleaned).
-`df:cleaned` | | This event is triggered when the widget is cleaned (when there's no terms to render or when the `clean()` method is called in other circumstances).
-
-As an example, we'll print in the console the total results in the `df:rendered` event.
-
-```javascript
-facet = new doofinder.widgets.TermFacet(container, options);
-facet.bind('df:rendered', function(event, res){
-   console.log(res.total);
-});
-```
-
-### widgets.RangeFacet
-
-**Extends:** `widgets.Display`. You can use `bind`, `one`, `off` and `trigger` and listen to `df:rendered` and `df:cleaned`.
-
-This widget render a range facet in a slider. To show it properly is necessary some
-CSS. You can add this stylesheet:
-
-https://raw.githubusercontent.com/doofinder/js-doofinder/master/dist/doofinder.css
-
-#### constructor
-
-Argument | Required | Type | Description
--------- | --------- | ---- | ---------------------
-`container` |  Yes | `String` | Results container CSS selector.
-`name` | Yes | `String`| The facet key.
-`options` |  No | `Object` | Options to configure the widget.
-
-##### Options
-
-Option | Type | Description
------- |  ---- |  --------------
-`template` | `String` | [Mustache](http://mustache.github.io/) template to shape the results.
-`templateVars` | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
-`templateFunctions` | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
-`sliderClassName`| `String` | The CSS class of the node that holds the slider. It's injected into the template context.
-`sliderOptions` | `Object` | We use [noUiSlider](http://refreshless.com/nouislider) and this option holds the slider configuration. Due to a buggy pips support, if no `pips` option is found, the widget paints them itself. If the `pips` option is `false`, no pips are displayed. In any other case, noUiSlider is in charge of displaying them.
-
-#### bind
-This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function which receives the API Search response.
-
-#### one
-Does the same as the `bind` method but the callback is executed only once.
-
-#### off
-Removes an event listener previously defined with `bind`.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function passed to `bind`.
-
-#### trigger
-Triggers an event in the widget instance.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function passed to `bind`.
-
-#### Events
-
-The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
-
-Event Name | Callback Arguments | Description
----------- | ------------------ | -----------
-`df:rendered` | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the range slider is rendered.
-`df:cleaned` | | This event is triggered when the widget is cleared (the slider is not rendered because it doesn't make sense).
-
-As an example, we'll print in the console the total results in the `df:rendered` event.
-
-```javascript
-facet = new doofinder.widgets.RangeFacet(container, options);
-facet.bind('df:rendered', function(event, res){
-   console.log(res.total);
-});
-```
-
-### widgets.FacetPanel
-
-**Extends:** `widgets.Display`. You can use `bind`, `one`, `off` and `trigger` and listen to `df:rendered` and `df:cleaned`.
-
-A panel that can contain a facet widget. Instead of replacing the HTML of its container, this widget appends itself to it.
-
-Use the `embedWidget` method to notify the panel about the widget to use to render itself.
-
-#### constructor
-
-Argument | Required | Type | Description
--------- | --------- | ---- | ---------------------
-`container` |  Yes | `String` | Results container CSS selector.
-`options` |  No | `Object` | Options to configure the widget.
-
-##### Options
-
-Option | Type | Description
------- |  ---- |  --------------
-`id` | `String` | Value for the `id` attribute of the panel. Optional. A random one will be generated if none provided.
-`template` | `String` | [Mustache](http://mustache.github.io/) template to paint the panel.
-`templateVars` | `Object` | Extra info you want to render in the template. Look at [Example 2](#example-2-adding-extra-info-to-our-template).
-`templateFunctions` | `Object` | Custom helpers to use in your template. Look at [Example 3](#example-3-create-a-custom-template-function).
-`startHidden` | `Boolean` | `true` by default. If `true`, the panel is hidden until the embedded widget is rendered. This avoids weird looking empty panels in your layout. You can disable this option if your template takes this issue into account.
-`startCollapsed` | `Boolean` | `false` by default. If `true`, the panel is collapsed by default. Otherwise the content of the panel is displayed on rendering.
-
-##### Example
-
-```javascript
-var panel = new doofinder.widgets.FacetPanel(
-  document.getElementById('aside'), {
-    startCollapsed: true,
+var facet = new doofinder.widgets.CollapsibleTermsFacet("#brandFilter", "brand", {
+    size: 5,
+    startCollapsed: false,
     templateVars: {
-      name: "categories_facet"
+        viewMoreLabel: "Expand",
+        viewLessLabel: "Collapse"
     }
-  }
-);
-controller.addWidget(panel);
-
-var facetWidget = new doofinder.widgets.TermFacet(
-  panel.contentElement,
-  facetName,
-  facetOptions
-);
-controller.addWidget(facetWidget);
-
-panel.embedWidget(facetWidget);
+});
 ```
 
-#### bind
-This method adds a callback to an event triggered from the widget. Events are triggered from every widget when a query is going to be done or when results are received or when they are rendered in a widget.
+##### Options
 
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function which receives the API Search response.
+| Option | Required | Type | Default | Description |
+| :--- | :---: | :---: | :---: | :--- |
+| `size` | No | `Number` | `10` | Maximum number of terms visible when the widget is collapsed. |
+| `startCollapsed` | No | `Boolean` | `true` | Determines whether the widget's default status is being collapsed or not. |
+| `buttonTemplate` | Yes | `String` || See _Default Templates_ below. |
 
-#### one
-Does the same as the `bind` method but the callback is executed only once.
+##### Default Templates
 
-#### off
-Removes an event listener previously defined with `bind`.
+**WARNING:** Behavior is a bit complex and is recommended to limit modifications to CSS classes and minor stuff.
 
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function passed to `bind`.
+###### template
 
-#### trigger
-Triggers an event in the widget instance.
+Default template of the widget.
 
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-event |  Yes | `String` | The event name.
-callback | Yes | `Function` | The function passed to `bind`.
+```mustache
+{{#terms}}
+  <div class="df-term" data-facet="{{name}}" data-value="{{key}}"
+      {{#extra-content}}{{index}}{{/extra-content}}
+      {{#selected}}data-selected{{/selected}}>
+    <span class="df-term__value">{{key}}</span>
+    <span class="df-term__count">{{doc_count}}</span>
+  </div>
+{{/terms}}
+{{#show-more-button}}{{terms.length}}{{/show-more-button}}
+```
+
+This is basically the same template as in the `TermsFacet` class, but adds a couple of template helpers to mark terms as _extra content_ (terms that will be hidden when the widget is collapsed), and paint the collapse toggle button.
+
+| Function | Description |
+| : --- | : --- |
+| `extra-content` | Receives the index of the result in the list of results and marks the term as _extra content_ if needed. |
+| `show-more-button` | Paints the button if there're more terms than should be visible when the widget is collapsed (uses the `size` option). |
+
+Apart from those inherited from `TermFacet`, there're some `data` attributes that must be present for the widget to work properly:
+
+| Attribute | Description |
+| : --- | : --- |
+| `data-extra-content` | Terms that are considered _extra content_ get this attribute added. |
+| `data-view-extra-content` | This attribute is dynamically assigned to the widget container to indicate whether the hidden terms must be visible or not. |
+
+###### buttonTemplate
+
+Default template for the visibility toggle button.
+
+```mustache
+<button type="button" data-toggle-extra-content
+    data-text-normal="{{#translate}}{{viewMoreLabel}}{{/translate}}"
+    data-text-toggle="{{#translate}}{{viewLessLabel}}{{/translate}}">
+  {{#collapsed}}{{#translate}}{{viewMoreLabel}}{{/translate}}{{/collapsed}}
+  {{^collapsed}}{{#translate}}{{viewLessLabel}}{{/translate}}{{/collapsed}}
+</button>
+```
+
+A couple of template variables are included by default in the rendering context:
+
+| Variable | Type | Default | Description |
+| : --- | : --- : | : --- : | : --- |
+| `viewMoreLabel` | `String` | `"View more…"` | Text to be rendered as the toggle button text when facets are collapsed. |
+| `viewLessLabel` | `String` | `"View less…"` | Text to be rendered as the toggle button text when all facets are visible. |
+
+You can change them by passing different values in the options object.
+
+There's also a `data` attribute that must be present for the widget to work properly:
+
+| Attribute | Description |
+| : --- | : --- |
+| `data-toggle-extra-content` | Used to identify the button as the terms visibility toggle |
 
 #### Events
 
-The events you can bind in widget are the described above. Note that each event sends different arguments to the callback in order to implement it properly.
+Apart from the default events, this widget triggers the following events.
 
-Event Name | Callback Arguments | Description
----------- | ------------------ | -----------
-`df:rendered` | <ul><li>res`Object`: Doofinder Search API response.</li></ul> | This event is triggered when the results are rendered.
-`df:cleaned` | | This event is triggered when the widget is cleaned.
+##### df:term:click
 
-### Client
+Triggered when a term is clicked for the current widget.
 
-This is the class which makes the queries to the Doofinder Search API.
+```javascript
+widget.on("df:term:click", function(facetName, facetValue, isSelected){
+  // Do something with data
+});
+```
+
+| Argument | Type | Description |
+| : --- | : --- : | : --- |
+| `facetName` | `String` | Name of the facet as defined in Doofinder. |
+| `facetValue` | `String` | Value of the term. |
+| `isSelected` | `Boolean` | Indicates whether the facet is selected or not. |
+
+---
+
+### doofinder.widgets.RangeFacet
+
+`Widget < Display < RangeFacet`
+
+This widget provides an interface to filter results by a numeric value through a slider control.
+
+**NOTICE:** Slider is managed by the excelent [noUiSlider] library but not all options are supported.
+
+**NOTICE:** Slider needs `doofinder.css` to work.
 
 #### constructor
-Argument | Required | Type | Description
--------- | --------- | ---- | ---------------------
-hashid   | Yes  | `String` | The unique search engine identifier.
-API Key/Zone  | Yes  | `String` | The secret key to authenticate the request or the doofinder zone.
-types | No  | `Array` | An array of datatypes to restrict the queries to them.
-
-**WARNING**: Do not use the API key unless you're coding on the server
-side, if you don't put the API key just put the doofinder zone instead.
-
-#### search
-This method performs a Search API call and retrieves the data. The data will be received by a callback function.
-
- Argument | Required | Type | Description
- -------- | --------- |---- | ---------------------
- query |  Yes | `String` | The query terms.
- params |  No | `Object` | The query terms.
- callback | Yes | `Function` | The function which receives the API Search response.
-
-#### registerSession
-Sends a request to the Search API in order to account the sessions in your SearchEngine.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-sessionId |  Yes | `String` | A session identifier.
-callback | No | `Function` | Receives two args: `err` and `response`
-
-#### registerClick
-Sends a request to the Search API in order to account the clicks for a product.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-id |  Yes | `String` | Unique identifier of the item in the datafeed.
-options | No | `Object` | Additional options like `sessionId` (default `"session_id"`), `query` (default `""`), `datatype` (default `"product"`)
-callback | No | `Function` | Receives two args: `err` and `response`
-
-#### registerCheckout
-Sends a request to the Search API in order to account the sales for your SearchEngine.
-
-Argument | Required | Type | Description
--------- | --------- |---- | ---------------------
-sessionId |  Yes | `String` | A session identifier.
-options | No | `Object` | Additional options like `query`
-callback | No | `Function` | Receives two args: `err` and `response`
-
-
-## Examples
-
-### Example 1: Create a simple template to show results.
-
-In the [Quick Start](#quick-start) example we composed a simple view using the Doofinder Library. Let's see how to shape the results by a Mustache template.
 
 ```javascript
-
-var resultsTemplate = '{{#results}}' +
-  ' <div>'+
-  '   <div>' +
-  '     <a href="{{link}}">'+
-  '       <img src="{{image_link}}" alt="{{title}}">'+
-  '     </a>'+
-  '     <div>'+
-  '       <a target="_blank" data-df-hitcounter="{{dfid}}" href="{{link}}">'+
-  '         <div>{{title}}</div>' +
-  '         <div>{{description}}</div>' +
-  '         <div>' +
-  '          <span>{{#format-currency}}{{price}}{{/format-currency}}</span>' +
-  '         </div>'+
-  '       </a>' +
-  '    </div>' +
-  '  </div>' +
-  '</div>' +
-  '{{/results}}';
-
-var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {template: resultsTemplate});
-
+var rangeWidget = new doofinder.widgets.RangeFacet("#price", {
+    format: formatCurrency
+});
 ```
 
-Let's have a look to the template:
+##### Options
 
-- We used `{{#results}}` to iterate through the items.
-- We used `{{field_name}}` tags to print the content of a field.
-- We used `{{#field_name}}` to check the presence of a field.
-- We used `{{#format-currency}}` helper to print the price with the coin symbol and formatted.
-- Note that we use a data attribute (data-df-hitcounter) to show the dfid. You can use this to send it with the [Controller.hit](#hit) method.
+| Option | Required | Type | Values | Default | Description |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| `pips` | No | `undefined` | `undefined` | `undefined` | Makes the widget render its own _pips_ due to a buggy behavior in noUiSlider. |
+||| `Boolean` | `false` || Disables _pips_. |
+||| `Object` |||  |
+| `format` | No | `Function` ||| Function to format numeric values as strings. |
 
-### Example 2: Adding extra info to our template.
+##### Default Templates
 
-Maybe you have some items with no header and you want to show a standard one, just in case.
+**NOTICE:** If you change the `df-slider` CSS class, remember to update CSS to match the new one.
+
+```mustache
+<div class="df-slider" data-facet="{{name}}"></div>
+```
+
+| Variable | Type | Description |
+| : --- | : --- : | : --- |
+| `name` | `String` | Name of the facet as defined in Doofinder. |
+
+#### RangeFacet.get
+
+Gets the current range selected in the slider.
 
 ```javascript
-var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {
-  template: resultsTemplate,
-  templateVars: {
-    standardTitle: "My title"
-    }
+var r = rangeWidget.get();
+var start = r[0];
+var end = r[1];
+```
+
+#### RangeFacet.set
+
+Sets the range selected in the slider.
+
+```javascript
+rangeWidget.set([10, 100]);
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description | Sample |
+| :--- | :---: | :---: | :--- | :--- |
+| `range` | Yes | `Array` | 2-item array of numbers. | `[10, 100]` |
+
+#### Events
+
+Apart from the default events, this widget triggers the following events.
+
+##### df:range:change
+
+Triggered when the range set in the slider changed by user input.
+
+```javascript
+// min [-----------|start|------------------|end|-------] max
+widget.on("df:range:change", function(value, range){
+  console.log(value.start);
+  console.log(value.end);
+  console.log(range.min);
+  console.log(range.max);
+});
+```
+
+| Argument | Type | Description |
+| : --- | : --- : | : --- |
+| `value` | `Object` | Current selected range. |
+| `range` | `Object` | Valid range. |
+
+---
+
+### doofinder.widgets.Panel
+
+`Widget < Display < Panel`
+
+This is a special widget. It's not used to filter anything, just as a presentational container for another widget. Useful when you want to separate widgets in _sections_ (like facet widgets) with a label but you iterate them dynamically.
+
+#### constructor
+
+```javascript
+// assume facet variable obtained from the server
+var panel = new doofinder.widgets.Panel("#aside", function(panel){
+  var widget = new doofinder.widgets.TermsFacet(panel.contentElement, facet.name);
+  widget.on("df:widget:render", function(response){
+    var suffix = this.selectedTerms > 0 ? ' (' + this.selectedTerms + ')' : '';
+    panel.labelElement.html(facet.label + suffix);
   });
+  return widget;
+}, {
+  label: facet.label
+});
 ```
 
-So you can modify your template in order to show a standard title if there's no header supplied by the item.
+##### Arguments
 
-```javascript
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `element` | Yes | `String` | CSS Selector. |
+||| `Node` | Direct reference to a DOM Node. |
+||| `DfDomElement` | Reference to a DOM node via `dfdom`. |
+| `getFacet` | Yes | `Function` | Function that receives the panel widget instance and returns an instance of a widget that will be rendered inside the panel. |
+| `options` | No | `Object` | Options object. |
 
-var resultsTemplate = '{{#results}}' +
-  ' <div>'+
-  '   <div>' +
-  '     <a href="{{link}}">'+
-  '       <img src="{{image_link}}" alt="{{title}}">'+
-  '     </a>'+
-  '     <div>'+
-  '       <a target="_blank" data-df-hitcounter="{{dfid}}" href="{{link}}">'+
-  '         {{#title}}' +
-  '         <div>{{title}}</div>' +
-  '         {{/title}}' +
-  '         {{^title}}' +
-  '         <div>{{standardTitle}}</div>' +
-  '         {{/title}}' +
-  '         <div>{{description}}</div>' +
-  '       </a>' +
-  '    </div>' +
-  '  </div>' +
-  '</div>' +
-  '{{/results}}';
+##### Options
 
-var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {
-  template: resultsTemplate,
-  templateVars: {
-    standardTitle: "My title"
-    }
-  });
+| Option | Required | Type | Values | Default | Description |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| `label` | No | `String` || `null` | Label used in the panel header. If not provided, no header will be rendered by default (unless you modify the default template). |
+| `insertionMethod` | Yes | `String` | `append` | `append` | How to insert the panel inside its container. It's appended by default. |
+|||| `prepend` ||  |
+|||| `before` ||  |
+|||| `after` ||  |
+|||| `html` || This replaces the container content and usually is not used. |
+
+##### Default Template
+
+```mustache
+<div class="df-panel" id="{{panelElement}}">
+  {{#label}}
+  <div class="df-panel__label" id="{{labelElement}}">{{label}}</div>
+  {{/label}}
+  <div class="df-panel__content" id="{{contentElement}}"></div>
+</div>
 ```
 
-### Example 3: Create a custom template function.
+Some template variables are included by default in the rendering context:
 
-Template functions are called helpers in [Mustache](http://mustache.github.io/). You can create and add custom helpers to your template by using the `templateFunctions` option. We'll create a helper that convert a text in bold.
+| Variable | Type | Default | Description |
+| : --- | : --- : | : --- : | : --- |
+| `panelElement` | `String` | `"df-<random>"` | id of the panel container. |
+| `labelElement` | `String` | `"df-<random>"` | id of the label container. |
+| `contentElement` | `String` | `"df-<random>"` | id of the content container. |
+
+##### The `getFacet()` Function
+
+Used to obtain the widget in the precise moment it can be rendered (the panel must be rendered first), gives access to the panel instance, so you can make use of cached references to the panel elements:
+
+| Variable | Description |
+| : --- | : --- |
+| `panelElement` | The panel node. |
+| `labelElement` | The label node. |
+| `contentElement` | The content node. |
+
+This way you can use events of the contained widget to alter the panel itself, for instance its label.
+
+#### Events
+
+Apart from the default events, this widget triggers the following events.
+
+##### df:widget:renderContent
+
+Triggered when the widget contained on the panel has been rendered.
 
 ```javascript
-
-{
-  templateFunctions: {
-    bold: function(){
-      function(text, render){
-        return "<b>" + render(text) + "</b>"
-      }
-    }
-}
-
+panel.on("df:widget:renderContent", function(widget){
+  // widget is ready to use
+});
 ```
-This helper will take the text in the tag and will wrapper it with the `<b>` tag. Note that `render(text)` returns the text wrapped by the helper.
 
-We'll use the helper to show the header and instantiate the widget.
+| Argument | Type | Description |
+| : --- | : --- : | : --- |
+| `widget` | `Widget` | Widget contained in the panel. |
+
+---
+
+### doofinder.widgets.CollapsiblePanel
+
+`Widget < Display < Panel < CollapsiblePanel`
+
+This widget is a variant of `Panel`. It provides collapsing features so a user can collapse the panel by clicking on its header.
+
+#### constructor
 
 ```javascript
-var resultsTemplate = '{{#results}}' +
-  ' <div>'+
-  '   <div>' +
-  '     <a href="{{link}}">'+
-  '       <img src="{{image_link}}" alt="{{link}}">'+
-  '     </a>'+
-  '     <div>'+
-  '       <a target="_blank" data-df-hitcounter="{{dfid}}" href="{{link}}">'+
-  '         <div>{{#bold}}{{title}}{{/bold}}</div>' +
-  '         <div>{{description}}</div>' +
-  '         <div>' +
-  '          <span>{{#format-currency}}{{price}}{{/format-currency}}</span>' +
-  '         </div>'+
-  '       </a>' +
-  '    </div>' +
-  '  </div>' +
-  '</div>' +
-  '{{/results}}';
+// assume facet variable obtained from the server
+var panel = new doofinder.widgets.CollapsiblePanel(
+  "#aside", 
+  function(panel){ 
+    /* ... */
+  }, 
+  {
+    label: facet.label,
+    startCollapsed: true
+  }
+);
+```
 
-var resultsWidget = new doofinder.widgets.ScrollResults('#scroll', {
-  template: resultsTemplate,
-  templateFunctions: {
-    bold: function(){
-      return function(text, render){
-        return "<b>" + render(text) + "</b>"
-      }
-    }
+##### Options
+
+Apart from the `Panel` options, this widget provides:
+
+| Option | Required | Type | Default | Description |
+| :--- | :---: | :---: | :---: | :--- |
+| `startCollapsed` | No | `Boolean` | `false` | Indicates whether the panel is rendered collapsed by default or not. |
+
+#### CollapsiblePanel.collapse()
+
+This method collapses the panel.
+
+```javascript
+panel.collapse();
+```
+
+#### CollapsiblePanel.expand()
+
+This method expands the panel.
+
+```javascript
+panel.expand();
+```
+
+#### CollapsiblePanel.toggle()
+
+This method toggles the panel status; if collapsed it expands and vice versa.
+
+```javascript
+panel.toggle();
+```
+
+#### CollapsiblePanel.reset()
+
+This method resets the panel collapse status based on the value of the `startCollapsed` option.
+
+```javascript
+panel.reset();
+```
+
+#### Events
+
+Apart from the default events, this widget triggers the following events:
+
+##### df:collapse:change
+
+Triggered when the panel collapse status change.
+
+```javascript
+panel.on("df:collapse:change", function(collapsed) {
+  if (collapsed) {
+    // ...
   }
 });
-
 ```
 
-## Issues in embedded dependencies (or what is npm-shrinkwrap file)
-We've added this file to deal with issues in embedded dependencies. You have there the whole dependencies tree so you can import your own fork when anything happen with the official ones. Since this suppose a work around, this file can appears and disappears. More information [here](https://docs.npmjs.com/cli/shrinkwrap)
+| Argument | Type | Description |
+| : --- | : --- : | : --- |
+| `collapsed` | `Boolean` | Whether the panel is collapsed or not. |
 
-Issue related | Dependency modified
-------------- | -------------------
-v4.1.9 Edge showing nothing. | grunt-browserify > browserify > stream-http. Loop using `Symbol.iterator` fails silently.
+## Session Reference
+
+A `Session` is used to store user data. User (session) data may be persisted or not, depending on the _store_ class being used.
+
+_Store_ classes must implement `ISessionStore` so `Session` instances know how to work with them.
+
+### doofinder.session.ISessionStore
+
+Interface that all storage classes must implement. See [`Session`](#doofindersessionsession).
+
+It provides some public methods:
+
+| Method | Description |
+| :--- | :--- |
+| `get(key)` | Gets the value for the specified key from the storage. |
+| `set(key, value)` | Sets the value for the specified key in the storage. |
+| `del(key)` | Deletes the specified key from the storage. |
+
+And requires some protected methods to be implemented:
+
+| Method | Description |
+| :--- | :--- |
+| `__getData()` | Gets the current data obj from the underlying storage and ensures that a `session_id` is created if it doesn't exist, like a signature that all session data must have. |
+| `__setData(dataObj)` | Saves the current data obj into the underlying storage. |
+| `clean()` | Deletes all data from the underlying storage. |
+| `exists()` | Checks whether the session exists or not. |
+
+### doofinder.session.ObjectSessionStore
+
+Store to hold session data as a plain `Object`.
+
+#### constructor
+
+```javascript
+var store = new doofinder.session.ObjectSessionStore({
+  key: "value"
+});
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `data` | No | `Object` | Initial data. |
+
+### doofinder.session.CookieSessionStore
+
+Store that holds session data in a browser cookie.
+
+#### constructor
+
+```javascript
+var store = new doofinder.session.CookieSessionStore(cookieName, {
+  expiry: 1
+});
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `cookieName` | Yes | `String` | A name for the cookie. |
+| `options` | No | `Object` | Options object. |
+
+##### Options
+
+| Option | Required | Type |  Default | Description |
+| :--- | :---: | :---: | :---: | :--- |
+| `prefix` | No | `String` | `""` | Prefix to be added to the cookie name. |
+| `expiry` | Yes | `Number` | `1/24` | Duration of the cookie in days. 1 hour by default. |
+
+### doofinder.session.Session
+
+Class that represents a user session persisted somewhere.
+
+#### constructor
+
+```javascript
+var session = new doofinder.session.Session(
+  new doofinder.session.CookieSessionStore("myCookie")
+);
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `store` | Yes | `ISessionStore` | A valid storage instance. |
+
+## Stats Reference
+
+### doofinder.Stats
+
+Helper class to wrap calls to the Doofinder stats API endpoint using the `Client` and `Session` classes.
+
+#### constructor
+
+```javascript
+var stats = new doofinder.Stats(client, session);
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `client` | Yes | `Client` | An instance of `Client`. |
+| `session` | Yes | `Session` | An instance of `Session`. |
+
+#### Stats.setCurrentQuery()
+
+Sets current search terms in the search session.
+
+```javascript
+stats.setCurrentQuery("red car");
+```
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `query` | Yes | `String` | Search terms. |
+
+**WARNING:** This should be called ONLY if the user has performed a search. That's why this is usually called when the user has stopped typing in the search box.
+
+#### Stats.registerSession()
+
+Registers the session in Doofinder stats if not already registered. It marks the session as registered synchronously to short-circuit other attempts while the request is in progress. If an error occurs in the stats request the session is marked as unregistered again.
+
+```javascript
+var registered = stats.registerSession(function(err, res){
+  // Do something in case of error or successful response
+});
+```
+
+This method returns a `Boolean` value saying if the session was registered or not (for instance if it was already registered).
+
+**WARNING:** This should be called ONLY if the user has performed a search. That's why this is usually called when the user has stopped typing in the search box.
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `callback` | No | `Function` | Method to be called when the response or an error is received. |
+
+#### Stats.registerClick()
+
+Registers a click on a search result for the specified search query.
+
+```javascript
+stats.registerClick("abcd3434...", "red car", function(err, res){
+  // Do something in case of error or successful response
+});
+stats.registerClick("abcd3434...", null, function(err, res){
+  // Do something in case of error or successful response
+});
+stats.registerClick("abcd3434...");
+```
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `dfid` | Yes | `String` | Internal id of the result in Doofinder |
+| `query` | No | `String` | Search terms. If not defined, is obtained from the session. |
+| `callback` | No | `Function` | Method to be called when the response or an error is received. |
+
+#### Stats.registerCheckout()
+
+Registers a checkout if session exists. This method returns a `Boolean` to determine whether the checkout was registered or not.
+
+```javascript
+var registered = stats.registerCheckout(function(err, res){
+  // Do something in case of error or successful response
+});
+```
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `callback` | No | `Function` | Method to be called when the response or an error is received. |
+
+#### Stats.registerBannerEvent()
+
+Registers an event for a banner.
+
+```javascript
+stats.registerBannerEvent("display", 1234, function(err, res){});
+stats.registerBannerEvent("click", 1234, function(err, res){});
+```
+
+| Argument | Required | Type | Values | Description |
+| :--- | :---: | :---: |:---: | :--- |
+| `eventName` | Yes | `String` | `display` | Use to register the event of a banner being displayed to the user. |
+|||| `click` | Used to register the click of a user on a banner. |
+| `bannerId` | Yes | `Number` || Id of the banner in Doofinder. |
+| `callback` | No | `Function` || Method to be called when the response or an error is received. |
+
+## How To
+
+### Configure facet widgets dynamically
+
+Facets defined in Doofinder for a search engine can be easily retrieved by requesting the search engine's options through an instance of `Client`.
+
+For each _terms_ facet you will get something like this:
+
+```json
+{
+  "visible": true,
+  "type": "terms",
+  "size": 20,
+  "name": "brand",
+  "label": "brand",
+  "field": "brand.facet",
+  "es_definition": {
+    "terms": {
+      "size": 20,
+      "field": "brand.facet"
+    }
+  }
+}
+```
+
+When dealing with the options response to dynamicly configure facets, you will only have to take some fields into account:
+
+| Field | Type | Values | Description |
+| :--- | :---: | :---: | :--- |
+| `name` | `String` || Machine name of the facet. |
+| `type` | `String` | `"terms"` | For _terms_ facet this value is fixed. |
+| `size` | `Number` || Maximum number of terms the server will return for this facet. |
+| `label` | `String` || Humanized name of the facet. |
+| `visible` | `Boolean` || Indicates whether this filter should be available for the user or is for your app's internal use only. |
+
+For instance, you could do this:
+
+```html
+<div id="brand"></div>
+```
+
+```javascript
+client.options(function(err, options){
+  options.facets.forEach(function(facet){
+    if (facet.type === 'terms') {
+      var elementId = "#" +  facet.name; // "#brand", for instance
+      controller.registerWidget(
+        new doofinder.widgets.TermsFacet(elementId, facet.name)
+      );
+    }
+  });
+});
+```
+
+For a _range_ facet you would get something like this:
+
+```json
+{
+  "visible": true,
+  "type": "range",
+  "ranges": [{
+    "from": 0
+  }],
+  "name": "best_price",
+  "label": "Price",
+  "field": "best_price",
+  "es_definition": {
+    "range": {
+      "ranges": [{
+          "from": 0
+      }],
+      "field": "best_price"
+    }
+  }
+}
+```
 
 
-
-
+[grunt]: https://gruntjs.com
+[doofinder]: https://www.doofinder.com
+[cors]: https://en.wikipedia.org/wiki/Cross-origin_resource_sharing
+[doofinder admin]: https://app.doofinder.com/admin
+[widgets]: #widgets
+[search api]: https://www.doofinder.com/support/developer/api/search-api
+[mustache]: http://mustache.github.io/
+[nouislider]: https://refreshless.com/nouislider/

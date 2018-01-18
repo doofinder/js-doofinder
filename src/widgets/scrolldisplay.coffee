@@ -1,7 +1,10 @@
+extend = require "extend"
+throttle = require "lodash.throttle"
+
+$ = require "../util/dfdom"
+Thing = require "../util/thing"
+
 Display = require "./display"
-dfScroll = require "../util/dfscroll"
-extend = require 'extend'
-$ = require '../util/dfdom'
 
 
 ###*
@@ -10,89 +13,131 @@ $ = require '../util/dfdom'
  * last page rendered.
 ###
 class ScrollDisplay extends Display
-
   ###*
+   * @param  {DfDomElement|Element|String} element Will be used as scroller.
+   * @param  {Object} options
+   *
    * Options:
    *
-   * - scrollOffset: 200
-   * - contentNode: Node that holds the results will become the container
-   *   element of the widget.
-   * - contentWrapper: Node that is used for scrolling instead of the first
-   *   child of the container.
+   * - contentElement:  By default content will be rendered inside the scroller
+   *                    unless this option is set to a valid container. This is
+   *                    optional unless the scroller is the window object, in
+   *                    that case this is mandatory.
+   * - offset:          Distance to the bottom. If the scroll reaches this point a new
+   *                    results page will be requested.
+   * - throttle:        Time in milliseconds to wait between scroll checks. This
+   *                    value limits calculations associated to the scroll event.
+   * - horizontal:      False by default. Scroll is handled vertically by default.
+   *                    If this options is enabled scroll is handled horizontally.
    *
-   *  elementWrapper
-   *  -------------------
-   * |  contentWrapper  ^|
-   * |  --------------- !|
-   * | |  element      |!|
-   * | |  ------------ |!|
-   * | | |  items     ||!|
+   * Markup:
    *
-   * TODO(@carlosescri): Document this better!!!
+   * You can just use a container element. Content will be rendered inside.
    *
-   * @param  {[type]} element  [description]
-   * @param  {[type]} template [description]
-   * @param  {[type]} options  [description]
-   * @return {[type]}          [description]
+   *  ______________________
+   * |                      |
+   * |  `element`           |
+   * |  __________________  |
+   * | |                  | |
+   * | | RENDERED CONTENT | |
+   * | |__________________| |
+   * |______________________|
+   *
+   * If you need to put extra content inside the container, before or after
+   * the rendered results, use the `contentElement` option:
+   *
+   *  __________________________
+   * |                          |
+   * |  `element`               |
+   * |  ______________________  |
+   * | |                      | |
+   * | | HEADER               | |
+   * | |______________________| |
+   * |  ______________________  |
+   * | |                      | |
+   * | | `contentElement`     | |
+   * | |  __________________  | |
+   * | | |                  | | |
+   * | | | RENDERED CONTENT | | |
+   * | | |__________________| | |
+   * | |______________________| |
+   * |  ______________________  |
+   * | |                      | |
+   * | | FOOTER               | |
+   * | |______________________| |
+   * |__________________________|
+   *
+   * IMPORTANT: Don't rely on the `element` attribute to do stuff with the
+   * container, if you use the `contentElement` option, that node will become
+   * the `element` node. To access the container always use the `container`
+   * attribute.
+   *
+   * TODO: Check how this works when the container is the window object.
   ###
-  constructor: (element, template, options) ->
-    super
+  constructor: (element, options) ->
+    defaultOptions =
+      contentElement: null
+      offset: 300
+      throttle: 16
+      horizontal: false
+    options = extend true, defaultOptions, (options or {})
 
-    if @element.element[0] is window and not options.contentNode?
-      throw "when the wrapper is window you must set contentNode option."
+    super element, options
 
-    self = this
-    scrollOptions =
-      callback: ->
-        if self.controller? and not self.pageRequested
-          self.pageRequested = true
-          # if page fetch fails...
-          setTimeout ->
-            self.pageRequested = false
-          , 5000
-          self.controller.nextPage.call(self.controller)
+    @container = @element
+    @__setContentElement()
 
-    if options.scrollOffset?
-      scrollOptions.scrollOffset = options.scrollOffset
-    if options.contentWrapper?
-      scrollOptions.content = options.contentWrapper
+    @working = false
+    @previousDelta = 0
 
-    @elementWrapper = @element
+  ###*
+   * Gets the element that will hold search results.
+  ###
+  __setContentElement: ->
+    if @options.contentElement?
+      @setElement @element.find @options.contentElement
+    else if Thing.is.window @element.get(0)
+      throw "ScrollDisplay: contentElement must be specified when the container is the window object"
 
-    if options.contentNode?
-      @element = $ options.contentNode
-    else if @element.element[0] is window
-      @element = $ "body"
+  init: ->
+    unless @initialized
+      fn = if @options.horizontal then @__scrollX else @__scrollY
+      @container.on "scroll", (throttle (fn.bind @), @options.throttle)
+      @controller.on "df:search df:refresh", (query, params) =>
+        @container.scrollTop 0
+      super
+
+  __scrollX: ->
+    rect = @container.box()
+    width = rect.scrollWidth
+    scrolled = rect.scrollLeft + rect.clientWidth
+    @__getNextPage() if width - scrolled <= @options.offset
+    direction = if rect.scrollLeft >= @previousDelta then "right" else "left"
+    @previousDelta = rect.scrollLeft
+    @trigger "df:widget:scroll", [rect.scrollLeft, direction]
+
+  __scrollY: ->
+    rect = @container.box()
+    height = rect.scrollHeight
+    scrolled = rect.scrollTop + rect.clientHeight
+    @__getNextPage() if height - scrolled <= @options.offset
+    direction = if rect.scrollTop >= @previousDelta then "down" else "up"
+    @previousDelta = rect.scrollTop
+    @trigger "df:widget:scroll", [rect.scrollTop, direction]
+
+  __getNextPage: ->
+    if @controller? and not @working
+      @working = true
+      # just in case page fetching fails, revert lock
+      setTimeout (=> @working = false), 2000
+      @controller.getNextPage()
+
+  render: (res) ->
+    if res.page is 1
+      super
     else
-      if not @element.children().length
-        @element.append (document.createElement 'div')
-      @element = @element.children().first()
-
-    dfScroll @elementWrapper, scrollOptions
-
-  ###*
-   * Initializes the object with a controller and attachs event handlers for
-   * this widget instance.
-   *
-   * @param  {Controller} controller Doofinder Search controller.
-  ###
-  init: (controller) ->
-    super
-    @controller.bind 'df:search df:refresh', (params) =>
-      @elementWrapper.scrollTop 0
-
-  ###*
-   * Called when subsequent (not "first-page") responses for a specific search
-   * are received. Renders the widget with the data received, by appending
-   * content after the last content received.
-   *
-   * @param {Object} res Search response.
-   * @fires ScrollDisplay#df:rendered
-  ###
-  renderNext: (res) ->
-    @pageRequested = false
-    @element.append (@mustache.render @template, @buildContext res)
-    @trigger "df:rendered", [res]
-
+      @working = false
+      @element.append @__renderTemplate res
+      @trigger "df:widget:render", [res]
 
 module.exports = ScrollDisplay

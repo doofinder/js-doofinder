@@ -1,5 +1,5 @@
 module.exports = (config) ->
-  conf = 
+  conf =
     customHeaders: [
       match: "context.html"
       name: "Pragma"
@@ -25,8 +25,10 @@ module.exports = (config) ->
     singleRun: true
 
     files: [
-      'test_karma/doofinder.min.js',
-      'test_karma/*.coffee'
+      'test_karma/doofinder.css',
+      'test_karma/doofinder.js',
+      'test_karma/utils.coffee',
+      'test_karma/test_*.coffee'
     ]
 
     customLaunchers:

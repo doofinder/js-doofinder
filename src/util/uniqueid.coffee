@@ -1,13 +1,36 @@
-###*
- * Generates a UID of the given length.
- *
- * @param  {Number} length = 8  Length of the UID.
- * @return {String}             Unique ID as a String.
-###
-uniqueId = (length = 8) ->
-  id = ""
-  id += Math.random().toString(36).substr(2) while id.length < length
-  id.substr 0, length
+md5 = require "md5"
 
+cleandfid = (dfid) ->
+  if /^\w{32}@[\w_-]+@\w{32}$/.test dfid
+    return dfid
+  else
+    throw new Error "dfid: #{dfid} is not valid."
 
-module.exports = uniqueId
+module.exports =
+  clean:
+    dfid: cleandfid
+
+  generate:
+    dfid: (id, datatype, hashid) ->
+      id = md5 "#{id}"
+      cleandfid "#{hashid}@#{datatype}@#{id}"
+
+    easy: (length = 8) ->
+      id = ""
+      id += Math.random().toString(36).substr(2) while id.length < length
+      id.substr 0, length
+
+    hash: ->
+      md5 [
+        new Date().getTime(),
+        String(Math.floor(Math.random() * 10000))
+      ].join ""
+
+    browserHash: ->
+      md5 [
+        navigator.userAgent,
+        navigator.language,
+        window.location.host,
+        new Date().getTime(),
+        String(Math.floor(Math.random() * 10000))
+      ].join ""

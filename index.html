@@ -5,73 +5,57 @@
   <title>Client</title>
 
   <link rel="stylesheet" type="text/css" href="dist/doofinder.css">
-  <style type="text/css">
-    * {
-      box-sizing: border-box;
-    }
-
-    .m {
-      margin-bottom: 1rem;
-    }
-
-    .w {
-      width: 320px;
-    }
-
-    .b {
-      border: 1px solid #ccc;
-    }
-
-    .q {
-      padding: .25rem;
-    }
-
-    .s {
-      position: relative;
-      height: 400px;
-      overflow: auto;
-    }
-  </style>
-
-  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-  <script type="text/javascript" src="dist/doofinder.js"></script>
-  <script type="text/javascript" src="node_modules/bean/bean.js"></script>
-
-  <script type="text/javascript">
-    $(document).ready(function(){
-      var client = new doofinder.Client('6a96504dc173514cab1e0198af92e6e9', 'eu1', null, null, 'localhost:4000');
-      var queryInputWidget = new doofinder.widgets.QueryInput('#query');
-      var resultsWidget = new doofinder.widgets.ScrollResults('#scroll');
-      var priceWidget = new doofinder.widgets.RangeFacet('#price', 'price', {
-        templateVars: {label: 'Price'}
-      });
-      var priceWidget2 = new doofinder.widgets.RangeFacet('#price2', 'price', {
-        templateVars: {label: 'Price 2'}
-      });
-      var brandWidget = new doofinder.widgets.TermFacet('#brand', 'brand', {
-        templateVars: {label: 'Brand'}
-      });
-
-      priceWidget.bind('df:rendered', function(res){
-        console.log(res);
-      });
-
-      controller = new doofinder.Controller(client, [
-        queryInputWidget,
-        resultsWidget,
-        priceWidget,
-        priceWidget2,
-        brandWidget
-      ]);
-
-    });
+  <link rel="stylesheet" type="text/css" href="demo/demo.css">
+  <script src="dist/doofinder.js"></script>
+  <script src="demo/demo.js"></script>
+  <script>
+    var HASHID = "e723b503db15fe242b934df14b141ccc";
   </script>
 </head>
 <body>
-  <input class="w m q" type="text" id="query" autofocus>
-  <div class="w m b s" id="scroll"></div>
-  <div class="w m b" id="price"></div>
-  <div class="w m b" id="price2"></div>
-  <div class="w m b" id="brand"></div>
+  <h1>Doofinder Library Demo</h1>
+  <div class="page">
+    <div class="example">
+      <h2>Basic Example</h2>
+      <input class="widget" id="basicInput" type="text" placeholder="Search something">
+      <pre id="basicStatus"></pre>
+      <div class="widget df-results" id="basicResults"></div>
+    </div>
+
+    <div class="example">
+      <h2>Advanced Example</h2>
+      <input class="widget" id="advancedInput" type="text" placeholder="Search something">
+      <pre id="advancedStatus"></pre>
+      <div class="row">
+        <div class="col" id="main">
+          <div class="widget df-results" id="advancedResults">
+            <div class="df-results__header">Results:</div>
+            <div class="df-results__content"></div>
+          </div>
+        </div>
+        <div class="col" id="advancedAside">
+          <div class="widget" id="advancedRangeFacet"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="example">
+      <h2>Multiple Controllers with same input</h2>
+      <input class="widget" id="commonInput" type="text" placeholder="Search something">
+      <pre id="firstStatus"></pre>
+      <div class="widget resultsX" id="firstResults"></div>
+      <pre id="secondStatus"></pre>
+      <div class="widget df-results" id="secondResults"></div>
+      <script type="text/x-mustache-template" id="myCustomTemplate">
+        <ul>
+          <li>{{#translate}}Hello!{{/translate}}</li>
+          <li>Meaning of life is {{meaningOfLife}}!</li>
+        {{#results}}
+          <li>{{#bold}}{{title}}{{/bold}}</li>
+        {{/results}}
+        </ul>
+      </script>
+    </div>
+  </div>
 </body>
 </html>

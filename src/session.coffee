@@ -2,10 +2,16 @@ Cookies = require "js-cookie"
 extend = require "extend"
 md5 = require "md5"
 
+errors = require "./util/errors"
+uniqueId = require "./util/uniqueid"
 
+
+###*
+ * Interface that all storage classes must implement. See Session class.
+###
 class ISessionStore
   ###*
-   * Gets the value for the specified key.
+   * Gets the value for the specified key from the storage.
    * @public
    * @param  {String} key
    * @param  {*}      defaultValue Value to return if the key does not exist.
@@ -14,7 +20,7 @@ class ISessionStore
   get: (key, defaultValue) ->
     dataObj = @__getData()
     unless dataObj.session_id?
-      throw Error "ISessionStore.__getData must ensure session_id exists!"
+      throw (errors.error "__getData must ensure session_id exists!", @)
     dataObj[key] or defaultValue
 
   ###*
@@ -47,7 +53,7 @@ class ISessionStore
    * @return {Object} Current data.
   ###
   __getData: ->
-    throw Error "ISessionStore.__getData not implemented!"
+    throw (errors.error "__getData() not implemented!", @)
 
   ###*
    * Sets the current data object.
@@ -56,22 +62,22 @@ class ISessionStore
    * @return {Object}         New data.
   ###
   __setData: (dataObj) ->
-    throw Error "ISessionStore.__setData(dataObj) not implemented!"
+    throw (errors.error "__setData(dataObj) not implemented!", @)
 
   ###*
    * Deletes the current data, including session_id.
    * @public
    * @return {*}
   ###
-  delete: ->
-    throw Error "ISessionStore.delete not implemented!"
+  clean: ->
+    throw (errors.error "clean() not implemented!", @)
 
   ###*
    * Checks whether the session exists or not.
    * @return {Boolean} `true` if the session exists, `false` otherwise.
   ###
   exists: ->
-    throw Error "ISessionStore.exists not implemented!"
+    throw (errors.error "exists() not implemented!", @)
 
 
 ###*
@@ -83,31 +89,31 @@ class ObjectSessionStore extends ISessionStore
   ###
   constructor: (@data = {}) ->
 
-  ###*
-  * Generates a unique session ID based on some randomness.
-  * @protected
-  * @return {String} A MD5 hash.
-  ###
-  __uniqueId: ->
-    md5 [
-      new Date().getTime(),
-      String(Math.floor(Math.random() * 10000))
-    ].join ""
-
   __getData: ->
-    @data.session_id = @__uniqueId() unless @data.session_id?
+    # ensure session id exists
+    @data.session_id ?= uniqueId.generate.hash()
     @data
 
   __setData: (@data) ->
 
-  delete: ->
+  clean: ->
     @data = {}
 
   exists: ->
     @data.session_id?
 
 
+###*
+ * Holds session data in a browser cookie.
+###
 class CookieSessionStore extends ISessionStore
+  ###*
+   * @param  {String} cookieName Name for the cookie.
+   * @param  {Object} options    Options object.
+   *                             - prefix: String to be appended to the cookie
+   *                                 name.
+   *                             - expiry: In days, 1 hour by default
+  ###
   constructor: (cookieName, options = {}) ->
     defaults =
       prefix: ""
@@ -116,33 +122,18 @@ class CookieSessionStore extends ISessionStore
     @cookieName = "#{options.prefix}#{cookieName}"
     @expiry = options.expiry
 
-  ###*
-   * Generates a unique session ID based on the user's browser, the location and
-   * some randomness.
-   *
-   * @protected
-   * @return {[type]} [description]
-  ###
-  __uniqueId: ->
-    md5 [
-      navigator.userAgent,
-      navigator.language,
-      window.location.host,
-      new Date().getTime(),
-      String(Math.floor(Math.random() * 10000))
-    ].join ""
-
   __getData: ->
     dataObj = Cookies.getJSON @cookieName
     unless dataObj?
-      dataObj = @__setData session_id: @__uniqueId()
+      # ensure session id
+      dataObj = @__setData session_id: uniqueId.generate.browserHash()
     dataObj
 
   __setData: (dataObj) ->
     Cookies.set @cookieName, dataObj, expires: @expiry
     return dataObj
 
-  delete: ->
+  clean: ->
     Cookies.remove @cookieName
 
   exists: ->
@@ -154,16 +145,9 @@ class CookieSessionStore extends ISessionStore
 ###
 class Session
   ###*
-   * Creates a Session.
-   * @param  {Controller} controller
-   * @param  {*}          store      A store object which implements:
-   *                                   - get(key, default)
-   *                                   - set(key, value)
-   *                                   - del(key)
-   *                                   - delete()
-   *                                   - exists()
+   * @param  {ISessionStore} store  Holds session data.
   ###
-  constructor: (@controller, @store = new ObjectSessionStore()) ->
+  constructor: (@store = new ObjectSessionStore()) ->
 
   ###*
    * Gets the value for the specified key.
@@ -185,14 +169,19 @@ class Session
   set: (key, value) ->
     @store.set key, value
 
+  ###*
+   * Deletes the specified key from the session store.
+   * @param  {String} key
+   * @return {Object} The current value of the data object.
+  ###
   del: (key) ->
     @store.del key
 
   ###*
-   * Finishes the session by removing the cookie.
+   * Finishes the session by removing the stored data.
   ###
-  delete: ->
-    @store.delete()
+  clean: ->
+    @store.clean()
 
   ###*
    * Checks whether the search session exists or not.
@@ -201,61 +190,9 @@ class Session
   exists: ->
     @store.exists()
 
-  ###*
-   * Registers a search for the session.
-   * Registers the session in Doofinder stats if not already registered.
-   *
-   * WARNING: This must be called ONLY if the user has performed a search.
-   *          That's why this is usually called when the user has stopped
-   *          typing in the search box.
-   *
-   * @public
-   * @param  {String} query Search terms.
-  ###
-  registerSearch: (query) ->
-    @set "query", query
-    unless @get "registered", false
-      @controller.registerSession @get "session_id"
-      @set "registered", true
-
-  ###*
-   * Registers a click on a search result for the specified search query.
-   * @public
-   * @param  {String} dfid  Doofinder's internal ID for the result.
-   * @param  {String} query Search terms.
-  ###
-  registerClick: (dfid, query) ->
-    @set "dfid", dfid
-    @set "query", query  # not sure this is needed
-    @controller.registerClick dfid, sessionId: @get "session_id"
-
-  ###*
-   * Register a checkout when the location passed matches one of the URLs
-   * provided.
-   *
-   * @public
-   * @param {String} location The URL to check against the patterns.
-   * @param {Array}  patterns A list of regular expressions to test with the
-   *                          provided location.
-  ###
-  registerCheckout: (location, patterns = []) ->
-    sessionId = @get "session_id"
-
-    for pattern in patterns
-      try
-        if pattern.test location
-          @controller.registerCheckout sessionId
-          @delete()
-
-          return true
-      catch e
-        console.error e.message
-
-    return false
-
 
 module.exports =
   Session: Session
   ISessionStore: ISessionStore
-  CookieSessionStore: CookieSessionStore
   ObjectSessionStore: ObjectSessionStore
+  CookieSessionStore: CookieSessionStore

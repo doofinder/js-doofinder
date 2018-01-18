@@ -1,32 +1,40 @@
-if not JSON.stringify and JSON.encode
-  JSON.stringify = JSON.encode
-if not JSON.parse and JSON.decode
-  JSON.parse = JSON.decode
-
 module.exports =
-  version: "5.1.7"
+  version: "5.2.0"
+
   Client: require "./client"
-  Mustache: require "mustache"
-  Widget: require "./widget"
   Controller: require "./controller"
+  Stats: require "./stats"
+
+  Mustache: require "mustache"
+
   widgets:
-    Display: require "./widgets/display"
-    Results: require "./widgets/results/results"
-    ScrollResults: require "./widgets/results/scrollresults"
+    Widget: require "./widgets/widget"
+
     QueryInput: require "./widgets/queryinput"
-    BaseFacet: require "./widgets/facets/basefacet"
-    TermFacet: require "./widgets/facets/termfacet"
+
+    Display: require "./widgets/display"
+    ScrollDisplay: require "./widgets/scrolldisplay"
+
+    TermsFacet: require "./widgets/facets/termsfacet"
+    CollapsibleTermsFacet: require "./widgets/facets/collapsibletermsfacet"
     RangeFacet: require "./widgets/facets/rangefacet"
-    FacetPanel: require "./widgets/facets/facetpanel"
+
+    Panel: require "./widgets/panel"
+    CollapsiblePanel: require "./widgets/collapsiblepanel"
+
   util:
+    bean: require "bean"
+    dfdom: require "./util/dfdom"
+    errors: require "./util/errors"
+    extend: require "extend"
+    helpers: require "./util/helpers"
+    http: require "./util/http"
     md5: require "md5"
     qs: require "qs"
-    bean: require "bean"
-    extend: require "extend"
-    introspection: require "./util/introspection"
-    dfdom: require "./util/dfdom"
+    text: require "./util/text"
+    Thing: require "./util/thing"
     throttle: require "lodash.throttle"
-    http: require "./util/http"
     uniqueId: require "./util/uniqueid"
-    buildHelpers: require "./util/helpers"
+
   session: require "./session"
+

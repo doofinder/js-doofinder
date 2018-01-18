@@ -1,6 +1,6 @@
 extend = require "extend"
-Widget = require "../widget"
-dfTypeWatch = require "../util/dftypewatch"
+Widget = require "./widget"
+Thing = require "../util/thing"
 
 
 ###*
@@ -15,10 +15,31 @@ class QueryInput extends Widget
    * @param  {Object} options Options object. Empty by default.
   ###
   constructor: (element, options = {}) ->
-    super element, options
-    @typingTimeout = @options.typingTimeout || 1000
-    @eventsBound = false
-    @cleanInput = if @options.clean? then @options.clean else true
+    defaults =
+      clean: true
+      captureLength: 3
+      typingTimeout: 1000
+      wait: 42 # meaning of life
+
+    super element, (extend true, defaults, options)
+
+    @controller = []
+    @timer = null
+    @stopTimer = null
+
+    Object.defineProperty @, "value",
+      get: =>
+        @element.val() or ""
+      set: (value) =>
+        @element.val value
+        @__scheduleUpdate()
+
+    @previousValue = @value
+
+  setController: (controller) ->
+    if not Thing.is.array controller
+      controller = [controller]
+    @controller = @controller.concat controller
 
   ###*
    * Initializes the object with a controller and attachs event handlers for
@@ -27,48 +48,63 @@ class QueryInput extends Widget
    *
    * @param  {Controller} controller Doofinder Search controller.
   ###
-  init: (controller) ->
-    if @controller
-      @controller.push controller
-    else
-      @controller = [controller]
+  init: ->
+    unless @initialized
+      @element.on "input", (=> @__scheduleUpdate())
 
-    self = this
+      unless (@element.get 0).tagName.toUpperCase() is "TEXTAREA"
+        @element.on "keydown", (e) =>
+          if e.keyCode? and e.keyCode is 13
+            @__scheduleUpdate 0, true
+            @trigger "df:input:submit", [@value]
 
-    # Bind events only once
-    if not @eventsBound
-      options = extend true,
-        callback: ->
-          query = self.element.val()
-          self.controller.forEach (controller)->
-            controller.reset()
-            controller.search.call controller, query
-        wait: 43
-        captureLength: 3,
-        @options
-      dfTypeWatch @element, options
+      super
 
-      # Typing stopped event. We use the first controller (we could use any) to
-      # detect the moment when the user stops typing.
-      ctrl = @controller[0]
-      ctrl.bind 'df:results_received', (res) ->
-        setTimeout (->
-          if ctrl.status.params.query_counter == res.query_counter and
-              ctrl.status.currentPage == 1
-            self.trigger('df:typing_stopped', [ctrl.status.params.query])),
-          self.typingTimeout
+  ###*
+   * Schedules input validation so its done "in the future", giving the user
+   * time to enter a new character (delaying search requests).
+   *
+   * @param  {Number} delay  = @options.wait  Time to wait until update in
+   *                         milliseconds.
+   * @param  {Boolean} force = false  Forces search if value is OK whether
+   *                         value changed or not.
+   * @protected
+  ###
+  __scheduleUpdate: (delay = @options.wait, force = false) ->
+    clearTimeout @timer
+    clearTimeout @stopTimer
+    @timer = setTimeout (@__updateStatus.bind @), delay, force
 
-      @eventsBound = true
+  ###*
+   * Checks current value of the input and, if it is OK and it changed since the
+   * last check, performs a new search in each registered controller.
+   *
+   * @param  {Boolean} force = false If true forces search if value is OK
+   *                         whether value changed or not.
+   * @protected
+  ###
+  __updateStatus: (force = false) ->
+    valueOk = @value.length >= @options.captureLength
+    valueChanged = @value.toUpperCase() != @previousValue
+
+    if valueOk and (valueChanged or force)
+      @stopTimer = setTimeout (=>
+        @trigger "df:input:stop", [@value]
+      ), @options.typingTimeout
+      @previousValue = @value.toUpperCase()
+      @controller.forEach (controller) => controller.search @value
+    else if @previousValue.length > 0 and @value.length is 0
+      @trigger "df:input:none" if @value.length is 0
 
   ###*
    * If the widget is configured to be cleaned, empties the value of the input
    * element.
-   * @fires QueryInput#df:cleaned
+   * @fires Widget#df:widget:clean
   ###
   clean: ->
-    if @cleanInput
-      @element.val ""
-      @trigger "df:cleaned"
+    if @options.clean
+      @element.val ""  # don't use @value, we don't want to search on clean
+    super
 
 
 module.exports = QueryInput

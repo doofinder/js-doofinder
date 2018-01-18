@@ -1,68 +1,56 @@
-###
-client.coffee
-author: @ecoslado
-2017 01 23
-###
+http = require "http"
+https = require "https"
 
-httpLib = require "http"
-httpsLib = require "https"
+extend = require "extend"
 
-###
-HttpClient
-This class implements a more
-easy API with http module
-###
+errors = require "./errors"
+Thing = require "./thing"
 
+###*
+ * Commodity API to http and https modules
+###
 class HttpClient
-
+  ###*
+   * @param  {Boolean} @secure If true, forces HTTPS.
   ###
-  Just assigns
+  constructor: (@secure) ->
+    @http = if @secure then https else http
+
+  ###*
+   * Performs a HTTP request expecting JSON to be returned.
+   * @param  {Object}   options  Options needed by http.ClientRequest
+   * @param  {Function} callback Callback to be called when the response is
+   *                             received. First param is the error, if any,
+   *                             and the second one is the response, if any.
+   * @return {http.ClientRequest}
   ###
-  constructor: (ssl) ->
-    @client = if ssl then httpsLib else httpLib
-
-
   request: (options, callback) ->
-    if typeof options == "string"
+    if Thing.is.string options
       options = host: options
-    req = @__makeRequest(options, callback)
-    req.end 
 
+    unless Thing.is.fn callback
+      throw (errors.error "A callback is needed!", @)
 
-  ###
-  Callback function will be passed as argument to search
-  and will be returned with response body
+    req = @http.get options, (response) ->
+      data = ""
+      response.setEncoding "utf-8"
+      response
+        .on "data", ((chunk) -> data += chunk)
+        .on "end", (->
+          if response.statusCode is 200
+            callback undefined, (JSON.parse data)
+          else
+            try
+              error = JSON.parse data
+            catch e
+              error = error: data
+            callback (extend true, (statusCode: response.statusCode), error)
+        )
+      response
 
-  @param {Object} res: the response
-  @api private
-  ###
-  __processResponse: (callback) ->
-    (res) ->
-      if res.statusCode >= 400
-        return callback res.statusCode, null
+    req.on "error", (error) ->
+      callback error: error
 
-      else
-        data = ""
-        res.on 'data', (chunk) ->
-          data += chunk
+    req
 
-        res.on 'end', () ->
-          return callback null, JSON.parse(data)
-
-        res.on 'error', (err) ->
-          return callback err, null
-
-  ###
-  Method to make a secured or not request based on @client
-
-  @param (Object) options: request options
-  @param (Function) the callback function to execute with the response as arg
-  @return (Object) the request object.
-  @api private
-  ###
-  __makeRequest: (options, callback) ->
-    @client.get options, @__processResponse(callback)
-
-# Module exports
 module.exports = HttpClient
-    

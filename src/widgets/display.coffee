@@ -1,82 +1,79 @@
-Widget = require "../widget"
-buildHelpers = require "../util/helpers"
 extend = require "extend"
+Widget = require "./widget"
+helpers = require "../util/helpers"
 
 
 ###*
  * Widget that renders a search response within a given template.
 ###
 class Display extends Widget
-
+  @defaultTemplate = """
+    {{#results}}
+      <a href="{{link}}" class="df-card">{{title}}</a>
+    {{/results}}
+  """
   ###*
-   * @param  {String|Node|DfDomElement} element  Container node.
-   * @param  {String}                   template Template to paint the response.
-   * @param  {Objects}                  options  Options for the widget.
+   * @param  {(String|Node|DfDomElement)} element  Container node.
+   * @param  {Object}                     options  Options for the widget.
   ###
-  constructor: (element, @template, options = {}) ->
-    @mustache = require "mustache"
-    # TODO(@carlosescri): Remove @extraContext and use @options.templateVars!!!
-    @extraContext = {}
+  constructor: (element, options = {}) ->
+    defaults =
+      template: @constructor.defaultTemplate
+      templateFunctions: {}
+      templateVars: {}
+      translations: {}
+
+    options = extend true, defaults, options
+
     super element, options
+
+    helpers.addTranslateHelper @options.templateFunctions, @options.translations
+
+    @mustache = require "mustache"
+    @currentContext = {}
 
   ###*
    * Adds extra context to the passed context object.
-   * @param  {Object} context = {}  Initial context (i.e: a search response).
-   * @return {Object}               Extended context.
+   * @param  {Object} response = {} Search response as initial context.
+   * @return {Object}               Extended search response.
+   * @protected
   ###
-  buildContext: (context = {}) ->
-    context = extend true,
-      context,
-      @options.templateVars,
-      @options.templateFunctions,
-      (is_first: context.page == 1, is_last: @controller?.status?.lastPageReached),
-      @extraContext
+  __buildContext: (response = {}) ->
+    @currentContext = extend true,
+                             {},
+                             response,
+                             @options.templateVars,
+                             @options.templateFunctions,
+                             is_first: response.page is 1
+                             is_last: response.page is Math.ceil (response.total / response.results_per_page)
 
-    # Compose URL parameters from options and from the query (if configured)
-    urlParams = extend true, {}, (@options.urlParams or {})
-    if @options.queryParam
-      urlParams[@options.queryParam] = context.query or ""
-
-    buildHelpers context, urlParams, @options.currency, @options.translations
+  ###*
+   * Actually renders the template given a search response.
+   * @param  {Object} res Search response.
+   * @return {String}     The rendered HTML code.
+   * @protected
+  ###
+  __renderTemplate: (res) ->
+    @mustache.render @options.template, @__buildContext res
 
   ###*
    * Called when the "first page" response for a specific search is received.
    * Renders the widget with the data received, by replacing its content.
    *
    * @param {Object} res Search response.
-   * @fires Display#df:rendered
+   * @fires Widget#df:widget:render
   ###
   render: (res) ->
-    @element.html (@mustache.render @template, @buildContext res)
-    @trigger "df:rendered", [res]
-
-  ###*
-   * Called when subsequent (not "first-page") responses for a specific search
-   * are received. Renders the widget with the data received, by replacing its
-   * content.
-   *
-   * @param {Object} res Search response.
-   * @fires Display#df:rendered
-  ###
-  renderNext: (res) ->
-    @element.html (@mustache.render @template, @buildContext res)
-    @trigger "df:rendered", [res]
+    @element.html @__renderTemplate res
+    super
 
   ###*
    * Cleans the widget by removing all the HTML inside the container element.
-   * @fires Display#df:cleaned
+   * @fires Widget#df:widget:clean
   ###
   clean: ->
     @element.html ""
-    @trigger "df:cleaned"
-
-  ###*
-   * Adds extra context to be used when rendering a search response.
-   * @param {String} key   Name of the variable to be used in the template.
-   * @param {*}      value Value of the variable.
-  ###
-  addExtraContext: (key, value) ->
-    @extraContext[key] = value
+    super
 
 
 module.exports = Display

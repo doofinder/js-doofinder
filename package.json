@@ -1,47 +1,51 @@
 {
   "name": "doofinder",
-  "version": "5.1.7",
+  "version": "5.2.0",
   "description": "Javascript Library for Doofinder Search API",
   "main": "lib/doofinder.js",
+  "jsdelivr": "dist/doofinder.min.js",
   "directories": {
     "test": "test"
   },
   "dependencies": {
     "bean": "^1.0.15",
     "extend": "^3.0.0",
+    "is": "^3.2.1",
     "js-cookie": "^2.1.2",
     "lodash.throttle": "^4.1.1",
     "md5": "^2.1.0",
     "mustache": "^2.2.1",
     "nouislider": "^8.5.1",
-    "qs": "^4.0.0"
+    "qs": "^6.5.0"
   },
   "devDependencies": {
-    "chai": "^2.2.0",
-    "coffee": "^1.0.0",
-    "coffee-script": "^1.9.1",
-    "grunt": "^0.4.5",
+    "chai": "^3.5.0",
+    "coffee-script": "^1.12.7",
+    "deep-eql": "^2.0.2",
+    "grunt": "^1.0.1",
     "grunt-browserify": "^5.0.0",
-    "grunt-cli": "^0.1.13",
+    "grunt-cli": "^1.2.0",
     "grunt-contrib-clean": "^1.0.0",
-    "grunt-contrib-coffee": "^0.13.0",
+    "grunt-contrib-coffee": "^1.0.0",
     "grunt-contrib-copy": "^1.0.0",
-    "grunt-contrib-uglify": "^2.0.0",
+    "grunt-contrib-uglify": "^3.0.1",
+    "grunt-contrib-watch": "^1.0.0",
     "grunt-karma": "^2.0.0",
-    "grunt-mocha-test": "^0.12.7",
+    "grunt-mocha-test": "^0.13.2",
     "grunt-sass": "^2.0.0",
+    "grunt-service": "^0.3.4",
     "grunt-version": "^1.0.0",
     "jquery": "^3.0.0",
     "jsdom": "^7.2.2",
     "jsdom-global": "^2.0.0",
     "karma": "^1.7.0",
     "karma-chai": "^0.1.0",
-    "karma-coffee-preprocessor": "^1.0.1",
     "karma-chrome-launcher": "^2.0.0",
+    "karma-coffee-preprocessor": "^1.0.1",
     "karma-mocha": "^1.3.0",
-    "karma-spec-reporter": "0.0.26",
-    "mocha": "^2.2.1",
-    "nock": "^5.2.1"
+    "karma-spec-reporter": "0.0.31",
+    "mocha": "^3.4.2",
+    "nock": "^9.0.14"
   },
   "scripts": {
     "test": "./node_modules/grunt-cli/bin/grunt mochaTest:release"
@@ -53,7 +57,10 @@
   "keywords": [
     "doofinder"
   ],
-  "author": "Kike Coslado",
+  "author": "Doofinder",
+  "contributors": [
+    "Carlos Escribano Rey <carlos@doofinder.com>"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/doofinder/js-doofinder/issues"

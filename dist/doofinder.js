@@ -1,537 +1,250 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.doofinder = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-
-/*
-client.coffee
-author: @ecoslado
-2015 04 01
- */
-
 (function() {
-  var Client, HttpClient, md5,
-    slice = [].slice;
+  var Client, HttpClient, Thing, errors, extend, md5, qs;
 
-  HttpClient = require("./util/http");
+  extend = require("extend");
 
   md5 = require("md5");
 
+  qs = require("qs");
 
-  /*
-  DfClient
-  This class is imported with module
-  requirement. Implements the search request
-  and returns a json object to a callback function
+  errors = require("./util/errors");
+
+  HttpClient = require("./util/http");
+
+  Thing = require("./util/thing");
+
+
+  /**
+   * This class allows searching and sending stats using the Doofinder service.
    */
 
   Client = (function() {
+    Client.apiVersion = "5";
 
-    /*
-    Client constructor
-    
-    @param {String} hashid
-    @param {String} apiKey
-    @param {String} version
-    @param {String} address
-    @api public
+
+    /**
+     * Constructor
+     *
+     * @param  {String} @hashid Unique ID of the Search Engine.
+     * @param  {Object} options Options object.
+     *
+     *                          {
+     *                            zone:    "eu1"            # Search Zone (eu1,
+     *                                                      # us1, ...).
+     *
+     *                            apiKey:  "eu1-abcd..."    # Complete API key,
+     *                                                      # including zone and
+     *                                                      # secret key for auth.
+     *
+     *                            address: "localhost:4000" # Force server address
+     *                                                      # for development
+     *                                                      # purposes.
+     *
+     *                            version: "5"              # API version. Better
+     *                                                      # not to touch this.
+     *                                                      # For development
+     *                                                      # purposes.
+     *                          }
+     *
+     *                          If you use `apiKey` you can omit `zone` but one of
+     *                          them is required.
+     *
+     * @public
      */
-    function Client(hashid, apiKey, version, type1, address) {
-      var zone, zoneApiKey;
+
+    function Client(hashid, options) {
+      var host, message, port, ref, ref1, secret, zone;
       this.hashid = hashid;
-      this.type = type1;
-      if (this.version == null) {
-        this.version = version;
+      if (options == null) {
+        options = {};
       }
-      if (this.version == null) {
-        this.version = 5;
-      }
-      this.params = {};
-      this.filters = {};
-      this.exclude = {};
-      if (this.url == null) {
-        this.url = address;
-      }
-      if (apiKey) {
-        zoneApiKey = apiKey.split('-');
-        zone = zoneApiKey[0];
-        if (zoneApiKey.length > 1) {
-          this.apiKey = zoneApiKey[1];
+      ref = (options.apiKey || options.zone || "").split("-"), zone = ref[0], secret = ref[1];
+      if (!zone) {
+        if (secret) {
+          message = "invalid `apiKey`";
+        } else {
+          message = "`apiKey` or `zone` must be defined";
         }
-      } else {
-        zone = "";
-        this.apiKey = "";
+        throw errors.error(message, this);
       }
-      this.httpClient = new HttpClient((this.apiKey != null) && this.version !== 4);
-      if (this.url == null) {
-        this.url = zone + "-search.doofinder.com";
+      ref1 = (options.address || (zone + "-search.doofinder.com")).split(":"), host = ref1[0], port = ref1[1];
+      this.requestOptions = {
+        host: host,
+        port: port,
+        headers: {}
+      };
+      if (secret != null) {
+        this.requestOptions.headers["Authorization"] = secret;
       }
+      this.httpClient = new HttpClient(secret != null);
+      this.version = "" + (options.version || this.constructor.apiVersion);
     }
 
 
-    /*
-    _sanitizeQuery
-    very crude check for bad intentioned queries
-    
-    checks if words are longer than 55 chars and the whole query is longer than 255 chars
-    @param string query
-    @return string query if it's ok, empty space if not
+    /**
+     * Performs a HTTP request to the endpoint specified with the default options
+     * of the client.
+     *
+     * @param  {String}   resource Resource to be called by GET.
+     * @param  {Function} callback Callback to be called when the response is
+     *                             received. First param is the error, if any,
+     *                             and the second one is the response, if any.
+     * @return {http.ClientRequest}
+     * @public
      */
 
-    Client.prototype._sanitizeQuery = function(query, callback) {
-      var i, maxQueryLength, maxWordLength, ref, x;
-      maxWordLength = 55;
-      maxQueryLength = 255;
-      if (typeof query === "undefined") {
-        throw Error("Query must be a defined");
-      }
-      if (query === null || query.constructor !== String) {
-        throw Error("Query must be a String");
-      }
-      query = query.replace(/ +/g, ' ').replace(/^ +| +$/g, '');
-      if (query.length > maxQueryLength) {
-        throw Error("Maximum query length exceeded: " + maxQueryLength + ".");
-      }
-      ref = query.split(' ');
-      for (i in ref) {
-        x = ref[i];
-        if (x.length > maxWordLength) {
-          throw Error("Maximum word length exceeded: " + maxWordLength + ".");
-        }
-      }
-      return callback(query);
+    Client.prototype.request = function(resource, callback) {
+      var options;
+      options = extend(true, {
+        path: resource
+      }, this.requestOptions);
+      return this.httpClient.request(options, callback);
     };
 
 
-    /*
-    search
-    
-    Method responsible of executing call.
-    
-    @param {Object} params
-      i.e.:
-    
-        query: "value of the query"
-        page: 2
-        rpp: 25
-        filters:
-          brand: ["nike", "adidas"]
-          color: ["blue"]
-          price:
-            from: 40
-            to: 150
-    
-    @param {Function} callback (err, res)
-    @api public
+    /**
+     * Performs a search request.
+     *
+     * @param  {String}   query    Search terms.
+     * @param  {Object}   params   Parameters for the request. Optional.
+     *
+     *                             params =
+     *                               page: Number
+     *                               rpp: Number
+     *                               type: String | [String]
+     *                               filter:
+     *                                 field: [String]
+     *                                 field:
+     *                                   from: Number
+     *                                   to: Number
+     *                               exclude:
+     *                                 field: [String]
+     *                                 field:
+     *                                   from: Number
+     *                                   to: Number
+     *                               sort: String
+     *                               sort:
+     *                                 field: "asc" | "desc"
+     *                               sort: [{field: "asc|desc"}]
+     *
+     * @param  {Function} callback Callback to be called when the response is
+     *                             received. First param is the error, if any,
+     *                             and the second one is the response, if any.
+     * @return {http.ClientRequest}
+     * @public
      */
 
-    Client.prototype.search = function() {
-      var _this, args, callback, params, query;
-      query = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      if (args.length === 1) {
+    Client.prototype.search = function(query, params, callback) {
+      var querystring;
+      if (arguments.length === 2) {
+        callback = params;
         params = {};
-        callback = args[0];
-      } else if (args.length === 2) {
-        params = args[0];
-        callback = args[1];
-      } else {
-        throw new Error("A callback is required.");
       }
-      if (params.page == null) {
-        params.page = 1;
-      }
-      if (params.rpp == null) {
-        params.rpp = 10;
-      }
-      _this = this;
-      return this._sanitizeQuery(query, function(cleaned) {
-        var filterKey, filterTerms, headers, options, paramKey, paramValue, path, queryString;
-        params.query = cleaned;
-        headers = {};
-        if (_this.apiKey) {
-          headers[_this.__getAuthHeaderName()] = _this.apiKey;
-        }
-        _this.params = {};
-        _this.filters = {};
-        _this.sort = [];
-        for (paramKey in params) {
-          paramValue = params[paramKey];
-          if (paramKey === "filters" || paramKey === "exclude") {
-            for (filterKey in paramValue) {
-              filterTerms = paramValue[filterKey];
-              _this.addFilter(filterKey, filterTerms, paramKey);
-            }
-          } else if (paramKey === "sort") {
-            _this.setSort(paramValue);
-          } else {
-            _this.addParam(paramKey, paramValue);
-          }
-        }
-        queryString = _this.makeQueryString();
-        path = "/" + _this.version + "/search?" + queryString;
-        options = _this.__requestOptions(path);
-        return _this.httpClient.request(options, callback);
-      });
+      querystring = this.__buildSearchQueryString(query, params);
+      return this.request("/" + this.version + "/search?" + querystring, callback);
     };
 
 
-    /*
-    addParam
-    
-    This method set simple params
-    @param {String} name of the param
-    @value {mixed} value of the param
-    @api public
+    /**
+     * Perform a request to get options for a search engine.
+     *
+     * @param  {String}   suffix   Optional suffix to add to the request URL. Can
+     *                             be something like a domain, so the URL looks
+     *                             like /<version>/options/<hashid>?example.com.
+     * @param  {Function} callback Callback to be called when the response is
+     *                             received. First param is the error, if any,
+     *                             and the second one is the response, if any.
+     * @return {http.ClientRequest}
+     * @public
      */
 
-    Client.prototype.addParam = function(param, value) {
-      if (value !== null) {
-        return this.params[param] = value;
-      } else {
-        return this.params[param] = "";
+    Client.prototype.options = function(suffix, callback) {
+      if (arguments.length === 1) {
+        callback = suffix;
+        suffix = "";
       }
+      suffix = suffix ? "?" + suffix : "";
+      return this.request("/" + this.version + "/options/" + this.hashid + suffix, callback);
     };
 
 
-    /*
-    addFilter
-    
-    This method adds a filter to query
-    @param {String} filterKey
-    @param {Array|Object} filterValues
-    @api public
+    /**
+     * Performs a request to submit stats events to Doofinder.
+     *
+     * @param  {String}   eventName Type of stats. Configures the endpoint.
+     * @param  {Object}   params    Parameters for the query string.
+     * @param  {Function} callback  Callback to be called when the response is
+     *                              received. First param is the error, if any,
+     *                              and the second one is the response, if any.
+     * @return {http.ClientRequest}
      */
 
-    Client.prototype.addFilter = function(filterKey, filterValues, type) {
-      if (type == null) {
-        type = "filters";
+    Client.prototype.stats = function(eventName, params, callback) {
+      var defaultParams, querystring;
+      if (eventName == null) {
+        eventName = "";
       }
-      return this[type][filterKey] = filterValues;
+      defaultParams = {
+        hashid: this.hashid,
+        random: new Date().getTime()
+      };
+      querystring = qs.stringify(extend(true, defaultParams, params || {}));
+      if (querystring) {
+        querystring = "?" + querystring;
+      }
+      return this.request("/" + this.version + "/stats/" + eventName + querystring, callback);
     };
 
 
-    /*
-    setSort
-    
-    This method adds sort to object
-    from an object or an array
-    
-    @param {Array|Object} sort
+    /**
+     * Creates a search query string for the specified query and parameters
+     * intended to be used in the search API endpoint.
+     *
+     * NOTICE:
+     *
+     * - qs library encodes "(" and ")" as "%28" and "%29" although is not
+     *   needed. Encoded parentheses must be supported in the search endpoint.
+     * - Iterating objects doesn't ensure the order of the keys so they can't be
+     *   reliabily used to specify sorting in multiple fields. That's why this
+     *   method validates sorting and raises an exception if the value is not
+     *   valid.
+     *
+     *   - sort: field                                         [OK]
+     *   - sort: {field: 'asc|desc'}                           [OK]
+     *   - sort: [{field1: 'asc|desc'}, {field2: 'asc|desc'}]  [OK]
+     *   - sort: {field1: 'asc|desc', field2: 'asc|desc'}      [ERR]
+     *
+     * @param  {String} query  Cleaned search terms.
+     * @param  {Object} params Search parameters object.
+     * @return {String}        Encoded query string to be used in a search URL.
+     * @protected
      */
 
-    Client.prototype.setSort = function(sort) {
-      return this.sort = sort;
-    };
-
-
-    /*
-    __escapeChars
-    
-    This method encodes just the chars
-    like &, ?, #.
-    
-    @param {String} word
-     */
-
-    Client.prototype.__escapeChars = function(word) {
-      return word.replace(/\&/g, "%26").replace(/\?/g, "%3F").replace(/\+/g, "%2B").replace(/\#/g, "%23");
-    };
-
-
-    /*
-    makeQueryString
-    
-    This method returns a
-    querystring for adding
-    to Search API request.
-    
-    @returns {String} querystring
-    @api private
-     */
-
-    Client.prototype.makeQueryString = function() {
-      var elem, facet, j, k, key, l, len, len1, len2, m, querystring, ref, ref1, ref2, ref3, ref4, ref5, ref6, segment, term, v, value;
-      querystring = encodeURI("hashid=" + this.hashid);
-      if (this.type && this.type instanceof Array) {
-        ref = this.type;
-        for (key in ref) {
-          value = ref[key];
-          querystring += encodeURI("&type[]=" + value);
-        }
-      } else if (this.type && this.type.constructor === String) {
-        querystring += encodeURI("&type=" + this.type);
-      } else if (this.params.type && this.params.type instanceof Array) {
-        ref1 = this.params.type;
-        for (key in ref1) {
-          value = ref1[key];
-          querystring += encodeURI("&type[]=" + value);
-        }
-      } else if (this.params.type && this.params.type.constructor === String) {
-        querystring += encodeURI("&type=" + this.type);
-      }
-      ref2 = this.params;
-      for (key in ref2) {
-        value = ref2[key];
-        if (key === "query") {
-          querystring += encodeURI("&" + key + "=");
-          querystring += encodeURIComponent(value);
-        } else if (key !== "type") {
-          querystring += encodeURI("&" + key + "=" + value);
-        }
-      }
-      ref3 = this.filters;
-      for (key in ref3) {
-        value = ref3[key];
-        if (value.constructor === Object) {
-          for (k in value) {
-            v = value[k];
-            querystring += encodeURI("&filter[" + key + "][" + k + "]=" + v);
-          }
-        }
-        if (value.constructor === Array) {
-          for (j = 0, len = value.length; j < len; j++) {
-            elem = value[j];
-            segment = this.__escapeChars(encodeURI("filter[" + key + "]=" + elem));
-            querystring += "&" + segment;
-          }
-        }
-      }
-      ref4 = this.exclude;
-      for (key in ref4) {
-        value = ref4[key];
-        if (value.constructor === Object) {
-          for (k in value) {
-            v = value[k];
-            querystring += encodeURI("&exclude[" + key + "][" + k + "]=" + v);
-          }
-        }
-        if (value.constructor === Array) {
-          for (l = 0, len1 = value.length; l < len1; l++) {
-            elem = value[l];
-            segment = this.__escapeChars(encodeURI("exclude[" + key + "]=" + elem));
-            querystring += "&" + segment;
-          }
-        }
-      }
-      if (this.sort && this.sort.constructor === Array) {
-        ref5 = this.sort;
-        for (m = 0, len2 = ref5.length; m < len2; m++) {
-          value = ref5[m];
-          for (facet in value) {
-            term = value[facet];
-            querystring += encodeURI("&sort[" + (this.sort.indexOf(value)) + "][" + facet + "]=" + term);
-          }
-        }
-      } else if (this.sort && this.sort.constructor === String) {
-        querystring += encodeURI("&sort=" + this.sort);
-      } else if (this.sort && this.sort.constructor === Object) {
-        ref6 = this.sort;
-        for (key in ref6) {
-          value = ref6[key];
-          querystring += encodeURI("&sort[" + key + "]=" + value);
-        }
-      }
-      return querystring;
-    };
-
-
-    /*
-    This method calls to /stats/click
-    service for accounting the
-    clicks to a product
-    
-    @param {String} productId
-    @param {Object} options
-    @param {Function} callback
-    
-    @api public
-     */
-
-    Client.prototype.registerClick = function() {
-      var args, callback, datatype, dfid, dfidRe, options, path, productId, query, sessionId;
-      productId = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      callback = (function(err, res) {});
-      options = {};
-      productId += '';
-      if (args.length === 1) {
-        if (typeof args[0] === 'function') {
-          callback = args[0];
-        } else {
-          options = args[0];
-        }
-      } else if (args.length === 2) {
-        options = args[0];
-        callback = args[1];
-      }
-      dfidRe = /\w{32}@[\w_-]+@\w{32}/;
-      if (dfidRe.exec(productId)) {
-        dfid = productId;
-      } else {
-        datatype = options.datatype || "product";
-        dfid = this.hashid + "@" + datatype + "@" + (md5(productId));
-      }
-      sessionId = options.sessionId || "session_id";
-      query = options.query || "";
-      path = "/" + this.version + "/stats/click?dfid=" + dfid + "&session_id=" + sessionId + "&query=" + (encodeURIComponent(query));
-      path += "&random=" + (new Date().getTime());
-      options = this.__requestOptions(path);
-      return this.httpClient.request(options, callback);
-    };
-
-
-    /*
-    This method calls to /stats/init_session
-    service for init a user session
-    
-    @param {String} sessionId
-    @param {Function} callback
-    
-    @api public
-     */
-
-    Client.prototype.registerSession = function(sessionId, callback) {
-      var options, path;
-      if (callback == null) {
-        callback = (function(err, res) {});
-      }
-      path = "/" + this.version + "/stats/init?hashid=" + this.hashid + "&session_id=" + sessionId;
-      path += "&random=" + (new Date().getTime());
-      options = this.__requestOptions(path);
-      return this.httpClient.request(options, callback);
-    };
-
-
-    /*
-    This method calls to /stats/checkout
-    service for init a user session
-    
-    @param {String} sessionId
-    @param {Object} options
-    @param {Function} callback
-    
-    @api public
-     */
-
-    Client.prototype.registerCheckout = function(sessionId, callback) {
-      var path, reqOpts;
-      callback = callback || (function(err, res) {});
-      path = "/" + this.version + "/stats/checkout?hashid=" + this.hashid + "&session_id=" + sessionId;
-      path += "&random=" + (new Date().getTime());
-      reqOpts = this.__requestOptions(path);
-      return this.httpClient.request(reqOpts, callback);
-    };
-
-
-    /*
-    This method calls to /hit
-    service for accounting the
-    hits in a product
-    
-    @param {String} dfid
-    @param {String} query
-    @param {Function} callback
-    @api public
-     */
-
-    Client.prototype.hit = function(sessionId, eventType, dfid, query, callback) {
-      var headers, path, reqOpts;
-      if (dfid == null) {
-        dfid = "";
-      }
+    Client.prototype.__buildSearchQueryString = function(query, params) {
+      var defaultParams, queryParams;
       if (query == null) {
         query = "";
       }
-      if (callback == null) {
-        callback = function(err, res) {};
+      query = query.replace(/\s+/g, " ");
+      if (query !== " ") {
+        query = query.trim();
       }
-      headers = {};
-      if (this.apiKey) {
-        headers[this.__getAuthHeaderName()] = this.apiKey;
-      }
-      path = "/" + this.version + "/hit/" + sessionId + "/" + eventType + "/" + this.hashid;
-      if (dfid !== "") {
-        path += "/" + dfid;
-      }
-      if (query !== "") {
-        path += "/" + (encodeURIComponent(query));
-      }
-      path = path + "?random=" + (new Date().getTime());
-      reqOpts = this.__requestOptions(path);
-      return this.httpClient.request(reqOpts, callback);
-    };
-
-
-    /*
-    This method calls to /hit
-    service for accounting the
-    hits in a product
-    
-    @param {String} dfid
-    @param {Object | Function} arg1
-    @param {Function} arg2
-    @api public
-     */
-
-    Client.prototype.options = function() {
-      var args, callback, options, path, querystring, reqOpts;
-      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-      callback = (function(err, res) {});
-      if (args.length === 1) {
-        options = {};
-        callback = args[0];
-      } else if (args.length === 2) {
-        options = args[0];
-        callback = args[1];
-      } else {
-        throw new Error("A callback is required.");
-      }
-      if (typeof options !== "undefined" && options.querystring) {
-        querystring = "?" + options.querystring;
-      } else {
-        querystring = "";
-      }
-      path = "/" + this.version + "/options/" + this.hashid + querystring;
-      reqOpts = this.__requestOptions(path);
-      return this.httpClient.request(reqOpts, callback);
-    };
-
-
-    /*
-    Method to make the request options
-    
-    @param (String) path: request options
-    @return (Object) the options object.
-    @api private
-     */
-
-    Client.prototype.__requestOptions = function(path) {
-      var headers, options;
-      headers = {};
-      if (this.apiKey) {
-        headers[this.__getAuthHeaderName()] = this.apiKey;
-      }
-      options = {
-        host: this.url,
-        path: path,
-        headers: headers
+      defaultParams = {
+        hashid: this.hashid
       };
-      if (this.url.split(':').length > 1) {
-        options.host = this.url.split(':')[0];
-        options.port = this.url.split(':')[1];
+      queryParams = extend(true, defaultParams, params || {}, {
+        query: query
+      });
+      if (Thing.is.array(queryParams.type) && queryParams.type.length === 1) {
+        queryParams.type = queryParams.type[0];
       }
-      return options;
-    };
-
-
-    /*
-    Method to obtain security header name
-    @return (String) either 'api token' or 'authorization' depending on version
-    @api private
-     */
-
-    Client.prototype.__getAuthHeaderName = function() {
-      if (this.version === 4) {
-        return 'api token';
-      } else {
-        return 'authorization';
+      if (Thing.is.hash(queryParams.sort) && (Object.keys(queryParams.sort)).length > 1) {
+        throw errors.error("To sort by multiple fields use an Array of Objects", this);
       }
+      return qs.stringify(queryParams, {
+        skipNulls: false
+      });
     };
 
     return Client;
@@ -542,22 +255,26 @@ author: @ecoslado
 
 }).call(this);
 
-},{"./util/http":9,"md5":64}],2:[function(require,module,exports){
-
-/*
- * Created by Kike Coslado on 26/10/15.
- * 20160419 REV(@JoeZ99)
- */
-
+},{"./util/errors":7,"./util/http":10,"./util/thing":12,"extend":24,"md5":66,"qs":73}],2:[function(require,module,exports){
 (function() {
-  var Controller, bean, extend, qs,
-    slice = [].slice;
+  var Client, Controller, Freezer, Thing, Widget, bean, errors, extend, qs,
+    hasProp = {}.hasOwnProperty;
 
   bean = require("bean");
 
   extend = require("extend");
 
   qs = require("qs");
+
+  errors = require("./util/errors");
+
+  Client = require("./client");
+
+  Widget = require("./widgets/widget");
+
+  Freezer = require("./util/freezer");
+
+  Thing = require("./util/thing");
 
 
   /*
@@ -566,556 +283,600 @@ author: @ecoslado
   This class uses the client to
   to retrieve the data and the widgets
   to paint them.
-  
-  TODO(@carlosescri): Use our introspection tool to do some cleanup.
    */
 
   Controller = (function() {
-
-    /*
-    Controller constructor
-    
-    @param {doofinder.Client} client
-    @param {doofinder.widget | Array} widgets
-    @param {Object} searchParams
-    @api public
-     */
-    function Controller(client, widgets, searchParams1) {
-      var i, len, widget;
-      this.searchParams = searchParams1 != null ? searchParams1 : {};
+    function Controller(client, defaultParams) {
+      var defaults;
       this.client = client;
-      this.hashid = client.hashid;
-      this.widgets = [];
-      if (widgets instanceof Array) {
-        for (i = 0, len = widgets.length; i < len; i++) {
-          widget = widgets[i];
-          this.addWidget(widget);
-        }
-      } else if (widgets) {
-        this.addWidget(widgets);
+      if (defaultParams == null) {
+        defaultParams = {};
       }
-      this.status = extend(true, {}, {
-        params: extend(true, {}, this.searchParams)
+      if (!(this.client instanceof Client)) {
+        throw errors.error("client must be an instance of Client", this);
+      }
+      if (!Thing.is.hash(defaultParams)) {
+        throw errors.error("defaultParams must be an instance of Object", this);
+      }
+      defaults = {
+        page: 1,
+        rpp: 10
+      };
+      this.defaults = extend(true, defaults, defaultParams);
+      this.queryCounter = 0;
+      this.widgets = [];
+      Object.defineProperty(this, 'hashid', {
+        get: function() {
+          return this.client.hashid;
+        }
+      });
+      Object.defineProperty(this, 'isFirstPage', {
+        get: function() {
+          return this.requestDone && this.params.page === 1;
+        }
+      });
+      Object.defineProperty(this, 'isLastPage', {
+        get: function() {
+          return this.requestDone && this.params.page === this.lastPage;
+        }
       });
       this.reset();
     }
 
 
-    /*
-    __search
-    this method invokes Client's search method for
-    retrieving the data and use widget's replace or
-    append to show them.
-    
-    @param {String} event: the event name
-    @param {Array} params: the params will be passed
-      to the listeners
-    @api private
+    /**
+     * Resets status and optionally forces query and params. As it is a reset
+     * aimed to perform a new search, page is forced to 1 in any case.
+     *
+     * @param  {String} query  Search terms.
+     * @param  {Object} params Optional search parameters.
+     * @return {Object}        Updated status.
      */
 
-    Controller.prototype.__search = function(next) {
-      var _this, params;
-      if (next == null) {
-        next = false;
+    Controller.prototype.reset = function(query, params) {
+      if (query == null) {
+        query = null;
       }
-      this.status.params.query_counter++;
-      params = extend(true, {}, this.status.params || {});
-      params.page = this.status.currentPage;
-      _this = this;
-      return this.client.search(params.query, params, function(err, res) {
-        var i, len, ref, results, widget;
-        if (err) {
-          return _this.trigger("df:error_received", [err]);
-        } else if (res) {
-          if (res.results.length < _this.status.params.rpp) {
-            _this.status.lastPageReached = true;
-          }
-          if (!_this.searchParams.query_name) {
-            _this.status.params.query_name = res.query_name;
-          }
-          _this.trigger("df:results_received", [res]);
-          if (res.query_counter === _this.status.params.query_counter) {
-            ref = _this.widgets;
-            results = [];
-            for (i = 0, len = ref.length; i < len; i++) {
-              widget = ref[i];
-              if (next) {
-                results.push(widget.renderNext(res));
-              } else {
-                results.push(widget.render(res));
-              }
-            }
-            return results;
-          }
-        }
-      });
-    };
-
-
-    /*
-    __search wrappers
-     */
-
-
-    /*
-    search
-    
-    Takes a new query, initializes status and performs
-    a search
-    
-    @param {String} query: the query term
-    @api public
-     */
-
-    Controller.prototype.search = function(query, params) {
-      var queryCounter, searchParams;
       if (params == null) {
         params = {};
       }
-      if (query) {
-        searchParams = extend(true, {}, this.searchParams);
-        queryCounter = this.status.params.query_counter;
-        this.status.params = extend(true, {}, params);
-        this.status.params = extend(true, searchParams, params);
-        this.status.params.query = query;
-        this.status.params.filters = extend(true, {}, this.searchParams.filters || {}, params.filters);
-        this.status.params.query_counter = queryCounter;
-        if (!this.searchParams.query_name) {
-          delete this.status.params.query_name;
-        }
-        this.status.currentPage = 1;
-        this.status.firstQueryTriggered = true;
-        this.status.lastPageReached = false;
-        this.__search();
-      }
-      return this.trigger("df:search", [this.status.params]);
+      this.query = query;
+      this.params = extend(true, {}, this.defaults, params, {
+        page: 1
+      });
+      this.requestDone = false;
+      return this.lastPage = null;
     };
 
 
-    /*
-    nextPage
-    
-    Increments the currentPage and performs a search. Takes
-    the next page results and shows them.
-    
-    @api public
+    /**
+     * Resets status and clean widgets at the same time.
+     * @public
      */
 
-    Controller.prototype.nextPage = function(replace) {
-      if (replace == null) {
-        replace = false;
-      }
-      if (this.status.firstQueryTriggered && this.status.currentPage > 0 && !this.status.lastPageReached) {
-        this.trigger("df:next_page");
-        this.status.currentPage++;
-        return this.__search(true);
-      }
+    Controller.prototype.clean = function() {
+      this.reset();
+      return this.cleanWidgets();
     };
 
 
-    /*
-    getPage
-    
-    Set the currentPage with a given value and performs a search.
-    Takes a given page and shows the results.
-    
-    @param {Number} page: the page you are retrieving
-    @api public
+    /**
+     * Performs a request for a new search (resets status).
+     * Page will always be 1 in this case.
+     *
+     * @param  {String} query  Search terms.
+     * @param  {Object} params Search parameters.
+     * @return {http.ClientRequest}
+     * @public
+     */
+
+    Controller.prototype.search = function(query, params) {
+      if (params == null) {
+        params = {};
+      }
+      this.reset(query, params);
+      this.__getResults();
+      return this.trigger("df:search", [this.query, this.params]);
+    };
+
+
+    /**
+     * Performs a request to get results for a specific page of the current
+     * search. Requires a search being made via `search()` to set a status.
+     *
+     * @param  {Number} page
+     * @return {http.ClientRequest|Boolean} The request or false if can't be made.
+     * @public
      */
 
     Controller.prototype.getPage = function(page) {
-      var self;
-      if (this.status.firstQueryTriggered && this.status.currentPage > 0) {
-        this.trigger("df:get_page");
-        this.status.currentPage = page;
-        self = this;
-        return this.__search();
+      page = parseInt(page, 10);
+      if (this.requestDone && page <= this.lastPage) {
+        this.params.page = page;
+        this.__getResults();
+        return this.trigger("df:search:page", [this.query, this.params]);
       }
     };
 
 
-    /*
-    refresh
-    
-    Makes a search call with the current status.
-    
-    @api public
+    /**
+     * Performs a request to get results for the next page of the current search,
+     * if the last page was not already reached.
+     *
+     * @return {http.ClientRequest|Boolean} The request or false if can't be made.
+     * @public
+     */
+
+    Controller.prototype.getNextPage = function() {
+      return this.getPage((this.params.page || 1) + 1);
+    };
+
+
+    /**
+     * Gets the first page for the the current search again.
+     *
+     * @return {http.ClientRequest|Boolean} The request or false if can't be made.
+     * @public
      */
 
     Controller.prototype.refresh = function() {
-      if (this.status.params.query) {
-        this.trigger("df:refresh", [this.status.params]);
-        this.status.currentPage = 1;
-        this.status.firstQueryTriggered = true;
-        this.status.lastPageReached = false;
-        return this.__search();
-      }
+      this.params.page = 1;
+      this.__getResults();
+      return this.trigger("df:refresh", [this.query, this.params]);
     };
 
 
-    /*
-    addFilter
-    
-    Adds new filter criteria.
-    
-    @param {String} key: the facet key you are filtering
-    @param {String | Object} value: the filtering criteria
-    @api public
+    /**
+     * Get results for the current search status.
+     *
+     * @return {http.ClientRequest}
+     * @protected
      */
 
-    Controller.prototype.addFilter = function(key, value) {
-      this.status.currentPage = 1;
-      if (!this.status.params.filters) {
-        this.status.params.filters = {};
-      }
-      if (value.constructor === Object) {
-        this.status.params.filters[key] = value;
-        if (this.searchParams.filters && this.searchParams.filters[key]) {
-          return delete this.searchParams.filters[key];
-        }
-      } else {
-        if (!this.status.params.filters[key]) {
-          this.status.params.filters[key] = [];
-        }
-        if (value.constructor !== Array) {
-          value = [value];
-        }
-        return this.status.params.filters[key] = this.status.params.filters[key].concat(value);
-      }
-    };
-
-    Controller.prototype.hasFilter = function(key) {
-      var ref;
-      return ((ref = this.status.params.filters) != null ? ref[key] : void 0) != null;
-    };
-
-    Controller.prototype.getFilter = function(key) {
-      var ref;
-      return (ref = this.status.params.filters) != null ? ref[key] : void 0;
-    };
-
-
-    /*
-    addParam
-    
-    Adds new search parameter to the current status.
-    
-    @param {String} key: the facet key you are filtering
-    @param {String | Number} value: the filtering criteria
-    @api public
-     */
-
-    Controller.prototype.addParam = function(key, value) {
-      return this.status.params[key] = value;
-    };
-
-
-    /*
-    clearParam
-    
-    Removes search parameter from current status.
-    
-    @param {String} key: the name of the param
-    @api public
-     */
-
-    Controller.prototype.clearParam = function(key) {
-      return delete this.status.params[key];
-    };
-
-
-    /*
-    reset
-    
-    Reset the params to the initial state.
-    
-    @api public
-     */
-
-    Controller.prototype.reset = function() {
-      var queryCounter;
-      queryCounter = this.status.params.query_counter || 1;
-      this.status = {
-        params: extend(true, {}, this.searchParams),
-        currentPage: 0,
-        firstQueryTriggered: false,
-        lastPageReached: false
-      };
-      this.status.params.query_counter = queryCounter;
-      if (this.searchParams.query) {
-        return this.status.params.query = '';
-      }
-    };
-
-
-    /*
-    removeFilter
-    
-    Removes some filter criteria.
-    
-    @param {String} key: the facet key you are filtering
-    @param {String | Object} value: the filtering criteria you are removing
-    @api public
-     */
-
-    Controller.prototype.removeFilter = function(key, value) {
-      var ref, ref1;
-      this.status.currentPage = 1;
-      if (((ref = this.status.params.filters) != null ? ref[key] : void 0) != null) {
-        if (this.status.params.filters[key].constructor === Object) {
-          delete this.status.params.filters[key];
-        } else if (this.status.params.filters[key].constructor === Array) {
-          if (value != null) {
-            this.__splice(this.status.params.filters[key], value);
-            if (!(this.status.params.filters[key].length > 0)) {
-              delete this.status.params.filters[key];
-            }
+    Controller.prototype.__getResults = function() {
+      var params, request;
+      this.requestDone = true;
+      params = extend(true, {
+        query_counter: ++this.queryCounter
+      }, this.params);
+      return request = this.client.search(this.query, params, (function(_this) {
+        return function(err, res) {
+          if (err) {
+            return _this.trigger("df:results:error", [err]);
           } else {
-            delete this.status.params.filters[key];
-          }
-        }
-      }
-      if (((ref1 = this.searchParams.filters) != null ? ref1[key] : void 0) != null) {
-        if (this.searchParams.filters[key].constructor === Object) {
-          return delete this.searchParams.filters[key];
-        } else if (this.searchParams.filters[key].constructor === Array) {
-          if (value != null) {
-            this.__splice(this.searchParams.filters[key], value);
-            if (!(this.searchParams.filters[key].length > 0)) {
-              return delete this.searchParams.filters[key];
+            _this.lastPage = Math.ceil(res.total / res.results_per_page);
+            _this.params.query_name = res.query_name;
+            _this.renderWidgets(res);
+            _this.trigger("df:results:success", [res]);
+            if (_this.isLastPage) {
+              return _this.trigger("df:results:end", [res]);
             }
-          } else {
-            return delete this.searchParams.filters[key];
           }
-        }
+        };
+      })(this));
+    };
+
+
+    /**
+     * Registers a function that is executed when certain event is triggered on
+     * the controller.
+     *
+     * @param  {String}   eventName Event name (or multiple events, space
+     *                              separated).
+     * @param  {Function} handler   The callback function.
+     * @public
+     */
+
+    Controller.prototype.on = function(eventName, handler) {
+      return bean.on(this, eventName, handler);
+    };
+
+
+    /**
+     * Registers a function that is executed when certain event is triggered on
+     * the controller the first time after this function is executed.
+     *
+     * @param  {String}   eventName Event name (or multiple events, space
+     *                              separated).
+     * @param  {Function} handler   The callback function.
+     * @public
+     */
+
+    Controller.prototype.one = function(eventName, handler) {
+      return bean.one(this, eventName, handler);
+    };
+
+
+    /**
+     * Unregisters an event handler of this controller.
+     *
+     * - If no handler is provided, all event handlers for the event name provided
+     *   are unregistered for the current controller.
+     * - If no handler and no event name are provided, all event handlers are
+     *   unregistered for the current controller.
+     *
+     * @param  {String}   eventName Event name (or multiple events, space
+     *                              separated). Optional.
+     * @param  {Function} handler   The callback function. Optional.
+     * @public
+     */
+
+    Controller.prototype.off = function(eventName, handler) {
+      return bean.off(this, eventName, handler);
+    };
+
+
+    /**
+     * Triggers an event in the current controller.
+     *
+     * @param  {String} eventName Event name (or multiple events, space
+     *                            separated).
+     * @param  {Array}  args      Array of arguments to pass to the event handler.
+     * @public
+     */
+
+    Controller.prototype.trigger = function(eventName, args) {
+      return bean.fire(this, eventName, args);
+    };
+
+
+    /**
+     * Registers a widget in the current controller instance.
+     *
+     * @param  {Widget} widget  An instance of Widget (or any of its subclasses).
+     * @public
+     */
+
+    Controller.prototype.registerWidget = function(widget) {
+      if (!(widget instanceof Widget)) {
+        throw errors.error("widget must be an instance of Widget", this);
       }
+      widget.setController(this);
+      widget.init();
+      return this.widgets.push(widget);
     };
 
-    Controller.prototype.__splice = function(list, value) {
-      var idx;
-      idx = list.indexOf(value);
-      while (idx >= 0) {
-        list.splice(idx, 1);
-        idx = list.indexOf(value);
+
+    /**
+     * Registers multiple widgets at the same time in the current controller
+     * instance.
+     *
+     * @param  {Array} widgets  An array of Widget instances.
+     * @public
+     */
+
+    Controller.prototype.registerWidgets = function(widgets) {
+      var j, len, results, widget;
+      results = [];
+      for (j = 0, len = widgets.length; j < len; j++) {
+        widget = widgets[j];
+        results.push(this.registerWidget(widget));
       }
-      return list;
+      return results;
     };
 
 
-    /*
-    setSearchParam
-    
-    Removes some filter criteria.
-    
-    @param {String} key: the param key
-    @param {Mixed} value: the value
-    @api public
+    /**
+     * Makes registered widgets render themselves with the provided search
+     * response.
+     *
+     * Triggers an event when all widgets' `render()` method have been executed.
+     *
+     * @param {Object} res A search response.
+     * @fires Controller#df:controller:renderWidgets
+     * @public
      */
 
-    Controller.prototype.setSearchParam = function(key, value) {
-      return this.searchParams[key] = value;
+    Controller.prototype.renderWidgets = function(res) {
+      this.widgets.forEach(function(widget) {
+        return widget.render(res);
+      });
+      return this.trigger("df:controller:renderWidgets");
     };
 
 
-    /*
-    addwidget
-    
-    Adds a new widget to the controller and reference the
-    controller from the widget.
-    
-    @param {doofinder.widget} widget: the widget you are adding.
-    @api public
+    /**
+     * Makes registered widgets clean themselves.
+     *
+     * Triggers an event when all widgets' `clean()` method have been executed.
+     *
+     * @fires Controller#df:controller:cleanWidgets
+     * @public
      */
 
-    Controller.prototype.addWidget = function(widget) {
-      this.widgets.push(widget);
-      return widget.init(this);
+    Controller.prototype.cleanWidgets = function() {
+      this.widgets.forEach(function(widget) {
+        return widget.clean();
+      });
+      return this.trigger("df:controller:cleanWidgets");
     };
 
 
-    /*
-    This method calls to /stats/click
-    service for accounting the
-    clicks to a product
-    
-    @param {String} productId
-    @param {Object} options
-    @param {Function} callback
-    
-    @api public
+    /**
+     * Returns the value of a search parameter.
+     *
+     * @param  {String} key
+     * @return {*}
+     * @public
      */
 
-    Controller.prototype.registerClick = function() {
-      var args, callback, options, productId;
-      productId = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      callback = (function(err, res) {});
-      options = {};
-      if (args.length === 1) {
-        if (typeof args[0] === 'function') {
-          callback = args[0];
+    Controller.prototype.getParam = function(key) {
+      return this.params[key];
+    };
+
+
+    /**
+     * Sets the value of a search parameter.
+     *
+     * @param {string}  key
+     * @param {*}       value
+     * @public
+     */
+
+    Controller.prototype.setParam = function(key, value) {
+      return this.params[key] = value;
+    };
+
+
+    /**
+     * Removes a search parameter.
+     *
+     * @param  {String} key
+     * @public
+     */
+
+    Controller.prototype.removeParam = function(key) {
+      return delete this.params[key];
+    };
+
+
+    /**
+     * Gets the value of a filter
+     *
+     * @param  {String} key       Name of the filter.
+     * @param  {String} paramName Name of the parameter ("filter" by default).
+     * @return {*}
+     * @public
+     */
+
+    Controller.prototype.getFilter = function(key, paramName) {
+      var ref;
+      if (paramName == null) {
+        paramName = "filter";
+      }
+      return (ref = this.params[paramName]) != null ? ref[key] : void 0;
+    };
+
+
+    /**
+     * Sets the value of a filter.
+     *
+     * String values are stored inside an array for the given key.
+     *
+     * @param  {String} key       Name of the filter.
+     * @param  {*}      value     Value of the filter.
+     * @param  {String} paramName Name of the parameter ("filter" by default).
+     * @return {*}
+     * @public
+     */
+
+    Controller.prototype.setFilter = function(key, value, paramName) {
+      var base;
+      if (paramName == null) {
+        paramName = "filter";
+      }
+      if ((base = this.params)[paramName] == null) {
+        base[paramName] = {};
+      }
+      this.params[paramName][key] = Thing.is.string(value) ? [value] : value;
+      return this.params[paramName][key];
+    };
+
+
+    /**
+     * Adds a value to a filter.
+     *
+     * @param {String}  key       Name of the filter.
+     * @param {*}       value     Value to be added.
+     * @param {String}  paramName = "filter"
+     */
+
+    Controller.prototype.addFilter = function(key, value, paramName) {
+      var base;
+      if (paramName == null) {
+        paramName = "filter";
+      }
+      if ((base = this.params)[paramName] == null) {
+        base[paramName] = {};
+      }
+      if (Thing.is.array(this.params[paramName][key])) {
+        if (Thing.is.array(value)) {
+          return this.params[paramName][key] = this.params[paramName][key].concat(value.filter((function(_this) {
+            return function(x, i, arr) {
+              return (_this.params[paramName][key].indexOf(x)) < 0;
+            };
+          })(this)));
         } else {
-          options = args[0];
+          if (!((this.params[paramName][key].indexOf(value)) >= 0)) {
+            return this.params[paramName][key].push(value);
+          }
         }
-      } else if (args.length === 2) {
-        options = args[0];
-        callback = args[1];
+      } else if ((Thing.is.hash(this.params[paramName][key])) && (Thing.is.hash(value))) {
+        return this.params[paramName][key] = this.__buildHashFilter(this.params[paramName][key], value);
+      } else {
+        return this.setFilter(key, value, paramName);
       }
-      if (!options.query) {
-        options.query = this.status.params.query;
-      }
-      return this.client.registerClick(productId, options, callback);
     };
 
 
-    /*
-    This method calls to /stats/init_session
-    service for init a user session
-    
-    @param {String} sessionId
-    @param {Function} callback
-    
-    @api public
+    /**
+     * Removes a value from a filter.
+     *
+     * - If values are stored in an array:
+     *   - If a single value is passed, removes it from the array, if exists.
+     *   - If an array is passed, removes as much values as it can from the array.
+     *   - Passing an object is a wrong use case, don't do it.
+     * - If values are stored in a plain Object:
+     *   - If a single value is passed, it is considered a key of the filter, so
+     *     direct removal is tried.
+     *   - If a plain Object is passed as a value, removes as much keys as it can
+     *     from the filter.
+     *   - Passing an array is a wrong use case, don't do it.
+     * - If no value is passed, the entire filter is removed.
+     * - In any other case, if the value matches the value of the filter, the
+     *   entire filter is removed.
+     *
+     * @param  {String} key       Name of the filter.
+     * @param  {*}      value     Value of the filter.
+     * @param  {String} paramName Name of the parameter ("filter" by default).
+     * @return {*}
+     * @public
      */
 
-    Controller.prototype.registerSession = function(sessionId, callback) {
-      if (callback == null) {
-        callback = (function(err, res) {});
+    Controller.prototype.removeFilter = function(key, value, paramName) {
+      var j, len, ref, ref1, x;
+      if (paramName == null) {
+        paramName = "filter";
       }
-      return this.client.registerSession(sessionId, callback);
-    };
-
-
-    /*
-    This method calls to /stats/checkout
-    service for init a user session
-    
-    @param {String} sessionId
-    @param {Object} options
-    @param {Function} callback
-    
-    @api public
-     */
-
-    Controller.prototype.registerCheckout = function(sessionId, callback) {
-      return this.client.registerCheckout(sessionId, callback);
-    };
-
-
-    /*
-    hit
-    
-    Increment the hit counter when a product is clicked.
-    
-    @param {String} dfid: the unique identifier present in the search result
-    @param {Function} callback
-     */
-
-    Controller.prototype.hit = function(sessionId, type, dfid, query, callback) {
-      if (dfid == null) {
-        dfid = "";
-      }
-      if (query == null) {
-        query = this.status.params.query;
-      }
-      if (callback == null) {
-        callback = function() {};
-      }
-      return this.client.hit(sessionId, type, dfid, query, callback);
-    };
-
-
-    /*
-    options
-    
-    Retrieves the SearchEngine options
-    
-    @param {Function} callback
-     */
-
-    Controller.prototype.options = function() {
-      var args, ref;
-      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-      return (ref = this.client).options.apply(ref, args);
-    };
-
-
-    /*
-    bind
-    
-    Method to add and event listener
-    @param {String} event
-    @param {Function} callback
-    @api public
-     */
-
-    Controller.prototype.bind = function(event, callback) {
-      return bean.on(this, event, callback);
-    };
-
-
-    /*
-    trigger
-    
-    Method to trigger an event
-    @param {String} event
-    @param {Array} params
-    @api public
-     */
-
-    Controller.prototype.trigger = function(event, params) {
-      return bean.fire(this, event, params);
-    };
-
-
-    /*
-    setStatusFromString
-    
-    Fills in the status from queryString
-    and searches.
-     */
-
-    Controller.prototype.setStatusFromString = function(queryString, prefix) {
-      var searchParams;
-      if (prefix == null) {
-        prefix = "#/search/";
-      }
-      this.status.firstQueryTriggered = true;
-      this.status.lastPageReached = false;
-      searchParams = extend(true, {}, this.searchParams || {});
-      this.status.params = extend(true, searchParams, qs.parse(queryString.replace("" + prefix, "")) || {});
-      this.status.params.query_counter = 1;
-      this.status.currentPage = 1;
-      this.refresh();
-      return this.status.params.query;
-    };
-
-
-    /*
-    statusQueryString
-    
-    Method to represent current status
-    with a queryString
-     */
-
-    Controller.prototype.statusQueryString = function(prefix) {
-      var discardQSFunctions, params;
-      if (prefix == null) {
-        prefix = "#/search/";
-      }
-      params = extend(true, {}, this.status.params);
-      delete params.transformer;
-      delete params.rpp;
-      delete params.query_counter;
-      delete params.page;
-      discardQSFunctions = function(prefix, value) {
-        if (typeof value === 'function') {
-          return;
+      if (((ref = this.params[paramName]) != null ? ref[key] : void 0) != null) {
+        if (value == null) {
+          delete this.params[paramName][key];
+        } else if (Thing.is.array(this.params[paramName][key])) {
+          if (!Thing.is.array(value)) {
+            value = [value];
+          }
+          this.params[paramName][key] = this.params[paramName][key].filter(function(x, i, arr) {
+            return (value.indexOf(x)) < 0;
+          });
+          if (this.params[paramName][key].length === 0) {
+            delete this.params[paramName][key];
+          }
+        } else if (Thing.is.hash(this.params[paramName][key])) {
+          if (!Thing.is.hash(value)) {
+            delete this.params[paramName][key][value];
+          } else {
+            ref1 = Object.keys(value);
+            for (j = 0, len = ref1.length; j < len; j++) {
+              x = ref1[j];
+              delete this.params[paramName][key][x];
+            }
+          }
+          if (!(Object.keys(this.params[paramName][key])).length) {
+            delete this.params[paramName][key];
+          }
+        } else if (this.params[paramName][key] === value) {
+          delete this.params[paramName][key];
         }
-        return value;
-      };
-      return "" + prefix + (qs.stringify(params, {
-        filter: discardQSFunctions
-      }));
+        return this.params[paramName][key];
+      }
+    };
+
+
+    /**
+     * Fixes filters in case they're range filters so there are no conflicts
+     * between filter properties (for instance, "gt" and "gte" being used in the
+     * same filter).
+     *
+     * @protected
+     * @param  {Object} currentFilter
+     * @param  {Object} newFilter
+     * @return {Object}
+     */
+
+    Controller.prototype.__buildHashFilter = function(currentFilter, newFilter) {
+      var value;
+      if (currentFilter == null) {
+        currentFilter = {};
+      }
+      if (newFilter == null) {
+        newFilter = {};
+      }
+      value = extend(true, {}, currentFilter);
+      if ((newFilter.gt != null) || (newFilter.gte != null)) {
+        delete value.gt;
+        delete value.gte;
+      }
+      if ((newFilter.lt != null) || (newFilter.lte != null)) {
+        delete value.lt;
+        delete value.lte;
+      }
+      return extend(true, value, newFilter);
+    };
+
+    Controller.prototype.getExclusion = function(key) {
+      return this.getFilter(key, "exclude");
+    };
+
+    Controller.prototype.setExclusion = function(key, value) {
+      return this.setFilter(key, value, "exclude");
+    };
+
+    Controller.prototype.removeExclusion = function(key, value) {
+      return this.removeFilter(key, value, "exclude");
+    };
+
+    Controller.prototype.addExclusion = function(key, value) {
+      return this.addFilter(key, value, "exclude");
+    };
+
+
+    /**
+     * Returns the current status of the controller as a URL querystring.
+     *
+     * Useful to save it somewhere and recover later.
+     *
+     * @return {String}
+     * @public
+     */
+
+    Controller.prototype.serializeStatus = function() {
+      var j, key, len, ref, status, value;
+      status = extend(true, {
+        query: this.query
+      }, this.params);
+      ref = ['transformer', 'rpp', 'query_counter', 'page'];
+      for (j = 0, len = ref.length; j < len; j++) {
+        key = ref[j];
+        delete status[key];
+      }
+      for (key in status) {
+        if (!hasProp.call(status, key)) continue;
+        value = status[key];
+        if (!value) {
+          delete status[key];
+        }
+      }
+      if ((Object.keys(status)).length > 0) {
+        return qs.stringify(status);
+      } else {
+        return "";
+      }
+    };
+
+
+    /**
+     * Changes the status of the controller based on the value of the status
+     * parameter.
+     *
+     * @param  {String} status  Status previously obtained with `serializeStatus`.
+     * @return {Object|Boolean} Status parameters as an Object or `false` if
+     *                          status could not be recovered.
+     */
+
+    Controller.prototype.loadStatus = function(status) {
+      var params, query, requestParams;
+      params = (qs.parse(status)) || {};
+      if ((Object.keys(params)).length > 0) {
+        requestParams = extend(true, {}, params);
+        query = requestParams.query || "";
+        delete requestParams.query;
+        this.reset(query, requestParams);
+        this.requestDone = true;
+        this.refresh();
+        return params;
+      } else {
+        return false;
+      }
     };
 
     return Controller;
@@ -1126,52 +887,47 @@ author: @ecoslado
 
 }).call(this);
 
-},{"bean":22,"extend":23,"qs":70}],3:[function(require,module,exports){
+},{"./client":1,"./util/errors":7,"./util/freezer":8,"./util/thing":12,"./widgets/widget":22,"bean":23,"extend":24,"qs":73}],3:[function(require,module,exports){
 (function() {
-  if (!JSON.stringify && JSON.encode) {
-    JSON.stringify = JSON.encode;
-  }
-
-  if (!JSON.parse && JSON.decode) {
-    JSON.parse = JSON.decode;
-  }
-
   module.exports = {
-    version: "5.1.7",
+    version: "5.2.0",
     Client: require("./client"),
-    Mustache: require("mustache"),
-    Widget: require("./widget"),
     Controller: require("./controller"),
+    Stats: require("./stats"),
+    Mustache: require("mustache"),
     widgets: {
-      Display: require("./widgets/display"),
-      Results: require("./widgets/results/results"),
-      ScrollResults: require("./widgets/results/scrollresults"),
+      Widget: require("./widgets/widget"),
       QueryInput: require("./widgets/queryinput"),
-      BaseFacet: require("./widgets/facets/basefacet"),
-      TermFacet: require("./widgets/facets/termfacet"),
+      Display: require("./widgets/display"),
+      ScrollDisplay: require("./widgets/scrolldisplay"),
+      TermsFacet: require("./widgets/facets/termsfacet"),
+      CollapsibleTermsFacet: require("./widgets/facets/collapsibletermsfacet"),
       RangeFacet: require("./widgets/facets/rangefacet"),
-      FacetPanel: require("./widgets/facets/facetpanel")
+      Panel: require("./widgets/panel"),
+      CollapsiblePanel: require("./widgets/collapsiblepanel")
     },
     util: {
+      bean: require("bean"),
+      dfdom: require("./util/dfdom"),
+      errors: require("./util/errors"),
+      extend: require("extend"),
+      helpers: require("./util/helpers"),
+      http: require("./util/http"),
       md5: require("md5"),
       qs: require("qs"),
-      bean: require("bean"),
-      extend: require("extend"),
-      introspection: require("./util/introspection"),
-      dfdom: require("./util/dfdom"),
+      text: require("./util/text"),
+      Thing: require("./util/thing"),
       throttle: require("lodash.throttle"),
-      http: require("./util/http"),
-      uniqueId: require("./util/uniqueid"),
-      buildHelpers: require("./util/helpers")
+      uniqueId: require("./util/uniqueid")
     },
     session: require("./session")
   };
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./session":4,"./util/dfdom":5,"./util/helpers":8,"./util/http":9,"./util/introspection":10,"./util/uniqueid":11,"./widget":12,"./widgets/display":13,"./widgets/facets/basefacet":14,"./widgets/facets/facetpanel":15,"./widgets/facets/rangefacet":16,"./widgets/facets/termfacet":17,"./widgets/queryinput":18,"./widgets/results/results":19,"./widgets/results/scrollresults":20,"bean":22,"extend":23,"lodash.throttle":63,"md5":64,"mustache":68,"qs":70}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/errors":7,"./util/helpers":9,"./util/http":10,"./util/text":11,"./util/thing":12,"./util/uniqueid":13,"./widgets/collapsiblepanel":14,"./widgets/display":15,"./widgets/facets/collapsibletermsfacet":16,"./widgets/facets/rangefacet":17,"./widgets/facets/termsfacet":18,"./widgets/panel":19,"./widgets/queryinput":20,"./widgets/scrolldisplay":21,"./widgets/widget":22,"bean":23,"extend":24,"lodash.throttle":65,"md5":66,"mustache":70,"qs":73}],4:[function(require,module,exports){
 (function() {
-  var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, extend, md5,
+  var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, errors, extend, md5, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -1181,12 +937,21 @@ author: @ecoslado
 
   md5 = require("md5");
 
+  errors = require("./util/errors");
+
+  uniqueId = require("./util/uniqueid");
+
+
+  /**
+   * Interface that all storage classes must implement. See Session class.
+   */
+
   ISessionStore = (function() {
     function ISessionStore() {}
 
 
     /**
-     * Gets the value for the specified key.
+     * Gets the value for the specified key from the storage.
      * @public
      * @param  {String} key
      * @param  {*}      defaultValue Value to return if the key does not exist.
@@ -1197,7 +962,7 @@ author: @ecoslado
       var dataObj;
       dataObj = this.__getData();
       if (dataObj.session_id == null) {
-        throw Error("ISessionStore.__getData must ensure session_id exists!");
+        throw errors.error("__getData must ensure session_id exists!", this);
       }
       return dataObj[key] || defaultValue;
     };
@@ -1242,7 +1007,7 @@ author: @ecoslado
      */
 
     ISessionStore.prototype.__getData = function() {
-      throw Error("ISessionStore.__getData not implemented!");
+      throw errors.error("__getData() not implemented!", this);
     };
 
 
@@ -1254,7 +1019,7 @@ author: @ecoslado
      */
 
     ISessionStore.prototype.__setData = function(dataObj) {
-      throw Error("ISessionStore.__setData(dataObj) not implemented!");
+      throw errors.error("__setData(dataObj) not implemented!", this);
     };
 
 
@@ -1264,8 +1029,8 @@ author: @ecoslado
      * @return {*}
      */
 
-    ISessionStore.prototype["delete"] = function() {
-      throw Error("ISessionStore.delete not implemented!");
+    ISessionStore.prototype.clean = function() {
+      throw errors.error("clean() not implemented!", this);
     };
 
 
@@ -1275,7 +1040,7 @@ author: @ecoslado
      */
 
     ISessionStore.prototype.exists = function() {
-      throw Error("ISessionStore.exists not implemented!");
+      throw errors.error("exists() not implemented!", this);
     };
 
     return ISessionStore;
@@ -1299,20 +1064,10 @@ author: @ecoslado
       this.data = data != null ? data : {};
     }
 
-
-    /**
-    * Generates a unique session ID based on some randomness.
-    * @protected
-    * @return {String} A MD5 hash.
-     */
-
-    ObjectSessionStore.prototype.__uniqueId = function() {
-      return md5([new Date().getTime(), String(Math.floor(Math.random() * 10000))].join(""));
-    };
-
     ObjectSessionStore.prototype.__getData = function() {
-      if (this.data.session_id == null) {
-        this.data.session_id = this.__uniqueId();
+      var base;
+      if ((base = this.data).session_id == null) {
+        base.session_id = uniqueId.generate.hash();
       }
       return this.data;
     };
@@ -1321,7 +1076,7 @@ author: @ecoslado
       this.data = data;
     };
 
-    ObjectSessionStore.prototype["delete"] = function() {
+    ObjectSessionStore.prototype.clean = function() {
       return this.data = {};
     };
 
@@ -1333,8 +1088,22 @@ author: @ecoslado
 
   })(ISessionStore);
 
+
+  /**
+   * Holds session data in a browser cookie.
+   */
+
   CookieSessionStore = (function(superClass) {
     extend1(CookieSessionStore, superClass);
+
+
+    /**
+     * @param  {String} cookieName Name for the cookie.
+     * @param  {Object} options    Options object.
+     *                             - prefix: String to be appended to the cookie
+     *                                 name.
+     *                             - expiry: In days, 1 hour by default
+     */
 
     function CookieSessionStore(cookieName, options) {
       var defaults;
@@ -1350,25 +1119,12 @@ author: @ecoslado
       this.expiry = options.expiry;
     }
 
-
-    /**
-     * Generates a unique session ID based on the user's browser, the location and
-     * some randomness.
-     *
-     * @protected
-     * @return {[type]} [description]
-     */
-
-    CookieSessionStore.prototype.__uniqueId = function() {
-      return md5([navigator.userAgent, navigator.language, window.location.host, new Date().getTime(), String(Math.floor(Math.random() * 10000))].join(""));
-    };
-
     CookieSessionStore.prototype.__getData = function() {
       var dataObj;
       dataObj = Cookies.getJSON(this.cookieName);
       if (dataObj == null) {
         dataObj = this.__setData({
-          session_id: this.__uniqueId()
+          session_id: uniqueId.generate.browserHash()
         });
       }
       return dataObj;
@@ -1381,7 +1137,7 @@ author: @ecoslado
       return dataObj;
     };
 
-    CookieSessionStore.prototype["delete"] = function() {
+    CookieSessionStore.prototype.clean = function() {
       return Cookies.remove(this.cookieName);
     };
 
@@ -1401,17 +1157,9 @@ author: @ecoslado
   Session = (function() {
 
     /**
-     * Creates a Session.
-     * @param  {Controller} controller
-     * @param  {*}          store      A store object which implements:
-     *                                   - get(key, default)
-     *                                   - set(key, value)
-     *                                   - del(key)
-     *                                   - delete()
-     *                                   - exists()
+     * @param  {ISessionStore} store  Holds session data.
      */
-    function Session(controller, store) {
-      this.controller = controller;
+    function Session(store) {
       this.store = store != null ? store : new ObjectSessionStore();
     }
 
@@ -1441,17 +1189,24 @@ author: @ecoslado
       return this.store.set(key, value);
     };
 
+
+    /**
+     * Deletes the specified key from the session store.
+     * @param  {String} key
+     * @return {Object} The current value of the data object.
+     */
+
     Session.prototype.del = function(key) {
       return this.store.del(key);
     };
 
 
     /**
-     * Finishes the session by removing the cookie.
+     * Finishes the session by removing the stored data.
      */
 
-    Session.prototype["delete"] = function() {
-      return this.store["delete"]();
+    Session.prototype.clean = function() {
+      return this.store.clean();
     };
 
 
@@ -1464,76 +1219,6 @@ author: @ecoslado
       return this.store.exists();
     };
 
-
-    /**
-     * Registers a search for the session.
-     * Registers the session in Doofinder stats if not already registered.
-     *
-     * WARNING: This must be called ONLY if the user has performed a search.
-     *          That's why this is usually called when the user has stopped
-     *          typing in the search box.
-     *
-     * @public
-     * @param  {String} query Search terms.
-     */
-
-    Session.prototype.registerSearch = function(query) {
-      this.set("query", query);
-      if (!this.get("registered", false)) {
-        this.controller.registerSession(this.get("session_id"));
-        return this.set("registered", true);
-      }
-    };
-
-
-    /**
-     * Registers a click on a search result for the specified search query.
-     * @public
-     * @param  {String} dfid  Doofinder's internal ID for the result.
-     * @param  {String} query Search terms.
-     */
-
-    Session.prototype.registerClick = function(dfid, query) {
-      this.set("dfid", dfid);
-      this.set("query", query);
-      return this.controller.registerClick(dfid, {
-        sessionId: this.get("session_id")
-      });
-    };
-
-
-    /**
-     * Register a checkout when the location passed matches one of the URLs
-     * provided.
-     *
-     * @public
-     * @param {String} location The URL to check against the patterns.
-     * @param {Array}  patterns A list of regular expressions to test with the
-     *                          provided location.
-     */
-
-    Session.prototype.registerCheckout = function(location, patterns) {
-      var e, i, len, pattern, sessionId;
-      if (patterns == null) {
-        patterns = [];
-      }
-      sessionId = this.get("session_id");
-      for (i = 0, len = patterns.length; i < len; i++) {
-        pattern = patterns[i];
-        try {
-          if (pattern.test(location)) {
-            this.controller.registerCheckout(sessionId);
-            this["delete"]();
-            return true;
-          }
-        } catch (_error) {
-          e = _error;
-          console.error(e.message);
-        }
-      }
-      return false;
-    };
-
     return Session;
 
   })();
@@ -1541,27 +1226,243 @@ author: @ecoslado
   module.exports = {
     Session: Session,
     ISessionStore: ISessionStore,
-    CookieSessionStore: CookieSessionStore,
-    ObjectSessionStore: ObjectSessionStore
+    ObjectSessionStore: ObjectSessionStore,
+    CookieSessionStore: CookieSessionStore
   };
 
 }).call(this);
 
-},{"extend":23,"js-cookie":62,"md5":64}],5:[function(require,module,exports){
+},{"./util/errors":7,"./util/uniqueid":13,"extend":24,"js-cookie":64,"md5":66}],5:[function(require,module,exports){
 (function() {
-  var DfDomElement, MATCHES_SELECTOR_FN, bean, matchesSelector;
+  var Client, Session, Stats, errors, uniqueId;
+
+  errors = require("./util/errors");
+
+  uniqueId = require("./util/uniqueid");
+
+  Client = require("./client");
+
+  Session = (require("./session")).Session;
+
+
+  /**
+   * Helper class to wrap calls to the Doofinder stats API endpoint.
+   */
+
+  Stats = (function() {
+
+    /**
+     * Stats client constructor.
+     * @param  {Client}   @client  Doofinder's Client instance
+     * @param  {Session}  @session Session instance
+     */
+    function Stats(client, session) {
+      this.client = client;
+      this.session = session;
+      if (!(this.client instanceof Client)) {
+        throw errors.error("First parameter must be a Client object!", this);
+      }
+      if (!(this.session instanceof Session)) {
+        throw errors.error("Second parameter must be a Session object!", this);
+      }
+    }
+
+
+    /**
+     * Sets current search terms in the search session.
+     *
+     * WARNING: This should be called ONLY if the user has performed a search.
+     *          That's why this is usually called when the user has stopped
+     *          typing in the search box.
+     *
+     * @public
+     * @param  {String} query Search terms.
+     */
+
+    Stats.prototype.setCurrentQuery = function(query) {
+      return this.session.set("query", query);
+    };
+
+
+    /**
+     * Registers the session in Doofinder stats if not already registered.
+     * It marks the session as registered synchronously to short-circuit other
+     * attempts while the request is in progress. If an error occurs in the
+     * stats request the session is marked as unregistered again.
+     *
+     * WARNING: This should be called ONLY if the user has performed a search.
+     *          That's why this is usually called when the user has stopped
+     *          typing in the search box.
+     *
+     *
+     * @param  {Function} callback Optional callback to be called when the
+     *                             response is received. First param is the
+     *                             error, if any, and the second one is the
+     *                             response, if any.
+     * @return {Boolean}           Whether the stats request has been done or
+     *                             not (doesn't check if it was successful).
+     * @public
+     */
+
+    Stats.prototype.registerSession = function(callback) {
+      var alreadyRegistered;
+      alreadyRegistered = this.session.get("registered", false);
+      if (!alreadyRegistered) {
+        this.session.set("registered", true);
+        this.client.stats("init", {
+          session_id: this.session.get("session_id")
+        }, (function(_this) {
+          return function(err, res) {
+            if (err != null) {
+              _this.session.set("registered", false);
+            }
+            return typeof callback === "function" ? callback(err, res) : void 0;
+          };
+        })(this));
+      }
+      return !alreadyRegistered;
+    };
+
+
+    /**
+     * Registers a click on a search result for the specified search query.
+     *
+     * @param  {String}   dfid      Doofinder's internal ID for the result.
+     * @param  {String}   query     Search terms.
+     * @param  {Function} callback  Optional callback to be called when the
+     *                              response is received. First param is the
+     *                              error, if any, and the second one is the
+     *                              response, if any.
+     * @public
+     */
+
+    Stats.prototype.registerClick = function(dfid, query, callback) {
+      var params;
+      dfid = uniqueId.clean.dfid("" + dfid);
+      this.session.set("dfid", dfid);
+      if (query != null) {
+        this.session.set("query", query);
+      }
+      params = {
+        dfid: dfid,
+        session_id: this.session.get("session_id"),
+        query: this.session.get("query")
+      };
+      return this.client.stats("click", params, (function(_this) {
+        return function(err, res) {
+          return typeof callback === "function" ? callback(err, res) : void 0;
+        };
+      })(this));
+    };
+
+
+    /**
+     * Registers a checkout if session exists.
+     * @param  {Function} callback Optional callback to be called when the
+     *                             response is received. First param is the
+     *                             error, if any, and the second one is the
+     *                             response, if any.
+     * @return {Boolean}           true if session exists and the request is
+     *                             made (doesn't check request success).
+     * @public
+     */
+
+    Stats.prototype.registerCheckout = function(callback) {
+      var sessionExists;
+      sessionExists = this.session.exists();
+      if (sessionExists) {
+        this.client.stats("checkout", {
+          session_id: this.session.get("session_id")
+        }, (function(_this) {
+          return function(err, res) {
+            if (err == null) {
+              _this.session.clean();
+            }
+            return typeof callback === "function" ? callback(err, res) : void 0;
+          };
+        })(this));
+      }
+      return sessionExists;
+    };
+
+
+    /**
+     * Registers an event for a banner
+     * @param  {String}   eventName Name of the event.
+     *                              - display
+     *                              - click
+     * @param  {Number}   bannerId  Id of the banner.
+     * @param  {Function} callback  Optional callback to be called when the
+     *                              response is received. First param is the
+     *                              error, if any, and the second one is the
+     *                              response, if any.
+     * @return {undefined}
+     * @public
+     */
+
+    Stats.prototype.registerBannerEvent = function(eventName, bannerId, callback) {
+      if (eventName == null) {
+        throw this.error("eventName is required");
+      }
+      if (bannerId == null) {
+        throw this.error("bannerId is required");
+      }
+      return this.client.stats("banner_" + eventName, {
+        banner_id: "" + bannerId
+      }, (function(_this) {
+        return function(err, res) {
+          return typeof callback === "function" ? callback(err, res) : void 0;
+        };
+      })(this));
+    };
+
+    return Stats;
+
+  })();
+
+  module.exports = Stats;
+
+}).call(this);
+
+},{"./client":1,"./session":4,"./util/errors":7,"./util/uniqueid":13}],6:[function(require,module,exports){
+(function() {
+  var DfDomElement, MATCHES_SELECTOR_FN, Text, Thing, bean, extend, getWindow, matchesSelector;
 
   bean = require("bean");
+
+  extend = require("extend");
+
+  Text = require("./text");
+
+  Thing = require("./thing");
 
   MATCHES_SELECTOR_FN = null;
 
   matchesSelector = function(node, selector) {
     if (MATCHES_SELECTOR_FN == null) {
       MATCHES_SELECTOR_FN = (['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector', 'matchesSelector'].filter(function(funcName) {
-        return typeof node[funcName] === 'function';
+        return Thing.is.fn(node[funcName]);
       })).pop();
     }
     return node[MATCHES_SELECTOR_FN](selector);
+  };
+
+  getWindow = function(node) {
+    var view;
+    if (Thing.is.window(node)) {
+      view = node;
+    } else if (Thing.is.document(node)) {
+      view = node.defaultView;
+    } else if (node.ownerDocument != null) {
+      view = node.ownerDocument.defaultView;
+    } else {
+      view = null;
+    }
+    if (view && view.opener) {
+      return view;
+    } else {
+      return window;
+    }
   };
 
 
@@ -1583,11 +1484,8 @@ author: @ecoslado
           return this.element.length;
         }
       });
-      if (selector instanceof String) {
-        selector = selector.toString();
-      }
-      if (typeof selector === "string") {
-        selector = selector.trim();
+      if (Thing.is.string(selector)) {
+        selector = selector.toString().trim();
         if (selector.length === 0) {
           selector = [];
         } else {
@@ -1596,7 +1494,7 @@ author: @ecoslado
           });
         }
       }
-      if (selector instanceof Array) {
+      if (Thing.is.array(selector)) {
         this.element = this.__initFromSelectorArray(selector);
       } else {
         this.element = this.__initFromSelector(selector);
@@ -1644,21 +1542,12 @@ author: @ecoslado
      * node.
      *
      * @protected
-     * @param  {Element|HTMLDocument|Document|Window} node
+     * @param  {HTMLElement|HTMLBodyElement|HTMLDocument|Document|Window} node
      * @return {Boolean}
      */
 
     DfDomElement.prototype.__isValidElementNode = function(node) {
-      switch (false) {
-        case !(node instanceof Element):
-          return true;
-        case !(node instanceof Document):
-          return true;
-        case !(node && node.document && node.location && node.alert && node.setInterval):
-          return true;
-        default:
-          return false;
-      }
+      return (Thing.is.element(node)) || (Thing.is.document(node)) || (Thing.is.window(node));
     };
 
 
@@ -1689,17 +1578,15 @@ author: @ecoslado
      */
 
     DfDomElement.prototype.__initFromSelector = function(selector) {
-      var element;
-      if (typeof selector === "string" && selector.length > 0) {
-        element = this.__fixNodeList(document.querySelectorAll(this.__fixSelector(selector)));
+      if (selector instanceof NodeList) {
+        return this.__fixNodeList(selector);
+      } else if (Thing.is.string(selector) && selector.length > 0) {
+        return this.__fixNodeList(document.querySelectorAll(this.__fixSelector(selector)));
       } else if (this.__isValidElementNode(selector)) {
-        element = [selector];
-      } else if (selector instanceof NodeList) {
-        element = this.__fixNodeList(selector);
+        return [selector];
       } else {
-        element = [];
+        return [];
       }
-      return element;
     };
 
 
@@ -1753,16 +1640,53 @@ author: @ecoslado
       return results;
     };
 
-    DfDomElement.prototype.get = function(key) {
-      if (key != null) {
-        return this.element[key] || null;
+    DfDomElement.prototype.get = function(index) {
+      if (index != null) {
+        return this.element[index] || null;
       } else {
         return this.element;
       }
     };
 
+
+    /**
+     * Reduces the set of matched elements to the first one from the set of
+     * matched elements.
+     *
+     * @public
+     * @return {DfDomElement}
+     */
+
     DfDomElement.prototype.first = function() {
-      return new DfDomElement(this.get(0));
+      return this.item(0);
+    };
+
+
+    /**
+     * Reduces the set of matched elements to the last one from the set of
+     * matched elements.
+     *
+     * @public
+     * @return {DfDomElement}
+     */
+
+    DfDomElement.prototype.last = function() {
+      return this.item(-1);
+    };
+
+
+    /**
+     * Reduces the set of matched elements to the one at the specified index.
+     * Providing a negative number indicates a position starting from the end of
+     * the set, rather than the beginning.
+     *
+     * @public
+     * @param  {Number} index
+     * @return {DfDomElement}
+     */
+
+    DfDomElement.prototype.item = function(index) {
+      return new DfDomElement(this.element[index >= 0 ? index : this.length + index] || []);
     };
 
 
@@ -1808,12 +1732,12 @@ author: @ecoslado
 
     DfDomElement.prototype.filter = function(selector_or_fn) {
       var filterFn;
-      if (typeof selector_or_fn === "string") {
+      if (Thing.is.fn(selector_or_fn)) {
+        filterFn = selector_or_fn;
+      } else {
         filterFn = function(node) {
           return matchesSelector(node, selector_or_fn);
         };
-      } else {
-        filterFn = selector_or_fn;
       }
       return new DfDomElement(this.element.filter(filterFn, this));
     };
@@ -1833,7 +1757,7 @@ author: @ecoslado
       finderFn = (function(_this) {
         return function(node) {
           var src;
-          src = node === window ? window.document : node;
+          src = Thing.is.window(node) ? window.document : node;
           return _this.__fixNodeList(src.querySelectorAll(selector));
         };
       })(this);
@@ -1857,6 +1781,30 @@ author: @ecoslado
         };
       })(this);
       return new DfDomElement(this.__find(finderFn));
+    };
+
+
+    /**
+     * Returns all the siblings of the elements in the set of matched elements
+     * in a DfDomElement instance.
+     *
+     * @public
+     * @return {DfDomElement}
+     */
+
+    DfDomElement.prototype.siblings = function() {
+      var nodes;
+      nodes = [];
+      this.each(function(x) {
+        var args, n;
+        n = nodes.length;
+        args = ((new DfDomElement(x)).parent().children().filter(function(node) {
+          return node !== x;
+        })).get();
+        args.splice(0, 0, n, 0);
+        return Array.prototype.splice.apply(nodes, args);
+      });
+      return new DfDomElement(nodes);
     };
 
 
@@ -1946,20 +1894,21 @@ author: @ecoslado
 
 
     /**
-     * Clones an Element node or returns the same if it's a HTML string.
+     * Clones an Element node or returns a copy of the same value if it's a
+     * HTML string.
+     *
      * @public
      * @param  {Element|String} node The node to be cloned.
      * @return {Element|String}      The copy or the same string.
      */
 
     DfDomElement.prototype.__cloneNode = function(node) {
-      switch (false) {
-        case typeof node !== "string":
-          return node;
-        case !(node instanceof Element):
-          return node.cloneNode(true);
-        default:
-          throw "Invalid argument: " + node;
+      if (Thing.is.string(node)) {
+        return node;
+      } else if (Thing.is.element(node)) {
+        return node.cloneNode(true);
+      } else {
+        throw "Invalid argument: " + node;
       }
     };
 
@@ -1972,14 +1921,14 @@ author: @ecoslado
      *
      * @public
      * @param  {DfDomElement|Element|String} child Stuff to be prepended.
-     * @return {DfDomElement}                          The current instance.
+     * @return {DfDomElement}                      The current instance.
      */
 
     DfDomElement.prototype.prepend = function(child) {
       if (child instanceof DfDomElement) {
         child = child.get();
       }
-      if (child instanceof Array) {
+      if (Thing.is.array(child)) {
         child.forEach((function(_this) {
           return function(node) {
             return _this.prepend(node);
@@ -1989,12 +1938,12 @@ author: @ecoslado
       } else {
         return this.each((function(_this) {
           return function(node, i) {
-            var newChild, ref;
-            if (typeof child === "string") {
+            var newChild;
+            if (Thing.is.string(child)) {
               return node.insertAdjacentHTML("afterbegin", child);
-            } else if (child instanceof Element) {
+            } else if (Thing.is.element(child)) {
               newChild = (i === 0 ? child : _this.__cloneNode(child));
-              if (((ref = node.children) != null ? ref.length : void 0) > 0) {
+              if (node.children.length > 0) {
                 return node.insertBefore(newChild, node.children[0]);
               } else {
                 return node.appendChild(newChild);
@@ -2021,7 +1970,7 @@ author: @ecoslado
       if (child instanceof DfDomElement) {
         child = child.get();
       }
-      if (child instanceof Array) {
+      if (Thing.is.array(child)) {
         child.forEach((function(_this) {
           return function(node) {
             return _this.append(node);
@@ -2031,9 +1980,9 @@ author: @ecoslado
       } else {
         return this.each((function(_this) {
           return function(node, i) {
-            if (typeof child === "string") {
+            if (Thing.is.string(child)) {
               return node.insertAdjacentHTML("beforeend", child);
-            } else if (child instanceof Element) {
+            } else if (Thing.is.element(child)) {
               return node.appendChild((i === 0 ? child : _this.__cloneNode(child)));
             }
           };
@@ -2057,7 +2006,7 @@ author: @ecoslado
       if (sibling instanceof DfDomElement) {
         sibling = sibling.get();
       }
-      if (sibling instanceof Array) {
+      if (Thing.is.array(sibling)) {
         sibling.forEach((function(_this) {
           return function(node) {
             return _this.before(node);
@@ -2068,9 +2017,9 @@ author: @ecoslado
         return this.each((function(_this) {
           return function(node, i) {
             var newSibling;
-            if (typeof sibling === "string") {
+            if (Thing.is.string(sibling)) {
               return node.insertAdjacentHTML("beforebegin", sibling);
-            } else if (sibling instanceof Element) {
+            } else if (Thing.is.element(sibling)) {
               newSibling = (i === 0 ? sibling : _this.__cloneNode(sibling));
               return node.parentElement.insertBefore(newSibling, node);
             }
@@ -2095,7 +2044,7 @@ author: @ecoslado
       if (sibling instanceof DfDomElement) {
         sibling = sibling.get();
       }
-      if (sibling instanceof Array) {
+      if (Thing.is.array(sibling)) {
         sibling.forEach((function(_this) {
           return function(node) {
             return _this.after(node);
@@ -2106,9 +2055,9 @@ author: @ecoslado
         return this.each((function(_this) {
           return function(node, i) {
             var newSibling;
-            if (typeof sibling === "string") {
+            if (Thing.is.string(sibling)) {
               return node.insertAdjacentHTML("afterend", sibling);
-            } else if (sibling instanceof Element) {
+            } else if (Thing.is.element(sibling)) {
               newSibling = (i === 0 ? sibling : _this.__cloneNode(sibling));
               return node.parentElement.insertBefore(newSibling, node.nextSibling);
             }
@@ -2263,9 +2212,11 @@ author: @ecoslado
      */
 
     DfDomElement.prototype.hasClass = function(className) {
+      var x;
+      x = this.length;
       return (this.element.filter(function(node) {
         return node.classList.contains(className);
-      })).length > 0;
+      })).length === x;
     };
 
 
@@ -2302,23 +2253,28 @@ author: @ecoslado
      * set of matched elements or set one or more CSS properties for every matched
      * element.
      *
+     * Note: the computed style of an element may not be the same as the value
+     * specified in the style sheet and it depends on the browser's quirks.
+     *
      * @public
      * @param  {String}         propertyName
      * @param  {String|Number}  value
+     * @param  {String}         priority      The proper way to set !important
      * @return {DfDomElement|String|null} Current instance on set, value or null
      *                                    on get.
      */
 
-    DfDomElement.prototype.css = function(propertyName, value) {
-      var node;
+    DfDomElement.prototype.css = function(propertyName, value, priority) {
+      var node, propName;
       if (value != null) {
+        propName = Text.dash2camel(propertyName);
+        value = priority != null ? value + "!" + priority : "" + value;
         return this.each(function(node) {
-          return node.style[propertyName] = value;
+          return node.style[propName] = value;
         });
       } else if ((node = this.get(0)) != null) {
-        return (getComputedStyle(node)).getPropertyValue(propertyName);
-      } else {
-        return null;
+        propName = Text.camel2dash(propertyName);
+        return ((getWindow(node)).getComputedStyle(node)).getPropertyValue(propName);
       }
     };
 
@@ -2361,9 +2317,58 @@ author: @ecoslado
      *                   properties describing the border-box in pixels. # MDN #
      */
 
-    DfDomElement.prototype.__clientRect = function() {
-      var ref;
-      return (ref = this.get(0)) != null ? typeof ref.getBoundingClientRect === "function" ? ref.getBoundingClientRect() : void 0 : void 0;
+    DfDomElement.prototype.box = function() {
+      var box, doc, isDoc, isElm, j, k, keys, l, len, len1, node, rect;
+      node = this.get(0);
+      keys = ['left', 'top', 'right', 'bottom', 'width', 'height', 'scrollLeft', 'scrollTop', 'scrollWidth', 'scrollHeight'];
+      rect = {};
+      for (j = 0, len = keys.length; j < len; j++) {
+        k = keys[j];
+        rect[k] = 0;
+      }
+      if (node != null) {
+        if (Thing.is.window(node)) {
+          doc = this.document();
+          rect = extend(rect, {
+            width: node.outerWidth,
+            height: node.outerHeight,
+            clientWidth: node.innerWidth,
+            clientHeight: node.innerHeight,
+            scrollLeft: node.scrollX,
+            scrollTop: node.scrollY,
+            scrollWidth: doc.scrollWidth,
+            scrollHeight: doc.scrollHeight
+          });
+        } else {
+          isDoc = Thing.is.document(node);
+          isElm = node.getBoundingClientRect != null;
+          if (isDoc) {
+            node = node.documentElement;
+            rect = extend(rect, {
+              width: node.offsetWidth,
+              height: node.offsetHeight
+            });
+          }
+          if (isElm) {
+            box = node.getBoundingClientRect();
+            for (l = 0, len1 = keys.length; l < len1; l++) {
+              k = keys[l];
+              rect[k] = box[k];
+            }
+          }
+          if (isDoc || isElm) {
+            rect = extend(rect, {
+              clientWidth: node.clientWidth,
+              clientHeight: node.clientHeight,
+              scrollLeft: node.scrollLeft,
+              scrollTop: node.scrollTop,
+              scrollWidth: node.scrollWidth,
+              scrollHeight: node.scrollHeight
+            });
+          }
+        }
+        return rect;
+      }
     };
 
 
@@ -2377,7 +2382,7 @@ author: @ecoslado
 
     DfDomElement.prototype.width = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.width : void 0;
+      return (ref = this.box()) != null ? ref.width : void 0;
     };
 
 
@@ -2391,7 +2396,7 @@ author: @ecoslado
 
     DfDomElement.prototype.height = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.height : void 0;
+      return (ref = this.box()) != null ? ref.height : void 0;
     };
 
 
@@ -2406,7 +2411,7 @@ author: @ecoslado
 
     DfDomElement.prototype.top = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.top : void 0;
+      return (ref = this.box()) != null ? ref.top : void 0;
     };
 
 
@@ -2421,7 +2426,7 @@ author: @ecoslado
 
     DfDomElement.prototype.right = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.right : void 0;
+      return (ref = this.box()) != null ? ref.right : void 0;
     };
 
 
@@ -2436,7 +2441,7 @@ author: @ecoslado
 
     DfDomElement.prototype.bottom = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.bottom : void 0;
+      return (ref = this.box()) != null ? ref.bottom : void 0;
     };
 
 
@@ -2451,33 +2456,97 @@ author: @ecoslado
 
     DfDomElement.prototype.left = function() {
       var ref;
-      return (ref = this.__clientRect()) != null ? ref.left : void 0;
+      return (ref = this.box()) != null ? ref.left : void 0;
     };
 
-    DfDomElement.prototype.__scrollProperty = function(node, propertyName, value) {
-      if (value != null) {
-        node[propertyName] = value;
-        return new DfDomElement(node);
-      } else {
-        return node[propertyName];
-      }
-    };
+
+    /**
+     * Gets scrolling position in the Y axis for the first element in the set of
+     * matched elements. If a value is provided, it's set for all elements in the
+     * set of matched elements.
+     *
+     * @public
+     * @param  {Number} value Optional. Scroll position.
+     * @return {Number}       Scroll position for get operation.
+     */
 
     DfDomElement.prototype.scrollTop = function(value) {
-      var node, propertyName;
-      node = this.get(0);
-      if (node != null) {
-        propertyName = node.scrollY != null ? "scrollY" : "scrollTop";
-        return this.__scrollProperty(node, propertyName, value);
+      var ref;
+      if (value != null) {
+        return this.each(function(node) {
+          if (Thing.is.window(node)) {
+            return node.scrollTo(node.scrollX, value);
+          } else {
+            return node.scrollTop = value;
+          }
+        });
+      } else {
+        return (ref = this.box()) != null ? ref.scrollTop : void 0;
       }
     };
 
+
+    /**
+     * Gets scrolling position in the X axis for the first element in the set of
+     * matched elements. If a value is provided, it's set for all elements in the
+     * set of matched elements.
+     *
+     * @public
+     * @param  {Number} value Optional. Scroll position.
+     * @return {Number}       Scroll position for get operation.
+     */
+
     DfDomElement.prototype.scrollLeft = function(value) {
-      var node, propertyName;
+      var ref;
+      if (value != null) {
+        return this.each(function(node) {
+          if (Thing.is.window(node)) {
+            return node.scrollTo(value, node.scrollY);
+          } else {
+            return node.scrollLeft = value;
+          }
+        });
+      } else {
+        return (ref = this.box()) != null ? ref.scrollLeft : void 0;
+      }
+    };
+
+
+    /**
+     * Sets scrolling at the specified coordinates for the set of matched
+     * elements.
+     *
+     * @public
+     * @param  {Number} x
+     * @param  {Number} y
+     */
+
+    DfDomElement.prototype.scrollTo = function(x, y) {
+      return this.each(function(node) {
+        if (Thing.is.window(node)) {
+          return node.scrollTo(x, y);
+        } else {
+          node.scrollLeft = x;
+          return node.scrollTop = y;
+        }
+      });
+    };
+
+    DfDomElement.prototype.window = function() {
+      return getWindow(this.get(0));
+    };
+
+    DfDomElement.prototype.document = function() {
+      var node;
       node = this.get(0);
       if (node != null) {
-        propertyName = node.scrollX != null ? "scrollX" : "scrollLeft";
-        return this.__scrollProperty(node, propertyName, value);
+        if (Thing.is.window(node)) {
+          return node.document.documentElement;
+        } else if (Thing.is.document(node)) {
+          return node.documentElement;
+        } else if (node.ownerDocument != null) {
+          return node.ownerDocument.documentElement;
+        }
       }
     };
 
@@ -2491,9 +2560,9 @@ author: @ecoslado
      * @public
      */
 
-    DfDomElement.prototype.on = function(events, selector, fn, args) {
+    DfDomElement.prototype.on = function(eventName, selector, handler) {
       return this.each(function(node) {
-        return bean.on(node, events, selector, fn, args);
+        return bean.on(node, eventName, selector, handler);
       });
     };
 
@@ -2507,9 +2576,9 @@ author: @ecoslado
      * @public
      */
 
-    DfDomElement.prototype.one = function(events, selector, fn, args) {
+    DfDomElement.prototype.one = function(eventName, selector, handler) {
       return this.each(function(node) {
-        return bean.one(node, events, selector, fn, args);
+        return bean.one(node, eventName, selector, handler);
       });
     };
 
@@ -2523,10 +2592,14 @@ author: @ecoslado
      * @public
      */
 
-    DfDomElement.prototype.trigger = function(events, args) {
-      return this.each(function(node) {
-        return bean.fire(node, events, args);
-      });
+    DfDomElement.prototype.trigger = function(eventName, args) {
+      if (eventName === 'focus' || eventName === 'blur') {
+        return this[eventName]();
+      } else {
+        return this.each(function(node) {
+          return bean.fire(node, eventName, args);
+        });
+      }
     };
 
 
@@ -2539,9 +2612,9 @@ author: @ecoslado
      * @public
      */
 
-    DfDomElement.prototype.off = function(events, fn) {
+    DfDomElement.prototype.off = function(eventName, handler) {
       return this.each(function(node) {
-        return bean.off(node, events, fn);
+        return bean.off(node, eventName, handler);
       });
     };
 
@@ -2556,10 +2629,7 @@ author: @ecoslado
      */
 
     DfDomElement.prototype.focus = function() {
-      var ref;
-      if ((ref = this.get(0)) != null) {
-        ref.focus();
-      }
+      this.length && (this.get(0)).focus();
       return this;
     };
 
@@ -2574,18 +2644,14 @@ author: @ecoslado
      */
 
     DfDomElement.prototype.blur = function() {
-      var ref;
-      if ((ref = this.get(0)) != null) {
-        ref.blur();
-      }
+      this.length && (this.get(0)).blur();
       return this;
     };
 
 
     /**
      * Checks the current matched set of elements against a selector or element,
-     * and return true if at least one of these elements matches the given
-     * argument.
+     * and return true if all elements match the given argument.
      *
      * @public
      * @param  {String|Element} selector_or_element
@@ -2593,12 +2659,12 @@ author: @ecoslado
      */
 
     DfDomElement.prototype.is = function(selector_or_element) {
-      if (typeof selector_or_element === "string") {
-        return (this.filter(selector_or_element)).length > 0;
+      if (Thing.is.string(selector_or_element)) {
+        return (this.filter(selector_or_element)).length === this.length;
       } else {
         return (this.filter(function(node) {
           return node === selector_or_element;
-        })).length > 0;
+        })).length === this.length;
       }
     };
 
@@ -2618,17 +2684,24 @@ author: @ecoslado
 
 
     /**
-     * Reduces the set of matched elements to the one at the specified index.
-     * Providing a negative number indicates a position starting from the end of
-     * the set, rather than the beginning.
-     *
-     * @public
-     * @param  {Number} index
-     * @return {DfDomElement}
+     * Checks if the first Element in the set of matched elements is the first child
+     * of its container. Doesn't take into account Text nodes.
+     * @return {Boolean} true if the node is the first child.
      */
 
-    DfDomElement.prototype.eq = function(index) {
-      return new DfDomElement(this.element[index >= 0 ? index : this.length + index] || []);
+    DfDomElement.prototype.isFirstElement = function() {
+      return this.length && !(this.get(0)).previousElementSibling;
+    };
+
+
+    /**
+     * Checks if the first Element in the set of matched elements is the last child
+     * of its container. Doesn't take into account Text nodes.
+     * @return {Boolean} true if the node is the last child.
+     */
+
+    DfDomElement.prototype.isLastElement = function() {
+      return this.length && !(this.get(0)).nextElementSibling;
     };
 
     return DfDomElement;
@@ -2646,287 +2719,214 @@ author: @ecoslado
 
 }).call(this);
 
-},{"bean":22}],6:[function(require,module,exports){
-(function() {
-  var $, bean, extend, throttle;
+},{"./text":11,"./thing":12,"bean":23,"extend":24}],7:[function(require,module,exports){
 
-  $ = require('./dfdom');
-
-  bean = require('bean');
-
-  extend = require('extend');
-
-  throttle = require('lodash.throttle');
-
-  module.exports = function(container, options) {
-    var containerElement, content, defaults, fn;
-    if (options == null) {
-      options = null;
-    }
-    container = $(container);
-    containerElement = container.element[0];
-    defaults = {
-      callback: function() {},
-      scrollOffset: 200,
-      content: containerElement === window ? $("body") : container.children().first(),
-      throttle: 250
-    };
-    options = extend(true, defaults, options || {});
-    content = $(options.content);
-    container.on('df:scroll', function() {
-      var containerHeight, containerScroll, contentHeight, delta;
-      contentHeight = content.height();
-      containerHeight = container.height();
-      containerScroll = container.scrollTop();
-      delta = Math.max(0, contentHeight - containerHeight - containerScroll);
-      if (containerScroll > 0 && delta >= 0 && delta <= options.scrollOffset) {
-        return options.callback();
-      }
-    });
-    fn = function(e) {
-      return bean.fire(container.element[0], 'df:scroll');
-    };
-    return bean.on(containerElement, 'scroll', throttle(fn, options.throttle, {
-      leading: true
-    }));
-  };
-
-}).call(this);
-
-},{"./dfdom":5,"bean":22,"extend":23,"lodash.throttle":63}],7:[function(require,module,exports){
-(function() {
-  var $, extend,
-    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-
-  extend = require('extend');
-
-  $ = require('./dfdom');
-
-  module.exports = function(element, options) {
-    var _supportedInputTypes, checkElement, defaults, watchElement;
-    _supportedInputTypes = ['TEXT', 'TEXTAREA', 'PASSWORD', 'TEL', 'SEARCH', 'URL', 'EMAIL', 'DATETIME', 'DATE', 'MONTH', 'WEEK', 'TIME', 'DATETIME-LOCAL', 'NUMBER', 'RANGE'];
-    defaults = {
-      wait: 750,
-      callback: function() {},
-      highlight: true,
-      captureLength: 2,
-      inputTypes: _supportedInputTypes
-    };
-    options = extend(true, {}, defaults, options);
-    checkElement = function(timer, override) {
-      var value;
-      value = timer.el.val() || '';
-      if (value.length >= options.captureLength && value.toUpperCase() !== timer.text || override && value.length >= options.captureLength || value.length === 0 && timer.text) {
-        timer.text = value.toUpperCase();
-        return timer.cb.call(timer.el, value);
-      }
-    };
-    watchElement = function(elem) {
-      var inputType, ref, timer;
-      inputType = elem.attr('type');
-      if (!inputType) {
-        inputType = 'text';
-      }
-      if (ref = inputType.toUpperCase(), indexOf.call(options.inputTypes, ref) >= 0) {
-        timer = {
-          timer: null,
-          text: elem.value || '',
-          cb: options.callback,
-          wait: options.wait,
-          el: elem
-        };
-        return elem.on('keydown paste cut input change', function(e) {
-          var delay, override, timerCallbackFx;
-          delay = timer.wait;
-          override = false;
-          inputType = this.type.toUpperCase();
-          if ((e.keyCode != null) && e.keyCode === 13 && inputType !== 'TEXTAREA' && indexOf.call(options.inputTypes, inputType) >= 0) {
-            delay = 1;
-            override = true;
-          }
-          timerCallbackFx = function() {
-            return checkElement(timer, override);
-          };
-          clearTimeout(timer.timer);
-          return timer.timer = setTimeout(timerCallbackFx, delay);
-        });
-      }
-    };
-    return watchElement($(element));
-  };
-
-}).call(this);
-
-},{"./dfdom":5,"extend":23}],8:[function(require,module,exports){
-
-/*
- * author: @ecoslado
- * 2015 09 30
+/**
+ * Helper to compose final error messages
+ * @param  {String} text     Description of the error.
+ * @param  {Object} instance Optional object instance.
+ * @return {String}          Final error message.
  */
 
 (function() {
-  var extend;
+  var _msg, error, warning;
+
+  _msg = function(text, instance) {
+    if (instance != null) {
+      return "[doofinder][" + instance.constructor.name + "]: " + text;
+    } else {
+      return "[doofinder]: " + text;
+    }
+  };
+
+  error = function(text, instance) {
+    return new Error(_msg(text, instance));
+  };
+
+  warning = function(text, instance) {
+    if (typeof console !== "undefined" && console !== null) {
+      return console.warn(_msg(text, instance));
+    }
+  };
+
+  module.exports = {
+    error: error,
+    warning: warning
+  };
+
+}).call(this);
+
+},{}],8:[function(require,module,exports){
+(function() {
+  var Thing, freeze, freezeProperty;
+
+  Thing = require("./thing");
+
+
+  /**
+   * Recursively freezes an object so it can't be modified in any way (adding or
+   * removing properties, and so on).
+   *
+   * @param  {*} value Any object or primitive
+   * @return {*}       Freezed value.
+   */
+
+  freeze = function(value) {
+    (Object.getOwnPropertyNames(value)).forEach(function(propertyName) {
+      if (Thing.is.object(value) && (value[propertyName] != null) && !Object.isFrozen(value[propertyName])) {
+        return freeze(value[propertyName]);
+      }
+    });
+    Object.freeze(value);
+    return value;
+  };
+
+
+  /**
+   * Freezes a property of an Object so it can't be modified.
+   *
+   * @param  {Object} instance      An object's instance.
+   * @param  {String} propertyName  A property name.
+   * @param  {*}      propertyValue An optional value. If not set the current
+   *                                value is used.
+   * @return {Object}               The passed instance.
+   */
+
+  freezeProperty = function(instance, propertyName, propertyValue) {
+    var descriptor;
+    if (propertyValue == null) {
+      propertyValue = instance[propertyName];
+    }
+    descriptor = {
+      value: propertyValue,
+      configurable: false,
+      enumerable: false,
+      writable: false
+    };
+    freeze(propertyValue);
+    Object.defineProperty(instance, propertyName, descriptor);
+    return instance;
+  };
+
+  module.exports = {
+    freeze: freeze,
+    freezeProperty: freezeProperty
+  };
+
+}).call(this);
+
+},{"./thing":12}],9:[function(require,module,exports){
+(function() {
+  var extend, translate;
 
   extend = require("extend");
 
-  module.exports = function(context, parameters, currency, translations) {
-    var helpers;
-    if (parameters == null) {
-      parameters = {};
-    }
-    if (currency == null) {
-      currency = null;
-    }
-    if (translations == null) {
-      translations = {};
-    }
-    if (!currency) {
-      currency = {
-        symbol: '&euro;',
-        format: '%v%s',
-        decimal: ',',
-        thousand: '.',
-        precision: 2
-      };
-    }
-    helpers = {
-      'url-params': function() {
-        return function(text, render) {
-          var glue, key, params, url;
-          url = (render(text)).trim();
-          if (url.length > 0) {
-            params = [];
-            for (key in parameters) {
-              params.push(key + "=" + parameters[key]);
-            }
-            if (params.length > 0) {
-              params = params.join("&");
-              glue = url.match(/\?/) ? "&" : "?";
-              url = "" + url + glue + params;
-            }
-          }
-          return url;
-        };
-      },
-      'remove-protocol': function() {
-        return function(text, render) {
-          var url;
-          url = render(text);
-          return url.replace(/^https?:/, '');
-        };
-      },
-      'format-currency': function() {
-        return function(text, render) {
-          var base, mod, neg, number, power, price, value;
-          price = render(text);
-          value = parseFloat(price);
-          if (!value && value !== 0) {
-            return '';
-          }
-          power = Math.pow(10, currency.precision);
-          number = (Math.round(value * power) / power).toFixed(currency.precision);
-          neg = number < 0 ? '-' : '';
-          base = '' + parseInt(Math.abs(number || 0).toFixed(currency.precision), 10);
-          mod = base.length > 3 ? base.length % 3 : 0;
-          number = neg + (mod ? base.substr(0, mod) + currency.thousand : '') + base.substr(mod).replace(/(\d{3})(?=\d)/g, '$1' + currency.thousand) + (currency.precision ? currency.decimal + Math.abs(number).toFixed(currency.precision).split('.')[1] : '');
-          return currency.format.replace(/%s/g, currency.symbol).replace(/%v/g, number);
-        };
-      },
-      'translate': function() {
-        return function(text, render) {
-          text = render(text);
-          return translations[text] || text;
-        };
+  translate = (require("./text")).translate;
+
+  module.exports = {
+    addTranslateHelper: function(context, translations) {
+      if (translations == null) {
+        translations = {};
       }
-    };
-    return extend(context, helpers);
+
+      /**
+       * Mustache helper to translate strings given a translations object in the
+       * global context object. If no translation is found, the source text is
+       * returned.
+       */
+      return extend(true, context, {
+        "translate": function() {
+          return function(text, render) {
+            return translate(render(text), translations);
+          };
+        }
+      });
+    }
   };
 
 }).call(this);
 
-},{"extend":23}],9:[function(require,module,exports){
-
-/*
-client.coffee
-author: @ecoslado
-2017 01 23
- */
-
+},{"./text":11,"extend":24}],10:[function(require,module,exports){
 (function() {
-  var HttpClient, httpLib, httpsLib;
+  var HttpClient, Thing, errors, extend, http, https;
 
-  httpLib = require("http");
+  http = require("http");
 
-  httpsLib = require("https");
+  https = require("https");
+
+  extend = require("extend");
+
+  errors = require("./errors");
+
+  Thing = require("./thing");
 
 
-  /*
-  HttpClient
-  This class implements a more
-  easy API with http module
+  /**
+   * Commodity API to http and https modules
    */
 
   HttpClient = (function() {
 
-    /*
-    Just assigns
+    /**
+     * @param  {Boolean} @secure If true, forces HTTPS.
      */
-    function HttpClient(ssl) {
-      this.client = ssl ? httpsLib : httpLib;
+    function HttpClient(secure) {
+      this.secure = secure;
+      this.http = this.secure ? https : http;
     }
+
+
+    /**
+     * Performs a HTTP request expecting JSON to be returned.
+     * @param  {Object}   options  Options needed by http.ClientRequest
+     * @param  {Function} callback Callback to be called when the response is
+     *                             received. First param is the error, if any,
+     *                             and the second one is the response, if any.
+     * @return {http.ClientRequest}
+     */
 
     HttpClient.prototype.request = function(options, callback) {
       var req;
-      if (typeof options === "string") {
+      if (Thing.is.string(options)) {
         options = {
           host: options
         };
       }
-      req = this.__makeRequest(options, callback);
-      return req.end;
-    };
-
-
-    /*
-    Callback function will be passed as argument to search
-    and will be returned with response body
-    
-    @param {Object} res: the response
-    @api private
-     */
-
-    HttpClient.prototype.__processResponse = function(callback) {
-      return function(res) {
+      if (!Thing.is.fn(callback)) {
+        throw errors.error("A callback is needed!", this);
+      }
+      req = this.http.get(options, function(response) {
         var data;
-        if (res.statusCode >= 400) {
-          return callback(res.statusCode, null);
-        } else {
-          data = "";
-          res.on('data', function(chunk) {
-            return data += chunk;
-          });
-          res.on('end', function() {
-            return callback(null, JSON.parse(data));
-          });
-          return res.on('error', function(err) {
-            return callback(err, null);
-          });
-        }
-      };
-    };
-
-
-    /*
-    Method to make a secured or not request based on @client
-    
-    @param (Object) options: request options
-    @param (Function) the callback function to execute with the response as arg
-    @return (Object) the request object.
-    @api private
-     */
-
-    HttpClient.prototype.__makeRequest = function(options, callback) {
-      return this.client.get(options, this.__processResponse(callback));
+        data = "";
+        response.setEncoding("utf-8");
+        response.on("data", (function(chunk) {
+          return data += chunk;
+        })).on("end", (function() {
+          var e, error, error1;
+          if (response.statusCode === 200) {
+            return callback(void 0, JSON.parse(data));
+          } else {
+            try {
+              error = JSON.parse(data);
+            } catch (error1) {
+              e = error1;
+              error = {
+                error: data
+              };
+            }
+            return callback(extend(true, {
+              statusCode: response.statusCode
+            }, error));
+          }
+        }));
+        return response;
+      });
+      req.on("error", function(error) {
+        return callback({
+          error: error
+        });
+      });
+      return req;
     };
 
     return HttpClient;
@@ -2937,240 +2937,248 @@ author: @ecoslado
 
 }).call(this);
 
-},{"http":53,"https":30}],10:[function(require,module,exports){
-(function() {
-  var isArray, isFunction, isObject, isPlainObject;
-
-  isFunction = function(obj) {
-    return typeof obj === 'function' || false;
-  };
-
-  isObject = function(obj) {
-    var type;
-    type = typeof obj;
-    return type === 'function' || type === 'object' && !!obj;
-  };
-
-  isArray = Array.isArray || function(obj) {
-    return toString.call(obj) === '[object Array]';
-  };
-
-  isPlainObject = function(obj) {
-    var proto;
-    if (typeof obj === 'object' && obj !== null) {
-      if (typeof Object.getPrototypeOf === 'function') {
-        proto = Object.getPrototypeOf(obj);
-        return proto === Object.prototype || proto === null;
-      }
-      return Object.prototype.toString.call(obj) === '[object Object]';
-    }
-    return false;
-  };
-
-  module.exports = {
-    isArray: isArray,
-    isFunction: isFunction,
-    isObject: isObject,
-    isPlainObject: isPlainObject
-  };
-
-}).call(this);
-
-},{}],11:[function(require,module,exports){
+},{"./errors":7,"./thing":12,"extend":24,"http":54,"https":31}],11:[function(require,module,exports){
 
 /**
- * Generates a UID of the given length.
- *
- * @param  {Number} length = 8  Length of the UID.
- * @return {String}             Unique ID as a String.
+ * Converts text in camel case to dash case
+ * @param  {String} text Text in camelCase
+ * @return {String}      Text converted to dash-case
  */
 
 (function() {
-  var uniqueId;
+  var camel2dash, dash2camel, dash2class, toSnake, translate, ucfirst, ucwords;
 
-  uniqueId = function(length) {
-    var id;
-    if (length == null) {
-      length = 8;
-    }
-    id = "";
-    while (id.length < length) {
-      id += Math.random().toString(36).substr(2);
-    }
-    return id.substr(0, length);
+  camel2dash = function(text) {
+    return text.replace(/[A-Z]/g, (function(m) {
+      return "-" + m.toLowerCase();
+    }));
   };
 
-  module.exports = uniqueId;
+
+  /**
+   * Converts text in dash case to camel case
+   * @param  {String} text Text in dash-case
+   * @return {String}      Text converted to camelCase
+   */
+
+  dash2camel = function(text) {
+    text = text.replace(/([-_])([^-_])/g, (function(m, p1, p2) {
+      return p2.toUpperCase();
+    }));
+    return text.replace(/[-_]/g, "");
+  };
+
+  dash2class = function(text) {
+    return (dash2camel(text)).replace(/^./, function(m) {
+      return m.toUpperCase();
+    });
+  };
+
+  ucwords = function(text) {
+    return text.replace(/(^|\s)\S/g, function(c) {
+      return c.toUpperCase();
+    });
+  };
+
+  ucfirst = function(text) {
+    return text.replace(/^\S/g, function(c) {
+      return c.toUpperCase();
+    });
+  };
+
+  toSnake = function(text) {
+    return text.replace(/\s+/g, '_');
+  };
+
+  translate = function(text, translations) {
+    return translations[text] || text;
+  };
+
+  module.exports = {
+    camel2dash: camel2dash,
+    dash2camel: dash2camel,
+    dash2class: dash2class,
+    ucwords: ucwords,
+    ucfirst: ucfirst,
+    toSnake: toSnake,
+    translate: translate
+  };
 
 }).call(this);
 
 },{}],12:[function(require,module,exports){
 (function() {
-  var $, Widget, bean;
+  var Is;
 
-  bean = require("bean");
+  Is = require("is");
 
-  $ = require("./util/dfdom");
+  Is.window = function(value) {
+    return (value != null) && typeof value === 'object' && 'setInterval' in value;
+  };
 
+  Is.document = function(value) {
+    return (value != null) && typeof value.documentElement === 'object';
+  };
 
-  /**
-   * Base class for a Widget, a class that paints itself given a search response.
-   *
-   * A widget knows how to:
-   *
-   * - Render and clean itself.
-   * - Bind handlers to/trigger events on the main element node.
-   */
+  Is.stringArray = function(value) {
+    return (Is.array(value)) && (value.every(function(x) {
+      return Is.string(x);
+    }));
+  };
 
-  Widget = (function() {
-
-    /**
-     * @param  {String|Node|DfDomElement} element   Container node.
-     * @param  {Object} @options = {}               Options for the widget.
-     */
-    function Widget(element, options) {
-      this.options = options != null ? options : {};
-      this.setElement(element);
-    }
-
-
-    /**
-     * Assigns the container element to the widget.
-     * @param  {String|Node|DfDomElement} element   Container node.
-     */
-
-    Widget.prototype.setElement = function(element) {
-      return this.element = ($(element)).first();
-    };
-
-
-    /**
-     * Initializes the object. Intended to be extended in child classes.
-     * You will want to add your own event handlers here.
-     *
-     * @param  {Controller} controller Doofinder Search controller.
-     */
-
-    Widget.prototype.init = function(controller) {
-      this.controller = controller;
-    };
-
-
-    /**
-     * Called when the "first page" response for a specific search is received.
-     * Renders the widget with the data received.
-     *
-     * @param  {Object} res Search response.
-     */
-
-    Widget.prototype.render = function(res) {};
-
-
-    /**
-     * Called when subsequent (not "first-page") responses for a specific search
-     * are received. Renders the widget with the data received.
-     *
-     * @param  {Object} res Search response.
-     */
-
-    Widget.prototype.renderNext = function(res) {};
-
-
-    /**
-     * Cleans the widget. Intended to be overriden.
-     */
-
-    Widget.prototype.clean = function() {};
-
-
-    /**
-     * Attachs a single-use event listener to the container element.
-     * @param  {String}   event    Event name.
-     * @param  {Function} callback Function that will be executed in response to
-     *                             the event.
-     */
-
-    Widget.prototype.one = function(event, callback) {
-      return this.element.one(event, callback);
-    };
-
-
-    /**
-     * Attachs an event listener to the container element.
-     * TODO(@carlosescri): Rename to "on" to unify.
-     *
-     * @param  {String}   event    Event name.
-     * @param  {Function} callback Function that will be executed in response to
-     *                             the event.
-     */
-
-    Widget.prototype.bind = function(event, callback) {
-      return this.element.on(event, callback);
-    };
-
-
-    /**
-     * Removes an event listener from the container element.
-     * @param  {String}   event    Event name.
-     * @param  {Function} callback Function that won't be executed anymore in
-     *                             response to the event.
-     */
-
-    Widget.prototype.off = function(event, callback) {
-      return this.element.off(event, callback);
-    };
-
-
-    /*
-    trigger
-    
-    Method to trigger an event
-    @param {String} event
-    @param {Array} params
-    @api public
-     */
-
-
-    /**
-     * Triggers an event with the container element as the target of the event.
-     * @param  {String} event  Event name.
-     * @param  {Array}  params Array of parameters to be sent to the handler.
-     */
-
-    Widget.prototype.trigger = function(event, params) {
-      return this.element.trigger(event, params);
-    };
-
-
-    /**
-     * Throws an error that can be captured.
-     * @param  {String} message Error message.
-     * @throws {Error}
-     */
-
-    Widget.prototype.raiseError = function(message) {
-      throw Error("[Doofinder] " + message);
-    };
-
-    return Widget;
-
-  })();
-
-  module.exports = Widget;
+  module.exports = {
+    "is": Is
+  };
 
 }).call(this);
 
-},{"./util/dfdom":5,"bean":22}],13:[function(require,module,exports){
+},{"is":63}],13:[function(require,module,exports){
 (function() {
-  var Display, Widget, buildHelpers, extend,
+  var cleandfid, md5;
+
+  md5 = require("md5");
+
+  cleandfid = function(dfid) {
+    if (/^\w{32}@[\w_-]+@\w{32}$/.test(dfid)) {
+      return dfid;
+    } else {
+      throw new Error("dfid: " + dfid + " is not valid.");
+    }
+  };
+
+  module.exports = {
+    clean: {
+      dfid: cleandfid
+    },
+    generate: {
+      dfid: function(id, datatype, hashid) {
+        id = md5("" + id);
+        return cleandfid(hashid + "@" + datatype + "@" + id);
+      },
+      easy: function(length) {
+        var id;
+        if (length == null) {
+          length = 8;
+        }
+        id = "";
+        while (id.length < length) {
+          id += Math.random().toString(36).substr(2);
+        }
+        return id.substr(0, length);
+      },
+      hash: function() {
+        return md5([new Date().getTime(), String(Math.floor(Math.random() * 10000))].join(""));
+      },
+      browserHash: function() {
+        return md5([navigator.userAgent, navigator.language, window.location.host, new Date().getTime(), String(Math.floor(Math.random() * 10000))].join(""));
+      }
+    }
+  };
+
+}).call(this);
+
+},{"md5":66}],14:[function(require,module,exports){
+(function() {
+  var CollapsiblePanel, Panel, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  Widget = require("../widget");
+  extend = require("extend");
 
-  buildHelpers = require("../util/helpers");
+  Panel = require("./panel");
+
+  CollapsiblePanel = (function(superClass) {
+    extend1(CollapsiblePanel, superClass);
+
+    function CollapsiblePanel(element, getWidget, options) {
+      var defaults;
+      if (options == null) {
+        options = {};
+      }
+      defaults = {
+        templateVars: {
+          label: "Untitled"
+        },
+        startCollapsed: false
+      };
+      options = extend(true, defaults, options);
+      CollapsiblePanel.__super__.constructor.call(this, element, getWidget, options);
+      Object.defineProperty(this, 'isCollapsed', {
+        get: function() {
+          return (this.panelElement.attr("data-collapse")) === "true";
+        }
+      });
+    }
+
+    CollapsiblePanel.prototype.collapse = function() {
+      if (this.rendered) {
+        this.panelElement.attr("data-collapse", "true");
+        return this.trigger("df:collapse:change", [true]);
+      }
+    };
+
+    CollapsiblePanel.prototype.expand = function() {
+      if (this.rendered) {
+        this.panelElement.attr("data-collapse", "false");
+        return this.trigger("df:collapse:change", [false]);
+      }
+    };
+
+    CollapsiblePanel.prototype.toggle = function() {
+      if (this.rendered) {
+        if (this.isCollapsed) {
+          return this.expand();
+        } else {
+          return this.collapse();
+        }
+      }
+    };
+
+    CollapsiblePanel.prototype.reset = function() {
+      if (this.rendered) {
+        if (this.options.startCollapsed) {
+          return this.collapse();
+        } else {
+          return this.expand();
+        }
+      }
+    };
+
+    CollapsiblePanel.prototype.__initPanel = function(res) {
+      CollapsiblePanel.__super__.__initPanel.apply(this, arguments);
+      this.panelElement.on("click", "#" + this.options.templateVars.labelElement, (function(_this) {
+        return function(e) {
+          e.preventDefault();
+          return _this.toggle();
+        };
+      })(this));
+      return this.reset();
+    };
+
+    CollapsiblePanel.prototype.clean = function() {
+      this.reset();
+      return CollapsiblePanel.__super__.clean.apply(this, arguments);
+    };
+
+    return CollapsiblePanel;
+
+  })(Panel);
+
+  module.exports = CollapsiblePanel;
+
+}).call(this);
+
+},{"./panel":19,"extend":24}],15:[function(require,module,exports){
+(function() {
+  var Display, Widget, extend, helpers,
+    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
 
   extend = require("extend");
+
+  Widget = require("./widget");
+
+  helpers = require("../util/helpers");
 
 
   /**
@@ -3180,44 +3188,60 @@ author: @ecoslado
   Display = (function(superClass) {
     extend1(Display, superClass);
 
+    Display.defaultTemplate = "{{#results}}\n  <a href=\"{{link}}\" class=\"df-card\">{{title}}</a>\n{{/results}}";
+
 
     /**
-     * @param  {String|Node|DfDomElement} element  Container node.
-     * @param  {String}                   template Template to paint the response.
-     * @param  {Objects}                  options  Options for the widget.
+     * @param  {(String|Node|DfDomElement)} element  Container node.
+     * @param  {Object}                     options  Options for the widget.
      */
 
-    function Display(element, template, options) {
-      this.template = template;
+    function Display(element, options) {
+      var defaults;
       if (options == null) {
         options = {};
       }
-      this.mustache = require("mustache");
-      this.extraContext = {};
+      defaults = {
+        template: this.constructor.defaultTemplate,
+        templateFunctions: {},
+        templateVars: {},
+        translations: {}
+      };
+      options = extend(true, defaults, options);
       Display.__super__.constructor.call(this, element, options);
+      helpers.addTranslateHelper(this.options.templateFunctions, this.options.translations);
+      this.mustache = require("mustache");
+      this.currentContext = {};
     }
 
 
     /**
      * Adds extra context to the passed context object.
-     * @param  {Object} context = {}  Initial context (i.e: a search response).
-     * @return {Object}               Extended context.
+     * @param  {Object} response = {} Search response as initial context.
+     * @return {Object}               Extended search response.
+     * @protected
      */
 
-    Display.prototype.buildContext = function(context) {
-      var ref, ref1, urlParams;
-      if (context == null) {
-        context = {};
+    Display.prototype.__buildContext = function(response) {
+      if (response == null) {
+        response = {};
       }
-      context = extend(true, context, this.options.templateVars, this.options.templateFunctions, {
-        is_first: context.page === 1,
-        is_last: (ref = this.controller) != null ? (ref1 = ref.status) != null ? ref1.lastPageReached : void 0 : void 0
-      }, this.extraContext);
-      urlParams = extend(true, {}, this.options.urlParams || {});
-      if (this.options.queryParam) {
-        urlParams[this.options.queryParam] = context.query || "";
-      }
-      return buildHelpers(context, urlParams, this.options.currency, this.options.translations);
+      return this.currentContext = extend(true, {}, response, this.options.templateVars, this.options.templateFunctions, {
+        is_first: response.page === 1,
+        is_last: response.page === Math.ceil(response.total / response.results_per_page)
+      });
+    };
+
+
+    /**
+     * Actually renders the template given a search response.
+     * @param  {Object} res Search response.
+     * @return {String}     The rendered HTML code.
+     * @protected
+     */
+
+    Display.prototype.__renderTemplate = function(res) {
+      return this.mustache.render(this.options.template, this.__buildContext(res));
     };
 
 
@@ -3226,49 +3250,23 @@ author: @ecoslado
      * Renders the widget with the data received, by replacing its content.
      *
      * @param {Object} res Search response.
-     * @fires Display#df:rendered
+     * @fires Widget#df:widget:render
      */
 
     Display.prototype.render = function(res) {
-      this.element.html(this.mustache.render(this.template, this.buildContext(res)));
-      return this.trigger("df:rendered", [res]);
-    };
-
-
-    /**
-     * Called when subsequent (not "first-page") responses for a specific search
-     * are received. Renders the widget with the data received, by replacing its
-     * content.
-     *
-     * @param {Object} res Search response.
-     * @fires Display#df:rendered
-     */
-
-    Display.prototype.renderNext = function(res) {
-      this.element.html(this.mustache.render(this.template, this.buildContext(res)));
-      return this.trigger("df:rendered", [res]);
+      this.element.html(this.__renderTemplate(res));
+      return Display.__super__.render.apply(this, arguments);
     };
 
 
     /**
      * Cleans the widget by removing all the HTML inside the container element.
-     * @fires Display#df:cleaned
+     * @fires Widget#df:widget:clean
      */
 
     Display.prototype.clean = function() {
       this.element.html("");
-      return this.trigger("df:cleaned");
-    };
-
-
-    /**
-     * Adds extra context to be used when rendering a search response.
-     * @param {String} key   Name of the variable to be used in the template.
-     * @param {*}      value Value of the variable.
-     */
-
-    Display.prototype.addExtraContext = function(key, value) {
-      return this.extraContext[key] = value;
+      return Display.__super__.clean.apply(this, arguments);
     };
 
     return Display;
@@ -3279,540 +3277,15 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../util/helpers":8,"../widget":12,"extend":23,"mustache":68}],14:[function(require,module,exports){
+},{"../util/helpers":9,"./widget":22,"extend":24,"mustache":70}],16:[function(require,module,exports){
 (function() {
-  var BaseFacet, Display, extend,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  Display = require("../display");
-
-  extend = require("extend");
-
-
-  /**
-   * Base class that represents a widget that renders a facet/filter control.
-   */
-
-  BaseFacet = (function(superClass) {
-    extend1(BaseFacet, superClass);
-
-    BaseFacet.defaultLabelTemplate = "{{label}}";
-
-
-    /**
-     * @param  {String|Node|DfDomElement} element  Container node.
-     * @param  {String} name    Name of the facet/filter.
-     * @param  {Object} options Options object. Empty by default.
-     */
-
-    function BaseFacet(element, name, options) {
-      var defaults;
-      this.name = name;
-      if (options == null) {
-        options = {};
-      }
-      defaults = {
-        templateVars: {
-          label: options.label || this.name
-        },
-        labelTemplate: this.constructor.defaultLabelTemplate,
-        template: this.constructor.defaultTemplate
-      };
-      options = extend(true, defaults, options);
-      BaseFacet.__super__.constructor.call(this, element, options.template, options);
-    }
-
-
-    /**
-     * Renders the label of the facet widget based on the given search response,
-     * within the configured label template.
-     *
-     * @param  {Object} res Search response.
-     * @return {String}     The rendered label.
-     */
-
-    BaseFacet.prototype.renderLabel = function(res) {
-      return this.mustache.render(this.options.labelTemplate, this.buildContext(res));
-    };
-
-
-    /**
-     * Called when subsequent (not "first-page") responses for a specific search
-     * are received. Usually not used in this kind of widgets. Here is overwritten
-     * to avoid strange behavior.
-     *
-     * @param {Object} res Search response.
-     */
-
-    BaseFacet.prototype.renderNext = function(res) {};
-
-    return BaseFacet;
-
-  })(Display);
-
-  module.exports = BaseFacet;
-
-}).call(this);
-
-},{"../display":13,"extend":23}],15:[function(require,module,exports){
-(function() {
-  var $, Display, FacetPanel, extend, uniqueId,
+  var $, CollapsibleTermsFacet, TermsFacet, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   extend = require("extend");
 
-  $ = require("../../util/dfdom");
-
-  Display = require("../display");
-
-  uniqueId = require("../../util/uniqueid");
-
-
-  /**
-   * Collapsible panel that contains a facet widget.
-   * It's always appended to a container element, it does not replace the entire
-   * HTML content.
-   */
-
-  FacetPanel = (function(superClass) {
-    extend1(FacetPanel, superClass);
-
-    FacetPanel.defaultTemplate = "<div id=\"{{id}}\" data-role=\"panel\">\n  <a href=\"#\" data-role=\"panel-label\" data-toggle=\"panel\"></a>\n  <div data-role=\"panel-content\"></div>\n</div>";
-
-
-    /**
-     * @param  {String|Node|DfDomElement} element  Container node.
-     * @param  {Object} options Options object. Empty by default.
-     */
-
-    function FacetPanel(element, options) {
-      var defaults, uid;
-      if (options == null) {
-        options = {};
-      }
-      uid = "df-panel-" + (uniqueId());
-      defaults = {
-        id: uid,
-        template: this.constructor.defaultTemplate,
-        startHidden: true,
-        startCollapsed: false,
-        templateVars: {
-          id: options.id || uid
-        }
-      };
-      options = extend(true, defaults, options);
-      FacetPanel.__super__.constructor.call(this, element, options.template, options);
-      this.element.append(this.mustache.render(this.template, this.buildContext()));
-      this.setElement("#" + this.options.id);
-      this.toggleElement = (this.element.find('[data-toggle="panel"]')).first();
-      this.labelElement = (this.element.find('[data-role="panel-label"]')).first();
-      this.contentElement = (this.element.find('[data-role="panel-content"]')).first();
-      this.clean();
-    }
-
-
-    /**
-     * Initializes the object with a controller and attachs event handlers for
-     * this widget instance.
-     *
-     * @param  {Controller} controller Doofinder Search controller.
-     */
-
-    FacetPanel.prototype.init = function(controller) {
-      FacetPanel.__super__.init.apply(this, arguments);
-      return this.toggleElement.on("click", (function(_this) {
-        return function(e) {
-          e.preventDefault();
-          if (_this.isCollapsed()) {
-            return _this.expand();
-          } else {
-            return _this.collapse();
-          }
-        };
-      })(this));
-    };
-
-
-    /**
-     * Checks whether the panel is collapsed or not.
-     * @return {Boolean} `true` if the panel is collapsed, `false` otherwise.
-     */
-
-    FacetPanel.prototype.isCollapsed = function() {
-      return (this.element.attr("data-collapse")) != null;
-    };
-
-
-    /**
-     * Collapses the panel to hide its content.
-     */
-
-    FacetPanel.prototype.collapse = function() {
-      return this.element.attr("data-collapse", "");
-    };
-
-
-    /**
-     * Expands the panel to display its content.
-     */
-
-    FacetPanel.prototype.expand = function() {
-      return this.element.removeAttr("data-collapse");
-    };
-
-
-    /**
-     * Embeds one and only one widget into this panel content. If the panel is
-     * rendered hidden (default), we listen for the first rendering of the
-     * embedded widget and then we display it.
-     *
-     * @param  {Widget} embeddedWidget A (child) instance of `Widget`.
-     */
-
-    FacetPanel.prototype.embedWidget = function(embeddedWidget) {
-      if (this.embeddedWidget != null) {
-        return this.raiseError("You can embed only one item on a `FacetPanel` instance.");
-      } else {
-        this.embeddedWidget = embeddedWidget;
-        this.embeddedWidget.bind("df:rendered", ((function(_this) {
-          return function() {
-            return _this.element.css("display", "inherit");
-          };
-        })(this)));
-        return this.embeddedWidget.bind("df:cleaned", ((function(_this) {
-          return function() {
-            return _this.element.css("display", "none");
-          };
-        })(this)));
-      }
-    };
-
-
-    /**
-     * Called when the "first page" response for a specific search is received.
-     * Renders the panel title with the label obtained from the embedded widget.
-     * This method does not replace its own HTML code, only the HTML of specific
-     * parts.
-     *
-     * @param {Object} res Search response.
-     * @fires FacetPanel#df:rendered
-     */
-
-    FacetPanel.prototype.render = function(res) {
-      if (this.embeddedWidget != null) {
-        this.labelElement.html(this.embeddedWidget.renderLabel(res));
-        return this.trigger("df:rendered", [res]);
-      }
-    };
-
-
-    /**
-     * Called when subsequent (not "first-page") responses for a specific search
-     * are received. Disabled in this kind of widget.
-     *
-     * @param {Object} res Search response.
-     */
-
-    FacetPanel.prototype.renderNext = function(res) {};
-
-
-    /**
-     * Cleans the widget by removing the HTML inside the label element. Also, if
-     * the panel starts hidden, it's hidden again. If the panel starts collapsed,
-     * it's collapsed again.
-     *
-     * WARNING: DON'T CALL `super()` here. We don't want the panel container to
-     * be reset!!!
-     *
-     * @fires FacetPanel#df:cleaned
-     */
-
-    FacetPanel.prototype.clean = function() {
-      this.labelElement.html("");
-      if (this.options.startHidden) {
-        this.element.css("display", "none");
-      }
-      if (this.options.startCollapsed) {
-        this.collapse();
-      } else {
-        this.expand();
-      }
-      return this.trigger("df:cleaned");
-    };
-
-    return FacetPanel;
-
-  })(Display);
-
-  module.exports = FacetPanel;
-
-}).call(this);
-
-},{"../../util/dfdom":5,"../../util/uniqueid":11,"../display":13,"extend":23}],16:[function(require,module,exports){
-(function() {
-  var BaseFacet, RangeFacet, extend, noUiSlider,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  BaseFacet = require("./basefacet");
-
-  noUiSlider = require("nouislider");
-
-  extend = require("extend");
-
-
-  /**
-   * Represents a range slider control to filter numbers within a range.
-   */
-
-  RangeFacet = (function(superClass) {
-    extend1(RangeFacet, superClass);
-
-    RangeFacet.defaultTemplate = "<div class=\"{{sliderClassName}}\" data-facet=\"{{name}}\"></div>";
-
-
-    /**
-     * Apart from inherited options, this widget accepts these options:
-     *
-     * - sliderClassName (String) The CSS class of the node that actually holds
-     *                            the slider.
-     *
-     * IMPORTANT: Pips support is buggy so, if no sliderOptions.pips is found, the
-     * widget paints them itself. If the sliderOptions.pips is false, no pips are
-     * displayed. In any other case, noUiSlider is in charge of displaying them.
-     *
-     * @param  {String|Node|DfDomElement} element  Container node.
-     * @param  {String} name    Name of the facet/filter.
-     * @param  {Object} options Options object. Empty by default.
-     */
-
-    function RangeFacet(element, name, options) {
-      if (options == null) {
-        options = {};
-      }
-      RangeFacet.__super__.constructor.apply(this, arguments);
-      this.sliderClassName = options.sliderClassName || 'df-slider';
-      this.sliderSelector = "." + this.sliderClassName + "[data-facet='" + this.name + "']";
-      if (this.options.format) {
-        this.format = this.options.format;
-      } else {
-        this.format = function(value) {
-          return (value != null) && (value.toFixed(2) + '').replace(/0+$/, '').replace(/\.{1}$/, '');
-        };
-      }
-      this.slider = null;
-      this.values = {};
-      this.range = {};
-    }
-
-
-    /**
-     * Renders the slider for the very first time.
-     * @protected
-     * @param  {Object} options Slider options.
-     */
-
-    RangeFacet.prototype.__renderSlider = function(options) {
-      var context, self;
-      self = this;
-      context = {
-        name: this.name,
-        sliderClassName: this.sliderClassName
-      };
-      context = extend(true, context, this.extraContext || {});
-      this.element.html(this.mustache.render(this.template, context));
-      this.slider = document.createElement('div');
-      this.element.find(this.sliderSelector).append(this.slider);
-      noUiSlider.create(this.slider, options);
-      this.slider.noUiSlider.on('change', function() {
-        var max, min, ref;
-        ref = self.slider.noUiSlider.get(), min = ref[0], max = ref[1];
-        if (self.values[min] === self.range.min && self.values[max] === self.range.max) {
-          self.controller.removeFilter(self.name);
-        } else {
-          self.controller.addFilter(self.name, {
-            gte: self.values[min],
-            lte: self.values[max]
-          });
-        }
-        self.controller.refresh();
-        return self.values = {};
-      });
-      return void 0;
-    };
-
-
-    /*
-    Renders the slider pips
-    
-    @param {Object} Values for 0%, 50% and 100% pips ({0: 1, 50: 2, 100: 3})
-    @api private
-     */
-
-
-    /**
-     * Renders the slider's pips.
-     * @param  {Object} values Values for 0%, 50% and 100% pips:
-     *
-     *                         {
-     *                           0: 1,
-     *                           50: 2,
-     *                           100: 3
-     *                         }
-     */
-
-    RangeFacet.prototype.__renderPips = function(values) {
-      var i, j, len, markerType, node, pip, pips, pos, ref, ref1, results, results1, value;
-      pips = this.slider.querySelector('div.noUi-pips.noUi-pips-horizontal');
-      if (pips === null) {
-        pips = document.createElement('div');
-        pips.setAttribute('class', 'noUi-pips noUi-pips-horizontal');
-        this.slider.appendChild(pips);
-        results = [];
-        for (pos = i = 0, ref = 100 / 16; i <= 100; pos = i += ref) {
-          markerType = pos === 0 || pos === 50 || pos === 100 ? 'large' : 'normal';
-          pip = document.createElement('div');
-          pip.setAttribute('class', "noUi-marker noUi-marker-horizontal noUi-marker-" + markerType);
-          pip.setAttribute('style', "left: " + pos + "%;");
-          pips.appendChild(pip);
-          if (pos === 0 || pos === 50 || pos === 100) {
-            value = document.createElement('div');
-            value.setAttribute('class', 'noUi-value noUi-value-horizontal noUi-value-large');
-            value.setAttribute('data-position', pos);
-            value.innerHTML = values != null ? values[pos + ''] : '';
-            results.push(pips.appendChild(value));
-          } else {
-            results.push(void 0);
-          }
-        }
-        return results;
-      } else {
-        ref1 = pips.querySelectorAll('div[data-position]');
-        results1 = [];
-        for (j = 0, len = ref1.length; j < len; j++) {
-          node = ref1[j];
-          results1.push(node.innerHTML = values != null ? values[node.getAttribute('data-position')] : '');
-        }
-        return results1;
-      }
-    };
-
-
-    /**
-     * Gets a proper range for the slider given a search response.
-     * @protected
-     * @param  {Object} res Search response.
-     * @return {Object}     Object with `min` and `max` properties.
-     */
-
-    RangeFacet.prototype.__getRangeFromResponse = function(res) {
-      var range, stats;
-      stats = res.facets[this.name].range.buckets[0].stats;
-      return range = {
-        min: parseFloat(stats.min || 0, 10),
-        max: parseFloat(stats.max || 0, 10)
-      };
-    };
-
-
-    /**
-     * Called when the "first page" response for a specific search is received.
-     * Renders the widget with the data received, by replacing its content.
-     *
-     * @param {Object} res Search response.
-     * @fires RangeFacet#df:rendered
-     */
-
-    RangeFacet.prototype.render = function(res) {
-      var options, self, start, values;
-      if (!res.facets || !res.facets[this.name]) {
-        this.raiseError("RangeFacet: " + this.name + " facet is not configured");
-      } else if (!res.facets[this.name].range) {
-        this.raiseError("RangeFacet: " + this.name + " facet is not a range facet");
-      }
-      self = this;
-      this.range = this.__getRangeFromResponse(res);
-      if (this.range.min === this.range.max) {
-        return this.clean();
-      } else {
-        options = {
-          start: [this.range.min, this.range.max],
-          range: this.range,
-          connect: true,
-          tooltips: true,
-          format: {
-            to: function(value) {
-              var formattedValue;
-              if (value != null) {
-                formattedValue = self.format(value);
-                self.values[formattedValue] = parseFloat(value, 10);
-                return formattedValue;
-              } else {
-                return "";
-              }
-            },
-            from: function(formattedValue) {
-              return formattedValue;
-            }
-          }
-        };
-        if (res && res.filter && res.filter.range && res.filter.range[this.name]) {
-          start = [parseFloat(res.filter.range[this.name].gte, 10), parseFloat(res.filter.range[this.name].lte, 10)];
-          if (!isNaN(start[0])) {
-            options.start[0] = start[0];
-          }
-          if (!isNaN(start[1])) {
-            options.start[1] = start[1];
-          }
-        }
-        if (this.slider === null) {
-          this.__renderSlider(options);
-        } else {
-          this.slider.noUiSlider.updateOptions(options);
-        }
-        if (options.pips == null) {
-          values = {
-            0: options.format.to(options.range.min),
-            50: options.format.to((options.range.min + options.range.max) / 2.0),
-            100: options.format.to(options.range.max)
-          };
-          this.__renderPips(values);
-        }
-        return this.trigger("df:rendered", [res]);
-      }
-    };
-
-
-    /**
-     * Cleans the widget by removing all the HTML inside the container element.
-     * Resets the `slider` property of the widget to remove any references to the
-     * slider and allowing garbage collection.
-     */
-
-    RangeFacet.prototype.clean = function() {
-      this.slider = null;
-      return RangeFacet.__super__.clean.apply(this, arguments);
-    };
-
-    return RangeFacet;
-
-  })(BaseFacet);
-
-  module.exports = RangeFacet;
-
-}).call(this);
-
-},{"./basefacet":14,"extend":23,"nouislider":69}],17:[function(require,module,exports){
-(function() {
-  var $, BaseFacet, TermFacet, extend,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  BaseFacet = require("./basefacet");
-
-  extend = require("extend");
+  TermsFacet = require("./termsfacet");
 
   $ = require("../../util/dfdom");
 
@@ -3822,33 +3295,32 @@ author: @ecoslado
    * text field.
    */
 
-  TermFacet = (function(superClass) {
-    extend1(TermFacet, superClass);
+  CollapsibleTermsFacet = (function(superClass) {
+    extend1(CollapsibleTermsFacet, superClass);
 
-    TermFacet.defaultLabelTemplate = "{{label}}{{#total_selected}} ({{total_selected}}){{/total_selected}}";
+    CollapsibleTermsFacet.defaultTemplate = "{{#terms}}\n  <div class=\"df-term\" data-facet=\"{{name}}\" data-value=\"{{key}}\"\n      {{#extra-content}}{{index}}{{/extra-content}}\n      {{#selected}}data-selected{{/selected}}>\n    <span class=\"df-term__value\">{{key}}</span>\n    <span class=\"df-term__count\">{{doc_count}}</span>\n  </div>\n{{/terms}}\n{{#show-more-button}}{{terms.length}}{{/show-more-button}}";
 
-    TermFacet.defaultTemplate = "{{#terms}}\n  <a class=\"df-term\" href=\"#\" data-facet=\"{{name}}\" data-value=\"{{key}}\"\n      {{#extra-content}}{{index}}:{{size}}{{/extra-content}}\n      {{#selected}}data-selected{{/selected}}>\n    {{key}} <span class=\"df-term__count\">{{doc_count}}</span>\n  </a>\n{{/terms}}\n{{#show-more-button}}{{terms.length}}:{{size}}{{/show-more-button}}";
-
-    TermFacet.defaultButtonTemplate = "<button type=\"button\" data-toggle-extra-content\n    data-text-normal=\"{{#translate}}{{viewMoreLabel}}{{/translate}}\"\n    data-text-toggle=\"{{#translate}}{{viewLessLabel}}{{/translate}}\">\n  {{#translate}}{{viewMoreLabel}}{{/translate}}\n</button>";
+    CollapsibleTermsFacet.defaultButtonTemplate = "<button type=\"button\" data-toggle-extra-content\n    data-text-normal=\"{{#translate}}{{viewMoreLabel}}{{/translate}}\"\n    data-text-toggle=\"{{#translate}}{{viewLessLabel}}{{/translate}}\">\n  {{#collapsed}}{{#translate}}{{viewMoreLabel}}{{/translate}}{{/collapsed}}\n  {{^collapsed}}{{#translate}}{{viewLessLabel}}{{/translate}}{{/collapsed}}\n</button>";
 
 
     /**
      * @param  {String|Node|DfDomElement} element  Container node.
-     * @param  {String} name    Name of the facet/filter.
-     * @param  {Object} options Options object. Empty by default.
+     * @param  {String} facet Name of the facet/filter.
+     * @param  {Object} options
      */
 
-    function TermFacet(element, name, options) {
+    function CollapsibleTermsFacet(element, facet, options) {
       var defaults;
       if (options == null) {
         options = {};
       }
       defaults = {
-        size: null,
+        size: 10,
+        startCollapsed: true,
         buttonTemplate: this.constructor.defaultButtonTemplate,
         templateVars: {
-          viewMoreLabel: "View more...",
-          viewLessLabel: "View less..."
+          viewMoreLabel: "View more…",
+          viewLessLabel: "View less…"
         },
         templateFunctions: {
           "extra-content": (function(_this) {
@@ -3867,9 +3339,9 @@ author: @ecoslado
                * @return {string}   "data-extra-content" or ""
                */
               return function(text, render) {
-                var index, ref, size;
-                ref = (render(text)).split(":"), index = ref[0], size = ref[1];
-                if ((parseInt(index.trim(), 10)) >= (parseInt(size.trim(), 10))) {
+                var i;
+                i = parseInt(render(text), 10);
+                if ((_this.options.size != null) && i >= _this.options.size) {
                   return "data-extra-content";
                 } else {
                   return "";
@@ -3891,10 +3363,10 @@ author: @ecoslado
                * @return {string}   Rendered button or "".
                */
               return function(text, render) {
-                var length, ref, size;
-                ref = (render(text)).split(":"), length = ref[0], size = ref[1];
-                if ((parseInt(length.trim(), 10)) > (parseInt(size.trim(), 10))) {
-                  return _this.mustache.render(_this.options.buttonTemplate, _this.buildContext());
+                var len;
+                len = parseInt(render(text), 10);
+                if ((_this.options.size != null) && len > _this.options.size) {
+                  return _this.mustache.render(_this.options.buttonTemplate, _this.currentContext);
                 } else {
                   return "";
                 }
@@ -3903,8 +3375,15 @@ author: @ecoslado
           })(this)
         }
       };
-      options = extend(true, defaults, options);
-      TermFacet.__super__.constructor.apply(this, arguments);
+      CollapsibleTermsFacet.__super__.constructor.call(this, element, facet, extend(true, defaults, options));
+      Object.defineProperty(this, 'isCollapsed', {
+        get: (function(_this) {
+          return function() {
+            return !_this.element.hasAttr("data-view-extra-content");
+          };
+        })(this)
+      });
+      this.totalSelected = 0;
     }
 
 
@@ -3915,69 +3394,17 @@ author: @ecoslado
      * @param  {Controller} controller Doofinder Search controller.
      */
 
-    TermFacet.prototype.init = function(controller) {
-      TermFacet.__super__.init.apply(this, arguments);
-      this.element.on("click", "[data-facet='" + this.name + "'][data-value]", (function(_this) {
-        return function(e) {
-          var eventInfo, key, termNode, value, wasSelected;
-          e.preventDefault();
-          termNode = $(e.target);
-          value = termNode.data("value");
-          key = termNode.data("facet");
-          wasSelected = termNode.hasAttr("data-selected");
-          if (!wasSelected) {
-            termNode.attr("data-selected", "");
-            _this.controller.addFilter(key, value);
-          } else {
-            termNode.removeAttr("data-selected");
-            _this.controller.removeFilter(key, value);
-          }
-          _this.controller.refresh();
-          eventInfo = {
-            facetName: key,
-            facetValue: value,
-            selected: !wasSelected,
-            totalSelected: _this.getSelectedElements().length
-          };
-          return _this.trigger("df:term_clicked", [eventInfo]);
-        };
-      })(this));
-      if (this.options.size !== null) {
+    CollapsibleTermsFacet.prototype.init = function() {
+      if (!this.initialized) {
+        this.__updateElement(this.options.startCollapsed);
         this.element.on("click", "[data-toggle-extra-content]", (function(_this) {
           return function(e) {
-            var btn, currentText, viewLessText, viewMoreText;
             e.preventDefault();
-            btn = _this.getShowMoreButton();
-            currentText = btn.textContent.trim();
-            viewMoreText = (btn.getAttribute("data-text-normal")).trim();
-            viewLessText = (btn.getAttribute("data-text-toggle")).trim();
-            if (currentText === viewMoreText) {
-              btn.textContent = viewLessText;
-              return _this.element.attr("data-view-extra-content", "");
-            } else {
-              btn.textContent = viewMoreText;
-              return _this.element.removeAttr("data-view-extra-content");
-            }
-          };
-        })(this));
-        this.bind("df:rendered", (function(_this) {
-          return function(res) {
-            var btn;
-            if ((_this.element.attr("data-view-extra-content")) != null) {
-              btn = _this.getShowMoreButton();
-              return btn != null ? btn.textContent = (btn.getAttribute("data-text-toggle")).trim() : void 0;
-            }
-          };
-        })(this));
-        return this.bind("df:cleaned", (function(_this) {
-          return function(res) {
-            var btn;
-            _this.element.removeAttr("data-view-extra-content");
-            btn = _this.getShowMoreButton();
-            return btn != null ? btn.textContent = (btn.getAttribute("data-text-normal")).trim() : void 0;
+            return _this.toggle();
           };
         })(this));
       }
+      return CollapsibleTermsFacet.__super__.init.apply(this, arguments);
     };
 
 
@@ -3985,53 +3412,344 @@ author: @ecoslado
      * @return {HTMLElement} The "show more" button.
      */
 
-    TermFacet.prototype.getShowMoreButton = function() {
-      return (this.element.find("[data-toggle-extra-content]")).element[0];
+    CollapsibleTermsFacet.prototype.__getButton = function() {
+      return (this.element.find("[data-toggle-extra-content]")).first();
+    };
+
+    CollapsibleTermsFacet.prototype.__updateButton = function(collapsed) {
+      var att, btn;
+      btn = this.__getButton();
+      att = collapsed ? "data-text-normal" : "data-text-toggle";
+      return (btn.get(0)).textContent = (btn.attr(att)).trim();
+    };
+
+    CollapsibleTermsFacet.prototype.__updateElement = function(collapsed) {
+      if (collapsed) {
+        return this.element.removeAttr("data-view-extra-content");
+      } else {
+        return this.element.attr("data-view-extra-content", "");
+      }
+    };
+
+    CollapsibleTermsFacet.prototype.collapse = function() {
+      if (!this.isCollapsed) {
+        this.__updateButton(true);
+        this.__updateElement(true);
+        return this.trigger("df:collapse:change", [true]);
+      }
+    };
+
+    CollapsibleTermsFacet.prototype.expand = function() {
+      if (this.isCollapsed) {
+        this.__updateButton(false);
+        this.__updateElement(false);
+        return this.trigger("df:collapse:change", [false]);
+      }
+    };
+
+    CollapsibleTermsFacet.prototype.toggle = function() {
+      if (this.isCollapsed) {
+        return this.expand();
+      } else {
+        return this.collapse();
+      }
+    };
+
+    CollapsibleTermsFacet.prototype.reset = function() {
+      if (this.options.startCollapsed) {
+        return this.collapse();
+      } else {
+        return this.expand();
+      }
     };
 
 
     /**
-     * @return {DfDomElement} Collection of selected term nodes.
-     */
-
-    TermFacet.prototype.getSelectedElements = function() {
-      return this.element.find("[data-facet][data-selected]");
-    };
-
-
-    /**
-     * @return {Number} Number of selected term nodes.
-     */
-
-    TermFacet.prototype.countSelectedElements = function() {
-      return this.getSelectedElements().length;
-    };
-
-
-    /**
-     * @param  {Object} res Results response from the server.
-     * @return {Number}     Total terms used for filter.
-     */
-
-    TermFacet.prototype.countSelectedTerms = function(res) {
-      var ref, ref1;
-      return (((ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.name] : void 0 : void 0) || []).length;
-    };
-
-
-    /**
-     * Renders the label of the facet widget based on the given search response,
-     * within the configured label template. The number of selected terms is
-     * passed to the context so it can be used in the template.
+     * Adds extra context to the passed context object.
      *
-     * @param  {Object} res Search response.
-     * @return {String}     The rendered label.
+     * @param  {Object} response = {} Search response as initial context.
+     * @return {Object}               Extended search response.
+     * @protected
      */
 
-    TermFacet.prototype.renderLabel = function(res) {
-      return TermFacet.__super__.renderLabel.call(this, extend(true, res, {
-        total_selected: this.countSelectedTerms(res)
+    CollapsibleTermsFacet.prototype.__buildContext = function(response) {
+      if (response == null) {
+        response = {};
+      }
+      CollapsibleTermsFacet.__super__.__buildContext.apply(this, arguments);
+      return this.currentContext = extend(true, this.currentContext, {
+        size: this.options.size,
+        collapsed: this.isCollapsed
+      });
+    };
+
+    CollapsibleTermsFacet.prototype.clean = function() {
+      this.reset();
+      return CollapsibleTermsFacet.__super__.clean.apply(this, arguments);
+    };
+
+    return CollapsibleTermsFacet;
+
+  })(TermsFacet);
+
+  module.exports = CollapsibleTermsFacet;
+
+}).call(this);
+
+},{"../../util/dfdom":6,"./termsfacet":18,"extend":24}],17:[function(require,module,exports){
+(function() {
+  var Display, RangeFacet, extend, noUiSlider,
+    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  extend = require("extend");
+
+  noUiSlider = require("nouislider");
+
+  Display = require("../display");
+
+
+  /**
+   * Represents a range slider control to filter numbers within a range.
+   */
+
+  RangeFacet = (function(superClass) {
+    extend1(RangeFacet, superClass);
+
+    RangeFacet.defaultTemplate = "<div class=\"df-slider\" data-facet=\"{{name}}\"></div>";
+
+    RangeFacet.formatFn = {
+      to: function(value) {
+        var formattedValue;
+        if (value != null) {
+          value = parseFloat(value, 10);
+          formattedValue = this.format(value);
+          this.values[formattedValue] = value;
+          return formattedValue;
+        } else {
+          return "";
+        }
+      },
+      from: function(formattedValue) {
+        return formattedValue;
+      }
+    };
+
+    RangeFacet.basicFormat = function(value) {
+      return (("" + (value.toFixed(2))).replace(/0+$/, "")).replace(/\.{1}$/, "");
+    };
+
+
+    /**
+     * @param  {String|Node|DfDomElement} element Container node.
+     * @param  {String} facet                     Name of the facet as defined
+     *                                            in Doofinder.
+     * @param  {Object} options                   Options object.
+     * @public
+     *
+     * Options (apart from those inherited from Display):
+     *
+     * - pips: noUiSlider pips configuration or `false`. `undefined` by default.
+     * - format: Function that receives a number and returns it formatted
+     *           as string.
+     */
+
+    function RangeFacet(element, facet, options) {
+      var defaults;
+      this.facet = facet;
+      if (options == null) {
+        options = {};
+      }
+      defaults = {
+        template: this.constructor.defaultTemplate,
+        pips: void 0,
+        format: void 0
+      };
+      RangeFacet.__super__.constructor.call(this, element, extend(true, defaults, options));
+      this.format = this.options.format || this.constructor.basicFormat;
+      this.slider = null;
+      this.values = {};
+      this.range = {};
+      this.sliderOpts = {};
+    }
+
+
+    /**
+     * Renders the slider for the very first time.
+     * @protected
+     * @param  {Object} options Slider options.
+     */
+
+    RangeFacet.prototype.__renderSlider = function(options) {
+      this.element.html(this.__renderTemplate({
+        name: this.facet
       }));
+      this.slider = document.createElement('div');
+      (this.element.find("[data-facet=\"" + this.facet + "\"]")).append(this.slider);
+      noUiSlider.create(this.slider, options);
+      this.slider.noUiSlider.on('change', this.__handleSliderChanged.bind(this));
+      return void 0;
+    };
+
+
+    /**
+     * Renders the slider's pips.
+     * @protected
+     * @param  {Object} values Values for 0%, 50% and 100% pips:
+     *
+     *                         {
+     *                           0: 1,
+     *                           50: 2,
+     *                           100: 3
+     *                         }
+     */
+
+    RangeFacet.prototype.__renderPips = function(range) {
+      var i, j, len, markerType, node, pip, pips, pos, ref, ref1, results, results1, value, values;
+      values = {
+        0: this.constructor.formatFn.to.call(this, range.min),
+        50: this.constructor.formatFn.to.call(this, (range.min + range.max) / 2.0),
+        100: this.constructor.formatFn.to.call(this, range.max)
+      };
+      pips = this.slider.querySelector("div.noUi-pips.noUi-pips-horizontal");
+      if (pips === null) {
+        pips = document.createElement('div');
+        pips.setAttribute('class', 'noUi-pips noUi-pips-horizontal');
+        this.slider.appendChild(pips);
+        results = [];
+        for (pos = i = 0, ref = 100 / 16; i <= 100; pos = i += ref) {
+          markerType = pos === 0 || pos === 50 || pos === 100 ? 'large' : 'normal';
+          pip = document.createElement('div');
+          pip.setAttribute('class', "noUi-marker noUi-marker-horizontal noUi-marker-" + markerType);
+          pip.setAttribute('style', "left: " + pos + "%;");
+          pips.appendChild(pip);
+          if (pos === 0 || pos === 50 || pos === 100) {
+            value = document.createElement('div');
+            value.setAttribute('class', 'noUi-value noUi-value-horizontal noUi-value-large');
+            value.setAttribute('data-position', pos);
+            value.innerHTML = values != null ? values["" + pos] : '';
+            results.push(pips.appendChild(value));
+          } else {
+            results.push(void 0);
+          }
+        }
+        return results;
+      } else {
+        ref1 = pips.querySelectorAll('div[data-position]');
+        results1 = [];
+        for (j = 0, len = ref1.length; j < len; j++) {
+          node = ref1[j];
+          results1.push(node.innerHTML = values[node.getAttribute('data-position')]);
+        }
+        return results1;
+      }
+    };
+
+
+    /**
+     * Gets a proper range for the slider given a search response.
+     * @protected
+     * @param  {Object} res Search response.
+     * @return {Object}     Object with `min`, `max`, `start` and `end` keys.
+     */
+
+    RangeFacet.prototype.__getRangeFromResponse = function(response) {
+      var range, rangeFilter, ref, ref1, stats;
+      stats = response.facets[this.facet].range.buckets[0].stats;
+      range = {
+        min: parseFloat(stats.min || 0, 10),
+        max: parseFloat(stats.max || 0, 10)
+      };
+      if ((rangeFilter = response != null ? (ref = response.filter) != null ? (ref1 = ref.range) != null ? ref1[this.facet] : void 0 : void 0 : void 0) != null) {
+        range.start = (parseFloat(rangeFilter.gte, 10)) || range.min;
+        range.end = (parseFloat(rangeFilter.lte, 10)) || range.max;
+      } else {
+        range.start = range.min;
+        range.end = range.max;
+      }
+      return range;
+    };
+
+
+    /**
+     * Builds an options object for noUiSlider given a range object.
+     *
+     * @protected
+     * @param  {Object} range Object as returned by `__getRangeFromResponse`.
+     * @return {Object}       Options object.
+     */
+
+    RangeFacet.prototype.__getSliderOptions = function(range) {
+      return {
+        start: [range.start, range.end],
+        range: {
+          min: range.min,
+          max: range.max
+        },
+        connect: true,
+        tooltips: true,
+        format: {
+          to: this.constructor.formatFn.to.bind(this),
+          from: this.constructor.formatFn.from.bind(this)
+        }
+      };
+    };
+
+
+    /**
+     * Updates the controller when the range changes.
+     * @protected
+     */
+
+    RangeFacet.prototype.__handleSliderChanged = function() {
+      var end, ref, start;
+      ref = this.get(), start = ref[0], end = ref[1];
+      if (start === this.range.min && end === this.range.max) {
+        this.controller.removeFilter(this.facet);
+      } else {
+        this.controller.addFilter(this.facet, {
+          gte: start,
+          lte: end
+        });
+      }
+      this.values = {};
+      this.controller.refresh();
+      return this.trigger("df:range:change", [
+        {
+          start: start,
+          end: end
+        }, {
+          min: this.range.min,
+          max: this.range.max
+        }
+      ]);
+    };
+
+
+    /**
+     * Sets the range of the slider.
+     * @param {Array} value 2-number array with min and max values to set.
+     */
+
+    RangeFacet.prototype.set = function(value) {
+      this.slider.noUiSlider.set(value);
+      return this.__handleSliderChanged();
+    };
+
+
+    /**
+     * Returns the current value of the slider.
+     * @return {Array} value 2-number array with start and end values set.
+     */
+
+    RangeFacet.prototype.get = function() {
+      var end, ref, start;
+      if (this.slider != null) {
+        ref = this.slider.noUiSlider.get(), start = ref[0], end = ref[1];
+        return [this.values[start], this.values[end]];
+      } else {
+        return [];
+      }
     };
 
 
@@ -4040,72 +3758,290 @@ author: @ecoslado
      * Renders the widget with the data received, by replacing its content.
      *
      * @param {Object} res Search response.
-     * @fires TermFacet#df:rendered
+     * @fires RangeFacet#df:widget:render
      */
 
-    TermFacet.prototype.render = function(res) {
-      var context, eventInfo, i, index, len, ref, ref1, ref2, ref3, selectedTerms, term, totalSelected;
-      if (!res.facets || !res.facets[this.name]) {
-        this.raiseError("TermFacet: " + this.name + " facet is not configured");
-      } else if (!res.facets[this.name].terms.buckets) {
-        this.raiseError("TermFacet: " + this.name + " facet is not a terms facet");
-      }
-      if (res.facets[this.name].terms.buckets.length > 0) {
-        selectedTerms = {};
-        ref2 = ((ref = res.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.name] : void 0 : void 0) || [];
-        for (i = 0, len = ref2.length; i < len; i++) {
-          term = ref2[i];
-          selectedTerms[term] = true;
-        }
-        selectedTerms;
-        ref3 = res.facets[this.name].terms.buckets;
-        for (index in ref3) {
-          term = ref3[index];
-          term.index = index;
-          term.name = this.name;
-          if (selectedTerms[term.key]) {
-            term.selected = 1;
+    RangeFacet.prototype.render = function(response) {
+      if (response.page === 1) {
+        this.range = this.__getRangeFromResponse(response);
+        if (this.range.min === this.range.max) {
+          return this.clean();
+        } else {
+          this.sliderOpts = this.__getSliderOptions(this.range);
+          if (this.slider === null) {
+            this.__renderSlider(this.sliderOpts);
           } else {
-            term.selected = 0;
+            this.slider.noUiSlider.updateOptions(this.sliderOpts);
           }
+          if (this.options.pips == null) {
+            this.__renderPips(this.range);
+          }
+          return this.trigger("df:widget:render", [response]);
         }
-        totalSelected = this.countSelectedTerms(res);
-        context = extend(true, {
-          any_selected: totalSelected > 0,
-          total_selected: totalSelected,
-          name: this.name,
-          terms: res.facets[this.name].terms.buckets
-        });
-        eventInfo = {
-          facetName: this.name,
-          totalSelected: totalSelected
-        };
-        this.element.html(this.mustache.render(this.template, this.buildContext(context)));
-        return this.trigger("df:rendered", [res, eventInfo]);
-      } else {
-        return this.clean();
       }
     };
 
-    return TermFacet;
 
-  })(BaseFacet);
+    /**
+     * Cleans the widget by removing all the HTML inside the container element.
+     * Resets the `slider` property of the widget to remove any references to the
+     * slider and allowing garbage collection.
+     */
 
-  module.exports = TermFacet;
+    RangeFacet.prototype.clean = function() {
+      this.slider = null;
+      this.values = {};
+      return RangeFacet.__super__.clean.apply(this, arguments);
+    };
+
+    return RangeFacet;
+
+  })(Display);
+
+  module.exports = RangeFacet;
 
 }).call(this);
 
-},{"../../util/dfdom":5,"./basefacet":14,"extend":23}],18:[function(require,module,exports){
+},{"../display":15,"extend":24,"nouislider":71}],18:[function(require,module,exports){
 (function() {
-  var QueryInput, Widget, dfTypeWatch, extend,
+  var $, Display, TermsFacet, extend,
+    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+  extend = require("extend");
+
+  Display = require("../display");
+
+  $ = require("../../util/dfdom");
+
+
+  /**
+   * Represents a terms selector control to filter by the possible values of a
+   * text field.
+   */
+
+  TermsFacet = (function(superClass) {
+    extend1(TermsFacet, superClass);
+
+    TermsFacet.defaultTemplate = "{{#terms}}\n  <div class=\"df-term\" data-facet=\"{{name}}\" data-value=\"{{key}}\"\n      {{#selected}}data-selected{{/selected}}>\n    <span class=\"df-term__value\">{{key}}</span>\n    <span class=\"df-term__count\">{{doc_count}}</span>\n  </div>\n{{/terms}}";
+
+
+    /**
+     * @param  {String|Node|DfDomElement} element  Container node.
+     * @param  {String} facet Name of the facet/filter.
+     * @param  {Object} options
+     */
+
+    function TermsFacet(element, facet, options) {
+      this.facet = facet;
+      if (options == null) {
+        options = {};
+      }
+      TermsFacet.__super__.constructor.call(this, element, extend(true, {
+        template: this.constructor.defaultTemplate
+      }, options));
+      this.totalSelected = 0;
+    }
+
+
+    /**
+     * Initializes the object with a controller and attachs event handlers for
+     * this widget instance.
+     *
+     * @param  {Controller} controller Doofinder Search controller.
+     */
+
+    TermsFacet.prototype.init = function() {
+      if (!this.initialized) {
+        this.element.on("click", "[data-facet=\"" + this.facet + "\"][data-value]", (function(_this) {
+          return function(e) {
+            var facetName, facetValue, isSelected, termNode;
+            e.preventDefault();
+            termNode = $(e.currentTarget);
+            facetName = termNode.data("facet");
+            facetValue = termNode.data("value");
+            isSelected = !termNode.hasAttr("data-selected");
+            if (isSelected) {
+              _this.totalSelected++;
+              termNode.attr("data-selected", "");
+              _this.controller.addFilter(facetName, facetValue);
+            } else {
+              _this.totalSelected--;
+              termNode.removeAttr("data-selected");
+              _this.controller.removeFilter(facetName, facetValue);
+            }
+            _this.controller.refresh();
+            return _this.trigger("df:term:click", [facetName, facetValue, isSelected]);
+          };
+        })(this));
+      }
+      return TermsFacet.__super__.init.apply(this, arguments);
+    };
+
+
+    /**
+     * Adds extra context to the passed context object.
+     *
+     * @param  {Object} response = {} Search response as initial context.
+     * @return {Object}               Extended search response.
+     * @protected
+     */
+
+    TermsFacet.prototype.__buildContext = function(response) {
+      var index, ref, ref1, ref2, selectedTerms, term, terms;
+      if (response == null) {
+        response = {};
+      }
+      TermsFacet.__super__.__buildContext.apply(this, arguments);
+      terms = response.facets[this.facet].terms.buckets;
+      selectedTerms = (response != null ? (ref = response.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.facet] : void 0 : void 0 : void 0) || [];
+      for (index in terms) {
+        term = terms[index];
+        term.index = parseInt(index, 10);
+        term.name = this.facet;
+        term.selected = (ref2 = term.key, indexOf.call(selectedTerms, ref2) >= 0);
+      }
+      this.totalSelected = selectedTerms.length;
+      return this.currentContext = extend(true, this.currentContext, {
+        name: this.facet,
+        terms: terms
+      });
+    };
+
+
+    /**
+     * Renders the widget with the data received, by replacing its content.
+     *
+     * @param {Object} res Search response.
+     * @fires TermsFacet#df:widget:render
+     */
+
+    TermsFacet.prototype.render = function(res) {
+      if (res.page === 1) {
+        if (res.facets[this.facet].terms.buckets.length > 0) {
+          return TermsFacet.__super__.render.call(this, res);
+        } else {
+          return this.clean();
+        }
+      } else {
+        return false;
+      }
+    };
+
+    TermsFacet.prototype.clean = function() {
+      this.totalSelected = 0;
+      return TermsFacet.__super__.clean.apply(this, arguments);
+    };
+
+    return TermsFacet;
+
+  })(Display);
+
+  module.exports = TermsFacet;
+
+}).call(this);
+
+},{"../../util/dfdom":6,"../display":15,"extend":24}],19:[function(require,module,exports){
+(function() {
+  var $, Display, INSERTION_METHODS, Panel, extend, uniqueId,
+    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+  extend = require("extend");
+
+  Display = require("./display");
+
+  $ = require("../util/dfdom");
+
+  uniqueId = require("../util/uniqueid");
+
+  INSERTION_METHODS = ["prepend", "append", "before", "after", "html"];
+
+  Panel = (function(superClass) {
+    extend1(Panel, superClass);
+
+    Panel.defaultTemplate = "<div class=\"df-panel\" id=\"{{panelElement}}\">\n  {{#label}}\n  <div class=\"df-panel__label\" id=\"{{labelElement}}\">{{label}}</div>\n  {{/label}}\n  <div class=\"df-panel__content\" id=\"{{contentElement}}\"></div>\n</div>";
+
+    function Panel(element, getWidget, options) {
+      var defaults, ref;
+      this.getWidget = getWidget;
+      if (options == null) {
+        options = {};
+      }
+      defaults = {
+        templateVars: {
+          label: null,
+          panelElement: "df-" + (uniqueId.generate.easy()),
+          labelElement: "df-" + (uniqueId.generate.easy()),
+          contentElement: "df-" + (uniqueId.generate.easy())
+        },
+        insertionMethod: "append",
+        template: this.constructor.defaultTemplate
+      };
+      options = extend(true, defaults, options);
+      if (ref = options.insertionMethod, indexOf.call(INSERTION_METHODS, ref) < 0) {
+        options.insertionMethod = "append";
+      }
+      Panel.__super__.constructor.call(this, element, options);
+      this.panelElement = null;
+      this.labelElement = null;
+      this.contentElement = null;
+      this.rendered = false;
+    }
+
+    Panel.prototype.render = function(res) {
+      if (!this.rendered) {
+        this.rendered = true;
+        this.element[this.options.insertionMethod](this.__renderTemplate(res));
+        this.__initPanel(res);
+        this.__renderContent(res);
+        return this.trigger("df:widget:render", [res]);
+      }
+    };
+
+    Panel.prototype.__initPanel = function(res) {
+      this.panelElement = $("#" + this.options.templateVars.panelElement);
+      this.labelElement = $("#" + this.options.templateVars.labelElement);
+      return this.contentElement = $("#" + this.options.templateVars.contentElement);
+    };
+
+    Panel.prototype.__renderContent = function(res) {
+      var widget;
+      widget = this.getWidget(this);
+      widget.one("df:widget:render", (function(res) {
+        return this.trigger("df:widget:renderContent", widget);
+      }).bind(this));
+      this.controller.registerWidget(widget);
+      return widget.render(res);
+    };
+
+    Panel.prototype.clean = function() {
+      if (this.rendered) {
+        return this.trigger("df:widget:clean");
+      }
+    };
+
+    return Panel;
+
+  })(Display);
+
+  module.exports = Panel;
+
+}).call(this);
+
+},{"../util/dfdom":6,"../util/uniqueid":13,"./display":15,"extend":24}],20:[function(require,module,exports){
+(function() {
+  var QueryInput, Thing, Widget, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   extend = require("extend");
 
-  Widget = require("../widget");
+  Widget = require("./widget");
 
-  dfTypeWatch = require("../util/dftypewatch");
+  Thing = require("../util/thing");
 
 
   /**
@@ -4124,14 +4060,42 @@ author: @ecoslado
      */
 
     function QueryInput(element, options) {
+      var defaults;
       if (options == null) {
         options = {};
       }
-      QueryInput.__super__.constructor.call(this, element, options);
-      this.typingTimeout = this.options.typingTimeout || 1000;
-      this.eventsBound = false;
-      this.cleanInput = this.options.clean != null ? this.options.clean : true;
+      defaults = {
+        clean: true,
+        captureLength: 3,
+        typingTimeout: 1000,
+        wait: 42
+      };
+      QueryInput.__super__.constructor.call(this, element, extend(true, defaults, options));
+      this.controller = [];
+      this.timer = null;
+      this.stopTimer = null;
+      Object.defineProperty(this, "value", {
+        get: (function(_this) {
+          return function() {
+            return _this.element.val() || "";
+          };
+        })(this),
+        set: (function(_this) {
+          return function(value) {
+            _this.element.val(value);
+            return _this.__scheduleUpdate();
+          };
+        })(this)
+      });
+      this.previousValue = this.value;
     }
+
+    QueryInput.prototype.setController = function(controller) {
+      if (!Thing.is.array(controller)) {
+        controller = [controller];
+      }
+      return this.controller = this.controller.concat(controller);
+    };
 
 
     /**
@@ -4142,37 +4106,84 @@ author: @ecoslado
      * @param  {Controller} controller Doofinder Search controller.
      */
 
-    QueryInput.prototype.init = function(controller) {
-      var ctrl, options, self;
-      if (this.controller) {
-        this.controller.push(controller);
-      } else {
-        this.controller = [controller];
+    QueryInput.prototype.init = function() {
+      if (!this.initialized) {
+        this.element.on("input", ((function(_this) {
+          return function() {
+            return _this.__scheduleUpdate();
+          };
+        })(this)));
+        if ((this.element.get(0)).tagName.toUpperCase() !== "TEXTAREA") {
+          this.element.on("keydown", (function(_this) {
+            return function(e) {
+              if ((e.keyCode != null) && e.keyCode === 13) {
+                _this.__scheduleUpdate(0, true);
+                return _this.trigger("df:input:submit", [_this.value]);
+              }
+            };
+          })(this));
+        }
+        return QueryInput.__super__.init.apply(this, arguments);
       }
-      self = this;
-      if (!this.eventsBound) {
-        options = extend(true, {
-          callback: function() {
-            var query;
-            query = self.element.val();
-            return self.controller.forEach(function(controller) {
-              controller.reset();
-              return controller.search.call(controller, query);
-            });
-          },
-          wait: 43,
-          captureLength: 3
-        }, this.options);
-        dfTypeWatch(this.element, options);
-        ctrl = this.controller[0];
-        ctrl.bind('df:results_received', function(res) {
-          return setTimeout((function() {
-            if (ctrl.status.params.query_counter === res.query_counter && ctrl.status.currentPage === 1) {
-              return self.trigger('df:typing_stopped', [ctrl.status.params.query]);
-            }
-          }), self.typingTimeout);
-        });
-        return this.eventsBound = true;
+    };
+
+
+    /**
+     * Schedules input validation so its done "in the future", giving the user
+     * time to enter a new character (delaying search requests).
+     *
+     * @param  {Number} delay  = @options.wait  Time to wait until update in
+     *                         milliseconds.
+     * @param  {Boolean} force = false  Forces search if value is OK whether
+     *                         value changed or not.
+     * @protected
+     */
+
+    QueryInput.prototype.__scheduleUpdate = function(delay, force) {
+      if (delay == null) {
+        delay = this.options.wait;
+      }
+      if (force == null) {
+        force = false;
+      }
+      clearTimeout(this.timer);
+      clearTimeout(this.stopTimer);
+      return this.timer = setTimeout(this.__updateStatus.bind(this), delay, force);
+    };
+
+
+    /**
+     * Checks current value of the input and, if it is OK and it changed since the
+     * last check, performs a new search in each registered controller.
+     *
+     * @param  {Boolean} force = false If true forces search if value is OK
+     *                         whether value changed or not.
+     * @protected
+     */
+
+    QueryInput.prototype.__updateStatus = function(force) {
+      var valueChanged, valueOk;
+      if (force == null) {
+        force = false;
+      }
+      valueOk = this.value.length >= this.options.captureLength;
+      valueChanged = this.value.toUpperCase() !== this.previousValue;
+      if (valueOk && (valueChanged || force)) {
+        this.stopTimer = setTimeout(((function(_this) {
+          return function() {
+            return _this.trigger("df:input:stop", [_this.value]);
+          };
+        })(this)), this.options.typingTimeout);
+        this.previousValue = this.value.toUpperCase();
+        return this.controller.forEach((function(_this) {
+          return function(controller) {
+            return controller.search(_this.value);
+          };
+        })(this));
+      } else if (this.previousValue.length > 0 && this.value.length === 0) {
+        if (this.value.length === 0) {
+          return this.trigger("df:input:none");
+        }
       }
     };
 
@@ -4180,14 +4191,14 @@ author: @ecoslado
     /**
      * If the widget is configured to be cleaned, empties the value of the input
      * element.
-     * @fires QueryInput#df:cleaned
+     * @fires Widget#df:widget:clean
      */
 
     QueryInput.prototype.clean = function() {
-      if (this.cleanInput) {
+      if (this.options.clean) {
         this.element.val("");
-        return this.trigger("df:cleaned");
       }
+      return QueryInput.__super__.clean.apply(this, arguments);
     };
 
     return QueryInput;
@@ -4198,135 +4209,21 @@ author: @ecoslado
 
 }).call(this);
 
-},{"../util/dftypewatch":7,"../widget":12,"extend":23}],19:[function(require,module,exports){
-
-/*
-display.coffee
-author: @ecoslado
-2015 11 10
- */
-
-
-/*
-Display
-This class receives the search
-results and paint them in a container
-shaped by template. Every new page
-replaces the current content.
- */
-
+},{"../util/thing":12,"./widget":22,"extend":24}],21:[function(require,module,exports){
 (function() {
-  var Display, Results,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  Display = require('../display');
-
-  Results = (function(superClass) {
-    extend(Results, superClass);
-
-
-    /*
-    constructor
-    
-    @param {String} container
-    @param {String|Function} template
-    @param {Object} extraOptions
-    @api public
-     */
-
-    function Results(container, options) {
-      var template;
-      if (options == null) {
-        options = {};
-      }
-      if (!options.template) {
-        template = "<ul>\n  {{#results}}\n    <li>\n      <b>{{title}}</b>: {{description}}\n    </li>\n  {{/results}}\n</ul>";
-      } else {
-        template = options.template;
-      }
-      Results.__super__.constructor.call(this, container, template, options);
-    }
-
-    return Results;
-
-  })(Display);
-
-  module.exports = Results;
-
-}).call(this);
-
-},{"../display":13}],20:[function(require,module,exports){
-
-/*
-scrollresults.coffee
-author: @ecoslado
-2015 11 10
- */
-
-
-/*
-Display
-This class receives the search
-results and paint them in a container
-shaped by template. Every new page
-replaces the current content.
- */
-
-(function() {
-  var ScrollDisplay, ScrollResults,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  ScrollDisplay = require('../scrolldisplay');
-
-  ScrollResults = (function(superClass) {
-    extend(ScrollResults, superClass);
-
-
-    /*
-    constructor
-    
-    @param {String} element
-    @param {String|Function} template
-    @param {Object} extraOptions
-    @api public
-     */
-
-    function ScrollResults(element, options) {
-      var template;
-      if (options == null) {
-        options = {};
-      }
-      if (!options.template) {
-        template = "<ul>\n  {{#results}}\n    <li>\n      <b>{{title}}</b>: {{description}}\n    </li>\n  {{/results}}\n</ul>";
-      } else {
-        template = options.template;
-      }
-      ScrollResults.__super__.constructor.call(this, element, template, options);
-    }
-
-    return ScrollResults;
-
-  })(ScrollDisplay);
-
-  module.exports = ScrollResults;
-
-}).call(this);
-
-},{"../scrolldisplay":21}],21:[function(require,module,exports){
-(function() {
-  var $, Display, ScrollDisplay, dfScroll, extend,
+  var $, Display, ScrollDisplay, Thing, extend, throttle,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
+  extend = require("extend");
+
+  throttle = require("lodash.throttle");
+
+  $ = require("../util/dfdom");
+
+  Thing = require("../util/thing");
+
   Display = require("./display");
-
-  dfScroll = require("../util/dfscroll");
-
-  extend = require('extend');
-
-  $ = require('../util/dfdom');
 
 
   /**
@@ -4340,99 +4237,156 @@ replaces the current content.
 
 
     /**
+     * @param  {DfDomElement|Element|String} element Will be used as scroller.
+     * @param  {Object} options
+     *
      * Options:
      *
-     * - scrollOffset: 200
-     * - contentNode: Node that holds the results will become the container
-     *   element of the widget.
-     * - contentWrapper: Node that is used for scrolling instead of the first
-     *   child of the container.
+     * - contentElement:  By default content will be rendered inside the scroller
+     *                    unless this option is set to a valid container. This is
+     *                    optional unless the scroller is the window object, in
+     *                    that case this is mandatory.
+     * - offset:          Distance to the bottom. If the scroll reaches this point a new
+     *                    results page will be requested.
+     * - throttle:        Time in milliseconds to wait between scroll checks. This
+     *                    value limits calculations associated to the scroll event.
+     * - horizontal:      False by default. Scroll is handled vertically by default.
+     *                    If this options is enabled scroll is handled horizontally.
      *
-     *  elementWrapper
-     *  -------------------
-     * |  contentWrapper  ^|
-     * |  --------------- !|
-     * | |  element      |!|
-     * | |  ------------ |!|
-     * | | |  items     ||!|
+     * Markup:
      *
-     * TODO(@carlosescri): Document this better!!!
+     * You can just use a container element. Content will be rendered inside.
      *
-     * @param  {[type]} element  [description]
-     * @param  {[type]} template [description]
-     * @param  {[type]} options  [description]
-     * @return {[type]}          [description]
+     *  ______________________
+     * |                      |
+     * |  `element`           |
+     * |  __________________  |
+     * | |                  | |
+     * | | RENDERED CONTENT | |
+     * | |__________________| |
+     * |______________________|
+     *
+     * If you need to put extra content inside the container, before or after
+     * the rendered results, use the `contentElement` option:
+     *
+     *  __________________________
+     * |                          |
+     * |  `element`               |
+     * |  ______________________  |
+     * | |                      | |
+     * | | HEADER               | |
+     * | |______________________| |
+     * |  ______________________  |
+     * | |                      | |
+     * | | `contentElement`     | |
+     * | |  __________________  | |
+     * | | |                  | | |
+     * | | | RENDERED CONTENT | | |
+     * | | |__________________| | |
+     * | |______________________| |
+     * |  ______________________  |
+     * | |                      | |
+     * | | FOOTER               | |
+     * | |______________________| |
+     * |__________________________|
+     *
+     * IMPORTANT: Don't rely on the `element` attribute to do stuff with the
+     * container, if you use the `contentElement` option, that node will become
+     * the `element` node. To access the container always use the `container`
+     * attribute.
+     *
+     * TODO: Check how this works when the container is the window object.
      */
 
-    function ScrollDisplay(element, template, options) {
-      var scrollOptions, self;
-      ScrollDisplay.__super__.constructor.apply(this, arguments);
-      if (this.element.element[0] === window && (options.contentNode == null)) {
-        throw "when the wrapper is window you must set contentNode option.";
-      }
-      self = this;
-      scrollOptions = {
-        callback: function() {
-          if ((self.controller != null) && !self.pageRequested) {
-            self.pageRequested = true;
-            setTimeout(function() {
-              return self.pageRequested = false;
-            }, 5000);
-            return self.controller.nextPage.call(self.controller);
-          }
-        }
+    function ScrollDisplay(element, options) {
+      var defaultOptions;
+      defaultOptions = {
+        contentElement: null,
+        offset: 300,
+        throttle: 16,
+        horizontal: false
       };
-      if (options.scrollOffset != null) {
-        scrollOptions.scrollOffset = options.scrollOffset;
-      }
-      if (options.contentWrapper != null) {
-        scrollOptions.content = options.contentWrapper;
-      }
-      this.elementWrapper = this.element;
-      if (options.contentNode != null) {
-        this.element = $(options.contentNode);
-      } else if (this.element.element[0] === window) {
-        this.element = $("body");
-      } else {
-        if (!this.element.children().length) {
-          this.element.append(document.createElement('div'));
-        }
-        this.element = this.element.children().first();
-      }
-      dfScroll(this.elementWrapper, scrollOptions);
+      options = extend(true, defaultOptions, options || {});
+      ScrollDisplay.__super__.constructor.call(this, element, options);
+      this.container = this.element;
+      this.__setContentElement();
+      this.working = false;
+      this.previousDelta = 0;
     }
 
 
     /**
-     * Initializes the object with a controller and attachs event handlers for
-     * this widget instance.
-     *
-     * @param  {Controller} controller Doofinder Search controller.
+     * Gets the element that will hold search results.
      */
 
-    ScrollDisplay.prototype.init = function(controller) {
-      ScrollDisplay.__super__.init.apply(this, arguments);
-      return this.controller.bind('df:search df:refresh', (function(_this) {
-        return function(params) {
-          return _this.elementWrapper.scrollTop(0);
-        };
-      })(this));
+    ScrollDisplay.prototype.__setContentElement = function() {
+      if (this.options.contentElement != null) {
+        return this.setElement(this.element.find(this.options.contentElement));
+      } else if (Thing.is.window(this.element.get(0))) {
+        throw "ScrollDisplay: contentElement must be specified when the container is the window object";
+      }
     };
 
+    ScrollDisplay.prototype.init = function() {
+      var fn;
+      if (!this.initialized) {
+        fn = this.options.horizontal ? this.__scrollX : this.__scrollY;
+        this.container.on("scroll", throttle(fn.bind(this), this.options.throttle));
+        this.controller.on("df:search df:refresh", (function(_this) {
+          return function(query, params) {
+            return _this.container.scrollTop(0);
+          };
+        })(this));
+        return ScrollDisplay.__super__.init.apply(this, arguments);
+      }
+    };
 
-    /**
-     * Called when subsequent (not "first-page") responses for a specific search
-     * are received. Renders the widget with the data received, by appending
-     * content after the last content received.
-     *
-     * @param {Object} res Search response.
-     * @fires ScrollDisplay#df:rendered
-     */
+    ScrollDisplay.prototype.__scrollX = function() {
+      var direction, rect, scrolled, width;
+      rect = this.container.box();
+      width = rect.scrollWidth;
+      scrolled = rect.scrollLeft + rect.clientWidth;
+      if (width - scrolled <= this.options.offset) {
+        this.__getNextPage();
+      }
+      direction = rect.scrollLeft >= this.previousDelta ? "right" : "left";
+      this.previousDelta = rect.scrollLeft;
+      return this.trigger("df:widget:scroll", [rect.scrollLeft, direction]);
+    };
 
-    ScrollDisplay.prototype.renderNext = function(res) {
-      this.pageRequested = false;
-      this.element.append(this.mustache.render(this.template, this.buildContext(res)));
-      return this.trigger("df:rendered", [res]);
+    ScrollDisplay.prototype.__scrollY = function() {
+      var direction, height, rect, scrolled;
+      rect = this.container.box();
+      height = rect.scrollHeight;
+      scrolled = rect.scrollTop + rect.clientHeight;
+      if (height - scrolled <= this.options.offset) {
+        this.__getNextPage();
+      }
+      direction = rect.scrollTop >= this.previousDelta ? "down" : "up";
+      this.previousDelta = rect.scrollTop;
+      return this.trigger("df:widget:scroll", [rect.scrollTop, direction]);
+    };
+
+    ScrollDisplay.prototype.__getNextPage = function() {
+      if ((this.controller != null) && !this.working) {
+        this.working = true;
+        setTimeout(((function(_this) {
+          return function() {
+            return _this.working = false;
+          };
+        })(this)), 2000);
+        return this.controller.getNextPage();
+      }
+    };
+
+    ScrollDisplay.prototype.render = function(res) {
+      if (res.page === 1) {
+        return ScrollDisplay.__super__.render.apply(this, arguments);
+      } else {
+        this.working = false;
+        this.element.append(this.__renderTemplate(res));
+        return this.trigger("df:widget:render", [res]);
+      }
     };
 
     return ScrollDisplay;
@@ -4443,7 +4397,124 @@ replaces the current content.
 
 }).call(this);
 
-},{"../util/dfdom":5,"../util/dfscroll":6,"./display":13,"extend":23}],22:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/thing":12,"./display":15,"extend":24,"lodash.throttle":65}],22:[function(require,module,exports){
+(function() {
+  var $, Widget, bean;
+
+  bean = require("bean");
+
+  $ = require("../util/dfdom");
+
+
+  /**
+   * Base class for a Widget, a class that paints itself given a search response.
+   */
+
+  Widget = (function() {
+
+    /**
+     * @param  {(String|Node|DfDomElement)} element
+     * @param  {Object}                     [options = {}]
+     */
+    function Widget(element, options) {
+      this.options = options != null ? options : {};
+      this.initialized = false;
+      this.controller = null;
+      this.setElement(element);
+    }
+
+
+    /**
+     * Assigns the container element to the widget.
+     *
+     * 99.9% of times this method is used "as is" but can be customized to assign
+     * a different container element to the widget.
+     *
+     * @param  {String|Node|DfDomElement} element   Container node.
+     */
+
+    Widget.prototype.setElement = function(element) {
+      return this.element = ($(element)).first();
+    };
+
+
+    /**
+     * Assigns a controller to the widget, so the widget can get access to the
+     * status of the search or directly manipulate the search through the
+     * controller, if needed.
+     *
+     * This method is called by the `Controller` when a widget is registered.
+     * Usually a widget is only registered in one controller but you can extend
+     * this method to change this behavior.
+     *
+     * @param {Controller} controller
+     */
+
+    Widget.prototype.setController = function(controller) {
+      this.controller = controller;
+    };
+
+
+    /**
+     * Initializes the widget. Intended to be extended in child classes, this
+     * method should be executed only once. This is enforced by the `initialized`
+     * attribute.
+     *
+     * You will want to add your own event handlers here.
+     */
+
+    Widget.prototype.init = function() {
+      if (!this.initialized) {
+        this.initialized = true;
+        return this.trigger("df:widget:init");
+      }
+    };
+
+
+    /**
+     * Renders the widget with the search response received from the server.
+     *
+     * @param  {Object} res Search response.
+     */
+
+    Widget.prototype.render = function(res) {
+      return this.trigger("df:widget:render", [res]);
+    };
+
+
+    /**
+     * Cleans the widget. Intended to be overriden.
+     */
+
+    Widget.prototype.clean = function() {
+      return this.trigger("df:widget:clean");
+    };
+
+    Widget.prototype.on = function(eventName, handler) {
+      return bean.on(this, eventName, handler);
+    };
+
+    Widget.prototype.one = function(eventName, handler) {
+      return bean.one(this, eventName, handler);
+    };
+
+    Widget.prototype.off = function(eventName, handler) {
+      return bean.off(this, eventName, handler);
+    };
+
+    Widget.prototype.trigger = function(eventName, args) {
+      return bean.fire(this, eventName, args);
+    };
+
+    return Widget;
+
+  })();
+
+  module.exports = Widget;
+
+}).call(this);
+
+},{"../util/dfdom":6,"bean":23}],23:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean
@@ -5186,7 +5257,7 @@ replaces the current content.
   return bean
 });
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 'use strict';
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -5274,9 +5345,9 @@ module.exports = function extend() {
 	return target;
 };
 
-},{}],24:[function(require,module,exports){
-
 },{}],25:[function(require,module,exports){
+
+},{}],26:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -7069,7 +7140,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":26,"ieee754":27,"isarray":28}],26:[function(require,module,exports){
+},{"base64-js":27,"ieee754":28,"isarray":29}],27:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -7185,7 +7256,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -7271,14 +7342,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7582,7 +7653,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -7598,7 +7669,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":53}],31:[function(require,module,exports){
+},{"http":54}],32:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -7623,7 +7694,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],32:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -7646,7 +7717,7 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -7832,7 +7903,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -8369,7 +8440,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8455,7 +8526,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8542,13 +8613,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":35,"./encode":36}],38:[function(require,module,exports){
+},{"./decode":36,"./encode":37}],39:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8673,7 +8744,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":40,"./_stream_writable":42,"core-util-is":46,"inherits":31,"process-nextick-args":48}],39:[function(require,module,exports){
+},{"./_stream_readable":41,"./_stream_writable":43,"core-util-is":47,"inherits":32,"process-nextick-args":49}],40:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8721,7 +8792,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":41,"core-util-is":46,"inherits":31}],40:[function(require,module,exports){
+},{"./_stream_transform":42,"core-util-is":47,"inherits":32}],41:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -9731,7 +9802,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":38,"./internal/streams/BufferList":43,"./internal/streams/destroy":44,"./internal/streams/stream":45,"_process":33,"core-util-is":46,"events":29,"inherits":31,"isarray":47,"process-nextick-args":48,"safe-buffer":49,"string_decoder/":50,"util":24}],41:[function(require,module,exports){
+},{"./_stream_duplex":39,"./internal/streams/BufferList":44,"./internal/streams/destroy":45,"./internal/streams/stream":46,"_process":34,"core-util-is":47,"events":30,"inherits":32,"isarray":48,"process-nextick-args":49,"safe-buffer":50,"string_decoder/":51,"util":25}],42:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9946,7 +10017,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":38,"core-util-is":46,"inherits":31}],42:[function(require,module,exports){
+},{"./_stream_duplex":39,"core-util-is":47,"inherits":32}],43:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10613,7 +10684,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":38,"./internal/streams/destroy":44,"./internal/streams/stream":45,"_process":33,"core-util-is":46,"inherits":31,"process-nextick-args":48,"safe-buffer":49,"util-deprecate":51}],43:[function(require,module,exports){
+},{"./_stream_duplex":39,"./internal/streams/destroy":45,"./internal/streams/stream":46,"_process":34,"core-util-is":47,"inherits":32,"process-nextick-args":49,"safe-buffer":50,"util-deprecate":52}],44:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -10688,7 +10759,7 @@ module.exports = function () {
 
   return BufferList;
 }();
-},{"safe-buffer":49}],44:[function(require,module,exports){
+},{"safe-buffer":50}],45:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -10761,10 +10832,10 @@ module.exports = {
   destroy: destroy,
   undestroy: undestroy
 };
-},{"process-nextick-args":48}],45:[function(require,module,exports){
+},{"process-nextick-args":49}],46:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":29}],46:[function(require,module,exports){
+},{"events":30}],47:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10875,9 +10946,9 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":32}],47:[function(require,module,exports){
-arguments[4][28][0].apply(exports,arguments)
-},{"dup":28}],48:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":33}],48:[function(require,module,exports){
+arguments[4][29][0].apply(exports,arguments)
+},{"dup":29}],49:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -10924,7 +10995,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":33}],49:[function(require,module,exports){
+},{"_process":34}],50:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -10988,7 +11059,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":25}],50:[function(require,module,exports){
+},{"buffer":26}],51:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('safe-buffer').Buffer;
@@ -11261,7 +11332,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":49}],51:[function(require,module,exports){
+},{"safe-buffer":50}],52:[function(require,module,exports){
 (function (global){
 
 /**
@@ -11332,7 +11403,7 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],52:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -11341,7 +11412,7 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":38,"./lib/_stream_passthrough.js":39,"./lib/_stream_readable.js":40,"./lib/_stream_transform.js":41,"./lib/_stream_writable.js":42}],53:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":39,"./lib/_stream_passthrough.js":40,"./lib/_stream_readable.js":41,"./lib/_stream_transform.js":42,"./lib/_stream_writable.js":43}],54:[function(require,module,exports){
 (function (global){
 var ClientRequest = require('./lib/request')
 var extend = require('xtend')
@@ -11423,7 +11494,7 @@ http.METHODS = [
 	'UNSUBSCRIBE'
 ]
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./lib/request":55,"builtin-status-codes":57,"url":59,"xtend":61}],54:[function(require,module,exports){
+},{"./lib/request":56,"builtin-status-codes":58,"url":60,"xtend":62}],55:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
 
@@ -11496,7 +11567,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],55:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -11806,7 +11877,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":54,"./response":56,"_process":33,"buffer":25,"inherits":31,"readable-stream":52,"to-arraybuffer":58}],56:[function(require,module,exports){
+},{"./capability":55,"./response":57,"_process":34,"buffer":26,"inherits":32,"readable-stream":53,"to-arraybuffer":59}],57:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -11992,7 +12063,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":54,"_process":33,"buffer":25,"inherits":31,"readable-stream":52}],57:[function(require,module,exports){
+},{"./capability":55,"_process":34,"buffer":26,"inherits":32,"readable-stream":53}],58:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -12058,7 +12129,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],58:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
 
 module.exports = function (buf) {
@@ -12087,7 +12158,7 @@ module.exports = function (buf) {
 	}
 }
 
-},{"buffer":25}],59:[function(require,module,exports){
+},{"buffer":26}],60:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -12821,7 +12892,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":60,"punycode":34,"querystring":37}],60:[function(require,module,exports){
+},{"./util":61,"punycode":35,"querystring":38}],61:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -12839,7 +12910,7 @@ module.exports = {
   }
 };
 
-},{}],61:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -12860,7 +12931,809 @@ function extend() {
     return target
 }
 
-},{}],62:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
+/* globals window, HTMLElement */
+
+'use strict';
+
+/**!
+ * is
+ * the definitive JavaScript type testing library
+ *
+ * @copyright 2013-2014 Enrico Marino / Jordan Harband
+ * @license MIT
+ */
+
+var objProto = Object.prototype;
+var owns = objProto.hasOwnProperty;
+var toStr = objProto.toString;
+var symbolValueOf;
+if (typeof Symbol === 'function') {
+  symbolValueOf = Symbol.prototype.valueOf;
+}
+var isActualNaN = function (value) {
+  return value !== value;
+};
+var NON_HOST_TYPES = {
+  'boolean': 1,
+  number: 1,
+  string: 1,
+  undefined: 1
+};
+
+var base64Regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$/;
+var hexRegex = /^[A-Fa-f0-9]+$/;
+
+/**
+ * Expose `is`
+ */
+
+var is = {};
+
+/**
+ * Test general.
+ */
+
+/**
+ * is.type
+ * Test if `value` is a type of `type`.
+ *
+ * @param {Mixed} value value to test
+ * @param {String} type type
+ * @return {Boolean} true if `value` is a type of `type`, false otherwise
+ * @api public
+ */
+
+is.a = is.type = function (value, type) {
+  return typeof value === type;
+};
+
+/**
+ * is.defined
+ * Test if `value` is defined.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if 'value' is defined, false otherwise
+ * @api public
+ */
+
+is.defined = function (value) {
+  return typeof value !== 'undefined';
+};
+
+/**
+ * is.empty
+ * Test if `value` is empty.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is empty, false otherwise
+ * @api public
+ */
+
+is.empty = function (value) {
+  var type = toStr.call(value);
+  var key;
+
+  if (type === '[object Array]' || type === '[object Arguments]' || type === '[object String]') {
+    return value.length === 0;
+  }
+
+  if (type === '[object Object]') {
+    for (key in value) {
+      if (owns.call(value, key)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  return !value;
+};
+
+/**
+ * is.equal
+ * Test if `value` is equal to `other`.
+ *
+ * @param {Mixed} value value to test
+ * @param {Mixed} other value to compare with
+ * @return {Boolean} true if `value` is equal to `other`, false otherwise
+ */
+
+is.equal = function equal(value, other) {
+  if (value === other) {
+    return true;
+  }
+
+  var type = toStr.call(value);
+  var key;
+
+  if (type !== toStr.call(other)) {
+    return false;
+  }
+
+  if (type === '[object Object]') {
+    for (key in value) {
+      if (!is.equal(value[key], other[key]) || !(key in other)) {
+        return false;
+      }
+    }
+    for (key in other) {
+      if (!is.equal(value[key], other[key]) || !(key in value)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  if (type === '[object Array]') {
+    key = value.length;
+    if (key !== other.length) {
+      return false;
+    }
+    while (key--) {
+      if (!is.equal(value[key], other[key])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  if (type === '[object Function]') {
+    return value.prototype === other.prototype;
+  }
+
+  if (type === '[object Date]') {
+    return value.getTime() === other.getTime();
+  }
+
+  return false;
+};
+
+/**
+ * is.hosted
+ * Test if `value` is hosted by `host`.
+ *
+ * @param {Mixed} value to test
+ * @param {Mixed} host host to test with
+ * @return {Boolean} true if `value` is hosted by `host`, false otherwise
+ * @api public
+ */
+
+is.hosted = function (value, host) {
+  var type = typeof host[value];
+  return type === 'object' ? !!host[value] : !NON_HOST_TYPES[type];
+};
+
+/**
+ * is.instance
+ * Test if `value` is an instance of `constructor`.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an instance of `constructor`
+ * @api public
+ */
+
+is.instance = is['instanceof'] = function (value, constructor) {
+  return value instanceof constructor;
+};
+
+/**
+ * is.nil / is.null
+ * Test if `value` is null.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is null, false otherwise
+ * @api public
+ */
+
+is.nil = is['null'] = function (value) {
+  return value === null;
+};
+
+/**
+ * is.undef / is.undefined
+ * Test if `value` is undefined.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is undefined, false otherwise
+ * @api public
+ */
+
+is.undef = is.undefined = function (value) {
+  return typeof value === 'undefined';
+};
+
+/**
+ * Test arguments.
+ */
+
+/**
+ * is.args
+ * Test if `value` is an arguments object.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an arguments object, false otherwise
+ * @api public
+ */
+
+is.args = is.arguments = function (value) {
+  var isStandardArguments = toStr.call(value) === '[object Arguments]';
+  var isOldArguments = !is.array(value) && is.arraylike(value) && is.object(value) && is.fn(value.callee);
+  return isStandardArguments || isOldArguments;
+};
+
+/**
+ * Test array.
+ */
+
+/**
+ * is.array
+ * Test if 'value' is an array.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an array, false otherwise
+ * @api public
+ */
+
+is.array = Array.isArray || function (value) {
+  return toStr.call(value) === '[object Array]';
+};
+
+/**
+ * is.arguments.empty
+ * Test if `value` is an empty arguments object.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an empty arguments object, false otherwise
+ * @api public
+ */
+is.args.empty = function (value) {
+  return is.args(value) && value.length === 0;
+};
+
+/**
+ * is.array.empty
+ * Test if `value` is an empty array.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an empty array, false otherwise
+ * @api public
+ */
+is.array.empty = function (value) {
+  return is.array(value) && value.length === 0;
+};
+
+/**
+ * is.arraylike
+ * Test if `value` is an arraylike object.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an arguments object, false otherwise
+ * @api public
+ */
+
+is.arraylike = function (value) {
+  return !!value && !is.bool(value)
+    && owns.call(value, 'length')
+    && isFinite(value.length)
+    && is.number(value.length)
+    && value.length >= 0;
+};
+
+/**
+ * Test boolean.
+ */
+
+/**
+ * is.bool
+ * Test if `value` is a boolean.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a boolean, false otherwise
+ * @api public
+ */
+
+is.bool = is['boolean'] = function (value) {
+  return toStr.call(value) === '[object Boolean]';
+};
+
+/**
+ * is.false
+ * Test if `value` is false.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is false, false otherwise
+ * @api public
+ */
+
+is['false'] = function (value) {
+  return is.bool(value) && Boolean(Number(value)) === false;
+};
+
+/**
+ * is.true
+ * Test if `value` is true.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is true, false otherwise
+ * @api public
+ */
+
+is['true'] = function (value) {
+  return is.bool(value) && Boolean(Number(value)) === true;
+};
+
+/**
+ * Test date.
+ */
+
+/**
+ * is.date
+ * Test if `value` is a date.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a date, false otherwise
+ * @api public
+ */
+
+is.date = function (value) {
+  return toStr.call(value) === '[object Date]';
+};
+
+/**
+ * is.date.valid
+ * Test if `value` is a valid date.
+ *
+ * @param {Mixed} value value to test
+ * @returns {Boolean} true if `value` is a valid date, false otherwise
+ */
+is.date.valid = function (value) {
+  return is.date(value) && !isNaN(Number(value));
+};
+
+/**
+ * Test element.
+ */
+
+/**
+ * is.element
+ * Test if `value` is an html element.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an HTML Element, false otherwise
+ * @api public
+ */
+
+is.element = function (value) {
+  return value !== undefined
+    && typeof HTMLElement !== 'undefined'
+    && value instanceof HTMLElement
+    && value.nodeType === 1;
+};
+
+/**
+ * Test error.
+ */
+
+/**
+ * is.error
+ * Test if `value` is an error object.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an error object, false otherwise
+ * @api public
+ */
+
+is.error = function (value) {
+  return toStr.call(value) === '[object Error]';
+};
+
+/**
+ * Test function.
+ */
+
+/**
+ * is.fn / is.function (deprecated)
+ * Test if `value` is a function.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a function, false otherwise
+ * @api public
+ */
+
+is.fn = is['function'] = function (value) {
+  var isAlert = typeof window !== 'undefined' && value === window.alert;
+  if (isAlert) {
+    return true;
+  }
+  var str = toStr.call(value);
+  return str === '[object Function]' || str === '[object GeneratorFunction]' || str === '[object AsyncFunction]';
+};
+
+/**
+ * Test number.
+ */
+
+/**
+ * is.number
+ * Test if `value` is a number.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a number, false otherwise
+ * @api public
+ */
+
+is.number = function (value) {
+  return toStr.call(value) === '[object Number]';
+};
+
+/**
+ * is.infinite
+ * Test if `value` is positive or negative infinity.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is positive or negative Infinity, false otherwise
+ * @api public
+ */
+is.infinite = function (value) {
+  return value === Infinity || value === -Infinity;
+};
+
+/**
+ * is.decimal
+ * Test if `value` is a decimal number.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a decimal number, false otherwise
+ * @api public
+ */
+
+is.decimal = function (value) {
+  return is.number(value) && !isActualNaN(value) && !is.infinite(value) && value % 1 !== 0;
+};
+
+/**
+ * is.divisibleBy
+ * Test if `value` is divisible by `n`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} n dividend
+ * @return {Boolean} true if `value` is divisible by `n`, false otherwise
+ * @api public
+ */
+
+is.divisibleBy = function (value, n) {
+  var isDividendInfinite = is.infinite(value);
+  var isDivisorInfinite = is.infinite(n);
+  var isNonZeroNumber = is.number(value) && !isActualNaN(value) && is.number(n) && !isActualNaN(n) && n !== 0;
+  return isDividendInfinite || isDivisorInfinite || (isNonZeroNumber && value % n === 0);
+};
+
+/**
+ * is.integer
+ * Test if `value` is an integer.
+ *
+ * @param value to test
+ * @return {Boolean} true if `value` is an integer, false otherwise
+ * @api public
+ */
+
+is.integer = is['int'] = function (value) {
+  return is.number(value) && !isActualNaN(value) && value % 1 === 0;
+};
+
+/**
+ * is.maximum
+ * Test if `value` is greater than 'others' values.
+ *
+ * @param {Number} value value to test
+ * @param {Array} others values to compare with
+ * @return {Boolean} true if `value` is greater than `others` values
+ * @api public
+ */
+
+is.maximum = function (value, others) {
+  if (isActualNaN(value)) {
+    throw new TypeError('NaN is not a valid value');
+  } else if (!is.arraylike(others)) {
+    throw new TypeError('second argument must be array-like');
+  }
+  var len = others.length;
+
+  while (--len >= 0) {
+    if (value < others[len]) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+/**
+ * is.minimum
+ * Test if `value` is less than `others` values.
+ *
+ * @param {Number} value value to test
+ * @param {Array} others values to compare with
+ * @return {Boolean} true if `value` is less than `others` values
+ * @api public
+ */
+
+is.minimum = function (value, others) {
+  if (isActualNaN(value)) {
+    throw new TypeError('NaN is not a valid value');
+  } else if (!is.arraylike(others)) {
+    throw new TypeError('second argument must be array-like');
+  }
+  var len = others.length;
+
+  while (--len >= 0) {
+    if (value > others[len]) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+/**
+ * is.nan
+ * Test if `value` is not a number.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is not a number, false otherwise
+ * @api public
+ */
+
+is.nan = function (value) {
+  return !is.number(value) || value !== value;
+};
+
+/**
+ * is.even
+ * Test if `value` is an even number.
+ *
+ * @param {Number} value value to test
+ * @return {Boolean} true if `value` is an even number, false otherwise
+ * @api public
+ */
+
+is.even = function (value) {
+  return is.infinite(value) || (is.number(value) && value === value && value % 2 === 0);
+};
+
+/**
+ * is.odd
+ * Test if `value` is an odd number.
+ *
+ * @param {Number} value value to test
+ * @return {Boolean} true if `value` is an odd number, false otherwise
+ * @api public
+ */
+
+is.odd = function (value) {
+  return is.infinite(value) || (is.number(value) && value === value && value % 2 !== 0);
+};
+
+/**
+ * is.ge
+ * Test if `value` is greater than or equal to `other`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} other value to compare with
+ * @return {Boolean}
+ * @api public
+ */
+
+is.ge = function (value, other) {
+  if (isActualNaN(value) || isActualNaN(other)) {
+    throw new TypeError('NaN is not a valid value');
+  }
+  return !is.infinite(value) && !is.infinite(other) && value >= other;
+};
+
+/**
+ * is.gt
+ * Test if `value` is greater than `other`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} other value to compare with
+ * @return {Boolean}
+ * @api public
+ */
+
+is.gt = function (value, other) {
+  if (isActualNaN(value) || isActualNaN(other)) {
+    throw new TypeError('NaN is not a valid value');
+  }
+  return !is.infinite(value) && !is.infinite(other) && value > other;
+};
+
+/**
+ * is.le
+ * Test if `value` is less than or equal to `other`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} other value to compare with
+ * @return {Boolean} if 'value' is less than or equal to 'other'
+ * @api public
+ */
+
+is.le = function (value, other) {
+  if (isActualNaN(value) || isActualNaN(other)) {
+    throw new TypeError('NaN is not a valid value');
+  }
+  return !is.infinite(value) && !is.infinite(other) && value <= other;
+};
+
+/**
+ * is.lt
+ * Test if `value` is less than `other`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} other value to compare with
+ * @return {Boolean} if `value` is less than `other`
+ * @api public
+ */
+
+is.lt = function (value, other) {
+  if (isActualNaN(value) || isActualNaN(other)) {
+    throw new TypeError('NaN is not a valid value');
+  }
+  return !is.infinite(value) && !is.infinite(other) && value < other;
+};
+
+/**
+ * is.within
+ * Test if `value` is within `start` and `finish`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} start lower bound
+ * @param {Number} finish upper bound
+ * @return {Boolean} true if 'value' is is within 'start' and 'finish'
+ * @api public
+ */
+is.within = function (value, start, finish) {
+  if (isActualNaN(value) || isActualNaN(start) || isActualNaN(finish)) {
+    throw new TypeError('NaN is not a valid value');
+  } else if (!is.number(value) || !is.number(start) || !is.number(finish)) {
+    throw new TypeError('all arguments must be numbers');
+  }
+  var isAnyInfinite = is.infinite(value) || is.infinite(start) || is.infinite(finish);
+  return isAnyInfinite || (value >= start && value <= finish);
+};
+
+/**
+ * Test object.
+ */
+
+/**
+ * is.object
+ * Test if `value` is an object.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an object, false otherwise
+ * @api public
+ */
+is.object = function (value) {
+  return toStr.call(value) === '[object Object]';
+};
+
+/**
+ * is.primitive
+ * Test if `value` is a primitive.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a primitive, false otherwise
+ * @api public
+ */
+is.primitive = function isPrimitive(value) {
+  if (!value) {
+    return true;
+  }
+  if (typeof value === 'object' || is.object(value) || is.fn(value) || is.array(value)) {
+    return false;
+  }
+  return true;
+};
+
+/**
+ * is.hash
+ * Test if `value` is a hash - a plain object literal.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a hash, false otherwise
+ * @api public
+ */
+
+is.hash = function (value) {
+  return is.object(value) && value.constructor === Object && !value.nodeType && !value.setInterval;
+};
+
+/**
+ * Test regexp.
+ */
+
+/**
+ * is.regexp
+ * Test if `value` is a regular expression.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a regexp, false otherwise
+ * @api public
+ */
+
+is.regexp = function (value) {
+  return toStr.call(value) === '[object RegExp]';
+};
+
+/**
+ * Test string.
+ */
+
+/**
+ * is.string
+ * Test if `value` is a string.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if 'value' is a string, false otherwise
+ * @api public
+ */
+
+is.string = function (value) {
+  return toStr.call(value) === '[object String]';
+};
+
+/**
+ * Test base64 string.
+ */
+
+/**
+ * is.base64
+ * Test if `value` is a valid base64 encoded string.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if 'value' is a base64 encoded string, false otherwise
+ * @api public
+ */
+
+is.base64 = function (value) {
+  return is.string(value) && (!value.length || base64Regex.test(value));
+};
+
+/**
+ * Test base64 string.
+ */
+
+/**
+ * is.hex
+ * Test if `value` is a valid hex encoded string.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if 'value' is a hex encoded string, false otherwise
+ * @api public
+ */
+
+is.hex = function (value) {
+  return is.string(value) && (!value.length || hexRegex.test(value));
+};
+
+/**
+ * is.symbol
+ * Test if `value` is an ES6 Symbol
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a Symbol, false otherise
+ * @api public
+ */
+
+is.symbol = function (value) {
+  return typeof Symbol === 'function' && toStr.call(value) === '[object Symbol]' && typeof symbolValueOf.call(value) === 'symbol';
+};
+
+module.exports = is;
+
+},{}],64:[function(require,module,exports){
 /*!
  * JavaScript Cookie v2.1.4
  * https://github.com/js-cookie/js-cookie
@@ -13027,7 +13900,7 @@ function extend() {
 	return init(function () {});
 }));
 
-},{}],63:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 (function (global){
 /**
  * lodash (Custom Build) <https://lodash.com/>
@@ -13470,7 +14343,7 @@ function toNumber(value) {
 module.exports = throttle;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],64:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 (function(){
   var crypt = require('crypt'),
       utf8 = require('charenc').utf8,
@@ -13632,7 +14505,7 @@ module.exports = throttle;
 
 })();
 
-},{"charenc":65,"crypt":66,"is-buffer":67}],65:[function(require,module,exports){
+},{"charenc":67,"crypt":68,"is-buffer":69}],67:[function(require,module,exports){
 var charenc = {
   // UTF-8 encoding
   utf8: {
@@ -13667,7 +14540,7 @@ var charenc = {
 
 module.exports = charenc;
 
-},{}],66:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 (function() {
   var base64map
       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
@@ -13765,9 +14638,9 @@ module.exports = charenc;
   module.exports = crypt;
 })();
 
-},{}],67:[function(require,module,exports){
-arguments[4][32][0].apply(exports,arguments)
-},{"dup":32}],68:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
+arguments[4][33][0].apply(exports,arguments)
+},{"dup":33}],70:[function(require,module,exports){
 /*!
  * mustache.js - Logic-less {{mustache}} templates with JavaScript
  * http://github.com/janl/mustache.js
@@ -14399,7 +15272,7 @@ arguments[4][32][0].apply(exports,arguments)
   return mustache;
 }));
 
-},{}],69:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 /*! nouislider - 8.5.1 - 2016-04-24 16:00:29 */
 
 (function (factory) {
@@ -16359,161 +17232,163 @@ function closure ( target, options, originalOptions ){
 	};
 
 }));
-},{}],70:[function(require,module,exports){
-// Load modules
+},{}],72:[function(require,module,exports){
+'use strict';
 
-var Stringify = require('./stringify');
-var Parse = require('./parse');
-
-
-// Declare internals
-
-var internals = {};
-
+var replace = String.prototype.replace;
+var percentTwenties = /%20/g;
 
 module.exports = {
-    stringify: Stringify,
-    parse: Parse
+    'default': 'RFC3986',
+    formatters: {
+        RFC1738: function (value) {
+            return replace.call(value, percentTwenties, '+');
+        },
+        RFC3986: function (value) {
+            return value;
+        }
+    },
+    RFC1738: 'RFC1738',
+    RFC3986: 'RFC3986'
 };
 
-},{"./parse":71,"./stringify":72}],71:[function(require,module,exports){
-// Load modules
+},{}],73:[function(require,module,exports){
+'use strict';
 
-var Utils = require('./utils');
+var stringify = require('./stringify');
+var parse = require('./parse');
+var formats = require('./formats');
 
+module.exports = {
+    formats: formats,
+    parse: parse,
+    stringify: stringify
+};
 
-// Declare internals
+},{"./formats":72,"./parse":74,"./stringify":75}],74:[function(require,module,exports){
+'use strict';
 
-var internals = {
+var utils = require('./utils');
+
+var has = Object.prototype.hasOwnProperty;
+
+var defaults = {
+    allowDots: false,
+    allowPrototypes: false,
+    arrayLimit: 20,
+    decoder: utils.decode,
     delimiter: '&',
     depth: 5,
-    arrayLimit: 20,
     parameterLimit: 1000,
-    strictNullHandling: false,
     plainObjects: false,
-    allowPrototypes: false
+    strictNullHandling: false
 };
 
-
-internals.parseValues = function (str, options) {
-
+var parseValues = function parseQueryStringValues(str, options) {
     var obj = {};
-    var parts = str.split(options.delimiter, options.parameterLimit === Infinity ? undefined : options.parameterLimit);
+    var cleanStr = options.ignoreQueryPrefix ? str.replace(/^\?/, '') : str;
+    var limit = options.parameterLimit === Infinity ? undefined : options.parameterLimit;
+    var parts = cleanStr.split(options.delimiter, limit);
 
-    for (var i = 0, il = parts.length; i < il; ++i) {
+    for (var i = 0; i < parts.length; ++i) {
         var part = parts[i];
-        var pos = part.indexOf(']=') === -1 ? part.indexOf('=') : part.indexOf(']=') + 1;
 
+        var bracketEqualsPos = part.indexOf(']=');
+        var pos = bracketEqualsPos === -1 ? part.indexOf('=') : bracketEqualsPos + 1;
+
+        var key, val;
         if (pos === -1) {
-            obj[Utils.decode(part)] = '';
-
-            if (options.strictNullHandling) {
-                obj[Utils.decode(part)] = null;
-            }
+            key = options.decoder(part, defaults.decoder);
+            val = options.strictNullHandling ? null : '';
+        } else {
+            key = options.decoder(part.slice(0, pos), defaults.decoder);
+            val = options.decoder(part.slice(pos + 1), defaults.decoder);
         }
-        else {
-            var key = Utils.decode(part.slice(0, pos));
-            var val = Utils.decode(part.slice(pos + 1));
-
-            if (!Object.prototype.hasOwnProperty.call(obj, key)) {
-                obj[key] = val;
-            }
-            else {
-                obj[key] = [].concat(obj[key]).concat(val);
-            }
+        if (has.call(obj, key)) {
+            obj[key] = [].concat(obj[key]).concat(val);
+        } else {
+            obj[key] = val;
         }
     }
 
     return obj;
 };
 
+var parseObject = function (chain, val, options) {
+    var leaf = val;
 
-internals.parseObject = function (chain, val, options) {
+    for (var i = chain.length - 1; i >= 0; --i) {
+        var obj;
+        var root = chain[i];
 
-    if (!chain.length) {
-        return val;
-    }
-
-    var root = chain.shift();
-
-    var obj;
-    if (root === '[]') {
-        obj = [];
-        obj = obj.concat(internals.parseObject(chain, val, options));
-    }
-    else {
-        obj = options.plainObjects ? Object.create(null) : {};
-        var cleanRoot = root[0] === '[' && root[root.length - 1] === ']' ? root.slice(1, root.length - 1) : root;
-        var index = parseInt(cleanRoot, 10);
-        var indexString = '' + index;
-        if (!isNaN(index) &&
-            root !== cleanRoot &&
-            indexString === cleanRoot &&
-            index >= 0 &&
-            (options.parseArrays &&
-             index <= options.arrayLimit)) {
-
+        if (root === '[]') {
             obj = [];
-            obj[index] = internals.parseObject(chain, val, options);
+            obj = obj.concat(leaf);
+        } else {
+            obj = options.plainObjects ? Object.create(null) : {};
+            var cleanRoot = root.charAt(0) === '[' && root.charAt(root.length - 1) === ']' ? root.slice(1, -1) : root;
+            var index = parseInt(cleanRoot, 10);
+            if (
+                !isNaN(index)
+                && root !== cleanRoot
+                && String(index) === cleanRoot
+                && index >= 0
+                && (options.parseArrays && index <= options.arrayLimit)
+            ) {
+                obj = [];
+                obj[index] = leaf;
+            } else {
+                obj[cleanRoot] = leaf;
+            }
         }
-        else {
-            obj[cleanRoot] = internals.parseObject(chain, val, options);
-        }
+
+        leaf = obj;
     }
 
-    return obj;
+    return leaf;
 };
 
-
-internals.parseKeys = function (key, val, options) {
-
-    if (!key) {
+var parseKeys = function parseQueryStringKeys(givenKey, val, options) {
+    if (!givenKey) {
         return;
     }
 
     // Transform dot notation to bracket notation
-
-    if (options.allowDots) {
-        key = key.replace(/\.([^\.\[]+)/g, '[$1]');
-    }
+    var key = options.allowDots ? givenKey.replace(/\.([^.[]+)/g, '[$1]') : givenKey;
 
     // The regex chunks
 
-    var parent = /^([^\[\]]*)/;
-    var child = /(\[[^\[\]]*\])/g;
+    var brackets = /(\[[^[\]]*])/;
+    var child = /(\[[^[\]]*])/g;
 
     // Get the parent
 
-    var segment = parent.exec(key);
+    var segment = brackets.exec(key);
+    var parent = segment ? key.slice(0, segment.index) : key;
 
     // Stash the parent if it exists
 
     var keys = [];
-    if (segment[1]) {
+    if (parent) {
         // If we aren't using plain objects, optionally prefix keys
         // that would overwrite object prototype properties
-        if (!options.plainObjects &&
-            Object.prototype.hasOwnProperty(segment[1])) {
-
+        if (!options.plainObjects && has.call(Object.prototype, parent)) {
             if (!options.allowPrototypes) {
                 return;
             }
         }
 
-        keys.push(segment[1]);
+        keys.push(parent);
     }
 
     // Loop through children appending to the array until we hit depth
 
     var i = 0;
     while ((segment = child.exec(key)) !== null && i < options.depth) {
-
-        ++i;
-        if (!options.plainObjects &&
-            Object.prototype.hasOwnProperty(segment[1].replace(/\[|\]/g, ''))) {
-
+        i += 1;
+        if (!options.plainObjects && has.call(Object.prototype, segment[1].slice(1, -1))) {
             if (!options.allowPrototypes) {
-                continue;
+                return;
             }
         }
         keys.push(segment[1]);
@@ -16525,97 +17400,112 @@ internals.parseKeys = function (key, val, options) {
         keys.push('[' + key.slice(segment.index) + ']');
     }
 
-    return internals.parseObject(keys, val, options);
+    return parseObject(keys, val, options);
 };
 
+module.exports = function (str, opts) {
+    var options = opts ? utils.assign({}, opts) : {};
 
-module.exports = function (str, options) {
+    if (options.decoder !== null && options.decoder !== undefined && typeof options.decoder !== 'function') {
+        throw new TypeError('Decoder has to be a function.');
+    }
 
-    options = options || {};
-    options.delimiter = typeof options.delimiter === 'string' || Utils.isRegExp(options.delimiter) ? options.delimiter : internals.delimiter;
-    options.depth = typeof options.depth === 'number' ? options.depth : internals.depth;
-    options.arrayLimit = typeof options.arrayLimit === 'number' ? options.arrayLimit : internals.arrayLimit;
+    options.ignoreQueryPrefix = options.ignoreQueryPrefix === true;
+    options.delimiter = typeof options.delimiter === 'string' || utils.isRegExp(options.delimiter) ? options.delimiter : defaults.delimiter;
+    options.depth = typeof options.depth === 'number' ? options.depth : defaults.depth;
+    options.arrayLimit = typeof options.arrayLimit === 'number' ? options.arrayLimit : defaults.arrayLimit;
     options.parseArrays = options.parseArrays !== false;
-    options.allowDots = options.allowDots !== false;
-    options.plainObjects = typeof options.plainObjects === 'boolean' ? options.plainObjects : internals.plainObjects;
-    options.allowPrototypes = typeof options.allowPrototypes === 'boolean' ? options.allowPrototypes : internals.allowPrototypes;
-    options.parameterLimit = typeof options.parameterLimit === 'number' ? options.parameterLimit : internals.parameterLimit;
-    options.strictNullHandling = typeof options.strictNullHandling === 'boolean' ? options.strictNullHandling : internals.strictNullHandling;
+    options.decoder = typeof options.decoder === 'function' ? options.decoder : defaults.decoder;
+    options.allowDots = typeof options.allowDots === 'boolean' ? options.allowDots : defaults.allowDots;
+    options.plainObjects = typeof options.plainObjects === 'boolean' ? options.plainObjects : defaults.plainObjects;
+    options.allowPrototypes = typeof options.allowPrototypes === 'boolean' ? options.allowPrototypes : defaults.allowPrototypes;
+    options.parameterLimit = typeof options.parameterLimit === 'number' ? options.parameterLimit : defaults.parameterLimit;
+    options.strictNullHandling = typeof options.strictNullHandling === 'boolean' ? options.strictNullHandling : defaults.strictNullHandling;
 
-    if (str === '' ||
-        str === null ||
-        typeof str === 'undefined') {
-
+    if (str === '' || str === null || typeof str === 'undefined') {
         return options.plainObjects ? Object.create(null) : {};
     }
 
-    var tempObj = typeof str === 'string' ? internals.parseValues(str, options) : str;
+    var tempObj = typeof str === 'string' ? parseValues(str, options) : str;
     var obj = options.plainObjects ? Object.create(null) : {};
 
     // Iterate over the keys and setup the new object
 
     var keys = Object.keys(tempObj);
-    for (var i = 0, il = keys.length; i < il; ++i) {
+    for (var i = 0; i < keys.length; ++i) {
         var key = keys[i];
-        var newObj = internals.parseKeys(key, tempObj[key], options);
-        obj = Utils.merge(obj, newObj, options);
+        var newObj = parseKeys(key, tempObj[key], options);
+        obj = utils.merge(obj, newObj, options);
     }
 
-    return Utils.compact(obj);
+    return utils.compact(obj);
 };
 
-},{"./utils":73}],72:[function(require,module,exports){
-// Load modules
+},{"./utils":76}],75:[function(require,module,exports){
+'use strict';
 
-var Utils = require('./utils');
+var utils = require('./utils');
+var formats = require('./formats');
 
-
-// Declare internals
-
-var internals = {
-    delimiter: '&',
-    arrayPrefixGenerators: {
-        brackets: function (prefix, key) {
-
-            return prefix + '[]';
-        },
-        indices: function (prefix, key) {
-
-            return prefix + '[' + key + ']';
-        },
-        repeat: function (prefix, key) {
-
-            return prefix;
-        }
+var arrayPrefixGenerators = {
+    brackets: function brackets(prefix) { // eslint-disable-line func-name-matching
+        return prefix + '[]';
     },
+    indices: function indices(prefix, key) { // eslint-disable-line func-name-matching
+        return prefix + '[' + key + ']';
+    },
+    repeat: function repeat(prefix) { // eslint-disable-line func-name-matching
+        return prefix;
+    }
+};
+
+var toISO = Date.prototype.toISOString;
+
+var defaults = {
+    delimiter: '&',
+    encode: true,
+    encoder: utils.encode,
+    encodeValuesOnly: false,
+    serializeDate: function serializeDate(date) { // eslint-disable-line func-name-matching
+        return toISO.call(date);
+    },
+    skipNulls: false,
     strictNullHandling: false
 };
 
-
-internals.stringify = function (obj, prefix, generateArrayPrefix, strictNullHandling, filter) {
-
+var stringify = function stringify( // eslint-disable-line func-name-matching
+    object,
+    prefix,
+    generateArrayPrefix,
+    strictNullHandling,
+    skipNulls,
+    encoder,
+    filter,
+    sort,
+    allowDots,
+    serializeDate,
+    formatter,
+    encodeValuesOnly
+) {
+    var obj = object;
     if (typeof filter === 'function') {
         obj = filter(prefix, obj);
-    }
-    else if (Utils.isBuffer(obj)) {
-        obj = obj.toString();
-    }
-    else if (obj instanceof Date) {
-        obj = obj.toISOString();
-    }
-    else if (obj === null) {
+    } else if (obj instanceof Date) {
+        obj = serializeDate(obj);
+    } else if (obj === null) {
         if (strictNullHandling) {
-            return Utils.encode(prefix);
+            return encoder && !encodeValuesOnly ? encoder(prefix, defaults.encoder) : prefix;
         }
 
         obj = '';
     }
 
-    if (typeof obj === 'string' ||
-        typeof obj === 'number' ||
-        typeof obj === 'boolean') {
-
-        return [Utils.encode(prefix) + '=' + Utils.encode(obj)];
+    if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean' || utils.isBuffer(obj)) {
+        if (encoder) {
+            var keyValue = encodeValuesOnly ? prefix : encoder(prefix, defaults.encoder);
+            return [formatter(keyValue) + '=' + formatter(encoder(obj, defaults.encoder))];
+        }
+        return [formatter(prefix) + '=' + formatter(String(obj))];
     }
 
     var values = [];
@@ -16624,88 +17514,186 @@ internals.stringify = function (obj, prefix, generateArrayPrefix, strictNullHand
         return values;
     }
 
-    var objKeys = Array.isArray(filter) ? filter : Object.keys(obj);
-    for (var i = 0, il = objKeys.length; i < il; ++i) {
+    var objKeys;
+    if (Array.isArray(filter)) {
+        objKeys = filter;
+    } else {
+        var keys = Object.keys(obj);
+        objKeys = sort ? keys.sort(sort) : keys;
+    }
+
+    for (var i = 0; i < objKeys.length; ++i) {
         var key = objKeys[i];
 
-        if (Array.isArray(obj)) {
-            values = values.concat(internals.stringify(obj[key], generateArrayPrefix(prefix, key), generateArrayPrefix, strictNullHandling, filter));
+        if (skipNulls && obj[key] === null) {
+            continue;
         }
-        else {
-            values = values.concat(internals.stringify(obj[key], prefix + '[' + key + ']', generateArrayPrefix, strictNullHandling, filter));
+
+        if (Array.isArray(obj)) {
+            values = values.concat(stringify(
+                obj[key],
+                generateArrayPrefix(prefix, key),
+                generateArrayPrefix,
+                strictNullHandling,
+                skipNulls,
+                encoder,
+                filter,
+                sort,
+                allowDots,
+                serializeDate,
+                formatter,
+                encodeValuesOnly
+            ));
+        } else {
+            values = values.concat(stringify(
+                obj[key],
+                prefix + (allowDots ? '.' + key : '[' + key + ']'),
+                generateArrayPrefix,
+                strictNullHandling,
+                skipNulls,
+                encoder,
+                filter,
+                sort,
+                allowDots,
+                serializeDate,
+                formatter,
+                encodeValuesOnly
+            ));
         }
     }
 
     return values;
 };
 
+module.exports = function (object, opts) {
+    var obj = object;
+    var options = opts ? utils.assign({}, opts) : {};
 
-module.exports = function (obj, options) {
+    if (options.encoder !== null && options.encoder !== undefined && typeof options.encoder !== 'function') {
+        throw new TypeError('Encoder has to be a function.');
+    }
 
-    options = options || {};
-    var delimiter = typeof options.delimiter === 'undefined' ? internals.delimiter : options.delimiter;
-    var strictNullHandling = typeof options.strictNullHandling === 'boolean' ? options.strictNullHandling : internals.strictNullHandling;
+    var delimiter = typeof options.delimiter === 'undefined' ? defaults.delimiter : options.delimiter;
+    var strictNullHandling = typeof options.strictNullHandling === 'boolean' ? options.strictNullHandling : defaults.strictNullHandling;
+    var skipNulls = typeof options.skipNulls === 'boolean' ? options.skipNulls : defaults.skipNulls;
+    var encode = typeof options.encode === 'boolean' ? options.encode : defaults.encode;
+    var encoder = typeof options.encoder === 'function' ? options.encoder : defaults.encoder;
+    var sort = typeof options.sort === 'function' ? options.sort : null;
+    var allowDots = typeof options.allowDots === 'undefined' ? false : options.allowDots;
+    var serializeDate = typeof options.serializeDate === 'function' ? options.serializeDate : defaults.serializeDate;
+    var encodeValuesOnly = typeof options.encodeValuesOnly === 'boolean' ? options.encodeValuesOnly : defaults.encodeValuesOnly;
+    if (typeof options.format === 'undefined') {
+        options.format = formats['default'];
+    } else if (!Object.prototype.hasOwnProperty.call(formats.formatters, options.format)) {
+        throw new TypeError('Unknown format option provided.');
+    }
+    var formatter = formats.formatters[options.format];
     var objKeys;
     var filter;
+
     if (typeof options.filter === 'function') {
         filter = options.filter;
         obj = filter('', obj);
-    }
-    else if (Array.isArray(options.filter)) {
-        objKeys = filter = options.filter;
+    } else if (Array.isArray(options.filter)) {
+        filter = options.filter;
+        objKeys = filter;
     }
 
     var keys = [];
 
-    if (typeof obj !== 'object' ||
-        obj === null) {
-
+    if (typeof obj !== 'object' || obj === null) {
         return '';
     }
 
     var arrayFormat;
-    if (options.arrayFormat in internals.arrayPrefixGenerators) {
+    if (options.arrayFormat in arrayPrefixGenerators) {
         arrayFormat = options.arrayFormat;
-    }
-    else if ('indices' in options) {
+    } else if ('indices' in options) {
         arrayFormat = options.indices ? 'indices' : 'repeat';
-    }
-    else {
+    } else {
         arrayFormat = 'indices';
     }
 
-    var generateArrayPrefix = internals.arrayPrefixGenerators[arrayFormat];
+    var generateArrayPrefix = arrayPrefixGenerators[arrayFormat];
 
     if (!objKeys) {
         objKeys = Object.keys(obj);
     }
-    for (var i = 0, il = objKeys.length; i < il; ++i) {
-        var key = objKeys[i];
-        keys = keys.concat(internals.stringify(obj[key], key, generateArrayPrefix, strictNullHandling, filter));
+
+    if (sort) {
+        objKeys.sort(sort);
     }
 
-    return keys.join(delimiter);
+    for (var i = 0; i < objKeys.length; ++i) {
+        var key = objKeys[i];
+
+        if (skipNulls && obj[key] === null) {
+            continue;
+        }
+
+        keys = keys.concat(stringify(
+            obj[key],
+            key,
+            generateArrayPrefix,
+            strictNullHandling,
+            skipNulls,
+            encode ? encoder : null,
+            filter,
+            sort,
+            allowDots,
+            serializeDate,
+            formatter,
+            encodeValuesOnly
+        ));
+    }
+
+    var joined = keys.join(delimiter);
+    var prefix = options.addQueryPrefix === true ? '?' : '';
+
+    return joined.length > 0 ? prefix + joined : '';
 };
 
-},{"./utils":73}],73:[function(require,module,exports){
-// Load modules
+},{"./formats":72,"./utils":76}],76:[function(require,module,exports){
+'use strict';
 
+var has = Object.prototype.hasOwnProperty;
 
-// Declare internals
+var hexTable = (function () {
+    var array = [];
+    for (var i = 0; i < 256; ++i) {
+        array.push('%' + ((i < 16 ? '0' : '') + i.toString(16)).toUpperCase());
+    }
 
-var internals = {};
-internals.hexTable = new Array(256);
-for (var h = 0; h < 256; ++h) {
-    internals.hexTable[h] = '%' + ((h < 16 ? '0' : '') + h.toString(16)).toUpperCase();
-}
+    return array;
+}());
 
+var compactQueue = function compactQueue(queue) {
+    var obj;
 
-exports.arrayToObject = function (source, options) {
+    while (queue.length) {
+        var item = queue.pop();
+        obj = item.obj[item.prop];
 
-    var obj = options.plainObjects ? Object.create(null) : {};
-    for (var i = 0, il = source.length; i < il; ++i) {
+        if (Array.isArray(obj)) {
+            var compacted = [];
+
+            for (var j = 0; j < obj.length; ++j) {
+                if (typeof obj[j] !== 'undefined') {
+                    compacted.push(obj[j]);
+                }
+            }
+
+            item.obj[item.prop] = compacted;
+        }
+    }
+
+    return obj;
+};
+
+exports.arrayToObject = function arrayToObject(source, options) {
+    var obj = options && options.plainObjects ? Object.create(null) : {};
+    for (var i = 0; i < source.length; ++i) {
         if (typeof source[i] !== 'undefined') {
-
             obj[i] = source[i];
         }
     }
@@ -16713,9 +17701,7 @@ exports.arrayToObject = function (source, options) {
     return obj;
 };
 
-
-exports.merge = function (target, source, options) {
-
+exports.merge = function merge(target, source, options) {
     if (!source) {
         return target;
     }
@@ -16723,47 +17709,61 @@ exports.merge = function (target, source, options) {
     if (typeof source !== 'object') {
         if (Array.isArray(target)) {
             target.push(source);
-        }
-        else if (typeof target === 'object') {
-            target[source] = true;
-        }
-        else {
-            target = [target, source];
+        } else if (typeof target === 'object') {
+            if (options.plainObjects || options.allowPrototypes || !has.call(Object.prototype, source)) {
+                target[source] = true;
+            }
+        } else {
+            return [target, source];
         }
 
         return target;
     }
 
     if (typeof target !== 'object') {
-        target = [target].concat(source);
+        return [target].concat(source);
+    }
+
+    var mergeTarget = target;
+    if (Array.isArray(target) && !Array.isArray(source)) {
+        mergeTarget = exports.arrayToObject(target, options);
+    }
+
+    if (Array.isArray(target) && Array.isArray(source)) {
+        source.forEach(function (item, i) {
+            if (has.call(target, i)) {
+                if (target[i] && typeof target[i] === 'object') {
+                    target[i] = exports.merge(target[i], item, options);
+                } else {
+                    target.push(item);
+                }
+            } else {
+                target[i] = item;
+            }
+        });
         return target;
     }
 
-    if (Array.isArray(target) &&
-        !Array.isArray(source)) {
-
-        target = exports.arrayToObject(target, options);
-    }
-
-    var keys = Object.keys(source);
-    for (var k = 0, kl = keys.length; k < kl; ++k) {
-        var key = keys[k];
+    return Object.keys(source).reduce(function (acc, key) {
         var value = source[key];
 
-        if (!Object.prototype.hasOwnProperty.call(target, key)) {
-            target[key] = value;
+        if (has.call(acc, key)) {
+            acc[key] = exports.merge(acc[key], value, options);
+        } else {
+            acc[key] = value;
         }
-        else {
-            target[key] = exports.merge(target[key], value, options);
-        }
-    }
-
-    return target;
+        return acc;
+    }, mergeTarget);
 };
 
+exports.assign = function assignSingleSource(target, source) {
+    return Object.keys(source).reduce(function (acc, key) {
+        acc[key] = source[key];
+        return acc;
+    }, target);
+};
 
 exports.decode = function (str) {
-
     try {
         return decodeURIComponent(str.replace(/\+/g, ' '));
     } catch (e) {
@@ -16771,112 +17771,90 @@ exports.decode = function (str) {
     }
 };
 
-exports.encode = function (str) {
-
+exports.encode = function encode(str) {
     // This code was originally written by Brian White (mscdex) for the io.js core querystring library.
     // It has been adapted here for stricter adherence to RFC 3986
     if (str.length === 0) {
         return str;
     }
 
-    if (typeof str !== 'string') {
-        str = '' + str;
-    }
+    var string = typeof str === 'string' ? str : String(str);
 
     var out = '';
-    for (var i = 0, il = str.length; i < il; ++i) {
-        var c = str.charCodeAt(i);
+    for (var i = 0; i < string.length; ++i) {
+        var c = string.charCodeAt(i);
 
-        if (c === 0x2D || // -
-            c === 0x2E || // .
-            c === 0x5F || // _
-            c === 0x7E || // ~
-            (c >= 0x30 && c <= 0x39) || // 0-9
-            (c >= 0x41 && c <= 0x5A) || // a-z
-            (c >= 0x61 && c <= 0x7A)) { // A-Z
-
-            out += str[i];
+        if (
+            c === 0x2D // -
+            || c === 0x2E // .
+            || c === 0x5F // _
+            || c === 0x7E // ~
+            || (c >= 0x30 && c <= 0x39) // 0-9
+            || (c >= 0x41 && c <= 0x5A) // a-z
+            || (c >= 0x61 && c <= 0x7A) // A-Z
+        ) {
+            out += string.charAt(i);
             continue;
         }
 
         if (c < 0x80) {
-            out += internals.hexTable[c];
+            out = out + hexTable[c];
             continue;
         }
 
         if (c < 0x800) {
-            out += internals.hexTable[0xC0 | (c >> 6)] + internals.hexTable[0x80 | (c & 0x3F)];
+            out = out + (hexTable[0xC0 | (c >> 6)] + hexTable[0x80 | (c & 0x3F)]);
             continue;
         }
 
         if (c < 0xD800 || c >= 0xE000) {
-            out += internals.hexTable[0xE0 | (c >> 12)] + internals.hexTable[0x80 | ((c >> 6) & 0x3F)] + internals.hexTable[0x80 | (c & 0x3F)];
+            out = out + (hexTable[0xE0 | (c >> 12)] + hexTable[0x80 | ((c >> 6) & 0x3F)] + hexTable[0x80 | (c & 0x3F)]);
             continue;
         }
 
-        ++i;
-        c = 0x10000 + (((c & 0x3FF) << 10) | (str.charCodeAt(i) & 0x3FF));
-        out += internals.hexTable[0xF0 | (c >> 18)] + internals.hexTable[0x80 | ((c >> 12) & 0x3F)] + internals.hexTable[0x80 | ((c >> 6) & 0x3F)] + internals.hexTable[0x80 | (c & 0x3F)];
+        i += 1;
+        c = 0x10000 + (((c & 0x3FF) << 10) | (string.charCodeAt(i) & 0x3FF));
+        out += hexTable[0xF0 | (c >> 18)]
+            + hexTable[0x80 | ((c >> 12) & 0x3F)]
+            + hexTable[0x80 | ((c >> 6) & 0x3F)]
+            + hexTable[0x80 | (c & 0x3F)];
     }
 
     return out;
 };
 
-exports.compact = function (obj, refs) {
+exports.compact = function compact(value) {
+    var queue = [{ obj: { o: value }, prop: 'o' }];
+    var refs = [];
 
-    if (typeof obj !== 'object' ||
-        obj === null) {
+    for (var i = 0; i < queue.length; ++i) {
+        var item = queue[i];
+        var obj = item.obj[item.prop];
 
-        return obj;
-    }
-
-    refs = refs || [];
-    var lookup = refs.indexOf(obj);
-    if (lookup !== -1) {
-        return refs[lookup];
-    }
-
-    refs.push(obj);
-
-    if (Array.isArray(obj)) {
-        var compacted = [];
-
-        for (var i = 0, il = obj.length; i < il; ++i) {
-            if (typeof obj[i] !== 'undefined') {
-                compacted.push(obj[i]);
+        var keys = Object.keys(obj);
+        for (var j = 0; j < keys.length; ++j) {
+            var key = keys[j];
+            var val = obj[key];
+            if (typeof val === 'object' && val !== null && refs.indexOf(val) === -1) {
+                queue.push({ obj: obj, prop: key });
+                refs.push(val);
             }
         }
-
-        return compacted;
     }
 
-    var keys = Object.keys(obj);
-    for (i = 0, il = keys.length; i < il; ++i) {
-        var key = keys[i];
-        obj[key] = exports.compact(obj[key], refs);
-    }
-
-    return obj;
+    return compactQueue(queue);
 };
 
-
-exports.isRegExp = function (obj) {
-
+exports.isRegExp = function isRegExp(obj) {
     return Object.prototype.toString.call(obj) === '[object RegExp]';
 };
 
-
-exports.isBuffer = function (obj) {
-
-    if (obj === null ||
-        typeof obj === 'undefined') {
-
+exports.isBuffer = function isBuffer(obj) {
+    if (obj === null || typeof obj === 'undefined') {
         return false;
     }
 
-    return !!(obj.constructor &&
-              obj.constructor.isBuffer &&
-              obj.constructor.isBuffer(obj));
+    return !!(obj.constructor && obj.constructor.isBuffer && obj.constructor.isBuffer(obj));
 };
 
 },{}]},{},[3])(3)

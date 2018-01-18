@@ -1,0 +1,101 @@
+* {
+  box-sizing: border-box;
+  font-family: -apple-system, system-ui, sans-serif;
+}
+
+html, body, input {
+  font-size: 16px;
+}
+
+body {
+  margin: 0;
+  padding: 1rem;
+}
+
+textarea {
+  height: 150px;
+}
+
+.page {
+  max-width: 960px;
+}
+.example {
+  margin-bottom: 4rem;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: .5rem;
+  border: 1px solid #ddd;
+}
+
+pre {
+  font-family: monospace;
+  font-size: 12px;
+  height: 14px;
+}
+
+.widget {
+  margin: 0 0 1rem 0;
+}
+
+.widget:last-child {
+  margin-bottom: 0;
+}
+
+.df-results {
+  height: 250px;
+  border: 1px solid #ddd;
+}
+
+.df-results__header {
+  padding: .5rem;
+  border-bottom: 1px solid #ddd;
+  background: #ddd;
+  font-style: 12px;
+  font-weight: bold;
+}
+
+.resultsX {
+  box-sizing: content-box;
+  height: 100px;
+  border: 10px solid #ddd;
+  background-color: #ddd;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.resultsX a {
+  display: block;
+  flex: 0 0 auto;
+  width: 100px;
+  height: 100px;
+  margin-left: 10px;
+  overflow: hidden;
+  white-space: normal;
+  vertical-align: top;
+  background-color: #333;
+  color: white;
+  font-size: 11px;
+}
+
+.resultsX a:first-child {
+  margin-left: 0;
+}
+
+.row {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.col {
+  flex: 0 0 50%;
+  padding: 0 5px 0 0;
+}
+
+.col + .col {
+  padding: 0 0 0 5px;
+}

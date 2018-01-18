@@ -1,13 +1,8 @@
 /* RESULTS AND SCROLL */
 .df-results {
-  -webkit-box-flex: 1;
-  -webkit-flex: 1;
-  -ms-flex: 1;
-  flex: 1;
   -webkit-overflow-scrolling: touch;
   overflow-x: hidden;
   overflow-y: auto;
-  height: 60%;
 }
 
 .df-results, .df-results * {
@@ -20,37 +15,114 @@
   margin: 0;
 }
 
+.df-card {
+  display: block;
+  cursor: pointer;
+  padding: .5rem;
+  text-decoration: none;
+  color: inherit;
+  border-bottom: 1px solid #ddd;
+}
+
+.df-card:hover {
+  background-color: #eee;
+}
+
+.df-card:last-child {
+  border-bottom-width: 0;
+}
+
 /* FACETS PANEL */
+.df-panel {
+  margin: 0 0 1rem 0;
+  border: 1px solid #ddd;
+}
+
 .df-panel, .df-panel * {
   box-sizing: border-box;
 }
 
-.df-panel + .df-panel {
-  margin-top: 8px;
+.df-panel:last-child {
+  margin-bottom: 0;
 }
 
-.df-panel__title {
+.df-panel__label {
   display: block;
-  padding: 8px;
+  padding: .5rem;
   margin: 0;
-  background: no-repeat right 8px center;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%20%20%3Cg%20stroke%3D%22none%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M10%207L3%207%203%206%2010%206%2010%207%2010%207Z%22%20fill%3D%22%23000000%22/%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M0%200L12%200%2012%2012%200%2012%200%200Z%22/%3E%0A%20%20%20%20%3C/g%3E%0A%3C/svg%3E%0A");
-  max-height: 30px;
+  border-bottom: 1px solid #ddd;
 }
 
 .df-panel__content {
-  padding: 8px;
+  padding: .5rem;
 }
 
-.df-panel__content ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.df-panel[data-collapse] .df-panel__label {
+  background: no-repeat right .5rem center;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%20%20%3Cg%20stroke%3D%22none%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M10%207L3%207%203%206%2010%206%2010%207%2010%207Z%22%20fill%3D%22%23000000%22/%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M0%200L12%200%2012%2012%200%2012%200%200Z%22/%3E%0A%20%20%20%20%3C/g%3E%0A%3C/svg%3E%0A");
+  cursor: pointer;
+}
+
+.df-panel[data-collapse="true"] .df-panel__label {
+  border-bottom-width: 0;
+}
+
+.df-panel[data-collapse="true"] .df-panel__content {
+  display: none;
+}
+
+.df-term {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  color: inherit;
+  cursor: pointer;
+  margin: 0 0 .5rem 0;
+}
+
+.df-term:last-child {
+  margin-bottom: 0;
+}
+
+.df-term__value {
+  flex: 1 1 auto;
+}
+
+.df-term__count {
+  flex: 0 0 auto;
+}
+
+.df-term:hover .df-term__value {
+  text-decoration: underline;
+}
+
+.df-term[data-selected] {
+  font-weight: bold;
+}
+
+:not([data-view-extra-content]) > .df-term[data-extra-content]:not([data-selected]) {
+  display: none;
+}
+
+button[data-toggle-extra-content] {
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 .5rem 0;
+  padding: .5rem;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  background-color: #f0f0f0;
+}
+
+button[data-toggle-extra-content]:last-child {
+  margin-bottom: 0;
 }
 
 /* THIRD PARTY COMPONENTS */
 .df-slider {
   padding: 40px 10px;
+  overflow-y: hidden;
 }
 
 .df-slider, .df-slider * {
@@ -61,8 +133,7 @@
  * These styles are required for noUiSlider to function.
  * You don't need to change these rules to apply your design.
  */
-.df-slider .noUi-target,
-.df-slider .noUi-target * {
+.noUi-target, .noUi-target * {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -ms-touch-action: none;
@@ -74,12 +145,12 @@
   box-sizing: border-box;
 }
 
-.df-slider .noUi-target {
+.noUi-target {
   position: relative;
   direction: ltr;
 }
 
-.df-slider .noUi-base {
+.noUi-base {
   width: 100%;
   height: 100%;
   position: relative;
@@ -87,7 +158,7 @@
   /* Fix 401 */
 }
 
-.df-slider .noUi-origin {
+.noUi-origin {
   position: absolute;
   right: 0;
   top: 0;
@@ -95,53 +166,52 @@
   bottom: 0;
 }
 
-.df-slider .noUi-handle {
+.noUi-handle {
   position: relative;
   z-index: 1;
 }
 
-.df-slider .noUi-stacking .noUi-handle {
+.noUi-stacking .noUi-handle {
   /* This class is applied to the lower origin when
    its values is > 50%. */
   z-index: 10;
 }
 
-.df-slider .noUi-state-tap .noUi-origin {
+.noUi-state-tap .noUi-origin {
   -webkit-transition: left 0.3s, top 0.3s;
   transition: left 0.3s, top 0.3s;
 }
 
-.df-slider .noUi-state-drag * {
+.noUi-state-drag * {
   cursor: inherit !important;
 }
 
 /* Painting and performance;
  * Browsers can paint handles in their own layer.
  */
-.df-slider .noUi-base,
-.df-slider .noUi-handle {
+.noUi-base, .noUi-handle {
   -webkit-transform: translate3d(0, 0, 0);
   transform: translate3d(0, 0, 0);
 }
 
 /* Slider size and handle placement;
  */
-.df-slider .noUi-horizontal {
+.noUi-horizontal {
   height: 18px;
 }
 
-.df-slider .noUi-horizontal .noUi-handle {
+.noUi-horizontal .noUi-handle {
   width: 34px;
   height: 28px;
   left: -17px;
   top: -6px;
 }
 
-.df-slider .noUi-vertical {
+.noUi-vertical {
   width: 18px;
 }
 
-.df-slider .noUi-vertical .noUi-handle {
+.noUi-vertical .noUi-handle {
   width: 28px;
   height: 34px;
   left: -6px;
@@ -150,43 +220,43 @@
 
 /* Styling;
  */
-.df-slider .noUi-background {
+.noUi-background {
   background: #FAFAFA;
   box-shadow: inset 0 1px 1px #f0f0f0;
 }
 
-.df-slider .noUi-connect {
+.noUi-connect {
   background: #3FB8AF;
   box-shadow: inset 0 0 3px rgba(51, 51, 51, 0.45);
   -webkit-transition: background 450ms;
   transition: background 450ms;
 }
 
-.df-slider .noUi-origin {
+.noUi-origin {
   border-radius: 2px;
 }
 
-.df-slider .noUi-target {
+.noUi-target {
   border-radius: 4px;
   border: 1px solid #D3D3D3;
   box-shadow: inset 0 1px 1px #F0F0F0, 0 3px 6px -5px #BBB;
 }
 
-.df-slider .noUi-target.noUi-connect {
+.noUi-target.noUi-connect {
   box-shadow: inset 0 0 3px rgba(51, 51, 51, 0.45), 0 3px 6px -5px #BBB;
 }
 
 /* Handles and cursors;
  */
-.df-slider .noUi-draggable {
+.noUi-draggable {
   cursor: w-resize;
 }
 
-.df-slider .noUi-vertical .noUi-draggable {
+.noUi-vertical .noUi-draggable {
   cursor: n-resize;
 }
 
-.df-slider .noUi-handle {
+.noUi-handle {
   border: 1px solid #D9D9D9;
   border-radius: 3px;
   background: #FFF;
@@ -194,14 +264,13 @@
   box-shadow: inset 0 0 1px #FFF, inset 0 1px 7px #EBEBEB, 0 3px 6px -3px #BBB;
 }
 
-.df-slider .noUi-active {
+.noUi-active {
   box-shadow: inset 0 0 1px #FFF, inset 0 1px 7px #DDD, 0 3px 6px -3px #BBB;
 }
 
 /* Handle stripes;
  */
-.df-slider .noUi-handle:before,
-.df-slider .noUi-handle:after {
+.noUi-handle:before, .noUi-handle:after {
   content: "";
   display: block;
   position: absolute;
@@ -212,44 +281,40 @@
   top: 6px;
 }
 
-.df-slider .noUi-handle:after {
+.noUi-handle:after {
   left: 17px;
 }
 
-.df-slider .noUi-vertical .noUi-handle:before,
-.df-slider .noUi-vertical .noUi-handle:after {
+.noUi-vertical .noUi-handle:before, .noUi-vertical .noUi-handle:after {
   width: 14px;
   height: 1px;
   left: 6px;
   top: 14px;
 }
 
-.df-slider .noUi-vertical .noUi-handle:after {
+.noUi-vertical .noUi-handle:after {
   top: 17px;
 }
 
 /* Disabled state;
  */
-.df-slider [disabled].noUi-connect,
-.df-slider [disabled] .noUi-connect {
+[disabled].noUi-connect, [disabled] .noUi-connect {
   background: #B8B8B8;
 }
 
-.df-slider [disabled].noUi-origin,
-.df-slider [disabled] .noUi-handle {
+[disabled].noUi-origin, [disabled] .noUi-handle {
   cursor: not-allowed;
 }
 
 /* Base;
  *
  */
-.df-slider .noUi-pips,
-.df-slider .noUi-pips * {
+.noUi-pips, .noUi-pips * {
   -moz-box-sizing: border-box;
   box-sizing: border-box;
 }
 
-.df-slider .noUi-pips {
+.noUi-pips {
   position: absolute;
   color: #999;
 }
@@ -257,12 +322,12 @@
 /* Values;
  *
  */
-.df-slider .noUi-value {
+.noUi-value {
   position: absolute;
   text-align: center;
 }
 
-.df-slider .noUi-value-sub {
+.noUi-value-sub {
   color: #ccc;
   font-size: 10px;
 }
@@ -270,23 +335,23 @@
 /* Markings;
  *
  */
-.df-slider .noUi-marker {
+.noUi-marker {
   position: absolute;
   background: #CCC;
 }
 
-.df-slider .noUi-marker-sub {
+.noUi-marker-sub {
   background: #AAA;
 }
 
-.df-slider .noUi-marker-large {
+.noUi-marker-large {
   background: #AAA;
 }
 
 /* Horizontal layout;
  *
  */
-.df-slider .noUi-pips-horizontal {
+.noUi-pips-horizontal {
   padding: 10px 0;
   height: 80px;
   top: 100%;
@@ -294,56 +359,56 @@
   width: 100%;
 }
 
-.df-slider .noUi-value-horizontal {
+.noUi-value-horizontal {
   -webkit-transform: translate3d(-50%, 50%, 0);
   transform: translate3d(-50%, 50%, 0);
 }
 
-.df-slider .noUi-marker-horizontal.noUi-marker {
+.noUi-marker-horizontal.noUi-marker {
   margin-left: -1px;
   width: 2px;
   height: 5px;
 }
 
-.df-slider .noUi-marker-horizontal.noUi-marker-sub {
+.noUi-marker-horizontal.noUi-marker-sub {
   height: 10px;
 }
 
-.df-slider .noUi-marker-horizontal.noUi-marker-large {
+.noUi-marker-horizontal.noUi-marker-large {
   height: 15px;
 }
 
 /* Vertical layout;
  *
  */
-.df-slider .noUi-pips-vertical {
+.noUi-pips-vertical {
   padding: 0 10px;
   height: 100%;
   top: 0;
   left: 100%;
 }
 
-.df-slider .noUi-value-vertical {
+.noUi-value-vertical {
   -webkit-transform: translate3d(0, -50%, 0);
   transform: translate3d(0, -50%, 0);
   padding-left: 25px;
 }
 
-.df-slider .noUi-marker-vertical.noUi-marker {
+.noUi-marker-vertical.noUi-marker {
   width: 5px;
   height: 2px;
   margin-top: -1px;
 }
 
-.df-slider .noUi-marker-vertical.noUi-marker-sub {
+.noUi-marker-vertical.noUi-marker-sub {
   width: 10px;
 }
 
-.df-slider .noUi-marker-vertical.noUi-marker-large {
+.noUi-marker-vertical.noUi-marker-large {
   width: 15px;
 }
 
-.df-slider .noUi-tooltip {
+.noUi-tooltip {
   display: block;
   position: absolute;
   border: 1px solid #D9D9D9;
@@ -353,19 +418,19 @@
   text-align: center;
 }
 
-.df-slider .noUi-horizontal .noUi-handle-lower .noUi-tooltip {
+.noUi-horizontal .noUi-handle-lower .noUi-tooltip {
   top: -32px;
 }
 
-.df-slider .noUi-horizontal .noUi-handle-upper .noUi-tooltip {
+.noUi-horizontal .noUi-handle-upper .noUi-tooltip {
   bottom: -32px;
 }
 
-.df-slider .noUi-vertical .noUi-handle-lower .noUi-tooltip {
+.noUi-vertical .noUi-handle-lower .noUi-tooltip {
   left: 120%;
 }
 
-.df-slider .noUi-vertical .noUi-handle-upper .noUi-tooltip {
+.noUi-vertical .noUi-handle-upper .noUi-tooltip {
   right: 120%;
 }
 
@@ -469,42 +534,4 @@
 
 .df-slider .noUi-target[disabled] .noUi-tooltip {
   display: none;
-}
-
-/* THEME */
-.df-results {
-  background-color: inherit;
-  padding: 0 8px 8px 8px;
-}
-
-.df-panel {
-  background-color: inherit;
-}
-
-.df-panel__title {
-  color: #333333;
-  font-family: 'Arial', sans-serif;
-  font-weight: bold;
-  font-size: 13px;
-  text-decoration: none;
-  background-color: #ccc;
-}
-
-.df-panel__content {
-  background-color: inherit;
-}
-
-.df-facet {
-  background-color: inherit;
-  font-size: 13px;
-  text-decoration: none;
-  color: #333333;
-}
-
-.df-facet:focus, .df-facet:active, .df-facet:hover, .df-facet.df-facet--active {
-  font-weight: bold;
-}
-
-.df-facet__count {
-  color: #747474;
 }

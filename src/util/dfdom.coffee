@@ -1,4 +1,7 @@
 bean = require "bean"
+extend = require "extend"
+Text = require "./text"
+Thing = require "./thing"
 
 MATCHES_SELECTOR_FN = null
 
@@ -11,9 +14,19 @@ matchesSelector = (node, selector) ->
       'msMatchesSelector',
       'oMatchesSelector',
       'matchesSelector'
-    ].filter (funcName) -> typeof node[funcName] is 'function').pop()
+    ].filter (funcName) -> Thing.is.fn node[funcName]).pop()
   node[MATCHES_SELECTOR_FN] selector
 
+getWindow = (node) ->
+  if Thing.is.window node
+    view = node
+  else if Thing.is.document node
+    view = node.defaultView
+  else if node.ownerDocument?
+    view = node.ownerDocument.defaultView
+  else
+    view = null
+  if view and view.opener then view else window
 
 ###*
  * DfDomElement
@@ -26,19 +39,16 @@ class DfDomElement
    * @return {DfDomElement}
   ###
   constructor: (selector) ->
-    Object.defineProperty this, 'length', get: -> @element.length
+    Object.defineProperty @, 'length', get: -> @element.length
 
-    if selector instanceof String
-      selector = selector.toString()
-
-    if typeof selector is "string"
-      selector = selector.trim()
+    if Thing.is.string selector
+      selector = selector.toString().trim()
       if selector.length is 0
         selector = []
       else
         selector = (selector.split ",").map (s) -> s.trim()
 
-    if selector instanceof Array
+    if Thing.is.array selector
       @element = @__initFromSelectorArray selector
     else
       @element = @__initFromSelector selector
@@ -75,16 +85,13 @@ class DfDomElement
    * node.
    *
    * @protected
-   * @param  {Element|HTMLDocument|Document|Window} node
+   * @param  {HTMLElement|HTMLBodyElement|HTMLDocument|Document|Window} node
    * @return {Boolean}
   ###
   __isValidElementNode: (node) ->
-    switch
-      when node instanceof Element then true
-      when node instanceof Document then true
-      when node and node.document and node.location and node.alert and
-        node.setInterval then true # is the window object
-      else false
+    (Thing.is.element node) or
+    (Thing.is.document node) or
+    (Thing.is.window node)
 
   ###*
    * Fills the internal store from an array of selectors.
@@ -105,15 +112,14 @@ class DfDomElement
    * @return {Array}     An Array of nodes.
   ###
   __initFromSelector: (selector) ->
-    if typeof selector is "string" and selector.length > 0
-      element = @__fixNodeList document.querySelectorAll @__fixSelector selector
+    if selector instanceof NodeList
+      @__fixNodeList selector
+    else if Thing.is.string(selector) and selector.length > 0
+      @__fixNodeList document.querySelectorAll @__fixSelector selector
     else if @__isValidElementNode selector
-      element = [selector]
-    else if selector instanceof NodeList
-      element = @__fixNodeList selector
+      [selector]
     else
-      element = []
-    element
+      []
 
   ###*
    * Removes duplicates from the internal store.
@@ -152,11 +158,38 @@ class DfDomElement
       Array.prototype.splice.apply results, args
     results
 
-  get: (key) ->
-    if key? then @element[key] or null else @element
+  get: (index) ->
+    if index? then (@element[index] or null) else @element
 
-  first: ->
-    new DfDomElement @get 0
+  ###*
+   * Reduces the set of matched elements to the first one from the set of
+   * matched elements.
+   *
+   * @public
+   * @return {DfDomElement}
+  ###
+  first: -> @item 0
+
+  ###*
+   * Reduces the set of matched elements to the last one from the set of
+   * matched elements.
+   *
+   * @public
+   * @return {DfDomElement}
+  ###
+  last: -> @item -1
+
+  ###*
+   * Reduces the set of matched elements to the one at the specified index.
+   * Providing a negative number indicates a position starting from the end of
+   * the set, rather than the beginning.
+   *
+   * @public
+   * @param  {Number} index
+   * @return {DfDomElement}
+  ###
+  item: (index) ->
+    new DfDomElement (@element[if index >= 0 then index else @length + index] or [])
 
   ###*
    * Iterates nodes in the set of matched elements, passing them to the
@@ -190,10 +223,10 @@ class DfDomElement
    * @return {DfDomElement}
   ###
   filter: (selector_or_fn) ->
-    if typeof selector_or_fn is "string"
-      filterFn = (node) -> matchesSelector node, selector_or_fn
-    else
+    if Thing.is.fn selector_or_fn
       filterFn = selector_or_fn
+    else
+      filterFn = (node) -> matchesSelector node, selector_or_fn
     new DfDomElement (@element.filter filterFn, @)
 
   ###*
@@ -206,7 +239,7 @@ class DfDomElement
   ###
   find: (selector) ->
     finderFn = (node) =>
-      src = if node is window then window.document else node
+      src = if Thing.is.window node then window.document else node
       @__fixNodeList src.querySelectorAll selector
     new DfDomElement @__find finderFn
 
@@ -221,6 +254,22 @@ class DfDomElement
     finderFn = (node) =>
       @__fixNodeList node.children
     new DfDomElement @__find finderFn
+
+  ###*
+   * Returns all the siblings of the elements in the set of matched elements
+   * in a DfDomElement instance.
+   *
+   * @public
+   * @return {DfDomElement}
+  ###
+  siblings: ->
+    nodes = []
+    @each (x) ->
+      n = nodes.length
+      args = ((new DfDomElement x).parent().children().filter (node) -> node isnt x).get()
+      args.splice 0, 0, n, 0
+      Array.prototype.splice.apply nodes, args
+    new DfDomElement nodes
 
   ###*
    * Returns a DfDomElement instance that contains the parent node of all the
@@ -286,16 +335,20 @@ class DfDomElement
       (@get 0).innerHTML
 
   ###*
-   * Clones an Element node or returns the same if it's a HTML string.
+   * Clones an Element node or returns a copy of the same value if it's a
+   * HTML string.
+   *
    * @public
    * @param  {Element|String} node The node to be cloned.
    * @return {Element|String}      The copy or the same string.
   ###
   __cloneNode: (node) ->
-    switch
-      when typeof node is "string" then node
-      when node instanceof Element then node.cloneNode true
-      else throw "Invalid argument: #{node}"
+    if Thing.is.string node
+      node
+    else if Thing.is.element node
+      node.cloneNode true
+    else
+      throw "Invalid argument: #{node}"
 
   ###*
    * Prepends a node or HTML into the set of matched elements. If the child is a
@@ -305,21 +358,21 @@ class DfDomElement
    *
    * @public
    * @param  {DfDomElement|Element|String} child Stuff to be prepended.
-   * @return {DfDomElement}                          The current instance.
+   * @return {DfDomElement}                      The current instance.
   ###
   prepend: (child) ->
     if child instanceof DfDomElement
       child = child.get()
-    if child instanceof Array
+    if Thing.is.array child
       child.forEach (node) => @prepend node
       return @
     else
       @each (node, i) =>
-        if typeof child is "string"
+        if Thing.is.string child
           node.insertAdjacentHTML "afterbegin", child
-        else if child instanceof Element
+        else if Thing.is.element child
           newChild = (if i is 0 then child else @__cloneNode child)
-          if node.children?.length > 0
+          if node.children.length > 0
             node.insertBefore newChild, node.children[0]
           else
             node.appendChild newChild
@@ -337,14 +390,14 @@ class DfDomElement
   append: (child) ->
     if child instanceof DfDomElement
       child = child.get()
-    if child instanceof Array
+    if Thing.is.array child
       child.forEach (node) => @append node
       return @
     else
       @each (node, i) =>
-        if typeof child is "string"
+        if Thing.is.string child
           node.insertAdjacentHTML "beforeend", child
-        else if child instanceof Element
+        else if Thing.is.element child
           node.appendChild (if i is 0 then child else @__cloneNode child)
 
   ###*
@@ -360,14 +413,14 @@ class DfDomElement
   before: (sibling) ->
     if sibling instanceof DfDomElement
       sibling = sibling.get()
-    if sibling instanceof Array
+    if Thing.is.array sibling
       sibling.forEach (node) => @before node
       return @
     else
       @each (node, i) =>
-        if typeof sibling is "string"
-          node.insertAdjacentHTML  "beforebegin", sibling
-        else if sibling instanceof Element
+        if Thing.is.string sibling
+          node.insertAdjacentHTML "beforebegin", sibling
+        else if Thing.is.element sibling
           newSibling = (if i is 0 then sibling else @__cloneNode sibling)
           node.parentElement.insertBefore newSibling, node
 
@@ -384,14 +437,14 @@ class DfDomElement
   after: (sibling) ->
     if sibling instanceof DfDomElement
       sibling = sibling.get()
-    if sibling instanceof Array
+    if Thing.is.array sibling
       sibling.forEach (node) => @after node
       return @
     else
       @each (node, i) =>
-        if typeof sibling is "string"
+        if Thing.is.string sibling
           node.insertAdjacentHTML  "afterend", sibling
-        else if sibling instanceof Element
+        else if Thing.is.element sibling
           newSibling = (if i is 0 then sibling else @__cloneNode sibling)
           node.parentElement.insertBefore newSibling, node.nextSibling
 
@@ -501,7 +554,8 @@ class DfDomElement
    * @param {String} className
   ###
   hasClass: (className) ->
-    (@element.filter (node) -> node.classList.contains className).length > 0
+    x = @length
+    (@element.filter (node) -> node.classList.contains className).length is x
 
   ###*
    * Removes a class name from all the elements in the set of matched elements.
@@ -530,19 +584,25 @@ class DfDomElement
    * set of matched elements or set one or more CSS properties for every matched
    * element.
    *
+   * Note: the computed style of an element may not be the same as the value
+   * specified in the style sheet and it depends on the browser's quirks.
+   *
    * @public
    * @param  {String}         propertyName
    * @param  {String|Number}  value
+   * @param  {String}         priority      The proper way to set !important
    * @return {DfDomElement|String|null} Current instance on set, value or null
    *                                    on get.
   ###
-  css: (propertyName, value) ->
+  css: (propertyName, value, priority) ->
     if value?
-      @each (node) -> node.style[propertyName] = value
+      propName = Text.dash2camel propertyName
+      value = if priority? then "#{value}!#{priority}" else "#{value}"
+      @each (node) ->
+        node.style[propName] = value
     else if (node = @get 0)?
-      (getComputedStyle node).getPropertyValue propertyName
-    else
-      null
+      propName = Text.camel2dash propertyName
+      ((getWindow node).getComputedStyle node).getPropertyValue propName
 
   ###*
    * Hides the element in the set of matched elements by setting their display
@@ -577,8 +637,55 @@ class DfDomElement
    *                   read-only left, top, right, bottom, x, y, width, height
    *                   properties describing the border-box in pixels. # MDN #
   ###
-  __clientRect: ->
-    (@get 0)?.getBoundingClientRect?()
+  box: ->
+    node = @get 0
+    keys = ['left', 'top', 'right', 'bottom', 'width', 'height',
+            'scrollLeft', 'scrollTop', 'scrollWidth', 'scrollHeight']
+
+    # init rect with 0 value for all props
+    rect = {}
+    rect[k] = 0 for k in keys
+
+    if node?
+      if Thing.is.window node
+        doc = @document()
+        rect = extend rect,
+          width:        node.outerWidth
+          height:       node.outerHeight
+          clientWidth:  node.innerWidth
+          clientHeight: node.innerHeight
+          scrollLeft:   node.scrollX
+          scrollTop:    node.scrollY
+          scrollWidth:  doc.scrollWidth
+          scrollHeight: doc.scrollHeight
+      else
+        isDoc = Thing.is.document node
+        isElm = node.getBoundingClientRect?
+
+        if isDoc
+          node = node.documentElement
+          rect = extend rect,
+            width:  node.offsetWidth
+            height: node.offsetHeight
+
+        if isElm
+          box = node.getBoundingClientRect()
+          rect[k] = box[k] for k in keys
+
+        if isDoc or isElm
+          rect = extend rect,
+            clientWidth:  node.clientWidth
+            clientHeight: node.clientHeight
+            scrollLeft:   node.scrollLeft
+            scrollTop:    node.scrollTop
+            scrollWidth:  node.scrollWidth
+            scrollHeight: node.scrollHeight
+      rect
+
+  # TODO: 2 new methods only with these measurements
+  # bottomDistance = bottom
+  # container.get(0).scrollHeight - container.get(0).scrollTop - container.get(0).clientHeight
+  # container.get(0).scrollWidth - container.get(0).scrollLeft - container.get(0).clientWidth
 
   ###*
    * Proxy method for getBoundingClientRect().width. Returns the width of the
@@ -588,7 +695,7 @@ class DfDomElement
    * @return {Number} The width of the element.
   ###
   width: ->
-    @__clientRect()?.width
+    @box()?.width
 
   ###*
    * Proxy method for getBoundingClientRect().height. Returns the height of the
@@ -598,7 +705,7 @@ class DfDomElement
    * @return {Number} The height of the element.
   ###
   height: ->
-    @__clientRect()?.height
+    @box()?.height
 
   ###*
    * Proxy method for getBoundingClientRect().top. Returns the top position of
@@ -609,7 +716,7 @@ class DfDomElement
    * @return {Number} The top position of the element.
   ###
   top: ->
-    @__clientRect()?.top
+    @box()?.top
 
   ###*
    * Proxy method for getBoundingClientRect().right. Returns the right position of
@@ -620,7 +727,7 @@ class DfDomElement
    * @return {Number} The right position of the element.
   ###
   right: ->
-    @__clientRect()?.right
+    @box()?.right
 
   ###*
    * Proxy method for getBoundingClientRect().bottom. Returns the bottom position of
@@ -631,7 +738,7 @@ class DfDomElement
    * @return {Number} The bottom position of the element.
   ###
   bottom: ->
-    @__clientRect()?.bottom
+    @box()?.bottom
 
   ###*
    * Proxy method for getBoundingClientRect().left. Returns the left position of
@@ -642,27 +749,74 @@ class DfDomElement
    * @return {Number} The left position of the element.
   ###
   left: ->
-    @__clientRect()?.left
+    @box()?.left
 
-  __scrollProperty: (node, propertyName, value) ->
-    if value?
-      node[propertyName] = value
-      new DfDomElement node
-    else
-      node[propertyName]
-
+  ###*
+   * Gets scrolling position in the Y axis for the first element in the set of
+   * matched elements. If a value is provided, it's set for all elements in the
+   * set of matched elements.
+   *
+   * @public
+   * @param  {Number} value Optional. Scroll position.
+   * @return {Number}       Scroll position for get operation.
+  ###
   scrollTop: (value) ->
-    node = @get 0
-    if node?
-      propertyName = if node.scrollY? then "scrollY" else "scrollTop"
-      @__scrollProperty node, propertyName, value
+    if value?
+      @each (node) ->
+        if Thing.is.window node
+          node.scrollTo node.scrollX, value
+        else
+          node.scrollTop = value
+    else
+      @box()?.scrollTop
 
-
+  ###*
+   * Gets scrolling position in the X axis for the first element in the set of
+   * matched elements. If a value is provided, it's set for all elements in the
+   * set of matched elements.
+   *
+   * @public
+   * @param  {Number} value Optional. Scroll position.
+   * @return {Number}       Scroll position for get operation.
+  ###
   scrollLeft: (value) ->
+    if value?
+      @each (node) ->
+        if Thing.is.window node
+          node.scrollTo value, node.scrollY
+        else
+          node.scrollLeft = value
+    else
+      @box()?.scrollLeft
+
+  ###*
+   * Sets scrolling at the specified coordinates for the set of matched
+   * elements.
+   *
+   * @public
+   * @param  {Number} x
+   * @param  {Number} y
+  ###
+  scrollTo: (x, y) ->
+    @each (node) ->
+      if Thing.is.window node
+        node.scrollTo x, y
+      else
+        node.scrollLeft = x
+        node.scrollTop = y
+
+  window: ->
+    getWindow @get 0
+
+  document: ->
     node = @get 0
     if node?
-      propertyName = if node.scrollX? then "scrollX" else "scrollLeft"
-      @__scrollProperty node, propertyName, value
+      if Thing.is.window node
+        node.document.documentElement
+      else if Thing.is.document node
+        node.documentElement
+      else if node.ownerDocument?
+        node.ownerDocument.documentElement
 
   #
   # Events
@@ -676,8 +830,8 @@ class DfDomElement
    *
    * @public
   ###
-  on: (events, selector, fn, args) ->
-    @each (node) -> bean.on node, events, selector, fn, args
+  on: (eventName, selector, handler) ->
+    @each (node) -> bean.on node, eventName, selector, handler
 
   ###*
    * Proxy method to Bean Framework's one(). Attachs a single-use event handler
@@ -687,8 +841,8 @@ class DfDomElement
    *
    * @public
   ###
-  one: (events, selector, fn, args) ->
-    @each (node) -> bean.one node, events, selector, fn, args
+  one: (eventName, selector, handler) ->
+    @each (node) -> bean.one node, eventName, selector, handler
 
   ###*
    * Proxy method to Bean Framework's fire(). Triggers the events provide on
@@ -698,8 +852,11 @@ class DfDomElement
    *
    * @public
   ###
-  trigger: (events, args) ->
-    @each (node) -> bean.fire node, events, args
+  trigger: (eventName, args) ->
+    if eventName in ['focus', 'blur']
+      @[eventName]()
+    else
+      @each (node) -> bean.fire node, eventName, args
 
   ###*
    * Proxy method to Bean Framework's off(). Removes event handlers from each
@@ -709,8 +866,8 @@ class DfDomElement
    *
    * @public
   ###
-  off: (events, fn) ->
-    @each (node) -> bean.off node, events, fn
+  off: (eventName, handler) ->
+    @each (node) -> bean.off node, eventName, handler
 
   ###*
    * Due to the way focus works this shortcut makes easier triggering the event
@@ -721,7 +878,7 @@ class DfDomElement
    * @return {DfDomElement} Current instance.
   ###
   focus: ->
-    (@get 0)?.focus()
+    @length and (@get 0).focus()
     return @
 
   ###*
@@ -733,7 +890,7 @@ class DfDomElement
    * @return {DfDomElement} Current instance.
   ###
   blur: ->
-    (@get 0)?.blur()
+    @length and (@get 0).blur()
     return @
 
   #
@@ -742,18 +899,17 @@ class DfDomElement
 
   ###*
    * Checks the current matched set of elements against a selector or element,
-   * and return true if at least one of these elements matches the given
-   * argument.
+   * and return true if all elements match the given argument.
    *
    * @public
    * @param  {String|Element} selector_or_element
    * @return {Boolean}
   ###
   is: (selector_or_element) ->
-    if typeof selector_or_element is "string"
-      (@filter selector_or_element).length > 0
+    if Thing.is.string selector_or_element
+      (@filter selector_or_element).length == @length
     else
-      (@filter (node) -> node is selector_or_element).length > 0
+      (@filter (node) -> node is selector_or_element).length == @length
 
   ###*
    * Checks the current matched set of elements against a selector or element,
@@ -767,16 +923,20 @@ class DfDomElement
     not @is selector_or_element
 
   ###*
-   * Reduces the set of matched elements to the one at the specified index.
-   * Providing a negative number indicates a position starting from the end of
-   * the set, rather than the beginning.
-   *
-   * @public
-   * @param  {Number} index
-   * @return {DfDomElement}
+   * Checks if the first Element in the set of matched elements is the first child
+   * of its container. Doesn't take into account Text nodes.
+   * @return {Boolean} true if the node is the first child.
   ###
-  eq: (index) ->
-    new DfDomElement (@element[if index >= 0 then index else @length + index] or [])
+  isFirstElement: ->
+    @length and not (@get 0).previousElementSibling
+
+  ###*
+   * Checks if the first Element in the set of matched elements is the last child
+   * of its container. Doesn't take into account Text nodes.
+   * @return {Boolean} true if the node is the last child.
+  ###
+  isLastElement: ->
+    @length and not (@get 0).nextElementSibling
 
 
 module.exports = (selector) ->
