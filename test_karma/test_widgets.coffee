@@ -111,12 +111,13 @@ describe "Default Widgets", ->
           total: 10
           results_per_page: 10
 
-  describe "TermsFacet", ->
+  describe "Terms Facet Widgets", ->
     TermsFacet = doofinder.widgets.TermsFacet
+    CollapsibleTermsFacet = doofinder.widgets.CollapsibleTermsFacet
 
-    createWidget = (options) ->
+    createWidget = (klass, options) ->
       insertHTML """<div id="widget"></div>"""
-      widget = new TermsFacet "#widget", "brand", options
+      widget = new klass "#widget", "brand", options
       # code is currently too coupled to controller so we need a mock
       widget.setController getControllerMock()
       widget.init()
@@ -140,107 +141,120 @@ describe "Default Widgets", ->
             doc_count: 2
         ]
 
-    it "renders properly and is not collapsible by default", (done) ->
-      widget = createWidget()
+    context "TermsFacet", ->
+      it "renders properly", (done) ->
+        widget = createWidget TermsFacet
+        widget.on "df:widget:render", (res) ->
+          res.facets.brand.terms.buckets[0].index.should.equal 0
+          res.facets.brand.terms.buckets[0].name.should.equal widget.facet
+          res.facets.brand.terms.buckets[0].selected.should.be.true
 
-      widget.on "df:widget:render", (res) ->
-        @collapsed.should.be.false
+          res.facets.brand.terms.buckets[1].index.should.equal 1
+          res.facets.brand.terms.buckets[1].name.should.equal widget.facet
+          res.facets.brand.terms.buckets[1].selected.should.be.false
 
-        res.facets.brand.terms.buckets[0].index.should.equal 0
-        res.facets.brand.terms.buckets[0].name.should.equal widget.facet
-        res.facets.brand.terms.buckets[0].selected.should.be.true
+          (@element.find "[data-facet]").length.should.equal 4
+          (@element.find "[data-selected]").length.should.equal 1
 
-        res.facets.brand.terms.buckets[1].index.should.equal 1
-        res.facets.brand.terms.buckets[1].name.should.equal widget.facet
-        res.facets.brand.terms.buckets[1].selected.should.be.false
+          selectedTerm = (@element.find "[data-selected]").first()
+          (selectedTerm.find ".df-term__value").html().trim().should.equal "CONCORD"
+          (selectedTerm.find ".df-term__count").html().trim().should.equal "20"
+          done()
+        widget.render termsFacetResponse()
 
-        (@element.find "[data-facet]").length.should.equal 4
-        (@element.find "[data-selected]").length.should.equal 1
-        (@element.find "[data-extra-content]").length.should.equal 0
-        @getButton().length.should.equal 0
+      it "cleans itself if there are no terms", (done) ->
+        widget = createWidget TermsFacet
 
-        selectedTerm = (@element.find "[data-selected]").first()
-        (selectedTerm.find ".df-term__value").html().trim().should.equal "CONCORD"
-        (selectedTerm.find ".df-term__count").html().trim().should.equal "20"
+        widget.on "df:widget:clean", ->
+          widget.element.html().trim().should.equal ""
+          done()
+
+        widget.render
+          page: 1
+          facets: brand: terms: buckets: []
+
+      it "does nothing if response is for a secondary page", (done) ->
+        widget = createWidget TermsFacet
+        (widget.render page: 2).should.be.false
         done()
 
-      widget.render termsFacetResponse()
+      it "unselects selected terms when clicked", (done) ->
+        widget = createWidget TermsFacet
 
-    it "cleans itself if there are no terms", (done) ->
-      widget = createWidget()
+        widget.on "df:term:click", (facetName, facetValue, isSelected) ->
+          facetName.should.equal "brand"
+          facetValue.should.equal "CONCORD"
+          isSelected.should.be.false
+          done()
 
-      widget.on "df:widget:clean", ->
-        widget.element.html().trim().should.equal ""
-        done()
+        widget.on "df:widget:render", (res) ->
+          (@element.find "[data-facet='brand'][data-value='CONCORD']").trigger "click"
 
-      widget.render
-        page: 1
-        facets: brand: terms: buckets: []
+        widget.render termsFacetResponse()
 
-    it "does nothing if response is for a secondary page", (done) ->
-      widget = createWidget()
-      (widget.render page: 2).should.be.false
-      done()
+      it "selects not selected terms when clicked", (done) ->
+        widget = createWidget TermsFacet
 
-    it "unselects selected terms when clicked", (done) ->
-      widget = createWidget()
+        widget.on "df:term:click", (facetName, facetValue, isSelected) ->
+          facetName.should.equal "brand"
+          facetValue.should.equal "CONCORD"
+          isSelected.should.be.true
+          done()
 
-      widget.on "df:term:click", (facetName, facetValue, isSelected) ->
-        facetName.should.equal "brand"
-        facetValue.should.equal "CONCORD"
-        isSelected.should.be.false
-        done()
+        widget.on "df:widget:render", (res) ->
+          (@element.find "[data-facet='brand'][data-value='CONCORD']").trigger "click"
 
-      widget.on "df:widget:render", (res) ->
-        (@element.find "[data-facet='brand'][data-value='CONCORD']").trigger "click"
+        response = termsFacetResponse()
+        delete response.filter
 
-      widget.render termsFacetResponse()
+        widget.render response
 
-    it "selects not selected terms when clicked", (done) ->
-      widget = createWidget()
+    context "CollapsibleTermsFacet", ->
+      it "renders properly", (done) ->
+        widget = createWidget CollapsibleTermsFacet
+        widget.on "df:widget:render", (res) ->
+          @isCollapsed.should.be.true
+          (@element.find "[data-extra-content]").length.should.equal 0
+          @__getButton().length.should.equal 0
+          done()
+        widget.render termsFacetResponse()
 
-      widget.on "df:term:click", (facetName, facetValue, isSelected) ->
-        facetName.should.equal "brand"
-        facetValue.should.equal "CONCORD"
-        isSelected.should.be.true
-        done()
+      it "properly collapses content", (done) ->
+        widget = createWidget CollapsibleTermsFacet, size: 2
 
-      widget.on "df:widget:render", (res) ->
-        (@element.find "[data-facet='brand'][data-value='CONCORD']").trigger "click"
+        widget.on "df:widget:render", (res) ->
+          @isCollapsed.should.be.true
 
-      response = termsFacetResponse()
-      delete response.filter
+          (@element.find "[data-facet]").length.should.equal 4
+          (@element.find "[data-selected]").length.should.equal 1
+          (@element.find "[data-extra-content]").length.should.equal 2
+          (@element.hasAttr "data-view-extra-content").should.be.false
 
-      widget.render response
+          button = @__getButton()
+          button.length.should.equal 1
+          button.html().trim().should.equal "View more…"
 
-    it "has collapse feature if size option is provided", (done) ->
-      widget = createWidget size: 2
+          @on "df:collapse:change", (isCollapsed) =>
+            if not @isCollapsed
+              (@element.hasAttr "data-view-extra-content").should.be.true
+              button.html().trim().should.equal "View less…"
+              button.trigger "click"
+            else
+              (@element.hasAttr "data-view-extra-content").should.be.false
+              button.html().trim().should.equal "View more…"
+              done()
 
-      widget.on "df:widget:render", (res) ->
-        @collapsed.should.be.true
+          button.trigger "click"
 
-        (@element.find "[data-facet]").length.should.equal 4
-        (@element.find "[data-selected]").length.should.equal 1
-        (@element.find "[data-extra-content]").length.should.equal 2
-        (@element.hasAttr "data-view-extra-content").should.be.false
+        widget.render termsFacetResponse()
 
-        button = @getButton()
-        button.length.should.equal 1
-        button.html().trim().should.equal "View more…"
-
-        @on "df:collapse:change", (isCollapsed) =>
-          if not @collapsed
-            (@element.hasAttr "data-view-extra-content").should.be.true
-            button.html().trim().should.equal "View less…"
-            button.trigger "click"
-          else
-            (@element.hasAttr "data-view-extra-content").should.be.false
-            button.html().trim().should.equal "View more…"
-            done()
-
-        button.trigger "click"
-
-      widget.render termsFacetResponse()
+      it "can start expanded", (done) ->
+        widget = createWidget CollapsibleTermsFacet, size: 2, startCollapsed: false
+        widget.on "df:widget:render", (res) ->
+          @isCollapsed.should.be.false
+          (@element.hasAttr "data-view-extra-content").should.be.true
+          done()
+        widget.render termsFacetResponse()
 
 
   describe "RangeFacet", ->

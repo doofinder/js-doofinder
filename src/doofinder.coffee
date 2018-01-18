@@ -8,14 +8,19 @@ module.exports =
   Mustache: require "mustache"
 
   widgets:
-    CollapsiblePanel: require "./widgets/collapsiblepanel"
-    Display: require "./widgets/display"
-    Panel: require "./widgets/panel"
-    QueryInput: require "./widgets/queryinput"
-    RangeFacet: require "./widgets/facets/rangefacet"
-    ScrollDisplay: require "./widgets/scrolldisplay"
-    TermsFacet: require "./widgets/facets/termsfacet"
     Widget: require "./widgets/widget"
+
+    QueryInput: require "./widgets/queryinput"
+
+    Display: require "./widgets/display"
+    ScrollDisplay: require "./widgets/scrolldisplay"
+
+    TermsFacet: require "./widgets/facets/termsfacet"
+    CollapsibleTermsFacet: require "./widgets/facets/collapsibletermsfacet"
+    RangeFacet: require "./widgets/facets/rangefacet"
+
+    Panel: require "./widgets/panel"
+    CollapsiblePanel: require "./widgets/collapsiblepanel"
 
   util:
     bean: require "bean"

@@ -63,16 +63,27 @@
             new doofinder.widgets.CollapsiblePanel(
               "#advancedAside",
               function(panel){
-                var maxVisibleTerms = Math.max(10, Math.round(facetOptions.size / 2));
-                var widget = new doofinder.widgets.TermsFacet(
-                  panel.contentElement,
-                  facetOptions.name,
-                  {
-                    // Display facets for `brand` with no collapsing
-                    size: facetOptions.name == 'brand' ? null : maxVisibleTerms,
-                    label: facetOptions.label
-                  }
-                );
+                var widget;
+
+                if (facetOptions.name === 'brand') {
+                  widget = new doofinder.widgets.CollapsibleTermsFacet(
+                    panel.contentElement,
+                    facetOptions.name,
+                    {
+                      size: 5,
+                      startCollapsed: true,
+                      translations: {
+                        "View more…": "More…",
+                        "View less…": "Less…"
+                      }
+                    }
+                  );
+                } else {
+                  widget = new doofinder.widgets.TermsFacet(
+                    panel.contentElement,
+                    facetOptions.name
+                  );
+                }
 
                 widget.on("df:widget:render", function(res){
                   var html = [facetOptions.label];

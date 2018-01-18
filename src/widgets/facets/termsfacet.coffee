@@ -2,86 +2,27 @@ extend = require "extend"
 Display = require "../display"
 $ = require "../../util/dfdom"
 
-defaultTemplate = """
-  {{#terms}}
-    <div class="df-term" data-facet="{{name}}" data-value="{{key}}"
-        {{#extra-content}}{{index}}{{/extra-content}}
-        {{#selected}}data-selected{{/selected}}>
-      <span class="df-term__value">{{key}}</span>
-      <span class="df-term__count">{{doc_count}}</span>
-    </div>
-  {{/terms}}
-  {{#show-more-button}}{{terms.length}}{{/show-more-button}}
-"""
-
-defaultButtonTemplate = """
-  <button type="button" data-toggle-extra-content
-      data-text-normal="{{#translate}}{{viewMoreLabel}}{{/translate}}"
-      data-text-toggle="{{#translate}}{{viewLessLabel}}{{/translate}}">
-    {{#collapsed}}{{#translate}}{{viewMoreLabel}}{{/translate}}{{/collapsed}}
-    {{^collapsed}}{{#translate}}{{viewLessLabel}}{{/translate}}{{/collapsed}}
-  </button>
-"""
-
-
 ###*
  * Represents a terms selector control to filter by the possible values of a
  * text field.
 ###
 class TermsFacet extends Display
+  @defaultTemplate = """
+    {{#terms}}
+      <div class="df-term" data-facet="{{name}}" data-value="{{key}}"
+          {{#selected}}data-selected{{/selected}}>
+        <span class="df-term__value">{{key}}</span>
+        <span class="df-term__count">{{doc_count}}</span>
+      </div>
+    {{/terms}}
+  """
   ###*
    * @param  {String|Node|DfDomElement} element  Container node.
    * @param  {String} facet Name of the facet/filter.
    * @param  {Object} options
   ###
   constructor: (element, @facet, options = {}) ->
-    defaults =
-      size: null  # set an int value to enable extra content behavior
-      template: defaultTemplate
-      buttonTemplate: defaultButtonTemplate
-      templateVars:
-        viewMoreLabel: "View more…"
-        viewLessLabel: "View less…"
-      templateFunctions:
-        "extra-content": =>
-          ###*
-           * Returns `data-extra-content` if the (0-based) index is greater
-           * than or equal to the size passed.
-           *
-           * Index and size are passed as text and must be parsed:
-           *
-           * {{#extra-content}}{{index}}:{{size}}{{/extra-content}}
-           *
-           * @param  {string}   text
-           * @param  {Function} render
-           * @return {string}   "data-extra-content" or ""
-          ###
-          (text, render) =>
-            i = parseInt (render text), 10
-            if @options.size? and i >= @options.size then "data-extra-content" else ""
-
-        "show-more-button": =>
-          ###*
-           * Renders a `View More` button if the length is greater than the
-           * size passed.
-           *
-           * {{#show-more-button}}{{length}}:{{size}}{{/show-more-button}}
-           *
-           * @param  {string}   text
-           * @param  {Function} render
-           * @return {string}   Rendered button or "".
-          ###
-          return (text, render) =>
-            len = parseInt (render text), 10
-            if @options.size? and len > @options.size
-              context = extend true, collapsed: @collapsed, @currentContext
-              @mustache.render @options.buttonTemplate, context
-            else
-              ""
-
-    super element, (extend true, defaults, options)
-
-    @collapsed = @options.size?
+    super element, (extend true, (template: @constructor.defaultTemplate), options)
     @totalSelected = 0
 
   ###*
@@ -123,31 +64,29 @@ class TermsFacet extends Display
           totalSelected: @totalSelected
         ] # DEPRECATED
 
-      if @options.size?
-        @element.on "click", "[data-toggle-extra-content]", (e) =>
-          e.preventDefault()
-          @toggleExtraContent()
-
     super
 
-  toggleExtraContent: ->
-    if @collapsed
-      labelAttr = "data-text-toggle"
-      @element.attr "data-view-extra-content", ""
-    else
-      labelAttr = "data-text-normal"
-      @element.removeAttr "data-view-extra-content"
-
-    btn = @getButton()
-    (btn.get 0).textContent = (btn.attr labelAttr).trim()
-    @collapsed = not @collapsed
-    @trigger "df:collapse:change", [@collapsed]
-
   ###*
-   * @return {HTMLElement} The "show more" button.
+   * Adds extra context to the passed context object.
+   *
+   * @param  {Object} response = {} Search response as initial context.
+   * @return {Object}               Extended search response.
+   * @protected
   ###
-  getButton: ->
-    (@element.find "[data-toggle-extra-content]").first()
+  __buildContext: (response = {}) ->
+    super
+
+    terms = response.facets[@facet].terms.buckets
+    selectedTerms = (response?.filter?.terms?[@facet]) or []
+
+    for index, term of terms
+      term.index = parseInt index, 10
+      term.name = @facet
+      term.selected = term.key in selectedTerms
+
+    @totalSelected = selectedTerms.length
+    @currentContext = extend true, @currentContext, name: @facet, terms: terms
+
 
   ###*
    * Renders the widget with the data received, by replacing its content.
@@ -157,22 +96,8 @@ class TermsFacet extends Display
   ###
   render: (res) ->
     if res.page is 1
-      terms = res.facets[@facet].terms.buckets
-
-      if terms.length > 0
-        selectedTerms = (res?.filter?.terms?[@facet]) or []
-        @totalSelected = selectedTerms.length
-        for index, term of terms
-          term.index = parseInt index, 10
-          term.name = @facet
-          term.selected = term.key in selectedTerms
-
-        context =
-          name: @facet
-          terms: terms
-          size: @options.size
-
-        super (extend true, {}, res, context)
+      if res.facets[@facet].terms.buckets.length > 0
+        super res
       else
         @clean()
     else
