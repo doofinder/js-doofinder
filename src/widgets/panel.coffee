@@ -7,17 +7,16 @@ uniqueId = require "../util/uniqueid"
 INSERTION_METHODS = ["prepend", "append", "before", "after", "html"]
 
 
-defaultTemplate = """
-  <div class="df-panel" id="{{panelElement}}">
-    {{#label}}
-    <div class="df-panel__label" id="{{labelElement}}">{{label}}</div>
-    {{/label}}
-    <div class="df-panel__content" id="{{contentElement}}"></div>
-  </div>
-"""
-
-
 class Panel extends Display
+  @defaultTemplate = """
+    <div class="df-panel" id="{{panelElement}}">
+      {{#label}}
+      <div class="df-panel__label" id="{{labelElement}}">{{label}}</div>
+      {{/label}}
+      <div class="df-panel__content" id="{{contentElement}}"></div>
+    </div>
+  """
+
   constructor: (element, @getWidget, options = {}) ->
     defaults =
       templateVars:
@@ -26,7 +25,7 @@ class Panel extends Display
         labelElement: "df-#{uniqueId.generate.easy()}"
         contentElement: "df-#{uniqueId.generate.easy()}"
       insertionMethod: "append" # html, append, prepend, before, after
-      template: defaultTemplate
+      template: @constructor.defaultTemplate
 
     options = extend true, defaults, options
 
@@ -46,17 +45,17 @@ class Panel extends Display
     unless @rendered
       @rendered = true
       @element[@options.insertionMethod] @__renderTemplate res
-      @initPanel res
-      @renderContent res
+      @__initPanel res
+      @__renderContent res
       @trigger "df:widget:render", [res]
       @trigger "df:rendered", [res] # DEPRECATED
 
-  initPanel: (res) ->
+  __initPanel: (res) ->
     @panelElement = $ "##{@options.templateVars.panelElement}"
     @labelElement = $ "##{@options.templateVars.labelElement}"
     @contentElement = $ "##{@options.templateVars.contentElement}"
 
-  renderContent: (res) ->
+  __renderContent: (res) ->
     widget = @getWidget @
     widget.one "df:widget:render", ((res) ->
       @trigger "df:widget:renderContent", widget

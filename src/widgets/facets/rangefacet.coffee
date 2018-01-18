@@ -175,8 +175,8 @@ class RangeFacet extends Display
     @controller.refresh()
 
     @trigger "df:range:change", [
-        gte: start
-        lte: end
+        start: start
+        end: end
       ,
         min: @range.min
         max: @range.max

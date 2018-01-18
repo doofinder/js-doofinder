@@ -108,13 +108,15 @@
           break;
         case 'range':
           // assume there's only one, insert it inside a div
-          advancedController.registerWidget(
-            new doofinder.widgets.RangeFacet("#advancedRangeFacet", facetOptions.name, {
-              format: function(value) {
-                return value.toFixed(2) + "€";
-              }
-            })
-          );
+          var rangeWidget = new doofinder.widgets.RangeFacet("#advancedRangeFacet", facetOptions.name, {
+            format: function(value) {
+              return value.toFixed(2) + "€";
+            }
+          });
+          rangeWidget.on("df:range:change", function(a){
+            console.log(arguments);
+          });
+          advancedController.registerWidget(rangeWidget);
           break;
         default:
           console.warn('Invalid facet type: ' + facetOptions.type);

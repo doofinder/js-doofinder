@@ -1098,8 +1098,9 @@
     }
 
     ObjectSessionStore.prototype.__getData = function() {
-      if (this.data.session_id == null) {
-        this.data.session_id = uniqueId.generate.hash();
+      var base;
+      if ((base = this.data).session_id == null) {
+        base.session_id = uniqueId.generate.hash();
       }
       return this.data;
     };
@@ -1301,6 +1302,22 @@
 
 
     /**
+     * Sets current search terms in the search session.
+     *
+     * WARNING: This should be called ONLY if the user has performed a search.
+     *          That's why this is usually called when the user has stopped
+     *          typing in the search box.
+     *
+     * @public
+     * @param  {String} query Search terms.
+     */
+
+    Stats.prototype.setCurrentQuery = function(query) {
+      return this.session.set("query", query);
+    };
+
+
+    /**
      * Registers the session in Doofinder stats if not already registered.
      * It marks the session as registered synchronously to short-circuit other
      * attempts while the request is in progress. If an error occurs in the
@@ -1337,22 +1354,6 @@
         })(this));
       }
       return !alreadyRegistered;
-    };
-
-
-    /**
-     * Sets current search terms in the search session.
-     *
-     * WARNING: This should be called ONLY if the user has performed a search.
-     *          That's why this is usually called when the user has stopped
-     *          typing in the search box.
-     *
-     * @public
-     * @param  {String} query Search terms.
-     */
-
-    Stats.prototype.setCurrentQuery = function(query) {
-      return this.session.set("query", query);
     };
 
 
@@ -1423,7 +1424,7 @@
      * @param  {String}   eventName Name of the event.
      *                              - display
      *                              - click
-     * @param  {*}        bannerId  Id of the banner.
+     * @param  {Number}   bannerId  Id of the banner.
      * @param  {Function} callback  Optional callback to be called when the
      *                              response is received. First param is the
      *                              error, if any, and the second one is the
@@ -3176,8 +3177,8 @@
       }
     };
 
-    CollapsiblePanel.prototype.initPanel = function(res) {
-      CollapsiblePanel.__super__.initPanel.apply(this, arguments);
+    CollapsiblePanel.prototype.__initPanel = function(res) {
+      CollapsiblePanel.__super__.__initPanel.apply(this, arguments);
       this.panelElement.on("click", "#" + this.options.templateVars.labelElement, (function(_this) {
         return function(e) {
           e.preventDefault();
@@ -3748,8 +3749,8 @@
       this.controller.refresh();
       return this.trigger("df:range:change", [
         {
-          gte: start,
-          lte: end
+          start: start,
+          end: end
         }, {
           min: this.range.min,
           max: this.range.max
@@ -3985,7 +3986,7 @@
 
 },{"../../util/dfdom":6,"../display":15,"extend":24}],19:[function(require,module,exports){
 (function() {
-  var $, Display, INSERTION_METHODS, Panel, defaultTemplate, extend, uniqueId,
+  var $, Display, INSERTION_METHODS, Panel, extend, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -4000,10 +4001,10 @@
 
   INSERTION_METHODS = ["prepend", "append", "before", "after", "html"];
 
-  defaultTemplate = "<div class=\"df-panel\" id=\"{{panelElement}}\">\n  {{#label}}\n  <div class=\"df-panel__label\" id=\"{{labelElement}}\">{{label}}</div>\n  {{/label}}\n  <div class=\"df-panel__content\" id=\"{{contentElement}}\"></div>\n</div>";
-
   Panel = (function(superClass) {
     extend1(Panel, superClass);
+
+    Panel.defaultTemplate = "<div class=\"df-panel\" id=\"{{panelElement}}\">\n  {{#label}}\n  <div class=\"df-panel__label\" id=\"{{labelElement}}\">{{label}}</div>\n  {{/label}}\n  <div class=\"df-panel__content\" id=\"{{contentElement}}\"></div>\n</div>";
 
     function Panel(element, getWidget, options) {
       var defaults, ref;
@@ -4019,7 +4020,7 @@
           contentElement: "df-" + (uniqueId.generate.easy())
         },
         insertionMethod: "append",
-        template: defaultTemplate
+        template: this.constructor.defaultTemplate
       };
       options = extend(true, defaults, options);
       if (ref = options.insertionMethod, indexOf.call(INSERTION_METHODS, ref) < 0) {
@@ -4036,20 +4037,20 @@
       if (!this.rendered) {
         this.rendered = true;
         this.element[this.options.insertionMethod](this.__renderTemplate(res));
-        this.initPanel(res);
-        this.renderContent(res);
+        this.__initPanel(res);
+        this.__renderContent(res);
         this.trigger("df:widget:render", [res]);
         return this.trigger("df:rendered", [res]);
       }
     };
 
-    Panel.prototype.initPanel = function(res) {
+    Panel.prototype.__initPanel = function(res) {
       this.panelElement = $("#" + this.options.templateVars.panelElement);
       this.labelElement = $("#" + this.options.templateVars.labelElement);
       return this.contentElement = $("#" + this.options.templateVars.contentElement);
     };
 
-    Panel.prototype.renderContent = function(res) {
+    Panel.prototype.__renderContent = function(res) {
       var widget;
       widget = this.getWidget(this);
       widget.one("df:widget:render", (function(res) {

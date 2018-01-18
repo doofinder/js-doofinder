@@ -91,7 +91,7 @@ class ObjectSessionStore extends ISessionStore
 
   __getData: ->
     # ensure session id exists
-    @data.session_id = uniqueId.generate.hash() unless @data.session_id?
+    @data.session_id ?= uniqueId.generate.hash()
     @data
 
   __setData: (@data) ->

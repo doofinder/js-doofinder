@@ -20,6 +20,19 @@ class Stats
       throw errors.error "Second parameter must be a Session object!", @
 
   ###*
+   * Sets current search terms in the search session.
+   *
+   * WARNING: This should be called ONLY if the user has performed a search.
+   *          That's why this is usually called when the user has stopped
+   *          typing in the search box.
+   *
+   * @public
+   * @param  {String} query Search terms.
+  ###
+  setCurrentQuery: (query) ->
+    @session.set "query", query
+
+  ###*
    * Registers the session in Doofinder stats if not already registered.
    * It marks the session as registered synchronously to short-circuit other
    * attempts while the request is in progress. If an error occurs in the
@@ -46,19 +59,6 @@ class Stats
         (@session.set "registered", false) if err? # revert on error
         callback? err, res
     not alreadyRegistered
-
-  ###*
-   * Sets current search terms in the search session.
-   *
-   * WARNING: This should be called ONLY if the user has performed a search.
-   *          That's why this is usually called when the user has stopped
-   *          typing in the search box.
-   *
-   * @public
-   * @param  {String} query Search terms.
-  ###
-  setCurrentQuery: (query) ->
-    @session.set "query", query
 
   ###*
    * Registers a click on a search result for the specified search query.
@@ -109,7 +109,7 @@ class Stats
    * @param  {String}   eventName Name of the event.
    *                              - display
    *                              - click
-   * @param  {*}        bannerId  Id of the banner.
+   * @param  {Number}   bannerId  Id of the banner.
    * @param  {Function} callback  Optional callback to be called when the
    *                              response is received. First param is the
    *                              error, if any, and the second one is the

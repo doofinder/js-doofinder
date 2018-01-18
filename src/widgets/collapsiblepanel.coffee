@@ -33,7 +33,7 @@ class CollapsiblePanel extends Panel
     if @rendered
       if @options.startCollapsed then @collapse() else @expand()
 
-  initPanel: (res) ->
+  __initPanel: (res) ->
     super
 
     @panelElement.on "click", "##{@options.templateVars.labelElement}", (e) =>

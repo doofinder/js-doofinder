@@ -318,8 +318,8 @@ describe "Default Widgets", ->
       widget.on "df:widget:render", ->
         @set [100, 1000]
       widget.on "df:range:change", (value, range) ->
-        value.gte.should.equal 100
-        value.lte.should.equal 1000
+        value.start.should.equal 100
+        value.end.should.equal 1000
         range.min.should.equal 7.900000095367432
         range.max.should.equal 2360.0
         done()
@@ -336,7 +336,7 @@ describe "Default Widgets", ->
 
     it "does nothing if response is for a secondary page", (done) ->
       widget = createWidget()
-      (widget.render page: 2).should.be.false
+      expect(widget.render page: 2).to.be.undefined
       done()
 
     it "formats values with custom format function if specified", (done) ->
