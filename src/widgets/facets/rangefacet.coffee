@@ -3,44 +3,56 @@ noUiSlider = require "nouislider"
 Display = require "../display"
 
 
-defaultTemplate = """<div class="{{sliderClassName}}" data-facet="{{name}}"></div>"""
-
-
 ###*
  * Represents a range slider control to filter numbers within a range.
 ###
 class RangeFacet extends Display
+  @defaultTemplate = """
+    <div class="df-slider" data-facet="{{name}}"></div>
+  """
+  @formatFn =
+    to: (value) ->
+      # noUISlider returns the formatted values when we retrieve them
+      # so we maintain references to raw values inside an object.
+      if value?
+        value = parseFloat value, 10
+        formattedValue = @format value
+        @values[formattedValue] = value
+        formattedValue
+      else
+        ""
+    from: (formattedValue) ->
+      formattedValue
+
+  @basicFormat = (value) ->
+    ("#{value.toFixed 2}".replace /0+$/, "").replace /\.{1}$/, ""
+
   ###*
-   * Apart from inherited options, this widget accepts these options:
+   * @param  {String|Node|DfDomElement} element Container node.
+   * @param  {String} facet                     Name of the facet as defined
+   *                                            in Doofinder.
+   * @param  {Object} options                   Options object.
+   * @public
    *
-   * - sliderClassName (String) The CSS class of the node that actually holds
-   *                            the slider.
+   * Options (apart from those inherited from Display):
    *
-   * IMPORTANT: Pips support is buggy so, if no sliderOptions.pips is found, the
-   * widget paints them itself. If the sliderOptions.pips is false, no pips are
-   * displayed. In any other case, noUiSlider is in charge of displaying them.
-   *
-   * @param  {String|Node|DfDomElement} element  Container node.
-   * @param  {String} facet    Name of the facet/filter.
-   * @param  {Object} options Options object. Empty by default.
+   * - pips: noUiSlider pips configuration or `false`. `undefined` by default.
+   * - format: Function that receives a number and returns it formatted
+   *           as string.
   ###
   constructor: (element, @facet, options = {}) ->
-    options = extend true, template: defaultTemplate, options
+    defaults =
+      template: @constructor.defaultTemplate
+      pips: undefined
+      format: undefined
 
-    super element, options
+    super element, (extend true, defaults, options)
 
-    @sliderClassName = options.sliderClassName or 'df-slider'
-    @sliderSelector =  ".#{@sliderClassName}[data-facet=\"#{@facet}\"]"
-
-    if @options.format
-      @format = @options.format
-    else
-      @format = (value) ->
-        value? and (value.toFixed(2) + '').replace(/0+$/, '').replace(/\.{1}$/, '')
-
-    @slider = null
-    @values = {}
-    @range = {}
+    @format = @options.format or @constructor.basicFormat
+    @slider = null    # node that actually holds noUiSlider stuff
+    @values = {}      # keys are formatted numbers, values are raw numbers
+    @range = {}       # range obtained from the search response
+    @sliderOpts = {}  # options for the slider
 
   ###*
    * Renders the slider for the very first time.
@@ -48,34 +60,24 @@ class RangeFacet extends Display
    * @param  {Object} options Slider options.
   ###
   __renderSlider: (options) ->
-    # Build template context
-    context =
-      name: @facet
-      sliderClassName: @sliderClassName
-
     # Render template HTML and place it inside the container
-    @element.html @__renderTemplate context
+    @element.html @__renderTemplate name: @facet
 
-    # Create a node for the the slider and append it to @sliderSelector
+    # Create a node for the the slider and append it to the container.
     @slider = document.createElement 'div'
-    @element.find(@sliderSelector).append(@slider)
+    (@element.find "[data-facet=\"#{@facet}\"]").append @slider
 
     # Initialize the slider
     noUiSlider.create @slider, options
 
     # Listen for the 'change' event so we can query Doofinder with new filters
     # Don't use 'set' event here or you will have problems.
-    @slider.noUiSlider.on 'change', @__sliderChanged.bind @
+    @slider.noUiSlider.on 'change', @__handleSliderChanged.bind @
     undefined
 
-  ###
-  Renders the slider pips
-
-  @param {Object} Values for 0%, 50% and 100% pips ({0: 1, 50: 2, 100: 3})
-  @api private
-  ###
   ###*
    * Renders the slider's pips.
+   * @protected
    * @param  {Object} values Values for 0%, 50% and 100% pips:
    *
    *                         {
@@ -84,8 +86,13 @@ class RangeFacet extends Display
    *                           100: 3
    *                         }
   ###
-  __renderPips: (values) ->
-    pips = @slider.querySelector('div.noUi-pips.noUi-pips-horizontal')
+  __renderPips: (range) ->
+    values =
+      0: @constructor.formatFn.to.call @, range.min
+      50: @constructor.formatFn.to.call @, ((range.min + range.max) / 2.0)
+      100: @constructor.formatFn.to.call @, range.max
+
+    pips = @slider.querySelector "div.noUi-pips.noUi-pips-horizontal"
     if pips is null
       # create pips container
       pips = document.createElement 'div'
@@ -110,61 +117,89 @@ class RangeFacet extends Display
     else
       # update pip values
       for node in pips.querySelectorAll('div[data-position]')
-        node.innerHTML = if values? then values[node.getAttribute('data-position')] else ''
+        node.innerHTML = values[node.getAttribute('data-position')]
 
   ###*
    * Gets a proper range for the slider given a search response.
    * @protected
    * @param  {Object} res Search response.
-   * @return {Object}     Object with `min` and `max` properties.
+   * @return {Object}     Object with `min`, `max`, `start` and `end` keys.
   ###
-  __getRangeFromResponse: (res) ->
-    stats = res.facets[@facet].range.buckets[0].stats
+  __getRangeFromResponse: (response) ->
+    stats = response.facets[@facet].range.buckets[0].stats
     range =
-      min: parseFloat(stats.min || 0, 10)
-      max: parseFloat(stats.max || 0, 10)
+      min: (parseFloat stats.min or 0, 10)
+      max: (parseFloat stats.max or 0, 10)
+    if (rangeFilter = response?.filter?.range?[@facet])?
+      # if we have values from search filtering we apply them
+      range.start = (parseFloat rangeFilter.gte, 10) or range.min
+      range.end = (parseFloat rangeFilter.lte, 10) or range.max
+    else
+      range.start = range.min
+      range.end = range.max
+    range
 
-  __sliderChanged: ->
-    [min, max] = @slider.noUiSlider.get()
+  ###*
+   * Builds an options object for noUiSlider given a range object.
+   *
+   * @protected
+   * @param  {Object} range Object as returned by `__getRangeFromResponse`.
+   * @return {Object}       Options object.
+  ###
+  __getSliderOptions: (range) ->
+    start: [range.start, range.end]
+    range:
+      min: range.min
+      max: range.max
+    connect: true
+    tooltips: true  # can't be overriden when options are updated!!!
+    format:
+      to: @constructor.formatFn.to.bind @
+      from: @constructor.formatFn.from.bind @
 
-    # TODO(@carlosescri): Probably all this controller stuff shouldn't be
-    # here and the controller should know this is a Filter Widget and
-    # listen for changes to refresh itself.
+  ###*
+   * Updates the controller when the range changes.
+   * @protected
+  ###
+  __handleSliderChanged: ->
+    [start, end] = @get()
 
-    if @values[min] == @range.min and @values[max] == @range.max
+    if start == @range.min and end == @range.max
       # No need to filter
       @controller.removeFilter @facet
     else
-      @controller.addFilter @facet,
-        gte: @values[min]
-        lte: @values[max]
+      @controller.addFilter @facet, gte: start, lte: end
+
+    # new search, reset values cache
+    @values = {}
     @controller.refresh()
 
     @trigger "df:range:change", [
-        gte: @values[min]
-        lte: @values[max]
+        gte: start
+        lte: end
       ,
         min: @range.min
         max: @range.max
     ]
 
-    @values = {}
-
-    # TODO(@carlosescri)'s proposal:
-    # if @values[min] == @range.min and @values[max] == @range.max
-    #   @trigger "df:filter:remove", [@facet]
-    # else
-    #   value =
-    #     gte: @values[min]
-    #     lte: @values[max]
-    #   @trigger "df:filter:add", [@facet, value]
-    #
-    # @trigger "df:slider:change", [@values[min], @values[max]]
-    # @values = {}
-
+  ###*
+   * Sets the range of the slider.
+   * @param {Array} value 2-number array with min and max values to set.
+  ###
   set: (value) ->
     @slider.noUiSlider.set value
-    @__sliderChanged()
+    @__handleSliderChanged()
+
+  ###*
+   * Returns the current value of the slider.
+   * @return {Array} value 2-number array with start and end values set.
+  ###
+  get: ->
+    if @slider?
+      [start, end] = @slider.noUiSlider.get()
+      [@values[start], @values[end]]
+    else
+      []
 
   ###*
    * Called when the "first page" response for a specific search is received.
@@ -173,59 +208,28 @@ class RangeFacet extends Display
    * @param {Object} res Search response.
    * @fires RangeFacet#df:widget:render
   ###
-  render: (res) ->
-    if res.page is 1
-      @range = @__getRangeFromResponse(res)
+  render: (response) ->
+    if response.page is 1
+      @range = @__getRangeFromResponse response
 
       if @range.min == @range.max
         # There's only one or no items with values in the range
         @clean()
       else
         # Update widget if any results found and there are range bounds
-
-        options =
-          start: [@range.min, @range.max]
-          range: @range
-          connect: true
-          tooltips: true  # can't be overriden when options are updated!!!
-          format:
-            to: (value) =>
-              # noUISlider gets the formatted values so we maintain references to
-              # raw values inside an object.
-              if value?
-                formattedValue = @format value
-                @values[formattedValue] = parseFloat value, 10
-                formattedValue
-              else
-                ""
-            from: (formattedValue) =>
-              formattedValue
-
-        # If we have values from search filtering we apply them
-        if res?.filter?.range?[@facet]
-          start = [parseFloat(res.filter.range[@facet].gte, 10),
-                   parseFloat(res.filter.range[@facet].lte, 10)]
-          options.start[0] = start[0] unless isNaN start[0]
-          options.start[1] = start[1] unless isNaN start[1]
+        @sliderOpts = @__getSliderOptions @range
 
         if @slider is null
-          @__renderSlider options
+          @__renderSlider @sliderOpts
         else
-          @slider.noUiSlider.updateOptions options
+          @slider.noUiSlider.updateOptions @sliderOpts
 
         # Pips are buggy in noUiSlider so we are going to paint them ourselves
         # unless options.pips has a value (either false or real options)
-        unless options.pips?
-          values =
-            0: options.format.to options.range.min
-            50: options.format.to((options.range.min + options.range.max) / 2.0)
-            100: options.format.to options.range.max
-          @__renderPips values
+        (@__renderPips @range) unless @options.pips?
 
-        @trigger "df:widget:render", [res]
-        @trigger "df:rendered", [res] # DEPRECATED
-    else
-      false
+        @trigger "df:widget:render", [response]
+        @trigger "df:rendered", [response] # DEPRECATED
 
   ###*
    * Cleans the widget by removing all the HTML inside the container element.
@@ -234,6 +238,7 @@ class RangeFacet extends Display
   ###
   clean: ->
     @slider = null
+    @values = {}
     super
 
 

@@ -3530,7 +3530,7 @@
 
 },{"../../util/dfdom":6,"./termsfacet":18,"extend":24}],17:[function(require,module,exports){
 (function() {
-  var Display, RangeFacet, defaultTemplate, extend, noUiSlider,
+  var Display, RangeFacet, extend, noUiSlider,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -3540,8 +3540,6 @@
 
   Display = require("../display");
 
-  defaultTemplate = "<div class=\"{{sliderClassName}}\" data-facet=\"{{name}}\"></div>";
-
 
   /**
    * Represents a range slider control to filter numbers within a range.
@@ -3550,43 +3548,61 @@
   RangeFacet = (function(superClass) {
     extend1(RangeFacet, superClass);
 
+    RangeFacet.defaultTemplate = "<div class=\"df-slider\" data-facet=\"{{name}}\"></div>";
+
+    RangeFacet.formatFn = {
+      to: function(value) {
+        var formattedValue;
+        if (value != null) {
+          value = parseFloat(value, 10);
+          formattedValue = this.format(value);
+          this.values[formattedValue] = value;
+          return formattedValue;
+        } else {
+          return "";
+        }
+      },
+      from: function(formattedValue) {
+        return formattedValue;
+      }
+    };
+
+    RangeFacet.basicFormat = function(value) {
+      return (("" + (value.toFixed(2))).replace(/0+$/, "")).replace(/\.{1}$/, "");
+    };
+
 
     /**
-     * Apart from inherited options, this widget accepts these options:
+     * @param  {String|Node|DfDomElement} element Container node.
+     * @param  {String} facet                     Name of the facet as defined
+     *                                            in Doofinder.
+     * @param  {Object} options                   Options object.
+     * @public
      *
-     * - sliderClassName (String) The CSS class of the node that actually holds
-     *                            the slider.
+     * Options (apart from those inherited from Display):
      *
-     * IMPORTANT: Pips support is buggy so, if no sliderOptions.pips is found, the
-     * widget paints them itself. If the sliderOptions.pips is false, no pips are
-     * displayed. In any other case, noUiSlider is in charge of displaying them.
-     *
-     * @param  {String|Node|DfDomElement} element  Container node.
-     * @param  {String} facet    Name of the facet/filter.
-     * @param  {Object} options Options object. Empty by default.
+     * - pips: noUiSlider pips configuration or `false`. `undefined` by default.
+     * - format: Function that receives a number and returns it formatted
+     *           as string.
      */
 
     function RangeFacet(element, facet, options) {
+      var defaults;
       this.facet = facet;
       if (options == null) {
         options = {};
       }
-      options = extend(true, {
-        template: defaultTemplate
-      }, options);
-      RangeFacet.__super__.constructor.call(this, element, options);
-      this.sliderClassName = options.sliderClassName || 'df-slider';
-      this.sliderSelector = "." + this.sliderClassName + "[data-facet=\"" + this.facet + "\"]";
-      if (this.options.format) {
-        this.format = this.options.format;
-      } else {
-        this.format = function(value) {
-          return (value != null) && (value.toFixed(2) + '').replace(/0+$/, '').replace(/\.{1}$/, '');
-        };
-      }
+      defaults = {
+        template: this.constructor.defaultTemplate,
+        pips: void 0,
+        format: void 0
+      };
+      RangeFacet.__super__.constructor.call(this, element, extend(true, defaults, options));
+      this.format = this.options.format || this.constructor.basicFormat;
       this.slider = null;
       this.values = {};
       this.range = {};
+      this.sliderOpts = {};
     }
 
 
@@ -3597,30 +3613,20 @@
      */
 
     RangeFacet.prototype.__renderSlider = function(options) {
-      var context;
-      context = {
-        name: this.facet,
-        sliderClassName: this.sliderClassName
-      };
-      this.element.html(this.__renderTemplate(context));
+      this.element.html(this.__renderTemplate({
+        name: this.facet
+      }));
       this.slider = document.createElement('div');
-      this.element.find(this.sliderSelector).append(this.slider);
+      (this.element.find("[data-facet=\"" + this.facet + "\"]")).append(this.slider);
       noUiSlider.create(this.slider, options);
-      this.slider.noUiSlider.on('change', this.__sliderChanged.bind(this));
+      this.slider.noUiSlider.on('change', this.__handleSliderChanged.bind(this));
       return void 0;
     };
 
 
-    /*
-    Renders the slider pips
-    
-    @param {Object} Values for 0%, 50% and 100% pips ({0: 1, 50: 2, 100: 3})
-    @api private
-     */
-
-
     /**
      * Renders the slider's pips.
+     * @protected
      * @param  {Object} values Values for 0%, 50% and 100% pips:
      *
      *                         {
@@ -3630,9 +3636,14 @@
      *                         }
      */
 
-    RangeFacet.prototype.__renderPips = function(values) {
-      var i, j, len, markerType, node, pip, pips, pos, ref, ref1, results, results1, value;
-      pips = this.slider.querySelector('div.noUi-pips.noUi-pips-horizontal');
+    RangeFacet.prototype.__renderPips = function(range) {
+      var i, j, len, markerType, node, pip, pips, pos, ref, ref1, results, results1, value, values;
+      values = {
+        0: this.constructor.formatFn.to.call(this, range.min),
+        50: this.constructor.formatFn.to.call(this, (range.min + range.max) / 2.0),
+        100: this.constructor.formatFn.to.call(this, range.max)
+      };
+      pips = this.slider.querySelector("div.noUi-pips.noUi-pips-horizontal");
       if (pips === null) {
         pips = document.createElement('div');
         pips.setAttribute('class', 'noUi-pips noUi-pips-horizontal');
@@ -3660,7 +3671,7 @@
         results1 = [];
         for (j = 0, len = ref1.length; j < len; j++) {
           node = ref1[j];
-          results1.push(node.innerHTML = values != null ? values[node.getAttribute('data-position')] : '');
+          results1.push(node.innerHTML = values[node.getAttribute('data-position')]);
         }
         return results1;
       }
@@ -3671,45 +3682,106 @@
      * Gets a proper range for the slider given a search response.
      * @protected
      * @param  {Object} res Search response.
-     * @return {Object}     Object with `min` and `max` properties.
+     * @return {Object}     Object with `min`, `max`, `start` and `end` keys.
      */
 
-    RangeFacet.prototype.__getRangeFromResponse = function(res) {
-      var range, stats;
-      stats = res.facets[this.facet].range.buckets[0].stats;
-      return range = {
+    RangeFacet.prototype.__getRangeFromResponse = function(response) {
+      var range, rangeFilter, ref, ref1, stats;
+      stats = response.facets[this.facet].range.buckets[0].stats;
+      range = {
         min: parseFloat(stats.min || 0, 10),
         max: parseFloat(stats.max || 0, 10)
       };
+      if ((rangeFilter = response != null ? (ref = response.filter) != null ? (ref1 = ref.range) != null ? ref1[this.facet] : void 0 : void 0 : void 0) != null) {
+        range.start = (parseFloat(rangeFilter.gte, 10)) || range.min;
+        range.end = (parseFloat(rangeFilter.lte, 10)) || range.max;
+      } else {
+        range.start = range.min;
+        range.end = range.max;
+      }
+      return range;
     };
 
-    RangeFacet.prototype.__sliderChanged = function() {
-      var max, min, ref;
-      ref = this.slider.noUiSlider.get(), min = ref[0], max = ref[1];
-      if (this.values[min] === this.range.min && this.values[max] === this.range.max) {
+
+    /**
+     * Builds an options object for noUiSlider given a range object.
+     *
+     * @protected
+     * @param  {Object} range Object as returned by `__getRangeFromResponse`.
+     * @return {Object}       Options object.
+     */
+
+    RangeFacet.prototype.__getSliderOptions = function(range) {
+      return {
+        start: [range.start, range.end],
+        range: {
+          min: range.min,
+          max: range.max
+        },
+        connect: true,
+        tooltips: true,
+        format: {
+          to: this.constructor.formatFn.to.bind(this),
+          from: this.constructor.formatFn.from.bind(this)
+        }
+      };
+    };
+
+
+    /**
+     * Updates the controller when the range changes.
+     * @protected
+     */
+
+    RangeFacet.prototype.__handleSliderChanged = function() {
+      var end, ref, start;
+      ref = this.get(), start = ref[0], end = ref[1];
+      if (start === this.range.min && end === this.range.max) {
         this.controller.removeFilter(this.facet);
       } else {
         this.controller.addFilter(this.facet, {
-          gte: this.values[min],
-          lte: this.values[max]
+          gte: start,
+          lte: end
         });
       }
+      this.values = {};
       this.controller.refresh();
-      this.trigger("df:range:change", [
+      return this.trigger("df:range:change", [
         {
-          gte: this.values[min],
-          lte: this.values[max]
+          gte: start,
+          lte: end
         }, {
           min: this.range.min,
           max: this.range.max
         }
       ]);
-      return this.values = {};
     };
+
+
+    /**
+     * Sets the range of the slider.
+     * @param {Array} value 2-number array with min and max values to set.
+     */
 
     RangeFacet.prototype.set = function(value) {
       this.slider.noUiSlider.set(value);
-      return this.__sliderChanged();
+      return this.__handleSliderChanged();
+    };
+
+
+    /**
+     * Returns the current value of the slider.
+     * @return {Array} value 2-number array with start and end values set.
+     */
+
+    RangeFacet.prototype.get = function() {
+      var end, ref, start;
+      if (this.slider != null) {
+        ref = this.slider.noUiSlider.get(), start = ref[0], end = ref[1];
+        return [this.values[start], this.values[end]];
+      } else {
+        return [];
+      }
     };
 
 
@@ -3721,65 +3793,24 @@
      * @fires RangeFacet#df:widget:render
      */
 
-    RangeFacet.prototype.render = function(res) {
-      var options, ref, ref1, start, values;
-      if (res.page === 1) {
-        this.range = this.__getRangeFromResponse(res);
+    RangeFacet.prototype.render = function(response) {
+      if (response.page === 1) {
+        this.range = this.__getRangeFromResponse(response);
         if (this.range.min === this.range.max) {
           return this.clean();
         } else {
-          options = {
-            start: [this.range.min, this.range.max],
-            range: this.range,
-            connect: true,
-            tooltips: true,
-            format: {
-              to: (function(_this) {
-                return function(value) {
-                  var formattedValue;
-                  if (value != null) {
-                    formattedValue = _this.format(value);
-                    _this.values[formattedValue] = parseFloat(value, 10);
-                    return formattedValue;
-                  } else {
-                    return "";
-                  }
-                };
-              })(this),
-              from: (function(_this) {
-                return function(formattedValue) {
-                  return formattedValue;
-                };
-              })(this)
-            }
-          };
-          if (res != null ? (ref = res.filter) != null ? (ref1 = ref.range) != null ? ref1[this.facet] : void 0 : void 0 : void 0) {
-            start = [parseFloat(res.filter.range[this.facet].gte, 10), parseFloat(res.filter.range[this.facet].lte, 10)];
-            if (!isNaN(start[0])) {
-              options.start[0] = start[0];
-            }
-            if (!isNaN(start[1])) {
-              options.start[1] = start[1];
-            }
-          }
+          this.sliderOpts = this.__getSliderOptions(this.range);
           if (this.slider === null) {
-            this.__renderSlider(options);
+            this.__renderSlider(this.sliderOpts);
           } else {
-            this.slider.noUiSlider.updateOptions(options);
+            this.slider.noUiSlider.updateOptions(this.sliderOpts);
           }
-          if (options.pips == null) {
-            values = {
-              0: options.format.to(options.range.min),
-              50: options.format.to((options.range.min + options.range.max) / 2.0),
-              100: options.format.to(options.range.max)
-            };
-            this.__renderPips(values);
+          if (this.options.pips == null) {
+            this.__renderPips(this.range);
           }
-          this.trigger("df:widget:render", [res]);
-          return this.trigger("df:rendered", [res]);
+          this.trigger("df:widget:render", [response]);
+          return this.trigger("df:rendered", [response]);
         }
-      } else {
-        return false;
       }
     };
 
@@ -3792,6 +3823,7 @@
 
     RangeFacet.prototype.clean = function() {
       this.slider = null;
+      this.values = {};
       return RangeFacet.__super__.clean.apply(this, arguments);
     };
 
