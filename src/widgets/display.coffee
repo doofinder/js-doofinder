@@ -3,24 +3,22 @@ Widget = require "./widget"
 helpers = require "../util/helpers"
 
 
-defaultTemplate = """
-  {{#results}}
-    <a href="{{link}}" class="df-card">{{title}}</a>
-  {{/results}}
-"""
-
-
 ###*
  * Widget that renders a search response within a given template.
 ###
 class Display extends Widget
+  @defaultTemplate = """
+    {{#results}}
+      <a href="{{link}}" class="df-card">{{title}}</a>
+    {{/results}}
+  """
   ###*
    * @param  {(String|Node|DfDomElement)} element  Container node.
    * @param  {Object}                     options  Options for the widget.
   ###
   constructor: (element, options = {}) ->
     defaults =
-      template: defaultTemplate
+      template: @constructor.defaultTemplate
       templateFunctions: {}
       templateVars: {}
       translations: {}

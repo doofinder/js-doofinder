@@ -115,7 +115,6 @@ class ScrollDisplay extends Display
     direction = if rect.scrollLeft >= @previousDelta then "right" else "left"
     @previousDelta = rect.scrollLeft
     @trigger "df:widget:scroll", [rect.scrollLeft, direction]
-    @container.trigger "df:scroll" # DEPRECATED
 
   __scrollY: ->
     rect = @container.box()
@@ -125,7 +124,6 @@ class ScrollDisplay extends Display
     direction = if rect.scrollTop >= @previousDelta then "down" else "up"
     @previousDelta = rect.scrollTop
     @trigger "df:widget:scroll", [rect.scrollTop, direction]
-    @container.trigger "df:scroll" # DEPRECATED
 
   __getNextPage: ->
     if @controller? and not @working
@@ -141,6 +139,5 @@ class ScrollDisplay extends Display
       @working = false
       @element.append @__renderTemplate res
       @trigger "df:widget:render", [res]
-      @trigger "df:rendered", [res] # DEPRECATED
 
 module.exports = ScrollDisplay

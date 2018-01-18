@@ -90,7 +90,6 @@ class QueryInput extends Widget
     if valueOk and (valueChanged or force)
       @stopTimer = setTimeout (=>
         @trigger "df:input:stop", [@value]
-        @trigger "df:typing_stopped", [@value] # DEPRECATED
       ), @options.typingTimeout
       @previousValue = @value.toUpperCase()
       @controller.forEach (controller) => controller.search @value

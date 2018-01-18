@@ -59,14 +59,12 @@ class Widget
   ###
   render: (res) ->
     @trigger "df:widget:render", [res]
-    @trigger "df:rendered", [res] # DEPRECATED
 
   ###*
    * Cleans the widget. Intended to be overriden.
   ###
   clean: ->
     @trigger "df:widget:clean"
-    @trigger "df:cleaned" # DEPRECATED
 
   #
   # Events

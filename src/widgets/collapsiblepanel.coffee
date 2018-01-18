@@ -13,16 +13,16 @@ class CollapsiblePanel extends Panel
     super element, getWidget, options
 
     Object.defineProperty @, 'isCollapsed', get: ->
-      (@panelElement.attr "data-df-collapse") is "true"
+      (@panelElement.attr "data-collapse") is "true"
 
   collapse: ->
     if @rendered
-      @panelElement.attr "data-df-collapse", "true"
+      @panelElement.attr "data-collapse", "true"
       @trigger "df:collapse:change", [true]
 
   expand: ->
     if @rendered
-      @panelElement.attr "data-df-collapse", "false"
+      @panelElement.attr "data-collapse", "false"
       @trigger "df:collapse:change", [false]
 
   toggle: ->

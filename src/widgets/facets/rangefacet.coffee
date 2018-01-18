@@ -229,7 +229,6 @@ class RangeFacet extends Display
         (@__renderPips @range) unless @options.pips?
 
         @trigger "df:widget:render", [response]
-        @trigger "df:rendered", [response] # DEPRECATED
 
   ###*
    * Cleans the widget by removing all the HTML inside the container element.

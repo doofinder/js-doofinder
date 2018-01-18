@@ -29,7 +29,7 @@ class Controller
       page: 1
       rpp: 10
 
-    @defaults = extend true, defaults, (@__fixParams defaultParams)
+    @defaults = extend true, defaults, defaultParams
     @queryCounter = 0
 
     @widgets = []
@@ -50,23 +50,6 @@ class Controller
   #
 
   ###*
-   * Fixes any deprecations in the search parameters.
-   *
-   * - Client now expects "filter" instead of "filters" because the parameters
-   *   are sent "as is" in the querystring, no re-processing is made.
-   *
-   * @param  {Object} params
-   * @return {Object}
-   * @protected
-  ###
-  __fixParams: (params) ->
-    if params.filters?
-      params.filter = params.filters
-      delete params.filters
-      errors.warning "`filters` key is deprecated for search parameters, use `filter` instead", @
-    params
-
-  ###*
    * Resets status and optionally forces query and params. As it is a reset
    * aimed to perform a new search, page is forced to 1 in any case.
    *
@@ -76,7 +59,7 @@ class Controller
   ###
   reset: (query = null, params = {}) ->
     @query = query
-    @params = extend true, {}, @defaults, (@__fixParams params), page: 1
+    @params = extend true, {}, @defaults, params, page: 1
     # At least one request sent, to detect if 1st page requested
     @requestDone = false
     @lastPage = null
@@ -155,7 +138,6 @@ class Controller
     request = @client.search @query, params, (err, res) =>
       if err
         @trigger "df:results:error", [err]
-        @trigger "df:error_received", [err] # DEPRECATED
       else
         @lastPage = Math.ceil (res.total / res.results_per_page)
         @params.query_name = res.query_name
@@ -163,8 +145,6 @@ class Controller
         @renderWidgets res
 
         @trigger "df:results:success", [res]
-        @trigger "df:results_received", [res] # DEPRECATED
-
         @trigger "df:results:end", [res] if @isLastPage
 
   #
@@ -221,10 +201,6 @@ class Controller
   ###
   trigger: (eventName, args) ->
     bean.fire @, eventName, args
-
-  bind: (eventName, handler) ->
-    errors.warning "`bind()` is deprecated, use `on()` instead", @
-    @on eventName, handler
 
   #
   # Widgets
@@ -313,11 +289,6 @@ class Controller
   ###
   removeParam: (key) ->
     delete @params[key]
-
-  # DEPRECATED
-  addParam: (key, value) ->
-    errors.warning "`addParam()` is deprecated, use `setParam()` instead", @
-    @setParam key, value
 
   #
   # Filters

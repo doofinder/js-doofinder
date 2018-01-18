@@ -302,7 +302,7 @@
         page: 1,
         rpp: 10
       };
-      this.defaults = extend(true, defaults, this.__fixParams(defaultParams));
+      this.defaults = extend(true, defaults, defaultParams);
       this.queryCounter = 0;
       this.widgets = [];
       Object.defineProperty(this, 'hashid', {
@@ -325,27 +325,6 @@
 
 
     /**
-     * Fixes any deprecations in the search parameters.
-     *
-     * - Client now expects "filter" instead of "filters" because the parameters
-     *   are sent "as is" in the querystring, no re-processing is made.
-     *
-     * @param  {Object} params
-     * @return {Object}
-     * @protected
-     */
-
-    Controller.prototype.__fixParams = function(params) {
-      if (params.filters != null) {
-        params.filter = params.filters;
-        delete params.filters;
-        errors.warning("`filters` key is deprecated for search parameters, use `filter` instead", this);
-      }
-      return params;
-    };
-
-
-    /**
      * Resets status and optionally forces query and params. As it is a reset
      * aimed to perform a new search, page is forced to 1 in any case.
      *
@@ -362,7 +341,7 @@
         params = {};
       }
       this.query = query;
-      this.params = extend(true, {}, this.defaults, this.__fixParams(params), {
+      this.params = extend(true, {}, this.defaults, params, {
         page: 1
       });
       this.requestDone = false;
@@ -463,14 +442,12 @@
       return request = this.client.search(this.query, params, (function(_this) {
         return function(err, res) {
           if (err) {
-            _this.trigger("df:results:error", [err]);
-            return _this.trigger("df:error_received", [err]);
+            return _this.trigger("df:results:error", [err]);
           } else {
             _this.lastPage = Math.ceil(res.total / res.results_per_page);
             _this.params.query_name = res.query_name;
             _this.renderWidgets(res);
             _this.trigger("df:results:success", [res]);
-            _this.trigger("df:results_received", [res]);
             if (_this.isLastPage) {
               return _this.trigger("df:results:end", [res]);
             }
@@ -540,11 +517,6 @@
 
     Controller.prototype.trigger = function(eventName, args) {
       return bean.fire(this, eventName, args);
-    };
-
-    Controller.prototype.bind = function(eventName, handler) {
-      errors.warning("`bind()` is deprecated, use `on()` instead", this);
-      return this.on(eventName, handler);
     };
 
 
@@ -655,11 +627,6 @@
 
     Controller.prototype.removeParam = function(key) {
       return delete this.params[key];
-    };
-
-    Controller.prototype.addParam = function(key, value) {
-      errors.warning("`addParam()` is deprecated, use `setParam()` instead", this);
-      return this.setParam(key, value);
     };
 
 
@@ -3138,21 +3105,21 @@
       CollapsiblePanel.__super__.constructor.call(this, element, getWidget, options);
       Object.defineProperty(this, 'isCollapsed', {
         get: function() {
-          return (this.panelElement.attr("data-df-collapse")) === "true";
+          return (this.panelElement.attr("data-collapse")) === "true";
         }
       });
     }
 
     CollapsiblePanel.prototype.collapse = function() {
       if (this.rendered) {
-        this.panelElement.attr("data-df-collapse", "true");
+        this.panelElement.attr("data-collapse", "true");
         return this.trigger("df:collapse:change", [true]);
       }
     };
 
     CollapsiblePanel.prototype.expand = function() {
       if (this.rendered) {
-        this.panelElement.attr("data-df-collapse", "false");
+        this.panelElement.attr("data-collapse", "false");
         return this.trigger("df:collapse:change", [false]);
       }
     };
@@ -3203,7 +3170,7 @@
 
 },{"./panel":19,"extend":24}],15:[function(require,module,exports){
 (function() {
-  var Display, Widget, defaultTemplate, extend, helpers,
+  var Display, Widget, extend, helpers,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -3213,8 +3180,6 @@
 
   helpers = require("../util/helpers");
 
-  defaultTemplate = "{{#results}}\n  <a href=\"{{link}}\" class=\"df-card\">{{title}}</a>\n{{/results}}";
-
 
   /**
    * Widget that renders a search response within a given template.
@@ -3222,6 +3187,8 @@
 
   Display = (function(superClass) {
     extend1(Display, superClass);
+
+    Display.defaultTemplate = "{{#results}}\n  <a href=\"{{link}}\" class=\"df-card\">{{title}}</a>\n{{/results}}";
 
 
     /**
@@ -3235,7 +3202,7 @@
         options = {};
       }
       defaults = {
-        template: defaultTemplate,
+        template: this.constructor.defaultTemplate,
         templateFunctions: {},
         templateVars: {},
         translations: {}
@@ -3809,8 +3776,7 @@
           if (this.options.pips == null) {
             this.__renderPips(this.range);
           }
-          this.trigger("df:widget:render", [response]);
-          return this.trigger("df:rendered", [response]);
+          return this.trigger("df:widget:render", [response]);
         }
       }
     };
@@ -3906,15 +3872,7 @@
               _this.controller.removeFilter(facetName, facetValue);
             }
             _this.controller.refresh();
-            _this.trigger("df:term:click", [facetName, facetValue, isSelected]);
-            return _this.trigger("df:term_clicked", [
-              {
-                facetName: facetName,
-                facetValue: facetValue,
-                selected: isSelected,
-                totalSelected: _this.totalSelected
-              }
-            ]);
+            return _this.trigger("df:term:click", [facetName, facetValue, isSelected]);
           };
         })(this));
       }
@@ -4039,8 +3997,7 @@
         this.element[this.options.insertionMethod](this.__renderTemplate(res));
         this.__initPanel(res);
         this.__renderContent(res);
-        this.trigger("df:widget:render", [res]);
-        return this.trigger("df:rendered", [res]);
+        return this.trigger("df:widget:render", [res]);
       }
     };
 
@@ -4062,8 +4019,7 @@
 
     Panel.prototype.clean = function() {
       if (this.rendered) {
-        this.trigger("df:widget:clean");
-        return this.trigger("df:cleaned");
+        return this.trigger("df:widget:clean");
       }
     };
 
@@ -4215,8 +4171,7 @@
       if (valueOk && (valueChanged || force)) {
         this.stopTimer = setTimeout(((function(_this) {
           return function() {
-            _this.trigger("df:input:stop", [_this.value]);
-            return _this.trigger("df:typing_stopped", [_this.value]);
+            return _this.trigger("df:input:stop", [_this.value]);
           };
         })(this)), this.options.typingTimeout);
         this.previousValue = this.value.toUpperCase();
@@ -4396,8 +4351,7 @@
       }
       direction = rect.scrollLeft >= this.previousDelta ? "right" : "left";
       this.previousDelta = rect.scrollLeft;
-      this.trigger("df:widget:scroll", [rect.scrollLeft, direction]);
-      return this.container.trigger("df:scroll");
+      return this.trigger("df:widget:scroll", [rect.scrollLeft, direction]);
     };
 
     ScrollDisplay.prototype.__scrollY = function() {
@@ -4410,8 +4364,7 @@
       }
       direction = rect.scrollTop >= this.previousDelta ? "down" : "up";
       this.previousDelta = rect.scrollTop;
-      this.trigger("df:widget:scroll", [rect.scrollTop, direction]);
-      return this.container.trigger("df:scroll");
+      return this.trigger("df:widget:scroll", [rect.scrollTop, direction]);
     };
 
     ScrollDisplay.prototype.__getNextPage = function() {
@@ -4432,8 +4385,7 @@
       } else {
         this.working = false;
         this.element.append(this.__renderTemplate(res));
-        this.trigger("df:widget:render", [res]);
-        return this.trigger("df:rendered", [res]);
+        return this.trigger("df:widget:render", [res]);
       }
     };
 
@@ -4526,8 +4478,7 @@
      */
 
     Widget.prototype.render = function(res) {
-      this.trigger("df:widget:render", [res]);
-      return this.trigger("df:rendered", [res]);
+      return this.trigger("df:widget:render", [res]);
     };
 
 
@@ -4536,8 +4487,7 @@
      */
 
     Widget.prototype.clean = function() {
-      this.trigger("df:widget:clean");
-      return this.trigger("df:cleaned");
+      return this.trigger("df:widget:clean");
     };
 
     Widget.prototype.on = function(eventName, handler) {
