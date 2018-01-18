@@ -12,15 +12,15 @@ module.exports = (grunt) ->
     coffee:
       release:
         files: [
-            expand: true
-            cwd: 'src/'
-            src: [
-              '*.coffee',
-              '**/*.coffee'
-            ]
-            dest: 'lib/'
-            ext: '.js'
+          expand: true
+          cwd: 'src/'
+          src: [
+            '*.coffee',
+            '**/*.coffee'
           ]
+          dest: 'lib/'
+          ext: '.js'
+        ]
 
     browserify:
       default:
