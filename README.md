@@ -218,7 +218,7 @@ client.stats("click", {
 ##### Arguments
 
 | Argument | Required | Type | Description |
-| :--- | :---: | :---: | :--- | :--- |
+| :--- | :---: | :---: | :--- |
 | `eventName` | Yes | `String` | Name of the event you want to send. |
 | `params` | Yes* | `Object` | Parameters sent in the URL.<br>Most events need parameters but it depends on the event. |
 | `callback` | No | `Function` | Callback to be called. |
@@ -551,7 +551,7 @@ controller.renderWidgets(response);
 ##### Arguments
 
 | Argument | Required | Type | Description |
-| :--- | :---: | :---: | :--- | :--- |
+| :--- | :---: | :---: | :--- |
 | `response` | Yes | `Object` | A search response from Doofinder service. |
 
 #### Controller.cleanWidgets()
@@ -1118,8 +1118,8 @@ var resultsWidget = new doofinder.widgets.ScrollDisplay("#scroller", {
 
 This widgets receives the same options as `Display`, plus:
 
-| Option | Required | Type |Default | Description |
-| :--- | :---: | :---: | | :--- |
+| Option | Required | Type | Default | Description |
+| :--- | :---: | :---: | :---: | :--- |
 | `contentElement` | No | `String` | `null` | Reference to a child node of the widget's element. By default the widget's element node contains the HTML rendered by the widget. |
 | `offset` | No | `Number` | `300` | Distance in pixels to the bottom of the content. As soon as the scrolled content reaches this value, a new results page is requested. |
 | `throttle` | No | `Number` | `16` | Time in milliseconds to wait between scroll checks. This value limits calculations associated to the `scroll` event. |
