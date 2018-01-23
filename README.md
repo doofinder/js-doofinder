@@ -76,7 +76,9 @@ The demo markup is inside `index.html` and the related Javascript code can be fo
 
 ## Documentation
 
-**(Work In Progress)**
+**IMPORTANT:** This is a work in progress.
+
+<https://doofinder.github.io/js-doofinder/>
 
 [cors]: https://en.wikipedia.org/wiki/Cross-origin_resource_sharing
 [doofinder admin]: https://app.doofinder.com/admin
