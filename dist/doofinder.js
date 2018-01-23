@@ -890,7 +890,7 @@
 },{"./client":1,"./util/errors":7,"./util/freezer":8,"./util/thing":12,"./widgets/widget":19,"bean":20,"extend":21,"qs":70}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.2.0",
+    version: "5.2.1",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
