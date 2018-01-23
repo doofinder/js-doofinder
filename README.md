@@ -7,34 +7,31 @@ A.K.A. `js-doofinder`, or just `doofinder`, this library makes easy to perform r
 <!-- MarkdownTOC depth="2" autolink="true" autoanchor="false" bracket="round" -->
 
 - [Installation](#installation)
-  - [NPM](#npm)
-  - [Bower](#bower)
-  - [CDN](#cdn)
+    - [NPM](#npm)
+    - [Bower](#bower)
+    - [CDN](#cdn)
 - [TL;DR](#tldr)
 - [Quick Start](#quick-start)
 - [Client Reference](#client-reference)
-  - [doofinder.Client](#doofinderclient)
+    - [doofinder.Client](#doofinderclient)
 - [Controller Reference](#controller-reference)
-  - [doofinder.Controller](#doofindercontroller)
+    - [doofinder.Controller](#doofindercontroller)
 - [Widgets Reference](#widgets-reference)
-  - [doofinder.widgets.Widget](#doofinderwidgetswidget)
-  - [doofinder.widgets.QueryInput](#doofinderwidgetsqueryinput)
-  - [doofinder.widgets.Display](#doofinderwidgetsdisplay)
-  - [doofinder.widgets.ScrollDisplay](#doofinderwidgetsscrolldisplay)
-  - [doofinder.widgets.TermsFacet](#doofinderwidgetstermsfacet)
-  - [doofinder.widgets.CollapsibleTermsFacet](#doofinderwidgetscollapsibletermsfacet)
-  - [doofinder.widgets.RangeFacet](#doofinderwidgetsrangefacet)
-  - [doofinder.widgets.Panel](#doofinderwidgetspanel)
-  - [doofinder.widgets.CollapsiblePanel](#doofinderwidgetscollapsiblepanel)
+    - [doofinder.widgets.Widget](#doofinderwidgetswidget)
+    - [doofinder.widgets.QueryInput](#doofinderwidgetsqueryinput)
+    - [doofinder.widgets.Display](#doofinderwidgetsdisplay)
+    - [doofinder.widgets.ScrollDisplay](#doofinderwidgetsscrolldisplay)
+    - [doofinder.widgets.TermsFacet](#doofinderwidgetstermsfacet)
+    - [doofinder.widgets.RangeFacet](#doofinderwidgetsrangefacet)
 - [Session Reference](#session-reference)
-  - [doofinder.session.ISessionStore](#doofindersessionisessionstore)
-  - [doofinder.session.ObjectSessionStore](#doofindersessionobjectsessionstore)
-  - [doofinder.session.CookieSessionStore](#doofindersessioncookiesessionstore)
-  - [doofinder.session.Session](#doofindersessionsession)
+    - [doofinder.session.ISessionStore](#doofindersessionisessionstore)
+    - [doofinder.session.ObjectSessionStore](#doofindersessionobjectsessionstore)
+    - [doofinder.session.CookieSessionStore](#doofindersessioncookiesessionstore)
+    - [doofinder.session.Session](#doofindersessionsession)
 - [Stats Reference](#stats-reference)
-  - [doofinder.Stats](#doofinderstats)
+    - [doofinder.Stats](#doofinderstats)
 - [How To](#how-to)
-  - [Configure facet widgets dynamically](#configure-facet-widgets-dynamically)
+    - [Configure facet widgets dynamically](#configure-facet-widgets-dynamically)
 
 <!-- /MarkdownTOC -->
 
@@ -1199,101 +1196,6 @@ The variables available for each term are:
 | `selected` | Indicates whether the term is selected or not. |
 | `doc_count` | Indicates the number of results when filtering the current search results by this term. |
 
----
-
-### doofinder.widgets.CollapsibleTermsFacet
-
-`Widget < Display < TermsFacet < CollapsibleTermsFacet`
-
-This is a `TermsFacet` widget that provides a collapsing feature _out of the box_ so, if you receive 20 terms to filter, you can display 10 and hide the rest until the user choose to display them by pressing a button.
-
-Check out the advanced example in the [Demo](#quick-start) to see how it works.
-
-**NOTICE:** Collapsing feature is handled in HTML and CSS via HTML data attributes. If you change the template and want to preserve this behavior, remember to use specific CSS found in `doofinder.css` and attributes defined in the default templates.
-
-#### constructor
-
-```javascript
-var facet = new doofinder.widgets.CollapsibleTermsFacet("#brandFilter", "brand", {
-    size: 5,
-    startCollapsed: false,
-    templateVars: {
-        viewMoreLabel: "Expand",
-        viewLessLabel: "Collapse"
-    }
-});
-```
-
-##### Options
-
-| Option | Required | Type | Default | Description |
-| :--- | :---: | :---: | :---: | :--- |
-| `size` | No | `Number` | `10` | Maximum number of terms visible when the widget is collapsed. |
-| `startCollapsed` | No | `Boolean` | `true` | Determines whether the widget's default status is being collapsed or not. |
-| `buttonTemplate` | Yes | `String` || See _Default Templates_ below. |
-
-##### Default Templates
-
-**WARNING:** Behavior is a bit complex and is recommended to limit modifications to CSS classes and minor stuff.
-
-###### template
-
-Default template of the widget.
-
-```mustache
-{{#terms}}
-  <div class="df-term" data-facet="{{name}}" data-value="{{key}}"
-      {{#extra-content}}{{index}}{{/extra-content}}
-      {{#selected}}data-selected{{/selected}}>
-    <span class="df-term__value">{{key}}</span>
-    <span class="df-term__count">{{doc_count}}</span>
-  </div>
-{{/terms}}
-{{#show-more-button}}{{terms.length}}{{/show-more-button}}
-```
-
-This is basically the same template as in the `TermsFacet` class, but adds a couple of template helpers to mark terms as _extra content_ (terms that will be hidden when the widget is collapsed), and paint the collapse toggle button.
-
-| Function | Description |
-| : --- | : --- |
-| `extra-content` | Receives the index of the result in the list of results and marks the term as _extra content_ if needed. |
-| `show-more-button` | Paints the button if there're more terms than should be visible when the widget is collapsed (uses the `size` option). |
-
-Apart from those inherited from `TermFacet`, there're some `data` attributes that must be present for the widget to work properly:
-
-| Attribute | Description |
-| : --- | : --- |
-| `data-extra-content` | Terms that are considered _extra content_ get this attribute added. |
-| `data-view-extra-content` | This attribute is dynamically assigned to the widget container to indicate whether the hidden terms must be visible or not. |
-
-###### buttonTemplate
-
-Default template for the visibility toggle button.
-
-```mustache
-<button type="button" data-toggle-extra-content
-    data-text-normal="{{#translate}}{{viewMoreLabel}}{{/translate}}"
-    data-text-toggle="{{#translate}}{{viewLessLabel}}{{/translate}}">
-  {{#collapsed}}{{#translate}}{{viewMoreLabel}}{{/translate}}{{/collapsed}}
-  {{^collapsed}}{{#translate}}{{viewLessLabel}}{{/translate}}{{/collapsed}}
-</button>
-```
-
-A couple of template variables are included by default in the rendering context:
-
-| Variable | Type | Default | Description |
-| : --- | : --- : | : --- : | : --- |
-| `viewMoreLabel` | `String` | `"View more…"` | Text to be rendered as the toggle button text when facets are collapsed. |
-| `viewLessLabel` | `String` | `"View less…"` | Text to be rendered as the toggle button text when all facets are visible. |
-
-You can change them by passing different values in the options object.
-
-There's also a `data` attribute that must be present for the widget to work properly:
-
-| Attribute | Description |
-| : --- | : --- |
-| `data-toggle-extra-content` | Used to identify the button as the terms visibility toggle |
-
 #### Events
 
 Apart from the default events, this widget triggers the following events.
@@ -1401,184 +1303,6 @@ widget.on("df:range:change", function(value, range){
 | : --- | : --- : | : --- |
 | `value` | `Object` | Current selected range. |
 | `range` | `Object` | Valid range. |
-
----
-
-### doofinder.widgets.Panel
-
-`Widget < Display < Panel`
-
-This is a special widget. It's not used to filter anything, just as a presentational container for another widget. Useful when you want to separate widgets in _sections_ (like facet widgets) with a label but you iterate them dynamically.
-
-#### constructor
-
-```javascript
-// assume facet variable obtained from the server
-var panel = new doofinder.widgets.Panel("#aside", function(panel){
-  var widget = new doofinder.widgets.TermsFacet(panel.contentElement, facet.name);
-  widget.on("df:widget:render", function(response){
-    var suffix = this.selectedTerms > 0 ? ' (' + this.selectedTerms + ')' : '';
-    panel.labelElement.html(facet.label + suffix);
-  });
-  return widget;
-}, {
-  label: facet.label
-});
-```
-
-##### Arguments
-
-| Argument | Required | Type | Description |
-| :--- | :---: | :---: | :--- |
-| `element` | Yes | `String` | CSS Selector. |
-||| `Node` | Direct reference to a DOM Node. |
-||| `DfDomElement` | Reference to a DOM node via `dfdom`. |
-| `getFacet` | Yes | `Function` | Function that receives the panel widget instance and returns an instance of a widget that will be rendered inside the panel. |
-| `options` | No | `Object` | Options object. |
-
-##### Options
-
-| Option | Required | Type | Values | Default | Description |
-| :--- | :---: | :---: | :---: | :---: | :--- |
-| `label` | No | `String` || `null` | Label used in the panel header. If not provided, no header will be rendered by default (unless you modify the default template). |
-| `insertionMethod` | Yes | `String` | `append` | `append` | How to insert the panel inside its container. It's appended by default. |
-|||| `prepend` ||  |
-|||| `before` ||  |
-|||| `after` ||  |
-|||| `html` || This replaces the container content and usually is not used. |
-
-##### Default Template
-
-```mustache
-<div class="df-panel" id="{{panelElement}}">
-  {{#label}}
-  <div class="df-panel__label" id="{{labelElement}}">{{label}}</div>
-  {{/label}}
-  <div class="df-panel__content" id="{{contentElement}}"></div>
-</div>
-```
-
-Some template variables are included by default in the rendering context:
-
-| Variable | Type | Default | Description |
-| : --- | : --- : | : --- : | : --- |
-| `panelElement` | `String` | `"df-<random>"` | id of the panel container. |
-| `labelElement` | `String` | `"df-<random>"` | id of the label container. |
-| `contentElement` | `String` | `"df-<random>"` | id of the content container. |
-
-##### The `getFacet()` Function
-
-Used to obtain the widget in the precise moment it can be rendered (the panel must be rendered first), gives access to the panel instance, so you can make use of cached references to the panel elements:
-
-| Variable | Description |
-| : --- | : --- |
-| `panelElement` | The panel node. |
-| `labelElement` | The label node. |
-| `contentElement` | The content node. |
-
-This way you can use events of the contained widget to alter the panel itself, for instance its label.
-
-#### Events
-
-Apart from the default events, this widget triggers the following events.
-
-##### df:widget:renderContent
-
-Triggered when the widget contained on the panel has been rendered.
-
-```javascript
-panel.on("df:widget:renderContent", function(widget){
-  // widget is ready to use
-});
-```
-
-| Argument | Type | Description |
-| : --- | : --- : | : --- |
-| `widget` | `Widget` | Widget contained in the panel. |
-
----
-
-### doofinder.widgets.CollapsiblePanel
-
-`Widget < Display < Panel < CollapsiblePanel`
-
-This widget is a variant of `Panel`. It provides collapsing features so a user can collapse the panel by clicking on its header.
-
-#### constructor
-
-```javascript
-// assume facet variable obtained from the server
-var panel = new doofinder.widgets.CollapsiblePanel(
-  "#aside", 
-  function(panel){ 
-    /* ... */
-  }, 
-  {
-    label: facet.label,
-    startCollapsed: true
-  }
-);
-```
-
-##### Options
-
-Apart from the `Panel` options, this widget provides:
-
-| Option | Required | Type | Default | Description |
-| :--- | :---: | :---: | :---: | :--- |
-| `startCollapsed` | No | `Boolean` | `false` | Indicates whether the panel is rendered collapsed by default or not. |
-
-#### CollapsiblePanel.collapse()
-
-This method collapses the panel.
-
-```javascript
-panel.collapse();
-```
-
-#### CollapsiblePanel.expand()
-
-This method expands the panel.
-
-```javascript
-panel.expand();
-```
-
-#### CollapsiblePanel.toggle()
-
-This method toggles the panel status; if collapsed it expands and vice versa.
-
-```javascript
-panel.toggle();
-```
-
-#### CollapsiblePanel.reset()
-
-This method resets the panel collapse status based on the value of the `startCollapsed` option.
-
-```javascript
-panel.reset();
-```
-
-#### Events
-
-Apart from the default events, this widget triggers the following events:
-
-##### df:collapse:change
-
-Triggered when the panel collapse status change.
-
-```javascript
-panel.on("df:collapse:change", function(collapsed) {
-  if (collapsed) {
-    // ...
-  }
-});
-```
-
-| Argument | Type | Description |
-| : --- | : --- : | : --- |
-| `collapsed` | `Boolean` | Whether the panel is collapsed or not. |
 
 ## Session Reference
 
