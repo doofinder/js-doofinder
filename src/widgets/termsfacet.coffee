@@ -1,6 +1,6 @@
 extend = require "extend"
-Display = require "../display"
-$ = require "../../util/dfdom"
+Display = require "./display"
+$ = require "../util/dfdom"
 
 ###*
  * Represents a terms selector control to filter by the possible values of a

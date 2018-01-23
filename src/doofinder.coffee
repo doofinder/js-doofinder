@@ -15,12 +15,8 @@ module.exports =
     Display: require "./widgets/display"
     ScrollDisplay: require "./widgets/scrolldisplay"
 
-    TermsFacet: require "./widgets/facets/termsfacet"
-    CollapsibleTermsFacet: require "./widgets/facets/collapsibletermsfacet"
-    RangeFacet: require "./widgets/facets/rangefacet"
-
-    Panel: require "./widgets/panel"
-    CollapsiblePanel: require "./widgets/collapsiblepanel"
+    TermsFacet: require "./widgets/termsfacet"
+    RangeFacet: require "./widgets/rangefacet"
 
   util:
     bean: require "bean"
