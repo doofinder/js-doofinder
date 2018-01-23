@@ -24,10 +24,9 @@ A.K.A. `js-doofinder`, or just `doofinder`, this library makes easy to perform r
     - [doofinder.widgets.TermsFacet](#doofinderwidgetstermsfacet)
     - [doofinder.widgets.RangeFacet](#doofinderwidgetsrangefacet)
 - [Session Reference](#session-reference)
-    - [doofinder.session.ISessionStore](#doofindersessionisessionstore)
+    - [doofinder.session.Session](#doofindersessionsession)
     - [doofinder.session.ObjectSessionStore](#doofindersessionobjectsessionstore)
     - [doofinder.session.CookieSessionStore](#doofindersessioncookiesessionstore)
-    - [doofinder.session.Session](#doofindersessionsession)
 - [Stats Reference](#stats-reference)
     - [doofinder.Stats](#doofinderstats)
 - [How To](#how-to)
@@ -1306,32 +1305,123 @@ widget.on("df:range:change", function(value, range){
 
 ## Session Reference
 
-A `Session` is used to store user data. User (session) data may be persisted or not, depending on the _store_ class being used.
+A `Session` is used to store user data. User (session) data may be persisted in different ways, depending on the _store_ class being used.
 
-_Store_ classes must implement `ISessionStore` so `Session` instances know how to work with them.
+Currently there are two _store_ classes available:
 
-### doofinder.session.ISessionStore
+- [`ObjectSessionStore`](#doofindersessionobjectsessionstore)
+- [`CookieSessionStore`](#doofindersessioncookiesessionstore)
 
-Interface that all storage classes must implement. See [`Session`](#doofindersessionsession).
+### doofinder.session.Session
 
-It provides some public methods:
+Class that represents a user session key/value store persisted somewhere.
 
-| Method | Description |
-| :--- | :--- |
-| `get(key)` | Gets the value for the specified key from the storage. |
-| `set(key, value)` | Sets the value for the specified key in the storage. |
-| `del(key)` | Deletes the specified key from the storage. |
+**NOTICE:** A `session_id` key with a valid value is always generated if it doesn't already exists when you access the session to get or set data. This is enforced by design but you can override session id if you want.
 
-And requires some protected methods to be implemented:
+#### constructor
 
-| Method | Description |
-| :--- | :--- |
-| `__getData()` | Gets the current data obj from the underlying storage and ensures that a `session_id` is created if it doesn't exist, like a signature that all session data must have. |
-| `__setData(dataObj)` | Saves the current data obj into the underlying storage. |
-| `clean()` | Deletes all data from the underlying storage. |
-| `exists()` | Checks whether the session exists or not. |
+```javascript
+var session = new doofinder.session.Session(
+  new doofinder.session.CookieSessionStore("myCookie")
+);
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `store` | Yes | `ISessionStore` | A valid storage instance. |
+
+#### Session.get()
+
+Gets the value of the specified key. Optionally accepts a default value to be returned if the specified key does not exist.
+
+```javascript
+var session = new doofinder.session.Session(
+  new doofinder.session.ObjectSessionStore({"query": "hello"})
+);
+session.get("query", "nothing"); // "hello"
+session.get("other", "nothing"); // "nothing"
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `key` | Yes | `String` | A key name. |
+| `defaultValue` | No | `*` | A default value to be returned. |
+
+#### Session.set()
+
+Saves a value in the session by assigning it to the specified key.
+
+```javascript
+var session = new doofinder.session.Session(
+  new doofinder.session.ObjectSessionStore()
+);
+session.set("query", "hello");
+session.get("query", "nothing"); // "hello"
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `key` | Yes | `String` | A key name. |
+| `value` | Yes | `*` | A value to be saved. |
+
+#### Session.del()
+
+Deletes the specified key from the session store.
+
+```javascript
+var session = new doofinder.session.Session(
+  new doofinder.session.ObjectSessionStore({"query": "hello"})
+);
+session.del("query");
+session.get("query", "nothing"); // "nothing"
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `key` | Yes | `String` | A key name. |
+
+#### Session.clean()
+
+Removes all session data.
+
+```javascript
+var session = new doofinder.session.Session(
+  new doofinder.session.ObjectSessionStore({"query": "hello"})
+);
+session.clean();
+session.get("query", "nothing"); // "nothing"
+```
+
+#### Session.exists()
+
+Checks whether the search session exists or not by searching for a `session_id` key defined in the _store_ class and returns a Boolean value.
+
+```javascript
+var session = new doofinder.session.Session(
+  new doofinder.session.ObjectSessionStore()
+);
+session.exists(); // false
+session.get("session_id", "nothing"); // "320sadd09fdfsedfab"
+session.exists(); // true
+session.set("session_id", "something");
+session.get("session_id", "nothing"); // "something"
+```
+
+**NOTICE:** A `session_id` key is always generated in the _store_ if it doesn't already exists when you access the store to get or set data. This is enforced by design but you can override session id if you want.
+
+---
 
 ### doofinder.session.ObjectSessionStore
+
+`ISessionStore < ObjectSessionStore`
 
 Store to hold session data as a plain `Object`.
 
@@ -1349,7 +1439,11 @@ var store = new doofinder.session.ObjectSessionStore({
 | :--- | :---: | :---: | :--- |
 | `data` | No | `Object` | Initial data. |
 
+---
+
 ### doofinder.session.CookieSessionStore
+
+`ISessionStore < CookieSessionStore`
 
 Store that holds session data in a browser cookie.
 
@@ -1374,24 +1468,6 @@ var store = new doofinder.session.CookieSessionStore(cookieName, {
 | :--- | :---: | :---: | :---: | :--- |
 | `prefix` | No | `String` | `""` | Prefix to be added to the cookie name. |
 | `expiry` | Yes | `Number` | `1/24` | Duration of the cookie in days. 1 hour by default. |
-
-### doofinder.session.Session
-
-Class that represents a user session persisted somewhere.
-
-#### constructor
-
-```javascript
-var session = new doofinder.session.Session(
-  new doofinder.session.CookieSessionStore("myCookie")
-);
-```
-
-##### Arguments
-
-| Argument | Required | Type | Description |
-| :--- | :---: | :---: | :--- |
-| `store` | Yes | `ISessionStore` | A valid storage instance. |
 
 ## Stats Reference
 
