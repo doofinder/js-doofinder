@@ -56,71 +56,56 @@
   // get options from doofinder server, to fetch facets configuration
   advancedClient.options(function(err, options){
     options.facets.reverse().forEach(function(facetOptions){
+      var widget, node;
+
+      try {
+        node = $("#" + facetOptions.name);
+      } catch (e) {
+        console.log(e);
+        return;
+      }
+
       switch(facetOptions.type) {
         case 'terms':
-          // register a panel widget that will contain the facet widget
-          advancedController.registerWidget(
-            new doofinder.widgets.CollapsiblePanel(
-              "#advancedAside",
-              function(panel){
-                var widget;
-
-                if (facetOptions.name === 'brand') {
-                  widget = new doofinder.widgets.CollapsibleTermsFacet(
-                    panel.contentElement,
-                    facetOptions.name,
-                    {
-                      size: 5,
-                      startCollapsed: true,
-                      translations: {
-                        "View more…": "More…",
-                        "View less…": "Less…"
-                      }
-                    }
-                  );
-                } else {
-                  widget = new doofinder.widgets.TermsFacet(
-                    panel.contentElement,
-                    facetOptions.name
-                  );
-                }
-
-                widget.on("df:widget:render", function(res){
-                  var html = [facetOptions.label];
-                  var total = this.selectedTerms;
-                  if (total > 0) {
-                    html.push('(' + total + ')');
-                  }
-                  panel.labelElement.html(html.join(' '));
-                });
-
-                return widget;
-              },
+          if (facetOptions.name === 'brand') {
+            widget = new doofinder.widgets.TermsFacet(
+              node,
+              facetOptions.name,
               {
-                insertionMethod: "prepend",
-                startCollapsed: false,
-                templateVars: {
-                  label: facetOptions.label
+                size: 5,
+                startCollapsed: true,
+                translations: {
+                  "View more…": "More…",
+                  "View less…": "Less…"
                 }
               }
-            )
-          );
+            );
+          } else {
+            widget = new doofinder.widgets.TermsFacet(
+              node,
+              facetOptions.name
+            );
+          }
           break;
         case 'range':
           // assume there's only one, insert it inside a div
-          var rangeWidget = new doofinder.widgets.RangeFacet("#advancedRangeFacet", facetOptions.name, {
-            format: function(value) {
-              return value.toFixed(2) + "€";
+          widget = new doofinder.widgets.RangeFacet(
+            node,
+            facetOptions.name, {
+              format: function(value) {
+                return value.toFixed(2) + "€";
+              }
             }
-          });
-          rangeWidget.on("df:range:change", function(a){
+          );
+          widget.on("df:range:change", function(a){
             console.log(arguments);
           });
-          advancedController.registerWidget(rangeWidget);
           break;
         default:
           console.warn('Invalid facet type: ' + facetOptions.type);
+          return;
       }
+      advancedController.registerWidget(widget);
     });
   });
 
