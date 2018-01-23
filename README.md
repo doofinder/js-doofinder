@@ -684,7 +684,7 @@ You can listen and trigger several events on a `Controller` instance, here's a s
 Triggered when a new search is done.
 
 | Argument | Type | Description |
-| : --- | : --- : | : --- |
+| :--- | :---: | :--- |
 | `query` | `String` | Search terms for the current search. |
 | `params` | `Object` | Search parameters defined in the controller for the new search. |
 
@@ -693,7 +693,7 @@ Triggered when a new search is done.
 Triggered when a new page for the current search is requested.
 
 | Argument | Type | Description |
-| : --- | : --- : | : --- |
+| :--- | :---: | :--- |
 | `query` | `String` | Search terms for the current search. |
 | `params` | `Object` | Search parameters defined in the controller for the current search. |
 
@@ -702,7 +702,7 @@ Triggered when a new page for the current search is requested.
 Triggered when the current search is refreshed to get the first page again.
 
 | Argument | Type | Description |
-| : --- | : --- : | : --- |
+| :--- | :---: | :--- |
 | `query` | `String` | Search terms for the current search. |
 | `params` | `Object` | Search parameters defined in the controller for the current search. |
 
@@ -711,7 +711,7 @@ Triggered when the current search is refreshed to get the first page again.
 Triggered when a successful search response is received. This event is triggered after the response has been processed.
 
 | Argument | Type | Description |
-| : --- | : --- : | : --- |
+| :--- | :---: | :--- |
 | `response` | `Object` | Valid response from the Doofinder service. |
 
 ##### df:results:error
@@ -719,7 +719,7 @@ Triggered when a successful search response is received. This event is triggered
 Triggered when there is an error in the search request.
 
 | Argument | Type | Description |
-| : --- | : --- : | : --- |
+| :--- | :---: | :--- |
 | `error` | `Object` | See below for details. |
 
 ###### Errors coming from the Doofinder servers
@@ -748,7 +748,7 @@ When the error comes from the server, it has a status code and, optionally, a me
 Triggered when a successful search response for the last page of the current search is received. This event is triggered after the response has been processed.
 
 | Argument | Type | Description |
-| : --- | : --- : | : --- |
+| :--- | :---: | :--- |
 | `response` | `Object` | Valid response from the Doofinder service. |
 
 ##### df:controller:renderWidgets
@@ -1061,7 +1061,7 @@ var display = new doofinder.widgets.Display("#myDiv", {
 Some template variables are included by default in the rendering context:
 
 | Variable | Type | Description |
-| : --- | : --- : | : --- |
+| :--- | :---: | :--- |
 | `is_first` | `Boolean` | Indicates if the response being rendered is for the first page of a search. |
 | `is_last` | `Boolean` | Indicates if the response being rendered is for the last page of a search. |
 
@@ -1070,7 +1070,7 @@ Some template variables are included by default in the rendering context:
 Some template functions are included by default in the rendering context:
 
 | Function | Description |
-| : --- | : --- |
+| :--- | :--- |
 | `translate` | If a match is found in the `translations` dictionary of the widget, the text inside the helper is replaced by its translation. |
 
 ---
@@ -1140,7 +1140,7 @@ resultsContainer.on("df:widget:scroll", function(scrollTop, direction){
 ```
 
 | Argument | Type | Values |Description |
-| : --- | : --- : | : --- : | : --- |
+| :--- | :---: | :---: | :--- |
 | `scrollTop` | `Number` || The number of pixels the content is scrolled vertically. |
 | `direction` | `String` | `"up", "down"` | The direction of the scrolling. |
 
@@ -1185,7 +1185,7 @@ This is the default template of the widget.
 There're some `data` attributes that must be present for the widget to work properly:
 
 | Attribute | Description |
-| : --- | : --- |
+| :--- | :--- |
 | `data-facet` | Holds the name of the current facet as defined in Doofinder. |
 | `data-value` | Holds the value of the term. |
 | `data-selected` | Indicates whether the term is selected or not. |
@@ -1193,7 +1193,7 @@ There're some `data` attributes that must be present for the widget to work prop
 The variables available for each term are:
 
 | Variable | Description |
-| : --- | : --- |
+| :--- | :--- |
 | `name` | Holds the name of the current facet as defined in Doofinder. |
 | `key` | Holds the value of the term. |
 | `selected` | Indicates whether the term is selected or not. |
@@ -1255,14 +1255,14 @@ Default template of the widget.
 This is basically the same template as in the `TermsFacet` class, but adds a couple of template helpers to mark terms as _extra content_ (terms that will be hidden when the widget is collapsed), and paint the collapse toggle button.
 
 | Function | Description |
-| : --- | : --- |
+| :--- | :--- |
 | `extra-content` | Receives the index of the result in the list of results and marks the term as _extra content_ if needed. |
 | `show-more-button` | Paints the button if there're more terms than should be visible when the widget is collapsed (uses the `size` option). |
 
 Apart from those inherited from `TermFacet`, there're some `data` attributes that must be present for the widget to work properly:
 
 | Attribute | Description |
-| : --- | : --- |
+| :--- | :--- |
 | `data-extra-content` | Terms that are considered _extra content_ get this attribute added. |
 | `data-view-extra-content` | This attribute is dynamically assigned to the widget container to indicate whether the hidden terms must be visible or not. |
 
@@ -1282,7 +1282,7 @@ Default template for the visibility toggle button.
 A couple of template variables are included by default in the rendering context:
 
 | Variable | Type | Default | Description |
-| : --- | : --- : | : --- : | : --- |
+| :--- | :---: | :---: | :--- |
 | `viewMoreLabel` | `String` | `"View more…"` | Text to be rendered as the toggle button text when facets are collapsed. |
 | `viewLessLabel` | `String` | `"View less…"` | Text to be rendered as the toggle button text when all facets are visible. |
 
@@ -1291,7 +1291,7 @@ You can change them by passing different values in the options object.
 There's also a `data` attribute that must be present for the widget to work properly:
 
 | Attribute | Description |
-| : --- | : --- |
+| :--- | :--- |
 | `data-toggle-extra-content` | Used to identify the button as the terms visibility toggle |
 
 #### Events
@@ -1309,7 +1309,7 @@ widget.on("df:term:click", function(facetName, facetValue, isSelected){
 ```
 
 | Argument | Type | Description |
-| : --- | : --- : | : --- |
+| :--- | :---: | :--- |
 | `facetName` | `String` | Name of the facet as defined in Doofinder. |
 | `facetValue` | `String` | Value of the term. |
 | `isSelected` | `Boolean` | Indicates whether the facet is selected or not. |
@@ -1352,7 +1352,7 @@ var rangeWidget = new doofinder.widgets.RangeFacet("#price", {
 ```
 
 | Variable | Type | Description |
-| : --- | : --- : | : --- |
+| :--- | :---: | :--- |
 | `name` | `String` | Name of the facet as defined in Doofinder. |
 
 #### RangeFacet.get
@@ -1398,7 +1398,7 @@ widget.on("df:range:change", function(value, range){
 ```
 
 | Argument | Type | Description |
-| : --- | : --- : | : --- |
+| :--- | :---: | :--- |
 | `value` | `Object` | Current selected range. |
 | `range` | `Object` | Valid range. |
 
@@ -1461,7 +1461,7 @@ var panel = new doofinder.widgets.Panel("#aside", function(panel){
 Some template variables are included by default in the rendering context:
 
 | Variable | Type | Default | Description |
-| : --- | : --- : | : --- : | : --- |
+| :--- | :---: | :---: | :--- |
 | `panelElement` | `String` | `"df-<random>"` | id of the panel container. |
 | `labelElement` | `String` | `"df-<random>"` | id of the label container. |
 | `contentElement` | `String` | `"df-<random>"` | id of the content container. |
@@ -1471,7 +1471,7 @@ Some template variables are included by default in the rendering context:
 Used to obtain the widget in the precise moment it can be rendered (the panel must be rendered first), gives access to the panel instance, so you can make use of cached references to the panel elements:
 
 | Variable | Description |
-| : --- | : --- |
+| :--- | :--- |
 | `panelElement` | The panel node. |
 | `labelElement` | The label node. |
 | `contentElement` | The content node. |
@@ -1493,7 +1493,7 @@ panel.on("df:widget:renderContent", function(widget){
 ```
 
 | Argument | Type | Description |
-| : --- | : --- : | : --- |
+| :--- | :---: | :--- |
 | `widget` | `Widget` | Widget contained in the panel. |
 
 ---
@@ -1577,7 +1577,7 @@ panel.on("df:collapse:change", function(collapsed) {
 ```
 
 | Argument | Type | Description |
-| : --- | : --- : | : --- |
+| :--- | :---: | :--- |
 | `collapsed` | `Boolean` | Whether the panel is collapsed or not. |
 
 ## Session Reference
