@@ -1,6 +1,6 @@
 extend = require "extend"
 noUiSlider = require "nouislider"
-Display = require "../display"
+Display = require "./display"
 
 
 ###*

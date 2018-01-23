@@ -255,7 +255,7 @@
 
 }).call(this);
 
-},{"./util/errors":7,"./util/http":10,"./util/thing":12,"extend":24,"md5":66,"qs":73}],2:[function(require,module,exports){
+},{"./util/errors":7,"./util/http":10,"./util/thing":12,"extend":21,"md5":63,"qs":70}],2:[function(require,module,exports){
 (function() {
   var Client, Controller, Freezer, Thing, Widget, bean, errors, extend, qs,
     hasProp = {}.hasOwnProperty;
@@ -887,10 +887,10 @@
 
 }).call(this);
 
-},{"./client":1,"./util/errors":7,"./util/freezer":8,"./util/thing":12,"./widgets/widget":22,"bean":23,"extend":24,"qs":73}],3:[function(require,module,exports){
+},{"./client":1,"./util/errors":7,"./util/freezer":8,"./util/thing":12,"./widgets/widget":19,"bean":20,"extend":21,"qs":70}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.2.0",
+    version: "5.2.1",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
@@ -900,11 +900,8 @@
       QueryInput: require("./widgets/queryinput"),
       Display: require("./widgets/display"),
       ScrollDisplay: require("./widgets/scrolldisplay"),
-      TermsFacet: require("./widgets/facets/termsfacet"),
-      CollapsibleTermsFacet: require("./widgets/facets/collapsibletermsfacet"),
-      RangeFacet: require("./widgets/facets/rangefacet"),
-      Panel: require("./widgets/panel"),
-      CollapsiblePanel: require("./widgets/collapsiblepanel")
+      TermsFacet: require("./widgets/termsfacet"),
+      RangeFacet: require("./widgets/rangefacet")
     },
     util: {
       bean: require("bean"),
@@ -925,7 +922,7 @@
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/errors":7,"./util/helpers":9,"./util/http":10,"./util/text":11,"./util/thing":12,"./util/uniqueid":13,"./widgets/collapsiblepanel":14,"./widgets/display":15,"./widgets/facets/collapsibletermsfacet":16,"./widgets/facets/rangefacet":17,"./widgets/facets/termsfacet":18,"./widgets/panel":19,"./widgets/queryinput":20,"./widgets/scrolldisplay":21,"./widgets/widget":22,"bean":23,"extend":24,"lodash.throttle":65,"md5":66,"mustache":70,"qs":73}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/errors":7,"./util/helpers":9,"./util/http":10,"./util/text":11,"./util/thing":12,"./util/uniqueid":13,"./widgets/display":14,"./widgets/queryinput":15,"./widgets/rangefacet":16,"./widgets/scrolldisplay":17,"./widgets/termsfacet":18,"./widgets/widget":19,"bean":20,"extend":21,"lodash.throttle":62,"md5":63,"mustache":67,"qs":70}],4:[function(require,module,exports){
 (function() {
   var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, errors, extend, md5, uniqueId,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -1232,7 +1229,7 @@
 
 }).call(this);
 
-},{"./util/errors":7,"./util/uniqueid":13,"extend":24,"js-cookie":64,"md5":66}],5:[function(require,module,exports){
+},{"./util/errors":7,"./util/uniqueid":13,"extend":21,"js-cookie":61,"md5":63}],5:[function(require,module,exports){
 (function() {
   var Client, Session, Stats, errors, uniqueId;
 
@@ -2719,7 +2716,7 @@
 
 }).call(this);
 
-},{"./text":11,"./thing":12,"bean":23,"extend":24}],7:[function(require,module,exports){
+},{"./text":11,"./thing":12,"bean":20,"extend":21}],7:[function(require,module,exports){
 
 /**
  * Helper to compose final error messages
@@ -2846,7 +2843,7 @@
 
 }).call(this);
 
-},{"./text":11,"extend":24}],10:[function(require,module,exports){
+},{"./text":11,"extend":21}],10:[function(require,module,exports){
 (function() {
   var HttpClient, Thing, errors, extend, http, https;
 
@@ -2937,7 +2934,7 @@
 
 }).call(this);
 
-},{"./errors":7,"./thing":12,"extend":24,"http":54,"https":31}],11:[function(require,module,exports){
+},{"./errors":7,"./thing":12,"extend":21,"http":51,"https":28}],11:[function(require,module,exports){
 
 /**
  * Converts text in camel case to dash case
@@ -3032,7 +3029,7 @@
 
 }).call(this);
 
-},{"is":63}],13:[function(require,module,exports){
+},{"is":60}],13:[function(require,module,exports){
 (function() {
   var cleandfid, md5;
 
@@ -3077,98 +3074,7 @@
 
 }).call(this);
 
-},{"md5":66}],14:[function(require,module,exports){
-(function() {
-  var CollapsiblePanel, Panel, extend,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  extend = require("extend");
-
-  Panel = require("./panel");
-
-  CollapsiblePanel = (function(superClass) {
-    extend1(CollapsiblePanel, superClass);
-
-    function CollapsiblePanel(element, getWidget, options) {
-      var defaults;
-      if (options == null) {
-        options = {};
-      }
-      defaults = {
-        templateVars: {
-          label: "Untitled"
-        },
-        startCollapsed: false
-      };
-      options = extend(true, defaults, options);
-      CollapsiblePanel.__super__.constructor.call(this, element, getWidget, options);
-      Object.defineProperty(this, 'isCollapsed', {
-        get: function() {
-          return (this.panelElement.attr("data-collapse")) === "true";
-        }
-      });
-    }
-
-    CollapsiblePanel.prototype.collapse = function() {
-      if (this.rendered) {
-        this.panelElement.attr("data-collapse", "true");
-        return this.trigger("df:collapse:change", [true]);
-      }
-    };
-
-    CollapsiblePanel.prototype.expand = function() {
-      if (this.rendered) {
-        this.panelElement.attr("data-collapse", "false");
-        return this.trigger("df:collapse:change", [false]);
-      }
-    };
-
-    CollapsiblePanel.prototype.toggle = function() {
-      if (this.rendered) {
-        if (this.isCollapsed) {
-          return this.expand();
-        } else {
-          return this.collapse();
-        }
-      }
-    };
-
-    CollapsiblePanel.prototype.reset = function() {
-      if (this.rendered) {
-        if (this.options.startCollapsed) {
-          return this.collapse();
-        } else {
-          return this.expand();
-        }
-      }
-    };
-
-    CollapsiblePanel.prototype.__initPanel = function(res) {
-      CollapsiblePanel.__super__.__initPanel.apply(this, arguments);
-      this.panelElement.on("click", "#" + this.options.templateVars.labelElement, (function(_this) {
-        return function(e) {
-          e.preventDefault();
-          return _this.toggle();
-        };
-      })(this));
-      return this.reset();
-    };
-
-    CollapsiblePanel.prototype.clean = function() {
-      this.reset();
-      return CollapsiblePanel.__super__.clean.apply(this, arguments);
-    };
-
-    return CollapsiblePanel;
-
-  })(Panel);
-
-  module.exports = CollapsiblePanel;
-
-}).call(this);
-
-},{"./panel":19,"extend":24}],15:[function(require,module,exports){
+},{"md5":63}],14:[function(require,module,exports){
 (function() {
   var Display, Widget, extend, helpers,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3277,226 +3183,185 @@
 
 }).call(this);
 
-},{"../util/helpers":9,"./widget":22,"extend":24,"mustache":70}],16:[function(require,module,exports){
+},{"../util/helpers":9,"./widget":19,"extend":21,"mustache":67}],15:[function(require,module,exports){
 (function() {
-  var $, CollapsibleTermsFacet, TermsFacet, extend,
+  var QueryInput, Thing, Widget, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   extend = require("extend");
 
-  TermsFacet = require("./termsfacet");
+  Widget = require("./widget");
 
-  $ = require("../../util/dfdom");
+  Thing = require("../util/thing");
 
 
   /**
-   * Represents a terms selector control to filter by the possible values of a
-   * text field.
+   * Represents a search input. This widget gets the search terms and calls the
+   * controller's search method. Certain minimum number of characters are needed
+   * to trigger search but the value is configurable.
    */
 
-  CollapsibleTermsFacet = (function(superClass) {
-    extend1(CollapsibleTermsFacet, superClass);
-
-    CollapsibleTermsFacet.defaultTemplate = "{{#terms}}\n  <div class=\"df-term\" data-facet=\"{{name}}\" data-value=\"{{key}}\"\n      {{#extra-content}}{{index}}{{/extra-content}}\n      {{#selected}}data-selected{{/selected}}>\n    <span class=\"df-term__value\">{{key}}</span>\n    <span class=\"df-term__count\">{{doc_count}}</span>\n  </div>\n{{/terms}}\n{{#show-more-button}}{{terms.length}}{{/show-more-button}}";
-
-    CollapsibleTermsFacet.defaultButtonTemplate = "<button type=\"button\" data-toggle-extra-content\n    data-text-normal=\"{{#translate}}{{viewMoreLabel}}{{/translate}}\"\n    data-text-toggle=\"{{#translate}}{{viewLessLabel}}{{/translate}}\">\n  {{#collapsed}}{{#translate}}{{viewMoreLabel}}{{/translate}}{{/collapsed}}\n  {{^collapsed}}{{#translate}}{{viewLessLabel}}{{/translate}}{{/collapsed}}\n</button>";
+  QueryInput = (function(superClass) {
+    extend1(QueryInput, superClass);
 
 
     /**
-     * @param  {String|Node|DfDomElement} element  Container node.
-     * @param  {String} facet Name of the facet/filter.
-     * @param  {Object} options
+     * @param  {String|Node|DfDomElement} element  The search input element.
+     * @param  {Object} options Options object. Empty by default.
      */
 
-    function CollapsibleTermsFacet(element, facet, options) {
+    function QueryInput(element, options) {
       var defaults;
       if (options == null) {
         options = {};
       }
       defaults = {
-        size: 10,
-        startCollapsed: true,
-        buttonTemplate: this.constructor.defaultButtonTemplate,
-        templateVars: {
-          viewMoreLabel: "View more…",
-          viewLessLabel: "View less…"
-        },
-        templateFunctions: {
-          "extra-content": (function(_this) {
-            return function() {
-
-              /**
-               * Returns `data-extra-content` if the (0-based) index is greater
-               * than or equal to the size passed.
-               *
-               * Index and size are passed as text and must be parsed:
-               *
-               * {{#extra-content}}{{index}}:{{size}}{{/extra-content}}
-               *
-               * @param  {string}   text
-               * @param  {Function} render
-               * @return {string}   "data-extra-content" or ""
-               */
-              return function(text, render) {
-                var i;
-                i = parseInt(render(text), 10);
-                if ((_this.options.size != null) && i >= _this.options.size) {
-                  return "data-extra-content";
-                } else {
-                  return "";
-                }
-              };
-            };
-          })(this),
-          "show-more-button": (function(_this) {
-            return function() {
-
-              /**
-               * Renders a `View More` button if the length is greater than the
-               * size passed.
-               *
-               * {{#show-more-button}}{{length}}:{{size}}{{/show-more-button}}
-               *
-               * @param  {string}   text
-               * @param  {Function} render
-               * @return {string}   Rendered button or "".
-               */
-              return function(text, render) {
-                var len;
-                len = parseInt(render(text), 10);
-                if ((_this.options.size != null) && len > _this.options.size) {
-                  return _this.mustache.render(_this.options.buttonTemplate, _this.currentContext);
-                } else {
-                  return "";
-                }
-              };
-            };
-          })(this)
-        }
+        clean: true,
+        captureLength: 3,
+        typingTimeout: 1000,
+        wait: 42
       };
-      CollapsibleTermsFacet.__super__.constructor.call(this, element, facet, extend(true, defaults, options));
-      Object.defineProperty(this, 'isCollapsed', {
+      QueryInput.__super__.constructor.call(this, element, extend(true, defaults, options));
+      this.controller = [];
+      this.timer = null;
+      this.stopTimer = null;
+      Object.defineProperty(this, "value", {
         get: (function(_this) {
           return function() {
-            return !_this.element.hasAttr("data-view-extra-content");
+            return _this.element.val() || "";
+          };
+        })(this),
+        set: (function(_this) {
+          return function(value) {
+            _this.element.val(value);
+            return _this.__scheduleUpdate();
           };
         })(this)
       });
-      this.totalSelected = 0;
+      this.previousValue = this.value;
     }
+
+    QueryInput.prototype.setController = function(controller) {
+      if (!Thing.is.array(controller)) {
+        controller = [controller];
+      }
+      return this.controller = this.controller.concat(controller);
+    };
 
 
     /**
      * Initializes the object with a controller and attachs event handlers for
-     * this widget instance.
+     * this widget instance. A QueryInput widget can be used by more than one
+     * controller (is an input widget, so it doesn't render results).
      *
      * @param  {Controller} controller Doofinder Search controller.
      */
 
-    CollapsibleTermsFacet.prototype.init = function() {
+    QueryInput.prototype.init = function() {
       if (!this.initialized) {
-        this.__updateElement(this.options.startCollapsed);
-        this.element.on("click", "[data-toggle-extra-content]", (function(_this) {
-          return function(e) {
-            e.preventDefault();
-            return _this.toggle();
+        this.element.on("input", ((function(_this) {
+          return function() {
+            return _this.__scheduleUpdate();
           };
-        })(this));
-      }
-      return CollapsibleTermsFacet.__super__.init.apply(this, arguments);
-    };
-
-
-    /**
-     * @return {HTMLElement} The "show more" button.
-     */
-
-    CollapsibleTermsFacet.prototype.__getButton = function() {
-      return (this.element.find("[data-toggle-extra-content]")).first();
-    };
-
-    CollapsibleTermsFacet.prototype.__updateButton = function(collapsed) {
-      var att, btn;
-      btn = this.__getButton();
-      att = collapsed ? "data-text-normal" : "data-text-toggle";
-      return (btn.get(0)).textContent = (btn.attr(att)).trim();
-    };
-
-    CollapsibleTermsFacet.prototype.__updateElement = function(collapsed) {
-      if (collapsed) {
-        return this.element.removeAttr("data-view-extra-content");
-      } else {
-        return this.element.attr("data-view-extra-content", "");
-      }
-    };
-
-    CollapsibleTermsFacet.prototype.collapse = function() {
-      if (!this.isCollapsed) {
-        this.__updateButton(true);
-        this.__updateElement(true);
-        return this.trigger("df:collapse:change", [true]);
-      }
-    };
-
-    CollapsibleTermsFacet.prototype.expand = function() {
-      if (this.isCollapsed) {
-        this.__updateButton(false);
-        this.__updateElement(false);
-        return this.trigger("df:collapse:change", [false]);
-      }
-    };
-
-    CollapsibleTermsFacet.prototype.toggle = function() {
-      if (this.isCollapsed) {
-        return this.expand();
-      } else {
-        return this.collapse();
-      }
-    };
-
-    CollapsibleTermsFacet.prototype.reset = function() {
-      if (this.options.startCollapsed) {
-        return this.collapse();
-      } else {
-        return this.expand();
+        })(this)));
+        if ((this.element.get(0)).tagName.toUpperCase() !== "TEXTAREA") {
+          this.element.on("keydown", (function(_this) {
+            return function(e) {
+              if ((e.keyCode != null) && e.keyCode === 13) {
+                _this.__scheduleUpdate(0, true);
+                return _this.trigger("df:input:submit", [_this.value]);
+              }
+            };
+          })(this));
+        }
+        return QueryInput.__super__.init.apply(this, arguments);
       }
     };
 
 
     /**
-     * Adds extra context to the passed context object.
+     * Schedules input validation so its done "in the future", giving the user
+     * time to enter a new character (delaying search requests).
      *
-     * @param  {Object} response = {} Search response as initial context.
-     * @return {Object}               Extended search response.
+     * @param  {Number} delay  = @options.wait  Time to wait until update in
+     *                         milliseconds.
+     * @param  {Boolean} force = false  Forces search if value is OK whether
+     *                         value changed or not.
      * @protected
      */
 
-    CollapsibleTermsFacet.prototype.__buildContext = function(response) {
-      if (response == null) {
-        response = {};
+    QueryInput.prototype.__scheduleUpdate = function(delay, force) {
+      if (delay == null) {
+        delay = this.options.wait;
       }
-      CollapsibleTermsFacet.__super__.__buildContext.apply(this, arguments);
-      return this.currentContext = extend(true, this.currentContext, {
-        size: this.options.size,
-        collapsed: this.isCollapsed
-      });
+      if (force == null) {
+        force = false;
+      }
+      clearTimeout(this.timer);
+      clearTimeout(this.stopTimer);
+      return this.timer = setTimeout(this.__updateStatus.bind(this), delay, force);
     };
 
-    CollapsibleTermsFacet.prototype.clean = function() {
-      this.reset();
-      return CollapsibleTermsFacet.__super__.clean.apply(this, arguments);
+
+    /**
+     * Checks current value of the input and, if it is OK and it changed since the
+     * last check, performs a new search in each registered controller.
+     *
+     * @param  {Boolean} force = false If true forces search if value is OK
+     *                         whether value changed or not.
+     * @protected
+     */
+
+    QueryInput.prototype.__updateStatus = function(force) {
+      var valueChanged, valueOk;
+      if (force == null) {
+        force = false;
+      }
+      valueOk = this.value.length >= this.options.captureLength;
+      valueChanged = this.value.toUpperCase() !== this.previousValue;
+      if (valueOk && (valueChanged || force)) {
+        this.stopTimer = setTimeout(((function(_this) {
+          return function() {
+            return _this.trigger("df:input:stop", [_this.value]);
+          };
+        })(this)), this.options.typingTimeout);
+        this.previousValue = this.value.toUpperCase();
+        return this.controller.forEach((function(_this) {
+          return function(controller) {
+            return controller.search(_this.value);
+          };
+        })(this));
+      } else if (this.previousValue.length > 0 && this.value.length === 0) {
+        if (this.value.length === 0) {
+          return this.trigger("df:input:none");
+        }
+      }
     };
 
-    return CollapsibleTermsFacet;
 
-  })(TermsFacet);
+    /**
+     * If the widget is configured to be cleaned, empties the value of the input
+     * element.
+     * @fires Widget#df:widget:clean
+     */
 
-  module.exports = CollapsibleTermsFacet;
+    QueryInput.prototype.clean = function() {
+      if (this.options.clean) {
+        this.element.val("");
+      }
+      return QueryInput.__super__.clean.apply(this, arguments);
+    };
+
+    return QueryInput;
+
+  })(Widget);
+
+  module.exports = QueryInput;
 
 }).call(this);
 
-},{"../../util/dfdom":6,"./termsfacet":18,"extend":24}],17:[function(require,module,exports){
+},{"../util/thing":12,"./widget":19,"extend":21}],16:[function(require,module,exports){
 (function() {
   var Display, RangeFacet, extend, noUiSlider,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3506,7 +3371,7 @@
 
   noUiSlider = require("nouislider");
 
-  Display = require("../display");
+  Display = require("./display");
 
 
   /**
@@ -3802,414 +3667,7 @@
 
 }).call(this);
 
-},{"../display":15,"extend":24,"nouislider":71}],18:[function(require,module,exports){
-(function() {
-  var $, Display, TermsFacet, extend,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty,
-    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-
-  extend = require("extend");
-
-  Display = require("../display");
-
-  $ = require("../../util/dfdom");
-
-
-  /**
-   * Represents a terms selector control to filter by the possible values of a
-   * text field.
-   */
-
-  TermsFacet = (function(superClass) {
-    extend1(TermsFacet, superClass);
-
-    TermsFacet.defaultTemplate = "{{#terms}}\n  <div class=\"df-term\" data-facet=\"{{name}}\" data-value=\"{{key}}\"\n      {{#selected}}data-selected{{/selected}}>\n    <span class=\"df-term__value\">{{key}}</span>\n    <span class=\"df-term__count\">{{doc_count}}</span>\n  </div>\n{{/terms}}";
-
-
-    /**
-     * @param  {String|Node|DfDomElement} element  Container node.
-     * @param  {String} facet Name of the facet/filter.
-     * @param  {Object} options
-     */
-
-    function TermsFacet(element, facet, options) {
-      this.facet = facet;
-      if (options == null) {
-        options = {};
-      }
-      TermsFacet.__super__.constructor.call(this, element, extend(true, {
-        template: this.constructor.defaultTemplate
-      }, options));
-      this.totalSelected = 0;
-    }
-
-
-    /**
-     * Initializes the object with a controller and attachs event handlers for
-     * this widget instance.
-     *
-     * @param  {Controller} controller Doofinder Search controller.
-     */
-
-    TermsFacet.prototype.init = function() {
-      if (!this.initialized) {
-        this.element.on("click", "[data-facet=\"" + this.facet + "\"][data-value]", (function(_this) {
-          return function(e) {
-            var facetName, facetValue, isSelected, termNode;
-            e.preventDefault();
-            termNode = $(e.currentTarget);
-            facetName = termNode.data("facet");
-            facetValue = termNode.data("value");
-            isSelected = !termNode.hasAttr("data-selected");
-            if (isSelected) {
-              _this.totalSelected++;
-              termNode.attr("data-selected", "");
-              _this.controller.addFilter(facetName, facetValue);
-            } else {
-              _this.totalSelected--;
-              termNode.removeAttr("data-selected");
-              _this.controller.removeFilter(facetName, facetValue);
-            }
-            _this.controller.refresh();
-            return _this.trigger("df:term:click", [facetName, facetValue, isSelected]);
-          };
-        })(this));
-      }
-      return TermsFacet.__super__.init.apply(this, arguments);
-    };
-
-
-    /**
-     * Adds extra context to the passed context object.
-     *
-     * @param  {Object} response = {} Search response as initial context.
-     * @return {Object}               Extended search response.
-     * @protected
-     */
-
-    TermsFacet.prototype.__buildContext = function(response) {
-      var index, ref, ref1, ref2, selectedTerms, term, terms;
-      if (response == null) {
-        response = {};
-      }
-      TermsFacet.__super__.__buildContext.apply(this, arguments);
-      terms = response.facets[this.facet].terms.buckets;
-      selectedTerms = (response != null ? (ref = response.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.facet] : void 0 : void 0 : void 0) || [];
-      for (index in terms) {
-        term = terms[index];
-        term.index = parseInt(index, 10);
-        term.name = this.facet;
-        term.selected = (ref2 = term.key, indexOf.call(selectedTerms, ref2) >= 0);
-      }
-      this.totalSelected = selectedTerms.length;
-      return this.currentContext = extend(true, this.currentContext, {
-        name: this.facet,
-        terms: terms
-      });
-    };
-
-
-    /**
-     * Renders the widget with the data received, by replacing its content.
-     *
-     * @param {Object} res Search response.
-     * @fires TermsFacet#df:widget:render
-     */
-
-    TermsFacet.prototype.render = function(res) {
-      if (res.page === 1) {
-        if (res.facets[this.facet].terms.buckets.length > 0) {
-          return TermsFacet.__super__.render.call(this, res);
-        } else {
-          return this.clean();
-        }
-      } else {
-        return false;
-      }
-    };
-
-    TermsFacet.prototype.clean = function() {
-      this.totalSelected = 0;
-      return TermsFacet.__super__.clean.apply(this, arguments);
-    };
-
-    return TermsFacet;
-
-  })(Display);
-
-  module.exports = TermsFacet;
-
-}).call(this);
-
-},{"../../util/dfdom":6,"../display":15,"extend":24}],19:[function(require,module,exports){
-(function() {
-  var $, Display, INSERTION_METHODS, Panel, extend, uniqueId,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty,
-    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-
-  extend = require("extend");
-
-  Display = require("./display");
-
-  $ = require("../util/dfdom");
-
-  uniqueId = require("../util/uniqueid");
-
-  INSERTION_METHODS = ["prepend", "append", "before", "after", "html"];
-
-  Panel = (function(superClass) {
-    extend1(Panel, superClass);
-
-    Panel.defaultTemplate = "<div class=\"df-panel\" id=\"{{panelElement}}\">\n  {{#label}}\n  <div class=\"df-panel__label\" id=\"{{labelElement}}\">{{label}}</div>\n  {{/label}}\n  <div class=\"df-panel__content\" id=\"{{contentElement}}\"></div>\n</div>";
-
-    function Panel(element, getWidget, options) {
-      var defaults, ref;
-      this.getWidget = getWidget;
-      if (options == null) {
-        options = {};
-      }
-      defaults = {
-        templateVars: {
-          label: null,
-          panelElement: "df-" + (uniqueId.generate.easy()),
-          labelElement: "df-" + (uniqueId.generate.easy()),
-          contentElement: "df-" + (uniqueId.generate.easy())
-        },
-        insertionMethod: "append",
-        template: this.constructor.defaultTemplate
-      };
-      options = extend(true, defaults, options);
-      if (ref = options.insertionMethod, indexOf.call(INSERTION_METHODS, ref) < 0) {
-        options.insertionMethod = "append";
-      }
-      Panel.__super__.constructor.call(this, element, options);
-      this.panelElement = null;
-      this.labelElement = null;
-      this.contentElement = null;
-      this.rendered = false;
-    }
-
-    Panel.prototype.render = function(res) {
-      if (!this.rendered) {
-        this.rendered = true;
-        this.element[this.options.insertionMethod](this.__renderTemplate(res));
-        this.__initPanel(res);
-        this.__renderContent(res);
-        return this.trigger("df:widget:render", [res]);
-      }
-    };
-
-    Panel.prototype.__initPanel = function(res) {
-      this.panelElement = $("#" + this.options.templateVars.panelElement);
-      this.labelElement = $("#" + this.options.templateVars.labelElement);
-      return this.contentElement = $("#" + this.options.templateVars.contentElement);
-    };
-
-    Panel.prototype.__renderContent = function(res) {
-      var widget;
-      widget = this.getWidget(this);
-      widget.one("df:widget:render", (function(res) {
-        return this.trigger("df:widget:renderContent", widget);
-      }).bind(this));
-      this.controller.registerWidget(widget);
-      return widget.render(res);
-    };
-
-    Panel.prototype.clean = function() {
-      if (this.rendered) {
-        return this.trigger("df:widget:clean");
-      }
-    };
-
-    return Panel;
-
-  })(Display);
-
-  module.exports = Panel;
-
-}).call(this);
-
-},{"../util/dfdom":6,"../util/uniqueid":13,"./display":15,"extend":24}],20:[function(require,module,exports){
-(function() {
-  var QueryInput, Thing, Widget, extend,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  extend = require("extend");
-
-  Widget = require("./widget");
-
-  Thing = require("../util/thing");
-
-
-  /**
-   * Represents a search input. This widget gets the search terms and calls the
-   * controller's search method. Certain minimum number of characters are needed
-   * to trigger search but the value is configurable.
-   */
-
-  QueryInput = (function(superClass) {
-    extend1(QueryInput, superClass);
-
-
-    /**
-     * @param  {String|Node|DfDomElement} element  The search input element.
-     * @param  {Object} options Options object. Empty by default.
-     */
-
-    function QueryInput(element, options) {
-      var defaults;
-      if (options == null) {
-        options = {};
-      }
-      defaults = {
-        clean: true,
-        captureLength: 3,
-        typingTimeout: 1000,
-        wait: 42
-      };
-      QueryInput.__super__.constructor.call(this, element, extend(true, defaults, options));
-      this.controller = [];
-      this.timer = null;
-      this.stopTimer = null;
-      Object.defineProperty(this, "value", {
-        get: (function(_this) {
-          return function() {
-            return _this.element.val() || "";
-          };
-        })(this),
-        set: (function(_this) {
-          return function(value) {
-            _this.element.val(value);
-            return _this.__scheduleUpdate();
-          };
-        })(this)
-      });
-      this.previousValue = this.value;
-    }
-
-    QueryInput.prototype.setController = function(controller) {
-      if (!Thing.is.array(controller)) {
-        controller = [controller];
-      }
-      return this.controller = this.controller.concat(controller);
-    };
-
-
-    /**
-     * Initializes the object with a controller and attachs event handlers for
-     * this widget instance. A QueryInput widget can be used by more than one
-     * controller (is an input widget, so it doesn't render results).
-     *
-     * @param  {Controller} controller Doofinder Search controller.
-     */
-
-    QueryInput.prototype.init = function() {
-      if (!this.initialized) {
-        this.element.on("input", ((function(_this) {
-          return function() {
-            return _this.__scheduleUpdate();
-          };
-        })(this)));
-        if ((this.element.get(0)).tagName.toUpperCase() !== "TEXTAREA") {
-          this.element.on("keydown", (function(_this) {
-            return function(e) {
-              if ((e.keyCode != null) && e.keyCode === 13) {
-                _this.__scheduleUpdate(0, true);
-                return _this.trigger("df:input:submit", [_this.value]);
-              }
-            };
-          })(this));
-        }
-        return QueryInput.__super__.init.apply(this, arguments);
-      }
-    };
-
-
-    /**
-     * Schedules input validation so its done "in the future", giving the user
-     * time to enter a new character (delaying search requests).
-     *
-     * @param  {Number} delay  = @options.wait  Time to wait until update in
-     *                         milliseconds.
-     * @param  {Boolean} force = false  Forces search if value is OK whether
-     *                         value changed or not.
-     * @protected
-     */
-
-    QueryInput.prototype.__scheduleUpdate = function(delay, force) {
-      if (delay == null) {
-        delay = this.options.wait;
-      }
-      if (force == null) {
-        force = false;
-      }
-      clearTimeout(this.timer);
-      clearTimeout(this.stopTimer);
-      return this.timer = setTimeout(this.__updateStatus.bind(this), delay, force);
-    };
-
-
-    /**
-     * Checks current value of the input and, if it is OK and it changed since the
-     * last check, performs a new search in each registered controller.
-     *
-     * @param  {Boolean} force = false If true forces search if value is OK
-     *                         whether value changed or not.
-     * @protected
-     */
-
-    QueryInput.prototype.__updateStatus = function(force) {
-      var valueChanged, valueOk;
-      if (force == null) {
-        force = false;
-      }
-      valueOk = this.value.length >= this.options.captureLength;
-      valueChanged = this.value.toUpperCase() !== this.previousValue;
-      if (valueOk && (valueChanged || force)) {
-        this.stopTimer = setTimeout(((function(_this) {
-          return function() {
-            return _this.trigger("df:input:stop", [_this.value]);
-          };
-        })(this)), this.options.typingTimeout);
-        this.previousValue = this.value.toUpperCase();
-        return this.controller.forEach((function(_this) {
-          return function(controller) {
-            return controller.search(_this.value);
-          };
-        })(this));
-      } else if (this.previousValue.length > 0 && this.value.length === 0) {
-        if (this.value.length === 0) {
-          return this.trigger("df:input:none");
-        }
-      }
-    };
-
-
-    /**
-     * If the widget is configured to be cleaned, empties the value of the input
-     * element.
-     * @fires Widget#df:widget:clean
-     */
-
-    QueryInput.prototype.clean = function() {
-      if (this.options.clean) {
-        this.element.val("");
-      }
-      return QueryInput.__super__.clean.apply(this, arguments);
-    };
-
-    return QueryInput;
-
-  })(Widget);
-
-  module.exports = QueryInput;
-
-}).call(this);
-
-},{"../util/thing":12,"./widget":22,"extend":24}],21:[function(require,module,exports){
+},{"./display":14,"extend":21,"nouislider":68}],17:[function(require,module,exports){
 (function() {
   var $, Display, ScrollDisplay, Thing, extend, throttle,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -4397,7 +3855,147 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"../util/thing":12,"./display":15,"extend":24,"lodash.throttle":65}],22:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/thing":12,"./display":14,"extend":21,"lodash.throttle":62}],18:[function(require,module,exports){
+(function() {
+  var $, Display, TermsFacet, extend,
+    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+  extend = require("extend");
+
+  Display = require("./display");
+
+  $ = require("../util/dfdom");
+
+
+  /**
+   * Represents a terms selector control to filter by the possible values of a
+   * text field.
+   */
+
+  TermsFacet = (function(superClass) {
+    extend1(TermsFacet, superClass);
+
+    TermsFacet.defaultTemplate = "{{#terms}}\n  <div class=\"df-term\" data-facet=\"{{name}}\" data-value=\"{{key}}\"\n      {{#selected}}data-selected{{/selected}}>\n    <span class=\"df-term__value\">{{key}}</span>\n    <span class=\"df-term__count\">{{doc_count}}</span>\n  </div>\n{{/terms}}";
+
+
+    /**
+     * @param  {String|Node|DfDomElement} element  Container node.
+     * @param  {String} facet Name of the facet/filter.
+     * @param  {Object} options
+     */
+
+    function TermsFacet(element, facet, options) {
+      this.facet = facet;
+      if (options == null) {
+        options = {};
+      }
+      TermsFacet.__super__.constructor.call(this, element, extend(true, {
+        template: this.constructor.defaultTemplate
+      }, options));
+      this.totalSelected = 0;
+    }
+
+
+    /**
+     * Initializes the object with a controller and attachs event handlers for
+     * this widget instance.
+     *
+     * @param  {Controller} controller Doofinder Search controller.
+     */
+
+    TermsFacet.prototype.init = function() {
+      if (!this.initialized) {
+        this.element.on("click", "[data-facet=\"" + this.facet + "\"][data-value]", (function(_this) {
+          return function(e) {
+            var facetName, facetValue, isSelected, termNode;
+            e.preventDefault();
+            termNode = $(e.currentTarget);
+            facetName = termNode.data("facet");
+            facetValue = termNode.data("value");
+            isSelected = !termNode.hasAttr("data-selected");
+            if (isSelected) {
+              _this.totalSelected++;
+              termNode.attr("data-selected", "");
+              _this.controller.addFilter(facetName, facetValue);
+            } else {
+              _this.totalSelected--;
+              termNode.removeAttr("data-selected");
+              _this.controller.removeFilter(facetName, facetValue);
+            }
+            _this.controller.refresh();
+            return _this.trigger("df:term:click", [facetName, facetValue, isSelected]);
+          };
+        })(this));
+      }
+      return TermsFacet.__super__.init.apply(this, arguments);
+    };
+
+
+    /**
+     * Adds extra context to the passed context object.
+     *
+     * @param  {Object} response = {} Search response as initial context.
+     * @return {Object}               Extended search response.
+     * @protected
+     */
+
+    TermsFacet.prototype.__buildContext = function(response) {
+      var index, ref, ref1, ref2, selectedTerms, term, terms;
+      if (response == null) {
+        response = {};
+      }
+      TermsFacet.__super__.__buildContext.apply(this, arguments);
+      terms = response.facets[this.facet].terms.buckets;
+      selectedTerms = (response != null ? (ref = response.filter) != null ? (ref1 = ref.terms) != null ? ref1[this.facet] : void 0 : void 0 : void 0) || [];
+      for (index in terms) {
+        term = terms[index];
+        term.index = parseInt(index, 10);
+        term.name = this.facet;
+        term.selected = (ref2 = term.key, indexOf.call(selectedTerms, ref2) >= 0);
+      }
+      this.totalSelected = selectedTerms.length;
+      return this.currentContext = extend(true, this.currentContext, {
+        name: this.facet,
+        terms: terms
+      });
+    };
+
+
+    /**
+     * Renders the widget with the data received, by replacing its content.
+     *
+     * @param {Object} res Search response.
+     * @fires TermsFacet#df:widget:render
+     */
+
+    TermsFacet.prototype.render = function(res) {
+      if (res.page === 1) {
+        if (res.facets[this.facet].terms.buckets.length > 0) {
+          return TermsFacet.__super__.render.call(this, res);
+        } else {
+          return this.clean();
+        }
+      } else {
+        return false;
+      }
+    };
+
+    TermsFacet.prototype.clean = function() {
+      this.totalSelected = 0;
+      return TermsFacet.__super__.clean.apply(this, arguments);
+    };
+
+    return TermsFacet;
+
+  })(Display);
+
+  module.exports = TermsFacet;
+
+}).call(this);
+
+},{"../util/dfdom":6,"./display":14,"extend":21}],19:[function(require,module,exports){
 (function() {
   var $, Widget, bean;
 
@@ -4514,7 +4112,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"bean":23}],23:[function(require,module,exports){
+},{"../util/dfdom":6,"bean":20}],20:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean
@@ -5257,7 +4855,7 @@
   return bean
 });
 
-},{}],24:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 'use strict';
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -5345,9 +4943,9 @@ module.exports = function extend() {
 	return target;
 };
 
-},{}],25:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 
-},{}],26:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -7140,7 +6738,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":27,"ieee754":28,"isarray":29}],27:[function(require,module,exports){
+},{"base64-js":24,"ieee754":25,"isarray":26}],24:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -7256,7 +6854,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],28:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -7342,14 +6940,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],29:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],30:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7653,7 +7251,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],31:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -7669,7 +7267,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":54}],32:[function(require,module,exports){
+},{"http":51}],29:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -7694,7 +7292,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],33:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -7717,7 +7315,7 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],34:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -7903,7 +7501,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],35:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -8440,7 +8038,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],36:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8526,7 +8124,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],37:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8613,13 +8211,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],38:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":36,"./encode":37}],39:[function(require,module,exports){
+},{"./decode":33,"./encode":34}],36:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8744,7 +8342,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":41,"./_stream_writable":43,"core-util-is":47,"inherits":32,"process-nextick-args":49}],40:[function(require,module,exports){
+},{"./_stream_readable":38,"./_stream_writable":40,"core-util-is":44,"inherits":29,"process-nextick-args":46}],37:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8792,7 +8390,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":42,"core-util-is":47,"inherits":32}],41:[function(require,module,exports){
+},{"./_stream_transform":39,"core-util-is":44,"inherits":29}],38:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -9802,7 +9400,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":39,"./internal/streams/BufferList":44,"./internal/streams/destroy":45,"./internal/streams/stream":46,"_process":34,"core-util-is":47,"events":30,"inherits":32,"isarray":48,"process-nextick-args":49,"safe-buffer":50,"string_decoder/":51,"util":25}],42:[function(require,module,exports){
+},{"./_stream_duplex":36,"./internal/streams/BufferList":41,"./internal/streams/destroy":42,"./internal/streams/stream":43,"_process":31,"core-util-is":44,"events":27,"inherits":29,"isarray":45,"process-nextick-args":46,"safe-buffer":47,"string_decoder/":48,"util":22}],39:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -10017,7 +9615,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":39,"core-util-is":47,"inherits":32}],43:[function(require,module,exports){
+},{"./_stream_duplex":36,"core-util-is":44,"inherits":29}],40:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10684,7 +10282,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":39,"./internal/streams/destroy":45,"./internal/streams/stream":46,"_process":34,"core-util-is":47,"inherits":32,"process-nextick-args":49,"safe-buffer":50,"util-deprecate":52}],44:[function(require,module,exports){
+},{"./_stream_duplex":36,"./internal/streams/destroy":42,"./internal/streams/stream":43,"_process":31,"core-util-is":44,"inherits":29,"process-nextick-args":46,"safe-buffer":47,"util-deprecate":49}],41:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -10759,7 +10357,7 @@ module.exports = function () {
 
   return BufferList;
 }();
-},{"safe-buffer":50}],45:[function(require,module,exports){
+},{"safe-buffer":47}],42:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -10832,10 +10430,10 @@ module.exports = {
   destroy: destroy,
   undestroy: undestroy
 };
-},{"process-nextick-args":49}],46:[function(require,module,exports){
+},{"process-nextick-args":46}],43:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":30}],47:[function(require,module,exports){
+},{"events":27}],44:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10946,9 +10544,9 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":33}],48:[function(require,module,exports){
-arguments[4][29][0].apply(exports,arguments)
-},{"dup":29}],49:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":30}],45:[function(require,module,exports){
+arguments[4][26][0].apply(exports,arguments)
+},{"dup":26}],46:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -10995,7 +10593,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":34}],50:[function(require,module,exports){
+},{"_process":31}],47:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -11059,7 +10657,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":26}],51:[function(require,module,exports){
+},{"buffer":23}],48:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('safe-buffer').Buffer;
@@ -11332,7 +10930,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":50}],52:[function(require,module,exports){
+},{"safe-buffer":47}],49:[function(require,module,exports){
 (function (global){
 
 /**
@@ -11403,7 +11001,7 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],53:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -11412,7 +11010,7 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":39,"./lib/_stream_passthrough.js":40,"./lib/_stream_readable.js":41,"./lib/_stream_transform.js":42,"./lib/_stream_writable.js":43}],54:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":36,"./lib/_stream_passthrough.js":37,"./lib/_stream_readable.js":38,"./lib/_stream_transform.js":39,"./lib/_stream_writable.js":40}],51:[function(require,module,exports){
 (function (global){
 var ClientRequest = require('./lib/request')
 var extend = require('xtend')
@@ -11494,7 +11092,7 @@ http.METHODS = [
 	'UNSUBSCRIBE'
 ]
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./lib/request":56,"builtin-status-codes":58,"url":60,"xtend":62}],55:[function(require,module,exports){
+},{"./lib/request":53,"builtin-status-codes":55,"url":57,"xtend":59}],52:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
 
@@ -11567,7 +11165,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],56:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -11877,7 +11475,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":55,"./response":57,"_process":34,"buffer":26,"inherits":32,"readable-stream":53,"to-arraybuffer":59}],57:[function(require,module,exports){
+},{"./capability":52,"./response":54,"_process":31,"buffer":23,"inherits":29,"readable-stream":50,"to-arraybuffer":56}],54:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -12063,7 +11661,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":55,"_process":34,"buffer":26,"inherits":32,"readable-stream":53}],58:[function(require,module,exports){
+},{"./capability":52,"_process":31,"buffer":23,"inherits":29,"readable-stream":50}],55:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -12129,7 +11727,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],59:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
 
 module.exports = function (buf) {
@@ -12158,7 +11756,7 @@ module.exports = function (buf) {
 	}
 }
 
-},{"buffer":26}],60:[function(require,module,exports){
+},{"buffer":23}],57:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -12892,7 +12490,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":61,"punycode":35,"querystring":38}],61:[function(require,module,exports){
+},{"./util":58,"punycode":32,"querystring":35}],58:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -12910,7 +12508,7 @@ module.exports = {
   }
 };
 
-},{}],62:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -12931,7 +12529,7 @@ function extend() {
     return target
 }
 
-},{}],63:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 /* globals window, HTMLElement */
 
 'use strict';
@@ -13733,7 +13331,7 @@ is.symbol = function (value) {
 
 module.exports = is;
 
-},{}],64:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 /*!
  * JavaScript Cookie v2.1.4
  * https://github.com/js-cookie/js-cookie
@@ -13900,7 +13498,7 @@ module.exports = is;
 	return init(function () {});
 }));
 
-},{}],65:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 (function (global){
 /**
  * lodash (Custom Build) <https://lodash.com/>
@@ -14343,7 +13941,7 @@ function toNumber(value) {
 module.exports = throttle;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],66:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 (function(){
   var crypt = require('crypt'),
       utf8 = require('charenc').utf8,
@@ -14505,7 +14103,7 @@ module.exports = throttle;
 
 })();
 
-},{"charenc":67,"crypt":68,"is-buffer":69}],67:[function(require,module,exports){
+},{"charenc":64,"crypt":65,"is-buffer":66}],64:[function(require,module,exports){
 var charenc = {
   // UTF-8 encoding
   utf8: {
@@ -14540,7 +14138,7 @@ var charenc = {
 
 module.exports = charenc;
 
-},{}],68:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 (function() {
   var base64map
       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
@@ -14638,9 +14236,9 @@ module.exports = charenc;
   module.exports = crypt;
 })();
 
-},{}],69:[function(require,module,exports){
-arguments[4][33][0].apply(exports,arguments)
-},{"dup":33}],70:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
+arguments[4][30][0].apply(exports,arguments)
+},{"dup":30}],67:[function(require,module,exports){
 /*!
  * mustache.js - Logic-less {{mustache}} templates with JavaScript
  * http://github.com/janl/mustache.js
@@ -15272,7 +14870,7 @@ arguments[4][33][0].apply(exports,arguments)
   return mustache;
 }));
 
-},{}],71:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 /*! nouislider - 8.5.1 - 2016-04-24 16:00:29 */
 
 (function (factory) {
@@ -17232,7 +16830,7 @@ function closure ( target, options, originalOptions ){
 	};
 
 }));
-},{}],72:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 'use strict';
 
 var replace = String.prototype.replace;
@@ -17252,7 +16850,7 @@ module.exports = {
     RFC3986: 'RFC3986'
 };
 
-},{}],73:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 'use strict';
 
 var stringify = require('./stringify');
@@ -17265,7 +16863,7 @@ module.exports = {
     stringify: stringify
 };
 
-},{"./formats":72,"./parse":74,"./stringify":75}],74:[function(require,module,exports){
+},{"./formats":69,"./parse":71,"./stringify":72}],71:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -17441,7 +17039,7 @@ module.exports = function (str, opts) {
     return utils.compact(obj);
 };
 
-},{"./utils":76}],75:[function(require,module,exports){
+},{"./utils":73}],72:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -17653,7 +17251,7 @@ module.exports = function (object, opts) {
     return joined.length > 0 ? prefix + joined : '';
 };
 
-},{"./formats":72,"./utils":76}],76:[function(require,module,exports){
+},{"./formats":69,"./utils":73}],73:[function(require,module,exports){
 'use strict';
 
 var has = Object.prototype.hasOwnProperty;

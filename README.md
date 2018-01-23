@@ -7,34 +7,30 @@ A.K.A. `js-doofinder`, or just `doofinder`, this library makes easy to perform r
 <!-- MarkdownTOC depth="2" autolink="true" autoanchor="false" bracket="round" -->
 
 - [Installation](#installation)
-  - [NPM](#npm)
-  - [Bower](#bower)
-  - [CDN](#cdn)
+    - [NPM](#npm)
+    - [Bower](#bower)
+    - [CDN](#cdn)
 - [TL;DR](#tldr)
 - [Quick Start](#quick-start)
 - [Client Reference](#client-reference)
-  - [doofinder.Client](#doofinderclient)
+    - [doofinder.Client](#doofinderclient)
 - [Controller Reference](#controller-reference)
-  - [doofinder.Controller](#doofindercontroller)
+    - [doofinder.Controller](#doofindercontroller)
 - [Widgets Reference](#widgets-reference)
-  - [doofinder.widgets.Widget](#doofinderwidgetswidget)
-  - [doofinder.widgets.QueryInput](#doofinderwidgetsqueryinput)
-  - [doofinder.widgets.Display](#doofinderwidgetsdisplay)
-  - [doofinder.widgets.ScrollDisplay](#doofinderwidgetsscrolldisplay)
-  - [doofinder.widgets.TermsFacet](#doofinderwidgetstermsfacet)
-  - [doofinder.widgets.CollapsibleTermsFacet](#doofinderwidgetscollapsibletermsfacet)
-  - [doofinder.widgets.RangeFacet](#doofinderwidgetsrangefacet)
-  - [doofinder.widgets.Panel](#doofinderwidgetspanel)
-  - [doofinder.widgets.CollapsiblePanel](#doofinderwidgetscollapsiblepanel)
+    - [doofinder.widgets.Widget](#doofinderwidgetswidget)
+    - [doofinder.widgets.QueryInput](#doofinderwidgetsqueryinput)
+    - [doofinder.widgets.Display](#doofinderwidgetsdisplay)
+    - [doofinder.widgets.ScrollDisplay](#doofinderwidgetsscrolldisplay)
+    - [doofinder.widgets.TermsFacet](#doofinderwidgetstermsfacet)
+    - [doofinder.widgets.RangeFacet](#doofinderwidgetsrangefacet)
 - [Session Reference](#session-reference)
-  - [doofinder.session.ISessionStore](#doofindersessionisessionstore)
-  - [doofinder.session.ObjectSessionStore](#doofindersessionobjectsessionstore)
-  - [doofinder.session.CookieSessionStore](#doofindersessioncookiesessionstore)
-  - [doofinder.session.Session](#doofindersessionsession)
+    - [doofinder.session.Session](#doofindersessionsession)
+    - [doofinder.session.ObjectSessionStore](#doofindersessionobjectsessionstore)
+    - [doofinder.session.CookieSessionStore](#doofindersessioncookiesessionstore)
 - [Stats Reference](#stats-reference)
-  - [doofinder.Stats](#doofinderstats)
+    - [doofinder.Stats](#doofinderstats)
 - [How To](#how-to)
-  - [Configure facet widgets dynamically](#configure-facet-widgets-dynamically)
+    - [Configure facet widgets dynamically](#configure-facet-widgets-dynamically)
 
 <!-- /MarkdownTOC -->
 
@@ -233,11 +229,16 @@ This class is aimed to easily search and display search results in a browser, ma
 
 Search status includes:
 
-- Current page: Is always `1` when a fresh search is done.
-- Last page available for the current query.
-- Query name: Name of the query that Doofinder found that gave the best results so retrieving subsequent pages of results will use the same query.
-- Query counter: to keep track of the requests made and maintain order.
-- Request done: Whether a search request has been made or not.
+| Property | Type | Description |
+| :--- | :---: | :--- |
+| `hashid` | `String` | Shortcut to get the `hashid` of the search engine being queried. |
+| `query` | `String` | Current search' search terms |
+| `params` | `Object` | Any extra parameters sent to the server, like `rpp`, `page` and `query_name`. |
+| `isFirstPage` | `Boolean` | `true` if the last page requested is the first page. |
+| `isLastPage` | `Boolean` | `true` if the last page requested is the last page. |
+| `lastPage` | `Number` | The last page of the current search that you can request. If the current search has `100` results are you are getting `10` results per page, the last page is `10`. |
+| `queryCounter` | `Number` | Requests counter, used to avoid processing a response that arrived too late. |
+| `requestDone` | `Boolean` | Used internally to control if the first page of the current search has been requested. |
 
 #### constructor
 
@@ -556,13 +557,13 @@ controller.renderWidgets(response);
 
 #### Controller.cleanWidgets()
 
-Makes registered widgets clean themselves.
+Iterates all registered widgets and executes their `clean()` method so they can perform cleaning actions.
 
 ```javascript
 controller.cleanWidgets();
 ```
 
-**NOTICE:** Triggers a `df:controller:cleanWidgets` event on the controller when the `clean()` method of all widgets has been executed.
+**NOTICE:** This method triggers a `df:controller:cleanWidgets` event on the controller when the `clean()` method of all widgets has been executed.
 
 #### Controller.clean()
 
@@ -1199,101 +1200,6 @@ The variables available for each term are:
 | `selected` | Indicates whether the term is selected or not. |
 | `doc_count` | Indicates the number of results when filtering the current search results by this term. |
 
----
-
-### doofinder.widgets.CollapsibleTermsFacet
-
-`Widget < Display < TermsFacet < CollapsibleTermsFacet`
-
-This is a `TermsFacet` widget that provides a collapsing feature _out of the box_ so, if you receive 20 terms to filter, you can display 10 and hide the rest until the user choose to display them by pressing a button.
-
-Check out the advanced example in the [Demo](#quick-start) to see how it works.
-
-**NOTICE:** Collapsing feature is handled in HTML and CSS via HTML data attributes. If you change the template and want to preserve this behavior, remember to use specific CSS found in `doofinder.css` and attributes defined in the default templates.
-
-#### constructor
-
-```javascript
-var facet = new doofinder.widgets.CollapsibleTermsFacet("#brandFilter", "brand", {
-    size: 5,
-    startCollapsed: false,
-    templateVars: {
-        viewMoreLabel: "Expand",
-        viewLessLabel: "Collapse"
-    }
-});
-```
-
-##### Options
-
-| Option | Required | Type | Default | Description |
-| :--- | :---: | :---: | :---: | :--- |
-| `size` | No | `Number` | `10` | Maximum number of terms visible when the widget is collapsed. |
-| `startCollapsed` | No | `Boolean` | `true` | Determines whether the widget's default status is being collapsed or not. |
-| `buttonTemplate` | Yes | `String` || See _Default Templates_ below. |
-
-##### Default Templates
-
-**WARNING:** Behavior is a bit complex and is recommended to limit modifications to CSS classes and minor stuff.
-
-###### template
-
-Default template of the widget.
-
-```mustache
-{{#terms}}
-  <div class="df-term" data-facet="{{name}}" data-value="{{key}}"
-      {{#extra-content}}{{index}}{{/extra-content}}
-      {{#selected}}data-selected{{/selected}}>
-    <span class="df-term__value">{{key}}</span>
-    <span class="df-term__count">{{doc_count}}</span>
-  </div>
-{{/terms}}
-{{#show-more-button}}{{terms.length}}{{/show-more-button}}
-```
-
-This is basically the same template as in the `TermsFacet` class, but adds a couple of template helpers to mark terms as _extra content_ (terms that will be hidden when the widget is collapsed), and paint the collapse toggle button.
-
-| Function | Description |
-| :--- | :--- |
-| `extra-content` | Receives the index of the result in the list of results and marks the term as _extra content_ if needed. |
-| `show-more-button` | Paints the button if there're more terms than should be visible when the widget is collapsed (uses the `size` option). |
-
-Apart from those inherited from `TermFacet`, there're some `data` attributes that must be present for the widget to work properly:
-
-| Attribute | Description |
-| :--- | :--- |
-| `data-extra-content` | Terms that are considered _extra content_ get this attribute added. |
-| `data-view-extra-content` | This attribute is dynamically assigned to the widget container to indicate whether the hidden terms must be visible or not. |
-
-###### buttonTemplate
-
-Default template for the visibility toggle button.
-
-```mustache
-<button type="button" data-toggle-extra-content
-    data-text-normal="{{#translate}}{{viewMoreLabel}}{{/translate}}"
-    data-text-toggle="{{#translate}}{{viewLessLabel}}{{/translate}}">
-  {{#collapsed}}{{#translate}}{{viewMoreLabel}}{{/translate}}{{/collapsed}}
-  {{^collapsed}}{{#translate}}{{viewLessLabel}}{{/translate}}{{/collapsed}}
-</button>
-```
-
-A couple of template variables are included by default in the rendering context:
-
-| Variable | Type | Default | Description |
-| :--- | :---: | :---: | :--- |
-| `viewMoreLabel` | `String` | `"View more…"` | Text to be rendered as the toggle button text when facets are collapsed. |
-| `viewLessLabel` | `String` | `"View less…"` | Text to be rendered as the toggle button text when all facets are visible. |
-
-You can change them by passing different values in the options object.
-
-There's also a `data` attribute that must be present for the widget to work properly:
-
-| Attribute | Description |
-| :--- | :--- |
-| `data-toggle-extra-content` | Used to identify the button as the terms visibility toggle |
-
 #### Events
 
 Apart from the default events, this widget triggers the following events.
@@ -1402,212 +1308,125 @@ widget.on("df:range:change", function(value, range){
 | `value` | `Object` | Current selected range. |
 | `range` | `Object` | Valid range. |
 
----
+## Session Reference
 
-### doofinder.widgets.Panel
+A `Session` is used to store user data. User (session) data may be persisted in different ways, depending on the _store_ class being used.
 
-`Widget < Display < Panel`
+Currently there are two _store_ classes available:
 
-This is a special widget. It's not used to filter anything, just as a presentational container for another widget. Useful when you want to separate widgets in _sections_ (like facet widgets) with a label but you iterate them dynamically.
+- [`ObjectSessionStore`](#doofindersessionobjectsessionstore)
+- [`CookieSessionStore`](#doofindersessioncookiesessionstore)
+
+### doofinder.session.Session
+
+Class that represents a user session key/value store persisted somewhere.
+
+**NOTICE:** A `session_id` key with a valid value is always generated if it doesn't already exists when you access the session to get or set data. This is enforced by design but you can override session id if you want.
 
 #### constructor
 
 ```javascript
-// assume facet variable obtained from the server
-var panel = new doofinder.widgets.Panel("#aside", function(panel){
-  var widget = new doofinder.widgets.TermsFacet(panel.contentElement, facet.name);
-  widget.on("df:widget:render", function(response){
-    var suffix = this.selectedTerms > 0 ? ' (' + this.selectedTerms + ')' : '';
-    panel.labelElement.html(facet.label + suffix);
-  });
-  return widget;
-}, {
-  label: facet.label
-});
+var session = new doofinder.session.Session(
+  new doofinder.session.CookieSessionStore("myCookie")
+);
 ```
 
 ##### Arguments
 
 | Argument | Required | Type | Description |
 | :--- | :---: | :---: | :--- |
-| `element` | Yes | `String` | CSS Selector. |
-||| `Node` | Direct reference to a DOM Node. |
-||| `DfDomElement` | Reference to a DOM node via `dfdom`. |
-| `getFacet` | Yes | `Function` | Function that receives the panel widget instance and returns an instance of a widget that will be rendered inside the panel. |
-| `options` | No | `Object` | Options object. |
+| `store` | Yes | `ISessionStore` | A valid storage instance. |
 
-##### Options
+#### Session.get()
 
-| Option | Required | Type | Values | Default | Description |
-| :--- | :---: | :---: | :---: | :---: | :--- |
-| `label` | No | `String` || `null` | Label used in the panel header. If not provided, no header will be rendered by default (unless you modify the default template). |
-| `insertionMethod` | Yes | `String` | `append` | `append` | How to insert the panel inside its container. It's appended by default. |
-|||| `prepend` ||  |
-|||| `before` ||  |
-|||| `after` ||  |
-|||| `html` || This replaces the container content and usually is not used. |
-
-##### Default Template
-
-```mustache
-<div class="df-panel" id="{{panelElement}}">
-  {{#label}}
-  <div class="df-panel__label" id="{{labelElement}}">{{label}}</div>
-  {{/label}}
-  <div class="df-panel__content" id="{{contentElement}}"></div>
-</div>
-```
-
-Some template variables are included by default in the rendering context:
-
-| Variable | Type | Default | Description |
-| :--- | :---: | :---: | :--- |
-| `panelElement` | `String` | `"df-<random>"` | id of the panel container. |
-| `labelElement` | `String` | `"df-<random>"` | id of the label container. |
-| `contentElement` | `String` | `"df-<random>"` | id of the content container. |
-
-##### The `getFacet()` Function
-
-Used to obtain the widget in the precise moment it can be rendered (the panel must be rendered first), gives access to the panel instance, so you can make use of cached references to the panel elements:
-
-| Variable | Description |
-| :--- | :--- |
-| `panelElement` | The panel node. |
-| `labelElement` | The label node. |
-| `contentElement` | The content node. |
-
-This way you can use events of the contained widget to alter the panel itself, for instance its label.
-
-#### Events
-
-Apart from the default events, this widget triggers the following events.
-
-##### df:widget:renderContent
-
-Triggered when the widget contained on the panel has been rendered.
+Gets the value of the specified key. Optionally accepts a default value to be returned if the specified key does not exist.
 
 ```javascript
-panel.on("df:widget:renderContent", function(widget){
-  // widget is ready to use
-});
+var session = new doofinder.session.Session(
+  new doofinder.session.ObjectSessionStore({"query": "hello"})
+);
+session.get("query", "nothing"); // "hello"
+session.get("other", "nothing"); // "nothing"
 ```
 
-| Argument | Type | Description |
-| :--- | :---: | :--- |
-| `widget` | `Widget` | Widget contained in the panel. |
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `key` | Yes | `String` | A key name. |
+| `defaultValue` | No | `*` | A default value to be returned. |
+
+#### Session.set()
+
+Saves a value in the session by assigning it to the specified key.
+
+```javascript
+var session = new doofinder.session.Session(
+  new doofinder.session.ObjectSessionStore()
+);
+session.set("query", "hello");
+session.get("query", "nothing"); // "hello"
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `key` | Yes | `String` | A key name. |
+| `value` | Yes | `*` | A value to be saved. |
+
+#### Session.del()
+
+Deletes the specified key from the session store.
+
+```javascript
+var session = new doofinder.session.Session(
+  new doofinder.session.ObjectSessionStore({"query": "hello"})
+);
+session.del("query");
+session.get("query", "nothing"); // "nothing"
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `key` | Yes | `String` | A key name. |
+
+#### Session.clean()
+
+Removes all session data.
+
+```javascript
+var session = new doofinder.session.Session(
+  new doofinder.session.ObjectSessionStore({"query": "hello"})
+);
+session.clean();
+session.get("query", "nothing"); // "nothing"
+```
+
+#### Session.exists()
+
+Checks whether the search session exists or not by searching for a `session_id` key defined in the _store_ class and returns a Boolean value.
+
+```javascript
+var session = new doofinder.session.Session(
+  new doofinder.session.ObjectSessionStore()
+);
+session.exists(); // false
+session.get("session_id", "nothing"); // "320sadd09fdfsedfab"
+session.exists(); // true
+session.set("session_id", "something");
+session.get("session_id", "nothing"); // "something"
+```
+
+**NOTICE:** A `session_id` key is always generated in the _store_ if it doesn't already exists when you access the store to get or set data. This is enforced by design but you can override session id if you want.
 
 ---
 
-### doofinder.widgets.CollapsiblePanel
-
-`Widget < Display < Panel < CollapsiblePanel`
-
-This widget is a variant of `Panel`. It provides collapsing features so a user can collapse the panel by clicking on its header.
-
-#### constructor
-
-```javascript
-// assume facet variable obtained from the server
-var panel = new doofinder.widgets.CollapsiblePanel(
-  "#aside", 
-  function(panel){ 
-    /* ... */
-  }, 
-  {
-    label: facet.label,
-    startCollapsed: true
-  }
-);
-```
-
-##### Options
-
-Apart from the `Panel` options, this widget provides:
-
-| Option | Required | Type | Default | Description |
-| :--- | :---: | :---: | :---: | :--- |
-| `startCollapsed` | No | `Boolean` | `false` | Indicates whether the panel is rendered collapsed by default or not. |
-
-#### CollapsiblePanel.collapse()
-
-This method collapses the panel.
-
-```javascript
-panel.collapse();
-```
-
-#### CollapsiblePanel.expand()
-
-This method expands the panel.
-
-```javascript
-panel.expand();
-```
-
-#### CollapsiblePanel.toggle()
-
-This method toggles the panel status; if collapsed it expands and vice versa.
-
-```javascript
-panel.toggle();
-```
-
-#### CollapsiblePanel.reset()
-
-This method resets the panel collapse status based on the value of the `startCollapsed` option.
-
-```javascript
-panel.reset();
-```
-
-#### Events
-
-Apart from the default events, this widget triggers the following events:
-
-##### df:collapse:change
-
-Triggered when the panel collapse status change.
-
-```javascript
-panel.on("df:collapse:change", function(collapsed) {
-  if (collapsed) {
-    // ...
-  }
-});
-```
-
-| Argument | Type | Description |
-| :--- | :---: | :--- |
-| `collapsed` | `Boolean` | Whether the panel is collapsed or not. |
-
-## Session Reference
-
-A `Session` is used to store user data. User (session) data may be persisted or not, depending on the _store_ class being used.
-
-_Store_ classes must implement `ISessionStore` so `Session` instances know how to work with them.
-
-### doofinder.session.ISessionStore
-
-Interface that all storage classes must implement. See [`Session`](#doofindersessionsession).
-
-It provides some public methods:
-
-| Method | Description |
-| :--- | :--- |
-| `get(key)` | Gets the value for the specified key from the storage. |
-| `set(key, value)` | Sets the value for the specified key in the storage. |
-| `del(key)` | Deletes the specified key from the storage. |
-
-And requires some protected methods to be implemented:
-
-| Method | Description |
-| :--- | :--- |
-| `__getData()` | Gets the current data obj from the underlying storage and ensures that a `session_id` is created if it doesn't exist, like a signature that all session data must have. |
-| `__setData(dataObj)` | Saves the current data obj into the underlying storage. |
-| `clean()` | Deletes all data from the underlying storage. |
-| `exists()` | Checks whether the session exists or not. |
-
 ### doofinder.session.ObjectSessionStore
+
+`ISessionStore < ObjectSessionStore`
 
 Store to hold session data as a plain `Object`.
 
@@ -1625,7 +1444,11 @@ var store = new doofinder.session.ObjectSessionStore({
 | :--- | :---: | :---: | :--- |
 | `data` | No | `Object` | Initial data. |
 
+---
+
 ### doofinder.session.CookieSessionStore
+
+`ISessionStore < CookieSessionStore`
 
 Store that holds session data in a browser cookie.
 
@@ -1650,24 +1473,6 @@ var store = new doofinder.session.CookieSessionStore(cookieName, {
 | :--- | :---: | :---: | :---: | :--- |
 | `prefix` | No | `String` | `""` | Prefix to be added to the cookie name. |
 | `expiry` | Yes | `Number` | `1/24` | Duration of the cookie in days. 1 hour by default. |
-
-### doofinder.session.Session
-
-Class that represents a user session persisted somewhere.
-
-#### constructor
-
-```javascript
-var session = new doofinder.session.Session(
-  new doofinder.session.CookieSessionStore("myCookie")
-);
-```
-
-##### Arguments
-
-| Argument | Required | Type | Description |
-| :--- | :---: | :---: | :--- |
-| `store` | Yes | `ISessionStore` | A valid storage instance. |
 
 ## Stats Reference
 
