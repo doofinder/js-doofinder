@@ -229,11 +229,16 @@ This class is aimed to easily search and display search results in a browser, ma
 
 Search status includes:
 
-- Current page: Is always `1` when a fresh search is done.
-- Last page available for the current query.
-- Query name: Name of the query that Doofinder found that gave the best results so retrieving subsequent pages of results will use the same query.
-- Query counter: to keep track of the requests made and maintain order.
-- Request done: Whether a search request has been made or not.
+| Property | Type | Description |
+| :--- | :---: | :--- |
+| `hashid` | `String` | Shortcut to get the `hashid` of the search engine being queried. |
+| `query` | `String` | Current search' search terms |
+| `params` | `Object` | Any extra parameters sent to the server, like `rpp`, `page` and `query_name`. |
+| `isFirstPage` | `Boolean` | `true` if the last page requested is the first page. |
+| `isLastPage` | `Boolean` | `true` if the last page requested is the last page. |
+| `lastPage` | `Number` | The last page of the current search that you can request. If the current search has `100` results are you are getting `10` results per page, the last page is `10`. |
+| `queryCounter` | `Number` | Requests counter, used to avoid processing a response that arrived too late. |
+| `requestDone` | `Boolean` | Used internally to control if the first page of the current search has been requested. |
 
 #### constructor
 
@@ -552,13 +557,13 @@ controller.renderWidgets(response);
 
 #### Controller.cleanWidgets()
 
-Makes registered widgets clean themselves.
+Iterates all registered widgets and executes their `clean()` method so they can perform cleaning actions.
 
 ```javascript
 controller.cleanWidgets();
 ```
 
-**NOTICE:** Triggers a `df:controller:cleanWidgets` event on the controller when the `clean()` method of all widgets has been executed.
+**NOTICE:** This method triggers a `df:controller:cleanWidgets` event on the controller when the `clean()` method of all widgets has been executed.
 
 #### Controller.clean()
 
