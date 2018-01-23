@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 <!-- MarkdownTOC depth="2" autolink="true" autoanchor="false" bracket="round" -->
 
 - [Client Reference](#client-reference)
