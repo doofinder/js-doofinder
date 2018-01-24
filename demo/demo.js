@@ -6,7 +6,7 @@
   }
 })(function(){
 
-  window.controllers = [];
+  window.doofinderControllers = [];
 
   // some utilities
   var $ = doofinder.util.dfdom;
@@ -34,7 +34,7 @@
   basicController.registerWidgets([basicInputWidget, basicResultsWidget]);
   configureStatusHandler(basicController, "#basicStatus");
 
-  window.controllers.push(basicController);
+  window.doofinderControllers.push(basicController);
 
   //
   // Advanced
@@ -109,7 +109,7 @@
     });
   });
 
-  window.controllers.push(advancedController);
+  window.doofinderControllers.push(advancedController);
 
   //
   // Multiple Controllers, same input
@@ -154,6 +154,6 @@
   // register widgets
   secondController.registerWidgets([commonInputWidget, secondResultsWidget]);
 
-  window.controllers.push(firstController);
-  window.controllers.push(secondController);
+  window.doofinderControllers.push(firstController);
+  window.doofinderControllers.push(secondController);
 });
