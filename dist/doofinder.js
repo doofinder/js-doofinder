@@ -890,7 +890,7 @@
 },{"./client":1,"./util/errors":7,"./util/freezer":8,"./util/thing":12,"./widgets/widget":19,"bean":20,"extend":21,"qs":70}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.2.1",
+    version: "5.2.2",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
@@ -1270,10 +1270,10 @@
      *
      * @param  {String}  	session_id  Session id.
      *
-     * @param  {Function} callback Optional callback to be called when the
-     *                             response is received. First param is the
-     *                             error, if any, and the second one is the
-     *                             response, if any.
+     * @param  {Function} callback    Optional callback to be called when the
+     *                                response is received. First param is the
+     *                                error, if any, and the second one is the
+     *                                response, if any.
      * @public
      */
 
@@ -1288,21 +1288,21 @@
      * Registers a click on a search result for the specified search query.
      *
      * @param  {String}  	session_id  Session id.
-     * @param  {String}   dfid      Doofinder's internal ID for the result.
-     * @param  {String}   query     Search terms.
-     * @param  {Function} callback  Optional callback to be called when the
-     *                              response is received. First param is the
-     *                              error, if any, and the second one is the
-     *                              response, if any.
+     * @param  {String}   dfid        Doofinder's internal ID for the result.
+     * @param  {String}   query       Optional. Search terms.
+     * @param  {Function} callback    Optional callback to be called when the
+     *                                response is received. First param is the
+     *                                error, if any, and the second one is the
+     *                                response, if any.
      * @public
      */
 
     Stats.prototype.registerClick = function(session_id, dfid, query, callback) {
       var params;
       params = {
-        dfid: dfid,
         session_id: session_id,
-        query: query
+        dfid: dfid,
+        query: query || ""
       };
       return this.client.stats("click", params, callback);
     };
@@ -1312,10 +1312,10 @@
      * Registers a checkout.
      *
      * @param  {String}  	session_id  Session id.
-     * @param  {Function} callback Optional callback to be called when the
-     *                             response is received. First param is the
-     *                             error, if any, and the second one is the
-     *                             response, if any.
+     * @param  {Function} callback    Optional callback to be called when the
+     *                                response is received. First param is the
+     *                                error, if any, and the second one is the
+     *                                response, if any.
      * @public
      */
 

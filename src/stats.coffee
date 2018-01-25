@@ -26,10 +26,10 @@ class Stats
    *
    * @param  {String}  	session_id  Session id.
    *
-   * @param  {Function} callback Optional callback to be called when the
-   *                             response is received. First param is the
-   *                             error, if any, and the second one is the
-   *                             response, if any.
+   * @param  {Function} callback    Optional callback to be called when the
+   *                                response is received. First param is the
+   *                                error, if any, and the second one is the
+   *                                response, if any.
    * @public
   ###
   registerSession: (session_id, callback) ->
@@ -39,19 +39,19 @@ class Stats
    * Registers a click on a search result for the specified search query.
    *
    * @param  {String}  	session_id  Session id.
-   * @param  {String}   dfid      Doofinder's internal ID for the result.
-   * @param  {String}   query     Search terms.
-   * @param  {Function} callback  Optional callback to be called when the
-   *                              response is received. First param is the
-   *                              error, if any, and the second one is the
-   *                              response, if any.
+   * @param  {String}   dfid        Doofinder's internal ID for the result.
+   * @param  {String}   query       Optional. Search terms.
+   * @param  {Function} callback    Optional callback to be called when the
+   *                                response is received. First param is the
+   *                                error, if any, and the second one is the
+   *                                response, if any.
    * @public
   ###
   registerClick: (session_id, dfid, query, callback) ->
     params =
-      dfid: dfid
       session_id: session_id
-      query: query
+      dfid: dfid
+      query: query or ""
 
     @client.stats "click", params, callback
 
@@ -59,10 +59,10 @@ class Stats
    * Registers a checkout.
    *
    * @param  {String}  	session_id  Session id.
-   * @param  {Function} callback Optional callback to be called when the
-   *                             response is received. First param is the
-   *                             error, if any, and the second one is the
-   *                             response, if any.
+   * @param  {Function} callback    Optional callback to be called when the
+   *                                response is received. First param is the
+   *                                error, if any, and the second one is the
+   *                                response, if any.
    * @public
   ###
   registerCheckout: (session_id, callback) ->

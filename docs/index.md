@@ -1417,7 +1417,7 @@ Helper class to wrap calls to the Doofinder stats API endpoint using the `Client
 #### constructor
 
 ```javascript
-var stats = new doofinder.Stats(client, session);
+var stats = new doofinder.Stats(client);
 ```
 
 ##### Arguments
@@ -1425,28 +1425,13 @@ var stats = new doofinder.Stats(client, session);
 | Argument | Required | Type | Description |
 | :--- | :---: | :---: | :--- |
 | `client` | Yes | `Client` | An instance of `Client`. |
-| `session` | Yes | `Session` | An instance of `Session`. |
-
-#### Stats.setCurrentQuery()
-
-Sets current search terms in the search session.
-
-```javascript
-stats.setCurrentQuery("red car");
-```
-
-| Argument | Required | Type | Description |
-| :--- | :---: | :---: | :--- |
-| `query` | Yes | `String` | Search terms. |
-
-**WARNING:** This should be called ONLY if the user has performed a search. That's why this is usually called when the user has stopped typing in the search box.
 
 #### Stats.registerSession()
 
 Registers the session in Doofinder stats if not already registered. It marks the session as registered synchronously to short-circuit other attempts while the request is in progress. If an error occurs in the stats request the session is marked as unregistered again.
 
 ```javascript
-var registered = stats.registerSession(function(err, res){
+var registered = stats.registerSession(sessionId, function(err, res){
   // Do something in case of error or successful response
 });
 ```
@@ -1457,6 +1442,7 @@ This method returns a `Boolean` value saying if the session was registered or no
 
 | Argument | Required | Type | Description |
 | :--- | :---: | :---: | :--- |
+| `sessionId` | Yes | `String` | The anonymous user session id. |
 | `callback` | No | `Function` | Method to be called when the response or an error is received. |
 
 #### Stats.registerClick()
@@ -1464,19 +1450,20 @@ This method returns a `Boolean` value saying if the session was registered or no
 Registers a click on a search result for the specified search query.
 
 ```javascript
-stats.registerClick("abcd3434...", "red car", function(err, res){
+stats.registerClick(sessionId, "abcd3434...", "red car", function(err, res){
   // Do something in case of error or successful response
 });
-stats.registerClick("abcd3434...", null, function(err, res){
+stats.registerClick(sessionId, "abcd3434...", null, function(err, res){
   // Do something in case of error or successful response
 });
-stats.registerClick("abcd3434...");
+stats.registerClick(sessionId, "abcd3434...");
 ```
 
 | Argument | Required | Type | Description |
 | :--- | :---: | :---: | :--- |
+| `sessionId` | Yes | `String` | The anonymous user session id. |
 | `dfid` | Yes | `String` | Internal id of the result in Doofinder |
-| `query` | No | `String` | Search terms. If not defined, is obtained from the session. |
+| `query` | No | `String` | Search terms. If not defined, it's sent as the empty string. |
 | `callback` | No | `Function` | Method to be called when the response or an error is received. |
 
 #### Stats.registerCheckout()
@@ -1484,13 +1471,14 @@ stats.registerClick("abcd3434...");
 Registers a checkout if session exists. This method returns a `Boolean` to determine whether the checkout was registered or not.
 
 ```javascript
-var registered = stats.registerCheckout(function(err, res){
+var registered = stats.registerCheckout(sessionId, function(err, res){
   // Do something in case of error or successful response
 });
 ```
 
 | Argument | Required | Type | Description |
 | :--- | :---: | :---: | :--- |
+| `sessionId` | Yes | `String` | The anonymous user session id. |
 | `callback` | No | `Function` | Method to be called when the response or an error is received. |
 
 #### Stats.registerBannerEvent()
