@@ -32,7 +32,7 @@ class QueryInput extends Widget
         @element.val() or ""
       set: (value) =>
         @element.val value
-        @__scheduleUpdate()
+        @__scheduleUpdate 0, true
 
     @previousValue = @value
 
