@@ -18,8 +18,27 @@ class Stats
       throw errors.error "First parameter must be a Client object!", @
 
   ###*
+   * Wrapper of @client.stats function.
+   *
+   * WARNING: This should be called ONLY if the user has performed a search.
+   *          That's why this is usually called when the user has stopped
+   *          typing in the search box.
+   *
+   * @param  {String}  	session_id  Session id.
+   *
+   * @param  {Function} callback Optional callback to be called when the
+   *                             response is received. First param is the
+   *                             error, if any, and the second one is the
+   *                             response, if any.
+   * @public
+  ###
+  registerSession: (session_id, callback) ->
+    @client.stats "init", (session_id: session_id), callback
+
+  ###*
    * Registers a click on a search result for the specified search query.
    *
+   * @param  {String}  	session_id  Session id.
    * @param  {String}   dfid      Doofinder's internal ID for the result.
    * @param  {String}   query     Search terms.
    * @param  {Function} callback  Optional callback to be called when the
@@ -28,30 +47,26 @@ class Stats
    *                              response, if any.
    * @public
   ###
-  registerClick: (query, session_id, callback) ->
+  registerClick: (session_id, dfid, query, callback) ->
     params =
+      dfid: dfid
       session_id: session_id
       query: query
 
-    @client.stats "click", params, (err, res) =>
-      callback? err, res
+    @client.stats "click", params, callback
 
   ###*
-   * Registers a checkout if session exists.
+   * Registers a checkout.
+   *
+   * @param  {String}  	session_id  Session id.
    * @param  {Function} callback Optional callback to be called when the
    *                             response is received. First param is the
    *                             error, if any, and the second one is the
    *                             response, if any.
-   * @return {Boolean}           true if session exists and the request is
-   *                             made (doesn't check request success).
    * @public
   ###
   registerCheckout: (session_id, callback) ->
-    if sessionExists
-      @client.stats "checkout", session_id: session_id, (err, res) =>
-        unless err?
-          @session.clean()
-        callback? err, res
+    @client.stats "checkout", session_id: session_id, callback
 
   ###*
    * Registers an event for a banner

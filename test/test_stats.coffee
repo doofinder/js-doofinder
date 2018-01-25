@@ -14,10 +14,9 @@ Stats = require "../lib/stats"
 cfg = require "./config"
 serve = require "./serve"
 
-getStats = (sessionData) ->
+getStats = () ->
   client = cfg.getClient()
-  session = cfg.getSession sessionData
-  new Stats client, session
+  new Stats client
 
 # test
 describe "Stats", ->
@@ -27,94 +26,51 @@ describe "Stats", ->
   context "Instantiation", ->
     it "fails without a Client and a Session", (done) ->
       (-> new Stats()).should.throw()
-      (-> new Stats cfg.getClient()).should.throw()
-      (-> new Stats cfg.getClient(), cfg.getSession()).should.not.throw()
+      (-> new Stats cfg.getClient()).should.not.throw()
       done()
 
   context "Session Registration", ->
-    it "registers session if not already registered", (done) ->
+    it "registers session", (done) ->
       sessionId = "it's me"
       scope = serve.stats "init", session_id: sessionId
       stats = getStats session_id: sessionId
-      (stats.session.get "registered", false).should.be.false
-      stats.registerSession (err, res) ->
+      stats.registerSession sessionId, (err, res) ->
         (expect err).to.be.undefined
         res.should.equal "OK"
-        (stats.session.get "registered").should.be.true
-        (stats.session.get "session_id").should.equal sessionId
         scope.isDone().should.be.true
         done()
-
-    it "doesn't register session if already registered", (done) ->
-      sessionId = "it's me"
-      scope = serve.stats "init", session_id: sessionId
-      stats = getStats session_id: sessionId, registered: true
-      (stats.session.get "registered").should.be.true
-      stats.registerSession().should.be.false
-      scope.isDone().should.be.false
-      done()
-
-  context "Search Save", ->
-    it "saves current search query", (done) ->
-      stats = getStats()
-      stats.session.exists().should.be.false
-      stats.setCurrentQuery "something"
-      (stats.session.get "query").should.equal "something"
-      stats.session.exists().should.be.true
-      done()
 
   context "Clicks Registration", ->
     it "fails with no valid dfid", (done) ->
+      sessionId = "it's me"
       stats = getStats()
       stats.registerClick.should.throw()
-      (-> stats.registerClick "someid").should.throw()
+      (-> stats.registerClick sessionId, "someid").should.throw()
       done()
 
-    it "uses query from session if no query received as argument", (done) ->
+    it "success with a valid dfid", (done) ->
+      sessionId = "it's me"
       params =
         dfid: uniqueId.generate.dfid "someid", "product", cfg.hashid
-        session_id: "hi"
-        query: "something"
-
-      scope = serve.stats "click", params
-      stats = getStats session_id: "hi", query: "something"
-      stats.registerClick params.dfid, null, (err, res) ->
-        (expect err).to.be.undefined
-        res.should.equal "OK"
-        scope.isDone().should.be.true
-        done()
-
-    it "uses query from arguments if received", (done) ->
-      params =
-        dfid: uniqueId.generate.dfid "someid", "product", cfg.hashid
-        session_id: "hi"
+        session_id: sessionId
         query: "other thing"
 
       scope = serve.stats "click", params
-      stats = getStats session_id: "hi", query: "something"
-      stats.registerClick params.dfid, "other thing", (err, res) ->
+      stats = getStats session_id: sessionId, query: "something"
+      stats.registerClick sessionId, params.dfid, "other thing", (err, res) ->
         (expect err).to.be.undefined
         res.should.equal "OK"
         scope.isDone().should.be.true
         done()
 
   context "Checkout Registration", ->
-    it "doesn't register checkout if there is no session", (done) ->
-      scope = serve.stats "checkout"
-      stats = getStats()
-      stats.session.exists().should.be.false
-      stats.registerCheckout().should.be.false
-      scope.isDone().should.be.false
-      done()
-
-    it "properly registers checkout and cleans session if there is a session", (done) ->
-      scope = serve.stats "checkout", session_id: "hi"
-      stats = getStats session_id: "hi"
-      stats.session.exists().should.be.true
-      stats.registerCheckout (err, res) ->
+    it "registers checkout", (done) ->
+      sessionId = "it's me"
+      scope = serve.stats "checkout", session_id: sessionId
+      stats = getStats session_id: sessionId
+      stats.registerCheckout sessionId, (err, res) ->
         (expect err).to.be.undefined
         res.should.equal "OK"
-        stats.session.exists().should.be.false
         scope.isDone().should.be.true
         done()
 
