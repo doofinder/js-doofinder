@@ -890,7 +890,7 @@
 },{"./client":1,"./util/errors":7,"./util/freezer":8,"./util/thing":12,"./widgets/widget":19,"bean":20,"extend":21,"qs":70}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.2.2",
+    version: "5.2.3",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
@@ -1268,61 +1268,69 @@
      *          That's why this is usually called when the user has stopped
      *          typing in the search box.
      *
-     * @param  {String}  	session_id  Session id.
-     *
-     * @param  {Function} callback    Optional callback to be called when the
-     *                                response is received. First param is the
-     *                                error, if any, and the second one is the
-     *                                response, if any.
+     * @param  {String}  	sessionId Session id.
+     * @param  {Function} callback  Optional callback to be called when the
+     *                              response is received. First param is the
+     *                              error, if any, and the second one is the
+     *                              response, if any.
      * @public
      */
 
-    Stats.prototype.registerSession = function(session_id, callback) {
+    Stats.prototype.registerSession = function(sessionId, callback) {
       return this.client.stats("init", {
-        session_id: session_id
-      }, callback);
+        session_id: sessionId
+      }, function(err, res) {
+        return typeof callback === "function" ? callback(err, res) : void 0;
+      });
     };
 
 
     /**
      * Registers a click on a search result for the specified search query.
      *
-     * @param  {String}  	session_id  Session id.
-     * @param  {String}   dfid        Doofinder's internal ID for the result.
-     * @param  {String}   query       Optional. Search terms.
-     * @param  {Function} callback    Optional callback to be called when the
-     *                                response is received. First param is the
-     *                                error, if any, and the second one is the
-     *                                response, if any.
+     * @param  {String}  	sessionId Session id.
+     * @param  {String}   dfid      Doofinder's internal ID for the result.
+     * @param  {String}   query     Optional. Search terms.
+     * @param  {Function} callback  Optional callback to be called when the
+     *                              response is received. First param is the
+     *                              error, if any, and the second one is the
+     *                              response, if any.
      * @public
      */
 
-    Stats.prototype.registerClick = function(session_id, dfid, query, callback) {
+    Stats.prototype.registerClick = function(sessionId, dfid, query, callback) {
       var params;
+      errors.requireVal(sessionId, "sessionId");
+      errors.requireVal(dfid, "dfid");
       params = {
-        session_id: session_id,
+        session_id: sessionId,
         dfid: dfid,
         query: query || ""
       };
-      return this.client.stats("click", params, callback);
+      return this.client.stats("click", params, function(err, res) {
+        return typeof callback === "function" ? callback(err, res) : void 0;
+      });
     };
 
 
     /**
      * Registers a checkout.
      *
-     * @param  {String}  	session_id  Session id.
-     * @param  {Function} callback    Optional callback to be called when the
-     *                                response is received. First param is the
-     *                                error, if any, and the second one is the
-     *                                response, if any.
+     * @param  {String}  	sessionId Session id.
+     * @param  {Function} callback  Optional callback to be called when the
+     *                              response is received. First param is the
+     *                              error, if any, and the second one is the
+     *                              response, if any.
      * @public
      */
 
-    Stats.prototype.registerCheckout = function(session_id, callback) {
+    Stats.prototype.registerCheckout = function(sessionId, callback) {
+      errors.requireVal(sessionId, "sessionId");
       return this.client.stats("checkout", {
-        session_id: session_id
-      }, callback);
+        session_id: sessionId
+      }, function(err, res) {
+        return typeof callback === "function" ? callback(err, res) : void 0;
+      });
     };
 
 
@@ -1341,19 +1349,13 @@
      */
 
     Stats.prototype.registerBannerEvent = function(eventName, bannerId, callback) {
-      if (eventName == null) {
-        throw this.error("eventName is required");
-      }
-      if (bannerId == null) {
-        throw this.error("bannerId is required");
-      }
+      errors.requireVal(eventName, "eventName");
+      errors.requireVal(bannerId, "bannerId");
       return this.client.stats("banner_" + eventName, {
-        banner_id: "" + bannerId
-      }, (function(_this) {
-        return function(err, res) {
-          return typeof callback === "function" ? callback(err, res) : void 0;
-        };
-      })(this));
+        banner_id: bannerId
+      }, function(err, res) {
+        return typeof callback === "function" ? callback(err, res) : void 0;
+      });
     };
 
     return Stats;
@@ -2691,7 +2693,12 @@
 
   module.exports = {
     error: error,
-    warning: warning
+    warning: warning,
+    requireVal: function(value, varName) {
+      if (value == null) {
+        throw error(varName + " is required");
+      }
+    }
   };
 
 }).call(this);

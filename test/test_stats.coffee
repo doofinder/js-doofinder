@@ -30,6 +30,10 @@ describe "Stats", ->
       done()
 
   context "Session Registration", ->
+    it "fails with invalid parameters", (done) ->
+      getStats().registerSession.should.throw()
+      done()
+
     it "registers session", (done) ->
       sessionId = "it's me"
       scope = serve.stats "init", session_id: sessionId
@@ -41,29 +45,35 @@ describe "Stats", ->
         done()
 
   context "Clicks Registration", ->
-    it "fails with no valid dfid", (done) ->
-      sessionId = "it's me"
+    it "fails with invalid parameters", (done) ->
       stats = getStats()
       stats.registerClick.should.throw()
-      (-> stats.registerClick sessionId, "someid").should.throw()
+      (-> stats.registerClick "sessionid").should.throw()
       done()
 
-    it "success with a valid dfid", (done) ->
+    it "registers clicks", (done) ->
       sessionId = "it's me"
+      dfid = uniqueId.generate.dfid "someid", "product", cfg.hashid
+      query = "other thing"
+
       params =
-        dfid: uniqueId.generate.dfid "someid", "product", cfg.hashid
+        dfid: dfid
         session_id: sessionId
-        query: "other thing"
+        query: query
 
       scope = serve.stats "click", params
       stats = getStats()
-      stats.registerClick sessionId, params.dfid, "other thing", (err, res) ->
+      stats.registerClick sessionId, dfid, query, (err, res) ->
         (expect err).to.be.undefined
         res.should.equal "OK"
         scope.isDone().should.be.true
         done()
 
   context "Checkout Registration", ->
+    it "fails with invalid parameters", (done) ->
+      getStats().registerCheckout.should.throw()
+      done()
+
     it "registers checkout", (done) ->
       sessionId = "it's me"
       scope = serve.stats "checkout", session_id: sessionId
@@ -78,7 +88,7 @@ describe "Stats", ->
     it "fails with no eventName or bannerId", (done) ->
       stats = getStats()
       stats.registerBannerEvent.should.throw()
-      (-> stats.registerBannerEvent "display", undefined).should.throw()
+      (-> stats.registerBannerEvent "display").should.throw()
       (-> stats.registerBannerEvent undefined, 1).should.throw()
       done()
 

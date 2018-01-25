@@ -24,49 +24,55 @@ class Stats
    *          That's why this is usually called when the user has stopped
    *          typing in the search box.
    *
-   * @param  {String}  	session_id  Session id.
-   *
-   * @param  {Function} callback    Optional callback to be called when the
-   *                                response is received. First param is the
-   *                                error, if any, and the second one is the
-   *                                response, if any.
+   * @param  {String}  	sessionId Session id.
+   * @param  {Function} callback  Optional callback to be called when the
+   *                              response is received. First param is the
+   *                              error, if any, and the second one is the
+   *                              response, if any.
    * @public
   ###
-  registerSession: (session_id, callback) ->
-    @client.stats "init", (session_id: session_id), callback
+  registerSession: (sessionId, callback) ->
+    @client.stats "init", (session_id: sessionId), (err, res) ->
+      callback? err, res # Client requires a callback, we don't
 
   ###*
    * Registers a click on a search result for the specified search query.
    *
-   * @param  {String}  	session_id  Session id.
-   * @param  {String}   dfid        Doofinder's internal ID for the result.
-   * @param  {String}   query       Optional. Search terms.
-   * @param  {Function} callback    Optional callback to be called when the
-   *                                response is received. First param is the
-   *                                error, if any, and the second one is the
-   *                                response, if any.
+   * @param  {String}  	sessionId Session id.
+   * @param  {String}   dfid      Doofinder's internal ID for the result.
+   * @param  {String}   query     Optional. Search terms.
+   * @param  {Function} callback  Optional callback to be called when the
+   *                              response is received. First param is the
+   *                              error, if any, and the second one is the
+   *                              response, if any.
    * @public
   ###
-  registerClick: (session_id, dfid, query, callback) ->
+  registerClick: (sessionId, dfid, query, callback) ->
+    errors.requireVal sessionId, "sessionId"
+    errors.requireVal dfid, "dfid"
+
     params =
-      session_id: session_id
+      session_id: sessionId
       dfid: dfid
       query: query or ""
 
-    @client.stats "click", params, callback
+    @client.stats "click", params, (err, res) ->
+      callback? err, res # Client requires a callback, we don't
 
   ###*
    * Registers a checkout.
    *
-   * @param  {String}  	session_id  Session id.
-   * @param  {Function} callback    Optional callback to be called when the
-   *                                response is received. First param is the
-   *                                error, if any, and the second one is the
-   *                                response, if any.
+   * @param  {String}  	sessionId Session id.
+   * @param  {Function} callback  Optional callback to be called when the
+   *                              response is received. First param is the
+   *                              error, if any, and the second one is the
+   *                              response, if any.
    * @public
   ###
-  registerCheckout: (session_id, callback) ->
-    @client.stats "checkout", session_id: session_id, callback
+  registerCheckout: (sessionId, callback) ->
+    errors.requireVal sessionId, "sessionId"
+    @client.stats "checkout", session_id: sessionId, (err, res) ->
+      callback? err, res # Client requires a callback, we don't
 
   ###*
    * Registers an event for a banner
@@ -82,12 +88,10 @@ class Stats
    * @public
   ###
   registerBannerEvent: (eventName, bannerId, callback) ->
-    unless eventName?
-      throw @error "eventName is required"
-    unless bannerId?
-      throw @error "bannerId is required"
-    @client.stats "banner_#{eventName}", banner_id: "#{bannerId}", (err, res) =>
-      callback? err, res
+    errors.requireVal eventName, "eventName"
+    errors.requireVal bannerId, "bannerId"
+    @client.stats "banner_#{eventName}", banner_id: bannerId, (err, res) ->
+      callback? err, res # Client requires a callback, we don't
 
 
 module.exports = Stats

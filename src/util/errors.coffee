@@ -20,3 +20,5 @@ warning = (text, instance) ->
 module.exports =
   error: error
   warning: warning
+  requireVal: (value, varName) ->
+    (throw error "#{varName} is required") unless value?
