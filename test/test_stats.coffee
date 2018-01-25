@@ -33,7 +33,7 @@ describe "Stats", ->
     it "registers session", (done) ->
       sessionId = "it's me"
       scope = serve.stats "init", session_id: sessionId
-      stats = getStats session_id: sessionId
+      stats = getStats()
       stats.registerSession sessionId, (err, res) ->
         (expect err).to.be.undefined
         res.should.equal "OK"
@@ -56,7 +56,7 @@ describe "Stats", ->
         query: "other thing"
 
       scope = serve.stats "click", params
-      stats = getStats session_id: sessionId, query: "something"
+      stats = getStats()
       stats.registerClick sessionId, params.dfid, "other thing", (err, res) ->
         (expect err).to.be.undefined
         res.should.equal "OK"
@@ -67,7 +67,7 @@ describe "Stats", ->
     it "registers checkout", (done) ->
       sessionId = "it's me"
       scope = serve.stats "checkout", session_id: sessionId
-      stats = getStats session_id: sessionId
+      stats = getStats()
       stats.registerCheckout sessionId, (err, res) ->
         (expect err).to.be.undefined
         res.should.equal "OK"
