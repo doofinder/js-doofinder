@@ -535,3 +535,44 @@ button[data-toggle-extra-content]:last-child {
 .df-slider .noUi-target[disabled] .noUi-tooltip {
   display: none;
 }
+
+.df-pagination {
+  list-style: none;
+  display: flex;
+  padding: 0;
+  border-radius: .25rem;
+  justify-content: center;
+}
+
+.df-page span, .df-page a {
+  position: relative;
+  display: block;
+  padding: .5rem .75rem;
+  margin-left: -1px;
+  line-height: 1.25;
+  border: 1px solid #dddddd;
+  text-decoration: none;
+}
+
+.df-page a:hover {
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.df-page:first-child span, .df-page:first-child a {
+  border-top-left-radius: .25rem;
+  border-bottom-left-radius: .25rem;
+}
+
+.df-page:last-child span, .df-page:last-child a {
+  border-top-right-radius: .25rem;
+  border-bottom-right-radius: .25rem;
+}
+
+.df-page--disabled span, .df-page--disabled a {
+  color: #6c757d;
+  pointer-events: none;
+  cursor: auto;
+  background-color: #fff;
+  border-color: #dee2e6;
+}
