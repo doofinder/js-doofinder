@@ -890,7 +890,7 @@
 },{"./client":1,"./util/errors":7,"./util/freezer":8,"./util/thing":12,"./widgets/widget":20,"bean":21,"extend":22,"qs":71}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.2.4",
+    version: "5.2.5",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
@@ -3335,13 +3335,13 @@
       firstPage = 1;
       lastPage = this.controller.lastPage;
       nLinks = 1 + this.options.delta * 2;
-      if (page === firstPage || (page - this.options.delta) <= this.options.delta) {
+      if ((page - this.options.delta) <= this.options.delta) {
         pages = (function() {
           results = [];
           for (var i = 1, ref = Math.min(nLinks, lastPage); 1 <= ref ? i <= ref : i >= ref; 1 <= ref ? i++ : i--){ results.push(i); }
           return results;
         }).apply(this);
-      } else if (page === lastPage || page + nLinks > lastPage) {
+      } else if ((page + this.options.delta + 1) >= lastPage) {
         pages = (function() {
           results1 = [];
           for (var j = ref1 = Math.max(lastPage - nLinks + 1, firstPage); ref1 <= lastPage ? j <= lastPage : j >= lastPage; ref1 <= lastPage ? j++ : j--){ results1.push(j); }

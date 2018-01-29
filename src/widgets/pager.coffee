@@ -93,10 +93,11 @@ class Pager extends Display
     nLinks = 1 + @options.delta * 2 # number of links in the main block
 
     # compose main block depending on the current page
-    if page is firstPage or (page - @options.delta) <= @options.delta
+    if (page - @options.delta) <= @options.delta
       # [1,2,3,...]
       pages = [1..(Math.min nLinks, lastPage)]
-    else if page is lastPage or page + nLinks > lastPage
+    # else if page is lastPage or page + nLinks > lastPage
+    else if (page + @options.delta + 1) >= lastPage
       # [...,8,9,10]
       pages = [(Math.max (lastPage - nLinks + 1), firstPage)..lastPage]
     else
