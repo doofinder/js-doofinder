@@ -48,6 +48,11 @@ pre {
   border: 1px solid #ddd;
 }
 
+.df-results-y-auto {
+  height: auto;
+  min-height: 250px;
+}
+
 .df-results__header {
   padding: .5rem;
   border-bottom: 1px solid #ddd;

@@ -6,7 +6,7 @@
   }
 })(function(){
 
-  window.doofinderControllers = [];
+  window.doofinderControllers = {};
 
   // some utilities
   var $ = doofinder.util.dfdom;
@@ -34,7 +34,27 @@
   basicController.registerWidgets([basicInputWidget, basicResultsWidget]);
   configureStatusHandler(basicController, "#basicStatus");
 
-  window.doofinderControllers.push(basicController);
+  window.doofinderControllers.basic = basicController;
+
+  //
+  // Basic Paged
+  //
+
+  // create a search client
+  var pagedClient = new doofinder.Client(HASHID, {zone: 'eu1'});
+  // create a basic controller, get 20 results per page
+  var pagedController = new doofinder.Controller(pagedClient, {rpp: 10});
+  // create an input widget
+  var pagedInputWidget = new doofinder.widgets.QueryInput("#pagedInput");
+  // create a results widget
+  var pagedResultsWidget = new doofinder.widgets.Display("#pagedResults");
+  // create a pager widget
+  var pagedPagerWidget = new doofinder.widgets.Pager("#pagedPager");
+  // register widgets in the controller
+  pagedController.registerWidgets([pagedInputWidget, pagedResultsWidget, pagedPagerWidget]);
+  configureStatusHandler(pagedController, "#pagedStatus");
+
+  window.doofinderControllers.paged = pagedController;
 
   //
   // Advanced
@@ -109,7 +129,7 @@
     });
   });
 
-  window.doofinderControllers.push(advancedController);
+  window.doofinderControllers.advanced = advancedController;
 
   //
   // Multiple Controllers, same input
@@ -154,6 +174,5 @@
   // register widgets
   secondController.registerWidgets([commonInputWidget, secondResultsWidget]);
 
-  window.doofinderControllers.push(firstController);
-  window.doofinderControllers.push(secondController);
+  window.doofinderControllers.multiple = {first: firstController, second: secondController};
 });

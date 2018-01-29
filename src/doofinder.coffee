@@ -11,6 +11,7 @@ module.exports =
     Widget: require "./widgets/widget"
 
     QueryInput: require "./widgets/queryinput"
+    Pager: require "./widgets/pager"
 
     Display: require "./widgets/display"
     ScrollDisplay: require "./widgets/scrolldisplay"

@@ -264,3 +264,52 @@ button[data-toggle-extra-content]:last-child {
     }
   }
 }
+
+.df-pagination {
+  list-style: none;
+  display: flex;
+  padding: 0;
+  border-radius: .25rem;
+  justify-content: center;
+}
+
+.df-page {
+  span, a {
+    position: relative;
+    display: block;
+    padding: .5rem .75rem;
+    margin-left: -1px;
+    line-height: 1.25;
+    border: 1px solid #dddddd;
+    text-decoration: none;
+  }
+
+  a:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+  }
+
+  &:first-child {
+    span, a {
+      border-top-left-radius: .25rem;
+      border-bottom-left-radius: .25rem;
+    }
+  }
+
+  &:last-child {
+    span, a {
+      border-top-right-radius: .25rem;
+      border-bottom-right-radius: .25rem;
+    }
+  }
+}
+
+.df-page--disabled {
+  span, a {
+    color: #6c757d;
+    pointer-events: none;
+    cursor: auto;
+    background-color: #fff;
+    border-color: #dee2e6;
+  }
+}
