@@ -2,6 +2,7 @@ extend = require "extend"
 Display = require "./display"
 $ = require "../util/dfdom"
 
+
 class Pager extends Display
   @defaultTemplate = """
     {{#pager}}
@@ -62,12 +63,15 @@ class Pager extends Display
 
   constructor: (element, options) ->
     defaults =
-      delta: 2
+      delta: 2 # number of links on each side of the current page
       previousLabel: "Previous"
       nextLabel: "Next"
     options = extend true, defaults, options
     super element, options
 
+  ###*
+   * Initialize: Listen to clicks on active pages
+  ###
   init: ->
     unless @initialized
       @element.on "click", "[data-page]", (e) =>
@@ -76,36 +80,49 @@ class Pager extends Display
         @controller.getPage (parseInt (link.data "page"), 10)
       super
 
-  __getPager: (page) ->
-    firstPage = 1
-    lastPage = @controller.lastPage
+  ###*
+   * Builds context for the pager based on the current page.
+   *
+   * @param  {Number} page Current page.
+   * @return {Object}      Data to be added to the context.
+  ###
+  __buildPagerContext: (page) ->
+    firstPage = 1                   # for clarity
+    lastPage = @controller.lastPage # fix value
 
-    nLinks = 1 + @options.delta * 2
+    nLinks = 1 + @options.delta * 2 # number of links in the main block
 
+    # compose main block depending on the current page
     if page is firstPage or (page - @options.delta) <= @options.delta
+      # [1,2,3,...]
       pages = [1..(Math.min nLinks, lastPage)]
     else if page is lastPage or page + nLinks > lastPage
+      # [...,8,9,10]
       pages = [(Math.max (lastPage - nLinks + 1), firstPage)..lastPage]
     else
+      # [...,4,5,6,...]
       pages = [(page - @options.delta)..(page + @options.delta)]
 
     pager =
+      # previous link must work?
       previous: if (p = page - 1) < firstPage then false else p
+      # next link must work?
       next: if (n = page + 1) > lastPage then false else n
+      # should I render first page separately?
       first: if pages[0] != firstPage then firstPage else false
+      # should I render last page separately?
       last: if pages[-1..][0] != lastPage then lastPage else false
+      # main block of pages to render
       pages: pages.map (p) -> page: p, current: (p is page)
-      current: page
+      # labels
       previousLabel: @options.previousLabel
       nextLabel: @options.nextLabel
 
   __buildContext: (response) ->
     if response.total > response.results_per_page
-      pager = @__getPager response.page
+      pager = @__buildPagerContext response.page
     else
       pager = false
-
-    console.log pager
 
     super (extend true, pager: pager, response)
 
