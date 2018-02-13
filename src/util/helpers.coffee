@@ -49,9 +49,38 @@ formatNumber = (value, spec) ->
   num = "-#{num}" if neg
   num
 
+
+###*
+ * Adds parameters to a URL
+ *
+ * @param  {String} url       Source URL.
+ * @param  {Object} urlParams Object representing parameters and values.
+ * @return {String}
+###
+addUrlParams = (url, urlParams = {}) ->
+  if url.length and (Object.keys urlParams).length
+    [host, params] = url.split "?"
+    params = qs.stringify (extend true, (qs.parse params), urlParams)
+    "#{host}?#{params}"
+  else
+    url
+
+
+###*
+ * Removes protocol from a URL.
+ *
+ * @param  {String} url Source URL.
+ * @return {String}
+###
+removeProtocol = (url) ->
+  url.trim().replace /^https?:/g, ""
+
+
 module.exports =
   fn:
     formatNumber: formatNumber
+    addUrlParams: addUrlParams
+    removeProtocol: removeProtocol
 
   addTranslateHelper: (context, translations = {}) ->
     ###*
@@ -94,12 +123,8 @@ module.exports =
     extend true, context, "url-params": ->
       (text, render) ->
         url = (render text).trim()
-        if url.length > 0
-          [host, params] = url.split "?"
-          urlParams = extend true, (getUrlParamsFn?() or {})
-          params = qs.stringify (extend true, (qs.parse params), urlParams)
-          url = "#{host}?#{params}" if params.length > 0
-        url
+        params = (getUrlParamsFn?() or {})
+        addUrlParams url, params
 
   addRemoveProtocolHelper: (context) ->
     ###*
@@ -108,7 +133,7 @@ module.exports =
     ###
     extend true, context, "remove-protocol": ->
       (text, render) ->
-        (render text).trim().replace /^https?:/g, ""
+        removeProtocol (render text)
 
   addFormatCurrencyHelper: (context, currency) ->
     ###*
