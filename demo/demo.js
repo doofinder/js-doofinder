@@ -175,4 +175,35 @@
   secondController.registerWidgets([commonInputWidget, secondResultsWidget]);
 
   window.doofinderControllers.multiple = {first: firstController, second: secondController};
+
+  //
+  // Multiple Inputs and multiple controllers
+  //
+
+  // create a search client
+  var multipleClient = new doofinder.Client(HASHID, {zone: 'eu1'});
+
+  // create an input widget
+  var multipleInputWidget = new doofinder.widgets.QueryInput([".Multiple", "#multipleInput"]);
+
+  // create a controllers, get 20 results per page
+  var firstControllerMultiple = new doofinder.Controller(multipleClient, {rpp: 20});
+  configureStatusHandler(firstControllerMultiple, "#firstStatusMultiple");
+  var secondControllerMultiple = new doofinder.Controller(multipleClient, {rpp: 20, transformer: "onlyid"});
+  configureStatusHandler(secondControllerMultiple, "#secondStatusMultiple");
+
+  // create a results widget
+  var firstResultsMultiple = new doofinder.widgets.ScrollDisplay("#firstResultsMultiple", {
+    offset: 200,
+    horizontal: true
+  });
+  var secondResultsMultiple = new doofinder.widgets.ScrollDisplay("#secondResultsMultiple", {
+    template: "{{#results}}<li>{{id}}</li>{{/results}}"
+  });
+
+  firstControllerMultiple.registerWidgets([multipleInputWidget, firstResultsMultiple]);
+  secondControllerMultiple.registerWidgets([multipleInputWidget, secondResultsMultiple]);
+
+
+  window.doofinderControllers.multipleInputsAndControllers = {first: firstControllerMultiple, second: secondControllerMultiple};
 });
