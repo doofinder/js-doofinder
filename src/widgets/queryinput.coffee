@@ -1,6 +1,7 @@
 extend = require "extend"
 Widget = require "./widget"
 Thing = require "../util/thing"
+$ = require "../util/dfdom"
 
 
 ###*
@@ -11,7 +12,9 @@ Thing = require "../util/thing"
 class QueryInput extends Widget
 
   ###*
-   * @param  {String|Node|DfDomElement} element  The search input element.
+   * @param  {String|Array} element  The search input element as css selector or
+                                      Array with String|Node|DfDomElement
+                                      elements.
    * @param  {Object} options Options object. Empty by default.
   ###
   constructor: (element, options = {}) ->
@@ -24,14 +27,15 @@ class QueryInput extends Widget
     super element, (extend true, defaults, options)
 
     @controller = []
+    @currentElement= @element.first()
     @timer = null
     @stopTimer = null
 
     Object.defineProperty @, "value",
       get: =>
-        @element.val() or ""
+        @currentElement.val() or ""
       set: (value) =>
-        @element.val value
+        @currentElement.val value
         @__scheduleUpdate 0, true
 
     @previousValue = @value
@@ -40,6 +44,9 @@ class QueryInput extends Widget
     if not Thing.is.array controller
       controller = [controller]
     @controller = @controller.concat controller
+
+  setElement: (elements) ->
+    @element = $ elements
 
   ###*
    * Initializes the object with a controller and attachs event handlers for
@@ -50,13 +57,15 @@ class QueryInput extends Widget
   ###
   init: ->
     unless @initialized
-      @element.on "input", (=> @__scheduleUpdate())
+      @element.on "input", (event) =>
+        @currentElement = $ event.target
+        # @element.val @value # Synchronize text inputs
+        @__scheduleUpdate()
 
-      unless (@element.get 0).tagName.toUpperCase() is "TEXTAREA"
-        @element.on "keydown", (e) =>
-          if e.keyCode? and e.keyCode is 13
-            @__scheduleUpdate 0, true
-            @trigger "df:input:submit", [@value]
+      @element.filter(":not(textarea)").on "keydown", (event) =>
+        if event.keyCode? and event.keyCode is 13
+          @__scheduleUpdate 0, true
+          @trigger "df:input:submit", [@value]
 
       super
 
