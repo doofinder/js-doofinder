@@ -50,7 +50,6 @@ class QueryInput extends Widget
     @element = ($ elements).map (elem) =>
       if elem.doofinderQueryInput?
         throw Error.error("(#{elem.id}) was registered in another QueryInput", elem)
-        return null
       else
         elem.doofinderQueryInput = @
 
