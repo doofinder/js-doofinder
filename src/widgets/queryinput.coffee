@@ -1,6 +1,7 @@
 extend = require "extend"
 Widget = require "./widget"
 Thing = require "../util/thing"
+Error = require "../util/errors"
 $ = require "../util/dfdom"
 
 
@@ -46,7 +47,12 @@ class QueryInput extends Widget
     @controller = @controller.concat controller
 
   setElement: (elements) ->
-    @element = $ elements
+    @element = ($ elements).map (elem) =>
+      if elem.doofinderQueryInput?
+        throw Error.error("(#{elem.id}) was registered in another QueryInput", elem)
+        return null
+      else
+        elem.doofinderQueryInput = @
 
   ###*
    * Initializes the object with a controller and attachs event handlers for
