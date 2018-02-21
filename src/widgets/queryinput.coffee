@@ -1,7 +1,7 @@
 extend = require "extend"
 Widget = require "./widget"
 Thing = require "../util/thing"
-Error = require "../util/errors"
+error = require "../util/errors"
 $ = require "../util/dfdom"
 
 
@@ -49,7 +49,7 @@ class QueryInput extends Widget
   setElement: (elements) ->
     @element = ($ elements).map (elem) =>
       if elem.doofinderQueryInput?
-        throw Error.error("(#{elem.id}) was registered in another QueryInput", elem)
+        throw error.error "(#{elem.id}) was registered in another QueryInput", elem
       else
         elem.doofinderQueryInput = @
 
