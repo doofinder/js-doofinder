@@ -28,7 +28,7 @@ class QueryInput extends Widget
     super element, (extend true, defaults, options)
 
     @controller = []
-    @currentElement= @element.first()
+    @currentElement = @element.first()
     @timer = null
     @stopTimer = null
 
@@ -46,12 +46,12 @@ class QueryInput extends Widget
       controller = [controller]
     @controller = @controller.concat controller
 
-  setElement: (elements) ->
-    @element = ($ elements).filter (elem) =>
-      if elem.doofinderQueryInput?
-        throw errors.error "(#{elem.id}) was registered in another QueryInput", elem
+  setElement: (element) ->
+    @element = (($ element).filter 'input[type="text"], input[type="search"], textarea').filter (node) =>
+      if node.dfQueryInput?
+        throw errors.error "(#{node.id}) was registered in another QueryInput", node
       else
-        elem.doofinderQueryInput = @
+        node.dfQueryInput = @
 
   ###*
    * Initializes the object with a controller and attachs event handlers for

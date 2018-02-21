@@ -187,9 +187,9 @@
   var multipleInputWidget = new doofinder.widgets.QueryInput([".Multiple", "#multipleInput"]);
   try {
     var secondmultipleInputWidget = new doofinder.widgets.QueryInput("#multipleInput");
-  }
-  catch (err) {
-    console.log(err);
+  } catch (err) {
+    console.warn("You can't attach more than one QueryInput to the same input and this error demonstrates it.");
+    console.warn(err);
     var secondmultipleInputWidget = multipleInputWidget;
   }
 
