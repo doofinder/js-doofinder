@@ -326,6 +326,13 @@ describe "Default Widgets", ->
       e.bubbles = true
       e
 
+    createInputEvent = ->
+      e = new Event "input"
+      e.bubbles = false
+      e.cancelable = false
+      e.type = "input"
+      e
+
     it "erases input value on clean by default", (done) ->
       controller = getControllerMock()
       widget = createWidget controller, "something"
@@ -397,6 +404,30 @@ describe "Default Widgets", ->
           controller.searchDone.should.be.true
         done()
       widget.value = "123"
+
+    it "can use multiple inputs", (done) ->
+      insertHTML """<input class="widget" type="text" value="something">
+                    <input class="widget" type="text" value="something">
+                    <input class="widget" type="text" value="something">
+                    <textarea class="widget">something</textarea>"""
+      controller = getControllerMock()
+      widget = new QueryInput ".widget", typingTimeout: 50
+      widget.setController controller
+      widget.init()
+
+      (widget.element.get 1).value = "something1"
+      (widget.element.get 1).dispatchEvent createInputEvent()
+      widget.value.should.equal "something1"
+      (widget.element.get 0).value = "something0"
+      (widget.element.get 0).dispatchEvent createInputEvent()
+      widget.value.should.equal "something0"
+      (widget.element.get 2).value = "something2"
+      (widget.element.get 2).dispatchEvent createInputEvent()
+      widget.value.should.equal "something2"
+      (widget.element.get 3).value = "something3"
+      (widget.element.get 3).dispatchEvent createInputEvent()
+      widget.value.should.equal "something3"
+      done()
 
     it "triggers a special event for enter key if input is not a textarea", (done) ->
       controller = getControllerMock()
