@@ -47,7 +47,7 @@ class QueryInput extends Widget
     @controller = @controller.concat controller
 
   setElement: (elements) ->
-    @element = ($ elements).map (elem) =>
+    @element = ($ elements).filter (elem) =>
       if elem.doofinderQueryInput?
         throw error.error "(#{elem.id}) was registered in another QueryInput", elem
       else
