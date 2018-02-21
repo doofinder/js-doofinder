@@ -890,7 +890,7 @@
 },{"./client":1,"./util/errors":7,"./util/freezer":8,"./util/thing":12,"./widgets/widget":20,"bean":21,"extend":22,"qs":71}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.2.5",
+    version: "5.2.6",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
@@ -1658,7 +1658,7 @@
      */
 
     DfDomElement.prototype.map = function(callback) {
-      return new DfDomElement((this.element.map(callback, this)).filter(function(node) {
+      return new DfDomElement((this.element.map(callback)).filter(function(node) {
         return node != null;
       }));
     };
@@ -3422,7 +3422,7 @@
 
 },{"../util/dfdom":6,"./display":14,"extend":22}],16:[function(require,module,exports){
 (function() {
-  var QueryInput, Thing, Widget, extend,
+  var $, QueryInput, Thing, Widget, errors, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -3431,6 +3431,10 @@
   Widget = require("./widget");
 
   Thing = require("../util/thing");
+
+  errors = require("../util/errors");
+
+  $ = require("../util/dfdom");
 
 
   /**
@@ -3444,7 +3448,9 @@
 
 
     /**
-     * @param  {String|Node|DfDomElement} element  The search input element.
+     * @param  {String|Array} element  The search input element as css selector or
+                                        Array with String|Node|DfDomElement
+                                        elements.
      * @param  {Object} options Options object. Empty by default.
      */
 
@@ -3461,17 +3467,18 @@
       };
       QueryInput.__super__.constructor.call(this, element, extend(true, defaults, options));
       this.controller = [];
+      this.currentElement = this.element.first();
       this.timer = null;
       this.stopTimer = null;
       Object.defineProperty(this, "value", {
         get: (function(_this) {
           return function() {
-            return _this.element.val() || "";
+            return _this.currentElement.val() || "";
           };
         })(this),
         set: (function(_this) {
           return function(value) {
-            _this.element.val(value);
+            _this.currentElement.val(value);
             return _this.__scheduleUpdate(0, true);
           };
         })(this)
@@ -3486,6 +3493,18 @@
       return this.controller = this.controller.concat(controller);
     };
 
+    QueryInput.prototype.setElement = function(elements) {
+      return this.element = ($(elements)).filter((function(_this) {
+        return function(elem) {
+          if (elem.doofinderQueryInput != null) {
+            throw errors.error("(" + elem.id + ") was registered in another QueryInput", elem);
+          } else {
+            return elem.doofinderQueryInput = _this;
+          }
+        };
+      })(this));
+    };
+
 
     /**
      * Initializes the object with a controller and attachs event handlers for
@@ -3497,21 +3516,20 @@
 
     QueryInput.prototype.init = function() {
       if (!this.initialized) {
-        this.element.on("input", ((function(_this) {
-          return function() {
+        this.element.on("input", (function(_this) {
+          return function(event) {
+            _this.currentElement = $(event.target);
             return _this.__scheduleUpdate();
           };
-        })(this)));
-        if ((this.element.get(0)).tagName.toUpperCase() !== "TEXTAREA") {
-          this.element.on("keydown", (function(_this) {
-            return function(e) {
-              if ((e.keyCode != null) && e.keyCode === 13) {
-                _this.__scheduleUpdate(0, true);
-                return _this.trigger("df:input:submit", [_this.value]);
-              }
-            };
-          })(this));
-        }
+        })(this));
+        this.element.filter(":not(textarea)").on("keydown", (function(_this) {
+          return function(event) {
+            if ((event.keyCode != null) && event.keyCode === 13) {
+              _this.__scheduleUpdate(0, true);
+              return _this.trigger("df:input:submit", [_this.value]);
+            }
+          };
+        })(this));
         return QueryInput.__super__.init.apply(this, arguments);
       }
     };
@@ -3598,7 +3616,7 @@
 
 }).call(this);
 
-},{"../util/thing":12,"./widget":20,"extend":22}],17:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/errors":7,"../util/thing":12,"./widget":20,"extend":22}],17:[function(require,module,exports){
 (function() {
   var Display, RangeFacet, extend, noUiSlider,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
