@@ -212,7 +212,7 @@ class DfDomElement
    * @return {DfDomElement}
   ###
   map: (callback) ->
-    new DfDomElement ((@element.map callback, @).filter (node) -> node?)
+    new DfDomElement ((@element.map callback).filter (node) -> node?)
 
   ###*
    * Reduce the set of matched elements to those match the selector or pass the
