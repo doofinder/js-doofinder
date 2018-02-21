@@ -185,6 +185,13 @@
 
   // create an input widget
   var multipleInputWidget = new doofinder.widgets.QueryInput([".Multiple", "#multipleInput"]);
+  try {
+    var secondmultipleInputWidget = new doofinder.widgets.QueryInput("#multipleInput");
+  }
+  catch (err) {
+    console.log(err);
+    var secondmultipleInputWidget = multipleInputWidget;
+  }
 
   // create a controllers, get 20 results per page
   var firstControllerMultiple = new doofinder.Controller(multipleClient, {rpp: 20});
@@ -202,7 +209,7 @@
   });
 
   firstControllerMultiple.registerWidgets([multipleInputWidget, firstResultsMultiple]);
-  secondControllerMultiple.registerWidgets([multipleInputWidget, secondResultsMultiple]);
+  secondControllerMultiple.registerWidgets([secondmultipleInputWidget, secondResultsMultiple]);
 
 
   window.doofinderControllers.multipleInputsAndControllers = {first: firstControllerMultiple, second: secondControllerMultiple};
