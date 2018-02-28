@@ -186,13 +186,6 @@
 
   // create an input widget
   var multipleInputWidget = new doofinder.widgets.QueryInput([".Multiple", "#multipleInput"]);
-  try {
-    var secondmultipleInputWidget = new doofinder.widgets.QueryInput("#multipleInput");
-  } catch (err) {
-    console.warn("You can't attach more than one QueryInput to the same input and this error demonstrates it.");
-    console.warn(err);
-    var secondmultipleInputWidget = multipleInputWidget;
-  }
 
   // create a controllers, get 20 results per page
   var firstControllerMultiple = new doofinder.Controller(multipleClient, {rpp: 20});
@@ -210,7 +203,7 @@
   });
 
   firstControllerMultiple.registerWidgets([multipleInputWidget, firstResultsMultiple]);
-  secondControllerMultiple.registerWidgets([secondmultipleInputWidget, secondResultsMultiple]);
+  secondControllerMultiple.registerWidgets([multipleInputWidget, secondResultsMultiple]);
 
 
   window.doofinderControllers.multipleInputsAndControllers = {first: firstControllerMultiple, second: secondControllerMultiple};
