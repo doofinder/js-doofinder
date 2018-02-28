@@ -1,6 +1,8 @@
 extend = require "extend"
 Widget = require "./widget"
 Thing = require "../util/thing"
+errors = require "../util/errors"
+$ = require "../util/dfdom"
 
 
 ###*
@@ -11,28 +13,34 @@ Thing = require "../util/thing"
 class QueryInput extends Widget
 
   ###*
-   * @param  {String|Node|DfDomElement} element  The search input element.
+   * @param  {String|Array} element  The search input element as css selector or
+                                      Array with String|Node|DfDomElement
+                                      elements.
    * @param  {Object} options Options object. Empty by default.
   ###
   constructor: (element, options = {}) ->
     defaults =
       clean: true
       captureLength: 3
+      captureForm: false
       typingTimeout: 1000
       wait: 42 # meaning of life
 
     super element, (extend true, defaults, options)
 
     @controller = []
+    @currentElement = @element.first()
     @timer = null
     @stopTimer = null
 
     Object.defineProperty @, "value",
       get: =>
-        @element.val() or ""
+        @currentElement.val() or ""
       set: (value) =>
-        @element.val value
-        @__scheduleUpdate 0, true
+        @currentElement.val value
+        # trigger on the current element so, if it also belongs to a different
+        # widget, it gets notified too
+        @currentElement.trigger "df:input:valueChanged"
 
     @previousValue = @value
 
@@ -40,6 +48,27 @@ class QueryInput extends Widget
     if not Thing.is.array controller
       controller = [controller]
     @controller = @controller.concat controller
+
+  setElement: (element) ->
+    @element = ($ element).filter 'input[type="text"], input[type="search"], textarea'
+
+  ###*
+   * Sets the input element considered as the currently active one.
+   *
+   * If the provided element is the current active element nothing happens.
+   * Otherwise a "df:input:targetChanged" event is triggered.
+   *
+   * TODO: This should validate that the current element belongs to
+   * this.element.
+   *
+   * @param {HTMLElement} element Input node.
+   * @protected
+  ###
+  __setCurrentElement: (element) ->
+    if @currentElement.isnt element
+      previousElement = @currentElement.get 0
+      @trigger "df:input:targetChanged", [element, previousElement]
+      @currentElement = $ element
 
   ###*
    * Initializes the object with a controller and attachs event handlers for
@@ -50,11 +79,26 @@ class QueryInput extends Widget
   ###
   init: ->
     unless @initialized
-      @element.on "input", (=> @__scheduleUpdate())
+      @element.on "focus", (event) =>
+        @__setCurrentElement event.target
 
-      unless (@element.get 0).tagName.toUpperCase() is "TEXTAREA"
-        @element.on "keydown", (e) =>
-          if e.keyCode? and e.keyCode is 13
+      @element.on "input", (event) =>
+        @__setCurrentElement event.target
+        # @element.val @value # Synchronize text inputs???
+        @__scheduleUpdate()
+
+      @element.on "df:input:valueChanged", =>
+        @__updateStatus true
+
+      inputsOnly = @element.filter(":not(textarea)")
+
+      if @options.captureForm
+        (inputsOnly.closest "form").on "submit", (event) =>
+          event.preventDefault()
+          @trigger "df:input:submit", [@value, event.target]
+      else
+        inputsOnly.on "keydown", (event) =>
+          if event.keyCode is 13
             @__scheduleUpdate 0, true
             @trigger "df:input:submit", [@value]
 

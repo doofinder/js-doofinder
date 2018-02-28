@@ -1660,7 +1660,7 @@
      */
 
     DfDomElement.prototype.map = function(callback) {
-      return new DfDomElement((this.element.map(callback, this)).filter(function(node) {
+      return new DfDomElement((this.element.map(callback)).filter(function(node) {
         return node != null;
       }));
     };
@@ -3424,7 +3424,7 @@
 
 },{"../util/dfdom":6,"./display":14,"extend":22}],16:[function(require,module,exports){
 (function() {
-  var QueryInput, Thing, Widget, extend,
+  var $, QueryInput, Thing, Widget, errors, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -3433,6 +3433,10 @@
   Widget = require("./widget");
 
   Thing = require("../util/thing");
+
+  errors = require("../util/errors");
+
+  $ = require("../util/dfdom");
 
 
   /**
@@ -3446,7 +3450,9 @@
 
 
     /**
-     * @param  {String|Node|DfDomElement} element  The search input element.
+     * @param  {String|Array} element  The search input element as css selector or
+                                        Array with String|Node|DfDomElement
+                                        elements.
      * @param  {Object} options Options object. Empty by default.
      */
 
@@ -3458,23 +3464,25 @@
       defaults = {
         clean: true,
         captureLength: 3,
+        captureForm: false,
         typingTimeout: 1000,
         wait: 42
       };
       QueryInput.__super__.constructor.call(this, element, extend(true, defaults, options));
       this.controller = [];
+      this.currentElement = this.element.first();
       this.timer = null;
       this.stopTimer = null;
       Object.defineProperty(this, "value", {
         get: (function(_this) {
           return function() {
-            return _this.element.val() || "";
+            return _this.currentElement.val() || "";
           };
         })(this),
         set: (function(_this) {
           return function(value) {
-            _this.element.val(value);
-            return _this.__scheduleUpdate(0, true);
+            _this.currentElement.val(value);
+            return _this.currentElement.trigger("df:input:valueChanged");
           };
         })(this)
       });
@@ -3488,6 +3496,33 @@
       return this.controller = this.controller.concat(controller);
     };
 
+    QueryInput.prototype.setElement = function(element) {
+      return this.element = ($(element)).filter('input[type="text"], input[type="search"], textarea');
+    };
+
+
+    /**
+     * Sets the input element considered as the currently active one.
+     *
+     * If the provided element is the current active element nothing happens.
+     * Otherwise a "df:input:targetChanged" event is triggered.
+     *
+     * TODO: This should validate that the current element belongs to
+     * this.element.
+     *
+     * @param {HTMLElement} element Input node.
+     * @protected
+     */
+
+    QueryInput.prototype.__setCurrentElement = function(element) {
+      var previousElement;
+      if (this.currentElement.isnt(element)) {
+        previousElement = this.currentElement.get(0);
+        this.trigger("df:input:targetChanged", [element, previousElement]);
+        return this.currentElement = $(element);
+      }
+    };
+
 
     /**
      * Initializes the object with a controller and attachs event handlers for
@@ -3498,16 +3533,36 @@
      */
 
     QueryInput.prototype.init = function() {
+      var inputsOnly;
       if (!this.initialized) {
-        this.element.on("input", ((function(_this) {
-          return function() {
+        this.element.on("focus", (function(_this) {
+          return function(event) {
+            return _this.__setCurrentElement(event.target);
+          };
+        })(this));
+        this.element.on("input", (function(_this) {
+          return function(event) {
+            _this.__setCurrentElement(event.target);
             return _this.__scheduleUpdate();
           };
-        })(this)));
-        if ((this.element.get(0)).tagName.toUpperCase() !== "TEXTAREA") {
-          this.element.on("keydown", (function(_this) {
-            return function(e) {
-              if ((e.keyCode != null) && e.keyCode === 13) {
+        })(this));
+        this.element.on("df:input:valueChanged", (function(_this) {
+          return function() {
+            return _this.__updateStatus(true);
+          };
+        })(this));
+        inputsOnly = this.element.filter(":not(textarea)");
+        if (this.options.captureForm) {
+          (inputsOnly.closest("form")).on("submit", (function(_this) {
+            return function(event) {
+              event.preventDefault();
+              return _this.trigger("df:input:submit", [_this.value, event.target]);
+            };
+          })(this));
+        } else {
+          inputsOnly.on("keydown", (function(_this) {
+            return function(event) {
+              if (event.keyCode === 13) {
                 _this.__scheduleUpdate(0, true);
                 return _this.trigger("df:input:submit", [_this.value]);
               }
@@ -3600,7 +3655,7 @@
 
 }).call(this);
 
-},{"../util/thing":12,"./widget":20,"extend":22}],17:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/errors":7,"../util/thing":12,"./widget":20,"extend":22}],17:[function(require,module,exports){
 (function() {
   var Display, RangeFacet, extend, noUiSlider,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
