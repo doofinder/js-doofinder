@@ -866,11 +866,9 @@ Triggered when the widget has finished rendering itself. The event handler recei
 
 ### doofinder.widgets.QueryInput
 
-`Widget < QueryInput`
+This is a special widget. It is linked to one or more HTML text input or textarea controls and listens the `input` event so, when value changes due to user input, it uses its value to perform a new search via its registered controller(s).
 
-This is a special widget. It is linked to a HTML text input control and listens the `input` event so, when value changes due to user input, it uses its value to perform a new search via its registered controller(s).
-
-This widget can be registered in multiple controllers at the same time so you could share the same text input and perform the same search in different search engines.
+This widget can also be registered in multiple controllers at the same time so you could share the same text input and perform the same search in different search engines.
 
 #### constructor
 
@@ -885,6 +883,7 @@ var queryInput = new doofinder.widgets.QueryInput('#search', {
 | Option | Required | Type | Values | Default | Description |
 | :--- | :---: | :---: | :---: | :---: | :--- |
 | `clean` | No | `Boolean` || `true` | If `true` the input is cleared when the widget is cleaned. |
+| `captureForm` | No | `Boolean` || `false` | If `true` and the input is inside a form, the submit event is captured and a `df:input:submit` event is triggered instead. |
 | `captureLength` | No | `Number` || `3` | Minimum number of characters to type to perform a search request. |
 | `typingTimeout` | No | `Number` || `1000` | Time in milliseconds the widget waits before triggering the `df:input:stop` event. |
 | `wait` | No | `Number` || `42` | Time in milliseconds the widget waits before checking input to decide whether to perform a search or not.<br>High values (`400`) reduce the number of requests sent. |
@@ -893,7 +892,7 @@ var queryInput = new doofinder.widgets.QueryInput('#search', {
 
 ##### df:input:submit
 
-This event is triggered when the user types <kbd>ENTER</kbd> on the search input control.
+This event is triggered when the user types <kbd>ENTER</kbd> on the search input control or the closest form is submitted in case `captureForm` option is enabled.
 
 **NOTICE:** This event is not triggered for `TEXTAREA` controls.
 
@@ -908,6 +907,7 @@ queryInput.on("df:input:submit", function(value){
 | Argument | Required | Type | Description |
 | :--- | :---: | :---: | :--- |
 | `value` | Yes | `String` | Value of the input control. |
+| `form` | No | `HTMLElement` | The form that has been submitted, if any or `undefined` |
 
 ##### df:input:stop
 
@@ -933,6 +933,49 @@ This event is triggered during the value checking process, if the input changed 
 queryInput.on("df:input:none", function(){
   // hide results?
 });
+```
+
+##### df:input:targetChanged
+
+This event is triggered when multiple inputs are attached to the widget and the current active input changes from one to another.
+
+```javascript
+queryInput.on("df:input:targetChanged", function(input, previousInput){
+  // do something with value
+});
+```
+
+##### Arguments
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `input` | Yes | `HTMLElement` | Current active input. |
+| `previousInput` | Yes | `HTMLElement` | Previously active input. |
+
+#### Programming with QueryInput
+
+##### Access the current active input
+
+A user only can type in one input at the same time so the current input can be easily identified. You can get the currently active input via the `currentElement` attribute.
+
+```javascript
+var input = myQueryInput.currentElement;
+```
+
+##### Set value programmatically
+
+To set the value of the input you can use the `currentElement` attribute:
+
+```javascript
+myQueryInput.currentElement.val('Hello');
+```
+
+But that doesn't trigger a search.
+
+Instead, use the `value` property:
+
+```javascript
+myQueryInput.value = 'Hello';
 ```
 
 ---

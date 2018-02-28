@@ -22,6 +22,7 @@ class QueryInput extends Widget
     defaults =
       clean: true
       captureLength: 3
+      captureForm: false
       typingTimeout: 1000
       wait: 42 # meaning of life
 
@@ -37,7 +38,9 @@ class QueryInput extends Widget
         @currentElement.val() or ""
       set: (value) =>
         @currentElement.val value
-        @__scheduleUpdate 0, true
+        # trigger on the current element so, if it also belongs to a different
+        # widget, it gets notified too
+        @currentElement.trigger "df:input:valueChanged"
 
     @previousValue = @value
 
@@ -47,11 +50,25 @@ class QueryInput extends Widget
     @controller = @controller.concat controller
 
   setElement: (element) ->
-    @element = (($ element).filter 'input[type="text"], input[type="search"], textarea').filter (node) =>
-      if node.dfQueryInput?
-        throw errors.error "(#{node.id}) was registered in another QueryInput", node
-      else
-        node.dfQueryInput = @
+    @element = ($ element).filter 'input[type="text"], input[type="search"], textarea'
+
+  ###*
+   * Sets the input element considered as the currently active one.
+   *
+   * If the provided element is the current active element nothing happens.
+   * Otherwise a "df:input:targetChanged" event is triggered.
+   *
+   * TODO: This should validate that the current element belongs to
+   * this.element.
+   *
+   * @param {HTMLElement} element Input node.
+   * @protected
+  ###
+  __setCurrentElement: (element) ->
+    if @currentElement.isnt element
+      previousElement = @currentElement.get 0
+      @trigger "df:input:targetChanged", [element, previousElement]
+      @currentElement = $ element
 
   ###*
    * Initializes the object with a controller and attachs event handlers for
@@ -62,15 +79,28 @@ class QueryInput extends Widget
   ###
   init: ->
     unless @initialized
+      @element.on "focus", (event) =>
+        @__setCurrentElement event.target
+
       @element.on "input", (event) =>
-        @currentElement = $ event.target
-        # @element.val @value # Synchronize text inputs
+        @__setCurrentElement event.target
+        # @element.val @value # Synchronize text inputs???
         @__scheduleUpdate()
 
-      @element.filter(":not(textarea)").on "keydown", (event) =>
-        if event.keyCode? and event.keyCode is 13
-          @__scheduleUpdate 0, true
-          @trigger "df:input:submit", [@value]
+      @element.on "df:input:valueChanged", =>
+        @__updateStatus true
+
+      inputsOnly = @element.filter(":not(textarea)")
+
+      if @options.captureForm
+        (inputsOnly.closest "form").on "submit", (event) =>
+          event.preventDefault()
+          @trigger "df:input:submit", [@value, event.target]
+      else
+        inputsOnly.on "keydown", (event) =>
+          if event.keyCode is 13
+            @__scheduleUpdate 0, true
+            @trigger "df:input:submit", [@value]
 
       super
 
