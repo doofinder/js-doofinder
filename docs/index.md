@@ -686,6 +686,14 @@ Triggered when a successful search response for the last page of the current sea
 | :--- | :---: | :--- |
 | `response` | `Object` | Valid response from the Doofinder service. |
 
+##### df:results:discarded
+
+Triggered when a search response is discarded because rendering it would replace results for a more recent search received before it.
+
+| Argument | Type | Description |
+| :--- | :---: | :--- |
+| `response` | `Object` | Valid response from the Doofinder service. |
+
 ##### df:controller:renderWidgets
 
 Triggered when the controller called the `render()` method of all widgets.
