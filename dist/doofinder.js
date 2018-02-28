@@ -892,7 +892,7 @@
 },{"./client":1,"./util/errors":7,"./util/freezer":8,"./util/thing":12,"./widgets/widget":20,"bean":21,"extend":22,"qs":71}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.2.5",
+    version: "5.3.0",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
