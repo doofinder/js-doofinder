@@ -86,6 +86,8 @@ module.exports = (grunt) ->
         options:
           prefix: '\"version\":\\s\"'
         src: ['./bower.json']
+      project:
+        src: ["package.json"]
 
     watch:
       default:
@@ -127,4 +129,31 @@ module.exports = (grunt) ->
 
   grunt.registerTask "serve", ["service:http"]
 
-  grunt.registerTask 'release', ['version:library', 'version:bower', 'compile', 'test']
+  #
+  # Release Tasks
+  #
+  # Be careful, these tasks change version numbers on each execution!!!
+
+  grunt.registerTask "release", [
+    "version:project:minor",
+    "version:library",
+    "version:bower",
+    "compile",
+    "test"
+  ]
+
+  grunt.registerTask "release:patch", [
+    "version:project:patch",
+    "version:library",
+    "version:bower",
+    "compile",
+    "test"
+  ]
+
+  grunt.registerTask "release:major", [
+    "version:project:major",
+    "version:library",
+    "version:bower",
+    "compile",
+    "test"
+  ]
