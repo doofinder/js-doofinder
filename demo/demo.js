@@ -117,8 +117,9 @@
               }
             }
           );
-          widget.on("df:range:change", function(a){
-            console.log(arguments);
+          widget.on("df:range:change", function(filter, boundaries){
+            console.log("There are products between " + boundaries.min + " and " + boundaries.max + "€");
+            console.log("Filtering products between " + filter.start + " and " + filter.end + "€");
           });
           break;
         default:

@@ -297,6 +297,34 @@ describe "Controller", ->
 
       controller.search ""
 
+    it "discards outdated responses", (done) ->
+      controller = cfg.getController()
+
+      controller.requestDone = true
+      controller.lastPage = 10
+      controller.queryCounter = 1
+
+      params =
+        query: ""
+        hashid: cfg.hashid
+        page: 2
+        rpp: 10
+        query_counter: 2
+
+      response =
+        page: 1
+        query_counter: 1
+        query_name: "match_and"
+
+      scope = serve.search params, response
+
+      controller.one "df:results:discarded", (res) ->
+        scope.isDone().should.be.true
+        res.query_counter.should.equal 1
+        done()
+
+      (expect controller.getNextPage()).not.to.be.undefined
+
     it "can get the next page in the 2nd request", (done) ->
       testAnotherPage cfg.getController(), 2, 2, 2, (controller, res) ->
         controller.lastPage.should.equal 2

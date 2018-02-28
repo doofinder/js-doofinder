@@ -138,7 +138,7 @@ class Controller
     request = @client.search @query, params, (err, res) =>
       if err
         @trigger "df:results:error", [err]
-      else
+      else if res.query_counter == @queryCounter
         @lastPage = Math.ceil (res.total / res.results_per_page)
         @params.query_name = res.query_name
 
@@ -146,6 +146,8 @@ class Controller
 
         @trigger "df:results:success", [res]
         @trigger "df:results:end", [res] if @isLastPage
+      else
+        @trigger "df:results:discarded", [res]
 
   #
   # Events
