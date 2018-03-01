@@ -97,7 +97,7 @@ class QueryInput extends Widget
 
       # 2. if the user wants to capture the form submission, prevent it
       if @options.captureForm
-        (inputsOnly.closest "form").on "submit", (event) =>
+        (inputsOnly.closest "form").on "submit", (event) ->
           event.preventDefault()
 
       # 3. capture the ENTER key

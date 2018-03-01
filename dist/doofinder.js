@@ -3553,11 +3553,9 @@
         })(this));
         inputsOnly = this.element.filter(":not(textarea)");
         if (this.options.captureForm) {
-          (inputsOnly.closest("form")).on("submit", (function(_this) {
-            return function(event) {
-              return event.preventDefault();
-            };
-          })(this));
+          (inputsOnly.closest("form")).on("submit", function(event) {
+            return event.preventDefault();
+          });
         }
         inputsOnly.on("keydown", (function(_this) {
           return function(event) {
