@@ -137,15 +137,15 @@ module.exports = (grunt) ->
   # Be careful, these tasks change version numbers on each execution!!!
 
   grunt.registerTask "release", [
-    "version:project:minor",
+    "version:project:patch",
     "version:library",
     "version:bower",
     "compile",
     "test"
   ]
 
-  grunt.registerTask "release:patch", [
-    "version:project:patch",
+  grunt.registerTask "release:minor", [
+    "version:project:minor",
     "version:library",
     "version:bower",
     "compile",
