@@ -3555,20 +3555,20 @@
         if (this.options.captureForm) {
           (inputsOnly.closest("form")).on("submit", (function(_this) {
             return function(event) {
-              event.preventDefault();
-              return _this.trigger("df:input:submit", [_this.value, event.target]);
-            };
-          })(this));
-        } else {
-          inputsOnly.on("keydown", (function(_this) {
-            return function(event) {
-              if (event.keyCode === 13) {
-                _this.__scheduleUpdate(0, true);
-                return _this.trigger("df:input:submit", [_this.value]);
-              }
+              return event.preventDefault();
             };
           })(this));
         }
+        inputsOnly.on("keydown", (function(_this) {
+          return function(event) {
+            var form;
+            if (event.keyCode === 13) {
+              _this.__scheduleUpdate(0, true);
+              form = (($(event.target)).closest("form")).get(0);
+              return _this.trigger("df:input:submit", [_this.value, form]);
+            }
+          };
+        })(this));
         return QueryInput.__super__.init.apply(this, arguments);
       }
     };
