@@ -87,7 +87,9 @@ module.exports = (grunt) ->
           prefix: '\"version\":\\s\"'
         src: ['./bower.json']
       project:
-        src: ["package.json"]
+        options:
+          prefix: '\"doofinder\",\\s+\"version\":\\s+\"'
+        src: ["package.json", "package-lock.json"]
 
     watch:
       default:
