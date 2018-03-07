@@ -50,7 +50,12 @@ class QueryInput extends Widget
     @controller = @controller.concat controller
 
   setElement: (element) ->
-    @element = ($ element).filter 'input[type="text"], input[type="search"], textarea'
+    @element = ($ element).filter [
+      'input:not([type])',
+      'input[type="text"]',
+      'input[type="search"]',
+      'textarea'
+    ].join ","
 
   ###*
    * Sets the input element considered as the currently active one.
