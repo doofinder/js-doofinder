@@ -22,7 +22,6 @@ class QueryInput extends Widget
     defaults =
       clean: true
       captureLength: 3
-      captureForm: false
       typingTimeout: 1000
       wait: 42 # meaning of life
 
@@ -94,24 +93,6 @@ class QueryInput extends Widget
 
       @element.on "df:input:valueChanged", =>
         @__updateStatus true
-
-      # configure ENTER key capture
-
-      # 1. get only input elements
-      inputsOnly = @element.filter(":not(textarea)")
-
-      # 2. if the user wants to capture the form submission, prevent it
-      if @options.captureForm
-        (inputsOnly.closest "form").on "submit", (event) ->
-          event.preventDefault()
-
-      # 3. capture the ENTER key
-      inputsOnly.on "keydown", (event) =>
-        if event.keyCode is 13
-          @__scheduleUpdate 0, true
-          # find the form closest to the input
-          form = (($ event.target).closest "form").get 0
-          @trigger "df:input:submit", [@value, form]
 
       super
 

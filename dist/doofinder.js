@@ -3464,7 +3464,6 @@
       defaults = {
         clean: true,
         captureLength: 3,
-        captureForm: false,
         typingTimeout: 1000,
         wait: 42
       };
@@ -3533,7 +3532,6 @@
      */
 
     QueryInput.prototype.init = function() {
-      var inputsOnly;
       if (!this.initialized) {
         this.element.on("focus", (function(_this) {
           return function(event) {
@@ -3549,22 +3547,6 @@
         this.element.on("df:input:valueChanged", (function(_this) {
           return function() {
             return _this.__updateStatus(true);
-          };
-        })(this));
-        inputsOnly = this.element.filter(":not(textarea)");
-        if (this.options.captureForm) {
-          (inputsOnly.closest("form")).on("submit", function(event) {
-            return event.preventDefault();
-          });
-        }
-        inputsOnly.on("keydown", (function(_this) {
-          return function(event) {
-            var form;
-            if (event.keyCode === 13) {
-              _this.__scheduleUpdate(0, true);
-              form = (($(event.target)).closest("form")).get(0);
-              return _this.trigger("df:input:submit", [_this.value, form]);
-            }
           };
         })(this));
         return QueryInput.__super__.init.apply(this, arguments);

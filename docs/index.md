@@ -5,24 +5,24 @@ layout: default
 <!-- MarkdownTOC depth="2" autolink="true" autoanchor="false" bracket="round" -->
 
 - [Client Reference](#client-reference)
-    - [doofinder.Client](#doofinderclient)
+  - [doofinder.Client](#doofinderclient)
 - [Controller Reference](#controller-reference)
-    - [doofinder.Controller](#doofindercontroller)
+  - [doofinder.Controller](#doofindercontroller)
 - [Widgets Reference](#widgets-reference)
-    - [doofinder.widgets.Widget](#doofinderwidgetswidget)
-    - [doofinder.widgets.QueryInput](#doofinderwidgetsqueryinput)
-    - [doofinder.widgets.Display](#doofinderwidgetsdisplay)
-    - [doofinder.widgets.ScrollDisplay](#doofinderwidgetsscrolldisplay)
-    - [doofinder.widgets.TermsFacet](#doofinderwidgetstermsfacet)
-    - [doofinder.widgets.RangeFacet](#doofinderwidgetsrangefacet)
+  - [doofinder.widgets.Widget](#doofinderwidgetswidget)
+  - [doofinder.widgets.QueryInput](#doofinderwidgetsqueryinput)
+  - [doofinder.widgets.Display](#doofinderwidgetsdisplay)
+  - [doofinder.widgets.ScrollDisplay](#doofinderwidgetsscrolldisplay)
+  - [doofinder.widgets.TermsFacet](#doofinderwidgetstermsfacet)
+  - [doofinder.widgets.RangeFacet](#doofinderwidgetsrangefacet)
 - [Session Reference](#session-reference)
-    - [doofinder.session.Session](#doofindersessionsession)
-    - [doofinder.session.ObjectSessionStore](#doofindersessionobjectsessionstore)
-    - [doofinder.session.CookieSessionStore](#doofindersessioncookiesessionstore)
+  - [doofinder.session.Session](#doofindersessionsession)
+  - [doofinder.session.ObjectSessionStore](#doofindersessionobjectsessionstore)
+  - [doofinder.session.CookieSessionStore](#doofindersessioncookiesessionstore)
 - [Stats Reference](#stats-reference)
-    - [doofinder.Stats](#doofinderstats)
+  - [doofinder.Stats](#doofinderstats)
 - [How To](#how-to)
-    - [Configure facet widgets dynamically](#configure-facet-widgets-dynamically)
+  - [Configure facet widgets dynamically](#configure-facet-widgets-dynamically)
 
 <!-- /MarkdownTOC -->
 
@@ -883,31 +883,11 @@ var queryInput = new doofinder.widgets.QueryInput('#search', {
 | Option | Required | Type | Values | Default | Description |
 | :--- | :---: | :---: | :---: | :---: | :--- |
 | `clean` | No | `Boolean` || `true` | If `true` the input is cleared when the widget is cleaned. |
-| `captureForm` | No | `Boolean` || `false` | If `true` and the input is inside a form, the submit event is captured and a `df:input:submit` event is triggered instead. |
 | `captureLength` | No | `Number` || `3` | Minimum number of characters to type to perform a search request. |
 | `typingTimeout` | No | `Number` || `1000` | Time in milliseconds the widget waits before triggering the `df:input:stop` event. |
 | `wait` | No | `Number` || `42` | Time in milliseconds the widget waits before checking input to decide whether to perform a search or not.<br>High values (`400`) reduce the number of requests sent. |
 
 #### Events
-
-##### df:input:submit
-
-This event is triggered when the user types <kbd>ENTER</kbd> on the search input control or the closest form is submitted in case `captureForm` option is enabled.
-
-**NOTICE:** This event is not triggered for `TEXTAREA` controls.
-
-```javascript
-queryInput.on("df:input:submit", function(value){
-  // do something with value
-});
-```
-
-##### Arguments
-
-| Argument | Required | Type | Description |
-| :--- | :---: | :---: | :--- |
-| `value` | Yes | `String` | Value of the input control. |
-| `form` | No | `HTMLElement` | The form that has been submitted, if any or `undefined` |
 
 ##### df:input:stop
 
