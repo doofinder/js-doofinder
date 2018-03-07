@@ -3497,7 +3497,7 @@
     };
 
     QueryInput.prototype.setElement = function(element) {
-      return this.element = ($(element)).filter('input[type="text"], input[type="search"], textarea');
+      return this.element = ($(element)).filter(['input:not([type])', 'input[type="text"]', 'input[type="search"]', 'textarea'].join(","));
     };
 
 
