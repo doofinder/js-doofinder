@@ -429,37 +429,6 @@ describe "Default Widgets", ->
       widget.value.should.equal "something3"
       done()
 
-    it "triggers a special event for enter key if input is not a textarea", (done) ->
-      controller = getControllerMock()
-      widget = createWidget controller, "something"
-      widget.on "df:input:submit", (value) ->
-        value.should.equal "something"
-      widget.on "df:input:stop", ->
-        controller.searchDone.should.be.true
-        done()
-      (widget.element.get 0).dispatchEvent createEnterKeydownEvent()
-
-    it "doesn't trigger a special event for enter key if input is a textarea", (done) ->
-      insertHTML """<textarea id="widget">something</textarea>"""
-      controller = getControllerMock()
-      widget = new QueryInput "#widget", typingTimeout: 50
-      # code is currently too coupled to controller so we need a mock
-      widget.setController controller
-      widget.init()
-
-      widget.on "df:input:submit", (value) ->
-        # this should never be executed
-        (expect true).to.be.false
-
-      widget.value.should.equal "something"
-      (widget.element.get 0).dispatchEvent createEnterKeydownEvent()
-
-      setTimeout (->
-        widget.value.should.equal "something"
-        controller.searchDone.should.be.false
-        done()
-      ), widget.options.typingTimeout
-
 
   describe "ScrollDisplay", ->
     ScrollDisplay = doofinder.widgets.ScrollDisplay
