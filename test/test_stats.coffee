@@ -53,7 +53,7 @@ describe "Stats", ->
 
     it "registers clicks", (done) ->
       sessionId = "it's me"
-      dfid = uniqueId.generate.dfid "someid", "product", cfg.hashid
+      dfid = uniqueId.dfid.create "someid", "product", cfg.hashid
       query = "other thing"
 
       params =

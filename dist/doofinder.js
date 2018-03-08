@@ -3155,27 +3155,48 @@
 
 },{"is":61}],13:[function(require,module,exports){
 (function() {
-  var cleandfid, md5;
+  var errors, generateDoofinderId, isValidDoofinderId, md5, splitDoofinderId;
 
   md5 = require("md5");
 
-  cleandfid = function(dfid) {
-    if (/^\w{32}@[\w_-]+@\w{32}$/.test(dfid)) {
+  errors = require("./errors");
+
+  isValidDoofinderId = function(text) {
+    return (splitDoofinderId(text)) !== text;
+  };
+
+  generateDoofinderId = function(id, datatype, hashid) {
+    var dfid;
+    id = md5("" + id);
+    dfid = hashid + "@" + datatype + "@" + id;
+    if (isValidDoofinderId(dfid)) {
       return dfid;
     } else {
-      throw new Error("dfid: " + dfid + " is not valid.");
+      throw errors.error("can't generate a dfid: invalid input data.");
+    }
+  };
+
+  splitDoofinderId = function(text) {
+    var m;
+    m = text.match(/^([0-9a-f]{32})@([\w-]+)@([0-9a-f]{32})$/i);
+    if (m != null) {
+      return {
+        hashid: m[1],
+        datatype: m[2],
+        id: m[3]
+      };
+    } else {
+      return text;
     }
   };
 
   module.exports = {
-    clean: {
-      dfid: cleandfid
+    dfid: {
+      isValid: isValidDoofinderId,
+      create: generateDoofinderId,
+      split: splitDoofinderId
     },
     generate: {
-      dfid: function(id, datatype, hashid) {
-        id = md5("" + id);
-        return cleandfid(hashid + "@" + datatype + "@" + id);
-      },
       easy: function(length) {
         var id;
         if (length == null) {
@@ -3198,7 +3219,7 @@
 
 }).call(this);
 
-},{"md5":64}],14:[function(require,module,exports){
+},{"./errors":7,"md5":64}],14:[function(require,module,exports){
 (function() {
   var Display, Widget, extend, helpers,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
