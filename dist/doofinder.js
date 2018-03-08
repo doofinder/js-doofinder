@@ -3472,6 +3472,7 @@
 },{"../util/dfdom":6,"./display":14,"extend":22}],16:[function(require,module,exports){
 (function() {
   var $, QueryInput, Thing, Widget, errors, extend,
+    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -3508,17 +3509,21 @@
       if (options == null) {
         options = {};
       }
+      this.unregisterDelayedEvent = bind(this.unregisterDelayedEvent, this);
+      this.registerDelayedEvent = bind(this.registerDelayedEvent, this);
       defaults = {
         clean: true,
         captureLength: 3,
         typingTimeout: 1000,
-        wait: 42
+        wait: 42,
+        delayedEvents: null
       };
       QueryInput.__super__.constructor.call(this, element, extend(true, defaults, options));
       this.controller = [];
       this.currentElement = this.element.first();
       this.timer = null;
-      this.stopTimer = null;
+      this.activeEventTimers = {};
+      this.delayedEvents = extend(true, {}, this.options.delayedEvents || {});
       Object.defineProperty(this, "value", {
         get: (function(_this) {
           return function() {
@@ -3596,8 +3601,36 @@
             return _this.__updateStatus(true);
           };
         })(this));
+        this.registerDelayedEvent("df:input:stop", this.options.typingTimeout);
         return QueryInput.__super__.init.apply(this, arguments);
       }
+    };
+
+
+    /**
+     * Register a new event with the specified name that is dispatched when the
+     * user stop typing during the number of miliseconds defined by delay param.
+     * If eventName exits, the delay assigned is update.
+     *
+     * @param {String} eventName  Name of the event
+     * @param {Number} delay      Time in miliseconds that the event waits after
+     *                            the user stops typing to be dispatched.
+     */
+
+    QueryInput.prototype.registerDelayedEvent = function(eventName, delay) {
+      return this.delayedEvents[eventName] = delay;
+    };
+
+
+    /**
+     * Unregister the delayed event with the given name.
+     *
+     * @param {String}  eventName Name of the event will be unregistered.
+     */
+
+    QueryInput.prototype.unregisterDelayedEvent = function(eventName) {
+      this.__cancelDelayedEvent(eventName);
+      return delete this.delayedEvents[eventName];
     };
 
 
@@ -3620,8 +3653,69 @@
         force = false;
       }
       clearTimeout(this.timer);
-      clearTimeout(this.stopTimer);
+      this.__cancelDelayedEvents();
       return this.timer = setTimeout(this.__updateStatus.bind(this), delay, force);
+    };
+
+
+    /**
+     * Schedules all declared events to be dispatched after the configured time.
+     */
+
+    QueryInput.prototype.__scheduleDelayedEvents = function() {
+      var delay, eventName, ref, results;
+      ref = this.delayedEvents;
+      results = [];
+      for (eventName in ref) {
+        delay = ref[eventName];
+        results.push(this.__scheduleDelayedEvent(eventName, delay));
+      }
+      return results;
+    };
+
+
+    /**
+     * Schedules an event that will be dispatched after the given delay in ms.
+     *
+     * @param {String}  eventName
+     * @param {Number}  delay
+     */
+
+    QueryInput.prototype.__scheduleDelayedEvent = function(eventName, delay) {
+      return this.activeEventTimers[eventName] = setTimeout(((function(_this) {
+        return function() {
+          return _this.trigger(eventName, [_this.value]);
+        };
+      })(this)), delay);
+    };
+
+
+    /**
+     * Cancels all scheduled events.
+     */
+
+    QueryInput.prototype.__cancelDelayedEvents = function() {
+      var eventName, i, len, ref, results;
+      ref = Object.keys(this.delayedEvents);
+      results = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        eventName = ref[i];
+        results.push(this.__cancelDelayedEvent(eventName));
+      }
+      return results;
+    };
+
+
+    /**
+     * Schedules an event that will be dispatched after the given delay in ms.
+     *
+     * @param {String}  eventName
+     * @param {Number}  delay
+     */
+
+    QueryInput.prototype.__cancelDelayedEvent = function(eventName) {
+      clearTimeout(this.activeEventTimers[eventName]);
+      return delete this.activeEventTimers[eventName];
     };
 
 
@@ -3642,11 +3736,7 @@
       valueOk = this.value.length >= this.options.captureLength;
       valueChanged = this.value.toUpperCase() !== this.previousValue;
       if (valueOk && (valueChanged || force)) {
-        this.stopTimer = setTimeout(((function(_this) {
-          return function() {
-            return _this.trigger("df:input:stop", [_this.value]);
-          };
-        })(this)), this.options.typingTimeout);
+        this.__scheduleDelayedEvents();
         this.previousValue = this.value.toUpperCase();
         return this.controller.forEach((function(_this) {
           return function(controller) {

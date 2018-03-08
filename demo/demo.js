@@ -27,7 +27,17 @@
   // create a basic controller, get 20 results per page
   var basicController = new doofinder.Controller(basicClient, {rpp: 20});
   // create an input widget
-  var basicInputWidget = new doofinder.widgets.QueryInput("#basicInput");
+  var basicInputWidget = new doofinder.widgets.QueryInput("#basicInput", {
+    delayedEvents: {
+      "df:user:bored": 10000
+    }
+  });
+  basicInputWidget.on("df:input:stop", function(value){
+    console.log("The user stopped writing.");
+  });
+  basicInputWidget.on("df:user:bored", function(value){
+    console.log("The user is bored!");
+  });
   // create a results widget
   var basicResultsWidget = new doofinder.widgets.ScrollDisplay("#basicResults");
   // register widgets in the controller
