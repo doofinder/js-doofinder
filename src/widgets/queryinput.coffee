@@ -24,14 +24,15 @@ class QueryInput extends Widget
       captureLength: 3
       typingTimeout: 1000
       wait: 42 # meaning of life
+      delayedEvents: null
 
     super element, (extend true, defaults, options)
 
     @controller = []
     @currentElement = @element.first()
     @timer = null
-    @activedTimeouts = {}
-    @delayedEventConfig = {}
+    @activeEventTimers = {}
+    @delayedEvents = extend true, {}, @options.delayedEvents or {}
 
     Object.defineProperty @, "value",
       get: =>
@@ -110,7 +111,7 @@ class QueryInput extends Widget
    *                            the user stops typing to be dispatched.
   ###
   registerDelayedEvent: (eventName, delay) =>
-    @delayedEventConfig[eventName] = delay
+    @delayedEvents[eventName] = delay
 
 
   ###*
@@ -119,7 +120,8 @@ class QueryInput extends Widget
    * @param {String}  eventName Name of the event will be unregistered.
   ###
   unregisterDelayedEvent: (eventName) =>
-    delete @delayedEventConfig[eventName]
+    @__cancelDelayedEvent eventName
+    delete @delayedEvents[eventName]
 
 
   ###*
@@ -134,25 +136,44 @@ class QueryInput extends Widget
   ###
   __scheduleUpdate: (delay = @options.wait, force = false) ->
     clearTimeout @timer
-    for eventName, timer of @activedTimeouts
-      clearTimeout timer
-      delete @activedTimeouts[eventName]
+    @__cancelDelayedEvents()
     @timer = setTimeout (@__updateStatus.bind @), delay, force
 
 
   ###*
-   * Starts a new timeout what dispatches a event with the given name after
-   * a delay.
-   *
-   * @param {String}  eventName Name of the event to be dispatched.
-   * @param {Number}  delay     Number of miliseconds to wait before dispatching
-   *                            the event
+   * Schedules all declared events to be dispatched after the configured time.
   ###
-  __createDelayedEventTimeout: (eventName, delay) =>
-    timer = setTimeout (=>
+  __scheduleDelayedEvents: ->
+    for eventName, delay of @delayedEvents
+      @__scheduleDelayedEvent eventName, delay
+
+  ###*
+   * Schedules an event that will be dispatched after the given delay in ms.
+   *
+   * @param {String}  eventName
+   * @param {Number}  delay
+  ###
+  __scheduleDelayedEvent: (eventName, delay) ->
+    @activeEventTimers[eventName] = setTimeout (=>
       @trigger eventName, [@value]
     ), delay
-    @activedTimeouts[eventName] = timer
+
+  ###*
+   * Cancels all scheduled events.
+  ###
+  __cancelDelayedEvents: ->
+    for eventName in Object.keys @delayedEvents
+      @__cancelDelayedEvent eventName
+
+  ###*
+   * Schedules an event that will be dispatched after the given delay in ms.
+   *
+   * @param {String}  eventName
+   * @param {Number}  delay
+  ###
+  __cancelDelayedEvent: (eventName) ->
+    clearTimeout @activeEventTimers[eventName]
+    delete @activeEventTimers[eventName]
 
 
   ###*
@@ -168,8 +189,7 @@ class QueryInput extends Widget
     valueChanged = @value.toUpperCase() != @previousValue
 
     if valueOk and (valueChanged or force)
-      for eventName, delay of @delayedEventConfig
-        @__createDelayedEventTimeout eventName, delay
+      @__scheduleDelayedEvents()
       @previousValue = @value.toUpperCase()
       @controller.forEach (controller) => controller.search @value
     else if @previousValue.length > 0 and @value.length is 0
