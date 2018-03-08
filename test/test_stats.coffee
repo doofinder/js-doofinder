@@ -51,23 +51,54 @@ describe "Stats", ->
       (-> stats.registerClick "sessionid").should.throw()
       done()
 
-    it "registers clicks", (done) ->
-      sessionId = "it's me"
-      dfid = uniqueId.dfid.create "someid", "product", cfg.hashid
-      query = "other thing"
-
-      params =
-        dfid: dfid
-        session_id: sessionId
-        query: query
-
-      scope = serve.stats "click", params
-      stats = getStats()
-      stats.registerClick sessionId, dfid, query, (err, res) ->
+    buildRegisterClickTestFn = (scope, done) ->
+      (err, res) ->
         (expect err).to.be.undefined
         res.should.equal "OK"
         scope.isDone().should.be.true
         done()
+
+    it "registers clicks with dfid", (done) ->
+      params =
+        dfid: uniqueId.dfid.create "someid", "product", cfg.hashid
+        session_id: "42"
+        query: "other thing"
+      scope = serve.stats "click", params
+      getStats().registerClick params.session_id,
+                               params.dfid,
+                               params.query,
+                               (buildRegisterClickTestFn scope, done)
+
+    it "registers clicks with id and datatype", (done) ->
+      params =
+        id: "someid"
+        datatype: "product"
+        session_id: "42"
+        query: "other thing"
+
+      scope = serve.stats "click", params
+      getStats().registerClick params.session_id,
+                               params.id,
+                               params.datatype,
+                               params.query,
+                               (buildRegisterClickTestFn scope, done)
+
+    it "breaks if not enough arguments where passed", (done) ->
+      id = "someid"
+      datatype = "product"
+      dfid = uniqueId.dfid.create id, datatype, cfg.hashid
+      session_id = "42"
+      query = "other thing"
+
+      stats = getStats()
+
+      (-> stats.registerClick.apply stats, []).should.throw
+      (-> stats.registerClick.apply stats, [session_id]).should.throw
+      (-> stats.registerClick.apply stats, [session_id, id]).should.throw
+
+      done()
+
+    # TODO: move text.dfid stuff to unique_id
 
   context "Checkout Registration", ->
     it "fails with invalid parameters", (done) ->
