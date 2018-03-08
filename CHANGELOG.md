@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [5.3.4] - 2018-03-08
+### Added
+- `QueryInput` now supports extra delayed events for the case the user stops typing and you want to perform actions independently of those done when the `df:input:stop` event is triggered.
+
 ### Fixed
 - `Stats.registerClick` now is fully compatible with the click recording API endpoint.
 
