@@ -886,6 +886,7 @@ var queryInput = new doofinder.widgets.QueryInput('#search', {
 | `captureLength` | No | `Number` || `3` | Minimum number of characters to type to perform a search request. |
 | `typingTimeout` | No | `Number` || `1000` | Time in milliseconds the widget waits before triggering the `df:input:stop` event. |
 | `wait` | No | `Number` || `42` | Time in milliseconds the widget waits before checking input to decide whether to perform a search or not.<br>High values (`400`) reduce the number of requests sent. |
+| `delayedEvents` | No | `Object` ||| Each key is the name of a custom event you want to trigger in the future after the user has stopped typing. Values are the delay in ms. See `df:input:stop` for more info. |
 
 #### Events
 
@@ -896,6 +897,20 @@ This event is triggered after some time determined by the value `typingTimeout` 
 ```javascript
 queryInput.on("df:input:stop", function(value){
   // do something with value
+});
+```
+
+If you want to perform extra actions without changing the default `df:input:stop` event, use `options.delayedEvents`:
+
+```javascript
+var queryInput = new doofinder.widgets.QueryInput('#q', {
+  delayedEvents: {
+    'df:user:bored': 10000 // 10s
+  }
+});
+
+queryInput.on("df:user:bored", function(value){
+  console.log('The user is bored!');
 });
 ```
 
