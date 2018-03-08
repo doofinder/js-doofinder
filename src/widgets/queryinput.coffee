@@ -30,7 +30,7 @@ class QueryInput extends Widget
     @controller = []
     @currentElement = @element.first()
     @timer = null
-    @stopTimer = null
+    @stopTimerMap = {}
 
     Object.defineProperty @, "value",
       get: =>
@@ -94,7 +94,21 @@ class QueryInput extends Widget
       @element.on "df:input:valueChanged", =>
         @__updateStatus true
 
+      @registerInputStopEvent @options.typingTimeout
+
       super
+
+  ###*
+   * Register a new input stop event. This event will be dispatched when
+   * the user stops to typing during X milliseconds, where X is defined by
+   * delay param. The format of the name of the dispatched event is
+   * 'df:input:stop:delay'.
+   *
+   * @param  {Number} delay Delay in milliseconds.
+  ###
+  registerInputStopEvent: (delay) ->
+    @stopTimerMap[delay] = null
+
 
   ###*
    * Schedules input validation so its done "in the future", giving the user
@@ -108,8 +122,11 @@ class QueryInput extends Widget
   ###
   __scheduleUpdate: (delay = @options.wait, force = false) ->
     clearTimeout @timer
-    clearTimeout @stopTimer
+    for delay, timer of @stopTimerMap
+      clearTimeout timer
     @timer = setTimeout (@__updateStatus.bind @), delay, force
+
+
 
   ###*
    * Checks current value of the input and, if it is OK and it changed since the
@@ -124,9 +141,18 @@ class QueryInput extends Widget
     valueChanged = @value.toUpperCase() != @previousValue
 
     if valueOk and (valueChanged or force)
-      @stopTimer = setTimeout (=>
-        @trigger "df:input:stop", [@value]
-      ), @options.typingTimeout
+      fn = (delay) =>
+        eventName = "df:input:stop"
+        # In order to continue dispatching the df:input:stop event, compare the delay
+        # with typingTimeout option
+        if +delay != +@options.typingTimeout
+          eventName = eventName + ":" + delay
+        @stopTimerMap[delay] = setTimeout (=>
+          @trigger eventName, [@value]
+        ), delay
+
+      for delay, timer of @stopTimerMap
+        fn(delay)
       @previousValue = @value.toUpperCase()
       @controller.forEach (controller) => controller.search @value
     else if @previousValue.length > 0 and @value.length is 0

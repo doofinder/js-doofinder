@@ -3471,7 +3471,7 @@
       this.controller = [];
       this.currentElement = this.element.first();
       this.timer = null;
-      this.stopTimer = null;
+      this.stopTimerMap = {};
       Object.defineProperty(this, "value", {
         get: (function(_this) {
           return function() {
@@ -3549,8 +3549,23 @@
             return _this.__updateStatus(true);
           };
         })(this));
+        this.registerInputStopEvent(this.options.typingTimeout);
         return QueryInput.__super__.init.apply(this, arguments);
       }
+    };
+
+
+    /**
+     * Register a new input stop event. This event will be dispatched when
+     * the user stops to typing during X milliseconds, where X is defined by
+     * delay param. The format of the name of the dispatched event is
+     * 'df:input:stop:delay'.
+     *
+     * @param  {Number} delay Delay in milliseconds.
+     */
+
+    QueryInput.prototype.registerInputStopEvent = function(delay) {
+      return this.stopTimerMap[delay] = null;
     };
 
 
@@ -3566,6 +3581,7 @@
      */
 
     QueryInput.prototype.__scheduleUpdate = function(delay, force) {
+      var ref, timer;
       if (delay == null) {
         delay = this.options.wait;
       }
@@ -3573,7 +3589,11 @@
         force = false;
       }
       clearTimeout(this.timer);
-      clearTimeout(this.stopTimer);
+      ref = this.stopTimerMap;
+      for (delay in ref) {
+        timer = ref[delay];
+        clearTimeout(timer);
+      }
       return this.timer = setTimeout(this.__updateStatus.bind(this), delay, force);
     };
 
@@ -3588,18 +3608,30 @@
      */
 
     QueryInput.prototype.__updateStatus = function(force) {
-      var valueChanged, valueOk;
+      var delay, fn, ref, timer, valueChanged, valueOk;
       if (force == null) {
         force = false;
       }
       valueOk = this.value.length >= this.options.captureLength;
       valueChanged = this.value.toUpperCase() !== this.previousValue;
       if (valueOk && (valueChanged || force)) {
-        this.stopTimer = setTimeout(((function(_this) {
-          return function() {
-            return _this.trigger("df:input:stop", [_this.value]);
+        fn = (function(_this) {
+          return function(delay) {
+            var eventName;
+            eventName = "df:input:stop";
+            if (+delay !== +_this.options.typingTimeout) {
+              eventName = eventName + ":" + delay;
+            }
+            return _this.stopTimerMap[delay] = setTimeout((function() {
+              return _this.trigger(eventName, [_this.value]);
+            }), delay);
           };
-        })(this)), this.options.typingTimeout);
+        })(this);
+        ref = this.stopTimerMap;
+        for (delay in ref) {
+          timer = ref[delay];
+          fn(delay);
+        }
         this.previousValue = this.value.toUpperCase();
         return this.controller.forEach((function(_this) {
           return function(controller) {
