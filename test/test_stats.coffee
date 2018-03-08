@@ -92,9 +92,9 @@ describe "Stats", ->
 
       stats = getStats()
 
-      (-> stats.registerClick.apply stats, []).should.throw
-      (-> stats.registerClick.apply stats, [session_id]).should.throw
-      (-> stats.registerClick.apply stats, [session_id, id]).should.throw
+      (-> stats.registerClick()).should.throw
+      (-> stats.registerClick(session_id)).should.throw
+      (-> stats.registerClick(session_id, id)).should.throw
 
       done()
 
