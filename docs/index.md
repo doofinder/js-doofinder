@@ -1480,6 +1480,10 @@ This method returns a `Boolean` value saying if the session was registered or no
 
 Registers a click on a search result for the specified search query.
 
+This methods accepts two different signatures depending if you use the Doofinder internal ID for documents or your database ID and a valid datatype in Doofinder.
+
+##### Using the Doofinder internal ID (dfid)
+
 ```javascript
 stats.registerClick(sessionId, "abcd3434...", "red car", function(err, res){
   // Do something in case of error or successful response
@@ -1494,6 +1498,26 @@ stats.registerClick(sessionId, "abcd3434...");
 | :--- | :---: | :---: | :--- |
 | `sessionId` | Yes | `String` | The anonymous user session id. |
 | `dfid` | Yes | `String` | Internal id of the result in Doofinder |
+| `query` | No | `String` | Search terms. If not defined, it's sent as the empty string. |
+| `callback` | No | `Function` | Method to be called when the response or an error is received. |
+
+##### Using your database ID
+
+```javascript
+stats.registerClick(sessionId, 10, "product", "red car", function(err, res){
+  // Do something in case of error or successful response
+});
+stats.registerClick(sessionId, 10, "product", null, function(err, res){
+  // Do something in case of error or successful response
+});
+stats.registerClick(sessionId, 10, "product", "some query");
+```
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `sessionId` | Yes | `String` | The anonymous user session id. |
+| `id` | Yes | `String` | Database ID of the result in your system. |
+| `datatype` | Yes | `String` | Type of document in Doofinder. |
 | `query` | No | `String` | Search terms. If not defined, it's sent as the empty string. |
 | `callback` | No | `Function` | Method to be called when the response or an error is received. |
 

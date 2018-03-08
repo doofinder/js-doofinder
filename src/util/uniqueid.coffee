@@ -1,20 +1,33 @@
 md5 = require "md5"
+errors = require "./errors"
 
-cleandfid = (dfid) ->
-  if /^\w{32}@[\w_-]+@\w{32}$/.test dfid
-    return dfid
+isValidDoofinderId = (text) ->
+  (splitDoofinderId text) isnt text
+
+generateDoofinderId = (id, datatype, hashid) ->
+  id = md5 "#{id}"
+  dfid = "#{hashid}@#{datatype}@#{id}"
+  if isValidDoofinderId dfid
+    dfid
   else
-    throw new Error "dfid: #{dfid} is not valid."
+    throw errors.error "can't generate a dfid: invalid input data."
+
+splitDoofinderId = (text) ->
+  m = text.match /^([0-9a-f]{32})@([\w-]+)@([0-9a-f]{32})$/i
+  if m?
+    hashid: m[1]
+    datatype: m[2]
+    id: m[3]
+  else
+    text
 
 module.exports =
-  clean:
-    dfid: cleandfid
+  dfid:
+    isValid: isValidDoofinderId
+    create: generateDoofinderId
+    split: splitDoofinderId
 
   generate:
-    dfid: (id, datatype, hashid) ->
-      id = md5 "#{id}"
-      cleandfid "#{hashid}@#{datatype}@#{id}"
-
     easy: (length = 8) ->
       id = ""
       id += Math.random().toString(36).substr(2) while id.length < length
