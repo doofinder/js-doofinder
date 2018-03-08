@@ -30,7 +30,8 @@ class QueryInput extends Widget
     @controller = []
     @currentElement = @element.first()
     @timer = null
-    @stopTimer = null
+    @activedTimeouts = {}
+    @delayedEventConfig = {}
 
     Object.defineProperty @, "value",
       get: =>
@@ -94,7 +95,32 @@ class QueryInput extends Widget
       @element.on "df:input:valueChanged", =>
         @__updateStatus true
 
+      @registerDelayedEvent "df:input:stop", @options.typingTimeout
+
       super
+
+
+  ###*
+   * Register a new event with the specified name that is dispatched when the
+   * user stop typing during the number of miliseconds defined by delay param.
+   * If eventName exits, the delay assigned is update.
+   *
+   * @param {String} eventName  Name of the event
+   * @param {Number} delay      Time in miliseconds that the event waits after
+   *                            the user stops typing to be dispatched.
+  ###
+  registerDelayedEvent: (eventName, delay) =>
+    @delayedEventConfig[eventName] = delay
+
+
+  ###*
+   * Unregister the delayed event with the given name.
+   *
+   * @param {String}  eventName Name of the event will be unregistered.
+  ###
+  unregisterDelayedEvent: (eventName) =>
+    delete @delayedEventConfig[eventName]
+
 
   ###*
    * Schedules input validation so its done "in the future", giving the user
@@ -108,8 +134,26 @@ class QueryInput extends Widget
   ###
   __scheduleUpdate: (delay = @options.wait, force = false) ->
     clearTimeout @timer
-    clearTimeout @stopTimer
+    for eventName, timer of @activedTimeouts
+      clearTimeout timer
+      delete @activedTimeouts[eventName]
     @timer = setTimeout (@__updateStatus.bind @), delay, force
+
+
+  ###*
+   * Starts a new timeout what dispatches a event with the given name after
+   * a delay.
+   *
+   * @param {String}  eventName Name of the event to be dispatched.
+   * @param {Number}  delay     Number of miliseconds to wait before dispatching
+   *                            the event
+  ###
+  __createDelayedEventTimeout: (eventName, delay) =>
+    timer = setTimeout (=>
+      @trigger eventName, [@value]
+    ), delay
+    @activedTimeouts[eventName] = timer
+
 
   ###*
    * Checks current value of the input and, if it is OK and it changed since the
@@ -124,9 +168,8 @@ class QueryInput extends Widget
     valueChanged = @value.toUpperCase() != @previousValue
 
     if valueOk and (valueChanged or force)
-      @stopTimer = setTimeout (=>
-        @trigger "df:input:stop", [@value]
-      ), @options.typingTimeout
+      for eventName, delay of @delayedEventConfig
+        @__createDelayedEventTimeout eventName, delay
       @previousValue = @value.toUpperCase()
       @controller.forEach (controller) => controller.search @value
     else if @previousValue.length > 0 and @value.length is 0
