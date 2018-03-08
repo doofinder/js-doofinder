@@ -12,14 +12,14 @@ uniqueId = require "../lib/util/uniqueid"
 describe "uniqueId", ->
   context "dfid", ->
     it "can generate a dfid", (done) ->
-      dfid = uniqueId.generate.dfid 1, "product", "3162d22da41ab3d2a03ebf335da66f01"
+      dfid = uniqueId.dfid.create 1, "product", "3162d22da41ab3d2a03ebf335da66f01"
       dfid.should.equal "3162d22da41ab3d2a03ebf335da66f01@product@c4ca4238a0b923820dcc509a6f75849b"
       done()
 
     it "can validate a dfid", (done) ->
       dfid = "3162d22da41ab3d2a03ebf335da66f01@product@c4ca4238a0b923820dcc509a6f75849b"
-      (uniqueId.clean.dfid dfid).should.equal dfid
-      expect(-> uniqueId.clean.dfid "hola").to.throw()
+      (uniqueId.dfid.isValid dfid).should.be.true
+      (uniqueId.dfid.isValid "hola").should.be.false
       done()
 
   context "random", ->

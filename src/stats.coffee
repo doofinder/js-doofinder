@@ -38,8 +38,15 @@ class Stats
   ###*
    * Registers a click on a search result for the specified search query.
    *
+   * stats = new doofinder.Stats(client);
+   * stats.registerClick(sessionId, id, datatype, query, callback);
+   * stats.registerClick(sessionId, dfid, query, callback);
+   *
    * @param  {String}  	sessionId Session id.
-   * @param  {String}   dfid      Doofinder's internal ID for the result.
+   * @param  {String}   id        Id of the result or Doofinder's internal ID
+   *                              for the result.
+   * @param  {String}   datatype  Optional. If the id is not a Doofinder id
+   *                              this argument is required.
    * @param  {String}   query     Optional. Search terms.
    * @param  {Function} callback  Optional callback to be called when the
    *                              response is received. First param is the
@@ -47,15 +54,24 @@ class Stats
    *                              response, if any.
    * @public
   ###
-  registerClick: (sessionId, dfid, query, callback) ->
+  registerClick: (sessionId, args...) ->
     errors.requireVal sessionId, "sessionId"
-    errors.requireVal dfid, "dfid"
 
-    params =
-      session_id: sessionId
-      dfid: dfid
-      query: query or ""
+    if args.length is 0
+      errors.requireVal null, "dfid or (id + datatype)"
+    else if uniqueId.dfid.isValid args[0]
+      required = ['dfid']
+    else
+      required = ['id', 'datatype']
+    keys = required.concat ['query']
 
+    params = session_id: sessionId
+    params[key] = args.shift() for key in keys
+    params.query ?= ""
+
+    errors.requireVal params[key], key for key in required
+
+    callback = args.shift()
     @client.stats "click", params, (err, res) ->
       callback? err, res # Client requires a callback, we don't
 

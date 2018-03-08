@@ -1234,7 +1234,8 @@
 
 },{"./util/errors":7,"./util/uniqueid":13,"extend":22,"js-cookie":62,"md5":64}],5:[function(require,module,exports){
 (function() {
-  var Client, Session, Stats, errors, uniqueId;
+  var Client, Session, Stats, errors, uniqueId,
+    slice = [].slice;
 
   errors = require("./util/errors");
 
@@ -1291,8 +1292,15 @@
     /**
      * Registers a click on a search result for the specified search query.
      *
+     * stats = new doofinder.Stats(client);
+     * stats.registerClick(sessionId, id, datatype, query, callback);
+     * stats.registerClick(sessionId, dfid, query, callback);
+     *
      * @param  {String}  	sessionId Session id.
-     * @param  {String}   dfid      Doofinder's internal ID for the result.
+     * @param  {String}   id        Id of the result or Doofinder's internal ID
+     *                              for the result.
+     * @param  {String}   datatype  Optional. If the id is not a Doofinder id
+     *                              this argument is required.
      * @param  {String}   query     Optional. Search terms.
      * @param  {Function} callback  Optional callback to be called when the
      *                              response is received. First param is the
@@ -1301,15 +1309,33 @@
      * @public
      */
 
-    Stats.prototype.registerClick = function(sessionId, dfid, query, callback) {
-      var params;
+    Stats.prototype.registerClick = function() {
+      var args, callback, i, j, key, keys, len, len1, params, required, sessionId;
+      sessionId = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
       errors.requireVal(sessionId, "sessionId");
-      errors.requireVal(dfid, "dfid");
+      if (args.length === 0) {
+        errors.requireVal(null, "dfid or (id + datatype)");
+      } else if (uniqueId.dfid.isValid(args[0])) {
+        required = ['dfid'];
+      } else {
+        required = ['id', 'datatype'];
+      }
+      keys = required.concat(['query']);
       params = {
-        session_id: sessionId,
-        dfid: dfid,
-        query: query || ""
+        session_id: sessionId
       };
+      for (i = 0, len = keys.length; i < len; i++) {
+        key = keys[i];
+        params[key] = args.shift();
+      }
+      if (params.query == null) {
+        params.query = "";
+      }
+      for (j = 0, len1 = required.length; j < len1; j++) {
+        key = required[j];
+        errors.requireVal(params[key], key);
+      }
+      callback = args.shift();
       return this.client.stats("click", params, function(err, res) {
         return typeof callback === "function" ? callback(err, res) : void 0;
       });
@@ -3155,27 +3181,48 @@
 
 },{"is":61}],13:[function(require,module,exports){
 (function() {
-  var cleandfid, md5;
+  var errors, generateDoofinderId, isValidDoofinderId, md5, splitDoofinderId;
 
   md5 = require("md5");
 
-  cleandfid = function(dfid) {
-    if (/^\w{32}@[\w_-]+@\w{32}$/.test(dfid)) {
+  errors = require("./errors");
+
+  isValidDoofinderId = function(text) {
+    return (splitDoofinderId(text)) !== text;
+  };
+
+  generateDoofinderId = function(id, datatype, hashid) {
+    var dfid;
+    id = md5("" + id);
+    dfid = hashid + "@" + datatype + "@" + id;
+    if (isValidDoofinderId(dfid)) {
       return dfid;
     } else {
-      throw new Error("dfid: " + dfid + " is not valid.");
+      throw errors.error("can't generate a dfid: invalid input data.");
+    }
+  };
+
+  splitDoofinderId = function(text) {
+    var m;
+    m = text.match(/^([0-9a-f]{32})@([\w-]+)@([0-9a-f]{32})$/i);
+    if (m != null) {
+      return {
+        hashid: m[1],
+        datatype: m[2],
+        id: m[3]
+      };
+    } else {
+      return text;
     }
   };
 
   module.exports = {
-    clean: {
-      dfid: cleandfid
+    dfid: {
+      isValid: isValidDoofinderId,
+      create: generateDoofinderId,
+      split: splitDoofinderId
     },
     generate: {
-      dfid: function(id, datatype, hashid) {
-        id = md5("" + id);
-        return cleandfid(hashid + "@" + datatype + "@" + id);
-      },
       easy: function(length) {
         var id;
         if (length == null) {
@@ -3198,7 +3245,7 @@
 
 }).call(this);
 
-},{"md5":64}],14:[function(require,module,exports){
+},{"./errors":7,"md5":64}],14:[function(require,module,exports){
 (function() {
   var Display, Widget, extend, helpers,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
