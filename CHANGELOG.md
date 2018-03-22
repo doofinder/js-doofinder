@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [5.3.5] - 2018-03-22
+### Changed
+- Updated noUiSlider to v11.x.
+- Reduced styles to the minimal so they're easily customizable following the default noUiSlider style guide.
+
 ## [5.3.4] - 2018-03-08
 ### Added
 - `QueryInput` now supports extra delayed events for the case the user stops typing and you want to perform actions independently of those done when the `df:input:stop` event is triggered.
