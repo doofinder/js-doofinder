@@ -120,21 +120,14 @@ button[data-toggle-extra-content]:last-child {
 }
 
 /* THIRD PARTY COMPONENTS */
-.df-slider {
-  padding: 40px 10px;
-  overflow-y: hidden;
-}
-
-.df-slider, .df-slider * {
-  box-sizing: border-box;
-}
-
+/*! nouislider - 11.0.3 - 2018-01-21 14:04:07 */
 /* Functional styling;
  * These styles are required for noUiSlider to function.
  * You don't need to change these rules to apply your design.
  */
 .noUi-target, .noUi-target * {
   -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
   -webkit-user-select: none;
   -ms-touch-action: none;
   touch-action: none;
@@ -150,48 +143,61 @@ button[data-toggle-extra-content]:last-child {
   direction: ltr;
 }
 
-.noUi-base {
+.noUi-base, .noUi-connects {
   width: 100%;
   height: 100%;
   position: relative;
   z-index: 1;
-  /* Fix 401 */
 }
 
-.noUi-origin {
+/* Wrapper for all connect elements.
+ */
+.noUi-connects {
+  overflow: hidden;
+  z-index: 0;
+}
+
+.noUi-connect, .noUi-origin {
+  will-change: transform;
   position: absolute;
-  right: 0;
+  z-index: 1;
   top: 0;
   left: 0;
-  bottom: 0;
+  height: 100%;
+  width: 100%;
+  -webkit-transform-origin: 0 0;
+  transform-origin: 0 0;
+}
+
+/* Offset direction
+ */
+html:not([dir="rtl"]) .noUi-horizontal .noUi-origin {
+  left: auto;
+  right: 0;
+}
+
+/* Give origins 0 height/width so they don't interfere with clicking the
+ * connect elements.
+ */
+.noUi-vertical .noUi-origin {
+  width: 0;
+}
+
+.noUi-horizontal .noUi-origin {
+  height: 0;
 }
 
 .noUi-handle {
-  position: relative;
-  z-index: 1;
+  position: absolute;
 }
 
-.noUi-stacking .noUi-handle {
-  /* This class is applied to the lower origin when
-   its values is > 50%. */
-  z-index: 10;
-}
-
-.noUi-state-tap .noUi-origin {
-  -webkit-transition: left 0.3s, top 0.3s;
-  transition: left 0.3s, top 0.3s;
+.noUi-state-tap .noUi-connect, .noUi-state-tap .noUi-origin {
+  -webkit-transition: transform 0.3s;
+  transition: transform 0.3s;
 }
 
 .noUi-state-drag * {
   cursor: inherit !important;
-}
-
-/* Painting and performance;
- * Browsers can paint handles in their own layer.
- */
-.noUi-base, .noUi-handle {
-  -webkit-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
 }
 
 /* Slider size and handle placement;
@@ -218,42 +224,37 @@ button[data-toggle-extra-content]:last-child {
   top: -17px;
 }
 
+html:not([dir="rtl"]) .noUi-horizontal .noUi-handle {
+  right: -17px;
+  left: auto;
+}
+
 /* Styling;
+ * Giving the connect element a border radius causes issues with using transform: scale
  */
-.noUi-background {
-  background: #FAFAFA;
-  box-shadow: inset 0 1px 1px #f0f0f0;
-}
-
-.noUi-connect {
-  background: #3FB8AF;
-  box-shadow: inset 0 0 3px rgba(51, 51, 51, 0.45);
-  -webkit-transition: background 450ms;
-  transition: background 450ms;
-}
-
-.noUi-origin {
-  border-radius: 2px;
-}
-
 .noUi-target {
+  background: #FAFAFA;
   border-radius: 4px;
   border: 1px solid #D3D3D3;
   box-shadow: inset 0 1px 1px #F0F0F0, 0 3px 6px -5px #BBB;
 }
 
-.noUi-target.noUi-connect {
-  box-shadow: inset 0 0 3px rgba(51, 51, 51, 0.45), 0 3px 6px -5px #BBB;
+.noUi-connects {
+  border-radius: 3px;
+}
+
+.noUi-connect {
+  background: #3FB8AF;
 }
 
 /* Handles and cursors;
  */
 .noUi-draggable {
-  cursor: w-resize;
+  cursor: ew-resize;
 }
 
 .noUi-vertical .noUi-draggable {
-  cursor: n-resize;
+  cursor: ns-resize;
 }
 
 .noUi-handle {
@@ -261,11 +262,11 @@ button[data-toggle-extra-content]:last-child {
   border-radius: 3px;
   background: #FFF;
   cursor: default;
-  box-shadow: inset 0 0 1px #FFF, inset 0 1px 7px #EBEBEB, 0 3px 6px -3px #BBB;
+  box-shadow: inset 0 0 1px #FFF, inset 0 1px 7px #EBEBEB, 0 3px 6px -3px #BBB;
 }
 
 .noUi-active {
-  box-shadow: inset 0 0 1px #FFF, inset 0 1px 7px #DDD, 0 3px 6px -3px #BBB;
+  box-shadow: inset 0 0 1px #FFF, inset 0 1px 7px #DDD, 0 3px 6px -3px #BBB;
 }
 
 /* Handle stripes;
@@ -298,11 +299,11 @@ button[data-toggle-extra-content]:last-child {
 
 /* Disabled state;
  */
-[disabled].noUi-connect, [disabled] .noUi-connect {
+[disabled] .noUi-connect {
   background: #B8B8B8;
 }
 
-[disabled].noUi-origin, [disabled] .noUi-handle {
+[disabled].noUi-target, [disabled].noUi-handle, [disabled] .noUi-handle {
   cursor: not-allowed;
 }
 
@@ -324,6 +325,7 @@ button[data-toggle-extra-content]:last-child {
  */
 .noUi-value {
   position: absolute;
+  white-space: nowrap;
   text-align: center;
 }
 
@@ -360,8 +362,13 @@ button[data-toggle-extra-content]:last-child {
 }
 
 .noUi-value-horizontal {
-  -webkit-transform: translate3d(-50%, 50%, 0);
-  transform: translate3d(-50%, 50%, 0);
+  -webkit-transform: translate(-50%, 50%);
+  transform: translate(-50%, 50%);
+}
+
+.noUi-rtl .noUi-value-horizontal {
+  -webkit-transform: translate(50%, 50%);
+  transform: translate(50%, 50%);
 }
 
 .noUi-marker-horizontal.noUi-marker {
@@ -389,9 +396,14 @@ button[data-toggle-extra-content]:last-child {
 }
 
 .noUi-value-vertical {
-  -webkit-transform: translate3d(0, -50%, 0);
-  transform: translate3d(0, -50%, 0);
+  -webkit-transform: translate(0, -50%);
+  transform: translate(0, -50%, 0);
   padding-left: 25px;
+}
+
+.noUi-rtl .noUi-value-vertical {
+  -webkit-transform: translate(0, 50%);
+  transform: translate(0, 50%);
 }
 
 .noUi-marker-vertical.noUi-marker {
@@ -414,126 +426,50 @@ button[data-toggle-extra-content]:last-child {
   border: 1px solid #D9D9D9;
   border-radius: 3px;
   background: #fff;
+  color: #000;
   padding: 5px;
   text-align: center;
+  white-space: nowrap;
 }
 
-.noUi-horizontal .noUi-handle-lower .noUi-tooltip {
-  top: -32px;
+.noUi-horizontal .noUi-tooltip {
+  -webkit-transform: translate(-50%, 0);
+  transform: translate(-50%, 0);
+  left: 50%;
+  bottom: 120%;
 }
 
-.noUi-horizontal .noUi-handle-upper .noUi-tooltip {
-  bottom: -32px;
-}
-
-.noUi-vertical .noUi-handle-lower .noUi-tooltip {
-  left: 120%;
-}
-
-.noUi-vertical .noUi-handle-upper .noUi-tooltip {
+.noUi-vertical .noUi-tooltip {
+  -webkit-transform: translate(0, -50%);
+  transform: translate(0, -50%);
+  top: 50%;
   right: 120%;
 }
 
-.df-slider .noUi-value-horizontal {
-  font-size: 80%;
+.df-slider {
+  padding-top: 50px;
+  padding-bottom: 50px;
 }
 
-.df-slider .noUi-value-horizontal[data-position="0"] {
-  transform: translate3d(-8px, 60%, 0);
-  left: 0;
+.df-slider, .df-slider * {
+  box-sizing: border-box;
 }
 
-.df-slider .noUi-value-horizontal[data-position="50"] {
-  transform: translate3d(-50%, 60%, 0);
-  left: 50%;
+.df-slider .noUi-target {
+  margin: 0 30px;
 }
 
-.df-slider .noUi-value-horizontal[data-position="100"] {
-  transform: translate3d(4px, 60%, 0);
-  right: 0%;
+.df-slider .noUi-pips-horizontal {
+  height: 50px;
+  padding: 10px 0 0 0;
 }
 
 .df-slider .noUi-marker-horizontal.noUi-marker-large {
-  height: 8px;
+  height: 15px;
 }
 
-.df-slider .noUi-background {
-  background-color: #9AA4AC;
-  box-shadow: none;
-}
-
-.df-slider .noUi-connect {
-  background-color: white;
-  box-shadow: none;
-}
-
-.df-slider .noUi-tooltip {
-  font-size: 80%;
-  background-color: #b0b0b0;
-  color: white;
-  border-width: 0;
-  padding: 2px 5px;
-}
-
-.df-slider .noUi-horizontal {
-  height: 8px;
-}
-
-.df-slider .noUi-horizontal .noUi-handle {
-  left: -9px;
-  width: 18px;
-  height: 18px;
-  border: 1px solid #CFCFCF;
-  border-radius: 18px;
-  cursor: ew-resize;
-}
-
-.df-slider .noUi-horizontal .noUi-handle::before {
-  display: none;
-}
-
-.df-slider .noUi-horizontal .noUi-handle::after {
-  width: 8px;
-  height: 8px;
-  border-radius: 8px;
-  background-color: #9AA4AC;
-  left: 4px;
-  top: 4px;
-}
-
-.df-slider .noUi-horizontal .noUi-handle:hover::after, .df-slider .noUi-horizontal .noUi-handle.noUi-active::after {
-  background-color: #333333;
-}
-
-.df-slider .noUi-horizontal .noUi-handle-upper .noUi-tooltip {
-  right: 0;
-  bottom: -24px;
-}
-
-.df-slider .noUi-horizontal .noUi-handle-lower .noUi-tooltip {
-  top: -24px;
-}
-
-.df-slider .noUi-target[disabled] {
-  cursor: not-allowed;
-}
-
-.df-slider .noUi-target[disabled],
-.df-slider .noUi-target[disabled] .noUi-connect,
-.df-slider .noUi-target[disabled] .noUi-background {
-  background-color: #d2d6da;
-}
-
-.df-slider .noUi-target[disabled] .noUi-handle {
-  cursor: not-allowed;
-}
-
-.df-slider .noUi-target[disabled] .noUi-handle::after, .df-slider .noUi-target[disabled] .noUi-handle:hover::after, .df-slider .noUi-target[disabled] .noUi-handle.noUi-active::after {
-  background-color: #d2d6da;
-}
-
-.df-slider .noUi-target[disabled] .noUi-tooltip {
-  display: none;
+.df-slider .noUi-value-horizontal.noUi-value-large {
+  top: 20px;
 }
 
 .df-pagination {

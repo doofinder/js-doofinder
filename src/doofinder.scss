@@ -125,142 +125,40 @@ button[data-toggle-extra-content]:last-child {
 
 /* THIRD PARTY COMPONENTS */
 
+@at-root {
+  @import "nouislider";
+}
+
 .df-slider {
   @include border-box();
 
-  padding: 40px 10px;
-  overflow-y: hidden;
+  $spaceX: 30px;
+  $spaceY: 50px;
 
-  $dark: #9AA4AC;
-  $light: white;
-  $gray: #CFCFCF;
-  $hover: #333333;
-  $dark-disabled: lighten($dark, 20%);
+  $markerHeight: 15px;
+  $markerValueDistance: 5px;
 
+  padding-top: $spaceY;
+  padding-bottom: $spaceY;
 
-  @at-root {
-    @import "nouislider";
-    @import "nouislider.pips";
-    @import "nouislider.tooltips";
+  .noUi-target {
+    margin: 0 $spaceX;
   }
+
+  .noUi-pips-horizontal {
+    height: $spaceY;
+    padding: 10px 0 0 0;
+  }
+
+  .noUi-marker-horizontal {
+    &.noUi-marker-large {
+      height: $markerHeight;
+    }
+  }
+
   .noUi-value-horizontal {
-    font-size: 80%;
-
-    &[data-position="0"]{
-      transform: translate3d(-8px, 60%, 0);
-      left: 0;
-    }
-    &[data-position="50"]{
-      transform: translate3d(-50%, 60%, 0);
-      left: 50%;
-    }
-
-    &[data-position="100"]{
-      transform: translate3d(4px, 60%, 0);
-      right: 0%;
-    }
-  }
-
-  .noUi-marker-horizontal.noUi-marker-large{
-    height: 8px;
-  }
-
-  .noUi-background {
-    background-color: $dark;
-    box-shadow: none;
-  }
-
-  .noUi-connect {
-    background-color: $light;
-    box-shadow: none;
-  }
-
-  .noUi-tooltip {
-    font-size: 80%;
-    background-color: #b0b0b0;
-    color: white;
-    border-width: 0;
-    padding: 2px 5px;
-  }
-
-  .noUi-horizontal {
-    $sliderHeight: 8px;
-
-    $handleWidth: 18px;
-    $handleBorder: 1px;
-    $handleInnerWidth: 8px;
-    $handleInnerPosition: 4px;
-
-    $tooltipOffset: -24px;
-
-    height: $sliderHeight;
-
-    .noUi-handle {
-      left: $handleWidth / -2;
-
-      width: $handleWidth;
-      height: $handleWidth;
-
-      border: $handleBorder solid $gray;
-      border-radius: $handleWidth;
-
-      cursor: ew-resize;
-
-      &::before {
-        display: none;
-      }
-
-      &::after {
-        width: $handleInnerWidth;
-        height: $handleInnerWidth;
-        border-radius: $handleInnerWidth;
-        background-color: $dark;
-        left: $handleInnerPosition;
-        top: $handleInnerPosition;
-      }
-
-      &:hover,
-      &.noUi-active {
-        &::after {
-          background-color: $hover;
-        }
-      }
-    }
-
-    .noUi-handle-upper {
-      .noUi-tooltip {
-        right: 0;
-        bottom: $tooltipOffset;
-      }
-    }
-
-    .noUi-handle-lower {
-      .noUi-tooltip {
-        top: $tooltipOffset;
-      }
-    }
-  }
-
-  .noUi-target[disabled] {
-    cursor: not-allowed;
-
-    &,
-    .noUi-connect,
-    .noUi-background {
-      background-color: $dark-disabled;
-    }
-    .noUi-handle {
-      cursor: not-allowed;
-
-      &::after,
-      &:hover::after,
-      &.noUi-active::after {
-        background-color: $dark-disabled;
-      }
-    }
-
-    .noUi-tooltip {
-      display: none;
+    &.noUi-value-large {
+      top: $markerHeight + $markerValueDistance;
     }
   }
 }

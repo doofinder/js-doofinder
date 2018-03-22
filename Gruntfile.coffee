@@ -49,7 +49,11 @@ module.exports = (grunt) ->
     copy:
       build_scss:
         files: [
-          expand: true, cwd: 'node_modules/nouislider/src', src: ['*.css'], dest: 'build_scss/', rename: (dest, src) ->
+          expand: true
+          cwd: 'node_modules/nouislider/distribute'
+          src: ['*.css', '!*.min.css']
+          dest: 'build_scss/'
+          rename: (dest, src) ->
             console.log dest + src
             return dest + '_' + src.replace(/\.css$/, '.scss')
         ]

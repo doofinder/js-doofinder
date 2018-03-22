@@ -229,8 +229,8 @@ describe "Default Widgets", ->
           range: buckets: [ {
             stats:
               sum: 522389.32065343857
-              min: 7.900000095367432
-              max: 2360.0
+              min: 7.9
+              max: 1687
               count: 1687
               avg: 309.6557917329215
             key: '0.0-*'
@@ -246,9 +246,9 @@ describe "Default Widgets", ->
         ($ ".df-slider").length.should.equal 1
         ($ ".noUi-tooltip").length.should.equal 2
         (($ ".noUi-tooltip").item 0).html().should.equal "7.9"
-        (($ ".noUi-tooltip").item 1).html().should.equal "2360"
-        ($ ".noUi-value[data-position='0']").html().should.equal "7.9"
-        ($ ".noUi-value[data-position='100']").html().should.equal "2360"
+        (($ ".noUi-tooltip").item 1).html().should.equal "1687"
+        ($ ".noUi-value[data-value^='7.9']").length.should.equal 1
+        ($ ".noUi-value[data-value='1687']").length.should.equal 1
         done()
       response = rangeFacetResponse()
       delete response.filter
@@ -258,9 +258,9 @@ describe "Default Widgets", ->
       widget = createWidget()
       widget.on "df:widget:render", (res) ->
         (($ ".noUi-tooltip").item 0).html().should.equal "7.9"
-        (($ ".noUi-tooltip").item 1).html().should.equal "1687.04"
-        ($ ".noUi-value[data-position='0']").html().should.equal "7.9"
-        ($ ".noUi-value[data-position='100']").html().should.equal "2360"
+        (($ ".noUi-tooltip").item 1).html().should.equal "1687"
+        ($ ".noUi-value[data-value^='7.9']").length.should.equal 1
+        ($ ".noUi-value[data-value='1687']").length.should.equal 1
         done()
       widget.render rangeFacetResponse()
 
@@ -271,8 +271,8 @@ describe "Default Widgets", ->
       widget.on "df:range:change", (value, range) ->
         value.start.should.equal 100
         value.end.should.equal 1000
-        range.min.should.equal 7.900000095367432
-        range.max.should.equal 2360.0
+        range.min.should.equal 7.9
+        range.max.should.equal 1687
         done()
       widget.render rangeFacetResponse()
 
@@ -294,9 +294,9 @@ describe "Default Widgets", ->
       widget = createWidget format: (value) -> "$#{value.toFixed 3}"
       widget.on "df:widget:render", (res) ->
         (($ ".noUi-tooltip").item 0).html().should.equal "$7.900"
-        (($ ".noUi-tooltip").item 1).html().should.equal "$1687.038"
-        ($ ".noUi-value[data-position='0']").html().should.equal "$7.900"
-        ($ ".noUi-value[data-position='100']").html().should.equal "$2360.000"
+        (($ ".noUi-tooltip").item 1).html().should.equal "$1687.000"
+        ($ ".noUi-value[data-value^='7.9']").html().should.equal "$7.900"
+        ($ ".noUi-value[data-value='1687']").html().should.equal "$1687.000"
         done()
       widget.render rangeFacetResponse()
 
