@@ -3908,7 +3908,7 @@
         pips: {
           mode: 'positions',
           values: [0, 50, 100],
-          density: 4,
+          density: 6,
           format: {
             to: this.constructor.formatFn.to.bind(this),
             from: this.constructor.formatFn.from.bind(this)

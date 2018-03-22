@@ -108,7 +108,7 @@ class RangeFacet extends Display
       pips:
         mode: 'positions'
         values: [0, 50, 100]
-        density: 4
+        density: 6
         format:
           to: @constructor.formatFn.to.bind @
           from: @constructor.formatFn.from.bind @
