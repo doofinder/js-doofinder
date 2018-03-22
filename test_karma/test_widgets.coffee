@@ -247,8 +247,8 @@ describe "Default Widgets", ->
         ($ ".noUi-tooltip").length.should.equal 2
         (($ ".noUi-tooltip").item 0).html().should.equal "7.9"
         (($ ".noUi-tooltip").item 1).html().should.equal "2360"
-        ($ ".noUi-value[data-position='0']").html().should.equal "7.9"
-        ($ ".noUi-value[data-position='100']").html().should.equal "2360"
+        ($ ".noUi-value[data-value^='7.9']").length.should.equal 1
+        ($ ".noUi-value[data-value='2360']").length.should.equal 1
         done()
       response = rangeFacetResponse()
       delete response.filter
@@ -259,8 +259,8 @@ describe "Default Widgets", ->
       widget.on "df:widget:render", (res) ->
         (($ ".noUi-tooltip").item 0).html().should.equal "7.9"
         (($ ".noUi-tooltip").item 1).html().should.equal "1687.04"
-        ($ ".noUi-value[data-position='0']").html().should.equal "7.9"
-        ($ ".noUi-value[data-position='100']").html().should.equal "2360"
+        ($ ".noUi-value[data-value^='7.9']").length.should.equal 1
+        ($ ".noUi-value[data-value='2360']").length.should.equal 1
         done()
       widget.render rangeFacetResponse()
 
@@ -295,8 +295,8 @@ describe "Default Widgets", ->
       widget.on "df:widget:render", (res) ->
         (($ ".noUi-tooltip").item 0).html().should.equal "$7.900"
         (($ ".noUi-tooltip").item 1).html().should.equal "$1687.038"
-        ($ ".noUi-value[data-position='0']").html().should.equal "$7.900"
-        ($ ".noUi-value[data-position='100']").html().should.equal "$2360.000"
+        ($ ".noUi-value[data-value^='7.9']").html().should.equal "$7.900"
+        ($ ".noUi-value[data-value='2360']").html().should.equal "$2360.000"
         done()
       widget.render rangeFacetResponse()
 
