@@ -107,7 +107,7 @@ class RangeFacet extends Display
       start: [range.start, range.end]
       pips:
         mode: 'positions'
-        values: [0, 25, 50, 75, 100]
+        values: [0, 50, 100]
         density: 4
         format:
           to: @constructor.formatFn.to.bind @
@@ -120,7 +120,7 @@ class RangeFacet extends Display
       format:
         to: @constructor.formatFn.to.bind @
         from: @constructor.formatFn.from.bind @
-    extend true, sliderOpts, pips: @options.pips
+    extend true, {}, sliderOpts, pips: @options.pips
 
   ###*
    * Updates the controller when the range changes.

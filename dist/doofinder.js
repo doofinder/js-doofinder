@@ -3907,7 +3907,7 @@
         start: [range.start, range.end],
         pips: {
           mode: 'positions',
-          values: [0, 25, 50, 75, 100],
+          values: [0, 50, 100],
           density: 4,
           format: {
             to: this.constructor.formatFn.to.bind(this),
@@ -3925,7 +3925,7 @@
           from: this.constructor.formatFn.from.bind(this)
         }
       };
-      return extend(true, sliderOpts, {
+      return extend(true, {}, sliderOpts, {
         pips: this.options.pips
       });
     };
