@@ -76,50 +76,6 @@ class RangeFacet extends Display
     undefined
 
   ###*
-   * Renders the slider's pips.
-   * @protected
-   * @param  {Object} values Values for 0%, 50% and 100% pips:
-   *
-   *                         {
-   *                           0: 1,
-   *                           50: 2,
-   *                           100: 3
-   *                         }
-  ###
-  __renderPips: (range) ->
-    values =
-      0: @constructor.formatFn.to.call @, range.min
-      50: @constructor.formatFn.to.call @, ((range.min + range.max) / 2.0)
-      100: @constructor.formatFn.to.call @, range.max
-
-    pips = @slider.querySelector "div.noUi-pips.noUi-pips-horizontal"
-    if pips is null
-      # create pips container
-      pips = document.createElement 'div'
-      pips.setAttribute 'class', 'noUi-pips noUi-pips-horizontal'
-      @slider.appendChild pips
-
-      # add pips
-      for pos in [0..100] by (100/16)
-        markerType = if pos in [0, 50, 100] then 'large' else 'normal'
-        pip = document.createElement 'div'
-        pip.setAttribute 'class', "noUi-marker noUi-marker-horizontal noUi-marker-#{markerType}"
-        pip.setAttribute 'style', "left: #{pos}%;"
-        pips.appendChild pip
-
-        # add values
-        if pos in [0, 50, 100]
-          value = document.createElement 'div'
-          value.setAttribute 'class', 'noUi-value noUi-value-horizontal noUi-value-large'
-          value.setAttribute 'data-position', pos
-          value.innerHTML = if values? then values["#{pos}"] else ''
-          pips.appendChild value
-    else
-      # update pip values
-      for node in pips.querySelectorAll('div[data-position]')
-        node.innerHTML = values[node.getAttribute('data-position')]
-
-  ###*
    * Gets a proper range for the slider given a search response.
    * @protected
    * @param  {Object} res Search response.
@@ -147,15 +103,24 @@ class RangeFacet extends Display
    * @return {Object}       Options object.
   ###
   __getSliderOptions: (range) ->
-    start: [range.start, range.end]
-    range:
-      min: range.min
-      max: range.max
-    connect: true
-    tooltips: true  # can't be overriden when options are updated!!!
-    format:
-      to: @constructor.formatFn.to.bind @
-      from: @constructor.formatFn.from.bind @
+    sliderOpts =
+      start: [range.start, range.end]
+      pips:
+        mode: 'positions'
+        values: [0, 25, 50, 75, 100]
+        density: 4
+        format:
+          to: @constructor.formatFn.to.bind @
+          from: @constructor.formatFn.from.bind @
+      range:
+        min: range.min
+        max: range.max
+      connect: true
+      tooltips: true  # can't be overriden when options are updated!!!
+      format:
+        to: @constructor.formatFn.to.bind @
+        from: @constructor.formatFn.from.bind @
+    extend true, sliderOpts, pips: @options.pips
 
   ###*
    * Updates the controller when the range changes.
@@ -223,10 +188,6 @@ class RangeFacet extends Display
           @__renderSlider @sliderOpts
         else
           @slider.noUiSlider.updateOptions @sliderOpts
-
-        # Pips are buggy in noUiSlider so we are going to paint them ourselves
-        # unless options.pips has a value (either false or real options)
-        (@__renderPips @range) unless @options.pips?
 
         @trigger "df:widget:render", [response]
 

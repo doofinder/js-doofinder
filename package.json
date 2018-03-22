@@ -15,7 +15,7 @@
     "lodash.throttle": "^4.1.1",
     "md5": "^2.1.0",
     "mustache": "^2.2.1",
-    "nouislider": "^8.5.1",
+    "nouislider": "^11.0.3",
     "qs": "^6.5.0"
   },
   "devDependencies": {
