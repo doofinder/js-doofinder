@@ -1,4 +1,4 @@
-s## Widgets
+## Widgets
 
 These classes handle human interaction with the controller which in turn instructs the client to act accordingly and uses widgets back to render results. For instance, the search box the user types the search terms in is binded to a [QueryInput widget class](queryInput.md), and the search results are displayed on some DOM element using some kind of [Display widget class](display.md). Also the results may display a filter side panel which accepts user input to filter results, the latter would have a [TermsFacet widget](display.md#doofinder-widgets-termsfacet) itself.
 
@@ -90,6 +90,71 @@ Triggers an event on the widget, along with an array of arguments to be passed t
 
 
 ### Reference
+
+#### Constructor 
+
+| Argument | Required | Type | Description | Sample |
+| :--- | :---: | :---: | :--- | :--- |
+| `element` | Yes | `String` | CSS Selector. | `"#widget"` |
+||| `Node` | Direct reference to a DOM Node. | `document.querySelector('#widget')` |
+||| `DfDomElement` | Reference to a DOM node via `dfdom`. | `dfdom('#widget')` |
+| `options` | No | `Object` | Options object. |  |
+
+#### Widget.setElement()
+
+| Argument | Required | Type | Description | Sample |
+| :--- | :---: | :---: | :--- | :--- |
+| `element` | Yes | `String` | CSS Selector. | `"#widget"` |
+||| `Node` | Direct reference to a DOM Node. | `document.querySelector('#widget')` |
+||| `DfDomElement` | Reference to a DOM node via `dfdom`. | `dfdom('#widget')` |
+
+#### Widget.setController()
+
+| Argument | Required | Type | Description | Sample |
+| :--- | :---: | :---: | :--- | :--- |
+| `controller` | Yes | `Controller` |||
+
+#### Widget.render()
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `response` | Yes | `Object` | Valid response from the Doofinder service. |
+
+#### Widget.init()
+
+No arguments. 
+
+#### Widget.clean()
+
+No arguments.
+
+#### Widget.on()
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `eventName` | Yes | `String` | Event name (or multiple events, space separated). |
+| `handler` | Yes | `Function` | The callback function. |
+
+#### Widget.one()
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `eventName` | Yes | `String` | Event name (or multiple events, space separated). |
+| `handler` | Yes | `Function` | The callback function. |
+
+#### Widget.off()
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `eventName` | No | `String` | Event name (or multiple events, space separated). |
+| `handler` | No | `Function` | The callback function. |
+
+#### Widget.trigger()
+
+| Argument | Required | Type | Description |
+| :--- | :---: | :---: | :--- |
+| `eventName` | Yes | `String` | Event name (or multiple events, space separated). |
+| `args` | No | `Array` | Array of arguments to pass to the event handler. |
   
   
 ### dofinder.widgets.ScrollDisplay

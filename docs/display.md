@@ -1,5 +1,7 @@
 ## doofinder.widgets.Display
 
+These kind of widgets are ment to display content inside some DOM element and may also be able to accepts input from the user through the rendered content
+
 `Widget < Display`
 
  A widget that inherit from this class can render content:
@@ -8,7 +10,7 @@
   - It populates variables and helpers (default and custom) to be used in the template.
   - It cleans its element from unnecessary HTML code when the widget itself is cleaned.
   
-### constructor
+### Instantiatin the class
 
 Constructor now accepts options for templating.
 
@@ -85,7 +87,7 @@ When the user performs scrolling and reaches the end of the results, a new searc
 **IMPORTANT:** Scrolling content inside a `<div>` (or similar node) requires width / height being restricted so the content overflows the container instead of the latter adapts to its content. Also, setting `overflow-x` and `overflow-y` properties in CSS will enforce these rules.
 
 
-### constructor
+### Scroll Display: Instantiating the class
 
 ```mustache
 <style>
@@ -127,7 +129,9 @@ This widgets receives the same options as `Display`, plus:
 
 **IMPORTANT:** Don't rely on the widget's `element` attribute to do stuff with the container, if you use the `contentElement` option, that node will internally become the `element` node. To access the container always use the `container` attribute.
 
-### Events
+### Scroll Display: Using the class
+
+#### Events
 
 | Event | Triggered when ... | Triggered with the arguments ... |
 | :--- | :--- | :--- |
@@ -140,7 +144,7 @@ This widgets receives the same options as `Display`, plus:
 
 This widget allows filtering search results by certain text values of a field. When a term is clicked, the widget forces its controller to perform a new search filtered by the value of the facet.
 
-### constructor
+### TermsFacet: Instantiating the class
 
 ```javascript
 var facet = new doofinder.widgets.TermsFacet("#brandFilter", "brand");
@@ -199,7 +203,7 @@ This widget provides an interface to filter results by a numeric value through a
 
 **NOTICE:** Slider needs `doofinder.css` to work.
 
-### constructor
+### RangeFacet: Instantiating the class
 
 ```javascript
 var rangeWidget = new doofinder.widgets.RangeFacet("#price", {
@@ -249,7 +253,9 @@ Sets the range selected in the slider.
 rangeWidget.set([10, 100]);
 ```
 
-### Events
+### RangeFacet: Using the class
+
+#### Events
 
 | Event | Triggered when ... | Triggered with the arguments ... |
 | :--- | :--- | :--- |

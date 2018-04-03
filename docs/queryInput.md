@@ -4,7 +4,7 @@ This is a special widget. It is linked to one or more HTML text input or textare
  
 This widget can also be registered in multiple controllers at the same time so you could share the same text input and perform the same search in different search engines.
 
-### constructor
+### Instantiating the class
 
 
 ```javascript
@@ -40,7 +40,9 @@ queryInput.on('df:user:bored', function(value){
 });
 ```
 
-### Events
+### Using the class
+
+#### Events
 
 | Event | Triggered when ... | Triggered with the arguments ...|
 | :--- | :--- | :--- |
@@ -48,7 +50,7 @@ queryInput.on('df:user:bored', function(value){
 | `df:input:none` | ... the value of the search box has changed to being empty | ... no arguments |
 | `df:input:targetChanged` | ... multiple inputs are attached to the widget and the current active input changes | `input` (The current active input) and `previousInput`(the previously active input) |
 
-### Extra attributes of QueryInput
+#### Extra attributes of QueryInput
 
    - `currentElement` the currently active input: it's value can be changed with the `.val()` method, but it doesn't trigger a search
   
