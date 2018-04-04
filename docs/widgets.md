@@ -1,3 +1,54 @@
+---
+layout: default
+---
+
+<!-- MarkdownTOC depth="2" autolink="true" autoanchor="false" bracket="round" -->
+
+- [The overview](index.md#the-overview)
+  - [Basic building blocks: client, widgets & controller](index.md#basic-building-blocks-client-widgets--controller)
+- [The Client](client.md#the-client)
+  - [Instantiating the class](client.md#instantiating-the-class)
+  - [Using the class](client.md#using-the-class)
+  - [Reference](client.md#reference)
+- [The Controller](controller.md#the-controller)
+  - [Instantiating the class](controller.md#instantiating-the-class)
+  - [Registering widgets](controller.md#registering-widgets)
+  - [Using the class](controller.md#using-the-class)
+  - [Reference](controller.md#reference)
+  - [Errors](controller.md#errors)
+- [The widgets](widgets.md)
+  - [Basic mechanics](widgets.md#basic-mechanics)
+  - [Instantiating the widget](widgets.md#instantiating-the-widget)
+  - [Using the widgets](widgets.md#using-the-widgets)
+  - [Reference](widgets.md#reference)
+- [Query Input Widgets](queryInput.md)
+  - [Instantiating the class](queryInput.md#instantiating-the-class)
+  - [Using the class](queryInput.md#using-the-class)
+- [Display widgets](display.md)
+  - [Instantiating the class](display.md#instantiating-the-class)
+- [Scroll Display widget](display.md#doofinderwidgetsscrolldisplay)
+  - [Instantiating the class](display.md#scrolldisplay-instantating-the-class)
+- [Terms Facet class](display.md#doofinderwidgetstermsfacet)
+  - [Instantiating the class](display.md#termsfacet-instantiating-the-class)
+- [Range Facet class](display.md#doofinderwidgetrangefacet)
+  - [Instantiating the class](display.md#rangefacet-instantiating-the-class)
+  - [Using the class](display.md#rangefacet-using-the-class)
+- [The session](session.md)
+  - [Instantiating the class](session.md#instantiating-the-class)
+  - [Using the class](session.md#using-the-class)
+  - [Reference](session.md#reference)
+  - [doofinder.session.ObjectSessionStore](session.md#doofindersessionobjectsessionstore)
+  - [doofinder.session.CookieSessionStore](session.md#doofindersessioncookiesessionstore)
+- [The Stats](stats.md)
+  - [Instantiating the class](stats.md#instantiating-the-class)
+  - [Using the class](stats.md#using-the-stats)
+  - [Reference](stats.md#reference)
+- [How To](howto.md)
+  - [Configure facet widgets dynamically](howto.md#configure-facet-widgets-dynamically)
+
+<!-- /MarkdownTOC -->
+
+
 ## Widgets
 
 These classes handle human interaction with the controller which in turn instructs the client to act accordingly and uses widgets back to render results. For instance, the search box the user types the search terms in is binded to a [QueryInput widget class](queryInput.md), and the search results are displayed on some DOM element using some kind of [Display widget class](display.md). Also the results may display a filter side panel which accepts user input to filter results, the latter would have a [TermsFacet widget](display.md#doofinder-widgets-termsfacet) itself.
