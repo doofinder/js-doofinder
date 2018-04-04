@@ -1,7 +1,7 @@
 ## Table Of Contents
 
-- [Overview](/#overview)
-  - [Basic building blocks: client, widgets & controller](/#basic-building-blocks-client-widgets--controller)
+- [Overview]({{ site.baseurl }}#overview)
+  - [Basic building blocks: client, widgets & controller]({{ site.baseurl }}#basic-building-blocks-client-widgets--controller)
 - [The Client](client#the-client)
   - [Instantiating the class](client#instantiating-the-class)
   - [Using the class](client#using-the-class)
