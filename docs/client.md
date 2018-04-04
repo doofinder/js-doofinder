@@ -8,7 +8,7 @@ layout: default
   - [Basic building blocks: client, widgets & controller](index#basic-building-blocks-client-widgets-controller)
 - [The Client](the-client#the-client)
   - [Instantiating the class](the-client#instantiating-the-class)
-  - [Using the class](the-client#using-the-class)
+  - [Using the class](client#using-the-class)
   - [Reference](the-client#client-reference)
   - [doofinder.Client](#doofinderclient)
 - [Controller Reference](#controller-reference)
