@@ -2793,7 +2793,7 @@
 
 },{"./thing":12}],9:[function(require,module,exports){
 (function() {
-  var addUrlParams, extend, formatNumber, qs, removeProtocol, translate;
+  var addUrlParams, decodeEntities, extend, formatNumber, qs, removeProtocol, translate;
 
   extend = require("extend");
 
@@ -2857,6 +2857,32 @@
 
 
   /**
+   * Function that decodes HTML entities from a string.
+   *
+   * All credit for this answer in StackOverflow:
+   *
+   * https://stackoverflow.com/a/9609450
+   *
+   * @return {String}
+   */
+
+  decodeEntities = (function() {
+    var element;
+    element = document.createElement("div");
+    return function(str) {
+      if (str && typeof str === "string") {
+        str = str.replace(/<script[^>]*>([\S\s]*?)<\/script>/gmi, "");
+        str = str.replace(/<\/?\w(?:[^"'>]|"[^"]*"|'[^']*')*>/gmi, "");
+        element.innerHTML = str;
+        str = element.textContent;
+        element.textContent = "";
+      }
+      return str;
+    };
+  })();
+
+
+  /**
    * Adds parameters to a URL
    *
    * @param  {String} url       Source URL.
@@ -2894,7 +2920,8 @@
     fn: {
       formatNumber: formatNumber,
       addUrlParams: addUrlParams,
-      removeProtocol: removeProtocol
+      removeProtocol: removeProtocol,
+      decodeEntities: decodeEntities
     },
     addTranslateHelper: function(context, translations) {
       if (translations == null) {
@@ -3774,7 +3801,7 @@
 
 },{"../util/dfdom":6,"../util/errors":7,"../util/thing":12,"./widget":20,"extend":22}],17:[function(require,module,exports){
 (function() {
-  var Display, RangeFacet, extend, noUiSlider,
+  var Display, RangeFacet, extend, helpers, noUiSlider,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -3783,6 +3810,8 @@
   noUiSlider = require("nouislider");
 
   Display = require("./display");
+
+  helpers = require("../util/helpers");
 
 
   /**
@@ -3799,7 +3828,7 @@
         var formattedValue;
         if (value != null) {
           value = parseFloat(value, 10);
-          formattedValue = this.format(value);
+          formattedValue = helpers.fn.decodeEntities(this.format(value));
           this.values[formattedValue] = value;
           return formattedValue;
         } else {
@@ -3807,7 +3836,7 @@
         }
       },
       from: function(formattedValue) {
-        return formattedValue;
+        return this.values[formattedValue] || formattedValue;
       }
     };
 
@@ -4034,7 +4063,7 @@
 
 }).call(this);
 
-},{"./display":14,"extend":22,"nouislider":69}],18:[function(require,module,exports){
+},{"../util/helpers":9,"./display":14,"extend":22,"nouislider":69}],18:[function(require,module,exports){
 (function() {
   var $, Display, ScrollDisplay, Thing, extend, throttle,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },

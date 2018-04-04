@@ -123,7 +123,7 @@
             node,
             facetOptions.name, {
               format: function(value) {
-                return value.toFixed(2) + "€";
+                return value.toFixed(2) + "&euro;";
               }
             }
           );

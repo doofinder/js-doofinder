@@ -51,6 +51,28 @@ formatNumber = (value, spec) ->
 
 
 ###*
+ * Function that decodes HTML entities from a string.
+ *
+ * All credit for this answer in StackOverflow:
+ *
+ * https://stackoverflow.com/a/9609450
+ *
+ * @return {String}
+###
+decodeEntities = (->
+  element = document.createElement "div"
+  (str) ->
+    if str and typeof str is "string"
+      str = str.replace /<script[^>]*>([\S\s]*?)<\/script>/gmi, ""
+      str = str.replace /<\/?\w(?:[^"'>]|"[^"]*"|'[^']*')*>/gmi, ""
+      element.innerHTML = str
+      str = element.textContent
+      element.textContent = ""
+    str
+)()
+
+
+###*
  * Adds parameters to a URL
  *
  * @param  {String} url       Source URL.
@@ -81,6 +103,7 @@ module.exports =
     formatNumber: formatNumber
     addUrlParams: addUrlParams
     removeProtocol: removeProtocol
+    decodeEntities: decodeEntities
 
   addTranslateHelper: (context, translations = {}) ->
     ###*
