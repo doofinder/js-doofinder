@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [5.3.6] - 2018-04-04
+### Fixed
+- There was a problem with HTML entities and the range slider (noUiSlider). We've made a temporary patch and filed an issue in the noUiSlider repository.
+
 ## [5.3.5] - 2018-03-22
 ### Changed
 - Updated noUiSlider to v11.x.
