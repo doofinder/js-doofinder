@@ -1,6 +1,7 @@
 extend = require "extend"
 noUiSlider = require "nouislider"
 Display = require "./display"
+helpers = require "../util/helpers"
 
 
 ###*
@@ -16,13 +17,24 @@ class RangeFacet extends Display
       # so we maintain references to raw values inside an object.
       if value?
         value = parseFloat value, 10
-        formattedValue = @format value
+        # noUiSlider uses innerText for pips so HTML entities like &euro;
+        # are not escaped:
+        #
+        # https://github.com/leongersen/noUiSlider/blob/aa64a6d9/src/js/pips.js#L222
+        #
+        # I've filed an issue and I hope they'll fix it soon so that function
+        # can be removed:
+        #
+        # https://github.com/leongersen/noUiSlider/issues/875
+        #
+        formattedValue = helpers.fn.decodeEntities @format value
+        # formattedValue = @format value << code should be like this in an ideal world
         @values[formattedValue] = value
         formattedValue
       else
         ""
     from: (formattedValue) ->
-      formattedValue
+      @values[formattedValue] or formattedValue
 
   @basicFormat = (value) ->
     ("#{value.toFixed 2}".replace /0+$/, "").replace /\.{1}$/, ""
