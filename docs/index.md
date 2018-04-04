@@ -4,7 +4,7 @@ layout: default
 
 {% include_relative toc.md %}
 
-## The overview
+## Overview
 
 ### Basic building blocks: client, widgets & controller
 

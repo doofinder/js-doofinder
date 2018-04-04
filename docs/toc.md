@@ -1,5 +1,7 @@
-- [The overview](index#the-overview)
-  - [Basic building blocks: client, widgets & controller](index#basic-building-blocks-client-widgets--controller)
+## Table Of Contents
+
+- [Overview](/#overview)
+  - [Basic building blocks: client, widgets & controller](/#basic-building-blocks-client-widgets--controller)
 - [The Client](client#the-client)
   - [Instantiating the class](client#instantiating-the-class)
   - [Using the class](client#using-the-class)
