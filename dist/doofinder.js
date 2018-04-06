@@ -3023,15 +3023,15 @@
 
 },{"./merge":11,"./text":12,"qs":72}],10:[function(require,module,exports){
 (function() {
-  var HttpClient, Thing, errors, extend, http, https;
+  var HttpClient, Thing, errors, http, https, merge;
 
   http = require("http");
 
   https = require("https");
 
-  extend = require("extend");
-
   errors = require("./errors");
+
+  merge = require("./merge");
 
   Thing = require("./thing");
 
@@ -3089,7 +3089,7 @@
                 error: data
               };
             }
-            return callback(extend(true, {
+            return callback(merge({
               statusCode: response.statusCode
             }, error));
           }
@@ -3112,7 +3112,7 @@
 
 }).call(this);
 
-},{"./errors":7,"./thing":13,"extend":23,"http":53,"https":30}],11:[function(require,module,exports){
+},{"./errors":7,"./merge":11,"./thing":13,"http":53,"https":30}],11:[function(require,module,exports){
 (function() {
   var Thing, merge,
     hasProp = {}.hasOwnProperty;

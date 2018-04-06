@@ -1,9 +1,8 @@
 http = require "http"
 https = require "https"
 
-extend = require "extend"
-
 errors = require "./errors"
+merge = require "./merge"
 Thing = require "./thing"
 
 ###*
@@ -44,7 +43,7 @@ class HttpClient
               error = JSON.parse data
             catch e
               error = error: data
-            callback (extend true, (statusCode: response.statusCode), error)
+            callback (merge statusCode: response.statusCode, error)
         )
       response
 
