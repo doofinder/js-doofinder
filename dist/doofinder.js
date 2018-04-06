@@ -4124,15 +4124,15 @@
 
 },{"../util/helpers":9,"../util/merge":11,"./display":15,"nouislider":70}],19:[function(require,module,exports){
 (function() {
-  var $, Display, ScrollDisplay, Thing, extend, throttle,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  var $, Display, ScrollDisplay, Thing, merge, throttle,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
-
-  extend = require("extend");
 
   throttle = require("lodash.throttle");
 
   $ = require("../util/dfdom");
+
+  merge = require("../util/merge");
 
   Thing = require("../util/thing");
 
@@ -4146,7 +4146,7 @@
    */
 
   ScrollDisplay = (function(superClass) {
-    extend1(ScrollDisplay, superClass);
+    extend(ScrollDisplay, superClass);
 
 
     /**
@@ -4219,7 +4219,7 @@
         throttle: 16,
         horizontal: false
       };
-      options = extend(true, defaultOptions, options || {});
+      options = merge(defaultOptions, options || {});
       ScrollDisplay.__super__.constructor.call(this, element, options);
       this.container = this.element;
       this.__setContentElement();
@@ -4310,7 +4310,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"../util/thing":13,"./display":15,"extend":23,"lodash.throttle":64}],20:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/merge":11,"../util/thing":13,"./display":15,"lodash.throttle":64}],20:[function(require,module,exports){
 (function() {
   var $, Display, TermsFacet, extend,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
