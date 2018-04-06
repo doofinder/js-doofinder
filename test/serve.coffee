@@ -1,5 +1,5 @@
 nock = require "nock"
-extend = require "extend"
+merge = require "../lib/util/merge"
 deepEqual = require "deep-eql"
 
 cfg = require "./config"
@@ -45,7 +45,7 @@ module.exports =
 
   stats: (type, params) ->
     resource = "/#{cfg.version}/stats/#{type}"
-    params = extend true, hashid: cfg.hashid, (params or {}), (random: 0)
+    params = merge hashid: cfg.hashid, (params or {}), (random: 0)
     checkParams = (actualParams) ->
       # random comes with, well, a random value so we alter it to make the
       # request match the expected parameters.

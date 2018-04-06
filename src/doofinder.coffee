@@ -23,7 +23,7 @@ module.exports =
     bean: require "bean"
     dfdom: require "./util/dfdom"
     errors: require "./util/errors"
-    extend: require "extend"
+    # extend: require "extend"
     helpers: require "./util/helpers"
     http: require "./util/http"
     md5: require "md5"
