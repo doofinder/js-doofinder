@@ -3860,11 +3860,9 @@
 
 },{"../util/dfdom":6,"../util/errors":7,"../util/merge":11,"../util/thing":13,"./widget":21}],18:[function(require,module,exports){
 (function() {
-  var Display, RangeFacet, extend, helpers, noUiSlider,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  var Display, RangeFacet, helpers, merge, noUiSlider,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
-
-  extend = require("extend");
 
   noUiSlider = require("nouislider");
 
@@ -3872,13 +3870,15 @@
 
   helpers = require("../util/helpers");
 
+  merge = require("../util/merge");
+
 
   /**
    * Represents a range slider control to filter numbers within a range.
    */
 
   RangeFacet = (function(superClass) {
-    extend1(RangeFacet, superClass);
+    extend(RangeFacet, superClass);
 
     RangeFacet.defaultTemplate = "<div class=\"df-slider\" data-facet=\"{{name}}\"></div>";
 
@@ -3929,7 +3929,7 @@
         pips: void 0,
         format: void 0
       };
-      RangeFacet.__super__.constructor.call(this, element, extend(true, defaults, options));
+      RangeFacet.__super__.constructor.call(this, element, merge(defaults, options));
       this.format = this.options.format || this.constructor.basicFormat;
       this.slider = null;
       this.values = {};
@@ -4013,7 +4013,7 @@
           from: this.constructor.formatFn.from.bind(this)
         }
       };
-      return extend(true, {}, sliderOpts, {
+      return merge({}, sliderOpts, {
         pips: this.options.pips
       });
     };
@@ -4122,7 +4122,7 @@
 
 }).call(this);
 
-},{"../util/helpers":9,"./display":15,"extend":23,"nouislider":70}],19:[function(require,module,exports){
+},{"../util/helpers":9,"../util/merge":11,"./display":15,"nouislider":70}],19:[function(require,module,exports){
 (function() {
   var $, Display, ScrollDisplay, Thing, extend, throttle,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
