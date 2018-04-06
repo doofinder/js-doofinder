@@ -1,5 +1,6 @@
-extend = require "extend"
+merge = require "../util/merge"
 Widget = require "./widget"
+
 helpers = require "../util/helpers"
 
 
@@ -23,7 +24,7 @@ class Display extends Widget
       templateVars: {}
       translations: {}
 
-    options = extend true, defaults, options
+    options = merge defaults, options
 
     super element, options
 
@@ -39,13 +40,12 @@ class Display extends Widget
    * @protected
   ###
   __buildContext: (response = {}) ->
-    @currentContext = extend true,
-                             {},
-                             response,
-                             @options.templateVars,
-                             @options.templateFunctions,
-                             is_first: response.page is 1
-                             is_last: response.page is Math.ceil (response.total / response.results_per_page)
+    @currentContext = merge {},
+                            response,
+                            @options.templateVars,
+                            @options.templateFunctions,
+                            is_first: response.page is 1
+                            is_last: response.page is Math.ceil (response.total / response.results_per_page)
 
   ###*
    * Actually renders the template given a search response.
