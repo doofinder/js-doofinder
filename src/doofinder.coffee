@@ -27,6 +27,7 @@ module.exports =
     helpers: require "./util/helpers"
     http: require "./util/http"
     md5: require "md5"
+    merge: require "./util/merge"
     qs: require "qs"
     text: require "./util/text"
     Thing: require "./util/thing"
@@ -34,4 +35,3 @@ module.exports =
     uniqueId: require "./util/uniqueid"
 
   session: require "./session"
-
