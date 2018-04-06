@@ -96,7 +96,7 @@
 
     Client.prototype.request = function(resource, callback) {
       var options;
-      options = extend(true, {
+      options = extend({
         path: resource
       }, this.requestOptions);
       return this.httpClient.request(options, callback);
@@ -189,7 +189,7 @@
         hashid: this.hashid,
         random: new Date().getTime()
       };
-      querystring = qs.stringify(extend(true, defaultParams, params || {}));
+      querystring = qs.stringify(extend(defaultParams, params || {}));
       if (querystring) {
         querystring = "?" + querystring;
       }
@@ -233,7 +233,7 @@
       defaultParams = {
         hashid: this.hashid
       };
-      queryParams = extend(true, defaultParams, params || {}, {
+      queryParams = extend(defaultParams, params || {}, {
         query: query
       });
       if (Thing.is.array(queryParams.type) && queryParams.type.length === 1) {
@@ -302,7 +302,7 @@
         page: 1,
         rpp: 10
       };
-      this.defaults = extend(true, defaults, defaultParams);
+      this.defaults = extend(defaults, defaultParams);
       this.queryCounter = 0;
       this.widgets = [];
       Object.defineProperty(this, 'hashid', {
@@ -341,7 +341,7 @@
         params = {};
       }
       this.query = query;
-      this.params = extend(true, {}, this.defaults, params, {
+      this.params = extend({}, this.defaults, params, {
         page: 1
       });
       this.requestDone = false;
@@ -436,7 +436,7 @@
     Controller.prototype.__getResults = function() {
       var params, request;
       this.requestDone = true;
-      params = extend(true, {
+      params = extend({
         query_counter: ++this.queryCounter
       }, this.params);
       return request = this.client.search(this.query, params, (function(_this) {
@@ -793,7 +793,7 @@
       if (newFilter == null) {
         newFilter = {};
       }
-      value = extend(true, {}, currentFilter);
+      value = extend({}, currentFilter);
       if ((newFilter.gt != null) || (newFilter.gte != null)) {
         delete value.gt;
         delete value.gte;
@@ -802,7 +802,7 @@
         delete value.lt;
         delete value.lte;
       }
-      return extend(true, value, newFilter);
+      return extend(value, newFilter);
     };
 
     Controller.prototype.getExclusion = function(key) {
@@ -833,7 +833,7 @@
 
     Controller.prototype.serializeStatus = function() {
       var j, key, len, ref, status, value;
-      status = extend(true, {
+      status = extend({
         query: this.query
       }, this.params);
       ref = ['transformer', 'rpp', 'query_counter', 'page'];
@@ -869,7 +869,7 @@
       var params, query, requestParams;
       params = (qs.parse(status)) || {};
       if ((Object.keys(params)).length > 0) {
-        requestParams = extend(true, {}, params);
+        requestParams = extend({}, params);
         query = requestParams.query || "";
         delete requestParams.query;
         this.reset(query, requestParams);
