@@ -3442,18 +3442,18 @@
 
 },{"../util/helpers":9,"../util/merge":11,"./widget":21,"mustache":69}],16:[function(require,module,exports){
 (function() {
-  var $, Display, Pager, extend,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  var $, Display, Pager, merge,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
-
-  extend = require("extend");
 
   Display = require("./display");
 
   $ = require("../util/dfdom");
 
+  merge = require("../util/merge");
+
   Pager = (function(superClass) {
-    extend1(Pager, superClass);
+    extend(Pager, superClass);
 
     Pager.defaultTemplate = "{{#pager}}\n  <ul class=\"df-pagination\">\n    <li class=\"df-page{{^previous}} df-page--disabled{{/previous}}\">\n      {{#previous}}\n      <a href=\"#page-{{.}}\" data-page=\"{{.}}\">\n        {{#translate}}{{previousLabel}}{{/translate}}\n      </a>\n      {{/previous}}\n      {{^previous}}\n      <span data-page=\"{{.}}\">\n        {{#translate}}{{previousLabel}}{{/translate}}\n      </span>\n      {{/previous}}\n    </li>\n    {{#first}}\n      <li class=\"df-page\">\n        <a href=\"#page-{{.}}\" data-page=\"{{.}}\">{{.}}</a>\n      </li>\n      <li class=\"df-page df-page--disabled\">\n        <span>…</span>\n      </li>\n    {{/first}}\n    {{#pages}}\n      <li class=\"df-page{{#current}} df-page--disabled{{/current}}\">\n        {{#current}}\n          <span data-page=\"{{page}}\">{{page}}</span>\n        {{/current}}\n        {{^current}}\n          <a href=\"#page-{{page}}\" data-page=\"{{page}}\">{{page}}</a>\n        {{/current}}\n      </li>\n    {{/pages}}\n    {{#last}}\n      <li class=\"df-page df-page--disabled\">\n        <span>…</span>\n      </li>\n      <li class=\"df-page\">\n        <a href=\"#page-{{.}}\" data-page=\"{{.}}\">{{.}}</a>\n      </li>\n    {{/last}}\n    <li class=\"df-page{{^next}} df-page--disabled{{/next}}\">\n      {{#next}}\n        <a href=\"#page-{{.}}\" data-page=\"{{.}}\">\n          {{#translate}}{{nextLabel}}{{/translate}}\n        </a>\n      {{/next}}\n      {{^next}}\n        <span data-page=\"{{.}}\">\n          {{#translate}}{{nextLabel}}{{/translate}}\n        </span>\n      {{/next}}\n    </li>\n  </ul>\n{{/pager}}";
 
@@ -3464,7 +3464,7 @@
         previousLabel: "Previous",
         nextLabel: "Next"
       };
-      options = extend(true, defaults, options);
+      options = merge(defaults, options);
       Pager.__super__.constructor.call(this, element, options);
     }
 
@@ -3542,7 +3542,7 @@
       } else {
         pager = false;
       }
-      return Pager.__super__.__buildContext.call(this, extend(true, {
+      return Pager.__super__.__buildContext.call(this, merge({
         pager: pager
       }, response));
     };
@@ -3555,7 +3555,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"./display":15,"extend":23}],17:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/merge":11,"./display":15}],17:[function(require,module,exports){
 (function() {
   var $, QueryInput, Thing, Widget, errors, extend,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
