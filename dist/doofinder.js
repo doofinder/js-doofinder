@@ -4312,16 +4312,16 @@
 
 },{"../util/dfdom":6,"../util/merge":11,"../util/thing":13,"./display":15,"lodash.throttle":64}],20:[function(require,module,exports){
 (function() {
-  var $, Display, TermsFacet, extend,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  var $, Display, TermsFacet, merge,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-
-  extend = require("extend");
 
   Display = require("./display");
 
   $ = require("../util/dfdom");
+
+  merge = require("../util/merge");
 
 
   /**
@@ -4330,7 +4330,7 @@
    */
 
   TermsFacet = (function(superClass) {
-    extend1(TermsFacet, superClass);
+    extend(TermsFacet, superClass);
 
     TermsFacet.defaultTemplate = "{{#terms}}\n  <div class=\"df-term\" data-facet=\"{{name}}\" data-value=\"{{key}}\"\n      {{#selected}}data-selected{{/selected}}>\n    <span class=\"df-term__value\">{{key}}</span>\n    <span class=\"df-term__count\">{{doc_count}}</span>\n  </div>\n{{/terms}}";
 
@@ -4346,7 +4346,7 @@
       if (options == null) {
         options = {};
       }
-      TermsFacet.__super__.constructor.call(this, element, extend(true, {
+      TermsFacet.__super__.constructor.call(this, element, merge({
         template: this.constructor.defaultTemplate
       }, options));
       this.totalSelected = 0;
@@ -4411,7 +4411,7 @@
         term.selected = (ref2 = term.key, indexOf.call(selectedTerms, ref2) >= 0);
       }
       this.totalSelected = selectedTerms.length;
-      return this.currentContext = extend(true, this.currentContext, {
+      return this.currentContext = merge(this.currentContext, {
         name: this.facet,
         terms: terms
       });
@@ -4450,7 +4450,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"./display":15,"extend":23}],21:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/merge":11,"./display":15}],21:[function(require,module,exports){
 (function() {
   var $, Widget, bean;
 

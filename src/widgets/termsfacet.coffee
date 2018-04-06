@@ -1,6 +1,6 @@
-extend = require "extend"
 Display = require "./display"
 $ = require "../util/dfdom"
+merge = require "../util/merge"
 
 ###*
  * Represents a terms selector control to filter by the possible values of a
@@ -22,7 +22,7 @@ class TermsFacet extends Display
    * @param  {Object} options
   ###
   constructor: (element, @facet, options = {}) ->
-    super element, (extend true, (template: @constructor.defaultTemplate), options)
+    super element, (merge template: @constructor.defaultTemplate, options)
     @totalSelected = 0
 
   ###*
@@ -79,7 +79,7 @@ class TermsFacet extends Display
       term.selected = term.key in selectedTerms
 
     @totalSelected = selectedTerms.length
-    @currentContext = extend true, @currentContext, name: @facet, terms: terms
+    @currentContext = merge @currentContext, name: @facet, terms: terms
 
 
   ###*
