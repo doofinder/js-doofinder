@@ -928,17 +928,17 @@
 
 },{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/errors":7,"./util/helpers":9,"./util/http":10,"./util/merge":11,"./util/text":12,"./util/thing":13,"./util/uniqueid":14,"./widgets/display":15,"./widgets/pager":16,"./widgets/queryinput":17,"./widgets/rangefacet":18,"./widgets/scrolldisplay":19,"./widgets/termsfacet":20,"./widgets/widget":21,"bean":22,"extend":23,"lodash.throttle":64,"md5":65,"mustache":69,"qs":72}],4:[function(require,module,exports){
 (function() {
-  var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, errors, extend, md5, uniqueId,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, errors, md5, merge, uniqueId,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   Cookies = require("js-cookie");
 
-  extend = require("extend");
-
   md5 = require("md5");
 
   errors = require("./util/errors");
+
+  merge = require("./util/merge");
 
   uniqueId = require("./util/uniqueid");
 
@@ -1054,7 +1054,7 @@
    */
 
   ObjectSessionStore = (function(superClass) {
-    extend1(ObjectSessionStore, superClass);
+    extend(ObjectSessionStore, superClass);
 
 
     /**
@@ -1095,7 +1095,7 @@
    */
 
   CookieSessionStore = (function(superClass) {
-    extend1(CookieSessionStore, superClass);
+    extend(CookieSessionStore, superClass);
 
 
     /**
@@ -1115,7 +1115,7 @@
         prefix: "",
         expiry: 1 / 24
       };
-      options = extend(true, defaults, options || {});
+      options = merge(defaults, options || {});
       this.cookieName = "" + options.prefix + cookieName;
       this.expiry = options.expiry;
     }
@@ -1233,7 +1233,7 @@
 
 }).call(this);
 
-},{"./util/errors":7,"./util/uniqueid":14,"extend":23,"js-cookie":63,"md5":65}],5:[function(require,module,exports){
+},{"./util/errors":7,"./util/merge":11,"./util/uniqueid":14,"js-cookie":63,"md5":65}],5:[function(require,module,exports){
 (function() {
   var Client, Session, Stats, errors, uniqueId,
     slice = [].slice;
