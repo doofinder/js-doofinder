@@ -1,5 +1,5 @@
-extend = require "extend"
 qs = require "qs"
+merge = require "./merge"
 
 translate = (require "./text").translate
 
@@ -82,7 +82,7 @@ decodeEntities = (->
 addUrlParams = (url, urlParams = {}) ->
   if url.length and (Object.keys urlParams).length
     [host, params] = url.split "?"
-    params = qs.stringify (extend true, (qs.parse params), urlParams)
+    params = qs.stringify (merge (qs.parse params), urlParams)
     "#{host}?#{params}"
   else
     url
@@ -111,7 +111,7 @@ module.exports =
      * global context object. If no translation is found, the source text is
      * returned.
     ###
-    extend true, context, "translate": ->
+    merge context, "translate": ->
       (text, render) ->
         translate (render text), translations
 
@@ -143,7 +143,7 @@ module.exports =
      * to the provided URL. Params are merged and global context takes
      * precedence over existing parameters.
     ###
-    extend true, context, "url-params": ->
+    merge context, "url-params": ->
       (text, render) ->
         url = (render text).trim()
         params = (getUrlParamsFn?() or {})
@@ -154,7 +154,7 @@ module.exports =
      * Mustache helper to remove HTTP protocol from the start of URLs so they
      * are protocol independant.
     ###
-    extend true, context, "remove-protocol": ->
+    merge context, "remove-protocol": ->
       (text, render) ->
         removeProtocol (render text)
 
@@ -163,7 +163,7 @@ module.exports =
      * Mustache helper to format numbers as currency using the currency spec
      * provided.
     ###
-    extend true, context, "format-currency": ->
+    merge context, "format-currency": ->
       (text, render) ->
         value = parseFloat (render text), 10
         if isNaN value then "" else (formatNumber value, currency)

@@ -2794,11 +2794,11 @@
 
 },{"./thing":13}],9:[function(require,module,exports){
 (function() {
-  var addUrlParams, decodeEntities, extend, formatNumber, qs, removeProtocol, translate;
-
-  extend = require("extend");
+  var addUrlParams, decodeEntities, formatNumber, merge, qs, removeProtocol, translate;
 
   qs = require("qs");
+
+  merge = require("./merge");
 
   translate = (require("./text")).translate;
 
@@ -2898,7 +2898,7 @@
     }
     if (url.length && (Object.keys(urlParams)).length) {
       ref = url.split("?"), host = ref[0], params = ref[1];
-      params = qs.stringify(extend(true, qs.parse(params), urlParams));
+      params = qs.stringify(merge(qs.parse(params), urlParams));
       return host + "?" + params;
     } else {
       return url;
@@ -2934,7 +2934,7 @@
        * global context object. If no translation is found, the source text is
        * returned.
        */
-      return extend(true, context, {
+      return merge(context, {
         "translate": function() {
           return function(text, render) {
             return translate(render(text), translations);
@@ -2972,7 +2972,7 @@
        * to the provided URL. Params are merged and global context takes
        * precedence over existing parameters.
        */
-      return extend(true, context, {
+      return merge(context, {
         "url-params": function() {
           return function(text, render) {
             var params, url;
@@ -2989,7 +2989,7 @@
        * Mustache helper to remove HTTP protocol from the start of URLs so they
        * are protocol independant.
        */
-      return extend(true, context, {
+      return merge(context, {
         "remove-protocol": function() {
           return function(text, render) {
             return removeProtocol(render(text));
@@ -3003,7 +3003,7 @@
        * Mustache helper to format numbers as currency using the currency spec
        * provided.
        */
-      return extend(true, context, {
+      return merge(context, {
         "format-currency": function() {
           return function(text, render) {
             var value;
@@ -3021,7 +3021,7 @@
 
 }).call(this);
 
-},{"./text":12,"extend":23,"qs":72}],10:[function(require,module,exports){
+},{"./merge":11,"./text":12,"qs":72}],10:[function(require,module,exports){
 (function() {
   var HttpClient, Thing, errors, extend, http, https;
 
