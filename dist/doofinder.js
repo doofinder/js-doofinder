@@ -3557,16 +3557,16 @@
 
 },{"../util/dfdom":6,"../util/merge":11,"./display":15}],17:[function(require,module,exports){
 (function() {
-  var $, QueryInput, Thing, Widget, errors, extend,
+  var $, QueryInput, Thing, Widget, errors, merge,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
-
-  extend = require("extend");
 
   Widget = require("./widget");
 
   Thing = require("../util/thing");
+
+  merge = require("../util/merge");
 
   errors = require("../util/errors");
 
@@ -3580,7 +3580,7 @@
    */
 
   QueryInput = (function(superClass) {
-    extend1(QueryInput, superClass);
+    extend(QueryInput, superClass);
 
 
     /**
@@ -3604,12 +3604,12 @@
         wait: 42,
         delayedEvents: null
       };
-      QueryInput.__super__.constructor.call(this, element, extend(true, defaults, options));
+      QueryInput.__super__.constructor.call(this, element, merge(defaults, options));
       this.controller = [];
       this.currentElement = this.element.first();
       this.timer = null;
       this.activeEventTimers = {};
-      this.delayedEvents = extend(true, {}, this.options.delayedEvents || {});
+      this.delayedEvents = merge({}, this.options.delayedEvents || {});
       Object.defineProperty(this, "value", {
         get: (function(_this) {
           return function() {
@@ -3858,7 +3858,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"../util/errors":7,"../util/thing":13,"./widget":21,"extend":23}],18:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/errors":7,"../util/merge":11,"../util/thing":13,"./widget":21}],18:[function(require,module,exports){
 (function() {
   var Display, RangeFacet, extend, helpers, noUiSlider,
     extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },

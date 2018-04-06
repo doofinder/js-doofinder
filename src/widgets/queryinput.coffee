@@ -1,6 +1,6 @@
-extend = require "extend"
 Widget = require "./widget"
 Thing = require "../util/thing"
+merge = require "../util/merge"
 errors = require "../util/errors"
 $ = require "../util/dfdom"
 
@@ -26,13 +26,13 @@ class QueryInput extends Widget
       wait: 42 # meaning of life
       delayedEvents: null
 
-    super element, (extend true, defaults, options)
+    super element, (merge defaults, options)
 
     @controller = []
     @currentElement = @element.first()
     @timer = null
     @activeEventTimers = {}
-    @delayedEvents = extend true, {}, @options.delayedEvents or {}
+    @delayedEvents = merge {}, @options.delayedEvents or {}
 
     Object.defineProperty @, "value",
       get: =>
