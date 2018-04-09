@@ -1,5 +1,5 @@
 module.exports =
-  version: "5.3.6"
+  version: "5.3.7"
 
   Client: require "./client"
   Controller: require "./controller"

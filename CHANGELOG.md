@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [5.3.7] - 2018-04-09
+### Removed
+- `doofinder.util.extend` has been replaced.
+
+### Added
+- `doofinder.util.merge` replaces `extend` because it's mainly used to compile options instead of extending _classes_ and that kind of stuff.
+
+### Fixed
+- Fixes a problem with PrototypeJS modifying the Array prototype.
+
 ## [5.3.6] - 2018-04-04
 ### Fixed
 - There was a problem with HTML entities and the range slider (noUiSlider). We've made a temporary patch and filed an issue in the noUiSlider repository.
