@@ -1,7 +1,7 @@
-extend = require "extend"
 noUiSlider = require "nouislider"
 Display = require "./display"
 helpers = require "../util/helpers"
+merge = require "../util/merge"
 
 
 ###*
@@ -58,7 +58,7 @@ class RangeFacet extends Display
       pips: undefined
       format: undefined
 
-    super element, (extend true, defaults, options)
+    super element, (merge defaults, options)
 
     @format = @options.format or @constructor.basicFormat
     @slider = null    # node that actually holds noUiSlider stuff
@@ -132,7 +132,7 @@ class RangeFacet extends Display
       format:
         to: @constructor.formatFn.to.bind @
         from: @constructor.formatFn.from.bind @
-    extend true, {}, sliderOpts, pips: @options.pips
+    merge {}, sliderOpts, pips: @options.pips
 
   ###*
    * Updates the controller when the range changes.

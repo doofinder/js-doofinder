@@ -1,7 +1,7 @@
-extend = require "extend"
 throttle = require "lodash.throttle"
 
 $ = require "../util/dfdom"
+merge = require "../util/merge"
 Thing = require "../util/thing"
 
 Display = require "./display"
@@ -80,7 +80,7 @@ class ScrollDisplay extends Display
       offset: 300
       throttle: 16
       horizontal: false
-    options = extend true, defaultOptions, (options or {})
+    options = merge defaultOptions, (options or {})
 
     super element, options
 

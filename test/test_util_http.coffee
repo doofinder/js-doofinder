@@ -1,6 +1,5 @@
 # required for testing
 chai = require "chai"
-extend = require "extend"
 
 # chai
 chai.should()

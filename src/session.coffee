@@ -1,8 +1,8 @@
 Cookies = require "js-cookie"
-extend = require "extend"
 md5 = require "md5"
 
 errors = require "./util/errors"
+merge = require "./util/merge"
 uniqueId = require "./util/uniqueid"
 
 
@@ -118,7 +118,7 @@ class CookieSessionStore extends ISessionStore
     defaults =
       prefix: ""
       expiry: 1 / 24
-    options = extend true, defaults, (options or {})
+    options = merge defaults, (options or {})
     @cookieName = "#{options.prefix}#{cookieName}"
     @expiry = options.expiry
 

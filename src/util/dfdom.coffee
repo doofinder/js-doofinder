@@ -1,5 +1,5 @@
 bean = require "bean"
-extend = require "extend"
+merge = require "./merge"
 Text = require "./text"
 Thing = require "./thing"
 
@@ -649,7 +649,7 @@ class DfDomElement
     if node?
       if Thing.is.window node
         doc = @document()
-        rect = extend rect,
+        rect = merge rect,
           width:        node.outerWidth
           height:       node.outerHeight
           clientWidth:  node.innerWidth
@@ -664,7 +664,7 @@ class DfDomElement
 
         if isDoc
           node = node.documentElement
-          rect = extend rect,
+          rect = merge rect,
             width:  node.offsetWidth
             height: node.offsetHeight
 
@@ -673,7 +673,7 @@ class DfDomElement
           rect[k] = box[k] for k in keys
 
         if isDoc or isElm
-          rect = extend rect,
+          rect = merge rect,
             clientWidth:  node.clientWidth
             clientHeight: node.clientHeight
             scrollLeft:   node.scrollLeft

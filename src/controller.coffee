@@ -1,11 +1,11 @@
 bean = require "bean"
-extend = require "extend"
 qs = require "qs"
 
 errors = require "./util/errors"
 Client = require "./client"
 Widget = require "./widgets/widget"
 
+merge = require "./util/merge"
 Freezer = require "./util/freezer"
 Thing = require "./util/thing"
 
@@ -29,7 +29,7 @@ class Controller
       page: 1
       rpp: 10
 
-    @defaults = extend true, defaults, defaultParams
+    @defaults = merge defaults, defaultParams
     @queryCounter = 0
 
     @widgets = []
@@ -59,7 +59,7 @@ class Controller
   ###
   reset: (query = null, params = {}) ->
     @query = query
-    @params = extend true, {}, @defaults, params, page: 1
+    @params = merge {}, @defaults, params, page: 1
     # At least one request sent, to detect if 1st page requested
     @requestDone = false
     @lastPage = null
@@ -134,7 +134,7 @@ class Controller
   ###
   __getResults: ->
     @requestDone = true
-    params = extend true, query_counter: ++@queryCounter, @params
+    params = merge query_counter: ++@queryCounter, @params
     request = @client.search @query, params, (err, res) =>
       if err
         @trigger "df:results:error", [err]
@@ -422,14 +422,14 @@ class Controller
    * @return {Object}
   ###
   __buildHashFilter: (currentFilter = {}, newFilter = {}) ->
-    value = extend true, {}, currentFilter
+    value = merge {}, currentFilter
     if newFilter.gt? or newFilter.gte?
       delete value.gt
       delete value.gte
     if newFilter.lt? or newFilter.lte?
       delete value.lt
       delete value.lte
-    extend true, value, newFilter
+    merge value, newFilter
 
   #
   # Exclusion Filters (see regular filters documentation)
@@ -457,7 +457,7 @@ class Controller
    * @public
   ###
   serializeStatus: ->
-    status = extend true, query: @query, @params
+    status = merge query: @query, @params
     delete status[key] for key in [
       'transformer',
       'rpp',
@@ -484,7 +484,7 @@ class Controller
     params = (qs.parse status) or {}
 
     if (Object.keys params).length > 0
-      requestParams = extend true, {}, params
+      requestParams = merge {}, params
       query = requestParams.query or ""
       delete requestParams.query
 

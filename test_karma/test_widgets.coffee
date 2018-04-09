@@ -307,7 +307,7 @@ describe "Default Widgets", ->
       insertHTML """<input id="widget" type="text" value="#{value}">"""
       defaults =
         typingTimeout: 50
-      options = doofinder.util.extend true, defaults, options
+      options = doofinder.util.merge defaults, options
       widget = new QueryInput "#widget", options
       # code is currently too coupled to controller so we need a mock
       widget.setController controller

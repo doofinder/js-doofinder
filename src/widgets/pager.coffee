@@ -1,6 +1,6 @@
-extend = require "extend"
 Display = require "./display"
 $ = require "../util/dfdom"
+merge = require "../util/merge"
 
 
 class Pager extends Display
@@ -66,7 +66,7 @@ class Pager extends Display
       delta: 2 # number of links on each side of the current page
       previousLabel: "Previous"
       nextLabel: "Next"
-    options = extend true, defaults, options
+    options = merge defaults, options
     super element, options
 
   ###*
@@ -125,7 +125,7 @@ class Pager extends Display
     else
       pager = false
 
-    super (extend true, pager: pager, response)
+    super (merge pager: pager, response)
 
 
 module.exports = Pager

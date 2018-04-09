@@ -1,9 +1,9 @@
-extend = require "extend"
 md5 = require "md5"
 qs = require "qs"
 
 errors = require "./util/errors"
 HttpClient = require "./util/http"
+merge = require "./util/merge"
 Thing = require "./util/thing"
 
 ###*
@@ -73,7 +73,7 @@ class Client
    * @public
   ###
   request: (resource, callback) ->
-    options = extend true, path: resource, @requestOptions
+    options = merge path: resource, @requestOptions
     @httpClient.request options, callback
 
   #
@@ -153,7 +153,7 @@ class Client
     defaultParams =
       hashid: @hashid
       random: new Date().getTime()
-    querystring = qs.stringify (extend true, defaultParams, (params or {}))
+    querystring = qs.stringify (merge defaultParams, (params or {}))
     querystring = "?#{querystring}" if querystring
     @request "/#{@version}/stats/#{eventName}#{querystring}", callback
 
@@ -196,7 +196,7 @@ class Client
       # transformer: null
       # query_counter: 1
 
-    queryParams = extend true, defaultParams, (params or {}), query: query
+    queryParams = merge defaultParams, (params or {}), query: query
 
     if Thing.is.array(queryParams.type) and queryParams.type.length is 1
       queryParams.type = queryParams.type[0]

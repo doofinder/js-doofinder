@@ -1,6 +1,6 @@
 # required for testing
 chai = require "chai"
-extend = require "extend"
+merge = require "../lib/util/merge"
 
 # chai
 chai.should()

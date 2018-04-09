@@ -1,8 +1,6 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.doofinder = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function() {
-  var Client, HttpClient, Thing, errors, extend, md5, qs;
-
-  extend = require("extend");
+  var Client, HttpClient, Thing, errors, md5, merge, qs;
 
   md5 = require("md5");
 
@@ -11,6 +9,8 @@
   errors = require("./util/errors");
 
   HttpClient = require("./util/http");
+
+  merge = require("./util/merge");
 
   Thing = require("./util/thing");
 
@@ -96,7 +96,7 @@
 
     Client.prototype.request = function(resource, callback) {
       var options;
-      options = extend(true, {
+      options = merge({
         path: resource
       }, this.requestOptions);
       return this.httpClient.request(options, callback);
@@ -189,7 +189,7 @@
         hashid: this.hashid,
         random: new Date().getTime()
       };
-      querystring = qs.stringify(extend(true, defaultParams, params || {}));
+      querystring = qs.stringify(merge(defaultParams, params || {}));
       if (querystring) {
         querystring = "?" + querystring;
       }
@@ -233,7 +233,7 @@
       defaultParams = {
         hashid: this.hashid
       };
-      queryParams = extend(true, defaultParams, params || {}, {
+      queryParams = merge(defaultParams, params || {}, {
         query: query
       });
       if (Thing.is.array(queryParams.type) && queryParams.type.length === 1) {
@@ -255,14 +255,12 @@
 
 }).call(this);
 
-},{"./util/errors":7,"./util/http":10,"./util/thing":12,"extend":22,"md5":64,"qs":71}],2:[function(require,module,exports){
+},{"./util/errors":7,"./util/http":10,"./util/merge":11,"./util/thing":13,"md5":64,"qs":71}],2:[function(require,module,exports){
 (function() {
-  var Client, Controller, Freezer, Thing, Widget, bean, errors, extend, qs,
+  var Client, Controller, Freezer, Thing, Widget, bean, errors, merge, qs,
     hasProp = {}.hasOwnProperty;
 
   bean = require("bean");
-
-  extend = require("extend");
 
   qs = require("qs");
 
@@ -271,6 +269,8 @@
   Client = require("./client");
 
   Widget = require("./widgets/widget");
+
+  merge = require("./util/merge");
 
   Freezer = require("./util/freezer");
 
@@ -302,7 +302,7 @@
         page: 1,
         rpp: 10
       };
-      this.defaults = extend(true, defaults, defaultParams);
+      this.defaults = merge(defaults, defaultParams);
       this.queryCounter = 0;
       this.widgets = [];
       Object.defineProperty(this, 'hashid', {
@@ -341,7 +341,7 @@
         params = {};
       }
       this.query = query;
-      this.params = extend(true, {}, this.defaults, params, {
+      this.params = merge({}, this.defaults, params, {
         page: 1
       });
       this.requestDone = false;
@@ -436,7 +436,7 @@
     Controller.prototype.__getResults = function() {
       var params, request;
       this.requestDone = true;
-      params = extend(true, {
+      params = merge({
         query_counter: ++this.queryCounter
       }, this.params);
       return request = this.client.search(this.query, params, (function(_this) {
@@ -793,7 +793,7 @@
       if (newFilter == null) {
         newFilter = {};
       }
-      value = extend(true, {}, currentFilter);
+      value = merge({}, currentFilter);
       if ((newFilter.gt != null) || (newFilter.gte != null)) {
         delete value.gt;
         delete value.gte;
@@ -802,7 +802,7 @@
         delete value.lt;
         delete value.lte;
       }
-      return extend(true, value, newFilter);
+      return merge(value, newFilter);
     };
 
     Controller.prototype.getExclusion = function(key) {
@@ -833,7 +833,7 @@
 
     Controller.prototype.serializeStatus = function() {
       var j, key, len, ref, status, value;
-      status = extend(true, {
+      status = merge({
         query: this.query
       }, this.params);
       ref = ['transformer', 'rpp', 'query_counter', 'page'];
@@ -869,7 +869,7 @@
       var params, query, requestParams;
       params = (qs.parse(status)) || {};
       if ((Object.keys(params)).length > 0) {
-        requestParams = extend(true, {}, params);
+        requestParams = merge({}, params);
         query = requestParams.query || "";
         delete requestParams.query;
         this.reset(query, requestParams);
@@ -889,7 +889,7 @@
 
 }).call(this);
 
-},{"./client":1,"./util/errors":7,"./util/freezer":8,"./util/thing":12,"./widgets/widget":20,"bean":21,"extend":22,"qs":71}],3:[function(require,module,exports){
+},{"./client":1,"./util/errors":7,"./util/freezer":8,"./util/merge":11,"./util/thing":13,"./widgets/widget":21,"bean":22,"qs":71}],3:[function(require,module,exports){
 (function() {
   module.exports = {
     version: "5.3.6",
@@ -910,10 +910,10 @@
       bean: require("bean"),
       dfdom: require("./util/dfdom"),
       errors: require("./util/errors"),
-      extend: require("extend"),
       helpers: require("./util/helpers"),
       http: require("./util/http"),
       md5: require("md5"),
+      merge: require("./util/merge"),
       qs: require("qs"),
       text: require("./util/text"),
       Thing: require("./util/thing"),
@@ -925,19 +925,19 @@
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/errors":7,"./util/helpers":9,"./util/http":10,"./util/text":11,"./util/thing":12,"./util/uniqueid":13,"./widgets/display":14,"./widgets/pager":15,"./widgets/queryinput":16,"./widgets/rangefacet":17,"./widgets/scrolldisplay":18,"./widgets/termsfacet":19,"./widgets/widget":20,"bean":21,"extend":22,"lodash.throttle":63,"md5":64,"mustache":68,"qs":71}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/errors":7,"./util/helpers":9,"./util/http":10,"./util/merge":11,"./util/text":12,"./util/thing":13,"./util/uniqueid":14,"./widgets/display":15,"./widgets/pager":16,"./widgets/queryinput":17,"./widgets/rangefacet":18,"./widgets/scrolldisplay":19,"./widgets/termsfacet":20,"./widgets/widget":21,"bean":22,"lodash.throttle":63,"md5":64,"mustache":68,"qs":71}],4:[function(require,module,exports){
 (function() {
-  var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, errors, extend, md5, uniqueId,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, errors, md5, merge, uniqueId,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   Cookies = require("js-cookie");
 
-  extend = require("extend");
-
   md5 = require("md5");
 
   errors = require("./util/errors");
+
+  merge = require("./util/merge");
 
   uniqueId = require("./util/uniqueid");
 
@@ -1053,7 +1053,7 @@
    */
 
   ObjectSessionStore = (function(superClass) {
-    extend1(ObjectSessionStore, superClass);
+    extend(ObjectSessionStore, superClass);
 
 
     /**
@@ -1094,7 +1094,7 @@
    */
 
   CookieSessionStore = (function(superClass) {
-    extend1(CookieSessionStore, superClass);
+    extend(CookieSessionStore, superClass);
 
 
     /**
@@ -1114,7 +1114,7 @@
         prefix: "",
         expiry: 1 / 24
       };
-      options = extend(true, defaults, options || {});
+      options = merge(defaults, options || {});
       this.cookieName = "" + options.prefix + cookieName;
       this.expiry = options.expiry;
     }
@@ -1232,7 +1232,7 @@
 
 }).call(this);
 
-},{"./util/errors":7,"./util/uniqueid":13,"extend":22,"js-cookie":62,"md5":64}],5:[function(require,module,exports){
+},{"./util/errors":7,"./util/merge":11,"./util/uniqueid":14,"js-cookie":62,"md5":64}],5:[function(require,module,exports){
 (function() {
   var Client, Session, Stats, errors, uniqueId,
     slice = [].slice;
@@ -1395,13 +1395,13 @@
 
 }).call(this);
 
-},{"./client":1,"./session":4,"./util/errors":7,"./util/uniqueid":13}],6:[function(require,module,exports){
+},{"./client":1,"./session":4,"./util/errors":7,"./util/uniqueid":14}],6:[function(require,module,exports){
 (function() {
-  var DfDomElement, MATCHES_SELECTOR_FN, Text, Thing, bean, extend, getWindow, matchesSelector;
+  var DfDomElement, MATCHES_SELECTOR_FN, Text, Thing, bean, getWindow, matchesSelector, merge;
 
   bean = require("bean");
 
-  extend = require("extend");
+  merge = require("./merge");
 
   Text = require("./text");
 
@@ -2300,7 +2300,7 @@
       if (node != null) {
         if (Thing.is.window(node)) {
           doc = this.document();
-          rect = extend(rect, {
+          rect = merge(rect, {
             width: node.outerWidth,
             height: node.outerHeight,
             clientWidth: node.innerWidth,
@@ -2315,7 +2315,7 @@
           isElm = node.getBoundingClientRect != null;
           if (isDoc) {
             node = node.documentElement;
-            rect = extend(rect, {
+            rect = merge(rect, {
               width: node.offsetWidth,
               height: node.offsetHeight
             });
@@ -2328,7 +2328,7 @@
             }
           }
           if (isDoc || isElm) {
-            rect = extend(rect, {
+            rect = merge(rect, {
               clientWidth: node.clientWidth,
               clientHeight: node.clientHeight,
               scrollLeft: node.scrollLeft,
@@ -2690,7 +2690,7 @@
 
 }).call(this);
 
-},{"./text":11,"./thing":12,"bean":21,"extend":22}],7:[function(require,module,exports){
+},{"./merge":11,"./text":12,"./thing":13,"bean":22}],7:[function(require,module,exports){
 
 /**
  * Helper to compose final error messages
@@ -2791,13 +2791,13 @@
 
 }).call(this);
 
-},{"./thing":12}],9:[function(require,module,exports){
+},{"./thing":13}],9:[function(require,module,exports){
 (function() {
-  var addUrlParams, decodeEntities, extend, formatNumber, qs, removeProtocol, translate;
-
-  extend = require("extend");
+  var addUrlParams, decodeEntities, formatNumber, merge, qs, removeProtocol, translate;
 
   qs = require("qs");
+
+  merge = require("./merge");
 
   translate = (require("./text")).translate;
 
@@ -2897,7 +2897,7 @@
     }
     if (url.length && (Object.keys(urlParams)).length) {
       ref = url.split("?"), host = ref[0], params = ref[1];
-      params = qs.stringify(extend(true, qs.parse(params), urlParams));
+      params = qs.stringify(merge(qs.parse(params), urlParams));
       return host + "?" + params;
     } else {
       return url;
@@ -2933,7 +2933,7 @@
        * global context object. If no translation is found, the source text is
        * returned.
        */
-      return extend(true, context, {
+      return merge(context, {
         "translate": function() {
           return function(text, render) {
             return translate(render(text), translations);
@@ -2971,7 +2971,7 @@
        * to the provided URL. Params are merged and global context takes
        * precedence over existing parameters.
        */
-      return extend(true, context, {
+      return merge(context, {
         "url-params": function() {
           return function(text, render) {
             var params, url;
@@ -2988,7 +2988,7 @@
        * Mustache helper to remove HTTP protocol from the start of URLs so they
        * are protocol independant.
        */
-      return extend(true, context, {
+      return merge(context, {
         "remove-protocol": function() {
           return function(text, render) {
             return removeProtocol(render(text));
@@ -3002,7 +3002,7 @@
        * Mustache helper to format numbers as currency using the currency spec
        * provided.
        */
-      return extend(true, context, {
+      return merge(context, {
         "format-currency": function() {
           return function(text, render) {
             var value;
@@ -3020,17 +3020,17 @@
 
 }).call(this);
 
-},{"./text":11,"extend":22,"qs":71}],10:[function(require,module,exports){
+},{"./merge":11,"./text":12,"qs":71}],10:[function(require,module,exports){
 (function() {
-  var HttpClient, Thing, errors, extend, http, https;
+  var HttpClient, Thing, errors, http, https, merge;
 
   http = require("http");
 
   https = require("https");
 
-  extend = require("extend");
-
   errors = require("./errors");
+
+  merge = require("./merge");
 
   Thing = require("./thing");
 
@@ -3088,7 +3088,7 @@
                 error: data
               };
             }
-            return callback(extend(true, {
+            return callback(merge({
               statusCode: response.statusCode
             }, error));
           }
@@ -3111,7 +3111,65 @@
 
 }).call(this);
 
-},{"./errors":7,"./thing":12,"extend":22,"http":52,"https":29}],11:[function(require,module,exports){
+},{"./errors":7,"./merge":11,"./thing":13,"http":52,"https":29}],11:[function(require,module,exports){
+(function() {
+  var Thing, merge,
+    hasProp = {}.hasOwnProperty;
+
+  Thing = require("./thing");
+
+
+  /**
+   * Heavily based on https://www.npmjs.com/package/extend.
+   *
+   * While extend() fully extends objects, this version only touches own
+   * properties and not inherited ones. This is intended to extend only option
+   * objects, not functions used as constructors or anything like that.
+   *
+   * Why? Try to use PrototypeJS in the same page as Doofinder and use extend
+   * instead to have some fun debugging.
+   *
+   * Works the same as extend, but merge is always "deep"
+   */
+
+  merge = function() {
+    var clone, i, length, obj, propName, propValue, propValueIsArray, ref, src, target, x;
+    target = arguments[0];
+    length = arguments.length;
+    if (target === null || (typeof target !== 'object' && typeof target !== 'function')) {
+      target = {};
+    }
+    for (x = i = 1, ref = length; 1 <= ref ? i <= ref : i >= ref; x = 1 <= ref ? ++i : --i) {
+      obj = arguments[x];
+      if (obj != null) {
+        for (propName in obj) {
+          if (!hasProp.call(obj, propName)) continue;
+          propValue = obj[propName];
+          src = target[propName];
+          if (target !== propValue) {
+            if (propValue && ((Thing.is.hash(propValue)) || (propValueIsArray = Thing.is.array(propValue)))) {
+              if (propValueIsArray) {
+                propValueIsArray = false;
+                clone = src && Thing.is.array(src) ? src : [];
+              } else {
+                clone = src && Thing.is.hash(src) ? src : {};
+              }
+              target[propName] = merge(clone, propValue);
+            } else if (!Thing.is.undef(propValue)) {
+              target[propName] = propValue;
+            }
+          }
+        }
+      }
+    }
+    return target;
+  };
+
+  module.exports = merge;
+
+}).call(this);
+
+},{"./thing":13}],12:[function(require,module,exports){
 
 /**
  * Converts text in camel case to dash case
@@ -3180,7 +3238,7 @@
 
 }).call(this);
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 (function() {
   var Is;
 
@@ -3206,7 +3264,7 @@
 
 }).call(this);
 
-},{"is":61}],13:[function(require,module,exports){
+},{"is":61}],14:[function(require,module,exports){
 (function() {
   var errors, generateDoofinderId, isValidDoofinderId, md5, splitDoofinderId;
 
@@ -3272,13 +3330,13 @@
 
 }).call(this);
 
-},{"./errors":7,"md5":64}],14:[function(require,module,exports){
+},{"./errors":7,"md5":64}],15:[function(require,module,exports){
 (function() {
-  var Display, Widget, extend, helpers,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  var Display, Widget, helpers, merge,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  extend = require("extend");
+  merge = require("../util/merge");
 
   Widget = require("./widget");
 
@@ -3290,7 +3348,7 @@
    */
 
   Display = (function(superClass) {
-    extend1(Display, superClass);
+    extend(Display, superClass);
 
     Display.defaultTemplate = "{{#results}}\n  <a href=\"{{link}}\" class=\"df-card\">{{title}}</a>\n{{/results}}";
 
@@ -3311,7 +3369,7 @@
         templateVars: {},
         translations: {}
       };
-      options = extend(true, defaults, options);
+      options = merge(defaults, options);
       Display.__super__.constructor.call(this, element, options);
       helpers.addTranslateHelper(this.options.templateFunctions, this.options.translations);
       this.mustache = require("mustache");
@@ -3330,7 +3388,7 @@
       if (response == null) {
         response = {};
       }
-      return this.currentContext = extend(true, {}, response, this.options.templateVars, this.options.templateFunctions, {
+      return this.currentContext = merge({}, response, this.options.templateVars, this.options.templateFunctions, {
         is_first: response.page === 1,
         is_last: response.page === Math.ceil(response.total / response.results_per_page)
       });
@@ -3381,20 +3439,20 @@
 
 }).call(this);
 
-},{"../util/helpers":9,"./widget":20,"extend":22,"mustache":68}],15:[function(require,module,exports){
+},{"../util/helpers":9,"../util/merge":11,"./widget":21,"mustache":68}],16:[function(require,module,exports){
 (function() {
-  var $, Display, Pager, extend,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  var $, Display, Pager, merge,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
-
-  extend = require("extend");
 
   Display = require("./display");
 
   $ = require("../util/dfdom");
 
+  merge = require("../util/merge");
+
   Pager = (function(superClass) {
-    extend1(Pager, superClass);
+    extend(Pager, superClass);
 
     Pager.defaultTemplate = "{{#pager}}\n  <ul class=\"df-pagination\">\n    <li class=\"df-page{{^previous}} df-page--disabled{{/previous}}\">\n      {{#previous}}\n      <a href=\"#page-{{.}}\" data-page=\"{{.}}\">\n        {{#translate}}{{previousLabel}}{{/translate}}\n      </a>\n      {{/previous}}\n      {{^previous}}\n      <span data-page=\"{{.}}\">\n        {{#translate}}{{previousLabel}}{{/translate}}\n      </span>\n      {{/previous}}\n    </li>\n    {{#first}}\n      <li class=\"df-page\">\n        <a href=\"#page-{{.}}\" data-page=\"{{.}}\">{{.}}</a>\n      </li>\n      <li class=\"df-page df-page--disabled\">\n        <span>…</span>\n      </li>\n    {{/first}}\n    {{#pages}}\n      <li class=\"df-page{{#current}} df-page--disabled{{/current}}\">\n        {{#current}}\n          <span data-page=\"{{page}}\">{{page}}</span>\n        {{/current}}\n        {{^current}}\n          <a href=\"#page-{{page}}\" data-page=\"{{page}}\">{{page}}</a>\n        {{/current}}\n      </li>\n    {{/pages}}\n    {{#last}}\n      <li class=\"df-page df-page--disabled\">\n        <span>…</span>\n      </li>\n      <li class=\"df-page\">\n        <a href=\"#page-{{.}}\" data-page=\"{{.}}\">{{.}}</a>\n      </li>\n    {{/last}}\n    <li class=\"df-page{{^next}} df-page--disabled{{/next}}\">\n      {{#next}}\n        <a href=\"#page-{{.}}\" data-page=\"{{.}}\">\n          {{#translate}}{{nextLabel}}{{/translate}}\n        </a>\n      {{/next}}\n      {{^next}}\n        <span data-page=\"{{.}}\">\n          {{#translate}}{{nextLabel}}{{/translate}}\n        </span>\n      {{/next}}\n    </li>\n  </ul>\n{{/pager}}";
 
@@ -3405,7 +3463,7 @@
         previousLabel: "Previous",
         nextLabel: "Next"
       };
-      options = extend(true, defaults, options);
+      options = merge(defaults, options);
       Pager.__super__.constructor.call(this, element, options);
     }
 
@@ -3483,7 +3541,7 @@
       } else {
         pager = false;
       }
-      return Pager.__super__.__buildContext.call(this, extend(true, {
+      return Pager.__super__.__buildContext.call(this, merge({
         pager: pager
       }, response));
     };
@@ -3496,18 +3554,18 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"./display":14,"extend":22}],16:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/merge":11,"./display":15}],17:[function(require,module,exports){
 (function() {
-  var $, QueryInput, Thing, Widget, errors, extend,
+  var $, QueryInput, Thing, Widget, errors, merge,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
-
-  extend = require("extend");
 
   Widget = require("./widget");
 
   Thing = require("../util/thing");
+
+  merge = require("../util/merge");
 
   errors = require("../util/errors");
 
@@ -3521,7 +3579,7 @@
    */
 
   QueryInput = (function(superClass) {
-    extend1(QueryInput, superClass);
+    extend(QueryInput, superClass);
 
 
     /**
@@ -3545,12 +3603,12 @@
         wait: 42,
         delayedEvents: null
       };
-      QueryInput.__super__.constructor.call(this, element, extend(true, defaults, options));
+      QueryInput.__super__.constructor.call(this, element, merge(defaults, options));
       this.controller = [];
       this.currentElement = this.element.first();
       this.timer = null;
       this.activeEventTimers = {};
-      this.delayedEvents = extend(true, {}, this.options.delayedEvents || {});
+      this.delayedEvents = merge({}, this.options.delayedEvents || {});
       Object.defineProperty(this, "value", {
         get: (function(_this) {
           return function() {
@@ -3799,13 +3857,11 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"../util/errors":7,"../util/thing":12,"./widget":20,"extend":22}],17:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/errors":7,"../util/merge":11,"../util/thing":13,"./widget":21}],18:[function(require,module,exports){
 (function() {
-  var Display, RangeFacet, extend, helpers, noUiSlider,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  var Display, RangeFacet, helpers, merge, noUiSlider,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
-
-  extend = require("extend");
 
   noUiSlider = require("nouislider");
 
@@ -3813,13 +3869,15 @@
 
   helpers = require("../util/helpers");
 
+  merge = require("../util/merge");
+
 
   /**
    * Represents a range slider control to filter numbers within a range.
    */
 
   RangeFacet = (function(superClass) {
-    extend1(RangeFacet, superClass);
+    extend(RangeFacet, superClass);
 
     RangeFacet.defaultTemplate = "<div class=\"df-slider\" data-facet=\"{{name}}\"></div>";
 
@@ -3870,7 +3928,7 @@
         pips: void 0,
         format: void 0
       };
-      RangeFacet.__super__.constructor.call(this, element, extend(true, defaults, options));
+      RangeFacet.__super__.constructor.call(this, element, merge(defaults, options));
       this.format = this.options.format || this.constructor.basicFormat;
       this.slider = null;
       this.values = {};
@@ -3954,7 +4012,7 @@
           from: this.constructor.formatFn.from.bind(this)
         }
       };
-      return extend(true, {}, sliderOpts, {
+      return merge({}, sliderOpts, {
         pips: this.options.pips
       });
     };
@@ -4063,17 +4121,17 @@
 
 }).call(this);
 
-},{"../util/helpers":9,"./display":14,"extend":22,"nouislider":69}],18:[function(require,module,exports){
+},{"../util/helpers":9,"../util/merge":11,"./display":15,"nouislider":69}],19:[function(require,module,exports){
 (function() {
-  var $, Display, ScrollDisplay, Thing, extend, throttle,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  var $, Display, ScrollDisplay, Thing, merge, throttle,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
-
-  extend = require("extend");
 
   throttle = require("lodash.throttle");
 
   $ = require("../util/dfdom");
+
+  merge = require("../util/merge");
 
   Thing = require("../util/thing");
 
@@ -4087,7 +4145,7 @@
    */
 
   ScrollDisplay = (function(superClass) {
-    extend1(ScrollDisplay, superClass);
+    extend(ScrollDisplay, superClass);
 
 
     /**
@@ -4160,7 +4218,7 @@
         throttle: 16,
         horizontal: false
       };
-      options = extend(true, defaultOptions, options || {});
+      options = merge(defaultOptions, options || {});
       ScrollDisplay.__super__.constructor.call(this, element, options);
       this.container = this.element;
       this.__setContentElement();
@@ -4251,18 +4309,18 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"../util/thing":12,"./display":14,"extend":22,"lodash.throttle":63}],19:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/merge":11,"../util/thing":13,"./display":15,"lodash.throttle":63}],20:[function(require,module,exports){
 (function() {
-  var $, Display, TermsFacet, extend,
-    extend1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  var $, Display, TermsFacet, merge,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-
-  extend = require("extend");
 
   Display = require("./display");
 
   $ = require("../util/dfdom");
+
+  merge = require("../util/merge");
 
 
   /**
@@ -4271,7 +4329,7 @@
    */
 
   TermsFacet = (function(superClass) {
-    extend1(TermsFacet, superClass);
+    extend(TermsFacet, superClass);
 
     TermsFacet.defaultTemplate = "{{#terms}}\n  <div class=\"df-term\" data-facet=\"{{name}}\" data-value=\"{{key}}\"\n      {{#selected}}data-selected{{/selected}}>\n    <span class=\"df-term__value\">{{key}}</span>\n    <span class=\"df-term__count\">{{doc_count}}</span>\n  </div>\n{{/terms}}";
 
@@ -4287,7 +4345,7 @@
       if (options == null) {
         options = {};
       }
-      TermsFacet.__super__.constructor.call(this, element, extend(true, {
+      TermsFacet.__super__.constructor.call(this, element, merge({
         template: this.constructor.defaultTemplate
       }, options));
       this.totalSelected = 0;
@@ -4352,7 +4410,7 @@
         term.selected = (ref2 = term.key, indexOf.call(selectedTerms, ref2) >= 0);
       }
       this.totalSelected = selectedTerms.length;
-      return this.currentContext = extend(true, this.currentContext, {
+      return this.currentContext = merge(this.currentContext, {
         name: this.facet,
         terms: terms
       });
@@ -4391,7 +4449,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"./display":14,"extend":22}],20:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/merge":11,"./display":15}],21:[function(require,module,exports){
 (function() {
   var $, Widget, bean;
 
@@ -4508,7 +4566,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"bean":21}],21:[function(require,module,exports){
+},{"../util/dfdom":6,"bean":22}],22:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean
@@ -5250,94 +5308,6 @@
 
   return bean
 });
-
-},{}],22:[function(require,module,exports){
-'use strict';
-
-var hasOwn = Object.prototype.hasOwnProperty;
-var toStr = Object.prototype.toString;
-
-var isArray = function isArray(arr) {
-	if (typeof Array.isArray === 'function') {
-		return Array.isArray(arr);
-	}
-
-	return toStr.call(arr) === '[object Array]';
-};
-
-var isPlainObject = function isPlainObject(obj) {
-	if (!obj || toStr.call(obj) !== '[object Object]') {
-		return false;
-	}
-
-	var hasOwnConstructor = hasOwn.call(obj, 'constructor');
-	var hasIsPrototypeOf = obj.constructor && obj.constructor.prototype && hasOwn.call(obj.constructor.prototype, 'isPrototypeOf');
-	// Not own constructor property must be Object
-	if (obj.constructor && !hasOwnConstructor && !hasIsPrototypeOf) {
-		return false;
-	}
-
-	// Own properties are enumerated firstly, so to speed up,
-	// if last one is own, then all properties are own.
-	var key;
-	for (key in obj) { /**/ }
-
-	return typeof key === 'undefined' || hasOwn.call(obj, key);
-};
-
-module.exports = function extend() {
-	var options, name, src, copy, copyIsArray, clone;
-	var target = arguments[0];
-	var i = 1;
-	var length = arguments.length;
-	var deep = false;
-
-	// Handle a deep copy situation
-	if (typeof target === 'boolean') {
-		deep = target;
-		target = arguments[1] || {};
-		// skip the boolean and the target
-		i = 2;
-	}
-	if (target == null || (typeof target !== 'object' && typeof target !== 'function')) {
-		target = {};
-	}
-
-	for (; i < length; ++i) {
-		options = arguments[i];
-		// Only deal with non-null/undefined values
-		if (options != null) {
-			// Extend the base object
-			for (name in options) {
-				src = target[name];
-				copy = options[name];
-
-				// Prevent never-ending loop
-				if (target !== copy) {
-					// Recurse if we're merging plain objects or arrays
-					if (deep && copy && (isPlainObject(copy) || (copyIsArray = isArray(copy)))) {
-						if (copyIsArray) {
-							copyIsArray = false;
-							clone = src && isArray(src) ? src : [];
-						} else {
-							clone = src && isPlainObject(src) ? src : {};
-						}
-
-						// Never move original objects, clone them
-						target[name] = extend(deep, clone, copy);
-
-					// Don't bring in undefined values
-					} else if (typeof copy !== 'undefined') {
-						target[name] = copy;
-					}
-				}
-			}
-		}
-	}
-
-	// Return the modified object
-	return target;
-};
 
 },{}],23:[function(require,module,exports){
 
