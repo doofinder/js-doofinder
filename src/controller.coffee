@@ -21,7 +21,7 @@ class Controller
     unless @client instanceof Client
       throw (errors.error "client must be an instance of Client", @)
 
-    unless Thing.is.hash defaultParams
+    unless Thing.is.plainObject defaultParams
       throw (errors.error "defaultParams must be an instance of Object", @)
 
     # controller needs page and rpp to do calculations
@@ -341,7 +341,7 @@ class Controller
       else
         # otherwise, the value is appended at the end of the array
         @params[paramName][key].push value unless (@params[paramName][key].indexOf value) >= 0
-    else if (Thing.is.hash @params[paramName][key]) and (Thing.is.hash value)
+    else if (Thing.is.plainObject @params[paramName][key]) and (Thing.is.plainObject value)
       # adding a hash to a hash filter extends it, taking care of the
       # nitty-gritty of range filters
       @params[paramName][key] = @__buildHashFilter @params[paramName][key], value
@@ -390,9 +390,9 @@ class Controller
         # if no item remaining in the filter, remove the key
         if @params[paramName][key].length is 0
           delete @params[paramName][key]
-      else if Thing.is.hash @params[paramName][key]
+      else if Thing.is.plainObject @params[paramName][key]
         # if the filter is a plain object
-        if not Thing.is.hash value
+        if not Thing.is.plainObject value
           # if value is a scalar, string... means it's a key so we remove it
           # directly
           delete @params[paramName][key][value]

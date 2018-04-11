@@ -51,14 +51,29 @@ class Client
         message = "`apiKey` or `zone` must be defined"
       throw (errors.error message, @)
 
-    [host, port] = (options.address or "#{zone}-search.doofinder.com").split ":"
+    [protocol, address] = (options.address or "#{zone}-search.doofinder.com").split "://"
+
+    unless address?
+      address = protocol
+      protocol = null
+
+    [host, port] = address.split ":"
 
     @requestOptions =
       host: host
       port: port
       headers: {}
-    @requestOptions.headers["Authorization"] = secret if secret?
-    @httpClient = new HttpClient secret?
+
+    forceSSL = false
+
+    if secret?
+      @requestOptions.headers["Authorization"] = secret
+      @requestOptions.protocol = "https:"
+      forceSSL = true
+    else if protocol?
+      @requestOptions.protocol = "#{protocol}:"
+
+    @httpClient = new HttpClient forceSSL
     @version = "#{options.version or @constructor.apiVersion}"
 
   ###*
@@ -198,10 +213,10 @@ class Client
 
     queryParams = merge defaultParams, (params or {}), query: query
 
-    if Thing.is.array(queryParams.type) and queryParams.type.length is 1
+    if (Thing.is.array queryParams.type) and queryParams.type.length is 1
       queryParams.type = queryParams.type[0]
 
-    if Thing.is.hash(queryParams.sort) and
+    if (Thing.is.plainObject queryParams.sort) and
         (Object.keys queryParams.sort).length > 1
       throw (errors.error "To sort by multiple fields use an Array of Objects", @)
 

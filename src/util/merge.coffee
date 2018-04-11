@@ -14,26 +14,27 @@ Thing = require "./thing"
 ###
 merge = ->
   target = arguments[0]
-  length = arguments.length
+  length = arguments.length - 1
 
   if target == null or (typeof target isnt 'object' and typeof target isnt 'function')
     target = {}
 
-  for x in [1..length]
-    obj = arguments[x]
-    if obj?
-      for own propName, propValue of obj
-        src = target[propName]
-        if target isnt propValue
-          if propValue and ((Thing.is.hash propValue) or (propValueIsArray = Thing.is.array propValue))
-            if propValueIsArray
-              propValueIsArray = false
-              clone = if src and Thing.is.array src then src else []
-            else
-              clone = if src and Thing.is.hash src then src else {}
-            target[propName] = merge clone, propValue
-          else unless Thing.is.undef propValue
-            target[propName] = propValue
+  if length > 0
+    for x in [1..length]
+      obj = arguments[x]
+      if obj?
+        for own propName, propValue of obj
+          src = target[propName]
+          if target isnt propValue
+            if propValue and ((Thing.is.plainObject propValue) or (propValueIsArray = Thing.is.array propValue))
+              if propValueIsArray
+                propValueIsArray = false
+                clone = if src and Thing.is.array src then src else []
+              else
+                clone = if src and Thing.is.plainObject src then src else {}
+              target[propName] = merge clone, propValue
+            else unless typeof propValue is "undefined"
+              target[propName] = propValue
 
   target
 
