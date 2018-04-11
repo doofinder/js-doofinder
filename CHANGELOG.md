@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [5.3.8] - 2018-04-11
+## Added
+- `Thing.is.plainObject` to replace `Thing.is.hash`.
+
+## Changed
+- If `Client` receives an `address` option with protocol, protocol is forced (an API key has precedence and forces HTTPS).
+
+## Fixed
+- `doofinder.util.merge`
+
 ## [5.3.7] - 2018-04-09
 ### Removed
 - `doofinder.util.extend` has been replaced.

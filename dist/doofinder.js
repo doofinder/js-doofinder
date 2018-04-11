@@ -54,7 +54,7 @@
      */
 
     function Client(hashid, options) {
-      var host, message, port, ref, ref1, secret, zone;
+      var address, forceSSL, host, message, port, protocol, ref, ref1, ref2, secret, zone;
       this.hashid = hashid;
       if (options == null) {
         options = {};
@@ -68,16 +68,26 @@
         }
         throw errors.error(message, this);
       }
-      ref1 = (options.address || (zone + "-search.doofinder.com")).split(":"), host = ref1[0], port = ref1[1];
+      ref1 = (options.address || (zone + "-search.doofinder.com")).split("://"), protocol = ref1[0], address = ref1[1];
+      if (address == null) {
+        address = protocol;
+        protocol = null;
+      }
+      ref2 = address.split(":"), host = ref2[0], port = ref2[1];
       this.requestOptions = {
         host: host,
         port: port,
         headers: {}
       };
+      forceSSL = false;
       if (secret != null) {
         this.requestOptions.headers["Authorization"] = secret;
+        this.requestOptions.protocol = "https:";
+        forceSSL = true;
+      } else if (protocol != null) {
+        this.requestOptions.protocol = protocol + ":";
       }
-      this.httpClient = new HttpClient(secret != null);
+      this.httpClient = new HttpClient(forceSSL);
       this.version = "" + (options.version || this.constructor.apiVersion);
     }
 
@@ -236,10 +246,10 @@
       queryParams = merge(defaultParams, params || {}, {
         query: query
       });
-      if (Thing.is.array(queryParams.type) && queryParams.type.length === 1) {
+      if ((Thing.is.array(queryParams.type)) && queryParams.type.length === 1) {
         queryParams.type = queryParams.type[0];
       }
-      if (Thing.is.hash(queryParams.sort) && (Object.keys(queryParams.sort)).length > 1) {
+      if ((Thing.is.plainObject(queryParams.sort)) && (Object.keys(queryParams.sort)).length > 1) {
         throw errors.error("To sort by multiple fields use an Array of Objects", this);
       }
       return qs.stringify(queryParams, {
@@ -295,7 +305,7 @@
       if (!(this.client instanceof Client)) {
         throw errors.error("client must be an instance of Client", this);
       }
-      if (!Thing.is.hash(defaultParams)) {
+      if (!Thing.is.plainObject(defaultParams)) {
         throw errors.error("defaultParams must be an instance of Object", this);
       }
       defaults = {
@@ -703,7 +713,7 @@
             return this.params[paramName][key].push(value);
           }
         }
-      } else if ((Thing.is.hash(this.params[paramName][key])) && (Thing.is.hash(value))) {
+      } else if ((Thing.is.plainObject(this.params[paramName][key])) && (Thing.is.plainObject(value))) {
         return this.params[paramName][key] = this.__buildHashFilter(this.params[paramName][key], value);
       } else {
         return this.setFilter(key, value, paramName);
@@ -753,8 +763,8 @@
           if (this.params[paramName][key].length === 0) {
             delete this.params[paramName][key];
           }
-        } else if (Thing.is.hash(this.params[paramName][key])) {
-          if (!Thing.is.hash(value)) {
+        } else if (Thing.is.plainObject(this.params[paramName][key])) {
+          if (!Thing.is.plainObject(value)) {
             delete this.params[paramName][key][value];
           } else {
             ref1 = Object.keys(value);
@@ -3135,28 +3145,30 @@
   merge = function() {
     var clone, i, length, obj, propName, propValue, propValueIsArray, ref, src, target, x;
     target = arguments[0];
-    length = arguments.length;
+    length = arguments.length - 1;
     if (target === null || (typeof target !== 'object' && typeof target !== 'function')) {
       target = {};
     }
-    for (x = i = 1, ref = length; 1 <= ref ? i <= ref : i >= ref; x = 1 <= ref ? ++i : --i) {
-      obj = arguments[x];
-      if (obj != null) {
-        for (propName in obj) {
-          if (!hasProp.call(obj, propName)) continue;
-          propValue = obj[propName];
-          src = target[propName];
-          if (target !== propValue) {
-            if (propValue && ((Thing.is.hash(propValue)) || (propValueIsArray = Thing.is.array(propValue)))) {
-              if (propValueIsArray) {
-                propValueIsArray = false;
-                clone = src && Thing.is.array(src) ? src : [];
-              } else {
-                clone = src && Thing.is.hash(src) ? src : {};
+    if (length > 0) {
+      for (x = i = 1, ref = length; 1 <= ref ? i <= ref : i >= ref; x = 1 <= ref ? ++i : --i) {
+        obj = arguments[x];
+        if (obj != null) {
+          for (propName in obj) {
+            if (!hasProp.call(obj, propName)) continue;
+            propValue = obj[propName];
+            src = target[propName];
+            if (target !== propValue) {
+              if (propValue && ((Thing.is.plainObject(propValue)) || (propValueIsArray = Thing.is.array(propValue)))) {
+                if (propValueIsArray) {
+                  propValueIsArray = false;
+                  clone = src && Thing.is.array(src) ? src : [];
+                } else {
+                  clone = src && Thing.is.plainObject(src) ? src : {};
+                }
+                target[propName] = merge(clone, propValue);
+              } else if (typeof propValue !== "undefined") {
+                target[propName] = propValue;
               }
-              target[propName] = merge(clone, propValue);
-            } else if (!Thing.is.undef(propValue)) {
-              target[propName] = propValue;
             }
           }
         }
@@ -3240,9 +3252,13 @@
 
 },{}],13:[function(require,module,exports){
 (function() {
-  var Is;
+  var Is, hasOwn, toStr;
 
   Is = require("is");
+
+  hasOwn = Object.prototype.hasOwnProperty;
+
+  toStr = Object.prototype.toString;
 
   Is.window = function(value) {
     return (value != null) && typeof value === 'object' && 'setInterval' in value;
@@ -3256,6 +3272,23 @@
     return (Is.array(value)) && (value.every(function(x) {
       return Is.string(x);
     }));
+  };
+
+  Is.plainObject = function(obj) {
+    var hasIsPrototypeOf, hasOwnConstructor, i, key, len;
+    if (!obj || ((toStr.call(obj)) !== "[object Object]")) {
+      return false;
+    }
+    hasOwnConstructor = hasOwn.call(obj, "constructor");
+    hasIsPrototypeOf = obj.constructor && obj.constructor.prototype && hasOwn.call(obj.constructor.prototype, "isPrototypeOf");
+    if (obj.constructor && !hasOwnConstructor && !hasIsPrototypeOf) {
+      return false;
+    }
+    for (i = 0, len = obj.length; i < len; i++) {
+      key = obj[i];
+      continue;
+    }
+    return typeof key === "undefined" || hasOwn.call(obj, key);
   };
 
   module.exports = {
