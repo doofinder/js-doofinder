@@ -91,13 +91,13 @@ These are the possible options for the `options` dictionary
 
 One of `zone` and `apiKey` options are required. If both are set, search zone is extracted from `apiKey`.
 
-
 | Option | Required | Type | Values | Default | Description |
 | :--- | :---: | :---: | :---: | :---: | :--- |
 | `zone` | Yes\* | `String` | `eu1`<br>`us1` || Search zone. | `eu1` |
 | `apiKey` | Yes\* | `String` ||| Secret to authenticate requests. |
 | `address` | No | `String` ||| Search server address.<br>For development purposes. |
 | `version` | No | `String` || `"5"` | Search API version.<br>For development purposes. |
+| `headers` | No | `Object` || `{}` | Extra HTTP headers to send in the request.<br>An `Authorization` header forces SSL protocol but the `apiKey` option<br>has precedence over any value passed for the `Authorization` header. |
 
 #### Client.search()
 
