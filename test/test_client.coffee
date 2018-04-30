@@ -60,6 +60,28 @@ describe "Client", ->
         client.version.should.equal "6"
         done()
 
+    context "HTTP Headers", ->
+      it "should add passed headers to the request", (done) ->
+        client = new Client cfg.hashid, apiKey: cfg.apiKey, headers:
+          "X-Name": "John Smith"
+        client.requestOptions.headers["X-Name"].should.equal "John Smith"
+        done()
+
+      it "forces SSL if 'Authorization' header is passed as option", (done) ->
+        client = new Client cfg.hashid, zone: "eu1", headers:
+          "Authorization": "abc"
+        client.requestOptions.headers["Authorization"].should.equal "abc"
+        client.httpClient.http.should.equal https
+        done()
+
+      it "won't replace API Keys passed in options", (done) ->
+        client = new Client cfg.hashid, apiKey: cfg.apiKey, headers:
+          "X-Name": "John Smith"
+          "Authorization": "abc"
+        client.requestOptions.headers["X-Name"].should.equal "John Smith"
+        client.requestOptions.headers["Authorization"].should.equal "aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd"
+        done()
+
     context "Custom Address", ->
       it "should use default address if not defined", (done) ->
         client = cfg.getClient()
