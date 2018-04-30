@@ -45,6 +45,11 @@
      *                                                      # not to touch this.
      *                                                      # For development
      *                                                      # purposes.
+     *
+     *                            headers: {                # You know, for HTTP.
+     *                              "Origin": "...",
+     *                              "...": "..."
+     *                            }
      *                          }
      *
      *                          If you use `apiKey` you can omit `zone` but one of
@@ -77,15 +82,18 @@
       this.requestOptions = {
         host: host,
         port: port,
-        headers: {}
+        headers: options.headers || {}
       };
       forceSSL = false;
+      if (protocol != null) {
+        this.requestOptions.protocol = protocol + ":";
+      }
       if (secret != null) {
         this.requestOptions.headers["Authorization"] = secret;
+      }
+      if ("Authorization" in this.requestOptions.headers) {
         this.requestOptions.protocol = "https:";
         forceSSL = true;
-      } else if (protocol != null) {
-        this.requestOptions.protocol = protocol + ":";
       }
       this.httpClient = new HttpClient(forceSSL);
       this.version = "" + (options.version || this.constructor.apiVersion);

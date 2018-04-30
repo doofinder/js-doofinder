@@ -34,6 +34,11 @@ class Client
    *                                                      # not to touch this.
    *                                                      # For development
    *                                                      # purposes.
+   *
+   *                            headers: {                # You know, for HTTP.
+   *                              "Origin": "...",
+   *                              "...": "..."
+   *                            }
    *                          }
    *
    *                          If you use `apiKey` you can omit `zone` but one of
@@ -62,16 +67,20 @@ class Client
     @requestOptions =
       host: host
       port: port
-      headers: {}
+      headers: options.headers or {}
 
     forceSSL = false
 
+    if protocol?
+      @requestOptions.protocol = "#{protocol}:"
+
     if secret?
       @requestOptions.headers["Authorization"] = secret
+
+    # This works even if no apiKey passed but passed an "Authorization" header
+    if "Authorization" of @requestOptions.headers
       @requestOptions.protocol = "https:"
       forceSSL = true
-    else if protocol?
-      @requestOptions.protocol = "#{protocol}:"
 
     @httpClient = new HttpClient forceSSL
     @version = "#{options.version or @constructor.apiVersion}"
