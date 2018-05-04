@@ -192,6 +192,10 @@ class QueryInput extends Widget
       @__scheduleDelayedEvents()
       @previousValue = @value.toUpperCase()
       @controller.forEach (controller) => controller.search @value
+    else if not valueOk
+      # Because the value is not ok, the search is not performed, but the previus
+      # value must be changed.
+      @previousValue = @value.toUpperCase()
     else if @previousValue.length > 0 and @value.length is 0
       @trigger "df:input:none" if @value.length is 0
 
