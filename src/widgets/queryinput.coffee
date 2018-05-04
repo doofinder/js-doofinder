@@ -193,7 +193,7 @@ class QueryInput extends Widget
       @previousValue = @value.toUpperCase()
       @controller.forEach (controller) => controller.search @value
     else if not valueOk
-      # Because the value is not ok, the search is not performed, but the previus
+      # Because the value is not ok, the search is not performed, but the previous
       # value must be changed.
       @previousValue = @value.toUpperCase()
     else if @previousValue.length > 0 and @value.length is 0
