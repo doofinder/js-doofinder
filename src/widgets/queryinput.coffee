@@ -187,13 +187,15 @@ class QueryInput extends Widget
   __updateStatus: (force = false) ->
     valueOk = @value.length >= @options.captureLength
     valueChanged = @value.toUpperCase() != @previousValue
+    valueDeleted = @previousValue.length > 0 and @value.length is 0
+
+    @previousValue = @value.toUpperCase()
 
     if valueOk and (valueChanged or force)
       @__scheduleDelayedEvents()
-      @previousValue = @value.toUpperCase()
       @controller.forEach (controller) => controller.search @value
-    else if @previousValue.length > 0 and @value.length is 0
-      @trigger "df:input:none" if @value.length is 0
+    else if valueDeleted
+      @trigger "df:input:none"
 
   ###*
    * If the widget is configured to be cleaned, empties the value of the input
