@@ -17,11 +17,11 @@ The mechanics of the thing is  more or less as it follows
   - **The controller acts on the widget or react to it**
     * If the widget is a [QueryInput widget](queryInput.md): Every time a user types in the associated search box, the [controller class](controller.md) uses the [client class](client.md) to fetch search results from the search server
     * If the widget is a [Display widget](display.md): Every time search results come from the search server, the [controller class](controller.md) calls widget's `render()` method to display the results
-    
+
 To summarize, _every widget is linked to_:
   - a DOM element.
   - a `Controller`
-    
+
 ### Instantiating the widget
 
 Just a reference to a DOM element and an optional options object
@@ -97,7 +97,7 @@ Triggers an event on the widget, along with an array of arguments to be passed t
 
 ### Reference
 
-#### Constructor 
+#### Constructor
 
 | Argument | Required | Type | Description | Sample |
 | :--- | :---: | :---: | :--- | :--- |
@@ -128,7 +128,7 @@ Triggers an event on the widget, along with an array of arguments to be passed t
 
 #### Widget.init()
 
-No arguments. 
+No arguments.
 
 #### Widget.clean()
 
@@ -161,8 +161,8 @@ No arguments.
 | :--- | :---: | :---: | :--- |
 | `eventName` | Yes | `String` | Event name (or multiple events, space separated). |
 | `args` | No | `Array` | Array of arguments to pass to the event handler. |
-  
-  
+
+
 ### dofinder.widgets.ScrollDisplay
 
 `Widget < Display < ScrollDisplay`
@@ -174,3 +174,19 @@ When the user performs scrolling and reaches the end of the results, a new searc
 **IMPORTANT:** Scrolling content inside a `<div>` (or similar node) requires width / height being restricted so the content overflows the container instead of the latter adapts to its content. Also, setting `overflow-x` and `overflow-y` properties in CSS will enforce these rules.
 
 
+### doofinder.widgets.Pager
+
+`Widget < Display < Pager`
+
+This class render a paginator: i.e. a collection pagination links ( `previous, 1, 2, 3, ... 15 next` and so on) .
+
+Each time the user clicks on one of these pagination links, a search request for that particular page is made. Hopefully, there's also some results display widget somewhere on the page that will display those results :-).
+
+
+#### Extra options for the constructor
+
+| Option | Required | Type | Values | Default | Description |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| `delta` | No | `Number` || `2` | Number of page links to show before and after the current page number. |
+| `previousLabel` | No | `String` || `Previous` | Label to use for the "previous" link. |
+| `nextLabel` | No | `String` || `Next` | Label to use for the "next" link. |

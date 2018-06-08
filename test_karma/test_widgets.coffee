@@ -432,3 +432,105 @@ describe "Default Widgets", ->
 
   describe "ScrollDisplay", ->
     ScrollDisplay = doofinder.widgets.ScrollDisplay
+
+
+
+
+  describe "Pager", ->
+    Pager = doofinder.widgets.Pager
+
+    beforeEach ->
+      insertHTML """<div id="widget"></div>"""
+
+    pagesResponse = (page, total) ->
+      response =
+        page: page
+        total: total
+        results_per_page: 10
+
+    helpersTestTemplate = """
+      {{#pager}}
+        {{#previous}}<div id="previous">{{previous}}</div>{{/previous}}
+        {{#next}}<div id="next">{{.}}</div>{{/next}}
+        {{#first}}<div id="first">{{.}}</div>{{/first}}
+        {{#last}}<div id="last">{{.}}</div>{{/last}}
+        {{#pages}}<div class="pageRunner" id="page-{{page}}">{{page}}</div>{{/pages}}
+        {{#previousLabel}}<div id="previousLabel">{{.}}</div>{{/previousLabel}}
+        {{#nextLabel}}<div id="nextLabel">{{.}}</div>{{/nextLabel}}
+        <a href="#" id="data-page" data-page="7"></a>
+      {{/pager}}
+    """
+
+    createWidget = (options) ->
+      widget = new Pager "#widget", options
+      controller = getControllerMock()
+      controller.lastPage = 9 # needed for pager widget
+      widget.setController controller
+      widget.init()
+      widget
+
+    it "properly builds default render context: first page", (done) ->
+      res = pagesResponse 1, 92
+      pager =
+        createWidget
+          template: helpersTestTemplate
+
+      pager.one "df:widget:render", (res) ->
+        ($ "#previous").length.should.equal 0
+        ($ "#first").length.should.equal 0
+        ($ "#next").html().should.equal "2"
+        ($ "#last").html().should.equal "9"
+        ($ "#previousLabel").html().should.equal "Previous"
+        ($ "#nextLabel").html().should.equal "Next"
+        done()
+
+      pager.render res
+
+    it "properly builds default render context: last page & custom labels", (done) ->
+      res = pagesResponse 9, 92
+      pager =
+        createWidget
+          template: helpersTestTemplate,
+          previousLabel: 'HELO'
+
+      pager.one "df:widget:render", (res) ->
+        ($ "#previous").html().should.equal "8"
+        ($ "#first").html().should.equal "1"
+        ($ "#next").length.should.equal 0
+        ($ "#last").length.should.equal 0
+        ($ "#previousLabel").html().should.equal "HELO"
+        done()
+      pager.init()
+      pager.setController controller
+      pager.render res
+
+    it "properly builds default render context: middle & custom delta", (done) ->
+      res = pagesResponse 5, 92
+      pager =
+        createWidget
+          template: helpersTestTemplate,
+          delta: 3
+
+      pager.one "df:widget:render", (res) ->
+        ($ "#previous").html().should.equal "4"
+        ($ "#first").html().should.equal "1"
+        ($ "#next").html().should.equal "6"
+        ($ "#last").html().should.equal "9"
+        ($ ".pageRunner").length.should.equal 7 # 7 middle links (delta = 3)
+        done()
+      pager.render res
+
+    it "listen to click events", (done) ->
+      res = pagesResponse 5, 92
+      pager =
+        createWidget
+          template: helpersTestTemplate
+
+      pager.controller.getPage = (page) ->
+        page.should.equal 7
+        done()
+
+      pager.one "df:widget:render", (res) ->
+        (@element.find "#data-page").trigger "click"
+
+      pager.render res
