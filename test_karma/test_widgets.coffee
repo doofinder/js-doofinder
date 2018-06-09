@@ -513,7 +513,7 @@ describe "Default Widgets", ->
 
       pager.one "df:widget:render", (res) ->
         ($ "#previous").html().should.equal "4"
-        ($ "#first").html().should.equal "1"
+        ($ "#first").length.should.equal 0
         ($ "#next").html().should.equal "6"
         ($ "#last").html().should.equal "9"
         ($ ".pageRunner").length.should.equal 7 # 7 middle links (delta = 3)

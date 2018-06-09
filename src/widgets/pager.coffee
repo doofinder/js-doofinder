@@ -13,6 +13,11 @@ class Pager extends Display
             {{#translate}}{{previousLabel}}{{/translate}}
           </a>
           {{/previous}}
+          {{^previous}}
+          <span>
+            {{#translate}}{{previousLabel}}{{/translate}}
+          </span>
+          {{/previous}}
         </li>
         {{#first}}
           <li class="df-page">
@@ -45,6 +50,11 @@ class Pager extends Display
             <a href="#page-{{.}}" data-page="{{.}}">
               {{#translate}}{{nextLabel}}{{/translate}}
             </a>
+          {{/next}}
+          {{^next}}
+            <span>
+              {{#translate}}{{nextLabel}}{{/translate}}
+            </span>
           {{/next}}
         </li>
       </ul>
@@ -83,11 +93,11 @@ class Pager extends Display
     nLinks = 1 + @options.delta * 2 # number of links in the main block
 
     # compose main block depending on the current page
-    if (page - @options.delta) <= firstPage
+    if (page - @options.delta - 1) <= firstPage
       # [1,2,3,...]
       pages = [1..(Math.min nLinks, lastPage)]
     # else if page is lastPage or page + nLinks > lastPage
-    else if (page + @options.delta ) >= lastPage
+    else if (page + @options.delta + 1) >= lastPage
       # [...,8,9,10]
       pages = [(Math.max (lastPage - nLinks + 1), firstPage)..lastPage]
     else
