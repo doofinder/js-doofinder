@@ -14,7 +14,7 @@ class Pager extends Display
           </a>
           {{/previous}}
           {{^previous}}
-          <span data-page="{{.}}">
+          <span>
             {{#translate}}{{previousLabel}}{{/translate}}
           </span>
           {{/previous}}
@@ -52,7 +52,7 @@ class Pager extends Display
             </a>
           {{/next}}
           {{^next}}
-            <span data-page="{{.}}">
+            <span>
               {{#translate}}{{nextLabel}}{{/translate}}
             </span>
           {{/next}}
@@ -93,7 +93,7 @@ class Pager extends Display
     nLinks = 1 + @options.delta * 2 # number of links in the main block
 
     # compose main block depending on the current page
-    if (page - @options.delta) <= @options.delta
+    if (page - @options.delta - 1) <= firstPage
       # [1,2,3,...]
       pages = [1..(Math.min nLinks, lastPage)]
     # else if page is lastPage or page + nLinks > lastPage
