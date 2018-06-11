@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [5.3.11] - 2018-06-11
+## Added
+- Documentation and tests for Pager.
+
+## Changed
+- Improved Pager template and math.
+
 ## [5.3.10] - 2018-05-08
 ## Fixed
 - Fixed a bug that prevented to perform the search request when you type again the same minimum number of characters that trigger a search.
