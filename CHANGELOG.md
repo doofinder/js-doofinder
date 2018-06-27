@@ -4,29 +4,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [5.3.12] - 2018-06-27
+### Fixed
+- Fixed problem with terms widget which could cause duplicated entries in terms data.
+
 ## [5.3.11] - 2018-06-11
-## Added
+### Added
 - Documentation and tests for Pager.
 
-## Changed
+### Changed
 - Improved Pager template and math.
 
 ## [5.3.10] - 2018-05-08
-## Fixed
+### Fixed
 - Fixed a bug that prevented to perform the search request when you type again the same minimum number of characters that trigger a search.
 
 ## [5.3.9] - 2018-04-30
-## Added
+### Added
 - Added new `headers` option for `Client`.
 
 ## [5.3.8] - 2018-04-11
-## Added
+### Added
 - `Thing.is.plainObject` to replace `Thing.is.hash`.
 
-## Changed
+### Changed
 - If `Client` receives an `address` option with protocol, protocol is forced (an API key has precedence and forces HTTPS).
 
-## Fixed
+### Fixed
 - `doofinder.util.merge`
 
 ## [5.3.7] - 2018-04-09
