@@ -73,13 +73,16 @@ class TermsFacet extends Display
     terms = response.facets[@facet].terms.buckets
     selectedTerms = (response?.filter?.terms?[@facet]) or []
 
-    for index, term of terms
-      term.index = parseInt index, 10
-      term.name = @facet
-      term.selected = term.key in selectedTerms
-
     @totalSelected = selectedTerms.length
-    @currentContext = merge @currentContext, name: @facet, terms: terms
+
+    # merge is not safe for arrays of objects!
+    @currentContext.name = @facet
+    @currentContext.terms = terms.map (term, index) =>
+      term.index = index
+      term.name = @facet
+      term.selected = (selectedTerms.indexOf term.key) >= 0
+      term
+    @currentContext
 
 
   ###*
