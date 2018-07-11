@@ -24,6 +24,8 @@
   - [Instantiating the class](display#instantiating-the-class)
 - [Scroll Display widget](display#doofinderwidgetsscrolldisplay)
   - [Instantiating the class](display#scrolldisplay-instantating-the-class)
+- [Pager widget](display#doofinderwidgetspager)
+  - [Extra options](display#pagerdisplayextraoptionsfortheconstructor)
 - [Terms Facet class](display#doofinderwidgetstermsfacet)
   - [Instantiating the class](display#termsfacet-instantiating-the-class)
 - [Range Facet class](display#doofinderwidgetrangefacet)

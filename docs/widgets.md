@@ -163,30 +163,3 @@ No arguments.
 | `args` | No | `Array` | Array of arguments to pass to the event handler. |
 
 
-### dofinder.widgets.ScrollDisplay
-
-`Widget < Display < ScrollDisplay`
-
-You can use this class to render subsequent responses for the same search one after another by appending HTML instead of replacing it. HTML is replaced for the first page of a search only.
-
-When the user performs scrolling and reaches the end of the results, a new search page is automatically requested.
-
-**IMPORTANT:** Scrolling content inside a `<div>` (or similar node) requires width / height being restricted so the content overflows the container instead of the latter adapts to its content. Also, setting `overflow-x` and `overflow-y` properties in CSS will enforce these rules.
-
-
-### doofinder.widgets.Pager
-
-`Widget < Display < Pager`
-
-This class render a paginator: i.e. a collection pagination links ( `previous, 1, 2, 3, ... 15 next` and so on) .
-
-Each time the user clicks on one of these pagination links, a search request for that particular page is made. Hopefully, there's also some results display widget somewhere on the page that will display those results :-).
-
-
-#### Extra options for the constructor
-
-| Option | Required | Type | Values | Default | Description |
-| :--- | :---: | :---: | :---: | :---: | :--- |
-| `delta` | No | `Number` || `2` | Number of page links to show before and after the current page number. |
-| `previousLabel` | No | `String` || `Previous` | Label to use for the "previous" link. |
-| `nextLabel` | No | `String` || `Next` | Label to use for the "next" link. |
