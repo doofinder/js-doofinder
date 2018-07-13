@@ -265,6 +265,6 @@ rangeWidget.set([10, 100]);
 
 | Event | Triggered when ... | Triggered with the arguments ... |
 | :--- | :--- | :--- |
-| `df:range:set` | ... the slider range is changed by user | `value` (object with `start` `end` keys representing the starting and ending selected values), and `range` (object with `min` and `max` keys representing range's minumum and maximum)|
+| `df:range:change` | ... the slider range is changed by user | `value` (object with `start` `end` keys representing the starting and ending selected values), and `range` (object with `min` and `max` keys representing range's minumum and maximum)|
 
 

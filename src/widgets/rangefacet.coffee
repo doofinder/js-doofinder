@@ -63,6 +63,7 @@ class RangeFacet extends Display
     @format = @options.format or @constructor.basicFormat
     @slider = null    # node that actually holds noUiSlider stuff
     @values = {}      # keys are formatted numbers, values are raw numbers
+    @initial = {}     # initial values of range before using slider
     @range = {}       # range obtained from the search response
     @sliderOpts = {}  # options for the slider
 
@@ -91,32 +92,37 @@ class RangeFacet extends Display
    * Gets a proper range for the slider given a search response.
    * @protected
    * @param  {Object} res Search response.
-   * @return {Object}     Object with `min`, `max`, `start` and `end` keys.
+   * @return {Object}     Object with `min`, `max`
   ###
   __getRangeFromResponse: (response) ->
     stats = response.facets[@facet].range.buckets[0].stats
     range =
       min: (parseFloat stats.min or 0, 10)
       max: (parseFloat stats.max or 0, 10)
+
+  ###*
+   * Gets the user range selection for the slider given a search response.
+   * @protected
+   * @param  {Object} res Search response.
+   * @return {Object}     Object with `start`, `end`
+  ###
+  __getSelectionFromResponse: (response) ->
+    selection = {}
     if (rangeFilter = response?.filter?.range?[@facet])?
-      # if we have values from search filtering we apply them
-      range.start = (parseFloat rangeFilter.gte, 10) or range.min
-      range.end = (parseFloat rangeFilter.lte, 10) or range.max
-    else
-      range.start = range.min
-      range.end = range.max
-    range
+      selection.start = (parseFloat rangeFilter.gte, 10) or range.min
+      selection.end = (parseFloat rangeFilter.lte, 10) or range.max
+    selection
 
   ###*
    * Builds an options object for noUiSlider given a range object.
    *
    * @protected
-   * @param  {Object} range Object as returned by `__getRangeFromResponse`.
+   * @param  {Object} selection Object with user selection
    * @return {Object}       Options object.
   ###
-  __getSliderOptions: (range) ->
+  __getSliderOptions: (selection) ->
     sliderOpts =
-      start: [range.start, range.end]
+      start: [selection.start or @range.min, selection.end or @range.max]
       pips:
         mode: 'positions'
         values: [0, 50, 100]
@@ -125,8 +131,8 @@ class RangeFacet extends Display
           to: @constructor.formatFn.to.bind @
           from: @constructor.formatFn.from.bind @
       range:
-        min: range.min
-        max: range.max
+        min: @initial.min
+        max: @initial.max
       connect: true
       tooltips: true  # can't be overriden when options are updated!!!
       format:
@@ -160,6 +166,19 @@ class RangeFacet extends Display
     ]
 
   ###*
+  * Checks whether the range must be considered as "initial".
+  * and set slider boundaries according to that.
+  * @protected
+  * @param {Object} selection user selection found in response
+  * @return {Boolean}
+  ###
+  __is_initial: (selection) ->
+    selection_is_empty = Object.keys(selection).length == 0
+    selection_equals_range = selection.start == @range.min and selection.end == @range.max
+    initial_is_empty = Object.keys(@initial).length == 0
+    return selection_is_empty or selection_equals_range or initial_is_empty
+
+  ###*
    * Sets the range of the slider.
    * @param {Array} value 2-number array with min and max values to set.
   ###
@@ -188,13 +207,18 @@ class RangeFacet extends Display
   render: (response) ->
     if response.page is 1
       @range = @__getRangeFromResponse response
+      selection = @__getSelectionFromResponse response
 
-      if @range.min == @range.max
+      is_initial = @__is_initial selection
+
+      @initial = merge {}, @range if is_initial
+
+      if @range.min == @range.max and is_initial
         # There's only one or no items with values in the range
         @clean()
       else
         # Update widget if any results found and there are range bounds
-        @sliderOpts = @__getSliderOptions @range
+        @sliderOpts = @__getSliderOptions selection
 
         if @slider is null
           @__renderSlider @sliderOpts

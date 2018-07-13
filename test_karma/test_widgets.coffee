@@ -276,6 +276,31 @@ describe "Default Widgets", ->
         done()
       widget.render rangeFacetResponse()
 
+    it "don't change @initial when updating slider", (done) ->
+      widget = createWidget()
+      widget.on "df:widget:render", -> # first req
+        widget.off "df:widget:render" # the ".one" event handler doesn't work
+        widget.initial.min.should.equal 7.9
+        widget.initial.max.should.equal 1687
+        widget.on "df:widget:render", -> # second req
+          # initial hasn't changed
+          widget.initial.min.should.equal 7.9
+          widget.initial.max.should.equal 1687
+          # range has
+          widget.range.min.should.equal 10
+          widget.range.max.should.equal 500
+          done()
+        # second request  with different ranges
+        second_response = rangeFacetResponse()
+        second_response.facets.best_price.range.buckets[0].stats.min = 10
+        second_response.facets.best_price.range.buckets[0].stats.max = 500
+        widget.render second_response
+
+      # first request.
+      response = rangeFacetResponse()
+      delete response.filter
+      widget.render response # first req without filters
+
     it "cleans itself when min and max values are equal", (done) ->
       widget = createWidget()
       widget.on "df:widget:clean", -> done()
