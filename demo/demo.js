@@ -1,3 +1,21 @@
+jQuery(function($){
+  var examples = $('.example');
+  var buttons = $('#menu a');
+  examples.hide();
+
+  buttons.on('click', function(e){
+    buttons.not(this).removeClass('selected');
+    $(this).addClass('selected');
+    var id = $(this).attr('href');
+    examples.not(id).hide();
+    $(id).show();
+  });
+
+  if (window.location.hash.length) {
+    $('a[href="' + window.location.hash + '"]').click();
+  }
+});
+
 (function(fn) {
   if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading"){
     fn();

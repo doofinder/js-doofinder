@@ -18,14 +18,22 @@
 <body>
   <h1>Doofinder Library Demo</h1>
   <div class="page">
-    <div class="example">
+    <nav id="menu">
+      <a href="#basic-example">Basic Example</a>
+      <a href="#basic-example-paged">Basic Example: Paged</a>
+      <a href="#advanced-example">Advanced Example</a>
+      <a href="#multiple-controllers-with-same-input">Multiple Controllers with same input</a>
+      <a href="#multiple-controllers-with-multiple-inputs">Multiple Controllers with multiple inputs</a>
+    </nav>
+
+    <div class="example" id="basic-example">
       <h2>Basic Example</h2>
       <input class="widget" id="basicInput" type="text" placeholder="Search something">
       <pre id="basicStatus"></pre>
       <div class="widget df-results" id="basicResults"></div>
     </div>
 
-    <div class="example">
+    <div class="example" id="basic-example-paged">
       <h2>Basic Example: Paged</h2>
       <input class="widget" id="pagedInput" type="text" placeholder="Search something">
       <pre id="pagedStatus"></pre>
@@ -33,7 +41,7 @@
       <div class="widget" id="pagedPager"></div>
     </div>
 
-    <div class="example">
+    <div class="example" id="advanced-example">
       <h2>Advanced Example</h2>
       <input class="widget" id="advancedInput" type="text" placeholder="Search something">
       <pre id="advancedStatus"></pre>
@@ -61,7 +69,7 @@
       </div>
     </div>
 
-    <div class="example">
+    <div class="example" id="multiple-controllers-with-same-input">
       <h2>Multiple Controllers with same input</h2>
       <input class="widget" id="commonInput" type="text" placeholder="Search something">
       <pre id="firstStatus"></pre>
@@ -79,7 +87,7 @@
       </script>
     </div>
 
-    <div class="example">
+    <div class="example" id="multiple-controllers-with-multiple-inputs">
       <h2>Multiple Controllers with multiple inputs</h2>
       <input class="widget Multiple" type="text" placeholder="Search something">
       <input class="widget Multiple" type="text" placeholder="Search something">
