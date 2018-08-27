@@ -82,7 +82,7 @@ class Widget
   trigger: (eventName, args) ->
     bean.fire @, eventName, args
 
-  toString: -> "[#{@constructor.name}]"
+  toString: -> @constructor.name
 
 
 module.exports = Widget

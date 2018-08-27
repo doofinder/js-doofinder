@@ -104,6 +104,6 @@ class TermsFacet extends Display
     @totalSelected = 0
     super
 
-  toString: -> "[#{@constructor.name}(#{@facet})]"
+  toString: -> "#{@facet} (#{super()})"
 
 module.exports = TermsFacet

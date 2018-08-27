@@ -213,7 +213,7 @@ class RangeFacet extends Display
     @values = {}
     super
 
-  toString: -> "[#{@constructor.name}(#{@facet})]"
+  toString: -> "#{@facet} (#{super()})"
 
 
 module.exports = RangeFacet

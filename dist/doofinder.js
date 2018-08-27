@@ -4163,7 +4163,7 @@
     };
 
     RangeFacet.prototype.toString = function() {
-      return "[" + this.constructor.name + "(" + this.facet + ")]";
+      return this.facet + " (" + (RangeFacet.__super__.toString.call(this)) + ")";
     };
 
     return RangeFacet;
@@ -4494,7 +4494,7 @@
     };
 
     TermsFacet.prototype.toString = function() {
-      return "[" + this.constructor.name + "(" + this.facet + ")]";
+      return this.facet + " (" + (TermsFacet.__super__.toString.call(this)) + ")";
     };
 
     return TermsFacet;
@@ -4615,7 +4615,7 @@
     };
 
     Widget.prototype.toString = function() {
-      return "[" + this.constructor.name + "]";
+      return this.constructor.name;
     };
 
     return Widget;
