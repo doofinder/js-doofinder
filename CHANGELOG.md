@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [5.3.13] - 2018-08-27
+### Added
+- New `forceDecimals` option for currency specification. `true` by default, forces decimal notation for integer values.
+
+### Fixed
+- Restored original behavior with currency formatting (via `forceDecimals` default value).
+- Better handling of widget rendering exceptions. Now they don't entirely break the execution of the render process.
+
 ## [5.3.12] - 2018-06-27
 ### Fixed
 - Fixed problem with terms widget which could cause duplicated entries in terms data.
