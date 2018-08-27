@@ -2837,14 +2837,17 @@
    * @param  {Object} currency An object that contains a currency specification.
    *                           Attributes of the specification are:
    *                           {
-   *                             symbol:    Required. A symbol, like "€".
-   *                             format:    Required. Template.
-   *                                          %s is replaced by the symbol.
-   *                                          %v is replaced by the value.
-   *                             decimal:   Optional. Decimal separator.
-   *                             thousand:  Optional. Thousands separator.
-   *                             precision: Optional. Number of decimals.
-   *                                          2 by default.
+   *                             symbol:        Required. A symbol, like "€".
+   *                             format:        Required. Template.
+   *                                              %s is replaced by the symbol.
+   *                                              %v is replaced by the value.
+   *                             decimal:       Optional. Decimal separator.
+   *                             thousand:      Optional. Thousands separator.
+   *                             precision:     Optional. Number of decimals.
+   *                                              2 by default.
+   *                             forceDecimals: Optional. Forces decimals for
+   *                                              integer values. `true` by
+   *                                              default.
    *                           }
    * @return {String}          Formatted value.
    */
@@ -2853,6 +2856,9 @@
     var base, dec, decimal, mod, neg, num, number, power, precision, thousand;
     if (value == null) {
       return "";
+    }
+    if (spec.forceDecimals == null) {
+      spec.forceDecimals = true;
     }
     neg = value < 0;
     precision = spec.precision != null ? spec.precision : 2;
@@ -2869,7 +2875,7 @@
     num.push((base.substr(mod)).replace(/(\d{3})(?=\d)/g, "$1" + thousand));
     if (precision > 0) {
       dec = (number.split("."))[1];
-      if ((parseInt(dec, 10)) > 0) {
+      if (spec.forceDecimals || (parseInt(dec, 10)) > 0) {
         num.push("" + decimal + dec);
       }
     }

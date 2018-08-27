@@ -27,3 +27,28 @@ describe "Helpers", ->
       fn = myHelpers.translate()
       (fn "hello", (text) -> text).should.equal "hello"
       done()
+
+  context "formatNumber", ->
+    formatNumber = helpers.fn.formatNumber
+
+    it "formats number according to the spec", (done) ->
+      spec =
+        symbol: '€'
+        format: '%s%v-hi!'
+        decimal: ','
+        thousand: '.'
+
+      (formatNumber 1234.56, spec).should.equal "€1.234,56-hi!"
+      (formatNumber 1234, spec).should.equal "€1.234,00-hi!"
+      done()
+
+    it "can remove decimals for integers", (done) ->
+      spec =
+        symbol: ''
+        format: '%s%v'
+        forceDecimals: false
+
+      (formatNumber 1234.56, spec).should.equal "1234.56"
+      (formatNumber 1234, spec).should.equal "1234"
+      done()
+
