@@ -589,7 +589,14 @@
 
     Controller.prototype.renderWidgets = function(res) {
       this.widgets.forEach(function(widget) {
-        return widget.render(res);
+        var err, error;
+        try {
+          return widget.render(res);
+        } catch (error) {
+          err = error;
+          errors.warning("Couldn't render " + widget + " widget due to an error:\n\n" + err.stack + "\n\nRefresh your browser's cache and try again. If the error persists contact support.");
+          return widget.clean();
+        }
       });
       return this.trigger("df:controller:renderWidgets");
     };
@@ -4155,6 +4162,10 @@
       return RangeFacet.__super__.clean.apply(this, arguments);
     };
 
+    RangeFacet.prototype.toString = function() {
+      return this.facet + " (" + (RangeFacet.__super__.toString.call(this)) + ")";
+    };
+
     return RangeFacet;
 
   })(Display);
@@ -4482,6 +4493,10 @@
       return TermsFacet.__super__.clean.apply(this, arguments);
     };
 
+    TermsFacet.prototype.toString = function() {
+      return this.facet + " (" + (TermsFacet.__super__.toString.call(this)) + ")";
+    };
+
     return TermsFacet;
 
   })(Display);
@@ -4597,6 +4612,10 @@
 
     Widget.prototype.trigger = function(eventName, args) {
       return bean.fire(this, eventName, args);
+    };
+
+    Widget.prototype.toString = function() {
+      return this.constructor.name;
     };
 
     return Widget;
