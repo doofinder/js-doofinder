@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [5.3.14] - 2018-08-28
+### Added
+- New `zoom` option in `RangeFacet` to allow _zooming_ selected range in the slider.
+
 ## [5.3.13] - 2018-08-27
 ### Added
 - New `forceDecimals` option for currency specification. `true` by default, forces decimal notation for integer values.
