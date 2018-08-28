@@ -243,7 +243,15 @@ class Controller
   ###
   renderWidgets: (res) ->
     @widgets.forEach (widget) ->
-      widget.render res
+      try
+        widget.render res
+      catch err
+        errors.warning """Couldn't render #{widget} widget due to an error:
+
+#{err.stack}
+
+Refresh your browser's cache and try again. If the error persists contact support."""
+        widget.clean()
     @trigger "df:controller:renderWidgets"
 
   ###*

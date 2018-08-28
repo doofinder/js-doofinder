@@ -104,4 +104,6 @@ class TermsFacet extends Display
     @totalSelected = 0
     super
 
+  toString: -> "#{@facet} (#{super()})"
+
 module.exports = TermsFacet

@@ -29,6 +29,7 @@ jQuery(function($){
   // some utilities
   var $ = doofinder.util.dfdom;
   var bean = doofinder.util.bean;
+  var formatNumber = doofinder.util.helpers.fn.formatNumber;
 
   function configureStatusHandler(controller, container) {
     controller.on("df:results:success", function(res){
@@ -141,7 +142,12 @@ jQuery(function($){
             node,
             facetOptions.name, {
               format: function(value) {
-                return value.toFixed(2) + "&euro;";
+                return formatNumber(value, {
+                  symbol: '€',
+                  format: '%v%s',
+                  forceDecimals: false
+                });
+                // return value.toFixed(2) + "&euro;";
               }
             }
           );

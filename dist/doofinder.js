@@ -589,7 +589,14 @@
 
     Controller.prototype.renderWidgets = function(res) {
       this.widgets.forEach(function(widget) {
-        return widget.render(res);
+        var err, error;
+        try {
+          return widget.render(res);
+        } catch (error) {
+          err = error;
+          errors.warning("Couldn't render " + widget + " widget due to an error:\n\n" + err.stack + "\n\nRefresh your browser's cache and try again. If the error persists contact support.");
+          return widget.clean();
+        }
       });
       return this.trigger("df:controller:renderWidgets");
     };
@@ -910,7 +917,7 @@
 },{"./client":1,"./util/errors":7,"./util/freezer":8,"./util/merge":11,"./util/thing":13,"./widgets/widget":21,"bean":22,"qs":71}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.3.12",
+    version: "5.3.13",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
@@ -2830,14 +2837,17 @@
    * @param  {Object} currency An object that contains a currency specification.
    *                           Attributes of the specification are:
    *                           {
-   *                             symbol:    Required. A symbol, like "€".
-   *                             format:    Required. Template.
-   *                                          %s is replaced by the symbol.
-   *                                          %v is replaced by the value.
-   *                             decimal:   Optional. Decimal separator.
-   *                             thousand:  Optional. Thousands separator.
-   *                             precision: Optional. Number of decimals.
-   *                                          2 by default.
+   *                             symbol:        Required. A symbol, like "€".
+   *                             format:        Required. Template.
+   *                                              %s is replaced by the symbol.
+   *                                              %v is replaced by the value.
+   *                             decimal:       Optional. Decimal separator.
+   *                             thousand:      Optional. Thousands separator.
+   *                             precision:     Optional. Number of decimals.
+   *                                              2 by default.
+   *                             forceDecimals: Optional. Forces decimals for
+   *                                              integer values. `true` by
+   *                                              default.
    *                           }
    * @return {String}          Formatted value.
    */
@@ -2846,6 +2856,9 @@
     var base, dec, decimal, mod, neg, num, number, power, precision, thousand;
     if (value == null) {
       return "";
+    }
+    if (spec.forceDecimals == null) {
+      spec.forceDecimals = true;
     }
     neg = value < 0;
     precision = spec.precision != null ? spec.precision : 2;
@@ -2862,7 +2875,7 @@
     num.push((base.substr(mod)).replace(/(\d{3})(?=\d)/g, "$1" + thousand));
     if (precision > 0) {
       dec = (number.split("."))[1];
-      if ((parseInt(dec, 10)) > 0) {
+      if (spec.forceDecimals || (parseInt(dec, 10)) > 0) {
         num.push("" + decimal + dec);
       }
     }
@@ -4155,6 +4168,10 @@
       return RangeFacet.__super__.clean.apply(this, arguments);
     };
 
+    RangeFacet.prototype.toString = function() {
+      return this.facet + " (" + (RangeFacet.__super__.toString.call(this)) + ")";
+    };
+
     return RangeFacet;
 
   })(Display);
@@ -4482,6 +4499,10 @@
       return TermsFacet.__super__.clean.apply(this, arguments);
     };
 
+    TermsFacet.prototype.toString = function() {
+      return this.facet + " (" + (TermsFacet.__super__.toString.call(this)) + ")";
+    };
+
     return TermsFacet;
 
   })(Display);
@@ -4597,6 +4618,10 @@
 
     Widget.prototype.trigger = function(eventName, args) {
       return bean.fire(this, eventName, args);
+    };
+
+    Widget.prototype.toString = function() {
+      return this.constructor.name;
     };
 
     return Widget;

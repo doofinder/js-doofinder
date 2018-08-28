@@ -13,19 +13,24 @@ translate = (require "./text").translate
  * @param  {Object} currency An object that contains a currency specification.
  *                           Attributes of the specification are:
  *                           {
- *                             symbol:    Required. A symbol, like "€".
- *                             format:    Required. Template.
- *                                          %s is replaced by the symbol.
- *                                          %v is replaced by the value.
- *                             decimal:   Optional. Decimal separator.
- *                             thousand:  Optional. Thousands separator.
- *                             precision: Optional. Number of decimals.
- *                                          2 by default.
+ *                             symbol:        Required. A symbol, like "€".
+ *                             format:        Required. Template.
+ *                                              %s is replaced by the symbol.
+ *                                              %v is replaced by the value.
+ *                             decimal:       Optional. Decimal separator.
+ *                             thousand:      Optional. Thousands separator.
+ *                             precision:     Optional. Number of decimals.
+ *                                              2 by default.
+ *                             forceDecimals: Optional. Forces decimals for
+ *                                              integer values. `true` by
+ *                                              default.
  *                           }
  * @return {String}          Formatted value.
 ###
 formatNumber = (value, spec) ->
   return "" unless value?
+
+  spec.forceDecimals ?= true
 
   neg = value < 0
 
@@ -43,7 +48,8 @@ formatNumber = (value, spec) ->
   (num.push ((base.substr mod).replace /(\d{3})(?=\d)/g, "$1#{thousand}"))
   if precision > 0
     dec = (number.split ".")[1]
-    (num.push "#{decimal}#{dec}") if (parseInt dec, 10) > 0
+    if spec.forceDecimals or (parseInt dec, 10) > 0
+      num.push "#{decimal}#{dec}"
 
   num = ((spec.format.replace /%s/g, spec.symbol).replace /%v/g, num.join "")
   num = "-#{num}" if neg
