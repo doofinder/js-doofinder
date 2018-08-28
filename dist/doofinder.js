@@ -3981,7 +3981,8 @@
       defaults = {
         template: this.constructor.defaultTemplate,
         pips: void 0,
-        format: void 0
+        format: void 0,
+        zoom: false
       };
       RangeFacet.__super__.constructor.call(this, element, merge(defaults, options));
       this.format = this.options.format || this.constructor.basicFormat;
@@ -3989,6 +3990,7 @@
       this.values = {};
       this.range = {};
       this.sliderOpts = {};
+      this.zoom = this.__getZoomOptions();
     }
 
 
@@ -4036,6 +4038,29 @@
 
 
     /**
+     * Calculates the position of the slider handles when range limits change
+     * to allow "zooming" the slider values.
+     *
+     * If this.options.zoom is false or less than 50, no zooming is applied.
+     * The calculated positions must be multiple of 5, smaller offsets disable
+     * zooming too.
+     *
+     * @return {Object|Boolean} The object with the positions (start & end) or
+     *                          false if zooming is disabled.
+     */
+
+    RangeFacet.prototype.__getZoomOptions = function() {
+      var offset, zoom;
+      zoom = Math.abs(this.options.zoom || 0);
+      offset = (Math.floor(((100 - zoom) / 2) / 5)) * 5;
+      return zoom >= 50 && offset >= 5 && {
+        start: offset,
+        end: 100 - offset
+      };
+    };
+
+
+    /**
      * Builds an options object for noUiSlider given a range object.
      *
      * @protected
@@ -4048,9 +4073,9 @@
       sliderOpts = {
         start: [range.start, range.end],
         pips: {
-          mode: 'positions',
-          values: [0, 50, 100],
-          density: 6,
+          mode: 'count',
+          values: 3,
+          density: 4,
           format: {
             to: this.constructor.formatFn.to.bind(this),
             from: this.constructor.formatFn.from.bind(this)
@@ -4062,11 +4087,20 @@
         },
         connect: true,
         tooltips: true,
+        behaviour: 'drag-tap',
         format: {
           to: this.constructor.formatFn.to.bind(this),
           from: this.constructor.formatFn.from.bind(this)
         }
       };
+      if (this.zoom !== false) {
+        if (range.start > range.min) {
+          sliderOpts.range[this.zoom.start + "%"] = range.start;
+        }
+        if (range.end < range.max) {
+          sliderOpts.range[this.zoom.end + "%"] = range.end;
+        }
+      }
       return merge({}, sliderOpts, {
         pips: this.options.pips
       });
