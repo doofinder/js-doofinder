@@ -144,6 +144,23 @@ This widgets receives the same options as `Display`, plus:
 | `df:widget:scroll` | ... each time scrolling calculations are made | `scrollTop` (number of pixels the content is scrolled vertically), and `direction` (direction of scrolling: "up" or "down")|
 
 
+## doofinder.widgets.Pager
+
+`Widget < Display < Pager`
+
+This class render a paginator: i.e. a collection pagination links ( `previous, 1, 2, 3, ... 15 next` and so on) .
+
+Each time the user clicks on one of these pagination links, a search request for that particular page is made. Hopefully, there's also some results display widget somewhere on the page that will display those results :-).
+
+### Pager Display: Extra options for the constructor
+
+| Option | Required | Type | Values | Default | Description |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| `delta` | No | `Number` || `2` | Number of page links to show before and after the current page number. |
+| `previousLabel` | No | `String` || `Previous` | Label to use for the "previous" link. |
+| `nextLabel` | No | `String` || `Next` | Label to use for the "next" link. |
+
+
 ## doofinder.widgets.TermsFacet
 
 `Widget < Display < TermsFacet`
