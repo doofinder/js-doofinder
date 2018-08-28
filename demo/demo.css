@@ -104,3 +104,20 @@ pre {
 .col + .col {
   padding: 0 0 0 5px;
 }
+
+#menu a {
+  display: inline-block;
+  padding: .5em;
+  border: 1px solid transparent;
+  font-size: 13px;
+}
+
+#menu a:hover {
+  border-color: #ccc;
+}
+
+#menu a.selected {
+  border-color: #000;
+  background-color: #000;
+  color: white;
+}

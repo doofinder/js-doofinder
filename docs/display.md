@@ -11,11 +11,11 @@ These kind of widgets are ment to display content inside some DOM element and ma
 `Widget < Display`
 
  A widget that inherit from this class can render content:
- 
+
    - It renders HTML inside its element node given a search response. Rendering is done with the [Mustache] engine.
   - It populates variables and helpers (default and custom) to be used in the template.
   - It cleans its element from unnecessary HTML code when the widget itself is cleaned.
-  
+
 ### Instantiatin the class
 
 Constructor now accepts options for templating.
@@ -50,7 +50,7 @@ var display = new doofinder.widgets.Display("#myDiv", {
   }
 });
 ```
-  
+
 #### options
 
 | Option | Required | Type | Default | Description |
@@ -89,7 +89,7 @@ var display = new doofinder.widgets.Display("#myDiv", {
 You can use this class to render subsequent responses for the same search one after another by appending HTML instead of replacing it. HTML is replaced for the first page of a search only.
 
 When the user performs scrolling and reaches the end of the results, a new search page is automatically requested.
- 
+
 **IMPORTANT:** Scrolling content inside a `<div>` (or similar node) requires width / height being restricted so the content overflows the container instead of the latter adapts to its content. Also, setting `overflow-x` and `overflow-y` properties in CSS will enforce these rules.
 
 
@@ -225,6 +225,7 @@ var rangeWidget = new doofinder.widgets.RangeFacet("#price", {
 ||| `Boolean` | `false` || Disables _pips_. |
 ||| `Object` |||  |
 | `format` | No | `Function` ||| Function to format numeric values as strings. |
+| `zoom` | No | `Number|Boolean` | `50 - 100 | false` | `false` | Percentage of the slider used to _zoom_ the currently selected range. Disabled by default. |
 
 #### Default Template
 

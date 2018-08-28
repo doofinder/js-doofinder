@@ -57,6 +57,7 @@ class RangeFacet extends Display
       template: @constructor.defaultTemplate
       pips: undefined
       format: undefined
+      zoom: false  # `false` disables zoom, use 50 -> 100
 
     super element, (merge defaults, options)
 
@@ -65,6 +66,7 @@ class RangeFacet extends Display
     @values = {}      # keys are formatted numbers, values are raw numbers
     @range = {}       # range obtained from the search response
     @sliderOpts = {}  # options for the slider
+    @zoom = @__getZoomOptions()
 
   ###*
    * Renders the slider for the very first time.
@@ -108,6 +110,22 @@ class RangeFacet extends Display
     range
 
   ###*
+   * Calculates the position of the slider handles when range limits change
+   * to allow "zooming" the slider values.
+   *
+   * If this.options.zoom is false or less than 50, no zooming is applied.
+   * The calculated positions must be multiple of 5, smaller offsets disable
+   * zooming too.
+   *
+   * @return {Object|Boolean} The object with the positions (start & end) or
+   *                          false if zooming is disabled.
+  ###
+  __getZoomOptions: ->
+    zoom = Math.abs (@options.zoom or 0)
+    offset = (Math.floor ((100 - zoom) / 2) / 5) * 5
+    zoom >= 50 and offset >= 5 and (start: offset, end: 100 - offset)
+
+  ###*
    * Builds an options object for noUiSlider given a range object.
    *
    * @protected
@@ -118,9 +136,9 @@ class RangeFacet extends Display
     sliderOpts =
       start: [range.start, range.end]
       pips:
-        mode: 'positions'
-        values: [0, 50, 100]
-        density: 6
+        mode: 'count'
+        values: 3
+        density: 4
         format:
           to: @constructor.formatFn.to.bind @
           from: @constructor.formatFn.from.bind @
@@ -129,9 +147,17 @@ class RangeFacet extends Display
         max: range.max
       connect: true
       tooltips: true  # can't be overriden when options are updated!!!
+      behaviour: 'drag-tap'
       format:
         to: @constructor.formatFn.to.bind @
         from: @constructor.formatFn.from.bind @
+
+    if @zoom isnt false
+      if range.start > range.min
+        sliderOpts.range["#{@zoom.start}%"] = range.start
+      if range.end < range.max
+        sliderOpts.range["#{@zoom.end}%"] = range.end
+
     merge {}, sliderOpts, pips: @options.pips
 
   ###*

@@ -1,3 +1,21 @@
+jQuery(function($){
+  var examples = $('.example');
+  var buttons = $('#menu a');
+  examples.hide();
+
+  buttons.on('click', function(e){
+    buttons.not(this).removeClass('selected');
+    $(this).addClass('selected');
+    var id = $(this).attr('href');
+    examples.not(id).hide();
+    $(id).show();
+  });
+
+  if (window.location.hash.length) {
+    $('a[href="' + window.location.hash + '"]').click();
+  }
+});
+
 (function(fn) {
   if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading"){
     fn();
@@ -24,7 +42,7 @@
   //
 
   // create a search client
-  var basicClient = new doofinder.Client(HASHID, {zone: 'eu1'});
+  var basicClient = new doofinder.Client(HASHID, {zone: 'eu1', address: SERVER_ADDRESS});
   // create a basic controller, get 20 results per page
   var basicController = new doofinder.Controller(basicClient, {rpp: 20});
   // create an input widget
@@ -52,7 +70,7 @@
   //
 
   // create a search client
-  var pagedClient = new doofinder.Client(HASHID, {zone: 'eu1'});
+  var pagedClient = new doofinder.Client(HASHID, {zone: 'eu1', address: SERVER_ADDRESS});
   // create a basic controller, get 20 results per page
   var pagedController = new doofinder.Controller(pagedClient, {rpp: 10});
   // create an input widget
@@ -72,7 +90,7 @@
   //
 
   // create a search client
-  var advancedClient = new doofinder.Client(HASHID, {zone: 'eu1'});
+  var advancedClient = new doofinder.Client(HASHID, {zone: 'eu1', address: SERVER_ADDRESS});
   // create a new controller
   var advancedController = new doofinder.Controller(advancedClient, {rpp: 50});
   configureStatusHandler(advancedController, "#advancedStatus");
@@ -123,6 +141,7 @@
           widget = new doofinder.widgets.RangeFacet(
             node,
             facetOptions.name, {
+              zoom: 80,
               format: function(value) {
                 return formatNumber(value, {
                   symbol: '€',
@@ -153,7 +172,7 @@
   //
 
   // create a search client
-  var commonClient = new doofinder.Client(HASHID, {zone: 'eu1'});
+  var commonClient = new doofinder.Client(HASHID, {zone: 'eu1', address: SERVER_ADDRESS});
   // create an input widget
   var commonInputWidget = new doofinder.widgets.QueryInput("#commonInput");
 
@@ -198,7 +217,7 @@
   //
 
   // create a search client
-  var multipleClient = new doofinder.Client(HASHID, {zone: 'eu1'});
+  var multipleClient = new doofinder.Client(HASHID, {zone: 'eu1', address: SERVER_ADDRESS});
 
   // create an input widget
   var multipleInputWidget = new doofinder.widgets.QueryInput([".Multiple", "#multipleInput"]);
