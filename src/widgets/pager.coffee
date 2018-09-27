@@ -10,12 +10,12 @@ class Pager extends Display
         <li class="df-page{{^previous}} df-page--disabled{{/previous}}">
           {{#previous}}
           <a href="#page-{{.}}" data-page="{{.}}">
-            {{#translate}}{{previousLabel}}{{/translate}}
+            {{#translate}}{{{previousLabel}}}{{/translate}}
           </a>
           {{/previous}}
           {{^previous}}
           <span>
-            {{#translate}}{{previousLabel}}{{/translate}}
+            {{#translate}}{{{previousLabel}}}{{/translate}}
           </span>
           {{/previous}}
         </li>
@@ -48,12 +48,12 @@ class Pager extends Display
         <li class="df-page{{^next}} df-page--disabled{{/next}}">
           {{#next}}
             <a href="#page-{{.}}" data-page="{{.}}">
-              {{#translate}}{{nextLabel}}{{/translate}}
+              {{#translate}}{{{nextLabel}}}{{/translate}}
             </a>
           {{/next}}
           {{^next}}
             <span>
-              {{#translate}}{{nextLabel}}{{/translate}}
+              {{#translate}}{{{nextLabel}}}{{/translate}}
             </span>
           {{/next}}
         </li>
