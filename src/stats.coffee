@@ -71,6 +71,8 @@ class Stats
 
     errors.requireVal params[key], key for key in required
 
+    params['custom_results_id'] = args.shift() if typeof args[0] != "function"
+
     callback = args.shift()
     @client.stats "click", params, (err, res) ->
       callback? err, res # Client requires a callback, we don't

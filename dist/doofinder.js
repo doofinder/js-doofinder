@@ -463,6 +463,7 @@
             return _this.trigger("df:results:error", [err]);
           } else if (res.query_counter === _this.queryCounter) {
             _this.lastPage = Math.ceil(res.total / res.results_per_page);
+            _this.custom_results_id = res.custom_results_id;
             _this.params.query_name = res.query_name;
             _this.renderWidgets(res);
             _this.trigger("df:results:success", [res]);
@@ -1359,6 +1360,9 @@
       for (j = 0, len1 = required.length; j < len1; j++) {
         key = required[j];
         errors.requireVal(params[key], key);
+      }
+      if (typeof args[0] !== "function") {
+        params['custom_results_id'] = args.shift();
       }
       callback = args.shift();
       return this.client.stats("click", params, function(err, res) {
@@ -15337,7 +15341,7 @@ arguments[4][31][0].apply(exports,arguments)
 }));
 
 },{}],69:[function(require,module,exports){
-/*! nouislider - 11.0.3 - 2018-01-21 14:04:07 */
+/*! nouislider - 11.1.0 - 2018-04-02 11:18:13 */
 
 (function (factory) {
 
@@ -15361,7 +15365,7 @@ arguments[4][31][0].apply(exports,arguments)
 
 	'use strict';
 
-	var VERSION = '11.0.3';
+	var VERSION = '11.1.0';
 
 
 	function isValidFormatter ( entry ) {
@@ -15370,6 +15374,10 @@ arguments[4][31][0].apply(exports,arguments)
 
 	function removeElement ( el ) {
 		el.parentElement.removeChild(el);
+	}
+
+	function isSet ( value ) {
+		return value !== null && value !== undefined;
 	}
 
 	// Bindable version
@@ -16008,8 +16016,8 @@ arguments[4][31][0].apply(exports,arguments)
 			throw new Error("noUiSlider (" + VERSION + "): 'padding' option must be a positive number(s).");
 		}
 
-		if ( parsed.padding[0] >= 50 || parsed.padding[1] >= 50 ) {
-			throw new Error("noUiSlider (" + VERSION + "): 'padding' option must be less than half the range.");
+		if ( parsed.padding[0] + parsed.padding[1] >= 100 ) {
+			throw new Error("noUiSlider (" + VERSION + "): 'padding' option must not exceed 100% of the range.");
 		}
 	}
 
@@ -16107,7 +16115,7 @@ arguments[4][31][0].apply(exports,arguments)
 
 	function testCssPrefix ( parsed, entry ) {
 
-		if ( entry !== undefined && typeof entry !== 'string' && entry !== false ) {
+		if ( typeof entry !== 'string' && entry !== false ) {
 			throw new Error("noUiSlider (" + VERSION + "): 'cssPrefix' must be a string or `false`.");
 		}
 
@@ -16116,7 +16124,7 @@ arguments[4][31][0].apply(exports,arguments)
 
 	function testCssClasses ( parsed, entry ) {
 
-		if ( entry !== undefined && typeof entry !== 'object' ) {
+		if ( typeof entry !== 'object' ) {
 			throw new Error("noUiSlider (" + VERSION + "): 'cssClasses' must be an object.");
 		}
 
@@ -16168,8 +16176,8 @@ arguments[4][31][0].apply(exports,arguments)
 			'ariaFormat': { r: false, t: testAriaFormat },
 			'format': { r: false, t: testFormat },
 			'tooltips': { r: false, t: testTooltips },
-			'cssPrefix': { r: false, t: testCssPrefix },
-			'cssClasses': { r: false, t: testCssClasses }
+			'cssPrefix': { r: true, t: testCssPrefix },
+			'cssClasses': { r: true, t: testCssClasses }
 		};
 
 		var defaults = {
@@ -16226,7 +16234,7 @@ arguments[4][31][0].apply(exports,arguments)
 		Object.keys(tests).forEach(function( name ){
 
 			// If the option isn't set, but it is required, throw an error.
-			if ( options[name] === undefined && defaults[name] === undefined ) {
+			if ( !isSet(options[name]) && defaults[name] === undefined ) {
 
 				if ( tests[name].r ) {
 					throw new Error("noUiSlider (" + VERSION + "): '" + name + "' is required.");
@@ -16235,7 +16243,7 @@ arguments[4][31][0].apply(exports,arguments)
 				return true;
 			}
 
-			tests[name].t( parsed, options[name] === undefined ? defaults[name] : options[name] );
+			tests[name].t( parsed, !isSet(options[name]) ? defaults[name] : options[name] );
 		});
 
 		// Forward pips options
