@@ -1,6 +1,6 @@
 {
   "name": "doofinder",
-  "version": "5.3.15",
+  "version": "5.4.0",
   "description": "Javascript Library for Doofinder Search API",
   "main": "lib/doofinder.js",
   "jsdelivr": "dist/doofinder.min.js",

@@ -917,7 +917,7 @@
 },{"./client":1,"./util/errors":7,"./util/freezer":8,"./util/merge":11,"./util/thing":13,"./widgets/widget":21,"bean":22,"qs":71}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.3.15",
+    version: "5.4.0",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
@@ -15340,7 +15340,7 @@ arguments[4][31][0].apply(exports,arguments)
 }));
 
 },{}],69:[function(require,module,exports){
-/*! nouislider - 11.1.0 - 2018-04-02 11:18:13 */
+/*! nouislider - 11.0.3 - 2018-01-21 14:04:07 */
 
 (function (factory) {
 
@@ -15364,7 +15364,7 @@ arguments[4][31][0].apply(exports,arguments)
 
 	'use strict';
 
-	var VERSION = '11.1.0';
+	var VERSION = '11.0.3';
 
 
 	function isValidFormatter ( entry ) {
@@ -15373,10 +15373,6 @@ arguments[4][31][0].apply(exports,arguments)
 
 	function removeElement ( el ) {
 		el.parentElement.removeChild(el);
-	}
-
-	function isSet ( value ) {
-		return value !== null && value !== undefined;
 	}
 
 	// Bindable version
@@ -16015,8 +16011,8 @@ arguments[4][31][0].apply(exports,arguments)
 			throw new Error("noUiSlider (" + VERSION + "): 'padding' option must be a positive number(s).");
 		}
 
-		if ( parsed.padding[0] + parsed.padding[1] >= 100 ) {
-			throw new Error("noUiSlider (" + VERSION + "): 'padding' option must not exceed 100% of the range.");
+		if ( parsed.padding[0] >= 50 || parsed.padding[1] >= 50 ) {
+			throw new Error("noUiSlider (" + VERSION + "): 'padding' option must be less than half the range.");
 		}
 	}
 
@@ -16114,7 +16110,7 @@ arguments[4][31][0].apply(exports,arguments)
 
 	function testCssPrefix ( parsed, entry ) {
 
-		if ( typeof entry !== 'string' && entry !== false ) {
+		if ( entry !== undefined && typeof entry !== 'string' && entry !== false ) {
 			throw new Error("noUiSlider (" + VERSION + "): 'cssPrefix' must be a string or `false`.");
 		}
 
@@ -16123,7 +16119,7 @@ arguments[4][31][0].apply(exports,arguments)
 
 	function testCssClasses ( parsed, entry ) {
 
-		if ( typeof entry !== 'object' ) {
+		if ( entry !== undefined && typeof entry !== 'object' ) {
 			throw new Error("noUiSlider (" + VERSION + "): 'cssClasses' must be an object.");
 		}
 
@@ -16175,8 +16171,8 @@ arguments[4][31][0].apply(exports,arguments)
 			'ariaFormat': { r: false, t: testAriaFormat },
 			'format': { r: false, t: testFormat },
 			'tooltips': { r: false, t: testTooltips },
-			'cssPrefix': { r: true, t: testCssPrefix },
-			'cssClasses': { r: true, t: testCssClasses }
+			'cssPrefix': { r: false, t: testCssPrefix },
+			'cssClasses': { r: false, t: testCssClasses }
 		};
 
 		var defaults = {
@@ -16233,7 +16229,7 @@ arguments[4][31][0].apply(exports,arguments)
 		Object.keys(tests).forEach(function( name ){
 
 			// If the option isn't set, but it is required, throw an error.
-			if ( !isSet(options[name]) && defaults[name] === undefined ) {
+			if ( options[name] === undefined && defaults[name] === undefined ) {
 
 				if ( tests[name].r ) {
 					throw new Error("noUiSlider (" + VERSION + "): '" + name + "' is required.");
@@ -16242,7 +16238,7 @@ arguments[4][31][0].apply(exports,arguments)
 				return true;
 			}
 
-			tests[name].t( parsed, !isSet(options[name]) ? defaults[name] : options[name] );
+			tests[name].t( parsed, options[name] === undefined ? defaults[name] : options[name] );
 		});
 
 		// Forward pips options
