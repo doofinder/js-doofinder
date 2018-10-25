@@ -140,8 +140,6 @@ class Controller
         @trigger "df:results:error", [err]
       else if res.query_counter == @queryCounter
         @lastPage = Math.ceil (res.total / res.results_per_page)
-        # save the las custom_results_id received
-        @custom_results_id = res.custom_results_id
         @params.query_name = res.query_name
 
         @renderWidgets res
