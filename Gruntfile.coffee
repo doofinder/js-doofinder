@@ -122,17 +122,26 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-service'
   grunt.loadNpmTasks 'grunt-version'
 
+  # `compile` generates final JS code ready to be used
   grunt.registerTask 'compile', ['coffee:release', 'browserify', 'uglify:release']
+  # `css` builds sample CSS required by some elements like noUiSlider
   grunt.registerTask 'css', ['copy:build_scss', 'sass:build_scss', 'clean:build_scss']
 
+  # `test:mocha` runs Mocha tests in NodeJS
   grunt.registerTask 'test:mocha', ['mochaTest:release']
+  # `test:karma` runs browser tests in Karma
   grunt.registerTask 'test:karma', ['copy:karma', 'karma:test', 'clean:karma']
+  # `test` runs all tests
   grunt.registerTask 'test', ['test:mocha', 'test:karma']
 
-  grunt.registerTask 'default', ['dev']
+  # `dev` runs the development environment, with a server at localhost:8008
   grunt.registerTask 'dev', ['service:http', 'compile', 'watch:default']
+  # `dev:test` runs the development environment and tests are run after compile
   grunt.registerTask 'dev:test', ['service:http', 'compile', 'test', 'watch:test']
+  # well, the default
+  grunt.registerTask 'default', ['dev']
 
+  # if you need only the server, here you are
   grunt.registerTask "serve", ["service:http"]
 
   #
