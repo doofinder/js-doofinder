@@ -3,6 +3,7 @@ Widget = require "./widget"
 
 helpers = require "../util/helpers"
 
+INSERTION_METHODS = ["prepend", "append", "before", "after", "html"]
 
 ###*
  * Widget that renders a search response within a given template.
@@ -32,6 +33,9 @@ class Display extends Widget
 
     @mustache = require "mustache"
     @currentContext = {}
+
+    unless options.insertionMethod in INSERTION_METHODS
+      options.insertionMethod = "html"
 
   ###*
    * Adds extra context to the passed context object.
@@ -64,7 +68,7 @@ class Display extends Widget
    * @fires Widget#df:widget:render
   ###
   render: (res) ->
-    @element.html @__renderTemplate res
+    @element[@options.insertionMethod] @__renderTemplate res
     super
 
   ###*

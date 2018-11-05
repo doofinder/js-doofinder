@@ -1327,6 +1327,10 @@
      * @param  {String}   datatype  Optional. If the id is not a Doofinder id
      *                              this argument is required.
      * @param  {String}   query     Optional. Search terms.
+     * @param  {String}   custom_results_id Optional. Id of the custom results
+     *                                      that produced the current set of
+     *                                      results, including the current one
+     *                                      being clicked.
      * @param  {Function} callback  Optional callback to be called when the
      *                              response is received. First param is the
      *                              error, if any, and the second one is the
@@ -3391,15 +3395,18 @@
 
 },{"./errors":7,"md5":64}],15:[function(require,module,exports){
 (function() {
-  var Display, Widget, helpers, merge,
+  var Display, INSERTION_METHODS, Widget, helpers, merge,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
+    hasProp = {}.hasOwnProperty,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   merge = require("../util/merge");
 
   Widget = require("./widget");
 
   helpers = require("../util/helpers");
+
+  INSERTION_METHODS = ["prepend", "append", "before", "after", "html"];
 
 
   /**
@@ -3418,7 +3425,7 @@
      */
 
     function Display(element, options) {
-      var defaults;
+      var defaults, ref;
       if (options == null) {
         options = {};
       }
@@ -3433,6 +3440,9 @@
       helpers.addTranslateHelper(this.options.templateFunctions, this.options.translations);
       this.mustache = require("mustache");
       this.currentContext = {};
+      if (ref = options.insertionMethod, indexOf.call(INSERTION_METHODS, ref) < 0) {
+        options.insertionMethod = "html";
+      }
     }
 
 
@@ -3475,7 +3485,7 @@
      */
 
     Display.prototype.render = function(res) {
-      this.element.html(this.__renderTemplate(res));
+      this.element[this.options.insertionMethod](this.__renderTemplate(res));
       return Display.__super__.render.apply(this, arguments);
     };
 
@@ -15340,7 +15350,7 @@ arguments[4][31][0].apply(exports,arguments)
 }));
 
 },{}],69:[function(require,module,exports){
-/*! nouislider - 11.0.3 - 2018-01-21 14:04:07 */
+/*! nouislider - 11.1.0 - 2018-04-02 11:18:13 */
 
 (function (factory) {
 
@@ -15364,7 +15374,7 @@ arguments[4][31][0].apply(exports,arguments)
 
 	'use strict';
 
-	var VERSION = '11.0.3';
+	var VERSION = '11.1.0';
 
 
 	function isValidFormatter ( entry ) {
@@ -15373,6 +15383,10 @@ arguments[4][31][0].apply(exports,arguments)
 
 	function removeElement ( el ) {
 		el.parentElement.removeChild(el);
+	}
+
+	function isSet ( value ) {
+		return value !== null && value !== undefined;
 	}
 
 	// Bindable version
@@ -16011,8 +16025,8 @@ arguments[4][31][0].apply(exports,arguments)
 			throw new Error("noUiSlider (" + VERSION + "): 'padding' option must be a positive number(s).");
 		}
 
-		if ( parsed.padding[0] >= 50 || parsed.padding[1] >= 50 ) {
-			throw new Error("noUiSlider (" + VERSION + "): 'padding' option must be less than half the range.");
+		if ( parsed.padding[0] + parsed.padding[1] >= 100 ) {
+			throw new Error("noUiSlider (" + VERSION + "): 'padding' option must not exceed 100% of the range.");
 		}
 	}
 
@@ -16110,7 +16124,7 @@ arguments[4][31][0].apply(exports,arguments)
 
 	function testCssPrefix ( parsed, entry ) {
 
-		if ( entry !== undefined && typeof entry !== 'string' && entry !== false ) {
+		if ( typeof entry !== 'string' && entry !== false ) {
 			throw new Error("noUiSlider (" + VERSION + "): 'cssPrefix' must be a string or `false`.");
 		}
 
@@ -16119,7 +16133,7 @@ arguments[4][31][0].apply(exports,arguments)
 
 	function testCssClasses ( parsed, entry ) {
 
-		if ( entry !== undefined && typeof entry !== 'object' ) {
+		if ( typeof entry !== 'object' ) {
 			throw new Error("noUiSlider (" + VERSION + "): 'cssClasses' must be an object.");
 		}
 
@@ -16171,8 +16185,8 @@ arguments[4][31][0].apply(exports,arguments)
 			'ariaFormat': { r: false, t: testAriaFormat },
 			'format': { r: false, t: testFormat },
 			'tooltips': { r: false, t: testTooltips },
-			'cssPrefix': { r: false, t: testCssPrefix },
-			'cssClasses': { r: false, t: testCssClasses }
+			'cssPrefix': { r: true, t: testCssPrefix },
+			'cssClasses': { r: true, t: testCssClasses }
 		};
 
 		var defaults = {
@@ -16229,7 +16243,7 @@ arguments[4][31][0].apply(exports,arguments)
 		Object.keys(tests).forEach(function( name ){
 
 			// If the option isn't set, but it is required, throw an error.
-			if ( options[name] === undefined && defaults[name] === undefined ) {
+			if ( !isSet(options[name]) && defaults[name] === undefined ) {
 
 				if ( tests[name].r ) {
 					throw new Error("noUiSlider (" + VERSION + "): '" + name + "' is required.");
@@ -16238,7 +16252,7 @@ arguments[4][31][0].apply(exports,arguments)
 				return true;
 			}
 
-			tests[name].t( parsed, options[name] === undefined ? defaults[name] : options[name] );
+			tests[name].t( parsed, !isSet(options[name]) ? defaults[name] : options[name] );
 		});
 
 		// Forward pips options
