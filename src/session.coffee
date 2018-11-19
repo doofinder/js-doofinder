@@ -117,7 +117,7 @@ class CookieSessionStore extends ISessionStore
   constructor: (cookieName, options = {}) ->
     defaults =
       prefix: ""
-      expiry: 1 / 24
+      expiry: 1
     options = merge defaults, (options or {})
     @cookieName = "#{options.prefix}#{cookieName}"
     @expiry = options.expiry
