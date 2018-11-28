@@ -273,26 +273,27 @@
 
 }).call(this);
 
-},{"./util/errors":7,"./util/http":10,"./util/merge":11,"./util/thing":13,"md5":64,"qs":71}],2:[function(require,module,exports){
+},{"./util/errors":7,"./util/http":11,"./util/merge":12,"./util/thing":15,"md5":66,"qs":73}],2:[function(require,module,exports){
 (function() {
-  var Client, Controller, Freezer, Thing, Widget, bean, errors, merge, qs,
+  var Client, Controller, EventEnabled, Freezer, Thing, Widget, errors, merge, qs,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
-
-  bean = require("bean");
 
   qs = require("qs");
 
-  errors = require("./util/errors");
-
   Client = require("./client");
 
-  Widget = require("./widgets/widget");
+  errors = require("./util/errors");
 
-  merge = require("./util/merge");
+  EventEnabled = require("./util/eventEnabled");
 
   Freezer = require("./util/freezer");
 
+  merge = require("./util/merge");
+
   Thing = require("./util/thing");
+
+  Widget = require("./widgets/widget");
 
 
   /*
@@ -303,7 +304,9 @@
   to paint them.
    */
 
-  Controller = (function() {
+  Controller = (function(superClass) {
+    extend(Controller, superClass);
+
     function Controller(client, defaultParams) {
       var defaults;
       this.client = client;
@@ -474,69 +477,6 @@
           }
         };
       })(this));
-    };
-
-
-    /**
-     * Registers a function that is executed when certain event is triggered on
-     * the controller.
-     *
-     * @param  {String}   eventName Event name (or multiple events, space
-     *                              separated).
-     * @param  {Function} handler   The callback function.
-     * @public
-     */
-
-    Controller.prototype.on = function(eventName, handler) {
-      return bean.on(this, eventName, handler);
-    };
-
-
-    /**
-     * Registers a function that is executed when certain event is triggered on
-     * the controller the first time after this function is executed.
-     *
-     * @param  {String}   eventName Event name (or multiple events, space
-     *                              separated).
-     * @param  {Function} handler   The callback function.
-     * @public
-     */
-
-    Controller.prototype.one = function(eventName, handler) {
-      return bean.one(this, eventName, handler);
-    };
-
-
-    /**
-     * Unregisters an event handler of this controller.
-     *
-     * - If no handler is provided, all event handlers for the event name provided
-     *   are unregistered for the current controller.
-     * - If no handler and no event name are provided, all event handlers are
-     *   unregistered for the current controller.
-     *
-     * @param  {String}   eventName Event name (or multiple events, space
-     *                              separated). Optional.
-     * @param  {Function} handler   The callback function. Optional.
-     * @public
-     */
-
-    Controller.prototype.off = function(eventName, handler) {
-      return bean.off(this, eventName, handler);
-    };
-
-
-    /**
-     * Triggers an event in the current controller.
-     *
-     * @param  {String} eventName Event name (or multiple events, space
-     *                            separated).
-     * @param  {Array}  args      Array of arguments to pass to the event handler.
-     * @public
-     */
-
-    Controller.prototype.trigger = function(eventName, args) {
-      return bean.fire(this, eventName, args);
     };
 
 
@@ -908,13 +848,13 @@
 
     return Controller;
 
-  })();
+  })(EventEnabled);
 
   module.exports = Controller;
 
 }).call(this);
 
-},{"./client":1,"./util/errors":7,"./util/freezer":8,"./util/merge":11,"./util/thing":13,"./widgets/widget":21,"bean":22,"qs":71}],3:[function(require,module,exports){
+},{"./client":1,"./util/errors":7,"./util/eventEnabled":8,"./util/freezer":9,"./util/merge":12,"./util/thing":15,"./widgets/widget":23,"qs":73}],3:[function(require,module,exports){
 (function() {
   module.exports = {
     version: "5.5.0",
@@ -950,7 +890,7 @@
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/errors":7,"./util/helpers":9,"./util/http":10,"./util/merge":11,"./util/text":12,"./util/thing":13,"./util/uniqueid":14,"./widgets/display":15,"./widgets/pager":16,"./widgets/queryinput":17,"./widgets/rangefacet":18,"./widgets/scrolldisplay":19,"./widgets/termsfacet":20,"./widgets/widget":21,"bean":22,"lodash.throttle":63,"md5":64,"mustache":68,"qs":71}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/errors":7,"./util/helpers":10,"./util/http":11,"./util/merge":12,"./util/text":14,"./util/thing":15,"./util/uniqueid":16,"./widgets/display":17,"./widgets/pager":18,"./widgets/queryinput":19,"./widgets/rangefacet":20,"./widgets/scrolldisplay":21,"./widgets/termsfacet":22,"./widgets/widget":23,"bean":24,"lodash.throttle":65,"md5":66,"mustache":70,"qs":73}],4:[function(require,module,exports){
 (function() {
   var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, errors, md5, merge, uniqueId,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -1257,7 +1197,7 @@
 
 }).call(this);
 
-},{"./util/errors":7,"./util/merge":11,"./util/uniqueid":14,"js-cookie":62,"md5":64}],5:[function(require,module,exports){
+},{"./util/errors":7,"./util/merge":12,"./util/uniqueid":16,"js-cookie":64,"md5":66}],5:[function(require,module,exports){
 (function() {
   var Client, Session, Stats, errors, uniqueId,
     slice = [].slice;
@@ -1427,7 +1367,7 @@
 
 }).call(this);
 
-},{"./client":1,"./session":4,"./util/errors":7,"./util/uniqueid":14}],6:[function(require,module,exports){
+},{"./client":1,"./session":4,"./util/errors":7,"./util/uniqueid":16}],6:[function(require,module,exports){
 (function() {
   var DfDomElement, MATCHES_SELECTOR_FN, Text, Thing, bean, getWindow, matchesSelector, merge;
 
@@ -2722,7 +2662,7 @@
 
 }).call(this);
 
-},{"./merge":11,"./text":12,"./thing":13,"bean":22}],7:[function(require,module,exports){
+},{"./merge":12,"./text":14,"./thing":15,"bean":24}],7:[function(require,module,exports){
 
 /**
  * Helper to compose final error messages
@@ -2765,6 +2705,86 @@
 }).call(this);
 
 },{}],8:[function(require,module,exports){
+(function() {
+  var EventEnabled, bean;
+
+  bean = require("bean");
+
+  EventEnabled = (function() {
+    function EventEnabled() {}
+
+
+    /**
+     * Registers a function that is executed when certain event is triggered on
+     * the instance.
+     *
+     * @param  {String}   eventName Event name (or multiple events, space
+     *                              separated).
+     * @param  {Function} handler   The callback function.
+     * @public
+     */
+
+    EventEnabled.prototype.on = function(eventName, handler) {
+      return bean.on(this, eventName, handler);
+    };
+
+
+    /**
+     * Registers a function that is executed when certain event is triggered on
+     * the instance the first time after this function is executed.
+     *
+     * @param  {String}   eventName Event name (or multiple events, space
+     *                              separated).
+     * @param  {Function} handler   The callback function.
+     * @public
+     */
+
+    EventEnabled.prototype.one = function(eventName, handler) {
+      return bean.one(this, eventName, handler);
+    };
+
+
+    /**
+     * Unregisters an event handler of this instance.
+     *
+     * - If no handler is provided, all event handlers for the event name provided
+     *   are unregistered for the current instance.
+     * - If no handler and no event name are provided, all event handlers are
+     *   unregistered for the current instance.
+     *
+     * @param  {String}   eventName Event name (or multiple events, space
+     *                              separated). Optional.
+     * @param  {Function} handler   The callback function. Optional.
+     * @public
+     */
+
+    EventEnabled.prototype.off = function(eventName, handler) {
+      return bean.off(this, eventName, handler);
+    };
+
+
+    /**
+     * Triggers an event in the current instance.
+     *
+     * @param  {String} eventName Event name (or multiple events, space
+     *                            separated).
+     * @param  {Array}  args      Array of arguments to pass to the event handler.
+     * @public
+     */
+
+    EventEnabled.prototype.trigger = function(eventName, args) {
+      return bean.fire(this, eventName, args);
+    };
+
+    return EventEnabled;
+
+  })();
+
+  module.exports = EventEnabled;
+
+}).call(this);
+
+},{"bean":24}],9:[function(require,module,exports){
 (function() {
   var Thing, freeze, freezeProperty;
 
@@ -2823,7 +2843,7 @@
 
 }).call(this);
 
-},{"./thing":13}],9:[function(require,module,exports){
+},{"./thing":15}],10:[function(require,module,exports){
 (function() {
   var addUrlParams, decodeEntities, formatNumber, merge, qs, removeProtocol, translate;
 
@@ -3058,7 +3078,7 @@
 
 }).call(this);
 
-},{"./merge":11,"./text":12,"qs":71}],10:[function(require,module,exports){
+},{"./merge":12,"./text":14,"qs":73}],11:[function(require,module,exports){
 (function() {
   var HttpClient, Thing, errors, http, https, merge;
 
@@ -3149,7 +3169,7 @@
 
 }).call(this);
 
-},{"./errors":7,"./merge":11,"./thing":13,"http":52,"https":29}],11:[function(require,module,exports){
+},{"./errors":7,"./merge":12,"./thing":15,"http":54,"https":31}],12:[function(require,module,exports){
 (function() {
   var Thing, merge,
     hasProp = {}.hasOwnProperty;
@@ -3211,7 +3231,71 @@
 
 }).call(this);
 
-},{"./thing":13}],12:[function(require,module,exports){
+},{"./thing":15}],13:[function(require,module,exports){
+(function() {
+  var $, EventEnabled, ScrollManager, merge, throttle,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  throttle = require("lodash.throttle");
+
+  $ = require("../util/dfdom");
+
+  EventEnabled = require("../util/eventEnabled");
+
+  merge = require("../util/merge");
+
+  ScrollManager = (function(superClass) {
+    extend(ScrollManager, superClass);
+
+    function ScrollManager(container, options) {
+      var defaults, fn;
+      if (options == null) {
+        options = {};
+      }
+      defaults = {
+        horizontal: false,
+        offset: 300,
+        throttle: 16
+      };
+      this.container = $(container);
+      this.options = merge(defaults, options);
+      this.previousDelta = 0;
+      fn = this.options.horizontal ? this.__scrollX : this.__scrollY;
+      this.container.on("scroll", throttle(fn.bind(this), this.options.throttle));
+    }
+
+    ScrollManager.prototype.__scrollX = function() {
+      var direction, offsetReached, rect, scrolled, width;
+      rect = this.container.box();
+      width = rect.scrollWidth;
+      scrolled = rect.scrollLeft + rect.clientWidth;
+      direction = rect.scrollLeft >= this.previousDelta ? "right" : "left";
+      offsetReached = width - scrolled <= this.options.offset;
+      this.previousDelta = rect.scrollLeft;
+      return this.trigger("scroll", [rect.scrollLeft, direction, offsetReached]);
+    };
+
+    ScrollManager.prototype.__scrollY = function() {
+      var direction, height, offsetReached, rect, scrolled;
+      rect = this.container.box();
+      height = rect.scrollHeight;
+      scrolled = rect.scrollTop + rect.clientHeight;
+      direction = rect.scrollTop >= this.previousDelta ? "down" : "up";
+      offsetReached = height - scrolled <= this.options.offset;
+      this.previousDelta = rect.scrollTop;
+      return this.trigger("scroll", [rect.scrollTop, direction, offsetReached]);
+    };
+
+    return ScrollManager;
+
+  })(EventEnabled);
+
+  module.exports = ScrollManager;
+
+}).call(this);
+
+},{"../util/dfdom":6,"../util/eventEnabled":8,"../util/merge":12,"lodash.throttle":65}],14:[function(require,module,exports){
 
 /**
  * Converts text in camel case to dash case
@@ -3280,7 +3364,7 @@
 
 }).call(this);
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 (function() {
   var Is, hasOwn, toStr;
 
@@ -3327,7 +3411,7 @@
 
 }).call(this);
 
-},{"is":61}],14:[function(require,module,exports){
+},{"is":63}],16:[function(require,module,exports){
 (function() {
   var errors, generateDoofinderId, isValidDoofinderId, md5, splitDoofinderId;
 
@@ -3393,7 +3477,7 @@
 
 }).call(this);
 
-},{"./errors":7,"md5":64}],15:[function(require,module,exports){
+},{"./errors":7,"md5":66}],17:[function(require,module,exports){
 (function() {
   var Display, INSERTION_METHODS, Widget, helpers, merge,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3508,7 +3592,7 @@
 
 }).call(this);
 
-},{"../util/helpers":9,"../util/merge":11,"./widget":21,"mustache":68}],16:[function(require,module,exports){
+},{"../util/helpers":10,"../util/merge":12,"./widget":23,"mustache":70}],18:[function(require,module,exports){
 (function() {
   var $, Display, Pager, merge,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3623,7 +3707,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"../util/merge":11,"./display":15}],17:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/merge":12,"./display":17}],19:[function(require,module,exports){
 (function() {
   var $, QueryInput, Thing, Widget, errors, merge,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -3925,7 +4009,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"../util/errors":7,"../util/merge":11,"../util/thing":13,"./widget":21}],18:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/errors":7,"../util/merge":12,"../util/thing":15,"./widget":23}],20:[function(require,module,exports){
 (function() {
   var Display, RangeFacet, helpers, merge, noUiSlider,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -4227,17 +4311,17 @@
 
 }).call(this);
 
-},{"../util/helpers":9,"../util/merge":11,"./display":15,"nouislider":69}],19:[function(require,module,exports){
+},{"../util/helpers":10,"../util/merge":12,"./display":17,"nouislider":71}],21:[function(require,module,exports){
 (function() {
-  var $, Display, ScrollDisplay, Thing, merge, throttle,
+  var $, Display, ScrollDisplay, ScrollManager, Thing, merge,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
-
-  throttle = require("lodash.throttle");
 
   $ = require("../util/dfdom");
 
   merge = require("../util/merge");
+
+  ScrollManager = require("../util/scrollManager");
 
   Thing = require("../util/thing");
 
@@ -4330,6 +4414,7 @@
       this.__setContentElement();
       this.working = false;
       this.previousDelta = 0;
+      this.scrollManager = null;
     }
 
 
@@ -4346,10 +4431,19 @@
     };
 
     ScrollDisplay.prototype.init = function() {
-      var fn;
       if (!this.initialized) {
-        fn = this.options.horizontal ? this.__scrollX : this.__scrollY;
-        this.container.on("scroll", throttle(fn.bind(this), this.options.throttle));
+        this.scrollManager = new ScrollManager(this.container, {
+          throttle: this.options.throttle,
+          horizontal: this.options.horizontal
+        });
+        this.scrollManager.on("scroll", (function(_this) {
+          return function(delta, direction, offsetReached) {
+            if (offsetReached) {
+              _this.__getNextPage();
+            }
+            return _this.trigger("df:widget:scroll", [delta, direction]);
+          };
+        })(this));
         this.controller.on("df:search df:refresh", (function(_this) {
           return function(query, params) {
             return _this.container.scrollTop(0);
@@ -4357,32 +4451,6 @@
         })(this));
         return ScrollDisplay.__super__.init.apply(this, arguments);
       }
-    };
-
-    ScrollDisplay.prototype.__scrollX = function() {
-      var direction, rect, scrolled, width;
-      rect = this.container.box();
-      width = rect.scrollWidth;
-      scrolled = rect.scrollLeft + rect.clientWidth;
-      if (width - scrolled <= this.options.offset) {
-        this.__getNextPage();
-      }
-      direction = rect.scrollLeft >= this.previousDelta ? "right" : "left";
-      this.previousDelta = rect.scrollLeft;
-      return this.trigger("df:widget:scroll", [rect.scrollLeft, direction]);
-    };
-
-    ScrollDisplay.prototype.__scrollY = function() {
-      var direction, height, rect, scrolled;
-      rect = this.container.box();
-      height = rect.scrollHeight;
-      scrolled = rect.scrollTop + rect.clientHeight;
-      if (height - scrolled <= this.options.offset) {
-        this.__getNextPage();
-      }
-      direction = rect.scrollTop >= this.previousDelta ? "down" : "up";
-      this.previousDelta = rect.scrollTop;
-      return this.trigger("df:widget:scroll", [rect.scrollTop, direction]);
     };
 
     ScrollDisplay.prototype.__getNextPage = function() {
@@ -4415,7 +4483,7 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"../util/merge":11,"../util/thing":13,"./display":15,"lodash.throttle":63}],20:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/merge":12,"../util/scrollManager":13,"../util/thing":15,"./display":17}],22:[function(require,module,exports){
 (function() {
   var $, Display, TermsFacet, merge,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -4558,25 +4626,30 @@
 
 }).call(this);
 
-},{"../util/dfdom":6,"../util/merge":11,"./display":15}],21:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/merge":12,"./display":17}],23:[function(require,module,exports){
 (function() {
-  var $, Widget, bean;
-
-  bean = require("bean");
+  var $, EventEnabled, Widget,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
 
   $ = require("../util/dfdom");
+
+  EventEnabled = require("../util/eventEnabled");
 
 
   /**
    * Base class for a Widget, a class that paints itself given a search response.
    */
 
-  Widget = (function() {
+  Widget = (function(superClass) {
+    extend(Widget, superClass);
+
 
     /**
      * @param  {(String|Node|DfDomElement)} element
      * @param  {Object}                     [options = {}]
      */
+
     function Widget(element, options) {
       this.options = options != null ? options : {};
       this.initialized = false;
@@ -4651,35 +4724,19 @@
       return this.trigger("df:widget:clean");
     };
 
-    Widget.prototype.on = function(eventName, handler) {
-      return bean.on(this, eventName, handler);
-    };
-
-    Widget.prototype.one = function(eventName, handler) {
-      return bean.one(this, eventName, handler);
-    };
-
-    Widget.prototype.off = function(eventName, handler) {
-      return bean.off(this, eventName, handler);
-    };
-
-    Widget.prototype.trigger = function(eventName, args) {
-      return bean.fire(this, eventName, args);
-    };
-
     Widget.prototype.toString = function() {
       return this.constructor.name;
     };
 
     return Widget;
 
-  })();
+  })(EventEnabled);
 
   module.exports = Widget;
 
 }).call(this);
 
-},{"../util/dfdom":6,"bean":22}],22:[function(require,module,exports){
+},{"../util/dfdom":6,"../util/eventEnabled":8}],24:[function(require,module,exports){
 /*!
   * Bean - copyright (c) Jacob Thornton 2011-2012
   * https://github.com/fat/bean
@@ -5422,9 +5479,9 @@
   return bean
 });
 
-},{}],23:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 
-},{}],24:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -7217,7 +7274,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":25,"ieee754":26,"isarray":27}],25:[function(require,module,exports){
+},{"base64-js":27,"ieee754":28,"isarray":29}],27:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -7333,7 +7390,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],26:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -7419,14 +7476,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],27:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],28:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7730,7 +7787,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],29:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -7746,7 +7803,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":52}],30:[function(require,module,exports){
+},{"http":54}],32:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -7771,7 +7828,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],31:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -7794,7 +7851,7 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],32:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -7980,7 +8037,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],33:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -8517,7 +8574,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],34:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8603,7 +8660,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],35:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8690,13 +8747,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],36:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":34,"./encode":35}],37:[function(require,module,exports){
+},{"./decode":36,"./encode":37}],39:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8821,7 +8878,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":39,"./_stream_writable":41,"core-util-is":45,"inherits":30,"process-nextick-args":47}],38:[function(require,module,exports){
+},{"./_stream_readable":41,"./_stream_writable":43,"core-util-is":47,"inherits":32,"process-nextick-args":49}],40:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8869,7 +8926,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":40,"core-util-is":45,"inherits":30}],39:[function(require,module,exports){
+},{"./_stream_transform":42,"core-util-is":47,"inherits":32}],41:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -9879,7 +9936,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":37,"./internal/streams/BufferList":42,"./internal/streams/destroy":43,"./internal/streams/stream":44,"_process":32,"core-util-is":45,"events":28,"inherits":30,"isarray":46,"process-nextick-args":47,"safe-buffer":48,"string_decoder/":49,"util":23}],40:[function(require,module,exports){
+},{"./_stream_duplex":39,"./internal/streams/BufferList":44,"./internal/streams/destroy":45,"./internal/streams/stream":46,"_process":34,"core-util-is":47,"events":30,"inherits":32,"isarray":48,"process-nextick-args":49,"safe-buffer":50,"string_decoder/":51,"util":25}],42:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -10094,7 +10151,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":37,"core-util-is":45,"inherits":30}],41:[function(require,module,exports){
+},{"./_stream_duplex":39,"core-util-is":47,"inherits":32}],43:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10761,7 +10818,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":37,"./internal/streams/destroy":43,"./internal/streams/stream":44,"_process":32,"core-util-is":45,"inherits":30,"process-nextick-args":47,"safe-buffer":48,"util-deprecate":50}],42:[function(require,module,exports){
+},{"./_stream_duplex":39,"./internal/streams/destroy":45,"./internal/streams/stream":46,"_process":34,"core-util-is":47,"inherits":32,"process-nextick-args":49,"safe-buffer":50,"util-deprecate":52}],44:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -10836,7 +10893,7 @@ module.exports = function () {
 
   return BufferList;
 }();
-},{"safe-buffer":48}],43:[function(require,module,exports){
+},{"safe-buffer":50}],45:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -10909,10 +10966,10 @@ module.exports = {
   destroy: destroy,
   undestroy: undestroy
 };
-},{"process-nextick-args":47}],44:[function(require,module,exports){
+},{"process-nextick-args":49}],46:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":28}],45:[function(require,module,exports){
+},{"events":30}],47:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -11023,9 +11080,9 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":31}],46:[function(require,module,exports){
-arguments[4][27][0].apply(exports,arguments)
-},{"dup":27}],47:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":33}],48:[function(require,module,exports){
+arguments[4][29][0].apply(exports,arguments)
+},{"dup":29}],49:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -11072,7 +11129,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":32}],48:[function(require,module,exports){
+},{"_process":34}],50:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -11136,7 +11193,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":24}],49:[function(require,module,exports){
+},{"buffer":26}],51:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('safe-buffer').Buffer;
@@ -11409,7 +11466,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":48}],50:[function(require,module,exports){
+},{"safe-buffer":50}],52:[function(require,module,exports){
 (function (global){
 
 /**
@@ -11480,7 +11537,7 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],51:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -11489,7 +11546,7 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":37,"./lib/_stream_passthrough.js":38,"./lib/_stream_readable.js":39,"./lib/_stream_transform.js":40,"./lib/_stream_writable.js":41}],52:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":39,"./lib/_stream_passthrough.js":40,"./lib/_stream_readable.js":41,"./lib/_stream_transform.js":42,"./lib/_stream_writable.js":43}],54:[function(require,module,exports){
 (function (global){
 var ClientRequest = require('./lib/request')
 var extend = require('xtend')
@@ -11571,7 +11628,7 @@ http.METHODS = [
 	'UNSUBSCRIBE'
 ]
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./lib/request":54,"builtin-status-codes":56,"url":58,"xtend":60}],53:[function(require,module,exports){
+},{"./lib/request":56,"builtin-status-codes":58,"url":60,"xtend":62}],55:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
 
@@ -11644,7 +11701,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],54:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -11954,7 +12011,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":53,"./response":55,"_process":32,"buffer":24,"inherits":30,"readable-stream":51,"to-arraybuffer":57}],55:[function(require,module,exports){
+},{"./capability":55,"./response":57,"_process":34,"buffer":26,"inherits":32,"readable-stream":53,"to-arraybuffer":59}],57:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -12140,7 +12197,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":53,"_process":32,"buffer":24,"inherits":30,"readable-stream":51}],56:[function(require,module,exports){
+},{"./capability":55,"_process":34,"buffer":26,"inherits":32,"readable-stream":53}],58:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -12206,7 +12263,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],57:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
 
 module.exports = function (buf) {
@@ -12235,7 +12292,7 @@ module.exports = function (buf) {
 	}
 }
 
-},{"buffer":24}],58:[function(require,module,exports){
+},{"buffer":26}],60:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -12969,7 +13026,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":59,"punycode":33,"querystring":36}],59:[function(require,module,exports){
+},{"./util":61,"punycode":35,"querystring":38}],61:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -12987,7 +13044,7 @@ module.exports = {
   }
 };
 
-},{}],60:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -13008,7 +13065,7 @@ function extend() {
     return target
 }
 
-},{}],61:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 /* globals window, HTMLElement */
 
 'use strict';
@@ -13810,7 +13867,7 @@ is.symbol = function (value) {
 
 module.exports = is;
 
-},{}],62:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 /*!
  * JavaScript Cookie v2.1.4
  * https://github.com/js-cookie/js-cookie
@@ -13977,7 +14034,7 @@ module.exports = is;
 	return init(function () {});
 }));
 
-},{}],63:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 (function (global){
 /**
  * lodash (Custom Build) <https://lodash.com/>
@@ -14420,7 +14477,7 @@ function toNumber(value) {
 module.exports = throttle;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],64:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 (function(){
   var crypt = require('crypt'),
       utf8 = require('charenc').utf8,
@@ -14582,7 +14639,7 @@ module.exports = throttle;
 
 })();
 
-},{"charenc":65,"crypt":66,"is-buffer":67}],65:[function(require,module,exports){
+},{"charenc":67,"crypt":68,"is-buffer":69}],67:[function(require,module,exports){
 var charenc = {
   // UTF-8 encoding
   utf8: {
@@ -14617,7 +14674,7 @@ var charenc = {
 
 module.exports = charenc;
 
-},{}],66:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 (function() {
   var base64map
       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
@@ -14715,9 +14772,9 @@ module.exports = charenc;
   module.exports = crypt;
 })();
 
-},{}],67:[function(require,module,exports){
-arguments[4][31][0].apply(exports,arguments)
-},{"dup":31}],68:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
+arguments[4][33][0].apply(exports,arguments)
+},{"dup":33}],70:[function(require,module,exports){
 /*!
  * mustache.js - Logic-less {{mustache}} templates with JavaScript
  * http://github.com/janl/mustache.js
@@ -15349,8 +15406,8 @@ arguments[4][31][0].apply(exports,arguments)
   return mustache;
 }));
 
-},{}],69:[function(require,module,exports){
-/*! nouislider - 11.1.0 - 2018-04-02 11:18:13 */
+},{}],71:[function(require,module,exports){
+/*! nouislider - 11.0.3 - 2018-01-21 14:04:07 */
 
 (function (factory) {
 
@@ -15374,7 +15431,7 @@ arguments[4][31][0].apply(exports,arguments)
 
 	'use strict';
 
-	var VERSION = '11.1.0';
+	var VERSION = '11.0.3';
 
 
 	function isValidFormatter ( entry ) {
@@ -15383,10 +15440,6 @@ arguments[4][31][0].apply(exports,arguments)
 
 	function removeElement ( el ) {
 		el.parentElement.removeChild(el);
-	}
-
-	function isSet ( value ) {
-		return value !== null && value !== undefined;
 	}
 
 	// Bindable version
@@ -16025,8 +16078,8 @@ arguments[4][31][0].apply(exports,arguments)
 			throw new Error("noUiSlider (" + VERSION + "): 'padding' option must be a positive number(s).");
 		}
 
-		if ( parsed.padding[0] + parsed.padding[1] >= 100 ) {
-			throw new Error("noUiSlider (" + VERSION + "): 'padding' option must not exceed 100% of the range.");
+		if ( parsed.padding[0] >= 50 || parsed.padding[1] >= 50 ) {
+			throw new Error("noUiSlider (" + VERSION + "): 'padding' option must be less than half the range.");
 		}
 	}
 
@@ -16124,7 +16177,7 @@ arguments[4][31][0].apply(exports,arguments)
 
 	function testCssPrefix ( parsed, entry ) {
 
-		if ( typeof entry !== 'string' && entry !== false ) {
+		if ( entry !== undefined && typeof entry !== 'string' && entry !== false ) {
 			throw new Error("noUiSlider (" + VERSION + "): 'cssPrefix' must be a string or `false`.");
 		}
 
@@ -16133,7 +16186,7 @@ arguments[4][31][0].apply(exports,arguments)
 
 	function testCssClasses ( parsed, entry ) {
 
-		if ( typeof entry !== 'object' ) {
+		if ( entry !== undefined && typeof entry !== 'object' ) {
 			throw new Error("noUiSlider (" + VERSION + "): 'cssClasses' must be an object.");
 		}
 
@@ -16185,8 +16238,8 @@ arguments[4][31][0].apply(exports,arguments)
 			'ariaFormat': { r: false, t: testAriaFormat },
 			'format': { r: false, t: testFormat },
 			'tooltips': { r: false, t: testTooltips },
-			'cssPrefix': { r: true, t: testCssPrefix },
-			'cssClasses': { r: true, t: testCssClasses }
+			'cssPrefix': { r: false, t: testCssPrefix },
+			'cssClasses': { r: false, t: testCssClasses }
 		};
 
 		var defaults = {
@@ -16243,7 +16296,7 @@ arguments[4][31][0].apply(exports,arguments)
 		Object.keys(tests).forEach(function( name ){
 
 			// If the option isn't set, but it is required, throw an error.
-			if ( !isSet(options[name]) && defaults[name] === undefined ) {
+			if ( options[name] === undefined && defaults[name] === undefined ) {
 
 				if ( tests[name].r ) {
 					throw new Error("noUiSlider (" + VERSION + "): '" + name + "' is required.");
@@ -16252,7 +16305,7 @@ arguments[4][31][0].apply(exports,arguments)
 				return true;
 			}
 
-			tests[name].t( parsed, !isSet(options[name]) ? defaults[name] : options[name] );
+			tests[name].t( parsed, options[name] === undefined ? defaults[name] : options[name] );
 		});
 
 		// Forward pips options
@@ -17697,7 +17750,7 @@ function scope ( target, options, originalOptions ){
 	};
 
 }));
-},{}],70:[function(require,module,exports){
+},{}],72:[function(require,module,exports){
 'use strict';
 
 var replace = String.prototype.replace;
@@ -17717,7 +17770,7 @@ module.exports = {
     RFC3986: 'RFC3986'
 };
 
-},{}],71:[function(require,module,exports){
+},{}],73:[function(require,module,exports){
 'use strict';
 
 var stringify = require('./stringify');
@@ -17730,7 +17783,7 @@ module.exports = {
     stringify: stringify
 };
 
-},{"./formats":70,"./parse":72,"./stringify":73}],72:[function(require,module,exports){
+},{"./formats":72,"./parse":74,"./stringify":75}],74:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -17906,7 +17959,7 @@ module.exports = function (str, opts) {
     return utils.compact(obj);
 };
 
-},{"./utils":74}],73:[function(require,module,exports){
+},{"./utils":76}],75:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -18118,7 +18171,7 @@ module.exports = function (object, opts) {
     return joined.length > 0 ? prefix + joined : '';
 };
 
-},{"./formats":70,"./utils":74}],74:[function(require,module,exports){
+},{"./formats":72,"./utils":76}],76:[function(require,module,exports){
 'use strict';
 
 var has = Object.prototype.hasOwnProperty;

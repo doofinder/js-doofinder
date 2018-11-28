@@ -1,13 +1,12 @@
-bean = require "bean"
 qs = require "qs"
 
-errors = require "./util/errors"
 Client = require "./client"
-Widget = require "./widgets/widget"
-
-merge = require "./util/merge"
+errors = require "./util/errors"
+EventEnabled = require "./util/eventEnabled"
 Freezer = require "./util/freezer"
+merge = require "./util/merge"
 Thing = require "./util/thing"
+Widget = require "./widgets/widget"
 
 ###
 Controller
@@ -16,7 +15,7 @@ This class uses the client to
 to retrieve the data and the widgets
 to paint them.
 ###
-class Controller
+class Controller extends EventEnabled
   constructor: (@client, defaultParams = {}) ->
     unless @client instanceof Client
       throw (errors.error "client must be an instance of Client", @)
@@ -148,61 +147,6 @@ class Controller
         @trigger "df:results:end", [res] if @isLastPage
       else
         @trigger "df:results:discarded", [res]
-
-  #
-  # Events
-  #
-
-  ###*
-   * Registers a function that is executed when certain event is triggered on
-   * the controller.
-   *
-   * @param  {String}   eventName Event name (or multiple events, space
-   *                              separated).
-   * @param  {Function} handler   The callback function.
-   * @public
-  ###
-  on: (eventName, handler) ->
-    bean.on @, eventName, handler
-
-  ###*
-   * Registers a function that is executed when certain event is triggered on
-   * the controller the first time after this function is executed.
-   *
-   * @param  {String}   eventName Event name (or multiple events, space
-   *                              separated).
-   * @param  {Function} handler   The callback function.
-   * @public
-  ###
-  one: (eventName, handler) ->
-    bean.one @, eventName, handler
-
-  ###*
-   * Unregisters an event handler of this controller.
-   *
-   * - If no handler is provided, all event handlers for the event name provided
-   *   are unregistered for the current controller.
-   * - If no handler and no event name are provided, all event handlers are
-   *   unregistered for the current controller.
-   *
-   * @param  {String}   eventName Event name (or multiple events, space
-   *                              separated). Optional.
-   * @param  {Function} handler   The callback function. Optional.
-   * @public
-  ###
-  off: (eventName, handler) ->
-    bean.off @, eventName, handler
-
-  ###*
-   * Triggers an event in the current controller.
-   *
-   * @param  {String} eventName Event name (or multiple events, space
-   *                            separated).
-   * @param  {Array}  args      Array of arguments to pass to the event handler.
-   * @public
-  ###
-  trigger: (eventName, args) ->
-    bean.fire @, eventName, args
 
   #
   # Widgets
