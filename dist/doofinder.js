@@ -857,7 +857,7 @@
 },{"./client":1,"./util/errors":7,"./util/eventEnabled":8,"./util/freezer":9,"./util/merge":12,"./util/thing":15,"./widgets/widget":23,"qs":48}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.5.0",
+    version: "5.6.0",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
@@ -1077,7 +1077,7 @@
       }
       defaults = {
         prefix: "",
-        expiry: 1 / 24
+        expiry: 1
       };
       options = merge(defaults, options || {});
       this.cookieName = "" + options.prefix + cookieName;
