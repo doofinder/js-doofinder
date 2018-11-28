@@ -1,7 +1,6 @@
-throttle = require "lodash.throttle"
-
 $ = require "../util/dfdom"
 merge = require "../util/merge"
+ScrollManager = require "../util/scrollManager"
 Thing = require "../util/thing"
 
 Display = require "./display"
@@ -89,6 +88,7 @@ class ScrollDisplay extends Display
 
     @working = false
     @previousDelta = 0
+    @scrollManager = null
 
   ###*
    * Gets the element that will hold search results.
@@ -101,29 +101,17 @@ class ScrollDisplay extends Display
 
   init: ->
     unless @initialized
-      fn = if @options.horizontal then @__scrollX else @__scrollY
-      @container.on "scroll", (throttle (fn.bind @), @options.throttle)
+      @scrollManager = new ScrollManager @container,
+        throttle: @options.throttle
+        horizontal: @options.horizontal
+
+      @scrollManager.on "scroll", (delta, direction, offsetReached) =>
+        @__getNextPage() if offsetReached
+        @trigger "df:widget:scroll", [delta, direction]
+
       @controller.on "df:search df:refresh", (query, params) =>
         @container.scrollTop 0
       super
-
-  __scrollX: ->
-    rect = @container.box()
-    width = rect.scrollWidth
-    scrolled = rect.scrollLeft + rect.clientWidth
-    @__getNextPage() if width - scrolled <= @options.offset
-    direction = if rect.scrollLeft >= @previousDelta then "right" else "left"
-    @previousDelta = rect.scrollLeft
-    @trigger "df:widget:scroll", [rect.scrollLeft, direction]
-
-  __scrollY: ->
-    rect = @container.box()
-    height = rect.scrollHeight
-    scrolled = rect.scrollTop + rect.clientHeight
-    @__getNextPage() if height - scrolled <= @options.offset
-    direction = if rect.scrollTop >= @previousDelta then "down" else "up"
-    @previousDelta = rect.scrollTop
-    @trigger "df:widget:scroll", [rect.scrollTop, direction]
 
   __getNextPage: ->
     if @controller? and not @working

@@ -1,11 +1,11 @@
-bean = require "bean"
 $ = require "../util/dfdom"
+EventEnabled = require "../util/eventEnabled"
 
 
 ###*
  * Base class for a Widget, a class that paints itself given a search response.
 ###
-class Widget
+class Widget extends EventEnabled
 
   ###*
    * @param  {(String|Node|DfDomElement)} element
@@ -65,22 +65,6 @@ class Widget
   ###
   clean: ->
     @trigger "df:widget:clean"
-
-  #
-  # Events
-  #
-
-  on: (eventName, handler) ->
-    bean.on @, eventName, handler
-
-  one: (eventName, handler) ->
-    bean.one @, eventName, handler
-
-  off: (eventName, handler) ->
-    bean.off @, eventName, handler
-
-  trigger: (eventName, args) ->
-    bean.fire @, eventName, args
 
   toString: -> @constructor.name
 
