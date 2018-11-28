@@ -857,7 +857,7 @@
 },{"./client":1,"./util/errors":7,"./util/eventEnabled":8,"./util/freezer":9,"./util/merge":12,"./util/thing":15,"./widgets/widget":23,"qs":48}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.6.0",
+    version: "5.6.1",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
@@ -875,11 +875,13 @@
       bean: require("bean"),
       dfdom: require("./util/dfdom"),
       errors: require("./util/errors"),
+      EventEnabled: require("./util/eventEnabled"),
       helpers: require("./util/helpers"),
       http: require("./util/http"),
       md5: require("md5"),
       merge: require("./util/merge"),
       qs: require("qs"),
+      ScrollManager: require("./util/scrollManager"),
       text: require("./util/text"),
       Thing: require("./util/thing"),
       throttle: require("lodash.throttle"),
@@ -890,7 +892,7 @@
 
 }).call(this);
 
-},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/errors":7,"./util/helpers":10,"./util/http":11,"./util/merge":12,"./util/text":14,"./util/thing":15,"./util/uniqueid":16,"./widgets/display":17,"./widgets/pager":18,"./widgets/queryinput":19,"./widgets/rangefacet":20,"./widgets/scrolldisplay":21,"./widgets/termsfacet":22,"./widgets/widget":23,"bean":25,"lodash.throttle":40,"md5":41,"mustache":42,"qs":48}],4:[function(require,module,exports){
+},{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/errors":7,"./util/eventEnabled":8,"./util/helpers":10,"./util/http":11,"./util/merge":12,"./util/scrollManager":13,"./util/text":14,"./util/thing":15,"./util/uniqueid":16,"./widgets/display":17,"./widgets/pager":18,"./widgets/queryinput":19,"./widgets/rangefacet":20,"./widgets/scrolldisplay":21,"./widgets/termsfacet":22,"./widgets/widget":23,"bean":25,"lodash.throttle":40,"md5":41,"mustache":42,"qs":48}],4:[function(require,module,exports){
 (function() {
   var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, errors, md5, merge, uniqueId,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },

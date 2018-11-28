@@ -1,5 +1,5 @@
 module.exports =
-  version: "5.6.0"
+  version: "5.6.1"
 
   Client: require "./client"
   Controller: require "./controller"
@@ -23,12 +23,13 @@ module.exports =
     bean: require "bean"
     dfdom: require "./util/dfdom"
     errors: require "./util/errors"
-    # extend: require "extend"
+    EventEnabled: require "./util/eventEnabled"
     helpers: require "./util/helpers"
     http: require "./util/http"
     md5: require "md5"
     merge: require "./util/merge"
     qs: require "qs"
+    ScrollManager: require "./util/scrollManager"
     text: require "./util/text"
     Thing: require "./util/thing"
     throttle: require "lodash.throttle"
