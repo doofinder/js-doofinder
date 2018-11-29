@@ -102,8 +102,9 @@ class ScrollDisplay extends Display
   init: ->
     unless @initialized
       @scrollManager = new ScrollManager @container,
-        throttle: @options.throttle
         horizontal: @options.horizontal
+        offset: @options.offset
+        throttle: @options.throttle
 
       @scrollManager.on "scroll", (delta, direction, offsetReached) =>
         @__getNextPage() if offsetReached
