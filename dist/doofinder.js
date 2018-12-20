@@ -2996,7 +2996,7 @@
       return merge(context, {
         "translate": function() {
           return function(text, render) {
-            return translate(render(text), translations);
+            return render(translate(text, translations));
           };
         }
       });
