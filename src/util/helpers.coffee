@@ -119,7 +119,7 @@ module.exports =
     ###
     merge context, "translate": ->
       (text, render) ->
-        render (translate text, translations)
+        translate (render (translate text, translations)), translations
 
   ###*
    * Adds `url-params` Mustache helper to the provided context.

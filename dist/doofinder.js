@@ -857,7 +857,7 @@
 },{"./client":1,"./util/errors":7,"./util/eventEnabled":8,"./util/freezer":9,"./util/merge":12,"./util/thing":15,"./widgets/widget":23,"qs":48}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.6.3",
+    version: "5.6.4",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
@@ -2996,7 +2996,7 @@
       return merge(context, {
         "translate": function() {
           return function(text, render) {
-            return render(translate(text, translations));
+            return translate(render(translate(text, translations)), translations);
           };
         }
       });
