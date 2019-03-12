@@ -186,8 +186,25 @@ Removes a parameter from the current search status.
 ```javascript
 controller.removeParam("transformer");
 ```
+#### Changing the search response
+
+Sometimes you may want to alter the response before it's passed to the widgets to be rendered. You can do that by registering response processors.
+
+A response processor is a function that receives a response object and returns a response object. Inside the function you can alter the response.
+
+To register a processor just push it into the processors array:
+
+```javascript
+controller.processors.push(function(response){
+  response.processed = true;
+  return response;
+});
+```
+
+The processors are chained and processed in order.
 
 #### The search status
+
 As said before the "search status" is the set of search parameters that represent a particular search, including:
   - page: the page number of the results
   - filter: the filters applied to the search
