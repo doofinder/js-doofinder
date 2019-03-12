@@ -32,6 +32,7 @@ class Controller extends EventEnabled
     @queryCounter = 0
 
     @widgets = []
+    @processors = []
 
     Object.defineProperty @, 'hashid', get: ->
       @client.hashid
@@ -86,7 +87,7 @@ class Controller extends EventEnabled
   ###
   search: (query, params = {}) ->
     @reset query, params
-    @__getResults()
+    @__doSearch()
     @trigger "df:search", [@query, @params]
 
   ###*
@@ -101,7 +102,7 @@ class Controller extends EventEnabled
     page = parseInt page, 10
     if @requestDone and page <= @lastPage
       @params.page = page
-      @__getResults()
+      @__doSearch()
       @trigger "df:search:page", [@query, @params]
 
   ###*
@@ -122,7 +123,7 @@ class Controller extends EventEnabled
   ###
   refresh: ->
     @params.page = 1
-    @__getResults()
+    @__doSearch()
     @trigger "df:refresh", [@query, @params]
 
   ###*
@@ -131,22 +132,35 @@ class Controller extends EventEnabled
    * @return {http.ClientRequest}
    * @protected
   ###
-  __getResults: ->
+  __doSearch: ->
     @requestDone = true
     params = merge query_counter: ++@queryCounter, @params
-    request = @client.search @query, params, (err, res) =>
+    request = @client.search @query, params, (err, response) =>
       if err
         @trigger "df:results:error", [err]
-      else if res.query_counter == @queryCounter
-        @lastPage = Math.ceil (res.total / res.results_per_page)
-        @params.query_name = res.query_name
 
-        @renderWidgets res
+      else if response.query_counter == @queryCounter
+        @lastPage = Math.ceil (response.total / response.results_per_page)
+        @params.query_name = response.query_name
 
-        @trigger "df:results:success", [res]
-        @trigger "df:results:end", [res] if @isLastPage
+        @processResponse response
+        @renderWidgets response
+
+        @trigger "df:results:success", [response]
+        @trigger "df:results:end", [response] if @isLastPage
+
       else
-        @trigger "df:results:discarded", [res]
+        @trigger "df:results:discarded", [response]
+
+  ###*
+   * Transform the response by passing it through a set of data processors,
+   * if any.
+   *
+   * @param  {Object} response Search response.
+   * @return {Object}          The resulting search response.
+  ###
+  processResponse: (response) ->
+    @processors.reduce ((data, fn) -> fn data), response
 
   #
   # Widgets

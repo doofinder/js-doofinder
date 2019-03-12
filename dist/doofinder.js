@@ -326,6 +326,7 @@
       this.defaults = merge(defaults, defaultParams);
       this.queryCounter = 0;
       this.widgets = [];
+      this.processors = [];
       Object.defineProperty(this, 'hashid', {
         get: function() {
           return this.client.hashid;
@@ -396,7 +397,7 @@
         params = {};
       }
       this.reset(query, params);
-      this.__getResults();
+      this.__doSearch();
       return this.trigger("df:search", [this.query, this.params]);
     };
 
@@ -414,7 +415,7 @@
       page = parseInt(page, 10);
       if (this.requestDone && page <= this.lastPage) {
         this.params.page = page;
-        this.__getResults();
+        this.__doSearch();
         return this.trigger("df:search:page", [this.query, this.params]);
       }
     };
@@ -442,7 +443,7 @@
 
     Controller.prototype.refresh = function() {
       this.params.page = 1;
-      this.__getResults();
+      this.__doSearch();
       return this.trigger("df:refresh", [this.query, this.params]);
     };
 
@@ -454,29 +455,45 @@
      * @protected
      */
 
-    Controller.prototype.__getResults = function() {
+    Controller.prototype.__doSearch = function() {
       var params, request;
       this.requestDone = true;
       params = merge({
         query_counter: ++this.queryCounter
       }, this.params);
       return request = this.client.search(this.query, params, (function(_this) {
-        return function(err, res) {
+        return function(err, response) {
           if (err) {
             return _this.trigger("df:results:error", [err]);
-          } else if (res.query_counter === _this.queryCounter) {
-            _this.lastPage = Math.ceil(res.total / res.results_per_page);
-            _this.params.query_name = res.query_name;
-            _this.renderWidgets(res);
-            _this.trigger("df:results:success", [res]);
+          } else if (response.query_counter === _this.queryCounter) {
+            _this.lastPage = Math.ceil(response.total / response.results_per_page);
+            _this.params.query_name = response.query_name;
+            _this.processResponse(response);
+            _this.renderWidgets(response);
+            _this.trigger("df:results:success", [response]);
             if (_this.isLastPage) {
-              return _this.trigger("df:results:end", [res]);
+              return _this.trigger("df:results:end", [response]);
             }
           } else {
-            return _this.trigger("df:results:discarded", [res]);
+            return _this.trigger("df:results:discarded", [response]);
           }
         };
       })(this));
+    };
+
+
+    /**
+     * Transform the response by passing it through a set of data processors,
+     * if any.
+     *
+     * @param  {Object} response Search response.
+     * @return {Object}          The resulting search response.
+     */
+
+    Controller.prototype.processResponse = function(response) {
+      return this.processors.reduce((function(data, fn) {
+        return fn(data);
+      }), response);
     };
 
 

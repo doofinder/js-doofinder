@@ -45,6 +45,14 @@ jQuery(function($){
   var basicClient = new doofinder.Client(HASHID, {zone: 'eu1', address: SERVER_ADDRESS});
   // create a basic controller, get 20 results per page
   var basicController = new doofinder.Controller(basicClient, {rpp: 20});
+  // use response processors
+  basicController.processors.push(function(response){
+    response.results = response.results.map(function(result){
+      result.title += ' (processed)';
+      return result;
+    });
+    return response;
+  });
   // create an input widget
   var basicInputWidget = new doofinder.widgets.QueryInput("#basicInput", {
     delayedEvents: {
