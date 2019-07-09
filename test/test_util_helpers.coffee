@@ -52,3 +52,26 @@ describe "Helpers", ->
       (formatNumber 1234, spec).should.equal "1234"
       done()
 
+  context "urlParams", ->
+    it "works", (done) ->
+      addUrlParams = helpers.fn.addUrlParams
+
+      url = "https://www.fitnessdigital.com/showProducts.jsp?search=Polar+Vantage"
+      params =
+        "ct": 2
+        "pp": 1
+        "": ""
+      res = "https://www.fitnessdigital.com/showProducts.jsp?search=Polar%20Vantage&ct=2&pp=1"
+
+      """
+      qs library:
+
+      > RFC3986 used as default option and encodes ' ' to %20 which is backward
+      > compatible. In the same time, output can be stringified as per RFC1738
+      > with ' ' equal to '+'.
+
+      We use the default so '+' will be re-encoded to %20.
+      """
+
+      addUrlParams(url, params).should.equal res
+      done()

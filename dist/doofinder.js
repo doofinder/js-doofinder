@@ -2974,8 +2974,9 @@
     }
     if (url.length && (Object.keys(urlParams)).length) {
       ref = url.split("?"), host = ref[0], params = ref[1];
-      params = qs.stringify(merge(qs.parse(params), urlParams));
-      return host + "?" + params;
+      params = merge(qs.parse(params), urlParams);
+      delete params[""];
+      return host + "?" + (qs.stringify(params));
     } else {
       return url;
     }
@@ -3032,6 +3033,11 @@
      *                                   parameter value.
      *
      * Example obtaining dynamic values for parameters
+     *
+     * IMPORTANT: The URL inside the helper must be referenced with a triple
+     * mustache!!!
+     *
+     * {{#url-params}}{{{link}}}{{/url-params}}
      *
      * controller = new ...;
      * ...

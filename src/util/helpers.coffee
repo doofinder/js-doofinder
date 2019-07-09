@@ -88,8 +88,9 @@ decodeEntities = (->
 addUrlParams = (url, urlParams = {}) ->
   if url.length and (Object.keys urlParams).length
     [host, params] = url.split "?"
-    params = qs.stringify (merge (qs.parse params), urlParams)
-    "#{host}?#{params}"
+    params = merge (qs.parse params), urlParams
+    delete params[""] # in case it exists
+    "#{host}?#{qs.stringify params}"
   else
     url
 
@@ -134,6 +135,11 @@ module.exports =
    *                                   parameter value.
    *
    * Example obtaining dynamic values for parameters
+   *
+   * IMPORTANT: The URL inside the helper must be referenced with a triple
+   * mustache!!!
+   *
+   * {{#url-params}}{{{link}}}{{/url-params}}
    *
    * controller = new ...;
    * ...
