@@ -1509,7 +1509,7 @@
      */
 
     DfDomElement.prototype.__isValidElementNode = function(node) {
-      return (Thing.is.element(node)) || (Thing.is.document(node)) || (Thing.is.window(node));
+      return (Thing.is.element(node)) || (Thing.is.svgElement(node)) || (Thing.is.document(node)) || (Thing.is.window(node));
     };
 
 
@@ -3405,6 +3405,10 @@
     return (Is.array(value)) && (value.every(function(x) {
       return Is.string(x);
     }));
+  };
+
+  Is.svgElement = function(value) {
+    return (value != null) && typeof SVGElement !== 'undefined' && value instanceof SVGElement && value.nodeType === 1;
   };
 
   Is.plainObject = function(obj) {

@@ -90,6 +90,7 @@ class DfDomElement
   ###
   __isValidElementNode: (node) ->
     (Thing.is.element node) or
+    (Thing.is.svgElement node) or
     (Thing.is.document node) or
     (Thing.is.window node)
 
