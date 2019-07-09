@@ -17,6 +17,9 @@ Is.document = (value) ->
 Is.stringArray = (value) ->
   (Is.array value) and (value.every (x) -> Is.string x)
 
+Is.svgElement = (value) ->
+  value? and typeof SVGElement isnt 'undefined' and value instanceof SVGElement and value.nodeType is 1;
+
 # Ported from https://www.npmjs.com/package/extend.
 Is.plainObject = (obj) ->
   if not obj or ((toStr.call obj) isnt "[object Object]")
