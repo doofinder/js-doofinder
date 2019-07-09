@@ -396,6 +396,57 @@ describe "Controller", ->
 
       controller.search ""
 
+    it "can use processors to modify the response", (done) ->
+      params =
+        query: ""
+        hashid: cfg.hashid
+        page: 1
+        rpp: 10
+        query_counter: 1
+
+      response =
+        results: [
+          description: "Antena. 5.2 dBi. omnidireccional…"
+          dfid: "523093f0ded16148dc005362"
+          id: "ID1"
+          image_url: "http://www.example.com/images/product_image.jpg"
+          title: "Cisco Aironet Pillar Mount Diversity Omnidirectional Antenna"
+          type: "product"
+          url: "http://www.example.com/product_description.html"
+        ]
+        total: 1
+
+      scope = serve.search params, response
+
+      controller = cfg.getController()
+
+      # add a couple of processors
+      controller.processors.push (res) ->
+        res.results = res.results.map (result) ->
+          result.title += ' (processed)'
+          result
+        res.processors = res.processors or []
+        res.processors.push 'processor-0'
+        res
+
+      controller.processors.push (res) ->
+        res.processors = res.processors or []
+        res.processors.push 'processor-1'
+        res
+
+      controller.one "df:results:success", (response) ->
+        scope.isDone().should.be.true
+
+        response.results.length.should.equal 1
+        response.results[0].title.should.include " (processed)"
+
+        response.processors.length.should.equal 2
+        response.processors[0].should.equal 'processor-0'
+        response.processors[1].should.equal 'processor-1'
+        done()
+
+      controller.search ""
+
   context "Widgets", ->
     it "can register widgets after initialization", (done) ->
       widget = new WidgetMock()
