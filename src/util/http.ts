@@ -9,11 +9,13 @@ import { GenericObject } from '../types';
 export class HttpClient {
   /**
    * Performs a HTTP request expecting JSON to be returned.
-   * @param  {Object}   options  Options needed by http.ClientRequest
+   *
+   * @param  {String}   url      The url to be fetched
    * @param  {Function} callback Callback to be called when the response is
    *                             received. First param is the error, if any,
    *                             and the second one is the response, if any.
-   * @return {http.ClientRequest}
+   * @param  {Object}   options  Options needed by fetch API
+   * @return {Promize}
    */
   public async request(url: string, callback: Function, options?: GenericObject) {
     const response = await fetch(url, options);
