@@ -4,6 +4,8 @@ export const isString = (value: unknown): boolean => Object.prototype.toString.c
 
 export const isNumber = (value: unknown): boolean => Object.prototype.toString.call(value) === '[object Number]';
 
+export const isFunction = (value: unknown): boolean => Object.prototype.toString.call(value) === '[object Function]';
+
 export const isArray = (value: unknown): boolean => Array.isArray(value);
 
 export const isObject = (value: unknown): boolean => Object.prototype.toString.call(value) === '[object Object]';
