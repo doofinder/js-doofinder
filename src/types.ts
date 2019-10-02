@@ -9,8 +9,3 @@
 export interface GenericObject<T = any> {
   [key: string]: T;
 }
-
-export type CSSSelector = string;
-export type CSSUnit = string;
-
-export type EventName = string;

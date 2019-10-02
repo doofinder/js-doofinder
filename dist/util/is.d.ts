@@ -1,0 +1,11 @@
+export declare const isString: (value: unknown) => boolean;
+export declare const isNumber: (value: unknown) => boolean;
+export declare const isFunction: (value: unknown) => boolean;
+export declare const isArray: (value: unknown) => boolean;
+export declare const isObject: (value: unknown) => boolean;
+export declare const isPlainObject: (value: unknown) => boolean;
+export declare const isWindow: (element: unknown) => boolean;
+export declare const isDocument: (element: unknown) => boolean;
+export declare const isElement: (element: unknown) => boolean;
+export declare const isSvgElement: (element: unknown) => boolean;
+export declare const isNotNull: (element: unknown) => boolean;
