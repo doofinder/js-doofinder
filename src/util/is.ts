@@ -30,3 +30,6 @@ export const isElement = (element: unknown): boolean =>
 
 export const isSvgElement = (element: unknown): boolean =>
   element !== undefined && typeof SVGElement !== 'undefined' && element instanceof SVGElement && element.nodeType === 1;
+
+export const isNotNull = (element: unknown): boolean =>
+  typeof element !== "undefined" && element !== null

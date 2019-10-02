@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [6.0.0] - 2019-10-22
+### Changed
+
+- ES6 support.
+- TypeScript rewrite.
+- TypeScript support.
+- Removed everything but the client.
+
 ## [5.8.1] - 2019-07-09
 ### Fixed
 - Fix edge case in url-params helper.

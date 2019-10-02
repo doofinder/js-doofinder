@@ -15,7 +15,7 @@ export class HttpClient {
    *                             received. First param is the error, if any,
    *                             and the second one is the response, if any.
    * @param  {Object}   options  Options needed by fetch API
-   * @return {Promize}
+   * @return {Promise}
    */
   public async request(url: string, callback: Function, options?: GenericObject) {
     const response = await fetch(url, options);

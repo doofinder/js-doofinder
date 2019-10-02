@@ -1,21 +1,62 @@
-md5 = require "md5"
-qs = require "qs"
+// qs = require "qs"
 
-errors = require "./util/errors"
-HttpClient = require "./util/http"
-merge = require "./util/merge"
-Thing = require "./util/thing"
+import { error } from './util/errors';
+import { GenericObject } from './types';
+ 
+import { HttpClient } from './util/http';
+import { merge } from "./util/merge"
+import { isArray, isPlainObject, isNotNull } from './util/is';
 
-###*
+
+export interface DoofinderClientOptions {
+  zone?: string;
+  apiKey?: string;
+  address?: string;
+  version?: string;
+  headers?: object;
+}
+
+export interface DoofinderFilterRange {
+  from: number;
+  to: number;
+}
+
+export interface DoofinderFilter {
+  field: string[] | DoofinderFilterRange;
+}
+
+export enum DoofinderSorting {
+  ASC = 'asc',
+  DESC = 'desc'
+}
+
+export interface DoofinderSortOption {
+  [field: string]: DoofinderSorting
+}
+
+export interface DoofinderParameters {
+   page?: number;
+   rpp?: number;
+   type?: string | string[];
+   filter?: DoofinderFilter;
+   exclude?: DoofinderFilter;
+   sort?: String | DoofinderSortOption | DoofinderSortOption[];
+}
+
+/**
  * This class allows searching and sending stats using the Doofinder service.
-###
-class Client
-  @apiVersion = "5"
+ */
+export class Client {
+  public apiVersion: string = "5";
+  public hashid: string = null;
+  private requestOptions: GenericObject;
+  private httpClient: HttpClient = null;
+  private version: string = null;
 
-  ###*
+  /**
    * Constructor
    *
-   * @param  {String} @hashid Unique ID of the Search Engine.
+   * @param  {String} hashid  Unique ID of the Search Engine.
    * @param  {Object} options Options object.
    *
    *                          {
@@ -44,48 +85,53 @@ class Client
    *                          If you use `apiKey` you can omit `zone` but one of
    *                          them is required.
    *
-   * @public
-  ###
-  constructor: (@hashid, options = {}) ->
-    [zone, secret] = (options.apiKey or options.zone or "").split "-"
+   */
+  constructor(hashid: string, options: DoofinderClientOptions = {}) {
+    const [zone, secret] = (options.apiKey || options.zone || "").split("-");
 
-    if not zone
-      if secret
-        message = "invalid `apiKey`"
+    if (!zone) {
+      let message: string = null;
+      if (secret)
+        message = "invalid `apiKey`";
       else
-        message = "`apiKey` or `zone` must be defined"
-      throw (errors.error message, @)
+        message = "`apiKey` or `zone` must be defined";
 
-    [protocol, address] = (options.address or "#{zone}-search.doofinder.com").split "://"
+      throw (error(message, this));
+    }
 
-    unless address?
+    let [protocol, address] = (options.address || `${zone}-search.doofinder.com`).split("://");
+
+    if (!isNotNull(address)) {
       address = protocol
       protocol = null
+    }
 
-    [host, port] = address.split ":"
+    const [host, port] = address.split(":");
 
-    @requestOptions =
-      host: host
-      port: port
-      headers: options.headers or {}
+    this.requestOptions = {
+      host: host,
+      port: port,
+      headers: options.headers || {}
+    }
 
-    forceSSL = false
+    if (isNotNull(protocol)) {
+      this.requestOptions.protocol = `${protocol}:`;
+    }
 
-    if protocol?
-      @requestOptions.protocol = "#{protocol}:"
+    if (isNotNull(secret)) {
+      this.requestOptions.headers["Authorization"] = secret;
+    }
 
-    if secret?
-      @requestOptions.headers["Authorization"] = secret
+    // This works even if no apiKey passed but passed an "Authorization" header
+    if ("Authorization" in this.requestOptions.headers) {
+      this.requestOptions.protocol = "https:";
+    }
 
-    # This works even if no apiKey passed but passed an "Authorization" header
-    if "Authorization" of @requestOptions.headers
-      @requestOptions.protocol = "https:"
-      forceSSL = true
+    this.httpClient = new HttpClient();
+    this.version = `${options.version || this.apiVersion}`;
+  }
 
-    @httpClient = new HttpClient forceSSL
-    @version = "#{options.version or @constructor.apiVersion}"
-
-  ###*
+  /**
    * Performs a HTTP request to the endpoint specified with the default options
    * of the client.
    *
@@ -94,17 +140,17 @@ class Client
    *                             received. First param is the error, if any,
    *                             and the second one is the response, if any.
    * @return {http.ClientRequest}
-   * @public
-  ###
-  request: (resource, callback) ->
-    options = merge path: resource, @requestOptions
-    @httpClient.request options, callback
+   */
+  public request(resource: string, callback: Function) {
+    const options = Object.assign({}, {path: resource}, this.requestOptions);
+    this.httpClient.request(options, callback);
+  }
 
-  #
-  # Main Endpoints
-  #
+  //
+  // Main Endpoints
+  //
 
-  ###*
+  /**
    * Performs a search request.
    *
    * @param  {String}   query    Search terms.
@@ -133,16 +179,21 @@ class Client
    *                             received. First param is the error, if any,
    *                             and the second one is the response, if any.
    * @return {http.ClientRequest}
-   * @public
-  ###
-  search: (query, params, callback) ->
-    if arguments.length is 2
-      callback = params
-      params = {}
-    querystring = @__buildSearchQueryString query, params
-    @request "/#{@version}/search?#{querystring}", callback
+   */
+  public search(query: string, params: Function): void;
+  public search(query: string, params?: DoofinderParameters, callback?: Function): void {
+    let fnCallback: Function = null;
+    if (typeof params === 'function') {
+      fnCallback = params;
+      params = {};
+    } else {
+      fnCallback = callback;
+    }
+    const querystring: string = this.__buildSearchQueryString(query, params);
+    this.request(`/${this.version}/search?${querystring}`, fnCallback);
+  }
 
-  ###*
+  /**
    * Perform a request to get options for a search engine.
    *
    * @param  {String}   suffix   Optional suffix to add to the request URL. Can
@@ -152,17 +203,19 @@ class Client
    *                             received. First param is the error, if any,
    *                             and the second one is the response, if any.
    * @return {http.ClientRequest}
-   * @public
-  ###
-  options: (suffix, callback) ->
-    if arguments.length is 1
-      callback = suffix
-      suffix = ""
+   */
+  public options(suffix: Function);
+  public options(suffix: string, callback?: Function) {
+    if (typeof suffix === 'function') {
+      callback = suffix;
+      suffix = "";
+    }
 
-    suffix = if suffix then "?#{suffix}" else ""
-    @request "/#{@version}/options/#{@hashid}#{suffix}", callback
+    suffix = suffix ? `?${suffix}` : "";
+    this.request(`/${this.version}/options/${this.hashid}${suffix}`, callback);
+  }
 
-  ###*
+  /**
    * Performs a request to submit stats events to Doofinder.
    *
    * @param  {String}   eventName Type of stats. Configures the endpoint.
@@ -171,17 +224,21 @@ class Client
    *                              received. First param is the error, if any,
    *                              and the second one is the response, if any.
    * @return {http.ClientRequest}
-  ###
-  stats: (eventName, params, callback) ->
-    eventName ?= ""
-    defaultParams =
-      hashid: @hashid
+   */
+  public stats(eventName: string, params?: GenericObject, callback?: Function): void {
+    eventName = isNotNull(eventName) ? eventName : "";
+    let defaultParams: GenericObject = {
+      hashid: this.hashid,
       random: new Date().getTime()
-    querystring = qs.stringify (merge defaultParams, (params or {}))
-    querystring = "?#{querystring}" if querystring
-    @request "/#{@version}/stats/#{eventName}#{querystring}", callback
+    }
+    let querystring = qs.stringify (Object.assign(defaultParams, (params || {})));
+    if (querystring != null) {
+      querystring = `?${querystring}`;
+    }
+    this.request(`/${this.version}/stats/${eventName}${querystring}`, callback);
+  }
 
-  ###*
+  /**
    * Creates a search query string for the specified query and parameters
    * intended to be used in the search API endpoint.
    *
@@ -203,36 +260,30 @@ class Client
    * @param  {Object} params Search parameters object.
    * @return {String}        Encoded query string to be used in a search URL.
    * @protected
-  ###
-  __buildSearchQueryString: (query, params) ->
-    query ?= ""
-    query = (query.replace /\s+/g, " ")
-    query = query.trim() unless query is " "
+   */
+  protected _buildSearchQueryString(query: string, params: DoofinderParameters) {
+    if (query == null) query = "";
+    query = (query.replace(/\s+/g, " "));
+    query = query === " " ? query : query.trim();
 
-    defaultParams =
-      hashid: @hashid
-      # page: 1  # Doofinder assumes this by default
-      # rpp: 10  # Doofinder assumes this by default
-      # type: product or [product, article] ...
-      # filter: {}
-      # exclude: {}
-      # sort: []
-      # transformer: null
-      # query_counter: 1
+    let defaultParams: GenericObject = {
+      hashid: this.hashid
+    }
 
-    queryParams = merge defaultParams, (params or {}), query: query
+    let queryParams = Object.assign(defaultParams, (params || {}), {query: query});
 
-    if (Thing.is.array queryParams.type) and queryParams.type.length is 1
-      queryParams.type = queryParams.type[0]
+    if ((isArray(queryParams.type)) && (queryParams.type.length === 1)) {
+      queryParams.type = queryParams.type[0];
+    }
 
-    if (Thing.is.plainObject queryParams.sort) and
-        (Object.keys queryParams.sort).length > 1
-      throw (errors.error "To sort by multiple fields use an Array of Objects", @)
+    if ((isPlainObject(queryParams.sort)) &&
+        ((Object.keys(queryParams.sort)).length > 1)) {
+      throw (error("To sort by multiple fields use an Array of Objects", this));
+    }
 
-    # if we skip nulls, transformer won't ever be sent as empty!
-    # so, if you don't want a param to be present, just don't add it or set
-    # it as undefined
-    qs.stringify queryParams, skipNulls: false
-
-
-module.exports = Client
+    // if we skip nulls, transformer won't ever be sent as empty!
+    // so, if you don't want a param to be present, just don't add it or set
+    // it as undefined
+    return qs.stringify(queryParams, {skipNulls: false});
+  }
+}
