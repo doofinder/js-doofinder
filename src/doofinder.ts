@@ -1,10 +1,9 @@
-// qs = require "qs"
+import { stringify } from 'qs';
 
 import { error } from './util/errors';
 import { GenericObject } from './types';
  
 import { HttpClient } from './util/http';
-import { merge } from "./util/merge"
 import { isArray, isPlainObject, isNotNull } from './util/is';
 
 
@@ -142,8 +141,7 @@ export class Client {
    * @return {http.ClientRequest}
    */
   public request(resource: string, callback: Function) {
-    const options = Object.assign({}, {path: resource}, this.requestOptions);
-    this.httpClient.request(options, callback);
+    this.httpClient.request(resource, callback, this.requestOptions);
   }
 
   //
@@ -180,8 +178,8 @@ export class Client {
    *                             and the second one is the response, if any.
    * @return {http.ClientRequest}
    */
-  public search(query: string, params: Function): void;
-  public search(query: string, params?: DoofinderParameters, callback?: Function): void {
+  public search(query: string, params?: Function): void;
+  public search(query: string, params?: DoofinderParameters | Function, callback?: Function): void {
     let fnCallback: Function = null;
     if (typeof params === 'function') {
       fnCallback = params;
@@ -189,7 +187,7 @@ export class Client {
     } else {
       fnCallback = callback;
     }
-    const querystring: string = this.__buildSearchQueryString(query, params);
+    const querystring: string = this._buildSearchQueryString(query, params);
     this.request(`/${this.version}/search?${querystring}`, fnCallback);
   }
 
@@ -204,8 +202,8 @@ export class Client {
    *                             and the second one is the response, if any.
    * @return {http.ClientRequest}
    */
-  public options(suffix: Function);
-  public options(suffix: string, callback?: Function) {
+  public options(suffix: Function): void;
+  public options(suffix: string | Function, callback?: Function): void {
     if (typeof suffix === 'function') {
       callback = suffix;
       suffix = "";
@@ -231,7 +229,7 @@ export class Client {
       hashid: this.hashid,
       random: new Date().getTime()
     }
-    let querystring = qs.stringify (Object.assign(defaultParams, (params || {})));
+    let querystring = stringify(Object.assign(defaultParams, (params || {})));
     if (querystring != null) {
       querystring = `?${querystring}`;
     }
@@ -259,9 +257,8 @@ export class Client {
    * @param  {String} query  Cleaned search terms.
    * @param  {Object} params Search parameters object.
    * @return {String}        Encoded query string to be used in a search URL.
-   * @protected
    */
-  protected _buildSearchQueryString(query: string, params: DoofinderParameters) {
+  protected _buildSearchQueryString(query: string, params: DoofinderParameters): string {
     if (query == null) query = "";
     query = (query.replace(/\s+/g, " "));
     query = query === " " ? query : query.trim();
@@ -284,6 +281,6 @@ export class Client {
     // if we skip nulls, transformer won't ever be sent as empty!
     // so, if you don't want a param to be present, just don't add it or set
     // it as undefined
-    return qs.stringify(queryParams, {skipNulls: false});
+    return stringify(queryParams, {skipNulls: false});
   }
 }
