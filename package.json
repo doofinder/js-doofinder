@@ -1,0 +1,30 @@
+{
+  "name": "doofinder",
+  "version": "6.0.0",
+  "description": "Javascript Library for Doofinder Search API",
+  "main": "dist/doofinder.js",
+  "directories": {
+    "test": "test"
+  },
+  "repository": "git@github.com:doofinder/js-doofinder.git",
+  "scripts": {
+    "compile": "tsc"
+  },
+  "author": "Doofinder",
+  "contributors": [
+    "Carlos Escribano Rey <carlos@doofinder.com>",
+    "José Carlos Cuevas Albadalejo <josecarlos@doofinder.com>"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/doofinder/js-doofinder/issues"
+  },
+  "homepage": "https://github.com/doofinder/js-doofinder",
+  "devDependencies": {
+    "typescript": "^3.6.3"
+  },
+  "dependencies": {
+    "@types/qs": "^6.5.3",
+    "qs": "^6.9.0"
+  }
+}

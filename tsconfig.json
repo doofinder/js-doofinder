@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "declarationDir": "./types",
+    "module": "ES2015",
+    "noImplicitAny": true,
+    "outDir": "dist",
+    "target": "ES2015",
+    "moduleResolution": "Node",
+    "experimentalDecorators": true,
+    "sourceMap": true
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}

@@ -1,5 +1,4 @@
 import { error, warning } from "./errors";
-import { merge } from "./merge";
 import { isString, isFunction } from './is';
 import { GenericObject } from '../types';
 
