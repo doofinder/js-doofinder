@@ -140,7 +140,7 @@ export class Client {
    *                             and the second one is the response, if any.
    * @return {http.ClientRequest}
    */
-  public request(resource: string, callback: Function) {
+  public request(resource: string, callback?: Function) {
     this.httpClient.request(resource, callback, this.requestOptions);
   }
 
