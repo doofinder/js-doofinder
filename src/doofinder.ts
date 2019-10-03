@@ -3,7 +3,7 @@ import { stringify } from 'qs';
 import { error } from './util/errors';
 import { GenericObject } from './types';
  
-import { HttpClient } from './util/http';
+import { HttpClient, HttpResponse } from './util/http';
 import { isArray, isPlainObject, isNotNull } from './util/is';
 
 
@@ -135,13 +135,11 @@ export class Client {
    * of the client.
    *
    * @param  {String}   resource Resource to be called by GET.
-   * @param  {Function} callback Callback to be called when the response is
-   *                             received. First param is the error, if any,
-   *                             and the second one is the response, if any.
-   * @return {http.ClientRequest}
+   *
+   * @return {Promise<HttpResponse>}
    */
-  public request(resource: string, callback?: Function) {
-    this.httpClient.request(resource, callback, this.requestOptions);
+  public async request(resource: string): Promise<HttpResponse> {
+    return await this.httpClient.request(resource, this.requestOptions);
   }
 
   //
@@ -173,22 +171,11 @@ export class Client {
    *                                 field: "asc" | "desc"
    *                               sort: [{field: "asc|desc"}]
    *
-   * @param  {Function} callback Callback to be called when the response is
-   *                             received. First param is the error, if any,
-   *                             and the second one is the response, if any.
-   * @return {http.ClientRequest}
+   * @return {Promise<HttpResponse>}
    */
-  public search(query: string, params?: Function): void;
-  public search(query: string, params?: DoofinderParameters | Function, callback?: Function): void {
-    let fnCallback: Function = null;
-    if (typeof params === 'function') {
-      fnCallback = params;
-      params = {};
-    } else {
-      fnCallback = callback;
-    }
+  public async search(query: string, params?: DoofinderParameters): Promise<HttpResponse> {
     const querystring: string = this._buildSearchQueryString(query, params);
-    this.request(`/${this.version}/search?${querystring}`, fnCallback);
+    return await this.request(`/${this.version}/search?${querystring}`);
   }
 
   /**
@@ -200,17 +187,11 @@ export class Client {
    * @param  {Function} callback Callback to be called when the response is
    *                             received. First param is the error, if any,
    *                             and the second one is the response, if any.
-   * @return {http.ClientRequest}
+   * @return {Promise<HttpResponse>}
    */
-  public options(suffix: Function): void;
-  public options(suffix: string | Function, callback?: Function): void {
-    if (typeof suffix === 'function') {
-      callback = suffix;
-      suffix = "";
-    }
-
+  public async options(suffix?: string): Promise<HttpResponse> {
     suffix = suffix ? `?${suffix}` : "";
-    this.request(`/${this.version}/options/${this.hashid}${suffix}`, callback);
+    return await this.request(`/${this.version}/options/${this.hashid}${suffix}`);
   }
 
   /**
@@ -221,9 +202,9 @@ export class Client {
    * @param  {Function} callback  Callback to be called when the response is
    *                              received. First param is the error, if any,
    *                              and the second one is the response, if any.
-   * @return {http.ClientRequest}
+   * @return {Promise<HttpResponse>}
    */
-  public stats(eventName: string, params?: GenericObject, callback?: Function): void {
+  public async stats(eventName: string, params?: GenericObject): Promise<HttpResponse> {
     eventName = isNotNull(eventName) ? eventName : "";
     let defaultParams: GenericObject = {
       hashid: this.hashid,
@@ -233,7 +214,7 @@ export class Client {
     if (querystring != null) {
       querystring = `?${querystring}`;
     }
-    this.request(`/${this.version}/stats/${eventName}${querystring}`, callback);
+    return await this.request(`/${this.version}/stats/${eventName}${querystring}`);
   }
 
   /**

@@ -2,6 +2,13 @@ import { error, warning } from "./errors";
 import { isString, isFunction } from './is';
 import { GenericObject } from '../types';
 
+
+export interface HttpResponse {
+  statusCode: number;
+  data?: GenericObject;
+  error?: GenericObject;
+}
+
 /**
  * Commodity API to http and https modules
  */
@@ -10,26 +17,23 @@ export class HttpClient {
    * Performs a HTTP request expecting JSON to be returned.
    *
    * @param  {String}   url      The url to be fetched
-   * @param  {Function} callback Callback to be called when the response is
-   *                             received. First param is the error, if any,
-   *                             and the second one is the response, if any.
    * @param  {Object}   options  Options needed by fetch API
-   * @return {Promise}
+   * 
+   * @return {Promise<HttpResponse>}
    */
-  public async request(url: string, callback: Function, options?: GenericObject) {
+  public async request(url: string, options?: GenericObject): Promise<HttpResponse> {
     const response = await fetch(url, options);
 
     if (response.ok) {
       const data = await response.json();
-      callback(undefined, data);
+      return {statusCode: 200, data}; 
     } else {
       let error = {};
       try {
         const data = await response.json();
-        callback({statusCode: response}, data);
+        return {statusCode: response.status, data: data};
       } catch(err) {
-        error = {error: err};
-        callback({statusCode: response.status}, error);
+        return {statusCode: response.status, error: err};
       }
     }
   }
