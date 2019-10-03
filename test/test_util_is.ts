@@ -1,16 +1,33 @@
-# required for testing
-chai = require "chai"
+// required for testing
+import * as mocha from 'mocha';
+import * as chai from 'chai';
 
-# chai
-chai.should()
-expect = chai.expect
+// chai
+chai.should();
+const expect = chai.expect;
 
-# required for tests
-Thing = require "../lib/util/thing"
+// required for tests
+import * as Thing from '../src/util/is';
 
-describe "Thing", ->
-  it "can detect an array of strings", (done) ->
-    (Thing.is.stringArray ["a", "b", "c"]).should.be.true
-    (Thing.is.stringArray "a").should.be.false
-    (Thing.is.stringArray ["a", "b", 3]).should.be.false
-    done()
+describe("Is Module", () => {
+  it("can detect an array", (done) => {
+    (Thing.isArray(["a", "b", "c"])).should.be.true;
+    (Thing.isArray("a")).should.be.false;
+    (Thing.isArray(["a", "b", 3])).should.be.true;
+    done();
+  });
+
+  it("can tell an array from an object", (done) => {
+    const obj = {a: 1, b: 2};
+    const arr = ["a", "b", 3];
+
+    (Thing.isArray(obj)).should.be.false;
+    (Thing.isArray(arr)).should.be.true;
+    (Thing.isObject(obj)).should.be.true;
+    (Thing.isObject(arr)).should.be.false;
+    (Thing.isPlainObject(obj)).should.be.true;
+    (Thing.isPlainObject(arr)).should.be.false;
+
+    done();
+  });
+});
