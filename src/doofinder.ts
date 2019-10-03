@@ -86,16 +86,19 @@ export class Client {
    *
    */
   constructor(hashid: string, options: DoofinderClientOptions = {}) {
-    const [zone, secret] = (options.apiKey || options.zone || "").split("-");
+    this.hashid = hashid;
+    let zone, secret: string = null;
 
-    if (!zone) {
-      let message: string = null;
-      if (secret)
-        message = "invalid `apiKey`";
-      else
-        message = "`apiKey` or `zone` must be defined";
+    if ('apiKey' in options) {
+      [zone, secret] = options.apiKey.split("-");
+    }
 
-      throw (error(message, this));
+    if (!options['zone'] && !options['apiKey']) {
+      throw (error("`apiKey` or `zone` must be defined", this));
+    }
+
+    if (zone && !secret) {
+      throw (error("invalid `apiKey`", this));
     }
 
     let [protocol, address] = (options.address || `${zone}-search.doofinder.com`).split("://");
@@ -204,8 +207,7 @@ export class Client {
    *                              and the second one is the response, if any.
    * @return {Promise<HttpResponse>}
    */
-  public async stats(eventName: string, params?: GenericObject): Promise<HttpResponse> {
-    eventName = isNotNull(eventName) ? eventName : "";
+  public async stats(eventName = "", params?: GenericObject): Promise<HttpResponse> {
     let defaultParams: GenericObject = {
       hashid: this.hashid,
       random: new Date().getTime()

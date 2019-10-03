@@ -1,4 +1,4 @@
-export default function responseMock(hashid, queryCounter = 1) {
+export default function responseMock(hashid: string, queryCounter = 1): object {
   return {
     hashid: hashid,
     max_score: 1.3,

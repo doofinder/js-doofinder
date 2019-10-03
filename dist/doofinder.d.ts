@@ -1,4 +1,5 @@
 import { GenericObject } from './types';
+import { HttpResponse } from './util/http';
 export interface DoofinderClientOptions {
     zone?: string;
     apiKey?: string;
@@ -76,12 +77,10 @@ export declare class Client {
      * of the client.
      *
      * @param  {String}   resource Resource to be called by GET.
-     * @param  {Function} callback Callback to be called when the response is
-     *                             received. First param is the error, if any,
-     *                             and the second one is the response, if any.
-     * @return {http.ClientRequest}
+     *
+     * @return {Promise<HttpResponse>}
      */
-    request(resource: string, callback: Function): void;
+    request(resource: string): Promise<HttpResponse>;
     /**
      * Performs a search request.
      *
@@ -107,12 +106,9 @@ export declare class Client {
      *                                 field: "asc" | "desc"
      *                               sort: [{field: "asc|desc"}]
      *
-     * @param  {Function} callback Callback to be called when the response is
-     *                             received. First param is the error, if any,
-     *                             and the second one is the response, if any.
-     * @return {http.ClientRequest}
+     * @return {Promise<HttpResponse>}
      */
-    search(query: string, params?: Function): void;
+    search(query: string, params?: DoofinderParameters): Promise<HttpResponse>;
     /**
      * Perform a request to get options for a search engine.
      *
@@ -122,9 +118,9 @@ export declare class Client {
      * @param  {Function} callback Callback to be called when the response is
      *                             received. First param is the error, if any,
      *                             and the second one is the response, if any.
-     * @return {http.ClientRequest}
+     * @return {Promise<HttpResponse>}
      */
-    options(suffix: Function): void;
+    options(suffix?: string): Promise<HttpResponse>;
     /**
      * Performs a request to submit stats events to Doofinder.
      *
@@ -133,9 +129,9 @@ export declare class Client {
      * @param  {Function} callback  Callback to be called when the response is
      *                              received. First param is the error, if any,
      *                              and the second one is the response, if any.
-     * @return {http.ClientRequest}
+     * @return {Promise<HttpResponse>}
      */
-    stats(eventName: string, params?: GenericObject, callback?: Function): void;
+    stats(eventName: string, params?: GenericObject): Promise<HttpResponse>;
     /**
      * Creates a search query string for the specified query and parameters
      * intended to be used in the search API endpoint.

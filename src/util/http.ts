@@ -13,6 +13,8 @@ export interface HttpResponse {
  * Commodity API to http and https modules
  */
 export class HttpClient {
+  private secure: boolean = false;
+
   /**
    * Performs a HTTP request expecting JSON to be returned.
    *
@@ -22,11 +24,18 @@ export class HttpClient {
    * @return {Promise<HttpResponse>}
    */
   public async request(url: string, options?: GenericObject): Promise<HttpResponse> {
+
+    if ((url.indexOf('http') === -1) && (options && options['host'])) {
+      const protocol = options['protocol'] || 'http:';
+      const port = options['port'] || '';
+      url = `${protocol}//${options['host']}${port}${url}`;
+    }
+
     const response = await fetch(url, options);
 
     if (response.ok) {
       const data = await response.json();
-      return {statusCode: 200, data}; 
+      return {statusCode: 200, data: data}; 
     } else {
       let error = {};
       try {
