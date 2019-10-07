@@ -1,45 +1,19 @@
 import { stringify } from 'qs';
 
 import { error } from './util/errors';
-import { GenericObject } from './types';
+
+// Doofinder types
+import { DoofinderClientOptions, DoofinderFilterRange, DoofinderFilter,
+  DoofinderSorting, DoofinderSortOption, DoofinderParameters, 
+  DoofinderHeaders, DoofinderRequestOptions } from './types';
  
 import { HttpClient, HttpResponse } from './util/http';
 import { isArray, isPlainObject, isNotNull } from './util/is';
 
 
-export interface DoofinderClientOptions {
-  zone?: string;
-  apiKey?: string;
-  address?: string;
-  version?: string;
-  headers?: object;
-}
-
-export interface DoofinderFilterRange {
-  from: number;
-  to: number;
-}
-
-export interface DoofinderFilter {
-  field: string[] | DoofinderFilterRange;
-}
-
-export enum DoofinderSorting {
-  ASC = 'asc',
-  DESC = 'desc'
-}
-
-export interface DoofinderSortOption {
-  [field: string]: DoofinderSorting
-}
-
-export interface DoofinderParameters {
-   page?: number;
-   rpp?: number;
-   type?: string | string[];
-   filter?: DoofinderFilter;
-   exclude?: DoofinderFilter;
-   sort?: String | DoofinderSortOption | DoofinderSortOption[];
+interface DoofinderFullParameters extends DoofinderParameters {
+  hashid: string;
+  random?: number;
 }
 
 /**
@@ -48,7 +22,7 @@ export interface DoofinderParameters {
 export class Client {
   public apiVersion: string = "5";
   public hashid: string = null;
-  private requestOptions: GenericObject;
+  private requestOptions: DoofinderRequestOptions;
   private httpClient: HttpClient = null;
   private version: string = null;
 
@@ -113,7 +87,8 @@ export class Client {
     this.requestOptions = {
       host: host,
       port: port,
-      headers: options.headers || {}
+      // headers: options.headers || {}
+      headers: options.headers as DoofinderHeaders || {}
     }
 
     if (isNotNull(protocol)) {
@@ -207,8 +182,8 @@ export class Client {
    *                              and the second one is the response, if any.
    * @return {Promise<HttpResponse>}
    */
-  public async stats(eventName = "", params?: GenericObject): Promise<HttpResponse> {
-    let defaultParams: GenericObject = {
+  public async stats(eventName = "", params?: DoofinderParameters): Promise<HttpResponse> {
+    let defaultParams: DoofinderFullParameters = {
       hashid: this.hashid,
       random: new Date().getTime()
     }
@@ -246,7 +221,7 @@ export class Client {
     query = (query.replace(/\s+/g, " "));
     query = query === " " ? query : query.trim();
 
-    let defaultParams: GenericObject = {
+    let defaultParams: DoofinderFullParameters = {
       hashid: this.hashid
     }
 

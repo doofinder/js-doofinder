@@ -1,3 +1,5 @@
+import fetch from 'cross-fetch';
+
 import { error, warning } from "./errors";
 import { isString, isFunction } from './is';
 import { GenericObject } from '../types';

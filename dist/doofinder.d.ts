@@ -1,4 +1,3 @@
-import { GenericObject } from './types';
 import { HttpResponse } from './util/http';
 export interface DoofinderClientOptions {
     zone?: string;
@@ -28,6 +27,15 @@ export interface DoofinderParameters {
     filter?: DoofinderFilter;
     exclude?: DoofinderFilter;
     sort?: String | DoofinderSortOption | DoofinderSortOption[];
+}
+export interface DoofinderHeaders {
+    [headerKey: string]: string;
+}
+export interface DoofinderRequestOptions {
+    host: string;
+    port?: string | number;
+    protocol?: string;
+    headers?: DoofinderHeaders;
 }
 /**
  * This class allows searching and sending stats using the Doofinder service.
@@ -131,7 +139,7 @@ export declare class Client {
      *                              and the second one is the response, if any.
      * @return {Promise<HttpResponse>}
      */
-    stats(eventName: string, params?: GenericObject): Promise<HttpResponse>;
+    stats(eventName?: string, params?: DoofinderParameters): Promise<HttpResponse>;
     /**
      * Creates a search query string for the specified query and parameters
      * intended to be used in the search API endpoint.
