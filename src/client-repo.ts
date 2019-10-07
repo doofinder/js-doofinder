@@ -45,5 +45,3 @@ export class ClientRepo {
     return this._zone;
   }
 }
-
-export const clientRepo = ClientRepo.getInstance();

@@ -1,8 +1,5 @@
 // import fetch from 'cross-fetch';
 import 'cross-fetch/polyfill';
-
-import { error, warning } from "./errors";
-import { isString, isFunction } from './is';
 import { GenericObject } from '../types';
 
 
@@ -16,8 +13,6 @@ export interface HttpResponse {
  * Commodity API to http and https modules
  */
 export class HttpClient {
-  private secure: boolean = false;
-
   /**
    * Performs a HTTP request expecting JSON to be returned.
    *

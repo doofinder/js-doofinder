@@ -1,6 +1,5 @@
 import { stringify } from 'qs';
 
-import { error } from './util/errors';
 
 // Doofinder types
 import { DoofinderClientOptions, DoofinderFilterRange, DoofinderFilter,
@@ -68,11 +67,11 @@ export class Client {
     }
 
     if (!options['zone'] && !options['apiKey']) {
-      throw (error("`apiKey` or `zone` must be defined", this));
+      throw new Error("`apiKey` or `zone` must be defined");
     }
 
     if (zone && !secret) {
-      throw (error("invalid `apiKey`", this));
+      throw new Error("invalid `apiKey`");
     }
 
     let [protocol, address] = (options.address || `${zone}-search.doofinder.com`).split("://");
@@ -233,7 +232,7 @@ export class Client {
 
     if ((isPlainObject(queryParams.sort)) &&
         ((Object.keys(queryParams.sort)).length > 1)) {
-      throw (error("To sort by multiple fields use an Array of Objects", this));
+      throw new Error("To sort by multiple fields use an Array of Objects");
     }
 
     // if we skip nulls, transformer won't ever be sent as empty!
