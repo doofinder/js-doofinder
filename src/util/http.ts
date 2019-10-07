@@ -1,4 +1,5 @@
-import fetch from 'cross-fetch';
+// import fetch from 'cross-fetch';
+import 'cross-fetch/polyfill';
 
 import { error, warning } from "./errors";
 import { isString, isFunction } from './is';

@@ -1,42 +1,5 @@
+import { DoofinderClientOptions, DoofinderParameters } from './types';
 import { HttpResponse } from './util/http';
-export interface DoofinderClientOptions {
-    zone?: string;
-    apiKey?: string;
-    address?: string;
-    version?: string;
-    headers?: object;
-}
-export interface DoofinderFilterRange {
-    from: number;
-    to: number;
-}
-export interface DoofinderFilter {
-    field: string[] | DoofinderFilterRange;
-}
-export declare enum DoofinderSorting {
-    ASC = "asc",
-    DESC = "desc"
-}
-export interface DoofinderSortOption {
-    [field: string]: DoofinderSorting;
-}
-export interface DoofinderParameters {
-    page?: number;
-    rpp?: number;
-    type?: string | string[];
-    filter?: DoofinderFilter;
-    exclude?: DoofinderFilter;
-    sort?: String | DoofinderSortOption | DoofinderSortOption[];
-}
-export interface DoofinderHeaders {
-    [headerKey: string]: string;
-}
-export interface DoofinderRequestOptions {
-    host: string;
-    port?: string | number;
-    protocol?: string;
-    headers?: DoofinderHeaders;
-}
 /**
  * This class allows searching and sending stats using the Doofinder service.
  */

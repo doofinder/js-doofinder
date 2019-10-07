@@ -2,7 +2,6 @@
 import * as mocha from 'mocha';
 import * as chai from 'chai';
 
-import * as fetchMock from 'fetch-mock';
 
 // chai
 chai.should();
@@ -13,6 +12,9 @@ import { Client } from '../src/doofinder';
 
 // config, utils & mocks
 import * as cfg from './config';
+
+// Mock the fetch API
+import * as fetchMock from 'fetch-mock';
 
 function buildQuery(query?: string, params?: object) {
   // Quite hackish if you ask me...
@@ -260,8 +262,8 @@ describe("Client", () => {
       let response = await client.stats('test');
       expect(fetchMock.called(`glob:${cfg.address}/${cfg.version}/stats/test?*`)).to.be.true;
 
-      response = await client.stats('test2', {nostats: 1});
-      expect(fetchMock.called(`glob:${cfg.address}/${cfg.version}/stats/test2?*nostats=1*`)).to.be.true;
+      response = await client.stats('test2', {rpp: 20});
+      expect(fetchMock.called(`glob:${cfg.address}/${cfg.version}/stats/test2?*rpp=20*`)).to.be.true;
     });
   });
 });

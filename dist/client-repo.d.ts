@@ -1,8 +1,5 @@
 import { Client } from './doofinder';
-export declare enum Zone {
-    EU = "eu1",
-    US = "us1"
-}
+import { Zone } from './types';
 /**
  * This class allows to retrieve a fully configured
  * Doofinder client
