@@ -25,6 +25,8 @@ export class Query {
    *
    * NOTE: This does not search, just sets the parameter
    *
+   * @param  {String}   query   The search query to be sent.
+   *
    */
   public search(query: string): void {
     this.params.query = query;
@@ -38,6 +40,10 @@ export class Query {
     this.params = {};
   }
 
+  /**
+   * Allows to directly set a parameter on the query builder
+   * 
+   */
   public setParameter(paramName: string, value: any): void {
     // FIXME: Find a better way to ensure type checking here
     (this.params as any)[paramName] = value;
@@ -185,7 +191,7 @@ export class Query {
   /**
    * Sets an exclusion structure to the current context
    *
-   * @param  {Any}        filters            The exclusion filter to add
+   * @param  {Object}        filters            The exclusion filter to add
    *
    */
   public setExclusions(filters: Facet): void {
@@ -217,6 +223,8 @@ export class Query {
   /**
    * Sets the Results Per Page (rpp) parameter. 
    *
+   * @param  {Number}   rpp   The results per page to set
+   *
    */
   public resultsPerPage(rpp?: number): void {
     if (rpp) {
@@ -230,6 +238,9 @@ export class Query {
    * Sets the types to query in this query, call without
    * parameters to clear the setting
    *
+   * @param  {String | String[]}  type    The type or types to set
+   *                                      for this query
+   *
    */
   public setTypes(type?: string | string[]): void {
     if (type) {
@@ -241,6 +252,8 @@ export class Query {
 
   /**
    * Adds a type to the current types in this query 
+   *
+   * @param  {String}   type    The type to be added for the search
    *
    */
   public addType(type: string): void {
@@ -256,6 +269,8 @@ export class Query {
 
   /**
    * Remove a type from this query
+   *
+   * @param  {String}   type    The type to be removed for the search
    *
    */
   public removeType(type: string): void {
@@ -274,6 +289,7 @@ export class Query {
   /**
    * Sets the transformer, call it empty to reset it to null
    *
+   * @param  {String}   transformer   The transformer option to set
    */
   public transformer(transformer?: TransformerOptions): void {
     if (transformer) {
@@ -285,6 +301,8 @@ export class Query {
 
   /**
    * Sets the timeout for the query, call it empty to reset
+   *
+   * @param  {Number}   timeout       The timeoout for the call
    *
    */
   public timeout(timeout?: number): void {
@@ -299,6 +317,8 @@ export class Query {
    * Allows to ask for jsonp format, call without parameters
    * to clear the flag
    *
+   * @param  {Boolean}    jsonp   Wether to use jsonp or not
+   *
    */
   public jsonp(jsonp?: boolean): void {
     if (jsonp) {
@@ -312,6 +332,8 @@ export class Query {
    * Sets the query name for this query, call without parameters
    * to clear the value
    *
+   * @param  {String}   queryName   The query_name parameter value to set
+   *
    */
   public queryName(queryName?: QueryTypes): void {
     if (queryName) {
@@ -323,6 +345,8 @@ export class Query {
 
   /**
    * Sets the nostats flag, call without parameters to clear it
+   *
+   * @param  {Boolean}    nostats   Wether to send the nostats flag or not
    *
    */
   public noStats(nostats?: boolean): void {
@@ -339,6 +363,8 @@ export class Query {
    * Gets an structure body parameters ready to be sent through a post
    * to the Doofinder Search API 
    *
+   * @return  {Object}
+   *
    */
   public getParams(): object {
     // Create a copy of the current params
@@ -349,6 +375,9 @@ export class Query {
 
   /**
    * Gets the current query 
+   *
+   * @return   {String}
+   *
    */
   public getQuery(): string {
     return this.params.query;
