@@ -13,4 +13,3 @@ export declare class ClientRepo {
     getClient(): Client;
     zone: Zone;
 }
-export declare const clientRepo: ClientRepo;

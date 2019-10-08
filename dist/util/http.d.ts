@@ -1,3 +1,4 @@
+import 'cross-fetch/polyfill';
 import { GenericObject } from '../types';
 export interface HttpResponse {
     statusCode: number;
@@ -8,7 +9,6 @@ export interface HttpResponse {
  * Commodity API to http and https modules
  */
 export declare class HttpClient {
-    private secure;
     /**
      * Performs a HTTP request expecting JSON to be returned.
      *

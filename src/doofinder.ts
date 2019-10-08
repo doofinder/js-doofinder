@@ -5,6 +5,8 @@ import { stringify } from 'qs';
 import { DoofinderClientOptions, DoofinderFilterRange, DoofinderFilter,
   DoofinderSorting, DoofinderSortOption, DoofinderParameters, 
   DoofinderHeaders, DoofinderRequestOptions } from './types';
+
+import { Query } from './querybuilder/query';
  
 import { HttpClient, HttpResponse } from './util/http';
 import { isArray, isPlainObject, isNotNull } from './util/is';
@@ -150,7 +152,7 @@ export class Client {
    *
    * @return {Promise<HttpResponse>}
    */
-  public async search(query: string, params?: DoofinderParameters): Promise<HttpResponse> {
+  public async search(query: string | Query, params?: DoofinderParameters): Promise<HttpResponse> {
     const querystring: string = this._buildSearchQueryString(query, params);
     return await this.request(`/${this.version}/search?${querystring}`);
   }
@@ -215,16 +217,36 @@ export class Client {
    * @param  {Object} params Search parameters object.
    * @return {String}        Encoded query string to be used in a search URL.
    */
-  protected _buildSearchQueryString(query: string, params: DoofinderParameters): string {
-    if (query == null) query = "";
-    query = (query.replace(/\s+/g, " "));
-    query = query === " " ? query : query.trim();
+  protected _buildSearchQueryString(query: string | Query, params?: DoofinderParameters): string {
+    let q: string = "";
+    let parameters: DoofinderParameters = {};
+
+    // We get a normal query
+    if (typeof query === 'string') {
+      if (query == null) 
+        q = "";
+      else 
+        q = query;
+
+      parameters = params || {};
+    } else {
+      // We got a Query from QueryBuilder
+      if (query == null) 
+        q = "";
+      else
+        q = query.getQuery();
+
+      parameters = query.getParams();
+    }
+
+    q = (q.replace(/\s+/g, " "));
+    q = q === " " ? q : q.trim();
 
     let defaultParams: DoofinderFullParameters = {
       hashid: this.hashid
     }
 
-    let queryParams = Object.assign(defaultParams, (params || {}), {query: query});
+    let queryParams = Object.assign(defaultParams, parameters, {query: q});
 
     if ((isArray(queryParams.type)) && (queryParams.type.length === 1)) {
       queryParams.type = queryParams.type[0];
