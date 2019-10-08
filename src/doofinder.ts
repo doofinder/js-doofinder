@@ -222,20 +222,14 @@ export class Client {
     let parameters: DoofinderParameters = {};
 
     // We get a normal query
-    if (typeof query === 'string') {
-      if (query == null) 
-        q = "";
-      else 
-        q = query;
-
+    if (query == null) {
+      q = "";
+      parameters = params || {};
+    } else if (typeof query === 'string') {
+      q = query;
       parameters = params || {};
     } else {
-      // We got a Query from QueryBuilder
-      if (query == null) 
-        q = "";
-      else
-        q = query.getQuery();
-
+      q = query.getQuery();
       parameters = query.getParams();
     }
 
