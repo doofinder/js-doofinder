@@ -2,9 +2,13 @@
   "name": "doofinder",
   "version": "6.0.0",
   "description": "Javascript Library for Doofinder Search API",
-  "main": "dist/doofinder.js",
+  "main": "dist/doofinder.min.js",
   "directories": {
     "test": "test"
+  },
+  "typings": "dist/doofinder.d.ts",
+  "typescript": {
+    "definition": "dist/doofinder.d.ts"
   },
   "repository": "git@github.com:doofinder/js-doofinder.git",
   "scripts": {

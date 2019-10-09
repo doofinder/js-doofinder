@@ -1,4 +1,6 @@
 import { DoofinderClientOptions, DoofinderParameters } from './types';
+export { Query } from './querybuilder/query';
+import { Query } from './querybuilder/query';
 import { HttpResponse } from './util/http';
 /**
  * This class allows searching and sending stats using the Doofinder service.
@@ -79,7 +81,7 @@ export declare class Client {
      *
      * @return {Promise<HttpResponse>}
      */
-    search(query: string, params?: DoofinderParameters): Promise<HttpResponse>;
+    search(query: string | Query, params?: DoofinderParameters): Promise<HttpResponse>;
     /**
      * Perform a request to get options for a search engine.
      *
@@ -125,5 +127,5 @@ export declare class Client {
      * @param  {Object} params Search parameters object.
      * @return {String}        Encoded query string to be used in a search URL.
      */
-    protected _buildSearchQueryString(query: string, params: DoofinderParameters): string;
+    protected _buildSearchQueryString(query: string | Query, params?: DoofinderParameters): string;
 }

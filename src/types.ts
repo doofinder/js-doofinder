@@ -83,3 +83,15 @@ export interface DoofinderRequestOptions {
   headers?: DoofinderHeaders;
 }
 
+export interface RangeFacet {
+  lte?: number;
+  gte?: number;
+  lt?: number;
+  gt?: number;
+}
+
+export type FacetOption = RangeFacet | string[] | number[];
+
+export interface Facet {
+  [facetName: string]: FacetOption;
+}

@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "declaration": true,
-    "declarationDir": "./types",
+    "declarationDir": "./dist/types",
     "module": "ES2015",
     "noImplicitAny": true,
     "outDir": "dist",

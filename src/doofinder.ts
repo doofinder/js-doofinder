@@ -6,6 +6,10 @@ import { DoofinderClientOptions, DoofinderFilterRange, DoofinderFilter,
   DoofinderSorting, DoofinderSortOption, DoofinderParameters, 
   DoofinderHeaders, DoofinderRequestOptions } from './types';
 
+import { DoofinderResult } from './result';
+
+// Expose the QueryBuilder interface too
+export { Query } from './querybuilder/query';
 import { Query } from './querybuilder/query';
  
 import { HttpClient, HttpResponse } from './util/http';
@@ -114,7 +118,6 @@ export class Client {
    * of the client.
    *
    * @param  {String}   resource Resource to be called by GET.
-   *
    * @return {Promise<HttpResponse>}
    */
   public async request(resource: string): Promise<HttpResponse> {
@@ -149,12 +152,21 @@ export class Client {
    *                               sort:
    *                                 field: "asc" | "desc"
    *                               sort: [{field: "asc|desc"}]
+   * @param  {Boolean}  wrapper  Tell the client to return a class object instead of
+   *                             the raw value returned by the endpoint. 
+   *
    *
    * @return {Promise<HttpResponse>}
    */
-  public async search(query: string | Query, params?: DoofinderParameters): Promise<HttpResponse> {
+  public async search(query: string | Query, params?: DoofinderParameters, wrapper = false): Promise<HttpResponse | DoofinderResult> {
     const querystring: string = this._buildSearchQueryString(query, params);
-    return await this.request(`/${this.version}/search?${querystring}`);
+
+    const response: HttpResponse = await this.request(`/${this.version}/search?${querystring}`);
+    if (!wrapper) {
+      return response;
+    } else {
+      return new DoofinderResult(response); 
+    }
   }
 
   /**
@@ -213,34 +225,32 @@ export class Client {
    *   - sort: [{field1: 'asc|desc'}, {field2: 'asc|desc'}]  [OK]
    *   - sort: {field1: 'asc|desc', field2: 'asc|desc'}      [ERR]
    *
-   * @param  {String} query  Cleaned search terms.
-   * @param  {Object} params Search parameters object.
-   * @return {String}        Encoded query string to be used in a search URL.
+   * @param  {String | Object} query  Cleaned search terms.
+   * @param  {Object}          params Search parameters object.
+   *
+   * @return {String}     Encoded query string to be used in a search URL.
+   *
    */
-  protected _buildSearchQueryString(query: string | Query, params?: DoofinderParameters): string {
-    let q: string = "";
-    let parameters: DoofinderParameters = {};
+  protected _buildSearchQueryString(query?: string | Query, params?: DoofinderParameters): string {
+    let q: Query = new Query();
 
-    // We get a normal query
+    // We get a no query
     if (query == null) {
-      q = "";
-      parameters = params || {};
+      q.search("");
+      q.setParameters(params || {});
     } else if (typeof query === 'string') {
-      q = query;
-      parameters = params || {};
-    } else {
-      q = query.getQuery();
-      parameters = query.getParams();
-    }
+      // We get a string query
+      // clean it up
+      query = (query.replace(/\s+/g, " "));
+      query = query === " " ? query : query.trim();
 
-    q = (q.replace(/\s+/g, " "));
-    q = q === " " ? q : q.trim();
+      q.search(query);
+      q.setParameters(params || {});
+    } 
 
-    let defaultParams: DoofinderFullParameters = {
-      hashid: this.hashid
-    }
+    q.setParameter('hashid', this.hashid);
 
-    let queryParams = Object.assign(defaultParams, parameters, {query: q});
+    let queryParams: DoofinderParameters = Object.assign(q.getParams(), {query: q.getQuery()});
 
     if ((isArray(queryParams.type)) && (queryParams.type.length === 1)) {
       queryParams.type = queryParams.type[0];

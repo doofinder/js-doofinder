@@ -1,5 +1,5 @@
-import { SearchParameters, Facet, FacetOption } from './types';
-import { QueryTypes, TransformerOptions } from '../types';
+import { SearchParameters } from './types';
+import { QueryTypes, TransformerOptions, DoofinderParameters, Facet, FacetOption } from '../types';
 import { isPlainObject, isArray } from '../util/is';
 
 /**
@@ -13,10 +13,18 @@ export class Query {
   private params: SearchParameters = {};
   private hashid: string = null;
 
-  constructor(hashid?: string) {
-    if (hashid) {
+  constructor(hashid?: string | SearchParameters | Query) {
+    if (typeof hashid === 'string') {
       this.hashid = hashid;
       this.params.hashid = this.hashid;
+    } else if (hashid instanceof Query) {
+      // Let's create a quick copy with this
+      let params: SearchParameters = hashid.getParams();
+      params.query = hashid.getQuery();
+      this.params = params;
+    } else if (typeof hashid === 'object') {
+      // It's a complete object to pass on
+      this.params = hashid;
     }
   }
 
@@ -47,6 +55,15 @@ export class Query {
   public setParameter(paramName: string, value: any): void {
     // FIXME: Find a better way to ensure type checking here
     (this.params as any)[paramName] = value;
+  }
+
+  /**
+   * Overwrites the parameters with the object given, allowing
+   * to change in one call several parameters
+   *
+   */
+  public setParameters(parameters: SearchParameters): void {
+    Object.assign(this.params, parameters);
   }
 
   /**
@@ -366,7 +383,7 @@ export class Query {
    * @return  {Object}
    *
    */
-  public getParams(): object {
+  public getParams(): DoofinderParameters {
     // Create a copy of the current params
     let params: object = JSON.parse(JSON.stringify(this.params));
     delete (params as any)['query'];

@@ -1,4 +1,5 @@
-import { Facet, FacetOption } from './types';
+import { SearchParameters, Facet, FacetOption } from './types';
+import { QueryTypes, TransformerOptions } from '../types';
 /**
  * Main QueryBuilder interface, allows creating programmaticly
  * the query using methods instead of creating the JSON and
@@ -9,11 +10,13 @@ import { Facet, FacetOption } from './types';
 export declare class Query {
     private params;
     private hashid;
-    constructor(hashid?: string);
+    constructor(hashid?: string | SearchParameters | Query);
     /**
      * Sets the query string to make a search
      *
      * NOTE: This does not search, just sets the parameter
+     *
+     * @param  {String}   query   The search query to be sent.
      *
      */
     search(query: string): void;
@@ -22,6 +25,10 @@ export declare class Query {
      *
      */
     clear(): void;
+    /**
+     * Allows to directly set a parameter on the query builder
+     *
+     */
     setParameter(paramName: string, value: any): void;
     /**
      * This method adds a concrete filter to the current search request, and
@@ -116,7 +123,7 @@ export declare class Query {
     /**
      * Sets an exclusion structure to the current context
      *
-     * @param  {Any}        filters            The exclusion filter to add
+     * @param  {Object}        filters            The exclusion filter to add
      *
      */
     setExclusions(filters: Facet): void;
@@ -126,20 +133,91 @@ export declare class Query {
      * @param  {Number}     page              The page we want to set
      *
      */
-    setPage(page: number): void;
+    page(page?: number): void;
     /**
      * Advances the current page to the next one
      *
      */
     nextPage(): void;
     /**
+     * Sets the Results Per Page (rpp) parameter.
+     *
+     * @param  {Number}   rpp   The results per page to set
+     *
+     */
+    resultsPerPage(rpp?: number): void;
+    /**
+     * Sets the types to query in this query, call without
+     * parameters to clear the setting
+     *
+     * @param  {String | String[]}  type    The type or types to set
+     *                                      for this query
+     *
+     */
+    setTypes(type?: string | string[]): void;
+    /**
+     * Adds a type to the current types in this query
+     *
+     * @param  {String}   type    The type to be added for the search
+     *
+     */
+    addType(type: string): void;
+    /**
+     * Remove a type from this query
+     *
+     * @param  {String}   type    The type to be removed for the search
+     *
+     */
+    removeType(type: string): void;
+    /**
+     * Sets the transformer, call it empty to reset it to null
+     *
+     * @param  {String}   transformer   The transformer option to set
+     */
+    transformer(transformer?: TransformerOptions): void;
+    /**
+     * Sets the timeout for the query, call it empty to reset
+     *
+     * @param  {Number}   timeout       The timeoout for the call
+     *
+     */
+    timeout(timeout?: number): void;
+    /**
+     * Allows to ask for jsonp format, call without parameters
+     * to clear the flag
+     *
+     * @param  {Boolean}    jsonp   Wether to use jsonp or not
+     *
+     */
+    jsonp(jsonp?: boolean): void;
+    /**
+     * Sets the query name for this query, call without parameters
+     * to clear the value
+     *
+     * @param  {String}   queryName   The query_name parameter value to set
+     *
+     */
+    queryName(queryName?: QueryTypes): void;
+    /**
+     * Sets the nostats flag, call without parameters to clear it
+     *
+     * @param  {Boolean}    nostats   Wether to send the nostats flag or not
+     *
+     */
+    noStats(nostats?: boolean): void;
+    /**
      * Gets an structure body parameters ready to be sent through a post
      * to the Doofinder Search API
+     *
+     * @return  {Object}
      *
      */
     getParams(): object;
     /**
      * Gets the current query
+     *
+     * @return   {String}
+     *
      */
     getQuery(): string;
 }
