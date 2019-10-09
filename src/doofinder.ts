@@ -1,20 +1,25 @@
 import { stringify } from 'qs';
 
-
 // Doofinder types
-import { DoofinderClientOptions, DoofinderFilterRange, DoofinderFilter,
-  DoofinderSorting, DoofinderSortOption, DoofinderParameters, 
-  DoofinderHeaders, DoofinderRequestOptions } from './types';
+import {
+  DoofinderClientOptions,
+  DoofinderFilterRange,
+  DoofinderFilter,
+  DoofinderSorting,
+  DoofinderSortOption,
+  DoofinderParameters,
+  DoofinderHeaders,
+  DoofinderRequestOptions,
+} from './types';
 
 import { DoofinderResult } from './result';
 
 // Expose the QueryBuilder interface too
 export { Query } from './querybuilder/query';
 import { Query } from './querybuilder/query';
- 
+
 import { HttpClient, HttpResponse } from './util/http';
 import { isArray, isPlainObject, isNotNull } from './util/is';
-
 
 interface DoofinderFullParameters extends DoofinderParameters {
   hashid: string;
@@ -25,7 +30,7 @@ interface DoofinderFullParameters extends DoofinderParameters {
  * This class allows searching and sending stats using the Doofinder service.
  */
 export class Client {
-  public apiVersion: string = "5";
+  public apiVersion = '5';
   public hashid: string = null;
   private requestOptions: DoofinderRequestOptions;
   private httpClient: HttpClient = null;
@@ -64,49 +69,50 @@ export class Client {
    *                          them is required.
    *
    */
-  constructor(hashid: string, options: DoofinderClientOptions = {}) {
+  public constructor(hashid: string, options: DoofinderClientOptions = {}) {
     this.hashid = hashid;
-    let zone, secret: string = null;
+    let zone,
+      secret: string = null;
 
     if ('apiKey' in options) {
-      [zone, secret] = options.apiKey.split("-");
+      [zone, secret] = options.apiKey.split('-');
     }
 
     if (!options['zone'] && !options['apiKey']) {
-      throw new Error("`apiKey` or `zone` must be defined");
+      throw new Error('`apiKey` or `zone` must be defined');
     }
 
     if (zone && !secret) {
-      throw new Error("invalid `apiKey`");
+      throw new Error('invalid `apiKey`');
     }
 
-    let [protocol, address] = (options.address || `${zone}-search.doofinder.com`).split("://");
+    let [protocol, address] = (options.address || `${zone}-search.doofinder.com`).split('://');
 
     if (!isNotNull(address)) {
-      address = protocol
-      protocol = null
+      address = protocol;
+      protocol = null;
     }
 
-    const [host, port] = address.split(":");
+    const [host, port] = address.split(':');
 
     this.requestOptions = {
       host: host,
       port: port,
       // headers: options.headers || {}
-      headers: options.headers as DoofinderHeaders || {}
-    }
+      headers: (options.headers as DoofinderHeaders) || {},
+    };
 
     if (isNotNull(protocol)) {
       this.requestOptions.protocol = `${protocol}:`;
     }
 
     if (isNotNull(secret)) {
-      this.requestOptions.headers["Authorization"] = secret;
+      this.requestOptions.headers['Authorization'] = secret;
     }
 
     // This works even if no apiKey passed but passed an "Authorization" header
-    if ("Authorization" in this.requestOptions.headers) {
-      this.requestOptions.protocol = "https:";
+    if ('Authorization' in this.requestOptions.headers) {
+      this.requestOptions.protocol = 'https:';
     }
 
     this.httpClient = new HttpClient();
@@ -153,19 +159,23 @@ export class Client {
    *                                 field: "asc" | "desc"
    *                               sort: [{field: "asc|desc"}]
    * @param  {Boolean}  wrapper  Tell the client to return a class object instead of
-   *                             the raw value returned by the endpoint. 
+   *                             the raw value returned by the endpoint.
    *
    *
    * @return {Promise<HttpResponse>}
    */
-  public async search(query: string | Query, params?: DoofinderParameters, wrapper = false): Promise<HttpResponse | DoofinderResult> {
+  public async search(
+    query: string | Query,
+    params?: DoofinderParameters,
+    wrapper = false
+  ): Promise<HttpResponse | DoofinderResult> {
     const querystring: string = this._buildSearchQueryString(query, params);
 
     const response: HttpResponse = await this.request(`/${this.version}/search?${querystring}`);
     if (!wrapper) {
       return response;
     } else {
-      return new DoofinderResult(response); 
+      return new DoofinderResult(response);
     }
   }
 
@@ -181,7 +191,7 @@ export class Client {
    * @return {Promise<HttpResponse>}
    */
   public async options(suffix?: string): Promise<HttpResponse> {
-    suffix = suffix ? `?${suffix}` : "";
+    suffix = suffix ? `?${suffix}` : '';
     return await this.request(`/${this.version}/options/${this.hashid}${suffix}`);
   }
 
@@ -195,12 +205,12 @@ export class Client {
    *                              and the second one is the response, if any.
    * @return {Promise<HttpResponse>}
    */
-  public async stats(eventName = "", params?: DoofinderParameters): Promise<HttpResponse> {
-    let defaultParams: DoofinderFullParameters = {
+  public async stats(eventName = '', params?: DoofinderParameters): Promise<HttpResponse> {
+    const defaultParams: DoofinderFullParameters = {
       hashid: this.hashid,
-      random: new Date().getTime()
-    }
-    let querystring = stringify(Object.assign(defaultParams, (params || {})));
+      random: new Date().getTime(),
+    };
+    let querystring = stringify(Object.assign(defaultParams, params || {}));
     if (querystring != null) {
       querystring = `?${querystring}`;
     }
@@ -232,38 +242,37 @@ export class Client {
    *
    */
   protected _buildSearchQueryString(query?: string | Query, params?: DoofinderParameters): string {
-    let q: Query = new Query();
+    const q: Query = new Query();
 
     // We get a no query
     if (query == null) {
-      q.search("");
+      q.search('');
       q.setParameters(params || {});
     } else if (typeof query === 'string') {
       // We get a string query
       // clean it up
-      query = (query.replace(/\s+/g, " "));
-      query = query === " " ? query : query.trim();
+      query = query.replace(/\s+/g, ' ');
+      query = query === ' ' ? query : query.trim();
 
       q.search(query);
       q.setParameters(params || {});
-    } 
+    }
 
     q.setParameter('hashid', this.hashid);
 
-    let queryParams: DoofinderParameters = Object.assign(q.getParams(), {query: q.getQuery()});
+    const queryParams: DoofinderParameters = Object.assign(q.getParams(), { query: q.getQuery() });
 
-    if ((isArray(queryParams.type)) && (queryParams.type.length === 1)) {
+    if (isArray(queryParams.type) && queryParams.type.length === 1) {
       queryParams.type = queryParams.type[0];
     }
 
-    if ((isPlainObject(queryParams.sort)) &&
-        ((Object.keys(queryParams.sort)).length > 1)) {
-      throw new Error("To sort by multiple fields use an Array of Objects");
+    if (isPlainObject(queryParams.sort) && Object.keys(queryParams.sort).length > 1) {
+      throw new Error('To sort by multiple fields use an Array of Objects');
     }
 
     // if we skip nulls, transformer won't ever be sent as empty!
     // so, if you don't want a param to be present, just don't add it or set
     // it as undefined
-    return stringify(queryParams, {skipNulls: false});
+    return stringify(queryParams, { skipNulls: false });
   }
 }

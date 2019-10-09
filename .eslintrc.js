@@ -25,6 +25,7 @@ module.exports = {
       'results_per_page',
       'session_id',
       'total_found',
+      'max_score'
     ] }],
     // https://github.com/typescript-eslint/typescript-eslint/blob/master/packages/eslint-plugin/docs/rules/explicit-member-accessibility.md
     '@typescript-eslint/explicit-member-accessibility': ['error', { overrides: { accessors: 'off' } }],
