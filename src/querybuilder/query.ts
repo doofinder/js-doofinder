@@ -4,8 +4,8 @@ import { isPlainObject, isArray } from '../util/is';
 
 /**
  * Main QueryBuilder interface, allows creating programmaticly
- * the query using methods instead of creating the JSON and 
- * parameters by hand, and doing the searches in a deferred 
+ * the query using methods instead of creating the JSON and
+ * parameters by hand, and doing the searches in a deferred
  * mode
  *
  */
@@ -13,13 +13,13 @@ export class Query {
   private params: SearchParameters = {};
   private hashid: string = null;
 
-  constructor(hashid?: string | SearchParameters | Query) {
+  public constructor(hashid?: string | SearchParameters | Query) {
     if (typeof hashid === 'string') {
       this.hashid = hashid;
       this.params.hashid = this.hashid;
     } else if (hashid instanceof Query) {
       // Let's create a quick copy with this
-      let params: SearchParameters = hashid.getParams();
+      const params: SearchParameters = hashid.getParams();
       params.query = hashid.getQuery();
       this.params = params;
     } else if (typeof hashid === 'object') {
@@ -50,7 +50,7 @@ export class Query {
 
   /**
    * Allows to directly set a parameter on the query builder
-   * 
+   *
    */
   public setParameter(paramName: string, value: any): void {
     // FIXME: Find a better way to ensure type checking here
@@ -82,8 +82,8 @@ export class Query {
    *
    */
   public addFilter(filterName: string, value: FacetOption, filterType = 'filter'): void {
-    let filters: Facet = (this.params as any)[filterType];
-    
+    const filters: Facet = (this.params as any)[filterType];
+
     if (!filters[filterName]) {
       filters[filterName] = [];
     }
@@ -94,7 +94,7 @@ export class Query {
       filters[filterName] = value;
     }
 
-    Object.assign(this.params, {filterType: filters});
+    Object.assign(this.params, { filterType: filters });
   }
 
   /**
@@ -112,10 +112,10 @@ export class Query {
    *
    */
   public removeFilter(filterName: string, value: FacetOption, filterType = 'filter'): void {
-    let filters: Facet = (this.params as any)[filterType];
+    const filters: Facet = (this.params as any)[filterType];
 
     if (filters[filterName]) {
-      let index: number = (filters[filterName] as any).indexOf(value);
+      const index: number = (filters[filterName] as any).indexOf(value);
 
       if (index !== -1) {
         (filters[filterName] as any).splice(index, 1);
@@ -238,7 +238,7 @@ export class Query {
   }
 
   /**
-   * Sets the Results Per Page (rpp) parameter. 
+   * Sets the Results Per Page (rpp) parameter.
    *
    * @param  {Number}   rpp   The results per page to set
    *
@@ -261,20 +261,20 @@ export class Query {
    */
   public setTypes(type?: string | string[]): void {
     if (type) {
-      this.setParameter('type',  type);
+      this.setParameter('type', type);
     } else {
       delete this.params.type;
     }
   }
 
   /**
-   * Adds a type to the current types in this query 
+   * Adds a type to the current types in this query
    *
    * @param  {String}   type    The type to be added for the search
    *
    */
   public addType(type: string): void {
-    let typeParam: string[] = [];
+    const typeParam: string[] = [];
 
     if (typeof this.params.type === 'string') {
       typeParam.push(this.params.type);
@@ -293,7 +293,7 @@ export class Query {
   public removeType(type: string): void {
     if (this.params.type) {
       if (isArray(this.params.type)) {
-        let index: number = this.params.type.indexOf(type);
+        const index: number = this.params.type.indexOf(type);
         if (index !== -1) {
           (this.params.type as any).splice(1, index);
         }
@@ -367,7 +367,7 @@ export class Query {
    *
    */
   public noStats(nostats?: boolean): void {
-    if ((nostats) && (!!nostats)) {
+    if (nostats && !!nostats) {
       this.setParameter('nostats', 1);
     } else {
       delete this.params.nostats;
@@ -375,23 +375,23 @@ export class Query {
   }
 
   // Here starts the reading of the query
-  
+
   /**
    * Gets an structure body parameters ready to be sent through a post
-   * to the Doofinder Search API 
+   * to the Doofinder Search API
    *
    * @return  {Object}
    *
    */
   public getParams(): DoofinderParameters {
     // Create a copy of the current params
-    let params: object = JSON.parse(JSON.stringify(this.params));
+    const params: object = JSON.parse(JSON.stringify(this.params));
     delete (params as any)['query'];
     return params;
   }
 
   /**
-   * Gets the current query 
+   * Gets the current query
    *
    * @return   {String}
    *

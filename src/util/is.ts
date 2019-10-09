@@ -10,5 +10,4 @@ export const isPlainObject = (value: unknown): boolean =>
   !(value as GenericObject).nodeType &&
   !(value as GenericObject).setInterval;
 
-export const isNotNull = (element: unknown): boolean =>
-  typeof element !== "undefined" && element !== null
+export const isNotNull = (element: unknown): boolean => typeof element !== 'undefined' && element !== null;
