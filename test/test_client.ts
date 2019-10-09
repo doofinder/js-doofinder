@@ -146,7 +146,7 @@ describe("Client", () => {
       });
 
       it("accepts different basic parameters than the default ones", (done) => {
-        const querystring = `hashid=${cfg.hashid}&page=2&rpp=100&hello=world&query=`;
+        const querystring = `page=2&rpp=100&hello=world&hashid=${cfg.hashid}&query=`;
         (buildQuery(undefined, {page: 2, rpp: 100, hello: "world"})).should.equal(querystring);
         done();
       });
@@ -160,7 +160,7 @@ describe("Client", () => {
       });
 
       it("handles one type if set", (done) => {
-        const querystring = `hashid=${cfg.hashid}&type=product&query=`;
+        const querystring = `type=product&hashid=${cfg.hashid}&query=`;
         (buildQuery(undefined, {type: "product"})).should.equal(querystring);
         (buildQuery(undefined, {type: ["product"]})).should.equal(querystring);
         done();
@@ -168,8 +168,8 @@ describe("Client", () => {
 
       it("handles several types if set", (done) => {
         const querystring = [
-          `hashid=${cfg.hashid}&type%5B0%5D=product&type%5B1%5D=recipe`,
-          `&query=`
+          `type%5B0%5D=product&type%5B1%5D=recipe`,
+          `&hashid=${cfg.hashid}&query=`
         ].join("");
         (buildQuery(undefined, {type: ["product", "recipe"]})).should.equal(querystring);
         done();
@@ -181,9 +181,9 @@ describe("Client", () => {
 
       it("handles terms filters", (done) => {
         const querystring = [
-          `hashid=${cfg.hashid}&filter%5Bbrand%5D=NIKE`,
+          `filter%5Bbrand%5D=NIKE`,
           `&filter%5Bcategory%5D%5B0%5D=SHOES&filter%5Bcategory%5D%5B1%5D=SHIRTS`,
-          `&query=`
+          `&hashid=${cfg.hashid}&query=`
         ].join("");
         const params = {
           filter: {
@@ -197,8 +197,8 @@ describe("Client", () => {
 
       it("handles range filters", (done) => {
         const querystring = [
-          `hashid=${cfg.hashid}&filter%5Bprice%5D%5Bfrom%5D=0`,
-          "&filter%5Bprice%5D%5Bto%5D=150&query="
+          "filter%5Bprice%5D%5Bfrom%5D=0",
+          `&filter%5Bprice%5D%5Bto%5D=150&hashid=${cfg.hashid}&query=`
         ].join("");
 
         const params = {
@@ -217,13 +217,13 @@ describe("Client", () => {
 
     context("Sorting", () => {
       it("accepts a single field name to sort on", (done) => {
-        const querystring = `hashid=${cfg.hashid}&sort=brand&query=`;
+        const querystring = `sort=brand&hashid=${cfg.hashid}&query=`;
         (buildQuery(undefined, {sort: "brand"})).should.equal(querystring);
         done();
       });
 
       it("accepts an object for a single field to sort on", (done) => {
-        const querystring = `hashid=${cfg.hashid}&sort%5Bbrand%5D=desc&query=`;
+        const querystring = `sort%5Bbrand%5D=desc&hashid=${cfg.hashid}&query=`;
         const sorting = { brand: "desc"};
         (buildQuery(undefined, {sort: sorting})).should.equal(querystring);
         done();
@@ -240,8 +240,8 @@ describe("Client", () => {
 
       it("accepts an array of objects for a multiple fields to sort on", (done) => {
         const querystring = [
-          `hashid=${cfg.hashid}&sort%5B0%5D%5B_score%5D=desc`,
-          "&sort%5B1%5D%5Bbrand%5D=asc&query="
+          "sort%5B0%5D%5B_score%5D=desc",
+          `&sort%5B1%5D%5Bbrand%5D=asc&hashid=${cfg.hashid}&query=`
         ].join("");
         const sorting = [
           {
