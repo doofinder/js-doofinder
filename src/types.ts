@@ -39,37 +39,38 @@ export interface DoofinderFilter {
 
 export enum DoofinderSorting {
   ASC = 'asc',
-  DESC = 'desc'
+  DESC = 'desc',
 }
 
 export interface DoofinderSortOption {
-  [field: string]: DoofinderSorting
+  [field: string]: DoofinderSorting;
 }
 
 export enum TransformerOptions {
   Basic = 'basic',
-  OnlyID = 'onlyid'
+  OnlyID = 'onlyid',
 }
 
 export enum QueryTypes {
   MatchAnd = 'match_and',
   MatchOr = 'match_or',
   Fuzzy = 'fuzzy',
-  PhoneticText = 'phonetic_text'
+  PhoneticText = 'phonetic_text',
 }
 
 export interface DoofinderParameters {
-   page?: number;
-   rpp?: number;
-   type?: string | string[];
-   filter?: DoofinderFilter;
-   exclude?: DoofinderFilter;
-   transformer?: TransformerOptions;
-   sort?: String | DoofinderSortOption | DoofinderSortOption[];
-   timeout?: number;
-   jsonp?: boolean;
-   query_name?: QueryTypes;
-   nostats?: number;
+  page?: number;
+  rpp?: number;
+  type?: string | string[];
+  filter?: DoofinderFilter;
+  exclude?: DoofinderFilter;
+  transformer?: TransformerOptions;
+  sort?: string | DoofinderSortOption | DoofinderSortOption[];
+  timeout?: number;
+  jsonp?: boolean;
+  query_name?: QueryTypes;
+  nostats?: number;
+  [paramName: string]: unknown;
 }
 
 export interface DoofinderHeaders {

@@ -33,7 +33,6 @@ export class HttpClient {
       const data = await response.json();
       return { statusCode: 200, data: data };
     } else {
-      const error = {};
       try {
         const data = await response.json();
         return { statusCode: response.status, data: data };

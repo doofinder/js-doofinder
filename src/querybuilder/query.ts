@@ -52,9 +52,8 @@ export class Query {
    * Allows to directly set a parameter on the query builder
    *
    */
-  public setParameter(paramName: string, value: any): void {
-    // FIXME: Find a better way to ensure type checking here
-    (this.params as any)[paramName] = value;
+  public setParameter(paramName: string, value: unknown): void {
+    this.params[paramName] = value;
   }
 
   /**
@@ -82,14 +81,14 @@ export class Query {
    *
    */
   public addFilter(filterName: string, value: FacetOption, filterType = 'filter'): void {
-    const filters: Facet = (this.params as any)[filterType];
+    const filters: Facet = this.params[filterType] as Facet;
 
     if (!filters[filterName]) {
       filters[filterName] = [];
     }
 
     if (!isPlainObject(value)) {
-      (filters[filterName] as Array<any>).push(value);
+      (filters[filterName] as Array<unknown>).push(value);
     } else {
       filters[filterName] = value;
     }
@@ -112,14 +111,14 @@ export class Query {
    *
    */
   public removeFilter(filterName: string, value: FacetOption, filterType = 'filter'): void {
-    const filters: Facet = (this.params as any)[filterType];
+    const filters: Facet = this.params[filterType] as Facet;
 
     if (filters[filterName]) {
-      const index: number = (filters[filterName] as any).indexOf(value);
+      const index: number = (filters[filterName] as Array<unknown>).indexOf(value);
 
       if (index !== -1) {
-        (filters[filterName] as any).splice(index, 1);
-        (this.params as any)[filterType] = filters;
+        (filters[filterName] as Array<unknown>).splice(index, 1);
+        this.params[filterType] = filters;
         this.params.page = 1;
       }
     }
@@ -142,8 +141,8 @@ export class Query {
    *
    */
   public hasFilter(filterName: string, value?: FacetOption, filterType = 'filter'): boolean {
-    const filters: Facet = (this.params as any)[filterType] || {};
-    return filterName in filters && (!value || (filters[filterName] as any).indexOf(value) !== -1);
+    const filters: Facet = (this.params[filterType] as Facet) || {};
+    return filterName in filters && (!value || (filters[filterName] as Array<unknown>).indexOf(value) !== -1);
   }
 
   /**
@@ -159,7 +158,7 @@ export class Query {
    *                                         (default) or an "exclude" filter.
    *
    */
-  public toggleFilter(filterName: string, value: any, filterType = 'filter'): void {
+  public toggleFilter(filterName: string, value: unknown, filterType = 'filter'): void {
     if (!this.hasFilter(filterName, value, filterType)) {
       this.addFilter(filterName, value, filterType);
     } else {
@@ -177,7 +176,7 @@ export class Query {
    *
    */
   public setFilters(filters: Facet, filterType = 'filter'): void {
-    (this.params as any)[filterType] = filters;
+    this.params[filterType] = filters;
     this.params.page = 1;
   }
 
@@ -295,7 +294,7 @@ export class Query {
       if (isArray(this.params.type)) {
         const index: number = this.params.type.indexOf(type);
         if (index !== -1) {
-          (this.params.type as any).splice(1, index);
+          (this.params.type as Array<unknown>).splice(1, index);
         }
       } else if (this.params.type === type) {
         delete this.params.type;
@@ -385,8 +384,8 @@ export class Query {
    */
   public getParams(): DoofinderParameters {
     // Create a copy of the current params
-    const params: object = JSON.parse(JSON.stringify(this.params));
-    delete (params as any)['query'];
+    const params: SearchParameters = JSON.parse(JSON.stringify(this.params));
+    delete params.query;
     return params;
   }
 
