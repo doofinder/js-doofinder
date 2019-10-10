@@ -38,13 +38,29 @@ export declare enum DoofinderSorting {
 export interface DoofinderSortOption {
     [field: string]: DoofinderSorting;
 }
+export declare enum TransformerOptions {
+    Basic = "basic",
+    OnlyID = "onlyid"
+}
+export declare enum QueryTypes {
+    MatchAnd = "match_and",
+    MatchOr = "match_or",
+    Fuzzy = "fuzzy",
+    PhoneticText = "phonetic_text"
+}
 export interface DoofinderParameters {
     page?: number;
     rpp?: number;
     type?: string | string[];
     filter?: DoofinderFilter;
     exclude?: DoofinderFilter;
-    sort?: String | DoofinderSortOption | DoofinderSortOption[];
+    transformer?: TransformerOptions;
+    sort?: string | DoofinderSortOption | DoofinderSortOption[];
+    timeout?: number;
+    jsonp?: boolean;
+    query_name?: QueryTypes;
+    nostats?: number;
+    [paramName: string]: unknown;
 }
 export interface DoofinderHeaders {
     [headerKey: string]: string;
@@ -54,4 +70,14 @@ export interface DoofinderRequestOptions {
     port?: string | number;
     protocol?: string;
     headers?: DoofinderHeaders;
+}
+export interface RangeFacet {
+    lte?: number;
+    gte?: number;
+    lt?: number;
+    gt?: number;
+}
+export declare type FacetOption = RangeFacet | string[] | number[];
+export interface Facet {
+    [facetName: string]: FacetOption;
 }

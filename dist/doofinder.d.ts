@@ -1,4 +1,7 @@
 import { DoofinderClientOptions, DoofinderParameters } from './types';
+import { DoofinderResult } from './result';
+export { Query } from './querybuilder/query';
+import { Query } from './querybuilder/query';
 import { HttpResponse } from './util/http';
 /**
  * This class allows searching and sending stats using the Doofinder service.
@@ -48,7 +51,6 @@ export declare class Client {
      * of the client.
      *
      * @param  {String}   resource Resource to be called by GET.
-     *
      * @return {Promise<HttpResponse>}
      */
     request(resource: string): Promise<HttpResponse>;
@@ -76,10 +78,13 @@ export declare class Client {
      *                               sort:
      *                                 field: "asc" | "desc"
      *                               sort: [{field: "asc|desc"}]
+     * @param  {Boolean}  wrapper  Tell the client to return a class object instead of
+     *                             the raw value returned by the endpoint.
+     *
      *
      * @return {Promise<HttpResponse>}
      */
-    search(query: string, params?: DoofinderParameters): Promise<HttpResponse>;
+    search(query: string | Query, params?: DoofinderParameters, wrapper?: boolean): Promise<HttpResponse | DoofinderResult>;
     /**
      * Perform a request to get options for a search engine.
      *
@@ -121,9 +126,11 @@ export declare class Client {
      *   - sort: [{field1: 'asc|desc'}, {field2: 'asc|desc'}]  [OK]
      *   - sort: {field1: 'asc|desc', field2: 'asc|desc'}      [ERR]
      *
-     * @param  {String} query  Cleaned search terms.
-     * @param  {Object} params Search parameters object.
-     * @return {String}        Encoded query string to be used in a search URL.
+     * @param  {String | Object} query  Cleaned search terms.
+     * @param  {Object}          params Search parameters object.
+     *
+     * @return {String}     Encoded query string to be used in a search URL.
+     *
      */
-    protected _buildSearchQueryString(query: string, params: DoofinderParameters): string;
+    protected _buildSearchQueryString(query?: string | Query, params?: DoofinderParameters): string;
 }

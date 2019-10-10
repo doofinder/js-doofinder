@@ -39,20 +39,38 @@ export interface DoofinderFilter {
 
 export enum DoofinderSorting {
   ASC = 'asc',
-  DESC = 'desc'
+  DESC = 'desc',
 }
 
 export interface DoofinderSortOption {
-  [field: string]: DoofinderSorting
+  [field: string]: DoofinderSorting;
+}
+
+export enum TransformerOptions {
+  Basic = 'basic',
+  OnlyID = 'onlyid',
+}
+
+export enum QueryTypes {
+  MatchAnd = 'match_and',
+  MatchOr = 'match_or',
+  Fuzzy = 'fuzzy',
+  PhoneticText = 'phonetic_text',
 }
 
 export interface DoofinderParameters {
-   page?: number;
-   rpp?: number;
-   type?: string | string[];
-   filter?: DoofinderFilter;
-   exclude?: DoofinderFilter;
-   sort?: String | DoofinderSortOption | DoofinderSortOption[];
+  page?: number;
+  rpp?: number;
+  type?: string | string[];
+  filter?: DoofinderFilter;
+  exclude?: DoofinderFilter;
+  transformer?: TransformerOptions;
+  sort?: string | DoofinderSortOption | DoofinderSortOption[];
+  timeout?: number;
+  jsonp?: boolean;
+  query_name?: QueryTypes;
+  nostats?: number;
+  [paramName: string]: unknown;
 }
 
 export interface DoofinderHeaders {
@@ -66,3 +84,15 @@ export interface DoofinderRequestOptions {
   headers?: DoofinderHeaders;
 }
 
+export interface RangeFacet {
+  lte?: number;
+  gte?: number;
+  lt?: number;
+  gt?: number;
+}
+
+export type FacetOption = RangeFacet | string[] | number[];
+
+export interface Facet {
+  [facetName: string]: FacetOption;
+}
