@@ -1,5 +1,5 @@
-import { SearchParameters, Facet, FacetOption } from './types';
-import { QueryTypes, TransformerOptions } from '../types';
+import { SearchParameters } from './types';
+import { QueryTypes, TransformerOptions, DoofinderParameters, Facet, FacetOption } from '../types';
 /**
  * Main QueryBuilder interface, allows creating programmaticly
  * the query using methods instead of creating the JSON and
@@ -29,7 +29,13 @@ export declare class Query {
      * Allows to directly set a parameter on the query builder
      *
      */
-    setParameter(paramName: string, value: any): void;
+    setParameter(paramName: string, value: unknown): void;
+    /**
+     * Overwrites the parameters with the object given, allowing
+     * to change in one call several parameters
+     *
+     */
+    setParameters(parameters: SearchParameters): void;
     /**
      * This method adds a concrete filter to the current search request, and
      * resets the page counter
@@ -91,7 +97,7 @@ export declare class Query {
      *                                         (default) or an "exclude" filter.
      *
      */
-    toggleFilter(filterName: string, value: any, filterType?: string): void;
+    toggleFilter(filterName: string, value: unknown, filterType?: string): void;
     /**
      * Sets the filter structure directly to the requests of a given context
      *
@@ -212,7 +218,7 @@ export declare class Query {
      * @return  {Object}
      *
      */
-    getParams(): object;
+    getParams(): DoofinderParameters;
     /**
      * Gets the current query
      *

@@ -55,11 +55,12 @@ export interface DoofinderParameters {
     filter?: DoofinderFilter;
     exclude?: DoofinderFilter;
     transformer?: TransformerOptions;
-    sort?: String | DoofinderSortOption | DoofinderSortOption[];
+    sort?: string | DoofinderSortOption | DoofinderSortOption[];
     timeout?: number;
     jsonp?: boolean;
     query_name?: QueryTypes;
     nostats?: number;
+    [paramName: string]: unknown;
 }
 export interface DoofinderHeaders {
     [headerKey: string]: string;
@@ -69,4 +70,14 @@ export interface DoofinderRequestOptions {
     port?: string | number;
     protocol?: string;
     headers?: DoofinderHeaders;
+}
+export interface RangeFacet {
+    lte?: number;
+    gte?: number;
+    lt?: number;
+    gt?: number;
+}
+export declare type FacetOption = RangeFacet | string[] | number[];
+export interface Facet {
+    [facetName: string]: FacetOption;
 }
