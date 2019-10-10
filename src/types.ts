@@ -15,6 +15,8 @@ export interface GenericObject<T = any> {
  *
  */
 
+export { SearchParameters } from './querybuilder/types';
+
 export enum Zone {
   EU = 'eu1',
   US = 'us1',

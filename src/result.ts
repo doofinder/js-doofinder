@@ -23,10 +23,12 @@ interface FilterResponse {
 export class DoofinderResult {
   private _results: SingleResult[] = [];
   private _page = 1;
+  private _total: number = null;
   private _total_found: number = null;
   private _max_score: number = null;
-  private _query_name: QueryTypes = null;
   private _query: string = null;
+  private _query_counter: number = null;
+  private _query_name: QueryTypes = null;
   private _results_per_page: number = null;
   private _facets: Facet[] = null;
   private _filters: FilterResponse = null;
@@ -52,7 +54,10 @@ export class DoofinderResult {
     return this._results;
   }
   public get page(): number {
-    return this.page;
+    return this._page;
+  }
+  public get total(): number {
+    return this._total;
   }
   public get total_found(): number {
     return this._total_found;
@@ -60,11 +65,14 @@ export class DoofinderResult {
   public get max_score(): number {
     return this._max_score;
   }
-  public get query_name(): QueryTypes {
-    return this._query_name;
-  }
   public get query(): string {
     return this._query;
+  }
+  public get query_counter(): number {
+    return this._query_counter;
+  }
+  public get query_name(): QueryTypes {
+    return this._query_name;
   }
   public get results_per_page(): number {
     return this._results_per_page;
@@ -87,10 +95,12 @@ export class DoofinderResult {
       this._results = [];
     }
     this._page = results.page;
+    this._total = results.total;
     this._total_found = results.total_found;
     this._max_score = results.max_score;
-    this._query_name = results.query_name;
     this._query = results.query;
+    this._query_name = results.query_name;
+    this._query_counter = results.query_counter;
     this._results_per_page = results.results_per_page;
     if (results.facets) {
       this.loadFacets(results.facets);
@@ -98,5 +108,9 @@ export class DoofinderResult {
     if (results.filters) {
       this._filters = results.filters;
     }
+  }
+
+  public copy(): DoofinderResult {
+    return new DoofinderResult(this._raw);
   }
 }

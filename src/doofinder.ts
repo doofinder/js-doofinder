@@ -1,6 +1,10 @@
 import { stringify } from 'qs';
 
 // Doofinder types
+export * from './types';
+export * from './result';
+export { Query } from './querybuilder/query';
+
 import {
   DoofinderClientOptions,
   DoofinderFilterRange,
@@ -15,7 +19,6 @@ import {
 import { DoofinderResult } from './result';
 
 // Expose the QueryBuilder interface too
-export { Query } from './querybuilder/query';
 import { Query } from './querybuilder/query';
 
 import { HttpClient, HttpResponse } from './util/http';
@@ -69,8 +72,11 @@ export class Client {
    *                          them is required.
    *
    */
-  public constructor(hashid: string, options: DoofinderClientOptions = {}) {
-    this.hashid = hashid;
+  public constructor(hashid?: string, options: DoofinderClientOptions = {}) {
+    if (hashid) {
+      this.hashid = hashid;
+    }
+
     let zone,
       secret: string = null;
 

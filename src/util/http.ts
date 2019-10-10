@@ -1,5 +1,5 @@
 // import fetch from 'cross-fetch';
-import 'cross-fetch/polyfill';
+// import 'cross-fetch/polyfill';
 import { GenericObject } from '../types';
 
 export interface HttpResponse {

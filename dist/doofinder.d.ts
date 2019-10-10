@@ -1,6 +1,8 @@
+export * from './types';
+export * from './result';
+export { Query } from './querybuilder/query';
 import { DoofinderClientOptions, DoofinderParameters } from './types';
 import { DoofinderResult } from './result';
-export { Query } from './querybuilder/query';
 import { Query } from './querybuilder/query';
 import { HttpResponse } from './util/http';
 /**
@@ -45,7 +47,7 @@ export declare class Client {
      *                          them is required.
      *
      */
-    constructor(hashid: string, options?: DoofinderClientOptions);
+    constructor(hashid?: string, options?: DoofinderClientOptions);
     /**
      * Performs a HTTP request to the endpoint specified with the default options
      * of the client.

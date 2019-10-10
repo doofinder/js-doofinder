@@ -13,6 +13,7 @@ export interface GenericObject<T = any> {
  * Doofinder types
  *
  */
+export { SearchParameters } from './querybuilder/types';
 export declare enum Zone {
     EU = "eu1",
     US = "us1"

@@ -1,4 +1,3 @@
-import 'cross-fetch/polyfill';
 import { GenericObject } from '../types';
 export interface HttpResponse {
     statusCode: number;
