@@ -24,7 +24,11 @@ export class Query {
       this.params = params;
     } else if (typeof hashid === 'object') {
       // It's a complete object to pass on
-      this.params = hashid;
+      if ('params' in hashid) {
+        this.params = hashid['params'] as SearchParameters;
+      } else {
+        this.params = hashid;
+      }
     }
   }
 

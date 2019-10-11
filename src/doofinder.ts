@@ -184,7 +184,11 @@ export class Client {
     if (!wrapper) {
       return response;
     } else {
-      return new DoofinderResult(response);
+      if (response.statusCode >= 200 && response.statusCode <= 299) {
+        return new DoofinderResult(response.data);
+      } else {
+        return response;
+      }
     }
   }
 
