@@ -5,6 +5,8 @@ export * from './types';
 export * from './result';
 export { Query } from './querybuilder/query';
 
+export { ClientRepo } from './client-repo';
+
 import {
   DoofinderClientOptions,
   DoofinderFilterRange,
@@ -82,14 +84,15 @@ export class Client {
 
     if ('apiKey' in options) {
       [zone, secret] = options.apiKey.split('-');
+      if (zone && !secret) {
+        throw new Error('invalid `apiKey`');
+      }
+    } else if ('zone' in options) {
+      zone = options['zone'];
     }
 
     if (!options['zone'] && !options['apiKey']) {
       throw new Error('`apiKey` or `zone` must be defined');
-    }
-
-    if (zone && !secret) {
-      throw new Error('invalid `apiKey`');
     }
 
     let [protocol, address] = (options.address || `${zone}-search.doofinder.com`).split('://');
@@ -248,7 +251,7 @@ export class Client {
    *
    */
   protected _buildSearchQueryString(query?: string | Query, params?: DoofinderParameters): string {
-    const q: Query = new Query();
+    let q: Query = new Query();
 
     // We get a no query
     if (query == null) {
@@ -262,11 +265,16 @@ export class Client {
 
       q.search(query);
       q.setParameters(params || {});
+    } else {
+      q = query;
     }
 
-    q.setParameter('hashid', this.hashid);
+    if ((this.hashid) && (!q.hasParameter('hashid'))) {
+      q.setParameter('hashid', this.hashid);
+    }
 
-    const queryParams: DoofinderParameters = Object.assign(q.getParams(), { query: q.getQuery() });
+    let queryParams: DoofinderParameters = q.getParams();
+    queryParams.query = q.getQuery(); 
 
     if (isArray(queryParams.type) && queryParams.type.length === 1) {
       queryParams.type = queryParams.type[0];

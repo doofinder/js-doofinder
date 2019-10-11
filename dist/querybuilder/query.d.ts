@@ -212,6 +212,11 @@ export declare class Query {
      */
     noStats(nostats?: boolean): void;
     /**
+     * Checks if a parameter is set
+     *
+     */
+    hasParameter(param: string): boolean;
+    /**
      * Gets an structure body parameters ready to be sent through a post
      * to the Doofinder Search API
      *

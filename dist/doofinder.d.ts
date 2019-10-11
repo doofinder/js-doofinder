@@ -1,6 +1,7 @@
 export * from './types';
 export * from './result';
 export { Query } from './querybuilder/query';
+export { ClientRepo } from './client-repo';
 import { DoofinderClientOptions, DoofinderParameters } from './types';
 import { DoofinderResult } from './result';
 import { Query } from './querybuilder/query';

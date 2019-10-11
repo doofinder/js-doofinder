@@ -13,13 +13,10 @@ interface ClientPool {
  */
 export class ClientRepo {
   private static instance: ClientRepo;
-  private pool: ClientPool;
-  private _zone: Zone;
+  private pool: ClientPool = {};
+  private _zone: Zone = Zone.EU;
 
-  private constructor() {
-    this.zone = Zone.EU; // By default EU
-    this.pool = {};
-  }
+  private constructor() {}
 
   public static getInstance(): ClientRepo {
     if (!this.instance) {

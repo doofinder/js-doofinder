@@ -53,7 +53,11 @@ export class Query {
    *
    */
   public setParameter(paramName: string, value: unknown): void {
-    this.params[paramName] = value;
+    if (paramName !== 'params') {
+      this.params[paramName] = value;
+    } else {
+      throw new Error('Wrong parameter name!');
+    }
   }
 
   /**
@@ -62,7 +66,7 @@ export class Query {
    *
    */
   public setParameters(parameters: SearchParameters): void {
-    Object.assign(this.params, parameters);
+    this.params = Object.assign({}, this.params, parameters);
   }
 
   /**
@@ -371,6 +375,14 @@ export class Query {
     } else {
       delete this.params.nostats;
     }
+  }
+
+  /**
+   * Checks if a parameter is set
+   *
+   */
+  public hasParameter(param: string): boolean {
+    return param in this.params;
   }
 
   // Here starts the reading of the query
