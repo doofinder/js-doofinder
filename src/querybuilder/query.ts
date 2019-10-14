@@ -89,7 +89,11 @@ export class Query {
    *
    */
   public addFilter(filterName: string, value: FacetOption, filterType = 'filter'): void {
-    const filters: Facet = this.params[filterType] as Facet;
+    let filters: Facet = {};
+
+    if (filterType in this.params) {
+      filters = this.params[filterType] as Facet;
+    }
 
     if (!filters[filterName]) {
       filters[filterName] = [];
@@ -101,7 +105,7 @@ export class Query {
       filters[filterName] = value;
     }
 
-    Object.assign(this.params, { filterType: filters });
+    this.params[filterType] = filters;
   }
 
   /**
