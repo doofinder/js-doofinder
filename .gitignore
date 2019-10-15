@@ -1,4 +1,5 @@
 node_modules/
 test_karma/doofinder.*
+docs/html
 *.swp
 *~

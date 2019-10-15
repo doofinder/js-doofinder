@@ -168,7 +168,7 @@ export class Client {
    *                                 field: "asc" | "desc"
    *                               sort: [{field: "asc|desc"}]
    * @param  {Boolean}  wrapper  Tell the client to return a class object instead of
-   *                             the raw value returned by the endpoint.
+   *                             the raw value returned by the endpoint. Defaults to true
    *
    *
    * @return {Promise<HttpResponse>}
@@ -176,7 +176,7 @@ export class Client {
   public async search(
     query: string | Query,
     params?: DoofinderParameters,
-    wrapper = false
+    wrapper = true
   ): Promise<HttpResponse | DoofinderResult> {
     const querystring: string = this._buildSearchQueryString(query, params);
 
@@ -273,12 +273,12 @@ export class Client {
       q = query;
     }
 
-    if ((this.hashid) && (!q.hasParameter('hashid'))) {
+    if (this.hashid && !q.hasParameter('hashid')) {
       q.setParameter('hashid', this.hashid);
     }
 
-    let queryParams: DoofinderParameters = q.getParams();
-    queryParams.query = q.getQuery(); 
+    const queryParams: DoofinderParameters = q.getParams();
+    queryParams.query = q.getQuery();
 
     if (isArray(queryParams.type) && queryParams.type.length === 1) {
       queryParams.type = queryParams.type[0];
