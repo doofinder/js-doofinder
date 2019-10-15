@@ -7,8 +7,8 @@ A.K.A. `js-doofinder`, or just `doofinder`, this library makes easy to perform r
 <!-- MarkdownTOC depth="2" autolink="true" autoanchor="false" bracket="round" -->
 
 - [Installation](#installation)
+    - [Yarnpkg](#yarn)
     - [NPM](#npm)
-    - [Bower](#bower)
     - [CDN](#cdn)
 - [TL;DR](#tldr)
 - [Quick Start](#quick-start)
@@ -31,12 +31,6 @@ $ yarn add doofinder
 
 ```shell
 $ npm install doofinder
-```
-
-### Bower
-
-```shell
-$ bower install doofinder
 ```
 
 ### CDN

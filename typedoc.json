@@ -1,0 +1,9 @@
+{
+  "mode": "modules",
+  "out": "./docs/html",
+  "exclude": "node_modules/**",
+  "excludePrivate": true,
+  "excludeNotExported": false,
+  "includeDeclarations": true,
+  "name": "Doofinder Javascript Client Library v6"
+}
