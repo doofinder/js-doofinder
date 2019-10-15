@@ -106,6 +106,7 @@ export class Query {
     }
 
     this.params[filterType] = filters;
+    this.params.page = 1;
   }
 
   /**
