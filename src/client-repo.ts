@@ -20,7 +20,9 @@ export class ClientRepo {
   private pool: ClientPool = {};
   private _zone: Zone = Zone.EU;
 
-  private constructor();
+  private constructor() {
+    // Does nothing
+  }
 
   public static getInstance(): ClientRepo {
     if (!this.instance) {

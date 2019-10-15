@@ -12,6 +12,12 @@ export interface SingleResult {
 interface FilterResponse {
     [filterType: string]: string[] | GenericObject;
 }
+/**
+ * Wrapper object to retrieve the results given
+ * by the search endpoint easily through a programmatic
+ * interface and normalized results
+ *
+ */
 export declare class DoofinderResult {
     private _results;
     private _page;
@@ -39,7 +45,20 @@ export declare class DoofinderResult {
     readonly facets: Facet[];
     readonly filters: FilterResponse;
     readonly raw: GenericObject;
+    /**
+     * Allows to feed a raw result object from the
+     * endpoint, erasing the instance's content and
+     * filling it with the new content
+     *
+     * @param  {Object}   results   The results object to load
+     *
+     */
     loadResults(results: GenericObject): void;
+    /**
+     * Allow to return a fresh unlinked copy of this instance
+     * into a new one, making it a real copy, not a reference
+     *
+     */
     copy(): DoofinderResult;
 }
 export {};

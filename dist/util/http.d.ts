@@ -5,7 +5,9 @@ export interface HttpResponse {
     error?: GenericObject;
 }
 /**
- * Commodity API to http and https modules
+ * Commodity API to wrap making the requests
+ * to an endpoint.
+ *
  */
 export declare class HttpClient {
     /**
@@ -15,6 +17,7 @@ export declare class HttpClient {
      * @param  {Object}   options  Options needed by fetch API
      *
      * @return {Promise<HttpResponse>}
+     *
      */
     request(url: string, options?: GenericObject): Promise<HttpResponse>;
 }
