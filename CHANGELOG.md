@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - TypeScript rewrite.
 - TypeScript support.
 - Removed everything but the client.
+- Added QueryBuilder object.
+- Added DoofinderResult object.
 
 ## [5.8.1] - 2019-07-09
 ### Fixed

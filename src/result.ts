@@ -43,7 +43,20 @@ export class DoofinderResult {
   private loadFacets(facetObj: GenericObject): void {
     this._facets = Object.keys(facetObj).map(
       (key: string): Facet => {
-        return { key: facetObj[key] };
+        console.log('Loading key', key);
+        if ('terms' in facetObj[key]) {
+          const terms: Array<FacetOption> = [];
+          facetObj[key].terms.buckets.forEach((bucket: FacetOption): void => {
+            terms.push(bucket);
+          });
+          const result: Facet = {};
+          result[key] = terms as FacetOption;
+          return result;
+        } else if ('range' in facetObj[key]) {
+          const result: Facet = {};
+          result[key] = facetObj[key].range.buckets[0].stats as FacetOption;
+          return result;
+        }
       }
     );
   }

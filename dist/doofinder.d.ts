@@ -82,7 +82,7 @@ export declare class Client {
      *                                 field: "asc" | "desc"
      *                               sort: [{field: "asc|desc"}]
      * @param  {Boolean}  wrapper  Tell the client to return a class object instead of
-     *                             the raw value returned by the endpoint.
+     *                             the raw value returned by the endpoint. Defaults to true
      *
      *
      * @return {Promise<HttpResponse>}
