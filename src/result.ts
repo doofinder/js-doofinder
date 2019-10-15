@@ -20,6 +20,12 @@ interface FilterResponse {
   [filterType: string]: string[] | GenericObject;
 }
 
+/**
+ * Wrapper object to retrieve the results given
+ * by the search endpoint easily through a programmatic
+ * interface and normalized results
+ *
+ */
 export class DoofinderResult {
   private _results: SingleResult[] = [];
   private _page = 1;
@@ -100,6 +106,14 @@ export class DoofinderResult {
     return this._raw;
   }
 
+  /**
+   * Allows to feed a raw result object from the
+   * endpoint, erasing the instance's content and
+   * filling it with the new content
+   *
+   * @param  {Object}   results   The results object to load
+   *
+   */
   public loadResults(results: GenericObject): void {
     this._raw = results;
     if (results.total_found > 0) {
@@ -123,6 +137,11 @@ export class DoofinderResult {
     }
   }
 
+  /**
+   * Allow to return a fresh unlinked copy of this instance
+   * into a new one, making it a real copy, not a reference
+   *
+   */
   public copy(): DoofinderResult {
     return new DoofinderResult(this._raw);
   }

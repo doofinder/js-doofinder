@@ -9,7 +9,9 @@ export interface HttpResponse {
 }
 
 /**
- * Commodity API to http and https modules
+ * Commodity API to wrap making the requests
+ * to an endpoint.
+ *
  */
 export class HttpClient {
   /**
@@ -19,6 +21,7 @@ export class HttpClient {
    * @param  {Object}   options  Options needed by fetch API
    *
    * @return {Promise<HttpResponse>}
+   *
    */
   public async request(url: string, options?: GenericObject): Promise<HttpResponse> {
     if (url.indexOf('http') === -1 && (options && options['host'])) {
