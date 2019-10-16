@@ -24,7 +24,7 @@ import { DoofinderResult } from './result';
 import { Query } from './querybuilder/query';
 
 import { HttpClient, HttpResponse } from './util/http';
-import { isArray, isPlainObject, isNotNull } from './util/is';
+import { isArray, isPlainObject, isNotNull, isNull } from './util/is';
 
 interface DoofinderFullParameters extends DoofinderParameters {
   hashid: string;
@@ -97,7 +97,7 @@ export class Client {
 
     let [protocol, address] = (options.address || `${zone}-search.doofinder.com`).split('://');
 
-    if (!isNotNull(address)) {
+    if (isNull(address)) {
       address = protocol;
       protocol = null;
     }
