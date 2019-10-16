@@ -24,7 +24,7 @@ import { DoofinderResult } from './result';
 import { Query } from './querybuilder/query';
 
 import { HttpClient, HttpResponse } from './util/http';
-import { isArray, isPlainObject, isNotNull, isNull } from './util/is';
+import { isArray, isPlainObject, isNull } from './util/is';
 
 interface DoofinderFullParameters extends DoofinderParameters {
   hashid: string;
@@ -111,11 +111,11 @@ export class Client {
       headers: (options.headers as DoofinderHeaders) || {},
     };
 
-    if (isNotNull(protocol)) {
+    if (!isNull(protocol)) {
       this.requestOptions.protocol = `${protocol}:`;
     }
 
-    if (isNotNull(secret)) {
+    if (!isNull(secret)) {
       this.requestOptions.headers['Authorization'] = secret;
     }
 
