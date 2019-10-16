@@ -5,4 +5,4 @@ export const isObject = (value: unknown): boolean => Object.prototype.toString.c
 export const isPlainObject = (value: unknown): boolean =>
   isObject(value) && value.constructor === Object && !(value as Node).nodeType && !(value as Window).setInterval;
 
-export const isNull = (element: unknown): boolean => typeof element === 'object' && !element;
+export const isNull = (element: unknown): boolean => !(typeof element !== 'undefined' && element !== null);
