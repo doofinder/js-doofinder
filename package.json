@@ -66,10 +66,9 @@
     "typescript": "^3.6.3"
   },
   "dependencies": {
-    "@types/qs": "^6.5.3",
     "cross-fetch": "^3.0.4",
     "es6-promise": "^4.2.8",
     "node-fetch": "^2.6.0",
-    "qs": "^6.9.0"
+    "qss": "^2.0.3"
   }
 }

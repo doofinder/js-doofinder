@@ -136,4 +136,11 @@ export declare class Client {
      *
      */
     protected _buildSearchQueryString(query?: string | Query, params?: DoofinderParameters): string;
+    /**
+     * As qss is incapable of processing objects for query params, we preprocess
+     * the params to create string keys where needed so it will work as expected
+     *
+     */
+    private _processObjects;
+    private _processArray;
 }

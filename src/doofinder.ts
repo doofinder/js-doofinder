@@ -1,5 +1,3 @@
-import { stringify } from 'qs';
-
 // Doofinder types
 export * from './types';
 export * from './result';
@@ -16,6 +14,7 @@ import {
   DoofinderParameters,
   DoofinderHeaders,
   DoofinderRequestOptions,
+  GenericObject,
 } from './types';
 
 import { DoofinderResult } from './result';
@@ -25,6 +24,7 @@ import { Query } from './querybuilder/query';
 
 import { HttpClient, HttpResponse } from './util/http';
 import { isArray, isPlainObject, isNull } from './util/is';
+import { buildQueryParamsString } from './util/encode-params';
 
 interface DoofinderFullParameters extends DoofinderParameters {
   hashid: string;
@@ -223,7 +223,7 @@ export class Client {
       hashid: this.hashid,
       random: new Date().getTime(),
     };
-    let querystring = stringify(Object.assign(defaultParams, params || {}));
+    let querystring = buildQueryParamsString(Object.assign(defaultParams, params || {}));
     if (querystring != null) {
       querystring = `?${querystring}`;
     }
@@ -288,9 +288,6 @@ export class Client {
       throw new Error('To sort by multiple fields use an Array of Objects');
     }
 
-    // if we skip nulls, transformer won't ever be sent as empty!
-    // so, if you don't want a param to be present, just don't add it or set
-    // it as undefined
-    return stringify(queryParams, { skipNulls: false });
+    return buildQueryParamsString(queryParams);
   }
 }
