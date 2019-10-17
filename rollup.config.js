@@ -1,47 +1,47 @@
-const fs = require('fs');
-
 import clear from 'rollup-plugin-clear';
+import inject from 'rollup-plugin-inject';
 import resolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
-import globals from 'rollup-plugin-node-globals';
-import builtins from 'rollup-plugin-node-builtins';
 import typescript from 'rollup-plugin-typescript2';
-import { terser } from 'rollup-plugin-terser';
 
-export default {
-  input: ['src/doofinder.ts'],
-  output: [
-    {
-      file: 'dist/doofinder.min.js',
-      format: 'esm',
-      name: 'doofinder'
-    },
-    {
-      file: 'dist/doofinder.min.cjs.js',
-      format: 'cjs',
-      name: 'doofinder'
-    },
-    {
-      file: 'dist/doofinder.min.system.js',
-      format: 'system',
-      name: 'doofinder'
-    }
-  ],
-  plugins: [
+function defaultPlugins(file) {
+  return [
     clear({
-      targets: ['dist'],
+      targets: [file],
       watch: true
     }),
     resolve({
-      dedupe: [ 'qs' ],
-      preferBuiltins: true
+      dedupe: ['qss']
     }),
-    commonjs({
-      include: 'node_modules/**'
-    }),
-    globals(),
-    builtins(),
-    typescript(),
-    terser()
-  ],
+    typescript()
+  ]
 }
+
+export default [
+  {
+    input: 'src/index.ts',
+    output: {
+      file: 'lib/index.mjs',
+      format: 'esm'
+    },
+    plugins: defaultPlugins('lib/index.mjs')
+  },
+  {
+    input: 'src/index.ts',
+    output: {
+      file: 'lib/index.js',
+      format: 'cjs'
+    },
+    external: [
+      'node-fetch',
+      'qs'
+    ],
+    plugins: defaultPlugins('lib/index.js').concat([
+      inject({
+        exclude: 'node_modules/**',
+        modules: {
+          fetch: 'node-fetch'
+        }
+      })
+    ])
+  }
+]
