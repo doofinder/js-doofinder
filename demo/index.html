@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Web Components Playground</title>
+  <script type="module">
+    import { Client, Query } from './dist/doofinder.min.js';
+    let q = new Query('c0604b71c273c1fb3ef13eb2adfa4452');
+    q.search('silla');
+    q.addFilter('brand', 'JANE');
+    q.addFilter('brand', 'RECARO');
+
+    let c = new Client(null, { zone: 'eu1'});
+    c.search(q).then((result) => {
+      console.log(result);
+    });
+  </script>
+</head>
+<body>
+  <p id="message">Hola</p>
+</body>
+</html>
