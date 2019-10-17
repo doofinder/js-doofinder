@@ -4,6 +4,7 @@
   "description": "Javascript Library for Doofinder Search API",
   "main": "lib/index.js",
   "module": "lib/index.mjs",
+  "browser": "lib/doofinder.min.js",
   "engines": {
     "node": ">=10.15.0"
   },
@@ -18,10 +19,10 @@
   "types": "types/index.d.ts",
   "repository": "git@github.com:doofinder/js-doofinder.git",
   "scripts": {
-    "build": "yarn compile && yarn typings",
+    "build": "yarn compile && yarn minify-iife && yarn typings",
     "compile": "rimraf lib && rollup -c",
     "typings": "rimraf types && tsc --declaration --emitDeclarationOnly --outDir types",
-    "minify": "terser lib/index.mjs -c -m --comments /^nothing/",
+    "minify-iife": "terser lib/doofinder.js -c -m --comments /^nothing/ --keep-classnames --keep-fnames -o lib/doofinder.min.js",
     "lint": "eslint --env browser --fix src/**/*.ts",
     "test": "export TS_NODE_PROJECT=tsconfig.test.json ; mocha --reporter spec --require ts-node/register \"test/**/*.ts\"",
     "doc": "typedoc"
