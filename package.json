@@ -4,7 +4,15 @@
   "description": "Javascript Library for Doofinder Search API",
   "main": "lib/index.js",
   "module": "lib/index.mjs",
+  "engines": {
+    "node": ">=10.15.0"
+  },
+  "files": [
+    "lib",
+    "types"
+  ],
   "directories": {
+    "lib": "lib",
     "test": "test"
   },
   "types": "types/index.d.ts",

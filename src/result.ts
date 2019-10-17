@@ -49,7 +49,6 @@ export class DoofinderResult {
   private loadFacets(facetObj: GenericObject): void {
     this._facets = Object.keys(facetObj).map(
       (key: string): Facet => {
-        console.log('Loading key', key);
         if ('terms' in facetObj[key]) {
           const terms: Array<FacetOption> = [];
           facetObj[key].terms.buckets.forEach((bucket: FacetOption): void => {

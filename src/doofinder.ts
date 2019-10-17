@@ -1,26 +1,8 @@
 // Doofinder types
-export * from './types';
-export * from './result';
-export { Query } from './querybuilder/query';
+import { DoofinderClientOptions, DoofinderParameters, DoofinderHeaders, DoofinderRequestOptions } from './types';
 
-export { ClientRepo } from './client-repo';
-
-import {
-  DoofinderClientOptions,
-  DoofinderFilterRange,
-  DoofinderFilter,
-  DoofinderSorting,
-  DoofinderSortOption,
-  DoofinderParameters,
-  DoofinderHeaders,
-  DoofinderRequestOptions,
-  GenericObject,
-} from './types';
-
-import { DoofinderResult } from './result';
-
-// Expose the QueryBuilder interface too
 import { Query } from './querybuilder/query';
+import { DoofinderResult } from './result';
 
 import { HttpClient, HttpResponse } from './util/http';
 import { isArray, isPlainObject, isNull } from './util/is';

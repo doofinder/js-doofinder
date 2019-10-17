@@ -3,3 +3,5 @@ test_karma/doofinder.*
 docs/html
 *.swp
 *~
+lib/
+types/
