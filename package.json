@@ -2,17 +2,18 @@
   "name": "doofinder",
   "version": "6.0.0",
   "description": "Javascript Library for Doofinder Search API",
-  "main": "dist/doofinder.min.js",
+  "main": "lib/index.js",
+  "module": "lib/index.mjs",
   "directories": {
     "test": "test"
   },
-  "typings": "dist/doofinder.d.ts",
-  "typescript": {
-    "definition": "dist/doofinder.d.ts"
-  },
+  "types": "types/index.d.ts",
   "repository": "git@github.com:doofinder/js-doofinder.git",
   "scripts": {
-    "compile": "rollup -c",
+    "build": "yarn compile && yarn typings",
+    "compile": "rimraf lib && rollup -c",
+    "typings": "rimraf types && tsc --declaration --emitDeclarationOnly --outDir types",
+    "minify": "terser lib/index.mjs -c -m --comments /^nothing/",
     "lint": "eslint --env browser --fix src/**/*.ts",
     "test": "export TS_NODE_PROJECT=tsconfig.test.json ; mocha --reporter spec --require ts-node/register \"test/**/*.ts\"",
     "doc": "typedoc"
@@ -53,21 +54,21 @@
     "lint-staged": "^9.4.2",
     "mocha": "^6.2.1",
     "prettier": "^1.18.2",
+    "rimraf": "^3.0.0",
     "rollup": "^1.22.0",
     "rollup-plugin-clear": "^2.0.7",
     "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-inject": "^3.0.1",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-globals": "^1.4.0",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-terser": "^5.1.2",
     "rollup-plugin-typescript2": "^0.24.3",
+    "terser": "^4.3.9",
     "ts-node": "^8.4.1",
     "typedoc": "^0.15.0",
     "typescript": "^3.6.3"
   },
   "dependencies": {
-    "cross-fetch": "^3.0.4",
-    "es6-promise": "^4.2.8",
     "node-fetch": "^2.6.0",
     "qss": "^2.0.3"
   }
