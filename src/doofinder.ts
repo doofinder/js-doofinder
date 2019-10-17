@@ -1,5 +1,3 @@
-import { encode } from 'qss';
-
 // Doofinder types
 export * from './types';
 export * from './result';
@@ -26,6 +24,7 @@ import { Query } from './querybuilder/query';
 
 import { HttpClient, HttpResponse } from './util/http';
 import { isArray, isPlainObject, isNull } from './util/is';
+import { buildQueryParamsString } from './util/encode-params';
 
 interface DoofinderFullParameters extends DoofinderParameters {
   hashid: string;
@@ -224,7 +223,7 @@ export class Client {
       hashid: this.hashid,
       random: new Date().getTime(),
     };
-    let querystring = encode(Object.assign(defaultParams, params || {}));
+    let querystring = buildQueryParamsString(Object.assign(defaultParams, params || {}));
     if (querystring != null) {
       querystring = `?${querystring}`;
     }
@@ -289,59 +288,6 @@ export class Client {
       throw new Error('To sort by multiple fields use an Array of Objects');
     }
 
-    const processedQueryParams = this._processObjects(queryParams);
-
-    // if we skip nulls, transformer won't ever be sent as empty!
-    // so, if you don't want a param to be present, just don't add it or set
-    // it as undefined
-    return encode(processedQueryParams);
-  }
-
-  /**
-   * As qss is incapable of processing objects for query params, we preprocess
-   * the params to create string keys where needed so it will work as expected
-   *
-   */
-  private _processObjects(
-    queryParams: DoofinderParameters | GenericObject,
-    currentKey?: string | number
-  ): GenericObject {
-    const result: GenericObject = {};
-    let supraKey = '';
-    if (currentKey) {
-      supraKey = '' + currentKey;
-    }
-    Object.keys(queryParams).forEach((key: string) => {
-      const subkey = supraKey.length > 0 ? `${supraKey}[${key}]` : key;
-
-      if (isArray(queryParams[key])) {
-        const elements = this._processArray(queryParams[key], subkey);
-        Object.assign(result, elements);
-      } else if (isPlainObject(queryParams[key])) {
-        const elements = this._processObjects(queryParams[key], subkey);
-        Object.assign(result, elements);
-      } else {
-        result[subkey] = queryParams[key];
-      }
-    });
-
-    return result;
-  }
-
-  private _processArray(elems: Array<unknown>, key: string | number): GenericObject {
-    const result: GenericObject = {};
-    elems.forEach((elem: unknown, index: number) => {
-      if (isArray(elem)) {
-        const elements = this._processArray(elem as Array<unknown>, `${key}[${index}]`);
-        Object.assign(result, elements);
-      } else if (isPlainObject(elem)) {
-        const elements = this._processObjects(elem, `${key}[${index}]`);
-        Object.assign(result, elements);
-      } else {
-        result[`${key}[${index}]`] = elem;
-      }
-    });
-
-    return result;
+    return buildQueryParamsString(queryParams);
   }
 }
