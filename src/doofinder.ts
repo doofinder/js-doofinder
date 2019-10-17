@@ -1,27 +1,38 @@
-// Doofinder types
-import { DoofinderClientOptions, DoofinderParameters, DoofinderHeaders, DoofinderRequestOptions } from './types';
+import {
+  DoofinderParameters,
+  Zone,
+  GenericObject,
+  ClientOptions,
+  ClientResponseOrError,
+  ClientResponse,
+  ClientError,
+} from './types';
 
 import { Query } from './querybuilder/query';
 import { DoofinderResult } from './result';
 
-import { HttpClient, HttpResponse } from './util/http';
-import { isArray, isPlainObject, isNull } from './util/is';
 import { buildQueryParamsString } from './util/encode-params';
+import { isArray, isPlainObject } from './util/is';
 
 interface DoofinderFullParameters extends DoofinderParameters {
   hashid: string;
   random?: number;
 }
 
+function isValidZone(zone: string): boolean {
+  return Object.values(Zone).includes(zone as Zone);
+}
+
 /**
  * This class allows searching and sending stats using the Doofinder service.
  */
 export class Client {
-  public apiVersion = '5';
-  public hashid: string = null;
-  private requestOptions: DoofinderRequestOptions;
-  private httpClient: HttpClient = null;
-  private version: string = null;
+  public version = 5;
+  public hashid: string;
+  public secret: string;
+  public zone: Zone;
+  public endpoint: string;
+  public headers: GenericObject<string>;
 
   /**
    * Constructor
@@ -56,69 +67,73 @@ export class Client {
    *                          them is required.
    *
    */
-  public constructor(hashid?: string, options: DoofinderClientOptions = {}) {
-    if (hashid) {
-      this.hashid = hashid;
-    }
+  public constructor({ zone, hashid, serverAddress, headers }: Partial<ClientOptions>);
+  public constructor({ apiKey, hashid, serverAddress, headers }: Partial<ClientOptions>);
+  public constructor({ apiKey, zone, hashid, serverAddress, headers }: Partial<ClientOptions> = {}) {
+    if (apiKey) {
+      const [z, k] = (apiKey || '').split('-');
 
-    let zone,
-      secret: string = null;
-
-    if ('apiKey' in options) {
-      [zone, secret] = options.apiKey.split('-');
-      if (zone && !secret) {
-        throw new Error('invalid `apiKey`');
+      if (k && z && isValidZone(z)) {
+        this.zone = z as Zone;
+        this.secret = k;
+      } else {
+        throw new Error(`Invalid API key`);
       }
-    } else if ('zone' in options) {
-      zone = options['zone'];
+    } else if (zone) {
+      if (isValidZone(zone)) {
+        this.zone = zone;
+      } else {
+        throw new Error(`Invalid zone '${zone}'`);
+      }
+    } else {
+      throw new Error(`Must configure API key or zone`);
     }
 
-    if (!options['zone'] && !options['apiKey']) {
-      throw new Error('`apiKey` or `zone` must be defined');
+    this.endpoint = this.__buildEndpoint(serverAddress);
+
+    this.hashid = hashid;
+    this.headers = Object.assign({}, headers || {});
+
+    if (this.secret) {
+      this.headers['Authorization'] = this.secret;
     }
-
-    let [protocol, address] = (options.address || `${zone}-search.doofinder.com`).split('://');
-
-    if (isNull(address)) {
-      address = protocol;
-      protocol = null;
-    }
-
-    const [host, port] = address.split(':');
-
-    this.requestOptions = {
-      host: host,
-      port: port,
-      // headers: options.headers || {}
-      headers: (options.headers as DoofinderHeaders) || {},
-    };
-
-    if (!isNull(protocol)) {
-      this.requestOptions.protocol = `${protocol}:`;
-    }
-
-    if (!isNull(secret)) {
-      this.requestOptions.headers['Authorization'] = secret;
-    }
-
-    // This works even if no apiKey passed but passed an "Authorization" header
-    if ('Authorization' in this.requestOptions.headers) {
-      this.requestOptions.protocol = 'https:';
-    }
-
-    this.httpClient = new HttpClient();
-    this.version = `${options.version || this.apiVersion}`;
   }
 
   /**
-   * Performs a HTTP request to the endpoint specified with the default options
-   * of the client.
+   * Performs a HTTP request to the endpoint specified with the default
+   * options of the client.
    *
    * @param  {String}   resource Resource to be called by GET.
-   * @return {Promise<HttpResponse>}
+   * @return {Promise<ClientResponseOrError>}
    */
-  public async request(resource: string): Promise<HttpResponse> {
-    return await this.httpClient.request(resource, this.requestOptions);
+  public async request(resource: string): Promise<ClientResponseOrError> {
+    const response: Response = await fetch(`${this.endpoint}${resource}`, {
+      method: 'GET',
+      headers: Object.assign({}, this.headers),
+    });
+
+    if (response.ok) {
+      return this.__buildResponse(response);
+    } else {
+      return this.__buildError(response);
+    }
+  }
+
+  private async __buildResponse(response: Response): Promise<ClientResponse> {
+    const data = await response.json();
+    return { statusCode: response.status, data };
+  }
+
+  private async __buildError(response: Response): Promise<ClientError> {
+    let data: object;
+
+    try {
+      data = await response.json();
+    } catch (_error) {
+      data = null;
+    }
+
+    return { statusCode: response.status, error: new Error(response.statusText), data };
   }
 
   //
@@ -153,16 +168,16 @@ export class Client {
    *                             the raw value returned by the endpoint. Defaults to true
    *
    *
-   * @return {Promise<HttpResponse>}
+   * @return {Promise<ClientResponseOrError>}
    */
   public async search(
     query: string | Query,
     params?: DoofinderParameters,
     wrapper = true
-  ): Promise<HttpResponse | DoofinderResult> {
-    const querystring: string = this._buildSearchQueryString(query, params);
+  ): Promise<ClientResponseOrError | DoofinderResult> {
+    const querystring: string = this.__buildSearchQueryString(query, params);
+    const response: ClientResponseOrError = await this.request(`/${this.version}/search?${querystring}`);
 
-    const response: HttpResponse = await this.request(`/${this.version}/search?${querystring}`);
     if (!wrapper) {
       return response;
     } else {
@@ -183,9 +198,9 @@ export class Client {
    * @param  {Function} callback Callback to be called when the response is
    *                             received. First param is the error, if any,
    *                             and the second one is the response, if any.
-   * @return {Promise<HttpResponse>}
+   * @return {Promise<ClientResponseOrError>}
    */
-  public async options(suffix?: string): Promise<HttpResponse> {
+  public async options(suffix?: string): Promise<ClientResponseOrError> {
     suffix = suffix ? `?${suffix}` : '';
     return await this.request(`/${this.version}/options/${this.hashid}${suffix}`);
   }
@@ -198,9 +213,9 @@ export class Client {
    * @param  {Function} callback  Callback to be called when the response is
    *                              received. First param is the error, if any,
    *                              and the second one is the response, if any.
-   * @return {Promise<HttpResponse>}
+   * @return {Promise<ClientResponseOrError>}
    */
-  public async stats(eventName = '', params?: DoofinderParameters): Promise<HttpResponse> {
+  public async stats(eventName = '', params?: DoofinderParameters): Promise<ClientResponseOrError> {
     const defaultParams: DoofinderFullParameters = {
       hashid: this.hashid,
       random: new Date().getTime(),
@@ -236,7 +251,7 @@ export class Client {
    * @return {String}     Encoded query string to be used in a search URL.
    *
    */
-  protected _buildSearchQueryString(query?: string | Query, params?: DoofinderParameters): string {
+  private __buildSearchQueryString(query?: string | Query, params?: DoofinderParameters): string {
     let q: Query = new Query();
 
     // We get a no query
@@ -271,5 +286,16 @@ export class Client {
     }
 
     return buildQueryParamsString(queryParams);
+  }
+
+  private __buildEndpoint(serverAddress: string): string {
+    let [protocol, address] = (serverAddress || `${this.zone}-search.doofinder.com`).split('://');
+
+    if (!address) {
+      address = protocol;
+      protocol = null;
+    }
+
+    return `${protocol || (this.secret ? 'https:' : '')}//${address}`;
   }
 }

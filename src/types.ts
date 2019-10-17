@@ -24,12 +24,12 @@ export enum Zone {
  * can be sent to the Doofinder Client
  *
  */
-export interface DoofinderClientOptions {
-  zone?: string;
-  apiKey?: string;
-  address?: string;
-  version?: string;
-  headers?: object;
+export interface ClientOptions {
+  apiKey: string;
+  zone: Zone;
+  hashid: string;
+  serverAddress: string;
+  headers: GenericObject<string>;
 }
 
 /**
@@ -157,3 +157,14 @@ export type FacetOption = RangeFacet | string[] | number[];
 export interface Facet {
   [facetName: string]: FacetOption;
 }
+
+export interface ClientResponse {
+  statusCode: number;
+  data: GenericObject;
+}
+
+export interface ClientError extends ClientResponse {
+  error: Error;
+}
+
+export type ClientResponseOrError = ClientResponse | ClientError;

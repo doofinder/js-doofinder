@@ -34,7 +34,7 @@ export class ClientRepo {
 
   public getClient(): Client {
     if (!(this.zone in this.pool)) {
-      this.pool[this.zone] = new Client(null, { zone: this.zone });
+      this.pool[this.zone] = new Client({ zone: this.zone });
     }
     return this.pool[this.zone];
   }
