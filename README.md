@@ -50,7 +50,7 @@ The library provides:
 
 - A `Client` class to perform requests to the [Doofinder] service.
 - A `Query` class which provides an easy-to-use object to prepare the queries to the Doofinder `Client` before sending anything.
-- A `Result` class to wrap the response from the server and access to the data through easy to use methods. 
+- A `Result` class to wrap the response from the server and access to the data through easy to use methods.
 - A `ClientRepo` singleton that holds a pool of Doofinder `Client` in each zone and helps instantiating them.
 
 ## Quick Start
@@ -77,3 +77,17 @@ The demo markup is inside `index.html` and the related Javascript code can be fo
 [cors]: https://en.wikipedia.org/wiki/Cross-origin_resource_sharing
 [doofinder admin]: https://app.doofinder.com/admin
 [doofinder]: https://www.doofinder.com
+
+## Browser Support
+
+| Browser                | Standalone | ES Module |
+|------------------------|------------|-----------|
+| Edge                   | 15+        | 16+       |
+| Firefox                | 32+        | 60+       |
+| Chrome                 | 55+        | 61+       |
+| Safari                 | 11+        | 11+       |
+| Opera                  | 42+        | 48+       |
+| Chrome for Android     | 76+        | 76+       |
+| Firefox for Android    | 68+        | 68+       |
+| UC Browser for Android | 12.12+     | 12.12+    |
+| Safari for iOS         | 11+        | 11+       |
