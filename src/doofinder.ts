@@ -11,7 +11,7 @@ import {
 import { Query } from './querybuilder/query';
 import { DoofinderResult } from './result';
 
-import { buildQueryParamsString } from './util/encode-params';
+import { buildQueryString } from './util/encode-params';
 import { isArray, isPlainObject } from './util/is';
 
 interface DoofinderFullParameters extends DoofinderParameters {
@@ -220,7 +220,7 @@ export class Client {
       hashid: this.hashid,
       random: new Date().getTime(),
     };
-    let querystring = buildQueryParamsString(Object.assign(defaultParams, params || {}));
+    let querystring = buildQueryString(Object.assign(defaultParams, params || {}));
     if (querystring != null) {
       querystring = `?${querystring}`;
     }
@@ -285,7 +285,7 @@ export class Client {
       throw new Error('To sort by multiple fields use an Array of Objects');
     }
 
-    return buildQueryParamsString(queryParams);
+    return buildQueryString(queryParams);
   }
 
   private __buildEndpoint(serverAddress: string): string {

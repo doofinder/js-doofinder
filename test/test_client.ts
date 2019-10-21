@@ -97,7 +97,6 @@ describe('Client', () => {
       response = await cfg.getClient().request('/notfound');
       response.statusCode.should.equal(404);
       (response as ClientError).error.message.should.be.equal('Not Found');
-      console.log(response);
       (response as ClientError).data.error.should.be.equal('search engine not found');
 
       response = await cfg.getClient().request('/catastrophe');
