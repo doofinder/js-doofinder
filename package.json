@@ -24,7 +24,6 @@
     "doc": "typedoc",
     "dev": "es-dev-server --watch --node-resolve --open /playground/",
     "dev:compat": "es-dev-server --watch --node-resolve --compatibility esm --open /playground/",
-
     "lint": "eslint --env browser --fix src/**/*.ts",
     "compile": "rimraf lib && rollup -c",
     "minify-iife": "terser lib/doofinder.js -c -m --comments /^nothing/ --keep-classnames --keep-fnames -o lib/doofinder.min.js",
@@ -47,11 +46,14 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn lint-staged"
+      "pre-commit": "yarn lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
     }
   },
   "homepage": "https://github.com/doofinder/js-doofinder",
   "devDependencies": {
+    "@commitlint/cli": "^8.2.0",
+    "@commitlint/config-conventional": "^8.2.0",
     "@types/chai": "^4.2.3",
     "@types/fetch-mock": "^7.3.1",
     "@types/mocha": "^5.2.7",
