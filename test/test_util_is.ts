@@ -1,12 +1,10 @@
-// required for testing
-import * as mocha from 'mocha';
-import * as chai from 'chai';
+import 'mocha';
+import { should } from 'chai';
 
 // chai
-chai.should();
-const expect = chai.expect;
+should();
 
-// required for tests
+// tests
 import * as Thing from '../src/util/is';
 
 describe("Is Module", () => {

@@ -1,7 +1,7 @@
 import { encode } from 'qss';
 
-import { DoofinderParameters, GenericObject } from '../types';
 import { isArray, isPlainObject } from './is';
+import { GenericObject } from '../types';
 
 /**
  * As qss is incapable of processing objects for query params, we preprocess
@@ -9,62 +9,42 @@ import { isArray, isPlainObject } from './is';
  *
  */
 
-// Somehow, using this function and define it later is not allowed for some reason
-// so we go again on having headers defined somewhere
-let _processArray = (elems: Array<unknown>, key: string | number): GenericObject => {
-  return {};
-};
-
-function _processObjects(
-  queryParams: DoofinderParameters | GenericObject,
-  currentKey?: string | number
-): GenericObject {
-  const result: GenericObject = {};
-  let supraKey = '';
-  if (currentKey) {
-    supraKey = '' + currentKey;
+function _updateResult(result: GenericObject<string>, value: unknown, param: string): GenericObject {
+  if (isArray(value)) {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return Object.assign(result, _processArray(value as Array<unknown>, param));
+  } else if (isPlainObject(value)) {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return Object.assign(result, _processObject(value as GenericObject, param));
+  } else {
+    return Object.assign(result, { [param]: value });
   }
-  Object.keys(queryParams).forEach((key: string) => {
-    const subkey = supraKey.length > 0 ? `${supraKey}[${key}]` : key;
-
-    if (isArray(queryParams[key])) {
-      const elements = _processArray(queryParams[key], subkey);
-      Object.assign(result, elements);
-    } else if (isPlainObject(queryParams[key])) {
-      const elements = _processObjects(queryParams[key], subkey);
-      Object.assign(result, elements);
-    } else {
-      result[subkey] = queryParams[key];
-    }
-  });
-
-  return result;
 }
 
-_processArray = (elems: Array<unknown>, key: string | number): GenericObject => {
-  const result: GenericObject = {};
-  elems.forEach((elem: unknown, index: number) => {
-    if (isArray(elem)) {
-      const elements = _processArray(elem as Array<unknown>, `${key}[${index}]`);
-      Object.assign(result, elements);
-    } else if (isPlainObject(elem)) {
-      const elements = _processObjects(elem, `${key}[${index}]`);
-      Object.assign(result, elements);
-    } else {
-      result[`${key}[${index}]`] = elem;
-    }
-  });
+function _processObject(keyValueObj: GenericObject, targetKey = ''): GenericObject {
+  return Object.keys(keyValueObj).reduce((result: GenericObject, key: string): GenericObject => {
+    const value = keyValueObj[key];
+    const param = targetKey.length > 0 ? `${targetKey}[${key}]` : key;
+    return _updateResult(result, value, param);
+  }, {});
+}
 
-  return result;
-};
+function _processArray(valueList: Array<unknown>, key: string | number): GenericObject {
+  return valueList.reduce((result: GenericObject, value: unknown, index: number) => {
+    const param = `${key}[${index}]`;
+    return _updateResult(result, value, param);
+  }, {});
+}
 
 /**
  * Wrapper function to parse objects in a way qss will encode nested structures
  * correctly in the query params string resulting
  *
  */
-export function buildQueryParamsString(obj: DoofinderParameters | GenericObject): string {
-  const processedObject = _processObjects(obj);
+export function buildQueryString(paramsObj: GenericObject): string {
+  if (!isPlainObject(paramsObj)) {
+    throw new Error('Not an object');
+  }
 
-  return encode(processedObject);
+  return encode(_processObject(paramsObj));
 }

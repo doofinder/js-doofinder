@@ -1,11 +1,10 @@
 // required for testing
-import * as mocha from 'mocha';
-import * as chai from 'chai';
+import 'mocha';
+import { should, expect } from 'chai';
 
 
 // chai
-chai.should();
-const expect = chai.expect;
+should();
 
 // required for tests
 import { Client } from '../src/doofinder';
@@ -97,7 +96,6 @@ describe('Client', () => {
       response = await cfg.getClient().request('/notfound');
       response.statusCode.should.equal(404);
       (response as ClientError).error.message.should.be.equal('Not Found');
-      console.log(response);
       (response as ClientError).data.error.should.be.equal('search engine not found');
 
       response = await cfg.getClient().request('/catastrophe');
