@@ -1,11 +1,10 @@
 // required for testing
-import * as mocha from 'mocha';
-import * as chai from 'chai';
+import 'mocha';
+import { should, expect } from 'chai';
 
 
 // chai
-chai.should();
-const expect = chai.expect;
+should();
 
 // required for tests
 import { Client } from '../src/doofinder';

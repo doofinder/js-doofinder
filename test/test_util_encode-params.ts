@@ -1,11 +1,10 @@
 import 'mocha';
-import * as chai from 'chai';
+import { should, expect } from 'chai';
 
 import { butEncoded } from './util/but-encoded';
 
 // chai
-chai.should();
-const expect = chai.expect;
+should();
 
 // tests
 import { buildQueryString } from '../src/util/encode-params';

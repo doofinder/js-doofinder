@@ -1,8 +1,8 @@
 import 'mocha';
-import * as chai from 'chai';
+import { should } from 'chai';
 
 // chai
-chai.should();
+should();
 
 // tests
 import * as Thing from '../src/util/is';
