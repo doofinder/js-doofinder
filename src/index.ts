@@ -1,5 +1,4 @@
 export * from './types';
-export * from './querybuilder/types';
 
 export * from './result';
 export * from './querybuilder/query';

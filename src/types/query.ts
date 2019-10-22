@@ -1,4 +1,4 @@
-import { DoofinderParameters } from '../types';
+import { DoofinderParameters } from './request';
 
 /**
  * Extension of the DoofinderParameters interface to accept

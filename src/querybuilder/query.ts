@@ -1,4 +1,4 @@
-import { SearchParameters } from './types';
+import { SearchParameters } from '../types';
 import { QueryTypes, TransformerOptions, DoofinderParameters, Facet, FacetOption } from '../types';
 import { isPlainObject, isArray } from '../util/is';
 
