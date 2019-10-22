@@ -2,32 +2,36 @@
 import 'mocha';
 import { should, expect } from 'chai';
 
+import { expectAsync } from './util/async';
 
 // chai
 should();
 
 // required for tests
-import { Client } from '../src/doofinder';
+import { Client, ClientResponseError } from '../src/doofinder';
 
 // config, utils & mocks
 import * as cfg from './config';
 
 // Mock the fetch API
 import * as fetchMock from 'fetch-mock';
-import { Zone, ClientError } from '../src/types';
+import { Zone } from '../src/types';
+import { isPlainObject } from '../src/util/is';
 
 function buildQuery(query?: string, params?: object) {
   // Quite hackish if you ask me...
-  return (cfg.getClient() as any).__buildSearchQueryString(query, params);
+  // TODO: buildSearchQueryString() is public now!
+  // but, if you remove the cast, this breaks!!!
+  return (cfg.getClient() as any).buildSearchQueryString(query, params);
 }
 
 // test
 describe('Client', () => {
   beforeEach(() => {
     fetchMock.get('https://eu1-search.doofinder.com/test', {body: {value: true}, status: 200});
-    fetchMock.get('https://eu1-search.doofinder.com/error',{body: {message: 'Invalid'}, status: 400});
-    fetchMock.get('https://eu1-search.doofinder.com/notfound',{body: {error: 'search engine not found'}, status: 404});
-    fetchMock.get('https://eu1-search.doofinder.com/catastrophe', 503);
+    fetchMock.get('https://eu1-search.doofinder.com/5/error',{body: {message: 'Invalid'}, status: 400});
+    fetchMock.get('https://eu1-search.doofinder.com/5/notfound',{body: {error: 'search engine not found'}, status: 404});
+    fetchMock.get('https://eu1-search.doofinder.com/5/catastrophe', 503);
     fetchMock.get('glob:https://eu1-search.doofinder.com/*/stats/*', {body: {}, status: 200});
     fetchMock.get('glob:https://eu1-search.doofinder.com/*', {body: {}, status: 200});
   });
@@ -86,54 +90,93 @@ describe('Client', () => {
     });
   });
 
-  context('Request', () => {
-    it('handles request errors gracefully', async () => {
-      let response = await cfg.getClient().request('/error');
-      response.statusCode.should.be.equal(400);
-      (response as ClientError).error.message.should.be.equal('Bad Request');
-      (response as ClientError).data.message.should.be.equal('Invalid');
+  context('request() method', () => {
+    it('throws proper request errors', async () => {
+      const client = cfg.getClient();
 
-      response = await cfg.getClient().request('/notfound');
-      response.statusCode.should.equal(404);
-      (response as ClientError).error.message.should.be.equal('Not Found');
-      (response as ClientError).data.error.should.be.equal('search engine not found');
+      await expectAsync(
+        () => {
+          return client.request(
+            client.buildUrl('/error')
+          );
+        },
+        (error: ClientResponseError, _result: unknown) => {
+          error.statusCode.should.equal(400);
+          error.message.should.equal('Bad Request');
+          error.response.should.not.be.null;
+        }
+      );
 
-      response = await cfg.getClient().request('/catastrophe');
-      response.statusCode.should.equal(503);
+      await expectAsync(
+        () => {
+          return client.request(
+            client.buildUrl('/notfound')
+          );
+        },
+        (error: ClientResponseError, _result: unknown) => {
+          error.statusCode.should.equal(404);
+          error.message.should.equal('Not Found');
+          error.response.should.not.be.null;
+        }
+      );
+
+      await expectAsync(
+        () => {
+          return client.request(
+            client.buildUrl('/catastrophe')
+          );
+        },
+        (error: ClientResponseError, _result: unknown) => {
+          error.statusCode.should.equal(503);
+          error.response.should.not.be.null;
+        }
+      );
     });
 
     it('handles response success', async () => {
-      const response = await cfg.getClient().request('/somewhere');
-      response.data.should.be.empty;
-      response.statusCode.should.be.equal(200);
+      const client = cfg.getClient();
+      const url = client.buildUrl('/somewhere');
+      const response = await client.request(url);
+      fetchMock.called(url).should.be.true;
+      response.status.should.equal(200);
     });
   });
 
-  context('Options', () => {
-    it('Call with no arguments is done to the correct URL', async () => {
-      const response = await cfg.getClient().options();
-      expect(fetchMock.called(`${cfg.endpoint}/5/options/${cfg.hashid}`)).to.be.true;
-      response.data.should.be.empty;
+  context('options() method', () => {
+    it('called with no arguments makes requests to the correct URL', async () => {
+      const client = cfg.getClient();
+      const response = await client.options();
+      const expectedUrl = client.buildUrl(`/options/${cfg.hashid}`);
+      fetchMock.called(expectedUrl).should.be.true;
+      expect(isPlainObject(response)).to.be.true;
     });
 
-    it('Call with argument generates the correct url params', async () => {
-      const response = await cfg.getClient().options('example.com');
-      expect(fetchMock.called(`${cfg.endpoint}/5/options/${cfg.hashid}?example.com`)).to.be.true;
-      response.data.should.eql({});
+    it('called with an argument generates the correct url params', async () => {
+      const suffix = 'example.com';
+      const client = cfg.getClient();
+      const response = await client.options(suffix);
+      const expectedUrl = client.buildUrl(`/options/${cfg.hashid}`, suffix);
+      fetchMock.called(expectedUrl).should.be.true;
+      expect(isPlainObject(response)).to.be.true;
     });
   });
 
   context('Search', () => {
     context('Basic Parameters', () => {
       it('uses default basic parameters if none set', (done) => {
-        const querystring = `hashid=${cfg.hashid}&query=`;
-        buildQuery().should.equal(querystring);
+        const qs = buildQuery();
+        qs.should.include(`hashid=${cfg.hashid}`);
+        qs.should.include(`query=`);
         done();
       });
 
       it('accepts different basic parameters than the default ones', (done) => {
-        const querystring = `page=2&rpp=100&hello=world&hashid=${cfg.hashid}&query=`;
-        (buildQuery(undefined, {page: 2, rpp: 100, hello: 'world'})).should.equal(querystring);
+        const qs = buildQuery(undefined, {page: 2, rpp: 100, hello: 'world'});
+        qs.should.include(`page=2`);
+        qs.should.include(`rpp=100`);
+        qs.should.include(`hello=world`);
+        qs.should.include(`hashid=${cfg.hashid}`);
+        qs.should.include(`query=`);
         done();
       });
     });
