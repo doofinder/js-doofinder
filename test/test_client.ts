@@ -15,14 +15,11 @@ import * as cfg from './config';
 
 // Mock the fetch API
 import * as fetchMock from 'fetch-mock';
-import { Zone } from '../src/types';
+import { Zone, DoofinderParameters, SortDefinition, Sort, RequestSortOptions } from '../src/types';
 import { isPlainObject } from '../src/util/is';
 
-function buildQuery(query?: string, params?: object) {
-  // Quite hackish if you ask me...
-  // TODO: buildSearchQueryString() is public now!
-  // but, if you remove the cast, this breaks!!!
-  return (cfg.getClient() as any).buildSearchQueryString(query, params);
+function buildQuery(query?: string, params?: DoofinderParameters) {
+  return cfg.getClient().buildSearchQueryString(query, params);
 }
 
 // test
@@ -214,7 +211,7 @@ describe('Client', () => {
           `&filter%5Bcategory%5D%5B0%5D=SHOES&filter%5Bcategory%5D%5B1%5D=SHIRTS`,
           `&hashid=${cfg.hashid}&query=`
         ].join('');
-        const params = {
+        const params: DoofinderParameters = {
           filter: {
             brand: 'NIKE',
             category: ['SHOES', 'SHIRTS']
@@ -253,16 +250,17 @@ describe('Client', () => {
 
       it('accepts an object for a single field to sort on', (done) => {
         const querystring = `sort%5Bbrand%5D=desc&hashid=${cfg.hashid}&query=`;
-        const sorting = { brand: 'desc'};
+        const sorting: SortDefinition = { brand: Sort.DESC};
         (buildQuery(undefined, {sort: sorting})).should.equal(querystring);
         done();
       });
 
       it('fails with an object for a multiple fields to sort on', (done) => {
-        const sorting = {
-          '_score': 'desc',
-          brand: 'asc'
+        const sorting: RequestSortOptions = {
+          _score: Sort.DESC,
+          brand: Sort.ASC
         };
+
         (() => (buildQuery(undefined, {sort: sorting}))).should.throw();
         done();
       });
@@ -272,12 +270,9 @@ describe('Client', () => {
           'sort%5B0%5D%5B_score%5D=desc',
           `&sort%5B1%5D%5Bbrand%5D=asc&hashid=${cfg.hashid}&query=`
         ].join('');
-        const sorting = [
-          {
-            '_score': 'desc'
-          },{
-            brand: 'asc'
-          }
+        const sorting: RequestSortOptions = [
+          {_score: Sort.DESC},
+          {brand: Sort.ASC}
         ];
         (buildQuery(undefined, {sort: sorting})).should.equal(querystring);
         done();

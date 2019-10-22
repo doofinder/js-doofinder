@@ -32,29 +32,26 @@ export interface ClientOptions {
   headers: GenericObject<string>;
 }
 
-/**
- * A filter range must have these two
- * values
- *
- */
-export interface DoofinderFilterRange {
+export interface RangeFilter {
   from: number;
   to: number;
 }
+
+export type TermsFilter = string | string[];
 
 /**
  * Doofinder Filter definition
  *
  */
-export interface DoofinderFilter {
-  field: string[] | DoofinderFilterRange;
+export interface RequestFiltersObject {
+  [field: string]: TermsFilter | RangeFilter;
 }
 
 /**
  * Values available for the sorting options
  *
  */
-export enum DoofinderSorting {
+export enum Sort {
   ASC = 'asc',
   DESC = 'desc',
 }
@@ -63,9 +60,11 @@ export enum DoofinderSorting {
  * A single sorting option definition
  *
  */
-export interface DoofinderSortOption {
-  [field: string]: DoofinderSorting;
+export interface SortDefinition {
+  [field: string]: Sort;
 }
+
+export type RequestSortOptions = string | SortDefinition | SortDefinition[];
 
 /**
  * The available transformer options
@@ -98,10 +97,10 @@ export interface DoofinderParameters {
   page?: number;
   rpp?: number;
   type?: string | string[];
-  filter?: DoofinderFilter;
-  exclude?: DoofinderFilter;
+  filter?: RequestFiltersObject;
+  exclude?: RequestFiltersObject;
   transformer?: TransformerOptions;
-  sort?: string | DoofinderSortOption | DoofinderSortOption[];
+  sort?: RequestSortOptions;
   timeout?: number;
   jsonp?: boolean;
   query_name?: QueryTypes;
