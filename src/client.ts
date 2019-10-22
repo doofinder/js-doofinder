@@ -4,14 +4,12 @@ import { Query } from './query';
 import { DoofinderResult } from './result';
 
 import { buildQueryString } from './util/encode-params';
-import { isArray, isPlainObject } from './util/is';
+import { isArray, isPlainObject, isValidZone } from './util/is';
 
 export type RequestHeaders = GenericObject<string>;
 
 /**
- * The type definition of the options that
- * can be sent to the Doofinder Client
- *
+ * Options that can be used to create a Client instance.
  */
 export interface ClientOptions {
   apiKey: string;
@@ -24,10 +22,6 @@ export interface ClientOptions {
 interface DoofinderFullParameters extends DoofinderParameters {
   hashid: string;
   random?: number;
-}
-
-function isValidZone(zone: string): boolean {
-  return Object.values(Zone).includes(zone as Zone);
 }
 
 export class ClientResponseError extends Error {
@@ -215,6 +209,7 @@ export class Client {
    *                              and the second one is the response, if any.
    * @return {Promise<Response>}
    */
+  // TODO: This method should accept StatsParameters or something like that.
   public async stats(eventName = '', params?: DoofinderParameters): Promise<GenericObject> {
     const defaultParams: DoofinderFullParameters = {
       hashid: this.hashid,
