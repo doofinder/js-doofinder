@@ -6,7 +6,10 @@ import { DoofinderResult } from './result';
 import { buildQueryString } from './util/encode-params';
 import { isArray, isPlainObject, isValidZone } from './util/is';
 
-export type RequestHeaders = GenericObject<string>;
+export interface ClientHeaders extends GenericObject<string> {
+  Accept: string;
+  Authorization: string;
+}
 
 /**
  * Options that can be used to create a Client instance.
@@ -16,7 +19,7 @@ export interface ClientOptions {
   zone: Zone;
   hashid: string;
   serverAddress: string;
-  headers: RequestHeaders;
+  headers: Partial<ClientHeaders>;
 }
 
 interface DoofinderFullParameters extends DoofinderParameters {
@@ -113,7 +116,7 @@ export class Client {
     );
 
     if (this.secret) {
-      this.headers['Authorization'] = this.secret;
+      this.headers.Authorization = this.secret;
     }
   }
 

@@ -8,7 +8,7 @@ import { expectAsync } from './util/async';
 should();
 
 // required for tests
-import { Client, ClientResponseError } from '../src/doofinder';
+import { Client, ClientResponseError } from '../src/client';
 
 // config, utils & mocks
 import * as cfg from './config';
@@ -67,7 +67,7 @@ describe('Client', () => {
           'Authorization': 'abc'
         }});
         client.headers['X-Name'].should.equal('John Smith');
-        client.headers['Authorization'].should.equal('aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd');
+        client.headers.Authorization.should.equal('aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd');
         done();
       });
     });
