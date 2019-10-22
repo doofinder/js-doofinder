@@ -1,10 +1,25 @@
-import { DoofinderParameters, Zone, GenericObject, ClientOptions } from './types';
+import { DoofinderParameters, Zone, GenericObject } from './types';
 
 import { Query } from './query';
 import { DoofinderResult } from './result';
 
 import { buildQueryString } from './util/encode-params';
 import { isArray, isPlainObject } from './util/is';
+
+export type RequestHeaders = GenericObject<string>;
+
+/**
+ * The type definition of the options that
+ * can be sent to the Doofinder Client
+ *
+ */
+export interface ClientOptions {
+  apiKey: string;
+  zone: Zone;
+  hashid: string;
+  serverAddress: string;
+  headers: RequestHeaders;
+}
 
 interface DoofinderFullParameters extends DoofinderParameters {
   hashid: string;
