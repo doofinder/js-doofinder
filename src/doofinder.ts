@@ -209,8 +209,15 @@ export class Client {
     return await this.request(this.buildUrl(`/stats/${eventName}`, qs));
   }
 
-  public buildUrl(resource: string, suffix?: string): string {
-    const qs = suffix ? `?${suffix}` : '';
+  /**
+   *
+   * @param resource    URL part specifying the resource to be fetched from
+   *                    the current version of the API. Should start by '/'.
+   * @param querystring A query string to be attached to the URL. Should not
+   *                    start by '?'.
+   */
+  public buildUrl(resource: string, querystring?: string): string {
+    const qs = querystring ? `?${querystring}` : '';
     return `${this.endpoint}/${this.version}${resource}${qs}`;
   }
 
