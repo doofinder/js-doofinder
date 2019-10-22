@@ -1,4 +1,4 @@
-import { Client } from './doofinder';
+import { Client } from './client';
 import { Zone } from './types';
 
 interface ClientPool {

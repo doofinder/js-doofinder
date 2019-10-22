@@ -1,6 +1,6 @@
 import { DoofinderParameters, Zone, GenericObject, ClientOptions } from './types';
 
-import { Query } from './querybuilder/query';
+import { Query } from './query';
 import { DoofinderResult } from './result';
 
 import { buildQueryString } from './util/encode-params';
