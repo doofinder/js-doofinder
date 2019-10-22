@@ -157,14 +157,3 @@ export type FacetOption = RangeFacet | string[] | number[];
 export interface Facet {
   [facetName: string]: FacetOption;
 }
-
-export interface ClientResponse {
-  statusCode: number;
-  data: GenericObject;
-}
-
-export interface ClientError extends ClientResponse {
-  error: Error;
-}
-
-export type ClientResponseOrError = ClientResponse | ClientError;

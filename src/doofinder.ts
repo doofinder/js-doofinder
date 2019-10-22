@@ -1,12 +1,4 @@
-import {
-  DoofinderParameters,
-  Zone,
-  GenericObject,
-  ClientOptions,
-  ClientResponseOrError,
-  ClientResponse,
-  ClientError,
-} from './types';
+import { DoofinderParameters, Zone, GenericObject, ClientOptions } from './types';
 
 import { Query } from './querybuilder/query';
 import { DoofinderResult } from './result';
@@ -21,6 +13,18 @@ interface DoofinderFullParameters extends DoofinderParameters {
 
 function isValidZone(zone: string): boolean {
   return Object.values(Zone).includes(zone as Zone);
+}
+
+export class ClientResponseError extends Error {
+  public statusCode: number;
+  public response: Response;
+
+  public constructor(response: Response) {
+    super(response.statusText);
+    this.name = 'ClientResponseError';
+    this.statusCode = response.status;
+    this.response = response;
+  }
 }
 
 /**
@@ -92,7 +96,12 @@ export class Client {
     this.endpoint = this.__buildEndpoint(serverAddress);
 
     this.hashid = hashid;
-    this.headers = Object.assign({}, headers || {});
+    this.headers = Object.assign(
+      {
+        Accept: 'application/json',
+      },
+      headers || {}
+    );
 
     if (this.secret) {
       this.headers['Authorization'] = this.secret;
@@ -104,36 +113,20 @@ export class Client {
    * options of the client.
    *
    * @param  {String}   resource Resource to be called by GET.
-   * @return {Promise<ClientResponseOrError>}
+   * @return {Promise<Response>}
    */
-  public async request(resource: string): Promise<ClientResponseOrError> {
-    const response: Response = await fetch(`${this.endpoint}${resource}`, {
+  public async request(resource: string): Promise<Response> {
+    const response = await fetch(resource, {
       method: 'GET',
+      mode: 'cors',
       headers: Object.assign({}, this.headers),
     });
 
     if (response.ok) {
-      return this.__buildResponse(response);
+      return response;
     } else {
-      return this.__buildError(response);
+      throw new ClientResponseError(response);
     }
-  }
-
-  private async __buildResponse(response: Response): Promise<ClientResponse> {
-    const data = await response.json();
-    return { statusCode: response.status, data };
-  }
-
-  private async __buildError(response: Response): Promise<ClientError> {
-    let data: object;
-
-    try {
-      data = await response.json();
-    } catch (_error) {
-      data = null;
-    }
-
-    return { statusCode: response.status, error: new Error(response.statusText), data };
   }
 
   //
@@ -168,25 +161,17 @@ export class Client {
    *                             the raw value returned by the endpoint. Defaults to true
    *
    *
-   * @return {Promise<ClientResponseOrError>}
+   * @return {Promise<Response>}
    */
   public async search(
     query: string | Query,
     params?: DoofinderParameters,
-    wrapper = true
-  ): Promise<ClientResponseOrError | DoofinderResult> {
-    const querystring: string = this.__buildSearchQueryString(query, params);
-    const response: ClientResponseOrError = await this.request(`/${this.version}/search?${querystring}`);
-
-    if (!wrapper) {
-      return response;
-    } else {
-      if (response.statusCode >= 200 && response.statusCode <= 299) {
-        return new DoofinderResult(response.data);
-      } else {
-        return response;
-      }
-    }
+    wrap = true
+  ): Promise<Response | DoofinderResult> {
+    const qs: string = this.buildSearchQueryString(query, params);
+    const response: Response = await this.request(this.buildUrl('/search', qs));
+    const data = await response.json();
+    return wrap ? new DoofinderResult(data) : data;
   }
 
   /**
@@ -198,11 +183,11 @@ export class Client {
    * @param  {Function} callback Callback to be called when the response is
    *                             received. First param is the error, if any,
    *                             and the second one is the response, if any.
-   * @return {Promise<ClientResponseOrError>}
+   * @return {Promise<Response>}
    */
-  public async options(suffix?: string): Promise<ClientResponseOrError> {
-    suffix = suffix ? `?${suffix}` : '';
-    return await this.request(`/${this.version}/options/${this.hashid}${suffix}`);
+  public async options(qs?: string): Promise<GenericObject> {
+    const response = await this.request(this.buildUrl(`/options/${this.hashid}`, qs));
+    return await response.json();
   }
 
   /**
@@ -213,18 +198,27 @@ export class Client {
    * @param  {Function} callback  Callback to be called when the response is
    *                              received. First param is the error, if any,
    *                              and the second one is the response, if any.
-   * @return {Promise<ClientResponseOrError>}
+   * @return {Promise<Response>}
    */
-  public async stats(eventName = '', params?: DoofinderParameters): Promise<ClientResponseOrError> {
+  public async stats(eventName = '', params?: DoofinderParameters): Promise<GenericObject> {
     const defaultParams: DoofinderFullParameters = {
       hashid: this.hashid,
       random: new Date().getTime(),
     };
-    let querystring = buildQueryString(Object.assign(defaultParams, params || {}));
-    if (querystring != null) {
-      querystring = `?${querystring}`;
-    }
-    return await this.request(`/${this.version}/stats/${eventName}${querystring}`);
+    const qs = buildQueryString(Object.assign(defaultParams, params || {}));
+    return await this.request(this.buildUrl(`/stats/${eventName}`, qs));
+  }
+
+  /**
+   *
+   * @param resource    URL part specifying the resource to be fetched from
+   *                    the current version of the API. Should start by '/'.
+   * @param querystring A query string to be attached to the URL. Should not
+   *                    start by '?'.
+   */
+  public buildUrl(resource: string, querystring?: string): string {
+    const qs = querystring ? `?${querystring}` : '';
+    return `${this.endpoint}/${this.version}${resource}${qs}`;
   }
 
   /**
@@ -251,7 +245,7 @@ export class Client {
    * @return {String}     Encoded query string to be used in a search URL.
    *
    */
-  private __buildSearchQueryString(query?: string | Query, params?: DoofinderParameters): string {
+  public buildSearchQueryString(query?: string | Query, params?: DoofinderParameters): string {
     let q: Query = new Query();
 
     // We get a no query
