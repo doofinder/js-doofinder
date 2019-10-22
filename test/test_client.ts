@@ -8,7 +8,7 @@ import { expectAsync } from './util/async';
 should();
 
 // required for tests
-import { Client, ClientResponseError } from '../src/client';
+import { Client, ClientResponseError, StatsEvent } from '../src/client';
 
 // config, utils & mocks
 import * as cfg from './config';
@@ -283,11 +283,11 @@ describe('Client', () => {
   context('Stats', () => {
     it('Generates the correct url', async () => {
       const client = cfg.getClient();
-      let response = await client.stats('test');
-      expect(fetchMock.called(`glob:${cfg.endpoint}/5/stats/test?*`)).to.be.true;
+      await client.stats(StatsEvent.Init);
+      fetchMock.called(`glob:${cfg.endpoint}/5/stats/init?*`).should.be.true;
 
-      response = await client.stats('test2', {rpp: 20});
-      expect(fetchMock.called(`glob:${cfg.endpoint}/5/stats/test2?*rpp=20*`)).to.be.true;
+      await client.stats(StatsEvent.Click, {dfid: 'value'});
+      fetchMock.called(`glob:${cfg.endpoint}/5/stats/click?*dfid=value*`).should.be.true;
     });
   });
 });

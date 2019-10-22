@@ -22,9 +22,12 @@ export interface ClientOptions {
   headers: Partial<ClientHeaders>;
 }
 
-interface DoofinderFullParameters extends DoofinderParameters {
-  hashid: string;
-  random?: number;
+export enum StatsEvent {
+  Init = 'init',
+  Click = 'click',
+  Checkout = 'checkout',
+  BannerDisplay = 'banner_display',
+  BannerClick = 'banner_click',
 }
 
 export class ClientResponseError extends Error {
@@ -212,13 +215,20 @@ export class Client {
    *                              and the second one is the response, if any.
    * @return {Promise<Response>}
    */
-  // TODO: This method should accept StatsParameters or something like that.
-  public async stats(eventName = '', params?: DoofinderParameters): Promise<GenericObject> {
-    const defaultParams: DoofinderFullParameters = {
-      hashid: this.hashid,
-      random: new Date().getTime(),
-    };
-    const qs = buildQueryString(Object.assign(defaultParams, params || {}));
+
+  // ? Should this method accept StatsParameters or something like that?
+  // ? Should be a StatsClient wrapping Client to perform specific stats calls or a StatsQuery object like Query to wrap and validate calls?
+  // https://doofinder.github.io/js-doofinder/stats
+
+  public async stats(eventName: StatsEvent, eventParams?: GenericObject<string>): Promise<GenericObject> {
+    const params = Object.assign(
+      {
+        hashid: this.hashid,
+        random: new Date().getTime(),
+      },
+      eventParams
+    );
+    const qs = buildQueryString(params);
     return await this.request(this.buildUrl(`/stats/${eventName}`, qs));
   }
 
@@ -258,6 +268,7 @@ export class Client {
    * @return {String}     Encoded query string to be used in a search URL.
    *
    */
+  // TODO: All validation should be done in Query
   public buildSearchQueryString(query?: string | Query, params?: DoofinderParameters): string {
     let q: Query = new Query();
 
