@@ -42,6 +42,7 @@ export class Query {
    */
   public search(query: string): void {
     this.params.query = query;
+    this.params.page = 1;
   }
 
   /**
