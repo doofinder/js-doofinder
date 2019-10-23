@@ -1,4 +1,4 @@
-import { Client } from '../src/doofinder';
+import { Client } from '../src/client';
 
 export const hashid = 'ffffffffffffffffffffffffffffffff';
 export const endpoint = `https://eu1-search.doofinder.com`;

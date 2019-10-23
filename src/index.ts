@@ -1,7 +1,6 @@
 export * from './types';
-export * from './querybuilder/types';
 
+export * from './client';
 export * from './result';
-export * from './querybuilder/query';
-export * from './client-repo';
-export * from './doofinder';
+export * from './query';
+export * from './repo';

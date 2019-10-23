@@ -1,5 +1,6 @@
-import { Client } from './doofinder';
 import { Zone } from './types';
+import { Client } from './client';
+import { isValidZone } from './util/is';
 
 interface ClientPool {
   [zoneKey: string]: Client;
@@ -40,8 +41,11 @@ export class ClientRepo {
   }
 
   public set zone(zone: Zone) {
-    // TODO: Let's do a check here, Typescript does not behave here
-    this._zone = zone;
+    if (!isValidZone(zone)) {
+      throw new Error(`Invalid zone: ${zone}`);
+    } else {
+      this._zone = zone;
+    }
   }
 
   public get zone(): Zone {

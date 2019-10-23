@@ -1,18 +1,33 @@
-import { DoofinderParameters, Zone, GenericObject, ClientOptions } from './types';
+import { DoofinderParameters, Zone, GenericObject } from './types';
 
-import { Query } from './querybuilder/query';
+import { Query } from './query';
 import { DoofinderResult } from './result';
 
 import { buildQueryString } from './util/encode-params';
-import { isArray, isPlainObject } from './util/is';
+import { isArray, isPlainObject, isValidZone } from './util/is';
 
-interface DoofinderFullParameters extends DoofinderParameters {
-  hashid: string;
-  random?: number;
+export interface ClientHeaders extends GenericObject<string> {
+  Accept: string;
+  Authorization: string;
 }
 
-function isValidZone(zone: string): boolean {
-  return Object.values(Zone).includes(zone as Zone);
+/**
+ * Options that can be used to create a Client instance.
+ */
+export interface ClientOptions {
+  apiKey: string;
+  zone: Zone;
+  hashid: string;
+  serverAddress: string;
+  headers: Partial<ClientHeaders>;
+}
+
+export enum StatsEvent {
+  Init = 'init',
+  Click = 'click',
+  Checkout = 'checkout',
+  BannerDisplay = 'banner_display',
+  BannerClick = 'banner_click',
 }
 
 export class ClientResponseError extends Error {
@@ -104,7 +119,7 @@ export class Client {
     );
 
     if (this.secret) {
-      this.headers['Authorization'] = this.secret;
+      this.headers.Authorization = this.secret;
     }
   }
 
@@ -200,12 +215,20 @@ export class Client {
    *                              and the second one is the response, if any.
    * @return {Promise<Response>}
    */
-  public async stats(eventName = '', params?: DoofinderParameters): Promise<GenericObject> {
-    const defaultParams: DoofinderFullParameters = {
-      hashid: this.hashid,
-      random: new Date().getTime(),
-    };
-    const qs = buildQueryString(Object.assign(defaultParams, params || {}));
+
+  // ? Should this method accept StatsParameters or something like that?
+  // ? Should be a StatsClient wrapping Client to perform specific stats calls or a StatsQuery object like Query to wrap and validate calls?
+  // https://doofinder.github.io/js-doofinder/stats
+
+  public async stats(eventName: StatsEvent, eventParams?: GenericObject<string>): Promise<GenericObject> {
+    const params = Object.assign(
+      {
+        hashid: this.hashid,
+        random: new Date().getTime(),
+      },
+      eventParams
+    );
+    const qs = buildQueryString(params);
     return await this.request(this.buildUrl(`/stats/${eventName}`, qs));
   }
 
@@ -245,6 +268,7 @@ export class Client {
    * @return {String}     Encoded query string to be used in a search URL.
    *
    */
+  // TODO: All validation should be done in Query
   public buildSearchQueryString(query?: string | Query, params?: DoofinderParameters): string {
     let q: Query = new Query();
 

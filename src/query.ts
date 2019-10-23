@@ -1,6 +1,5 @@
-import { SearchParameters } from './types';
-import { QueryTypes, TransformerOptions, DoofinderParameters, Facet, FacetOption } from '../types';
-import { isPlainObject, isArray } from '../util/is';
+import { QueryTypes, TransformerOptions, DoofinderParameters, Facet, FacetOption, SearchParameters } from './types';
+import { isPlainObject, isArray } from './util/is';
 
 /**
  * Main QueryBuilder interface, allows creating programmaticly
