@@ -245,5 +245,86 @@ describe('Query', () => {
 
       done();
     });
+
+    it('setting filters by hand works as expected', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2});
+      q.addFilter('brand', ['Ferrari']);
+
+
+      // when 
+      q.setFilters({'model': ['F40'], 'color': ['red']});
+
+      // then
+      const params = q.getParams();
+      params.filter.should.not.have.property('brand');
+      params.filter.should.have.property('model');
+      params.filter.should.have.property('color');
+
+      done();
+    });
+  });
+
+  context('Query parameter methods', () => {
+    it('page should be set correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2});
+
+      // when
+      q.page(3);
+
+      // then
+      q.getParams().page.should.be.equal(3);
+      done();
+    });
+
+    it('next Page should be set correctly', (done) => {
+      // given
+      const pageNum = Math.floor((Math.random() * 10) + 1);
+      let q = new Query({hashid: cfg.hashid, rpp: 10, page: pageNum});
+
+      // when
+      q.nextPage();
+
+      // then
+      q.getParams().page.should.be.equal(pageNum + 1);
+      done();
+    });
+
+    it('next page should set page to two if none in Query', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10});
+
+      // when
+      q.nextPage();
+
+      // then
+      q.getParams().page.should.be.equal(2);
+      done();
+    });
+
+    it('results per page works as intended', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10});
+
+      // when
+      q.resultsPerPage(20);
+
+      // then
+      q.getParams().rpp.should.be.equal(20);
+      done();
+    });
+    
+    it('results per page can be reset with empty call', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10});
+
+      // when
+      q.resultsPerPage();
+
+      // then
+      q.getParams().should.not.have.property('rpp');
+      done();
+    });
   });
 });
