@@ -265,7 +265,7 @@ describe('Query', () => {
     });
   });
 
-  context('Query parameter methods', () => {
+  context('Query page parameter methods', () => {
     it('page should be set correctly', (done) => {
       // given
       let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2});
@@ -324,6 +324,282 @@ describe('Query', () => {
 
       // then
       q.getParams().should.not.have.property('rpp');
+      done();
+    });
+  });
+
+  context('Query type parameter methods', () => {
+    it('set type works correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees']});
+
+      // when
+      q.setTypes('product');
+
+      // then
+      const params = q.getParams();
+      params.should.have.property('type');
+      params.type.should.be.equal('product');
+
+      done();
+    });
+
+    it('adding a type works correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees']});
+
+      // when
+      q.addType('product');
+
+      // then
+      const params = q.getParams();
+      params.should.have.property('type');
+      params.type.length.should.be.equal(3);
+      params.type.should.include('product');
+
+      done();
+    });
+
+    it('adding types transforms into an array', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, type: 'product'});
+
+      // when
+      q.addType('blog');
+
+      // then
+      const params = q.getParams();
+      params.should.have.property('type');
+      params.type.length.should.be.equal(2);
+      params.type.should.include('product');
+      params.type.should.include('blog');
+
+      done();
+    }); 
+
+    it('removing a type works correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees']});
+
+      // when
+      q.removeType('employees');
+
+      // then
+      const params = q.getParams();
+      params.should.have.property('type');
+      params.type.length.should.be.equal(1);
+      params.type.should.not.include('employees');
+
+      done();
+    });
+
+    it('removing a type that is not there works correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees']});
+
+      // when
+      q.removeType('product');
+
+      // then
+      const params = q.getParams();
+      params.should.have.property('type');
+      params.type.length.should.be.equal(2);
+      params.type.should.include('blog');
+      params.type.should.include('employees');
+
+      done();
+    });
+
+    it('empty call empties the types', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees']});
+
+      // when
+      q.setTypes();
+
+      // then
+      const params = q.getParams();
+      params.should.not.have.property('type');
+
+      done();
+    });
+  });
+
+  context('Other Query parameter methods', () => {
+    it('Sets the transformer correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 20});
+
+      // when
+      q.transformer(TransformerOptions.Basic);
+
+      // then
+      q.getParams().transformer.should.be.equal(TransformerOptions.Basic);
+      done();
+    });
+
+    it('Clears the transformer correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 20, transformer: TransformerOptions.Basic});
+
+      // when
+      q.transformer();
+
+      // then
+      q.getParams().should.not.have.property('transformer');
+      done();
+    });
+
+    it('Sets the timeout correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 20});
+
+      // when
+      q.timeout(100);
+
+      // then
+      q.getParams().timeout.should.be.equal(100);
+      done();
+    });
+
+    it('Clears the timeout correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 20, timeout: 100});
+
+      // when
+      q.timeout();
+
+      // then
+      q.getParams().should.not.have.property('timeout');
+      done();
+    });
+
+    it('Sets the jsonp correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 20});
+
+      // when
+      q.jsonp(true);
+
+      // then
+      q.getParams().jsonp.should.be.true;
+      done();
+    });
+
+    it('Clears the jsonp correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 20, jsonp: true});
+
+      // when
+      q.jsonp();
+
+      // then
+      q.getParams().should.not.have.property('jsonp');
+      done();
+    });
+
+    it('Sets the query_name correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 20});
+
+      // when
+      q.queryName(QueryTypes.MatchAnd);
+
+      // then
+      q.getParams().query_name.should.be.equal(QueryTypes.MatchAnd);
+      done();
+    });
+
+    it('Clears the query_name correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 20, query_name: QueryTypes.MatchAnd});
+
+      // when
+      q.queryName();
+
+      // then
+      q.getParams().should.not.have.property('query_name');
+      done();
+    });
+
+    it('Sets the nostats correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 20});
+
+      // when
+      q.noStats(true);
+
+      // then
+      q.getParams().nostats.should.be.equal(1);
+      done();
+    });
+
+    it('Clears the nostats correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 20, nostats: 1});
+
+      // when
+      q.noStats();
+
+      // then
+      q.getParams().should.not.have.property('nostats');
+      done();
+    });
+  });
+
+  context('Parameter checking and fetching', () => {
+    it('hasParameter returns true if the parameter exists', (done) => {
+      // when
+      let q = new Query({hashid: cfg.hashid, rpp: 20, page: 11});
+
+      // then
+      q.hasParameter('rpp').should.be.true;
+      q.hasParameter('page').should.be.true;
+      q.hasParameter('url').should.be.false;
+
+      done();
+    });
+
+    it('getParams returns the current params', (done) => {
+      // when
+      let q = new Query({hashid: cfg.hashid, rpp: 20, page: 11});
+
+      // then
+      const params = q.getParams();
+      params.should.have.property('hashid');
+      params.should.have.property('rpp');
+      params.should.have.property('page');
+
+      done();
+    });
+
+    it('getParams returns the current params, even the new ones', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 20, page: 11});
+
+      // when
+      q.queryName(QueryTypes.Fuzzy);
+
+      // then
+      const params = q.getParams();
+      params.should.have.property('hashid');
+      params.should.have.property('rpp');
+      params.should.have.property('page');
+      params.should.have.property('query_name');
+
+      done();
+    });
+
+    it('getQuery works correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 20, page: 11});
+
+      // when
+      q.search('smartphone');
+
+      // then
+      q.getQuery().should.be.equal('smartphone');
+
       done();
     });
   });
