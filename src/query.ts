@@ -287,10 +287,12 @@ export class Query {
    *
    */
   public addType(type: string): void {
-    const typeParam: string[] = [];
+    let typeParam: string[] = [];
 
     if (typeof this.params.type === 'string') {
       typeParam.push(this.params.type);
+    } else if (this.params.type) {
+      typeParam = this.params.type;
     }
 
     typeParam.push(type);
