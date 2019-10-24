@@ -55,11 +55,13 @@ class Controller extends EventEnabled
    *
    * @param  {String} query  Search terms.
    * @param  {Object} params Optional search parameters.
+   * @param  {Object} items to search using getItems method
    * @return {Object}        Updated status.
   ###
-  reset: (query = null, params = {}) ->
+  reset: (query = null, params = {}, items = []) ->
     @query = query
     @params = merge {}, @defaults, params, page: 1
+    @items = items
     # At least one request sent, to detect if 1st page requested
     @requestDone = false
     @lastPage = null
@@ -87,6 +89,20 @@ class Controller extends EventEnabled
   ###
   search: (query, params = {}) ->
     @reset query, params
+    @__doSearch()
+    @trigger "df:search", [@query, @params]
+
+  ###*
+   * Performs a get items request.
+   * Page will always be 1 in this case.
+   *
+   * @param  {Object} dfid list to get.
+   * @param  {Object} params Search parameters.
+   * @return {http.ClientRequest}
+   * @public
+  ###
+  getItems: (items, params = {}) ->
+    @reset null, params, items
     @__doSearch()
     @trigger "df:search", [@query, @params]
 
@@ -135,7 +151,8 @@ class Controller extends EventEnabled
   __doSearch: ->
     @requestDone = true
     params = merge query_counter: ++@queryCounter, @params
-    request = @client.search @query, params, (err, response) =>
+
+    __getResults = (err, response) =>
       if err
         @trigger "df:results:error", [err]
 
@@ -151,6 +168,11 @@ class Controller extends EventEnabled
 
       else
         @trigger "df:results:discarded", [response]
+
+    if @items.length > 0
+      request = @client.getItems @items, params, __getResults
+    else
+      request = @client.search @query, params, __getResults
 
   ###*
    * Transform the response by passing it through a set of data processors,
