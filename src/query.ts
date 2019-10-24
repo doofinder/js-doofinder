@@ -76,8 +76,6 @@ export class Query {
    * This method adds a concrete filter to the current search request, and
    * resets the page counter
    *
-   * @param  {String}     context            The context to affect
-   *
    * @param  {String}     filterName         The name of the filter to set
    *
    * @param  {Any}        value              The value to set the filter to
@@ -99,7 +97,7 @@ export class Query {
     }
 
     if (!isPlainObject(value)) {
-      (filters[filterName] as Array<unknown>).push(value);
+      (filters[filterName] as Array<unknown>) = (filters[filterName] as Array<unknown>).concat(value);
     } else {
       filters[filterName] = value;
     }
@@ -111,8 +109,6 @@ export class Query {
   /**
    * This method removes a given filter to the current search request, and
    * resets the page counter
-   *
-   * @param  {String}     context            The context to affect
    *
    * @param  {String}     filterName         The name of the filter to modify
    *
@@ -126,12 +122,15 @@ export class Query {
     const filters: Facet = this.params[filterType] as Facet;
 
     if (filters[filterName]) {
-      const index: number = (filters[filterName] as Array<unknown>).indexOf(value);
+      if (!isPlainObject(value)) {
+        (value as Array<unknown>).forEach((value: unknown) => {
+          const index: number = (filters[filterName] as Array<unknown>).indexOf(value);
 
-      if (index !== -1) {
-        (filters[filterName] as Array<unknown>).splice(index, 1);
-        this.params[filterType] = filters;
-        this.params.page = 1;
+          if (index !== -1) {
+            (filters[filterName] as Array<unknown>).splice(index, 1);
+            this.params[filterType] = filters;
+          }
+        });
       }
     }
   }
@@ -152,7 +151,7 @@ export class Query {
    *                      filter set with any value
    *
    */
-  public hasFilter(filterName: string, value?: FacetOption, filterType = 'filter'): boolean {
+  public hasFilter(filterName: string, value?: FacetOption | string | number, filterType = 'filter'): boolean {
     const filters: Facet = (this.params[filterType] as Facet) || {};
     return filterName in filters && (!value || (filters[filterName] as Array<unknown>).indexOf(value) !== -1);
   }
@@ -170,11 +169,15 @@ export class Query {
    *                                         (default) or an "exclude" filter.
    *
    */
-  public toggleFilter(filterName: string, value: unknown, filterType = 'filter'): void {
-    if (!this.hasFilter(filterName, value, filterType)) {
-      this.addFilter(filterName, value, filterType);
-    } else {
-      this.removeFilter(filterName, value, filterType);
+  public toggleFilter(filterName: string, value: FacetOption, filterType = 'filter'): void {
+    if (!isPlainObject(value)) {
+      (value as Array<unknown>).forEach((value: any) => {
+        if (!this.hasFilter(filterName, value, filterType)) {
+          this.addFilter(filterName, [value], filterType);
+        } else {
+          this.removeFilter(filterName, [value], filterType);
+        }
+      });
     }
   }
 
@@ -189,7 +192,6 @@ export class Query {
    */
   public setFilters(filters: Facet, filterType = 'filter'): void {
     this.params[filterType] = filters;
-    this.params.page = 1;
   }
 
   /**

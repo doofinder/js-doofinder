@@ -93,17 +93,26 @@ describe("buildQueryString function", () => {
 
     const qs = buildQueryString(params);
 
-    qs.should.include(butEncoded('filter%5Btest%5D=%C3%B1aka'));
-    qs.should.include(butEncoded('filter%5Bgar%C3%A7on%5D=test%2Cvalue%2Cfrench'));
-    qs.should.include(butEncoded('filter%5Bquality%5D=check-in'));
-    qs.should.include(butEncoded('filter%5Bparenthesis%5D=this(null)%5B0%5D'));
-    qs.should.include(butEncoded('filter%5Bpercentage%5D=100%'));
+    qs.should.include('filter%5Btest%5D=%C3%B1aka');
+    qs.should.include('filter%5Bgar%C3%A7on%5D=test%2Cvalue%2Cfrench');
+    qs.should.include('filter%5Bquality%5D=check-in');
+    qs.should.include('filter%5Bparenthesis%5D=this(null)%5B0%5D');
+    qs.should.include('filter%5Bpercentage%5D=100%');
     
     done();
   });
 
   it("errs on non-object parameters", done => {
     const params = "myvalue";
+
+    //@ts-ignore
+    (() => buildQueryString(params)).should.throw();
+
+    done();
+  });
+
+  it("errs on array parameters", done => {
+    const params = ["myvalue", "anothervalue"];
 
     //@ts-ignore
     (() => buildQueryString(params)).should.throw();
