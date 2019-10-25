@@ -57,6 +57,11 @@ export class Query {
    */
   public setParameter(paramName: string, value: unknown): void {
     if (paramName !== 'params') {
+      if (paramName === 'sort') {
+        if (isPlainObject(value) && Object.keys(value).length > 1) {
+          throw new Error('To sort by multiple fields use an Array of Objects');
+        }
+      }
       this.params[paramName] = value;
     } else {
       throw new Error('Wrong parameter name!');
@@ -69,6 +74,10 @@ export class Query {
    *
    */
   public setParameters(parameters: SearchParameters): void {
+    if (isPlainObject(parameters.sort) && Object.keys(parameters.sort).length > 1) {
+      throw new Error('To sort by multiple fields use an Array of Objects');
+    }
+
     this.params = Object.assign({}, this.params, parameters);
   }
 
