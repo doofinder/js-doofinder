@@ -305,17 +305,27 @@ export class Query {
       if (field in (sortParams as GenericObject)) {
         (sortParams as GenericObject)[field] = order;
       } else {
-        (sortParams as Array<RequestSortOptions>) = [sortParams, { field: order }];
+        const obj: GenericObject = {};
+        obj[field] = order;
+        (sortParams as Array<RequestSortOptions>) = [sortParams, obj];
       }
     } else if (typeof sortParams === 'string') {
       if (field === sortParams) {
-        (sortParams as RequestSortOptions) = { field: order };
+        const obj: GenericObject = {};
+        obj[field] = order;
+        (sortParams as RequestSortOptions) = obj;
       } else {
-        (sortParams as RequestSortOptions) = [{ sortParams: Sort.ASC }, { field: order }];
+        const obj: GenericObject = {};
+        obj[sortParams] = Sort.ASC;
+        const newObj: GenericObject = {};
+        newObj[field] = order;
+        (sortParams as RequestSortOptions) = [obj, newObj];
       }
     } else if (isArray(sortParams)) {
       this.removeSorting(field);
-      (sortParams as Array<RequestSortOptions>).push({ field: order });
+      const obj: GenericObject = {};
+      obj[field] = order;
+      (sortParams as Array<RequestSortOptions>).push(obj);
     }
     this.params.sort = sortParams;
   }
