@@ -300,6 +300,7 @@ export class Query {
    *
    */
   public addSorting(field: string, order = Sort.ASC): void {
+    // prettier-ignore
     const sortParams = this.params.sort || [];
     if (isPlainObject(sortParams)) {
       if (field in (sortParams as GenericObject)) {
