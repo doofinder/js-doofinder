@@ -34,11 +34,42 @@ export class Query {
     } else if (typeof hashid === 'object') {
       // It's a complete object to pass on
       if ('params' in hashid) {
-        this.params = hashid['params'] as SearchParameters;
+        this.params = this._hydrate(hashid['params'] as SearchParameters);
       } else {
-        this.params = hashid;
+        this.params = this._hydrate(hashid);
       }
     }
+  }
+
+  private _parseSortingOptions(sortParams: RequestSortOptions): RequestSortOptions[] {
+    if (isPlainObject(sortParams) && Object.keys(sortParams).length > 1) {
+      throw new Error('To sort by multiple fields use an Array of Objects');
+    }
+
+    if (!isArray(sortParams)) {
+      if (isPlainObject(sortParams)) {
+        const res: Array<RequestSortOptions> = [];
+        res.push(sortParams);
+        return res;
+      } else if (typeof sortParams === 'string') {
+        const obj: RequestSortOptions = {};
+        obj[sortParams] = Sort.ASC;
+        const res: Array<RequestSortOptions> = [];
+        res.push(obj);
+        return res;
+      } else {
+        return null;
+      }
+    } else {
+      return sortParams as Array<RequestSortOptions>;
+    }
+  }
+
+  private _hydrate(params: SearchParameters): SearchParameters {
+    if ('sort' in params) {
+      params.sort = this._parseSortingOptions(params.sort) as RequestSortOptions;
+    }
+    return params;
   }
 
   /**
@@ -68,11 +99,10 @@ export class Query {
   public setParameter(paramName: string, value: unknown): void {
     if (paramName !== 'params') {
       if (paramName === 'sort') {
-        if (isPlainObject(value) && Object.keys(value).length > 1) {
-          throw new Error('To sort by multiple fields use an Array of Objects');
-        }
+        this.params['sort'] = this._parseSortingOptions(value as RequestSortOptions) as RequestSortOptions;
+      } else {
+        this.params[paramName] = value;
       }
-      this.params[paramName] = value;
     } else {
       throw new Error('Wrong parameter name!');
     }
@@ -84,11 +114,7 @@ export class Query {
    *
    */
   public setParameters(parameters: SearchParameters): void {
-    if (isPlainObject(parameters.sort) && Object.keys(parameters.sort).length > 1) {
-      throw new Error('To sort by multiple fields use an Array of Objects');
-    }
-
-    this.params = Object.assign({}, this.params, parameters);
+    this.params = Object.assign({}, this.params, this._hydrate(parameters));
   }
 
   /**
@@ -270,23 +296,13 @@ export class Query {
     }
 
     const sortParams = this.params.sort;
-    if (isPlainObject(sortParams)) {
-      if (field in (sortParams as GenericObject)) {
+    const index = this._findSortField(field, sortParams as Array<RequestSortOptions>);
+    if (index !== -1) {
+      (sortParams as Array<RequestSortOptions>).splice(index, 1);
+      if (sortParams.length === 0) {
         delete this.params.sort;
-      }
-    } else if (typeof sortParams === 'string') {
-      if (sortParams === field) {
-        delete this.params.sort;
-      }
-    } else if (isArray(sortParams)) {
-      const index = this._findSortField(field, sortParams as Array<RequestSortOptions>);
-      if (index !== -1) {
-        (sortParams as Array<RequestSortOptions>).splice(index, 1);
-        if (sortParams.length === 0) {
-          delete this.params.sort;
-        } else {
-          this.params.sort = sortParams;
-        }
+      } else {
+        this.params.sort = sortParams;
       }
     }
   }
@@ -303,43 +319,28 @@ export class Query {
     // This is so Prettier won't change it to const automagically
     let sortParams: RequestSortOptions = [];
     sortParams = this.params.sort || [];
-    if (isPlainObject(sortParams)) {
-      if (field in (sortParams as GenericObject)) {
-        (sortParams as GenericObject)[field] = order;
-      } else {
-        const obj: GenericObject = {};
-        obj[field] = order;
-        (sortParams as Array<RequestSortOptions>) = [sortParams, obj];
-      }
-    } else if (typeof sortParams === 'string') {
-      if (field === sortParams) {
-        const obj: GenericObject = {};
-        obj[field] = order;
-        (sortParams as RequestSortOptions) = obj;
-      } else {
-        const obj: GenericObject = {};
-        obj[sortParams] = Sort.ASC;
-        const newObj: GenericObject = {};
-        newObj[field] = order;
-        (sortParams as RequestSortOptions) = [obj, newObj];
-      }
-    } else if (isArray(sortParams)) {
-      this.removeSorting(field);
-      const obj: GenericObject = {};
-      obj[field] = order;
-      (sortParams as Array<RequestSortOptions>).push(obj);
-    }
+    this.removeSorting(field);
+    const obj: GenericObject = {};
+    obj[field] = order;
+    (sortParams as Array<RequestSortOptions>).push(obj);
+
     this.params.sort = sortParams;
+  }
+
+  /**
+   * Sets all the sorting options at once
+   *
+   * @param  {Array}  sortings    The sortings in the order wanted
+   *
+   */
+  public setSorting(sortings: Array<RequestSortOptions>): void {
+    this.params.sort = sortings as RequestSortOptions;
   }
 
   public hasSorting(field: string): boolean {
     if (!this.params.sort) {
       return false;
-    } else if (isPlainObject(this.params.sort)) {
-      return field in (this.params.sort as GenericObject);
-    } else if (typeof this.params.sort === 'string') {
-      return this.params.sort === field;
-    } else if (isArray(this.params.sort)) {
+    } else {
       return this._findSortField(field, this.params.sort as Array<RequestSortOptions>) !== -1;
     }
   }
