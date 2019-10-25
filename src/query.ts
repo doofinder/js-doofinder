@@ -300,8 +300,9 @@ export class Query {
    *
    */
   public addSorting(field: string, order = Sort.ASC): void {
-    // prettier-ignore
-    const sortParams = this.params.sort || [];
+    // This is so Prettier won't change it to const automagically
+    let sortParams: RequestSortOptions = [];
+    sortParams = this.params.sort || [];
     if (isPlainObject(sortParams)) {
       if (field in (sortParams as GenericObject)) {
         (sortParams as GenericObject)[field] = order;
