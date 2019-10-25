@@ -283,35 +283,27 @@ describe('Query', () => {
     });
 
     it('adding sort parameters when sort is a string', (done) => {
-      // given
+      // when
       let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
         sort: 'color'});
 
-      // when
-      q.addSorting('price', Sort.DESC);
-
       // then
       const params = q.getParams();
-      params.sort.length.should.be.equal(2);
+      params.sort.length.should.be.equal(1);
       params.sort.should.deep.include({'color': Sort.ASC});
-      params.sort.should.deep.include({'price': Sort.DESC});
 
       done();
     });
 
     it('adding sort parameters when sort is an object', (done) => {
-      // given
+      // when
       let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
         sort: {color: Sort.DESC}});
 
-      // when
-      q.addSorting('price', Sort.ASC);
-
       // then
       const params = q.getParams();
-      params.sort.length.should.be.equal(2);
+      params.sort.length.should.be.equal(1);
       params.sort.should.deep.include({'color': Sort.DESC});
-      params.sort.should.deep.include({'price': Sort.ASC});
 
       done();
     });
@@ -329,6 +321,25 @@ describe('Query', () => {
       params.sort.length.should.be.equal(2);
       params.sort.should.deep.include({color: Sort.ASC});
       params.sort.should.deep.include({price: Sort.DESC});
+
+      done();
+    });
+
+    it('setting the sort parameters works', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
+        sort: [{price: Sort.ASC}, {color: Sort.ASC}]});
+
+      // when
+      q.setSorting([{size: Sort.DESC}, {name: Sort.ASC}]);
+
+      // then
+      const params = q.getParams();
+      params.sort.length.should.be.equal(2);
+      params.sort.should.deep.include({size: Sort.DESC});
+      params.sort.should.deep.include({name: Sort.ASC});
+      params.sort.should.not.deep.include({price: Sort.ASC});
+      params.sort.should.not.deep.include({color: Sort.ASC});
 
       done();
     });
