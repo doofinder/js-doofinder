@@ -11,7 +11,7 @@ import * as cfg from './config';
 // required for tests
 import { Query } from '../src/query';
 import { QueryTypes, TransformerOptions, DoofinderParameters,
- Facet, FacetOption, SearchParameters } from '../src/types';
+ Facet, FacetOption, SearchParameters, Sort, RequestSortOptions } from '../src/types';
 
 
 describe('Query', () => {
@@ -260,6 +260,188 @@ describe('Query', () => {
       params.filter.should.not.have.property('brand');
       params.filter.should.have.property('model');
       params.filter.should.have.property('color');
+
+      done();
+    });
+  });
+
+  context('Query sorting parameter methods', () => {
+    it('adding sort parameters works correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2});
+
+      // when
+      q.addSorting('price');
+
+      // then
+      const params = q.getParams();
+      params.sort.length.should.be.equal(1);
+      (params.sort as Array<RequestSortOptions>)[0].should.have.property('price');
+      (params.sort as Array<any>)[0].price.should.be.equal(Sort.ASC);
+
+      done();
+    });
+
+    it('adding sort parameters when sort is a string', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
+        sort: 'color'});
+
+      // when
+      q.addSorting('price', Sort.DESC);
+
+      // then
+      const params = q.getParams();
+      params.sort.length.should.be.equal(2);
+      params.sort.should.deep.include({'color': Sort.ASC});
+      params.sort.should.deep.include({'price': Sort.DESC});
+
+      done();
+    });
+
+    it('adding sort parameters when sort is an object', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
+        sort: {color: Sort.DESC}});
+
+      // when
+      q.addSorting('price', Sort.ASC);
+
+      // then
+      const params = q.getParams();
+      params.sort.length.should.be.equal(2);
+      params.sort.should.deep.include({'color': Sort.DESC});
+      params.sort.should.deep.include({'price': Sort.ASC});
+
+      done();
+    });
+
+    it('adding an existing sort parameter modifies it', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
+        sort: [{price: Sort.ASC}, {color: Sort.ASC}]});
+
+      // when
+      q.addSorting('price', Sort.DESC);
+
+      // then
+      const params = q.getParams();
+      params.sort.length.should.be.equal(2);
+      params.sort.should.deep.include({color: Sort.ASC});
+      params.sort.should.deep.include({price: Sort.DESC});
+
+      done();
+    });
+
+    it('removing a sort parameter works correctly', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
+        sort: [{price: Sort.ASC}, {color: Sort.ASC}]});
+
+      // when
+      q.removeSorting('color');
+
+      // then
+      const params = q.getParams();
+      params.sort.length.should.be.equal(1);
+      params.sort.should.deep.include({price: Sort.ASC});
+      params.sort.should.not.deep.include({color: Sort.ASC});
+      params.sort.should.not.deep.include({color: Sort.DESC});
+
+      done();
+    });
+
+    it('removing a sort parameter when it is a string works', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
+        sort: 'color'});
+
+      // when
+      q.removeSorting('color');
+
+      // then
+      const params = q.getParams();
+      params.should.not.have.property('sort');
+
+      done();
+    });
+
+    it('removing a sort parameter when it is an object works', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
+        sort: {'color': Sort.ASC}});
+
+      // when
+      q.removeSorting('color');
+
+      // then
+      const params = q.getParams();
+      params.should.not.have.property('sort');
+
+      done();
+    });
+
+    it('removing a non existent sort parameter does nothing', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
+        sort: [{price: Sort.ASC}, {color: Sort.ASC}]});
+
+      // when
+      q.removeSorting('size');
+
+      // then
+      const params = q.getParams();
+      params.sort.length.should.be.equal(2);
+      params.sort.should.deep.include({price: Sort.ASC});
+      params.sort.should.deep.include({color: Sort.ASC});
+
+      done();
+    });
+
+    it('hasSorting returns proper values when asked', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
+        sort: [{price: Sort.ASC}, {color: Sort.ASC}]});
+
+      // then
+      q.hasSorting('price').should.be.true;
+      q.hasSorting('color').should.be.true;
+      q.hasSorting('size').should.be.false;
+
+      done();
+    });
+
+    it('hasSorting returns proper values when string sorting', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
+        sort: 'color'});
+      
+      // then
+      q.hasSorting('color').should.be.true;
+      q.hasSorting('price').should.be.false;
+
+      done();
+    });
+
+    it('hasSorting when it is an object works', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
+        sort: {'color': Sort.ASC}});
+
+      // then
+      q.hasSorting('color').should.be.true;
+      q.hasSorting('price').should.be.false;
+
+      done();
+    });
+
+    it('hasSorting when there is no sorting works', (done) => {
+      // given
+      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2});
+
+      // then
+      q.hasSorting('color').should.be.false;
+      q.hasSorting('price').should.be.false;
 
       done();
     });
