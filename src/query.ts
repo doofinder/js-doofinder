@@ -1,4 +1,14 @@
-import { QueryTypes, TransformerOptions, DoofinderParameters, Facet, FacetOption, SearchParameters } from './types';
+import {
+  QueryTypes,
+  TransformerOptions,
+  DoofinderParameters,
+  Facet,
+  FacetOption,
+  SearchParameters,
+  Sort,
+  GenericObject,
+  RequestSortOptions,
+} from './types';
 import { isPlainObject, isArray } from './util/is';
 
 /**
@@ -235,6 +245,91 @@ export class Query {
    */
   public setExclusions(filters: Facet): void {
     this.setFilters(filters, 'exclude');
+  }
+
+  private _findSortField(field: string, sortParams: Array<RequestSortOptions>): number {
+    let index = -1;
+    sortParams.forEach((sort: RequestSortOptions, idx: number) => {
+      if (field in (sort as GenericObject)) {
+        index = idx;
+      }
+    });
+
+    return index;
+  }
+
+  /**
+   * Remove a sorting field from the parameters
+   *
+   * @param   {String}    field   The field we want to remove the ordering
+   *
+   */
+  public removeSorting(field: string): void {
+    if (!this.params.sort) {
+      return;
+    }
+
+    const sortParams = this.params.sort;
+    if (isPlainObject(sortParams)) {
+      if (field in (sortParams as GenericObject)) {
+        delete this.params.sort;
+      }
+    } else if (typeof sortParams === 'string') {
+      if (sortParams === field) {
+        delete this.params.sort;
+      }
+    } else if (isArray(sortParams)) {
+      const index = this._findSortField(field, sortParams as Array<RequestSortOptions>);
+      if (index !== -1) {
+        (sortParams as Array<RequestSortOptions>).splice(index, 1);
+        if (sortParams.length === 0) {
+          delete this.params.sort;
+        } else {
+          this.params.sort = sortParams;
+        }
+      }
+    }
+  }
+
+  /**
+   * Adds or alters a sorting parameter to the query
+   *
+   * @param  {String}   field   The field to order by
+   *
+   * @param  {String}   order   Order literal to order by
+   *
+   */
+  public addSorting(field: string, order = Sort.ASC): void {
+    const sortParams = this.params.sort || [];
+    if (isPlainObject(sortParams)) {
+      if (field in (sortParams as GenericObject)) {
+        (sortParams as GenericObject)[field] = order;
+      } else {
+        (sortParams as Array<RequestSortOptions>) = [sortParams, { field: order }];
+      }
+    } else if (typeof sortParams === 'string') {
+      if (field === sortParams) {
+        (sortParams as RequestSortOptions) = { field: order };
+      } else {
+        (sortParams as RequestSortOptions) = [{ sortParams: Sort.ASC }, { field: order }];
+      }
+    } else if (isArray(sortParams)) {
+      this.removeSorting(field);
+      (sortParams as Array<RequestSortOptions>).push({ field: order });
+    }
+    this.params.sort = sortParams;
+  }
+
+  public hasSorting(field: string): boolean {
+    if (!this.params.sort) {
+      return false;
+    } else if (isPlainObject(this.params.sort)) {
+      return field in (this.params.sort as GenericObject);
+    } else if (typeof this.params.sort === 'string') {
+      return this.params.sort === field;
+    } else if (isArray(this.params.sort)) {
+      return this._findSortField(field, this.params.sort as Array<RequestSortOptions>) !== -1;
+    }
   }
 
   /**
