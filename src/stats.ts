@@ -1,5 +1,5 @@
-import { Client, StatsEvent } from './client';
-import { GenericObject } from './types';
+import { Client } from './client';
+import { GenericObject, StatsEvent } from './types';
 import { isDfid } from './util/is';
 
 export class StatsClient extends Client {
