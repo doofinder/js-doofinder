@@ -299,10 +299,6 @@ export class Client {
       queryParams.type = queryParams.type[0];
     }
 
-    if (isPlainObject(queryParams.sort) && Object.keys(queryParams.sort).length > 1) {
-      throw new Error('To sort by multiple fields use an Array of Objects');
-    }
-
     return buildQueryString(queryParams);
   }
 

@@ -1,4 +1,14 @@
-import { QueryTypes, TransformerOptions, DoofinderParameters, Facet, FacetOption, SearchParameters } from './types';
+import {
+  QueryTypes,
+  TransformerOptions,
+  DoofinderParameters,
+  Facet,
+  FacetOption,
+  SearchParameters,
+  Sort,
+  GenericObject,
+  RequestSortOptions,
+} from './types';
 import { isPlainObject, isArray } from './util/is';
 
 /**
@@ -24,11 +34,48 @@ export class Query {
     } else if (typeof hashid === 'object') {
       // It's a complete object to pass on
       if ('params' in hashid) {
-        this.params = hashid['params'] as SearchParameters;
+        this.params = this._hydrate(hashid['params'] as SearchParameters);
       } else {
-        this.params = hashid;
+        this.params = this._hydrate(hashid);
       }
     }
+  }
+
+  private _parseSortingOptions(sortParams: RequestSortOptions): RequestSortOptions[] {
+    if (isPlainObject(sortParams) && Object.keys(sortParams).length > 1) {
+      throw new Error('To sort by multiple fields use an Array of Objects');
+    }
+
+    if (!isArray(sortParams)) {
+      if (isPlainObject(sortParams)) {
+        const res: Array<RequestSortOptions> = [];
+        res.push(sortParams);
+        return res;
+      } else if (typeof sortParams === 'string') {
+        const obj: RequestSortOptions = {};
+        obj[sortParams] = Sort.ASC;
+        const res: Array<RequestSortOptions> = [];
+        res.push(obj);
+        return res;
+      } else {
+        return null;
+      }
+    } else {
+      return sortParams as Array<RequestSortOptions>;
+    }
+  }
+
+  private _hydrate(params: SearchParameters): SearchParameters {
+    if ('sort' in params) {
+      params.sort = this._parseSortingOptions(params.sort) as RequestSortOptions;
+    }
+    // Filter nulls
+    Object.keys(params).forEach((key: string) => {
+      if (!params[key]) {
+        delete params[key];
+      }
+    });
+    return params;
   }
 
   /**
@@ -56,10 +103,10 @@ export class Query {
    *
    */
   public setParameter(paramName: string, value: unknown): void {
-    if (paramName !== 'params') {
-      this.params[paramName] = value;
+    if (paramName === 'sort') {
+      this.params['sort'] = this._parseSortingOptions(value as RequestSortOptions) as RequestSortOptions;
     } else {
-      throw new Error('Wrong parameter name!');
+      this.params[paramName] = value;
     }
   }
 
@@ -69,14 +116,12 @@ export class Query {
    *
    */
   public setParameters(parameters: SearchParameters): void {
-    this.params = Object.assign({}, this.params, parameters);
+    this.params = Object.assign({}, this.params, this._hydrate(parameters));
   }
 
   /**
    * This method adds a concrete filter to the current search request, and
    * resets the page counter
-   *
-   * @param  {String}     context            The context to affect
    *
    * @param  {String}     filterName         The name of the filter to set
    *
@@ -99,7 +144,7 @@ export class Query {
     }
 
     if (!isPlainObject(value)) {
-      (filters[filterName] as Array<unknown>).push(value);
+      (filters[filterName] as Array<unknown>) = (filters[filterName] as Array<unknown>).concat(value);
     } else {
       filters[filterName] = value;
     }
@@ -111,8 +156,6 @@ export class Query {
   /**
    * This method removes a given filter to the current search request, and
    * resets the page counter
-   *
-   * @param  {String}     context            The context to affect
    *
    * @param  {String}     filterName         The name of the filter to modify
    *
@@ -126,12 +169,15 @@ export class Query {
     const filters: Facet = this.params[filterType] as Facet;
 
     if (filters[filterName]) {
-      const index: number = (filters[filterName] as Array<unknown>).indexOf(value);
+      if (isArray(value)) {
+        (value as Array<unknown>).forEach((value: unknown) => {
+          const index: number = (filters[filterName] as Array<unknown>).indexOf(value);
 
-      if (index !== -1) {
-        (filters[filterName] as Array<unknown>).splice(index, 1);
-        this.params[filterType] = filters;
-        this.params.page = 1;
+          if (index !== -1) {
+            (filters[filterName] as Array<unknown>).splice(index, 1);
+            this.params[filterType] = filters;
+          }
+        });
       }
     }
   }
@@ -152,7 +198,7 @@ export class Query {
    *                      filter set with any value
    *
    */
-  public hasFilter(filterName: string, value?: FacetOption, filterType = 'filter'): boolean {
+  public hasFilter(filterName: string, value?: FacetOption | string | number, filterType = 'filter'): boolean {
     const filters: Facet = (this.params[filterType] as Facet) || {};
     return filterName in filters && (!value || (filters[filterName] as Array<unknown>).indexOf(value) !== -1);
   }
@@ -170,11 +216,15 @@ export class Query {
    *                                         (default) or an "exclude" filter.
    *
    */
-  public toggleFilter(filterName: string, value: unknown, filterType = 'filter'): void {
-    if (!this.hasFilter(filterName, value, filterType)) {
-      this.addFilter(filterName, value, filterType);
-    } else {
-      this.removeFilter(filterName, value, filterType);
+  public toggleFilter(filterName: string, value: FacetOption, filterType = 'filter'): void {
+    if (!isPlainObject(value)) {
+      (value as Array<unknown>).forEach((value: any) => {
+        if (!this.hasFilter(filterName, value, filterType)) {
+          this.addFilter(filterName, [value], filterType);
+        } else {
+          this.removeFilter(filterName, [value], filterType);
+        }
+      });
     }
   }
 
@@ -189,7 +239,6 @@ export class Query {
    */
   public setFilters(filters: Facet, filterType = 'filter'): void {
     this.params[filterType] = filters;
-    this.params.page = 1;
   }
 
   /**
@@ -224,6 +273,78 @@ export class Query {
    */
   public setExclusions(filters: Facet): void {
     this.setFilters(filters, 'exclude');
+  }
+
+  private _findSortField(field: string, sortParams: Array<RequestSortOptions>): number {
+    let index = -1;
+    sortParams.forEach((sort: RequestSortOptions, idx: number) => {
+      if (field in (sort as GenericObject)) {
+        index = idx;
+      }
+    });
+
+    return index;
+  }
+
+  /**
+   * Remove a sorting field from the parameters
+   *
+   * @param   {String}    field   The field we want to remove the ordering
+   *
+   */
+  public removeSorting(field: string): void {
+    if (!this.params.sort) {
+      return;
+    }
+
+    const sortParams = this.params.sort;
+    const index = this._findSortField(field, sortParams as Array<RequestSortOptions>);
+    if (index !== -1) {
+      (sortParams as Array<RequestSortOptions>).splice(index, 1);
+      if (sortParams.length === 0) {
+        delete this.params.sort;
+      } else {
+        this.params.sort = sortParams;
+      }
+    }
+  }
+
+  /**
+   * Adds or alters a sorting parameter to the query
+   *
+   * @param  {String}   field   The field to order by
+   *
+   * @param  {String}   order   Order literal to order by
+   *
+   */
+  public addSorting(field: string, order = Sort.ASC): void {
+    // This is so Prettier won't change it to const automagically
+    let sortParams: RequestSortOptions = [];
+    sortParams = this.params.sort || [];
+    this.removeSorting(field);
+    const obj: GenericObject = {};
+    obj[field] = order;
+    (sortParams as Array<RequestSortOptions>).push(obj);
+
+    this.params.sort = sortParams;
+  }
+
+  /**
+   * Sets all the sorting options at once
+   *
+   * @param  {Array}  sortings    The sortings in the order wanted
+   *
+   */
+  public setSorting(sortings: Array<RequestSortOptions>): void {
+    this.params.sort = sortings as RequestSortOptions;
+  }
+
+  public hasSorting(field: string): boolean {
+    if (!this.params.sort) {
+      return false;
+    } else {
+      return this._findSortField(field, this.params.sort as Array<RequestSortOptions>) !== -1;
+    }
   }
 
   /**
@@ -285,10 +406,12 @@ export class Query {
    *
    */
   public addType(type: string): void {
-    const typeParam: string[] = [];
+    let typeParam: string[] = [];
 
     if (typeof this.params.type === 'string') {
       typeParam.push(this.params.type);
+    } else if (this.params.type) {
+      typeParam = this.params.type;
     }
 
     typeParam.push(type);
