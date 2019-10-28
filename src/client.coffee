@@ -96,9 +96,9 @@ class Client
    * @return {http.ClientRequest}
    * @public
   ###
-  request: (resource, callback, payLoad = null) ->
+  request: (resource, callback, payload) ->
     options = merge path: resource, @requestOptions
-    @httpClient.request options, callback, payLoad
+    @httpClient.request options, callback, payload
 
   #
   # Main Endpoints
@@ -151,9 +151,7 @@ class Client
   ###
   getItems: (items, params, callback) ->
     querystring = @__buildSearchQueryString "", params
-    payLoad =
-      items: items
-    @request "/#{@version}/getitems?#{querystring}", callback, payLoad
+    @request "/#{@version}/getitems?#{querystring}", callback, items: items
 
   ###*
    * Perform a request to get options for a search engine.

@@ -23,18 +23,18 @@ class HttpClient
    *                             and the second one is the response, if any.
    * @return {http.ClientRequest}
   ###
-  request: (options, callback, payLoad = null) ->
+  request: (options, callback, payload) ->
     if Thing.is.string options
       options = host: options
 
     unless Thing.is.fn callback
       throw (errors.error "A callback is needed!", @)
 
-    if payLoad
+    if payload?
       options.method = "POST"
       options.headers['Content-Type'] = "application/json"
-      payLoad = JSON.stringify(payLoad)
-      options["Content-Length"] = payLoad.length
+      payload = JSON.stringify(payload)
+      options["Content-Length"] = payload.length
 
     req = @http.request options, (response) ->
       data = ""
@@ -57,7 +57,7 @@ class HttpClient
       callback error: error
 
     if options.method == 'POST'
-      req.write(payLoad)
+      req.write(payload)
 
     req.end()
     req

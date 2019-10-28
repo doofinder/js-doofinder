@@ -112,15 +112,12 @@
      * @public
      */
 
-    Client.prototype.request = function(resource, callback, payLoad) {
+    Client.prototype.request = function(resource, callback, payload) {
       var options;
-      if (payLoad == null) {
-        payLoad = null;
-      }
       options = merge({
         path: resource
       }, this.requestOptions);
-      return this.httpClient.request(options, callback, payLoad);
+      return this.httpClient.request(options, callback, payload);
     };
 
 
@@ -176,12 +173,11 @@
      */
 
     Client.prototype.getItems = function(items, params, callback) {
-      var payLoad, querystring;
+      var querystring;
       querystring = this.__buildSearchQueryString("", params);
-      payLoad = {
+      return this.request("/" + this.version + "/getitems?" + querystring, callback, {
         items: items
-      };
-      return this.request("/" + this.version + "/getitems?" + querystring, callback, payLoad);
+      });
     };
 
 
@@ -3193,11 +3189,8 @@
      * @return {http.ClientRequest}
      */
 
-    HttpClient.prototype.request = function(options, callback, payLoad) {
+    HttpClient.prototype.request = function(options, callback, payload) {
       var req;
-      if (payLoad == null) {
-        payLoad = null;
-      }
       if (Thing.is.string(options)) {
         options = {
           host: options
@@ -3206,11 +3199,11 @@
       if (!Thing.is.fn(callback)) {
         throw errors.error("A callback is needed!", this);
       }
-      if (payLoad) {
+      if (payload != null) {
         options.method = "POST";
         options.headers['Content-Type'] = "application/json";
-        payLoad = JSON.stringify(payLoad);
-        options["Content-Length"] = payLoad.length;
+        payload = JSON.stringify(payload);
+        options["Content-Length"] = payload.length;
       }
       req = this.http.request(options, function(response) {
         var data;
@@ -3244,7 +3237,7 @@
         });
       });
       if (options.method === 'POST') {
-        req.write(payLoad);
+        req.write(payload);
       }
       req.end();
       return req;
