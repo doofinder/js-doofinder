@@ -69,6 +69,12 @@ export class Query {
     if ('sort' in params) {
       params.sort = this._parseSortingOptions(params.sort) as RequestSortOptions;
     }
+    // Filter nulls
+    Object.keys(params).forEach((key: string) => {
+      if (!params[key]) {
+        delete params[key];
+      }
+    });
     return params;
   }
 
@@ -97,14 +103,10 @@ export class Query {
    *
    */
   public setParameter(paramName: string, value: unknown): void {
-    if (paramName !== 'params') {
-      if (paramName === 'sort') {
-        this.params['sort'] = this._parseSortingOptions(value as RequestSortOptions) as RequestSortOptions;
-      } else {
-        this.params[paramName] = value;
-      }
+    if (paramName === 'sort') {
+      this.params['sort'] = this._parseSortingOptions(value as RequestSortOptions) as RequestSortOptions;
     } else {
-      throw new Error('Wrong parameter name!');
+      this.params[paramName] = value;
     }
   }
 
@@ -167,7 +169,7 @@ export class Query {
     const filters: Facet = this.params[filterType] as Facet;
 
     if (filters[filterName]) {
-      if (!isPlainObject(value)) {
+      if (isArray(value)) {
         (value as Array<unknown>).forEach((value: unknown) => {
           const index: number = (filters[filterName] as Array<unknown>).indexOf(value);
 
