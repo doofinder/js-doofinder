@@ -8,14 +8,14 @@ import { expectAsync } from './util/async';
 should();
 
 // required for tests
-import { Client, ClientResponseError, StatsEvent } from '../src/client';
+import { Client, ClientResponseError } from '../src/client';
 
 // config, utils & mocks
 import * as cfg from './config';
 
 // Mock the fetch API
 import * as fetchMock from 'fetch-mock';
-import { Zone, DoofinderParameters, SortDefinition, Sort, RequestSortOptions } from '../src/types';
+import { Zone, DoofinderParameters, SortDefinition, Sort, StatsEvent, RequestSortOptions } from '../src/types';
 import { isPlainObject } from '../src/util/is';
 
 function buildQuery(query?: string, params?: DoofinderParameters) {
