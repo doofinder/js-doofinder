@@ -10,3 +10,14 @@ export const isPlainObject = (value: unknown): boolean =>
 export const isNull = (element: unknown): boolean => !(typeof element !== 'undefined' && element !== null);
 
 export const isValidZone = (zone: string): boolean => Object.values(Zone).includes(zone as Zone);
+
+const dfidRegex = /^([0-9a-f]{32})@([\w-]+)@([0-9a-f]{32})$/i;
+
+/**
+ * Returns True if the string conforms to a
+ * doofinder ID
+ *
+ */
+export function isDfid(str: string): boolean {
+  return dfidRegex.test(str);
+}
