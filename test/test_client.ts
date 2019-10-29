@@ -2,6 +2,7 @@
 import 'mocha';
 import { should, expect } from 'chai';
 
+// TODO: Using chai-as-promised this can be removed
 import { expectAsync } from './util/async';
 
 // chai
