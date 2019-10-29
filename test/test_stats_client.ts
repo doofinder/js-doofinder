@@ -137,6 +137,50 @@ describe('StatsClient', () => {
       fetchMock.lastUrl().should.include('custom_results_id=140');
       response.status.should.be.equal(200);
     });
+  });
 
+  context('should register checkouts correctly', () => {
+    it('passes commands as expected', async () => {
+      // given
+      let sc = new StatsClient({zone: Zone.EU, apiKey: 'eu1-abcd'});
+
+      // when
+      const response = await sc.registerCheckout('SessionID');
+
+      // then
+      fetchMock.lastUrl().should.include('checkout');
+      fetchMock.lastUrl().should.include('session_id=SessionID');
+      response.status.should.be.equal(200);
+    });
+  });
+
+  context('should banner events correctly', () => {
+    it('registers banner displays as expected', async () => {
+      // given
+      let sc = new StatsClient({zone: Zone.EU, apiKey: 'eu1-abcd'});
+
+      // when
+      const response = await sc.registerDisplayBannerEvent('SessionID', 33);
+
+      // then
+      fetchMock.lastUrl().should.include('banner_display');
+      fetchMock.lastUrl().should.include('session_id=SessionID');
+      fetchMock.lastUrl().should.include('banner_id=33');
+      response.status.should.be.equal(200);
+    });
+
+    it('registers banner clicks as expected', async () => {
+      // given
+      let sc = new StatsClient({zone: Zone.EU, apiKey: 'eu1-abcd'});
+
+      // when
+      const response = await sc.registerClickBannerEvent('SessionID', 33);
+
+      // then
+      fetchMock.lastUrl().should.include('banner_click');
+      fetchMock.lastUrl().should.include('session_id=SessionID');
+      fetchMock.lastUrl().should.include('banner_id=33');
+      response.status.should.be.equal(200);
+    });
   });
 });
