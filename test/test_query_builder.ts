@@ -471,7 +471,7 @@ describe('Query', () => {
       done();
     });
 
-    it('next Page should be set correctly', (done) => {
+    it('next page should be set correctly', (done) => {
       // given
       const pageNum = Math.floor((Math.random() * 10) + 1);
       let q = new Query({hashid: cfg.hashid, rpp: 10, page: pageNum});
