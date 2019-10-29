@@ -75,9 +75,8 @@ export class StatsClient extends Client {
    *
    * @param   {String}    sessionId   Optional. The session ID
    *
-   * @param   {Function}  callback    Optional. The callback to launch
    */
-  public async registerCheckout(sessionId: string, callback?: Function): Promise<GenericObject> {
+  public async registerCheckout(sessionId: string): Promise<GenericObject> {
     const params = {
       session_id: sessionId,
       hashid: this.hashid,
