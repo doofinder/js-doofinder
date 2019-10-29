@@ -2,22 +2,37 @@ import { Client } from './client';
 import { GenericObject, StatsEvent } from './types';
 import { isDfid } from './util/is';
 
-export class StatsClient extends Client {
+export class StatsClient {
+  private client: Client;
+
+  public constructor(client: Client) {
+    this.client = client;
+  }
+
+  /**
+   * Allows changing the current client we
+   * are using
+   *
+   * @param  {Object}   client    The new Doofinder Client to use
+   *
+   */
+  public use(client: Client): void {
+    this.client = client;
+  }
+
   /**
    * Registers a new session with Doofinder, and returns
    * the session ID generated for this session
    *
    * @param   {String}     sessionId   The sessionId
    *
-   * @param   {Function}   callback    Optional, callback after everything works
-   *
    * @return  {String}     The newly generated Session ID
    */
   public async requestSession(sessionId: string, hashid?: string): Promise<GenericObject> {
     if (hashid) {
-      this.hashid = hashid;
+      this.client.hashid = hashid;
     }
-    return await this.stats(StatsEvent.Init, { session_id: sessionId, hashid: this.hashid });
+    return await this.client.stats(StatsEvent.Init, { session_id: sessionId });
   }
 
   /**
@@ -49,7 +64,6 @@ export class StatsClient extends Client {
   ): Promise<GenericObject> {
     const params: GenericObject = {
       session_id: sessionId,
-      hashid: this.hashid,
     };
 
     if (isDfid(id)) {
@@ -67,7 +81,7 @@ export class StatsClient extends Client {
       params['custom_results_id'] = customResultsId;
     }
 
-    return await this.stats(StatsEvent.Click, params);
+    return await this.client.stats(StatsEvent.Click, params);
   }
 
   /**
@@ -79,10 +93,9 @@ export class StatsClient extends Client {
   public async registerCheckout(sessionId: string): Promise<GenericObject> {
     const params = {
       session_id: sessionId,
-      hashid: this.hashid,
     };
 
-    return await this.stats(StatsEvent.Checkout, params);
+    return await this.client.stats(StatsEvent.Checkout, params);
   }
 
   /**
@@ -95,11 +108,10 @@ export class StatsClient extends Client {
   public async registerDisplayBannerEvent(sessionId: string, bannerId: number): Promise<GenericObject> {
     const params = {
       session_id: sessionId,
-      hashid: this.hashid,
       banner_id: '' + bannerId,
     };
 
-    return await this.stats(StatsEvent.BannerDisplay, params);
+    return await this.client.stats(StatsEvent.BannerDisplay, params);
   }
 
   /**
@@ -112,10 +124,9 @@ export class StatsClient extends Client {
   public async registerClickBannerEvent(sessionId: string, bannerId: number): Promise<GenericObject> {
     const params = {
       session_id: sessionId,
-      hashid: this.hashid,
       banner_id: '' + bannerId,
     };
 
-    return await this.stats(StatsEvent.BannerClick, params);
+    return await this.client.stats(StatsEvent.BannerClick, params);
   }
 }

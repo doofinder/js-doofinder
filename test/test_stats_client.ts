@@ -9,6 +9,7 @@ use(chaiAsPromised);
 should();
 
 // required for tests
+import { Client } from '../src/client';
 import { StatsClient } from '../src/stats';
 
 // config, utils & mocks
@@ -21,6 +22,7 @@ import { isPlainObject } from '../src/util/is';
 
 const ENDPOINT = 'https://eu1-search.doofinder.com/5/stats/';
 const TEST_DFID = 'ffffffffffffffffffffffffffffffff@product@ffffffffffffffffffffffffffffffff';
+const TEST_CLIENT = new Client({zone: Zone.EU, apiKey: 'eu1-abcd'});
 
 describe('StatsClient', () => {
   beforeEach(() => {
@@ -41,20 +43,21 @@ describe('StatsClient', () => {
   context('StatsClient inner workings', () => {
     it('should set the correct hashid when sent with new session', async () => {
       // given
-      let sc = new StatsClient({zone: Zone.EU, apiKey: 'eu1-abcd'});
+      const client = new Client({zone: Zone.EU, apiKey: 'eu1-abcd'});
+      let sc = new StatsClient(client);
 
       // when
-      const req = await sc.requestSession('myInventedSessionId', cfg.hashid);
+      const req = await sc.requestSession('myInventedSessionId', 'ffffffffffffffffffffffffffffffff');
 
       // then
-      sc.hashid.should.be.equal(cfg.hashid);
+      fetchMock.lastUrl().should.include('hashid=ffffffffffffffffffffffffffffffff');
     });
   });
 
   context('StatsClient session requests', () => {
     it('should make a correct init call in requestSession', async () => {
       // given
-      let sc = new StatsClient({zone: Zone.EU, apiKey: 'eu1-abcd'});
+      let sc = new StatsClient(TEST_CLIENT);
 
       // when
       const response = await sc.requestSession('anotherSessionID', cfg.hashid);
@@ -70,7 +73,7 @@ describe('StatsClient', () => {
   context('StatsClient click registration', () => {
     it('should make a correct click call in registerClick with dfid', async () => {
       // given
-      let sc = new StatsClient({zone: Zone.EU, apiKey: 'eu1-abcd'});
+      let sc = new StatsClient(TEST_CLIENT);
 
       // when
       const response = await sc.registerClick('SessionID', TEST_DFID);
@@ -84,7 +87,7 @@ describe('StatsClient', () => {
 
     it('registerClick should reject incorrect dfid', () => {
       // given
-      let sc = new StatsClient({zone: Zone.EU, apiKey: 'eu1-abcd'});
+      let sc = new StatsClient(TEST_CLIENT);
 
       // when
       return sc.registerClick('SessionID', TEST_DFID).should.eventually.throw;
@@ -92,7 +95,7 @@ describe('StatsClient', () => {
 
     it('should make a correct click call in registerClick with id and datatype', async () => {
       // given
-      let sc = new StatsClient({zone: Zone.EU, apiKey: 'eu1-abcd'});
+      let sc = new StatsClient(TEST_CLIENT);
 
       // when
       const response = await sc.registerClick('SessionID', 'SKU10044', 'product');
@@ -107,7 +110,7 @@ describe('StatsClient', () => {
 
     it('should add query correctly', async () => {
       // given
-      let sc = new StatsClient({zone: Zone.EU, apiKey: 'eu1-abcd'});
+      let sc = new StatsClient(TEST_CLIENT);
 
       // when
       const response = await sc.registerClick('SessionID', 'SKU10044', 'product', 'hammer');
@@ -123,7 +126,7 @@ describe('StatsClient', () => {
 
     it('should add custom results id correctly', async () => {
       // given
-      let sc = new StatsClient({zone: Zone.EU, apiKey: 'eu1-abcd'});
+      let sc = new StatsClient(TEST_CLIENT);
 
       // when
       const response = await sc.registerClick('SessionID', 'SKU10044', 'product', 'hammer', 140);
@@ -142,7 +145,7 @@ describe('StatsClient', () => {
   context('should register checkouts correctly', () => {
     it('passes commands as expected', async () => {
       // given
-      let sc = new StatsClient({zone: Zone.EU, apiKey: 'eu1-abcd'});
+      let sc = new StatsClient(TEST_CLIENT);
 
       // when
       const response = await sc.registerCheckout('SessionID');
@@ -157,7 +160,7 @@ describe('StatsClient', () => {
   context('should banner events correctly', () => {
     it('registers banner displays as expected', async () => {
       // given
-      let sc = new StatsClient({zone: Zone.EU, apiKey: 'eu1-abcd'});
+      let sc = new StatsClient(TEST_CLIENT);
 
       // when
       const response = await sc.registerDisplayBannerEvent('SessionID', 33);
@@ -171,7 +174,7 @@ describe('StatsClient', () => {
 
     it('registers banner clicks as expected', async () => {
       // given
-      let sc = new StatsClient({zone: Zone.EU, apiKey: 'eu1-abcd'});
+      let sc = new StatsClient(TEST_CLIENT);
 
       // when
       const response = await sc.registerClickBannerEvent('SessionID', 33);
