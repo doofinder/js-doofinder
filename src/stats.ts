@@ -2,6 +2,22 @@ import { Client } from './client';
 import { GenericObject, StatsEvent } from './types';
 import { isDfid } from './util/is';
 
+interface BaseStatsParams {
+  sessionId: string;
+  hashid?: string;
+}
+
+interface ClickStatsParams extends BaseStatsParams {
+  id: string;
+  datatype?: string;
+  query?: string;
+  customResultsId?: string | number;
+}
+
+interface BannerStatsParams extends BaseStatsParams {
+  bannerId: number;
+}
+
 export class StatsClient {
   private client: Client;
 
@@ -28,7 +44,11 @@ export class StatsClient {
    *
    * @return  {String}     The newly generated Session ID
    */
-  public async requestSession(sessionId: string, hashid?: string): Promise<GenericObject> {
+  public async requestSession({ sessionId, hashid }: BaseStatsParams): Promise<GenericObject> {
+    if (!sessionId) {
+      throw new Error('Session ID must be defined');
+    }
+
     if (hashid) {
       this.client.hashid = hashid;
     }
@@ -55,16 +75,25 @@ export class StatsClient {
    *                                        being clicked.
    *
    */
-  public async registerClick(
-    sessionId: string,
-    id: string,
-    datatype?: string,
-    query?: string,
-    customResultsId?: string | number
-  ): Promise<GenericObject> {
+  public async registerClick({
+    sessionId,
+    hashid,
+    id,
+    datatype,
+    query,
+    customResultsId,
+  }: ClickStatsParams): Promise<GenericObject> {
+    if (!sessionId) {
+      throw new Error('Session ID must be defined');
+    }
+
     const params: GenericObject = {
       session_id: sessionId,
     };
+
+    if (hashid) {
+      params['hashid'] = hashid;
+    }
 
     if (isDfid(id)) {
       params['dfid'] = id;
@@ -75,7 +104,9 @@ export class StatsClient {
       throw new Error('Must declare a dfid or an id and datatype');
     }
 
-    params['query'] = query || '';
+    if (query) {
+      params['query'] = query;
+    }
 
     if (customResultsId) {
       params['custom_results_id'] = customResultsId;
@@ -90,10 +121,18 @@ export class StatsClient {
    * @param   {String}    sessionId   Optional. The session ID
    *
    */
-  public async registerCheckout(sessionId: string): Promise<GenericObject> {
-    const params = {
+  public async registerCheckout({ sessionId, hashid }: BaseStatsParams): Promise<GenericObject> {
+    if (!sessionId) {
+      throw new Error('Session ID must be defined');
+    }
+
+    const params: GenericObject = {
       session_id: sessionId,
     };
+
+    if (hashid) {
+      params['hashid'] = hashid;
+    }
 
     return await this.client.stats(StatsEvent.Checkout, params);
   }
@@ -105,11 +144,19 @@ export class StatsClient {
    * @param  {Number}    bannerId    The banner ID
    *
    */
-  public async registerDisplayBannerEvent(sessionId: string, bannerId: number): Promise<GenericObject> {
-    const params = {
+  public async registerDisplayBannerEvent({ sessionId, bannerId, hashid }: BannerStatsParams): Promise<GenericObject> {
+    if (!sessionId) {
+      throw new Error('Session ID must be defined');
+    }
+
+    const params: GenericObject = {
       session_id: sessionId,
-      banner_id: '' + bannerId,
+      banner_id: bannerId,
     };
+
+    if (hashid) {
+      params['hashid'] = hashid;
+    }
 
     return await this.client.stats(StatsEvent.BannerDisplay, params);
   }
@@ -121,11 +168,19 @@ export class StatsClient {
    * @param  {Number}    bannerId    The banner ID
    *
    */
-  public async registerClickBannerEvent(sessionId: string, bannerId: number): Promise<GenericObject> {
-    const params = {
+  public async registerClickBannerEvent({ sessionId, bannerId, hashid }: BannerStatsParams): Promise<GenericObject> {
+    if (!sessionId) {
+      throw new Error('Session ID must be defined');
+    }
+
+    const params: GenericObject = {
       session_id: sessionId,
-      banner_id: '' + bannerId,
+      banner_id: bannerId,
     };
+
+    if (hashid) {
+      params['hashid'] = hashid;
+    }
 
     return await this.client.stats(StatsEvent.BannerClick, params);
   }
