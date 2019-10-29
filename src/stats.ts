@@ -144,7 +144,7 @@ export class StatsClient {
    * @param  {Number}    bannerId    The banner ID
    *
    */
-  public async registerDisplayBannerEvent({ sessionId, bannerId, hashid }: BannerStatsParams): Promise<GenericObject> {
+  public async registerBannerDisplayEvent({ sessionId, bannerId, hashid }: BannerStatsParams): Promise<GenericObject> {
     if (!sessionId) {
       throw new Error('Session ID must be defined');
     }
@@ -168,7 +168,7 @@ export class StatsClient {
    * @param  {Number}    bannerId    The banner ID
    *
    */
-  public async registerClickBannerEvent({ sessionId, bannerId, hashid }: BannerStatsParams): Promise<GenericObject> {
+  public async registerBannerClickEvent({ sessionId, bannerId, hashid }: BannerStatsParams): Promise<GenericObject> {
     if (!sessionId) {
       throw new Error('Session ID must be defined');
     }

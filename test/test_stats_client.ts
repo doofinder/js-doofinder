@@ -171,7 +171,7 @@ describe('StatsClient', () => {
       let sc = new StatsClient(TEST_CLIENT);
 
       // when
-      const response = await sc.registerDisplayBannerEvent({sessionId: 'SessionID', bannerId: 33});
+      const response = await sc.registerBannerDisplayEvent({sessionId: 'SessionID', bannerId: 33});
 
       // then
       fetchMock.lastUrl().should.include('banner_display');
@@ -185,7 +185,7 @@ describe('StatsClient', () => {
       let sc = new StatsClient(TEST_CLIENT);
 
       // when
-      const response = await sc.registerClickBannerEvent({sessionId: 'SessionID', bannerId: 33});
+      const response = await sc.registerBannerClickEvent({sessionId: 'SessionID', bannerId: 33});
 
       // then
       fetchMock.lastUrl().should.include('banner_click');
