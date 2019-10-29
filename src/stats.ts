@@ -91,7 +91,6 @@ export class StatsClient extends Client {
    *
    * @param  {Number}    bannerId    The banner ID
    *
-   * @param  {Function}  callback    The callback to launch
    */
   public async registerDisplayBannerEvent(sessionId: string, bannerId: number): Promise<GenericObject> {
     const params = {
@@ -109,7 +108,6 @@ export class StatsClient extends Client {
    *
    * @param  {Number}    bannerId    The banner ID
    *
-   * @param  {Function}  callback    The callback to launch
    */
   public async registerClickBannerEvent(sessionId: string, bannerId: number): Promise<GenericObject> {
     const params = {
