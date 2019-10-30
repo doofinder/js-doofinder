@@ -47,7 +47,7 @@ describe('StatsClient', () => {
       let sc = new StatsClient(client);
 
       // when
-      const req = await sc.requestSession({sessionId: 'myInventedSessionId', hashid: 'ffffffffffffffffffffffffffffffff'});
+      const req = await sc.registerSession({sessionId: 'myInventedSessionId', hashid: 'ffffffffffffffffffffffffffffffff'});
 
       // then
       fetchMock.lastUrl().should.include('hashid=ffffffffffffffffffffffffffffffff');
@@ -55,12 +55,12 @@ describe('StatsClient', () => {
   });
 
   context('StatsClient session requests', () => {
-    it('should make a correct init call in requestSession', async () => {
+    it('should make a correct init call in registerSession', async () => {
       // given
       let sc = new StatsClient(TEST_CLIENT);
 
       // when
-      const response = await sc.requestSession({sessionId: 'anotherSessionID', hashid: cfg.hashid});
+      const response = await sc.registerSession({sessionId: 'anotherSessionID', hashid: cfg.hashid});
 
       // then
       fetchMock.lastUrl().should.include('init');
