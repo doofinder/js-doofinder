@@ -1,4 +1,4 @@
-import { DoofinderParameters, Zone, GenericObject } from './types';
+import { DoofinderParameters, Zone, GenericObject, StatsEvent } from './types';
 
 import { Query } from './query';
 import { DoofinderResult } from './result';
@@ -20,14 +20,6 @@ export interface ClientOptions {
   hashid: string;
   serverAddress: string;
   headers: Partial<ClientHeaders>;
-}
-
-export enum StatsEvent {
-  Init = 'init',
-  Click = 'click',
-  Checkout = 'checkout',
-  BannerDisplay = 'banner_display',
-  BannerClick = 'banner_click',
 }
 
 export class ClientResponseError extends Error {
