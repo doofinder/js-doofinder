@@ -51,7 +51,15 @@ export class StatsClient {
       throw new Error(ERR_NO_SESSID);
     }
 
-    return this.client.stats(StatsEvent.Init, { session_id: sessionId });
+    const params: GenericObject = {
+      session_id: sessionId,
+    };
+
+    if (hashid) {
+      params['hashid'] = hashid;
+    }
+
+    return this.client.stats(StatsEvent.Init, params);
   }
 
   /**
