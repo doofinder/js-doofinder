@@ -4,6 +4,7 @@ import {
   DoofinderParameters,
   Facet,
   FacetOption,
+  RangeFacet,
   SearchParameters,
   Sort,
   GenericObject,
@@ -200,7 +201,11 @@ export class Query {
    */
   public hasFilter(filterName: string, value?: FacetOption | string | number, filterType = 'filter'): boolean {
     const filters: Facet = (this.params[filterType] as Facet) || {};
-    return filterName in filters && (!value || (filters[filterName] as Array<unknown>).indexOf(value) !== -1);
+    // This returns true if the filter is a range, we don't compare
+    return (
+      filterName in filters &&
+      (!value || isPlainObject(filters[filterName]) || (filters[filterName] as Array<unknown>).indexOf(value) !== -1)
+    );
   }
 
   /**
@@ -216,16 +221,22 @@ export class Query {
    *                                         (default) or an "exclude" filter.
    *
    */
-  public toggleFilter(filterName: string, value: FacetOption, filterType = 'filter'): void {
-    if (!isPlainObject(value)) {
-      (value as Array<unknown>).forEach((value: any) => {
-        if (!this.hasFilter(filterName, value, filterType)) {
-          this.addFilter(filterName, [value], filterType);
-        } else {
-          this.removeFilter(filterName, [value], filterType);
-        }
-      });
+  public toggleFilter(filterName: string, value: FacetOption | string | number, filterType = 'filter'): void {
+    let values: Array<RangeFacet | string | number> = [];
+
+    if (Array.isArray(value)) {
+      values = value;
+    } else if (typeof value === 'string' || typeof value === 'number' || isPlainObject(value)) {
+      values = [value];
     }
+
+    (values as Array<unknown>).forEach((value: any) => {
+      if (this.hasFilter(filterName, value, filterType)) {
+        this.removeFilter(filterName, [value], filterType);
+      } else {
+        this.addFilter(filterName, [value], filterType);
+      }
+    });
   }
 
   /**
