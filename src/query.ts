@@ -225,7 +225,7 @@ export class Query {
       (values as Array<unknown>).push(value);
     }
 
-    (value as Array<unknown>).forEach((value: any) => {
+    (values as Array<unknown>).forEach((value: any) => {
       if (!this.hasFilter(filterName, value, filterType)) {
         this.addFilter(filterName, [value], filterType);
       } else {
