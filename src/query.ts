@@ -216,16 +216,22 @@ export class Query {
    *                                         (default) or an "exclude" filter.
    *
    */
-  public toggleFilter(filterName: string, value: FacetOption, filterType = 'filter'): void {
-    if (!isPlainObject(value)) {
-      (value as Array<unknown>).forEach((value: any) => {
-        if (!this.hasFilter(filterName, value, filterType)) {
-          this.addFilter(filterName, [value], filterType);
-        } else {
-          this.removeFilter(filterName, [value], filterType);
-        }
-      });
+  public toggleFilter(filterName: string, value: FacetOption | string | number, filterType = 'filter'): void {
+    let values: FacetOption = [];
+
+    if (isArray(value)) {
+      values = value as FacetOption;
+    } else if (typeof value === 'string' || typeof value === 'number') {
+      (values as Array<unknown>).push(value);
     }
+
+    (value as Array<unknown>).forEach((value: any) => {
+      if (!this.hasFilter(filterName, value, filterType)) {
+        this.addFilter(filterName, [value], filterType);
+      } else {
+        this.removeFilter(filterName, [value], filterType);
+      }
+    });
   }
 
   /**
