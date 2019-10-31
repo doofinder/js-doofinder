@@ -205,7 +205,7 @@ describe('Query', () => {
       let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2});
 
       // when
-      q.toggleFilter('brand', ['Ferrari']);
+      q.toggleFilter('brand', 'Ferrari');
 
       // then
       const params = q.getParams();
