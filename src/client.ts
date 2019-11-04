@@ -4,7 +4,7 @@ import { Query } from './query';
 import { DoofinderResult } from './result';
 
 import { buildQueryString } from './util/encode-params';
-import { isArray, isPlainObject, isValidZone } from './util/is';
+import { isArray, isValidZone } from './util/is';
 
 export interface ClientHeaders extends GenericObject<string> {
   Accept: string;
@@ -106,6 +106,7 @@ export class Client {
     this.headers = Object.assign(
       {
         Accept: 'application/json',
+        'Content-Type': 'application/json',
       },
       headers || {}
     );
@@ -119,15 +120,22 @@ export class Client {
    * Performs a HTTP request to the endpoint specified with the default
    * options of the client.
    *
-   * @param  {String}   resource Resource to be called by GET.
+   * @param  {String}   resource Resource to be called by GET and POST.
+   * @param  {object}   payload  Resource to be called by POST.
    * @return {Promise<Response>}
    */
-  public async request(resource: string): Promise<Response> {
-    const response = await fetch(resource, {
-      method: 'GET',
+  public async request(resource: string, payload?: object): Promise<Response> {
+    const method: string = typeof payload === 'undefined' ? 'GET' : 'POST';
+    const requestInit: GenericObject = {
+      method: method,
       mode: 'cors',
       headers: Object.assign({}, this.headers),
-    });
+    };
+    if (method == 'POST') {
+      requestInit['body'] = JSON.stringify(payload);
+    }
+    const init = Object.assign({}, requestInit);
+    const response = await fetch(resource, init);
 
     if (response.ok) {
       return response;
@@ -164,7 +172,7 @@ export class Client {
    *                               sort:
    *                                 field: "asc" | "desc"
    *                               sort: [{field: "asc|desc"}]
-   * @param  {Boolean}  wrapper  Tell the client to return a class object instead of
+   * @param  {Boolean}  wrap  Tell the client to return a class object instead of
    *                             the raw value returned by the endpoint. Defaults to true
    *
    *
@@ -176,7 +184,13 @@ export class Client {
     wrap = true
   ): Promise<Response | DoofinderResult> {
     const qs: string = this.buildSearchQueryString(query, params);
-    const response: Response = await this.request(this.buildUrl('/search', qs));
+    let response: Response;
+    if (query instanceof Query && query.items) {
+      response = await this.request(this.buildUrl('/getitems', qs), { items: query.items });
+    } else {
+      response = await this.request(this.buildUrl('/search', qs));
+    }
+
     const data = await response.json();
     return wrap ? new DoofinderResult(data) : data;
   }
@@ -184,12 +198,7 @@ export class Client {
   /**
    * Perform a request to get options for a search engine.
    *
-   * @param  {String}   suffix   Optional suffix to add to the request URL. Can
-   *                             be something like a domain, so the URL looks
-   *                             like /<version>/options/<hashid>?example.com.
-   * @param  {Function} callback Callback to be called when the response is
-   *                             received. First param is the error, if any,
-   *                             and the second one is the response, if any.
+   * @param  {String}   qs   Query string value to use in the query request.
    * @return {Promise<Response>}
    */
   public async options(qs?: string): Promise<GenericObject> {
@@ -201,10 +210,7 @@ export class Client {
    * Performs a request to submit stats events to Doofinder.
    *
    * @param  {String}   eventName Type of stats. Configures the endpoint.
-   * @param  {Object}   params    Parameters for the query string.
-   * @param  {Function} callback  Callback to be called when the response is
-   *                              received. First param is the error, if any,
-   *                              and the second one is the response, if any.
+   * @param  {Object}   eventParams    Parameters for the query string.
    * @return {Promise<Response>}
    */
 
