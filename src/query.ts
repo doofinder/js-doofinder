@@ -87,8 +87,9 @@ export class Query {
    * @param  {String}   query   The search query to be sent.
    *
    */
-  public search(query: string): void {
+  public search(query: string): Query {
     this.params.query = query;
+    return this;
   }
 
   /**
@@ -96,8 +97,9 @@ export class Query {
    * counter and set to empty the query term
    * @param {String[]}     items            The dfid list
    */
-  public searchItems(items: string[]): void {
+  public searchItems(items: string[]): Query {
     this.items = items;
+    return this;
   }
 
   /**
@@ -142,7 +144,7 @@ export class Query {
    *                                         or an "exclude" filter.
    *
    */
-  public addFilter(filterName: string, value: FacetOption, filterType = 'filter'): void {
+  public addFilter(filterName: string, value: FacetOption, filterType = 'filter'): Query {
     let filters: Facet = {};
 
     if (filterType in this.params) {
@@ -161,6 +163,7 @@ export class Query {
 
     this.params[filterType] = filters;
     this.params.page = 1;
+    return this;
   }
 
   /**
@@ -259,8 +262,9 @@ export class Query {
    * @param  {Any}        value              The value to set the exclusion to
    *
    */
-  public addExclusion(filterName: string, value: FacetOption): void {
+  public addExclusion(filterName: string, value: FacetOption): Query {
     this.addFilter(filterName, value, 'exclude');
+    return this;
   }
 
   /**
@@ -327,7 +331,7 @@ export class Query {
    * @param  {String}   order   Order literal to order by
    *
    */
-  public addSorting(field: string, order = Sort.ASC): void {
+  public addSorting(field: string, order = Sort.ASC): Query {
     // This is so Prettier won't change it to const automagically
     let sortParams: RequestSortOptions = [];
     sortParams = this.params.sort || [];
@@ -337,6 +341,7 @@ export class Query {
     (sortParams as Array<RequestSortOptions>).push(obj);
 
     this.params.sort = sortParams;
+    return this;
   }
 
   /**
@@ -415,7 +420,7 @@ export class Query {
    * @param  {String}   type    The type to be added for the search
    *
    */
-  public addType(type: string): void {
+  public addType(type: string): Query {
     let typeParam: string[] = [];
 
     if (typeof this.params.type === 'string') {
@@ -426,6 +431,7 @@ export class Query {
 
     typeParam.push(type);
     this.setParameter('type', typeParam);
+    return this;
   }
 
   /**
