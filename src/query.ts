@@ -125,7 +125,7 @@ export class Query {
    * counter and set to empty the query term
    * @param {String[]}     items            The dfid list
    */
-  public addItems(items: string[]): void {
+  public searchItems(items: string[]): void {
     this.items = items;
     this.params.query = '';
     this.params.page = 1;

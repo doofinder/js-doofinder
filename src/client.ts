@@ -172,27 +172,31 @@ export class Client {
    *                               sort:
    *                                 field: "asc" | "desc"
    *                               sort: [{field: "asc|desc"}]
-   * @param  {Boolean}  wrap  Tell the client to return a class object instead of
-   *                             the raw value returned by the endpoint. Defaults to true
    *
    *
    * @return {Promise<Response>}
    */
-  public async search(
-    query: string | Query,
-    params?: DoofinderParameters,
-    wrap = true
-  ): Promise<Response | DoofinderResult> {
+  public async search(query: string | Query, params?: DoofinderParameters): Promise<Response | DoofinderResult> {
     const qs: string = this.buildSearchQueryString(query, params);
-    let response: Response;
-    if (query instanceof Query && query.items) {
-      response = await this.request(this.buildUrl('/getitems', qs), { items: query.items });
-    } else {
-      response = await this.request(this.buildUrl('/search', qs));
-    }
-
+    const response = await this.request(this.buildUrl('/search', qs));
     const data = await response.json();
-    return wrap ? new DoofinderResult(data) : data;
+    return new DoofinderResult(data);
+  }
+
+  /**
+   * Perform a get items request.
+   *
+   * @param {Query}   query   Query definition for get items request. This query
+   *                          must has the items list defined.
+   */
+  public async getItems(query: Query): Promise<Response | DoofinderResult> {
+    const qs: string = this.buildSearchQueryString(query);
+
+    if (!query.items) throw Error('Invalid query definition for get items request. You must define the items id list.');
+
+    const response = await this.request(this.buildUrl('/getitems', qs), { items: query.items });
+    const data = await response.json();
+    return new DoofinderResult(data);
   }
 
   /**

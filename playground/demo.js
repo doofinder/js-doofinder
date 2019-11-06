@@ -1,6 +1,6 @@
 function demo({ Client, Query, Zone }) {
   const client = new Client({ zone: Zone.EU });
-  const query = new Query('ebcd012c7f7172c3e16d7f40fe8a8842');
+  const query = new Query('c0604b71c273c1fb3ef13eb2adfa4452');
 
   // CASE 1
   query.search('led');
@@ -12,13 +12,13 @@ function demo({ Client, Query, Zone }) {
   });
 
   // Doing get items search
-  const query2 = new Query('ebcd012c7f7172c3e16d7f40fe8a8842');
+  const query2 = new Query('c0604b71c273c1fb3ef13eb2adfa4452');
   let items = [
-      "ebcd012c7f7172c3e16d7f40fe8a8842@product@a684eceee76fc522773286a895bc8436",
-      "ebcd012c7f7172c3e16d7f40fe8a8842@test_2@66f041e16a60928b05a7e228a89c3799"
+      "c0604b71c273c1fb3ef13eb2adfa4452@product@b137eb4183c4e03586f8ae9257bbf3bc",
+      "c0604b71c273c1fb3ef13eb2adfa4452@product@aaa77a0735b6312a741f903324a022b2"
   ];
-  query2.addItems(items);
-  client.search(query2).then(result => {
+  query2.searchItems(items);
+  client.getItems(query2).then(result => {
     console.log(result)
   });
 }

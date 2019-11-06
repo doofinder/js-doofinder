@@ -3,7 +3,8 @@
     "noImplicitAny": true,
     "moduleResolution": "Node",
     "module": "esnext",
-    "target": "esnext"
+    "target": "esnext",
+    "outDir": "out"
   },
   "include": [
     "src/**/*.ts"
