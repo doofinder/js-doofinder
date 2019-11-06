@@ -92,6 +92,15 @@ export class Query {
   }
 
   /**
+   * Add the items dfid to the current search request, reset the page
+   * counter and set to empty the query term
+   * @param {String[]}     items            The dfid list
+   */
+  public searchItems(items: string[]): void {
+    this.items = items;
+  }
+
+  /**
    * Puts the query in an empty state
    *
    */
@@ -118,17 +127,6 @@ export class Query {
    */
   public setParameters(parameters: SearchParameters): void {
     this.params = Object.assign({}, this.params, this._hydrate(parameters));
-  }
-
-  /**
-   * Add the items dfid to the current search request, reset the page
-   * counter and set to empty the query term
-   * @param {String[]}     items            The dfid list
-   */
-  public searchItems(items: string[]): void {
-    this.items = items;
-    this.params.query = '';
-    this.params.page = 1;
   }
 
   /**
