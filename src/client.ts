@@ -34,6 +34,13 @@ export class ClientResponseError extends Error {
   }
 }
 
+export class ClientError extends Error {
+  public constructor(message?: string) {
+    super(message);
+    this.name = 'ClientError';
+  }
+}
+
 /**
  * This class allows searching and sending stats using the Doofinder service.
  */
@@ -192,7 +199,7 @@ export class Client {
   public async getItems(query: Query): Promise<Response | DoofinderResult> {
     const qs: string = this.buildSearchQueryString(query);
 
-    if (!query.items) throw Error('Invalid query definition for get items request. You must define the items id list.');
+    if (!query.items) throw new ClientError('invalid items query');
 
     const response = await this.request(this.buildUrl('/getitems', qs), { items: query.items });
     const data = await response.json();
