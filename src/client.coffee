@@ -151,7 +151,7 @@ class Client
   ###
   getItems: (items, params, callback) ->
     querystring = @__buildSearchQueryString "", params
-    @request "/#{@version}/getitems?#{querystring}", callback, items: items
+    @request "/#{@version}/search?#{querystring}", callback, items: items
 
   ###*
    * Perform a request to get options for a search engine.

@@ -175,7 +175,7 @@
     Client.prototype.getItems = function(items, params, callback) {
       var querystring;
       querystring = this.__buildSearchQueryString("", params);
-      return this.request("/" + this.version + "/getitems?" + querystring, callback, {
+      return this.request("/" + this.version + "/search?" + querystring, callback, {
         items: items
       });
     };
