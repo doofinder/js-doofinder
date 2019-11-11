@@ -921,7 +921,7 @@
 },{"./client":1,"./util/errors":7,"./util/eventEnabled":8,"./util/freezer":9,"./util/merge":12,"./util/thing":15,"./widgets/widget":23,"qs":45}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.8.1",
+    version: "5.9.0",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
