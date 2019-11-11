@@ -112,12 +112,12 @@
      * @public
      */
 
-    Client.prototype.request = function(resource, callback) {
+    Client.prototype.request = function(resource, callback, payload) {
       var options;
       options = merge({
         path: resource
       }, this.requestOptions);
-      return this.httpClient.request(options, callback);
+      return this.httpClient.request(options, callback, payload);
     };
 
 
@@ -161,6 +161,23 @@
       }
       querystring = this.__buildSearchQueryString(query, params);
       return this.request("/" + this.version + "/search?" + querystring, callback);
+    };
+
+
+    /**
+     * Peform a get items query request
+     * @params {Object} list of dfids to get
+     * @param  {Object}   params   Parameters for the request. Optional.
+     * @return {http.ClientRequest}
+     * @public
+     */
+
+    Client.prototype.getItems = function(items, params, callback) {
+      var querystring;
+      querystring = this.__buildSearchQueryString("", params);
+      return this.request("/" + this.version + "/search?" + querystring, callback, {
+        items: items
+      });
     };
 
 
@@ -352,20 +369,25 @@
      *
      * @param  {String} query  Search terms.
      * @param  {Object} params Optional search parameters.
+     * @param  {Object} items to search using getItems method
      * @return {Object}        Updated status.
      */
 
-    Controller.prototype.reset = function(query, params) {
+    Controller.prototype.reset = function(query, params, items) {
       if (query == null) {
         query = null;
       }
       if (params == null) {
         params = {};
       }
+      if (items == null) {
+        items = [];
+      }
       this.query = query;
       this.params = merge({}, this.defaults, params, {
         page: 1
       });
+      this.items = items;
       this.requestDone = false;
       return this.lastPage = null;
     };
@@ -397,6 +419,26 @@
         params = {};
       }
       this.reset(query, params);
+      this.__doSearch();
+      return this.trigger("df:search", [this.query, this.params]);
+    };
+
+
+    /**
+     * Performs a get items request.
+     * Page will always be 1 in this case.
+     *
+     * @param  {Object} dfid list to get.
+     * @param  {Object} params Search parameters.
+     * @return {http.ClientRequest}
+     * @public
+     */
+
+    Controller.prototype.getItems = function(items, params) {
+      if (params == null) {
+        params = {};
+      }
+      this.reset(null, params, items);
       this.__doSearch();
       return this.trigger("df:search", [this.query, this.params]);
     };
@@ -456,12 +498,12 @@
      */
 
     Controller.prototype.__doSearch = function() {
-      var params, request;
+      var __getResults, params, request;
       this.requestDone = true;
       params = merge({
         query_counter: ++this.queryCounter
       }, this.params);
-      return request = this.client.search(this.query, params, (function(_this) {
+      __getResults = (function(_this) {
         return function(err, response) {
           if (err) {
             return _this.trigger("df:results:error", [err]);
@@ -478,7 +520,12 @@
             return _this.trigger("df:results:discarded", [response]);
           }
         };
-      })(this));
+      })(this);
+      if (this.items.length > 0) {
+        return request = this.client.getItems(this.items, params, __getResults);
+      } else {
+        return request = this.client.search(this.query, params, __getResults);
+      }
     };
 
 
@@ -3152,7 +3199,7 @@
      * @return {http.ClientRequest}
      */
 
-    HttpClient.prototype.request = function(options, callback) {
+    HttpClient.prototype.request = function(options, callback, payload) {
       var req;
       if (Thing.is.string(options)) {
         options = {
@@ -3162,7 +3209,13 @@
       if (!Thing.is.fn(callback)) {
         throw errors.error("A callback is needed!", this);
       }
-      req = this.http.get(options, function(response) {
+      if (payload != null) {
+        options.method = "POST";
+        options.headers['Content-Type'] = "application/json";
+        payload = JSON.stringify(payload);
+        options["Content-Length"] = payload.length;
+      }
+      req = this.http.request(options, function(response) {
         var data;
         data = "";
         response.setEncoding("utf-8");
@@ -3193,6 +3246,10 @@
           error: error
         });
       });
+      if (options.method === 'POST') {
+        req.write(payload);
+      }
+      req.end();
       return req;
     };
 
