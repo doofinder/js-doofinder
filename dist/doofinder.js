@@ -3145,6 +3145,16 @@
           };
         }
       });
+    },
+    addEscapeAttrValueHelper: function(context, value) {
+      return merge(context, {
+        "escape-attr-value": function() {
+          return function(text, render) {
+            value = render(text);
+            return value.replace('"', '%22');
+          };
+        }
+      });
     }
   };
 
