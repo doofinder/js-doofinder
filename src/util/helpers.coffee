@@ -179,3 +179,9 @@ module.exports =
       (text, render) ->
         value = parseFloat (render text), 10
         if isNaN value then "" else (formatNumber value, currency)
+
+  addEscapeAttrValueHelper: (context, value) ->
+    merge context, "escape-attr-value": ->
+      (text, render) ->
+        value = render text
+        value.replace('"', '%22')
