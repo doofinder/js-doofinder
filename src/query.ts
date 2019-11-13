@@ -1,10 +1,12 @@
 import {
   QueryTypes,
+  Filter,
   TransformerOptions,
   DoofinderParameters,
   Facet,
   FacetOption,
   RangeFacet,
+  TermsFacet,
   SearchParameters,
   Sort,
   GenericObject,
@@ -22,6 +24,7 @@ import { isPlainObject, isArray } from './util/is';
 export class Query {
   private params: SearchParameters = {};
   private hashid: string = null;
+  private _includeFilter: Filter = new Map();
 
   public constructor(hashid?: string | SearchParameters | Query) {
     if (typeof hashid === 'string') {
@@ -42,41 +45,16 @@ export class Query {
     }
   }
 
-  private _parseSortingOptions(sortParams: RequestSortOptions): RequestSortOptions[] {
-    if (isPlainObject(sortParams) && Object.keys(sortParams).length > 1) {
-      throw new Error('To sort by multiple fields use an Array of Objects');
-    }
-
-    if (!isArray(sortParams)) {
-      if (isPlainObject(sortParams)) {
-        const res: Array<RequestSortOptions> = [];
-        res.push(sortParams);
-        return res;
-      } else if (typeof sortParams === 'string') {
-        const obj: RequestSortOptions = {};
-        obj[sortParams] = Sort.ASC;
-        const res: Array<RequestSortOptions> = [];
-        res.push(obj);
-        return res;
+  get includeFilter(): GenericObject {
+    const result: GenericObject = {};
+    this._includeFilter.forEach((value, key) => {
+      if (value instanceof Set) {
+        result[key] = [...value];
       } else {
-        return null;
-      }
-    } else {
-      return sortParams as Array<RequestSortOptions>;
-    }
-  }
-
-  private _hydrate(params: SearchParameters): SearchParameters {
-    if ('sort' in params) {
-      params.sort = this._parseSortingOptions(params.sort) as RequestSortOptions;
-    }
-    // Filter nulls
-    Object.keys(params).forEach((key: string) => {
-      if (!params[key]) {
-        delete params[key];
+        result[key] = value;
       }
     });
-    return params;
+    return result;
   }
 
   /**
@@ -87,8 +65,9 @@ export class Query {
    * @param  {String}   query   The search query to be sent.
    *
    */
-  public search(query: string): void {
+  public search(query: string): Query {
     this.params.query = query;
+    return this;
   }
 
   /**
@@ -133,7 +112,7 @@ export class Query {
    *                                         or an "exclude" filter.
    *
    */
-  public addFilter(filterName: string, value: FacetOption, filterType = 'filter'): void {
+  public addFilter(filterName: string, value: FacetOption, filterType = 'filter'): Query {
     let filters: Facet = {};
 
     if (filterType in this.params) {
@@ -152,6 +131,18 @@ export class Query {
 
     this.params[filterType] = filters;
     this.params.page = 1;
+    return this;
+  }
+
+  public addFilter2(filterName: string, value: FacetOption): Query {
+    if (typeof value === 'string' || typeof value === 'number') {
+      this._addSingleFilterValue(filterName, value);
+    } else if (isArray(value)) {
+      this._addListFilterValue(filterName, value as []);
+    } else {
+      this._addRangeFilter(filterName, value as RangeFacet);
+    }
+    return this;
   }
 
   /**
@@ -284,17 +275,6 @@ export class Query {
    */
   public setExclusions(filters: Facet): void {
     this.setFilters(filters, 'exclude');
-  }
-
-  private _findSortField(field: string, sortParams: Array<RequestSortOptions>): number {
-    let index = -1;
-    sortParams.forEach((sort: RequestSortOptions, idx: number) => {
-      if (field in (sort as GenericObject)) {
-        index = idx;
-      }
-    });
-
-    return index;
   }
 
   /**
@@ -551,5 +531,81 @@ export class Query {
    */
   public getQuery(): string {
     return this.params.query;
+  }
+
+  private _parseSortingOptions(sortParams: RequestSortOptions): RequestSortOptions[] {
+    if (isPlainObject(sortParams) && Object.keys(sortParams).length > 1) {
+      throw new Error('To sort by multiple fields use an Array of Objects');
+    }
+
+    if (!isArray(sortParams)) {
+      if (isPlainObject(sortParams)) {
+        const res: Array<RequestSortOptions> = [];
+        res.push(sortParams);
+        return res;
+      } else if (typeof sortParams === 'string') {
+        const obj: RequestSortOptions = {};
+        obj[sortParams] = Sort.ASC;
+        const res: Array<RequestSortOptions> = [];
+        res.push(obj);
+        return res;
+      } else {
+        return null;
+      }
+    } else {
+      return sortParams as Array<RequestSortOptions>;
+    }
+  }
+
+  private _hydrate(params: SearchParameters): SearchParameters {
+    if ('sort' in params) {
+      params.sort = this._parseSortingOptions(params.sort) as RequestSortOptions;
+    }
+    // Filter nulls
+    Object.keys(params).forEach((key: string) => {
+      if (!params[key]) {
+        delete params[key];
+      }
+    });
+    return params;
+  }
+
+  private _findSortField(field: string, sortParams: Array<RequestSortOptions>): number {
+    let index = -1;
+    sortParams.forEach((sort: RequestSortOptions, idx: number) => {
+      if (field in (sort as GenericObject)) {
+        index = idx;
+      }
+    });
+
+    return index;
+  }
+
+  private _addSingleFilterValue(filterName: string, value: string | number): void {
+    if (this._includeFilter.has(filterName)) {
+      if (this._includeFilter.get(filterName) instanceof Set) {
+        (this._includeFilter.get(filterName) as TermsFacet).add(value);
+      } else {
+        // TODO: Define the correct exception here.
+        throw new Error('Error adding value in not terms facet value filter');
+      }
+    } else {
+      this._includeFilter.set(filterName, new Set([value]));
+    }
+  }
+
+  private _addListFilterValue(filterName: string, values: []): void {
+    if (this._includeFilter.has(filterName)) {
+      for (const value of values) {
+        this._addSingleFilterValue(filterName, value);
+      }
+    } else {
+      this._includeFilter.set(filterName, new Set([...values]));
+    }
+  }
+
+  private _addRangeFilter(filterName: string, value: RangeFacet): void {
+    // TODO: implement current validations.
+    this._includeFilter.set(filterName, value);
   }
 }

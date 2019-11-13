@@ -21,7 +21,7 @@ export interface RangeFacet {
 /**
  * Type definition of a single facet
  */
-export type FacetOption = RangeFacet | string[] | number[];
+export type FacetOption = RangeFacet | string[] | number[] | string | number;
 
 /**
  * Type holding all the current facets
