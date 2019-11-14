@@ -1,18 +1,38 @@
 import {
   QueryTypes,
-  Filter,
   TransformerOptions,
   DoofinderParameters,
   Facet,
   FacetOption,
-  RangeFacet,
-  TermsFacet,
   SearchParameters,
   Sort,
   GenericObject,
   RequestSortOptions,
 } from './types';
 import { isPlainObject, isArray } from './util/is';
+
+export interface RangeFilter {
+  lte?: number;
+  gte?: number;
+  lt?: number;
+  gt?: number;
+}
+
+export interface GeoDistanceFilter {
+  distance: string;
+  position: string;
+}
+
+export type TermsFilter = Set<string | number>;
+
+export type Filter = Map<string, TermsFilter | RangeFilter | GeoDistanceFilter>;
+
+export type AssignTermsFilterValue = string | number | string[] | number[];
+
+/**
+ * All the possibles values to assign to the Filter.
+ */
+export type AssignFilterValue = AssignTermsFilterValue | RangeFilter | GeoDistanceFilter;
 
 /**
  * Main QueryBuilder interface, allows creating programmaticly
@@ -24,7 +44,8 @@ import { isPlainObject, isArray } from './util/is';
 export class Query {
   private params: SearchParameters = {};
   private hashid: string = null;
-  private _includeFilter: Filter = new Map();
+  private _includedFilters: Filter = new Map();
+  private _excludedFilters: Filter = new Map();
 
   public constructor(hashid?: string | SearchParameters | Query) {
     if (typeof hashid === 'string') {
@@ -45,16 +66,12 @@ export class Query {
     }
   }
 
-  get includeFilter(): GenericObject {
-    const result: GenericObject = {};
-    this._includeFilter.forEach((value, key) => {
-      if (value instanceof Set) {
-        result[key] = [...value];
-      } else {
-        result[key] = value;
-      }
-    });
-    return result;
+  public get includedFilters(): GenericObject {
+    return this._getFilter(this._includedFilters);
+  }
+
+  public get excludeFilters(): GenericObject {
+    return this._getFilter(this._excludedFilters);
   }
 
   /**
@@ -76,102 +93,41 @@ export class Query {
    */
   public clear(): void {
     this.params = {};
+    this._includedFilters = new Map();
+    this._excludedFilters = new Map();
   }
 
   /**
-   * Allows to directly set a parameter on the query builder
+   * This method adds a concrete filter to the current search request.
+   *
+   * @param filterName  The name of the filter to set
+   * @param value       The value to set the filter to
+   *                                    (several can be added to the same filter)
    *
    */
-  public setParameter(paramName: string, value: unknown): void {
-    if (paramName === 'sort') {
-      this.params['sort'] = this._parseSortingOptions(value as RequestSortOptions) as RequestSortOptions;
-    } else {
-      this.params[paramName] = value;
-    }
+  public addIncludeFilter(filterName: string, value: AssignFilterValue): Query {
+    return this._addFilter(this._includedFilters, filterName, value);
   }
 
   /**
-   * Overwrites the parameters with the object given, allowing
-   * to change in one call several parameters
+   * Add an exclude filter to the query instance.
    *
+   * @param filterName  The name of the exclude filter
+   * @param value       The value to add to the exclude filter
    */
-  public setParameters(parameters: SearchParameters): void {
-    this.params = Object.assign({}, this.params, this._hydrate(parameters));
+  public addExcludeFilter(filterName: string, value: AssignFilterValue): Query {
+    return this._addFilter(this._excludedFilters, filterName, value);
   }
 
   /**
-   * This method adds a concrete filter to the current search request, and
-   * resets the page counter
+   * This method removes a given filter to the current search request.
    *
-   * @param  {String}     filterName         The name of the filter to set
-   *
-   * @param  {Any}        value              The value to set the filter to
-   *                                         (several can be added to the same filter)
-   *
-   * @param  {String}     filterType         If we are adding a "filter" (default)
-   *                                         or an "exclude" filter.
-   *
+   * @param filterName  The name of the filter to modify
+   * @param value       The value to remove from the filter
    */
-  public addFilter(filterName: string, value: FacetOption, filterType = 'filter'): Query {
-    let filters: Facet = {};
-
-    if (filterType in this.params) {
-      filters = this.params[filterType] as Facet;
-    }
-
-    if (!filters[filterName]) {
-      filters[filterName] = [];
-    }
-
-    if (!isPlainObject(value)) {
-      (filters[filterName] as Array<unknown>) = (filters[filterName] as Array<unknown>).concat(value);
-    } else {
-      filters[filterName] = value;
-    }
-
-    this.params[filterType] = filters;
-    this.params.page = 1;
+  public removeIncludedFilter(filterName: string, value: AssignFilterValue): Query {
+    this._removeFilter(this._includedFilters, filterName, value);
     return this;
-  }
-
-  public addFilter2(filterName: string, value: FacetOption): Query {
-    if (typeof value === 'string' || typeof value === 'number') {
-      this._addSingleFilterValue(filterName, value);
-    } else if (isArray(value)) {
-      this._addListFilterValue(filterName, value as []);
-    } else {
-      this._addRangeFilter(filterName, value as RangeFacet);
-    }
-    return this;
-  }
-
-  /**
-   * This method removes a given filter to the current search request, and
-   * resets the page counter
-   *
-   * @param  {String}     filterName         The name of the filter to modify
-   *
-   * @param  {Any}        value              The value to remove from the filter
-   *
-   * @param  {String}     filterType         If we are adding a "filter"
-   *                                         (default) or an "exclude" filter.
-   *
-   */
-  public removeFilter(filterName: string, value: FacetOption, filterType = 'filter'): void {
-    const filters: Facet = this.params[filterType] as Facet;
-
-    if (filters[filterName]) {
-      if (isArray(value)) {
-        (value as Array<unknown>).forEach((value: unknown) => {
-          const index: number = (filters[filterName] as Array<unknown>).indexOf(value);
-
-          if (index !== -1) {
-            (filters[filterName] as Array<unknown>).splice(index, 1);
-            this.params[filterType] = filters;
-          }
-        });
-      }
-    }
   }
 
   /**
@@ -213,21 +169,21 @@ export class Query {
    *
    */
   public toggleFilter(filterName: string, value: FacetOption | string | number, filterType = 'filter'): void {
-    let values: Array<RangeFacet | string | number> = [];
-
-    if (Array.isArray(value)) {
-      values = value;
-    } else if (typeof value === 'string' || typeof value === 'number' || isPlainObject(value)) {
-      values = [value];
-    }
-
-    (values as Array<unknown>).forEach((value: any) => {
-      if (this.hasFilter(filterName, value, filterType)) {
-        this.removeFilter(filterName, [value], filterType);
-      } else {
-        this.addFilter(filterName, [value], filterType);
-      }
-    });
+    // let values: Array<RangeFilter | string | number> = [];
+    //
+    // if (Array.isArray(value)) {
+    //   values = value;
+    // } else if (typeof value === 'string' || typeof value === 'number' || isPlainObject(value)) {
+    //   values = [value];
+    // }
+    //
+    // (values as Array<unknown>).forEach((value: any) => {
+    //   if (this.hasFilter(filterName, value, filterType)) {
+    //     this.removeFilter(filterName, [value], filterType);
+    //   } else {
+    //     this.addFilter(filterName, [value], filterType);
+    //   }
+    // });
   }
 
   /**
@@ -244,15 +200,24 @@ export class Query {
   }
 
   /**
-   * Adds an exclusion to the current context
-   *
-   * @param  {String}     filterName         The exclusion filter to add
-   *
-   * @param  {Any}        value              The value to set the exclusion to
+   * Allows to directly set a parameter on the query builder
    *
    */
-  public addExclusion(filterName: string, value: FacetOption): void {
-    this.addFilter(filterName, value, 'exclude');
+  public setParameter(paramName: string, value: unknown): void {
+    if (paramName === 'sort') {
+      this.params['sort'] = this._parseSortingOptions(value as RequestSortOptions) as RequestSortOptions;
+    } else {
+      this.params[paramName] = value;
+    }
+  }
+
+  /**
+   * Overwrites the parameters with the object given, allowing
+   * to change in one call several parameters
+   *
+   */
+  public setParameters(parameters: SearchParameters): void {
+    this.params = Object.assign({}, this.params, this._hydrate(parameters));
   }
 
   /**
@@ -264,7 +229,7 @@ export class Query {
    *
    */
   public removeExclusion(filterName: string, value: FacetOption): void {
-    this.removeFilter(filterName, value, 'exclude');
+    this._removeFilter(filterName, value, 'exclude');
   }
 
   /**
@@ -581,31 +546,67 @@ export class Query {
     return index;
   }
 
-  private _addSingleFilterValue(filterName: string, value: string | number): void {
-    if (this._includeFilter.has(filterName)) {
-      if (this._includeFilter.get(filterName) instanceof Set) {
-        (this._includeFilter.get(filterName) as TermsFacet).add(value);
-      } else {
-        // TODO: Define the correct exception here.
-        throw new Error('Error adding value in not terms facet value filter');
-      }
-    } else {
-      this._includeFilter.set(filterName, new Set([value]));
-    }
-  }
-
-  private _addListFilterValue(filterName: string, values: []): void {
-    if (this._includeFilter.has(filterName)) {
+  private _addListFilterValue(filter: Filter, filterName: string, values: string[]): void {
+    if (filter.has(filterName)) {
       for (const value of values) {
-        this._addSingleFilterValue(filterName, value);
+        (filter.get(filterName) as TermsFilter).add(value);
       }
     } else {
-      this._includeFilter.set(filterName, new Set([...values]));
+      filter.set(filterName, new Set([...values]));
     }
   }
 
-  private _addRangeFilter(filterName: string, value: RangeFacet): void {
+  private _addObjectFilter(filter: Filter, filterName: string, value: RangeFilter | GeoDistanceFilter): void {
     // TODO: implement current validations.
-    this._includeFilter.set(filterName, value);
+    filter.set(filterName, value);
+  }
+
+  private _getFilter(filter: Filter): GenericObject {
+    const result: GenericObject = {};
+    filter.forEach((value, key) => {
+      if (value instanceof Set) {
+        result[key] = [...value];
+      } else {
+        result[key] = value;
+      }
+    });
+    return result;
+  }
+
+  private _addFilter(filter: Filter, filterName: string, value: AssignFilterValue): Query {
+    if (typeof value === 'string' || typeof value === 'number') {
+      value = [`${value}`];
+    }
+
+    if (isArray(value)) {
+      this._addListFilterValue(filter, filterName, value as string[]);
+    } else if (isPlainObject(value)) {
+      this._addObjectFilter(filter, filterName, value as RangeFilter | GeoDistanceFilter);
+    } else {
+      // TODO: Define this error better.
+      throw new Error('Error in filter value');
+    }
+    return this;
+  }
+
+  private _removeFilter(filter: Filter, filterName: string, value: AssignFilterValue): void {
+    if (filter.has(filterName)) {
+      const filterElement = filter.get(filterName);
+      if (isArray(filterElement) || typeof value === 'string' || typeof value === 'number') {
+        this._removeTermFilterValue(filterElement as TermsFilter, value as AssignTermsFilterValue);
+      } else {
+        filter.delete(filterName);
+      }
+    }
+  }
+
+  private _removeTermFilterValue(filterElement: TermsFilter, value: AssignTermsFilterValue): void {
+    if (typeof value === 'string' || typeof value === 'number') {
+      filterElement.delete(value);
+    } else {
+      for (const subValue of value) {
+        filterElement.delete(subValue);
+      }
+    }
   }
 }
