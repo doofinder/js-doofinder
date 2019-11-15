@@ -9,7 +9,7 @@ import {
   GenericObject,
   RequestSortOptions,
 } from './types';
-import { isPlainObject, isArray } from './util/is';
+import { isPlainObject, isArray, isEmptyObject } from './util/is';
 
 export interface RangeFilter {
   lte?: number;
@@ -42,8 +42,9 @@ export type AssignFilterValue = AssignTermsFilterValue | RangeFilter | GeoDistan
  *
  */
 export class Query {
+  public hashid: string = null;
+  public searchText = '';
   private params: SearchParameters = {};
-  private hashid: string = null;
   private _includedFilters: Filter = new Map();
   private _excludedFilters: Filter = new Map();
 
@@ -70,7 +71,7 @@ export class Query {
     return this._getFilter(this._includedFilters);
   }
 
-  public get excludeFilters(): GenericObject {
+  public get excludedFilters(): GenericObject {
     return this._getFilter(this._excludedFilters);
   }
 
@@ -120,13 +121,24 @@ export class Query {
   }
 
   /**
-   * This method removes a given filter to the current search request.
+   * This method removes a given included filter to the current search request.
    *
    * @param filterName  The name of the filter to modify
    * @param value       The value to remove from the filter
    */
   public removeIncludedFilter(filterName: string, value: AssignFilterValue): Query {
     this._removeFilter(this._includedFilters, filterName, value);
+    return this;
+  }
+
+  /**
+   * This method removes a given excluded filter to the current search request.
+   *
+   * @param filterName  The name of the filter to modify
+   * @param value       The value to remove from the filter
+   */
+  public removeExcludedFilter(filterName: string, value: AssignFilterValue): Query {
+    this._removeFilter(this._excludedFilters, filterName, value);
     return this;
   }
 
@@ -146,44 +158,57 @@ export class Query {
    *                      filter set with any value
    *
    */
-  public hasFilter(filterName: string, value?: FacetOption | string | number, filterType = 'filter'): boolean {
-    const filters: Facet = (this.params[filterType] as Facet) || {};
-    // This returns true if the filter is a range, we don't compare
-    return (
-      filterName in filters &&
-      (!value || isPlainObject(filters[filterName]) || (filters[filterName] as Array<unknown>).indexOf(value) !== -1)
-    );
+  public hasIncludedFilter(filterName: string, value?: string): boolean {
+    return this._hasFilter(this._includedFilters, filterName, value);
+  }
+
+  public hasExcludedFilter(filterName: string, value?: string): boolean {
+    return this._hasFilter(this._excludedFilters, filterName, value);
   }
 
   /**
    * Toggles a filter value from the given filter in the given context
    *
-   * @param  {String}     context            The context to affect
-   *
-   * @param  {String}     filterName         The name of the filter to modify
-   *
-   * @param  {Any}        value              The value to remove from the filter
-   *
-   * @param  {String}     filterType         If we are adding a "filter"
-   *                                         (default) or an "exclude" filter.
-   *
+   * @param  context      The context to affect
+   * @param  filterName   The name of the filter to modify
+   * @param  value        The value to remove from the filter
+   * @param  filterType   If we are adding a "filter" (default) or an "exclude"
+   *                      filter.
    */
-  public toggleFilter(filterName: string, value: FacetOption | string | number, filterType = 'filter'): void {
-    // let values: Array<RangeFilter | string | number> = [];
-    //
-    // if (Array.isArray(value)) {
-    //   values = value;
-    // } else if (typeof value === 'string' || typeof value === 'number' || isPlainObject(value)) {
-    //   values = [value];
-    // }
-    //
-    // (values as Array<unknown>).forEach((value: any) => {
-    //   if (this.hasFilter(filterName, value, filterType)) {
-    //     this.removeFilter(filterName, [value], filterType);
-    //   } else {
-    //     this.addFilter(filterName, [value], filterType);
-    //   }
-    // });
+  public toggleIncludedFilter(filterName: string, value: FacetOption | string | number): void {
+    let values: Array<RangeFilter | string | number> = [];
+
+    if (Array.isArray(value)) {
+      values = value;
+    } else if (typeof value === 'string' || typeof value === 'number' || isPlainObject(value)) {
+      values = [value];
+    }
+
+    (values as Array<unknown>).forEach((value: any) => {
+      if (this.hasIncludedFilter(filterName, value)) {
+        this.removeIncludedFilter(filterName, [value]);
+      } else {
+        this.addIncludeFilter(filterName, [value]);
+      }
+    });
+  }
+
+  public toggleExcludedFilter(filterName: string, value: FacetOption | string | number): void {
+    let values: Array<RangeFilter | string | number> = [];
+
+    if (Array.isArray(value)) {
+      values = value;
+    } else if (typeof value === 'string' || typeof value === 'number' || isPlainObject(value)) {
+      values = [value];
+    }
+
+    (values as Array<unknown>).forEach((value: any) => {
+      if (this.hasExcludedFilter(filterName, value)) {
+        this.removeExcludedFilter(filterName, [value]);
+      } else {
+        this.addExcludeFilter(filterName, [value]);
+      }
+    });
   }
 
   /**
@@ -228,9 +253,9 @@ export class Query {
    * @param  {Any}        value              The value to set the exclusion to
    *
    */
-  public removeExclusion(filterName: string, value: FacetOption): void {
-    this._removeFilter(filterName, value, 'exclude');
-  }
+  // public removeExclusion(filterName: string, value: FacetOption): void {
+  //   this._removeFilter(this._excludedFilter[filterName], value, 'exclude');
+  // }
 
   /**
    * Sets an exclusion structure to the current context
@@ -488,6 +513,23 @@ export class Query {
     return params;
   }
 
+  public dump(): GenericObject {
+    const dumpData: GenericObject = this.params;
+
+    if (this.hashid) {
+      dumpData.hashid = this.hashid;
+    }
+    dumpData.query = this.searchText ? this.searchText : '';
+    if (!isEmptyObject(this.includedFilters)) {
+      dumpData.filter = this.includedFilters;
+    }
+    if (!isEmptyObject(this.excludedFilters)) {
+      dumpData.excludedFilters = this.excludedFilters;
+    }
+
+    return dumpData;
+  }
+
   /**
    * Gets the current query
    *
@@ -592,7 +634,7 @@ export class Query {
   private _removeFilter(filter: Filter, filterName: string, value: AssignFilterValue): void {
     if (filter.has(filterName)) {
       const filterElement = filter.get(filterName);
-      if (isArray(filterElement) || typeof value === 'string' || typeof value === 'number') {
+      if (filterElement instanceof Set || typeof value === 'string' || typeof value === 'number') {
         this._removeTermFilterValue(filterElement as TermsFilter, value as AssignTermsFilterValue);
       } else {
         filter.delete(filterName);
@@ -608,5 +650,13 @@ export class Query {
         filterElement.delete(subValue);
       }
     }
+  }
+
+  private _hasFilter(filter: Filter, filterName: string, value?: string): boolean {
+    // This returns true if the filter is a range, we don't compare
+    return (
+      filter.has(filterName) &&
+      (!value || isPlainObject(filter.get(filterName)) || (filter.get(filterName) as TermsFilter).has(value))
+    );
   }
 }

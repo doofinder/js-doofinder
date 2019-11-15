@@ -41,14 +41,14 @@ describe('Client', () => {
   context('Instantiation', () => {
     context('with invalid API key', () => {
       it('should break', (done) => {
-        (() => new Client({hashid: cfg.hashid, apiKey: 'abcd'})).should.throw();
+        (() => new Client({ hashid: cfg.hashid, apiKey: 'abcd' })).should.throw();
         done();
       });
     });
 
     context('with API Key and zone', () => {
       it("should use API key's zone", (done) => {
-        const client = new Client({hashid: cfg.hashid, zone: Zone.US, apiKey: 'eu1-abcd'});
+        const client = new Client({ hashid: cfg.hashid, zone: Zone.US, apiKey: 'eu1-abcd' });
         client.endpoint.should.equal(cfg.endpoint);
         done();
       });
@@ -56,14 +56,16 @@ describe('Client', () => {
 
     context('HTTP Headers', () => {
       it('should add passed headers to the request', (done) => {
-        const client = new Client({hashid: cfg.hashid, apiKey: cfg.apiKey, headers:
-          {'X-Name': 'John Smith'}});
+        const client = new Client({ hashid: cfg.hashid, apiKey: cfg.apiKey, headers: { 'X-Name': 'John Smith' } });
         client.headers['X-Name'].should.equal('John Smith');
         done()
       });
 
       it ("won't replace API Keys passed in options", (done) => {
-        const client = new Client({hashid: cfg.hashid, apiKey: cfg.apiKey, headers: {
+        const client = new Client({
+          hashid: cfg.hashid,
+          apiKey: cfg.apiKey,
+          headers: {
           'X-Name': 'John Smith',
           'Authorization': 'abc'
         }});
@@ -169,7 +171,7 @@ describe('Client', () => {
       });
 
       it('accepts different basic parameters than the default ones', (done) => {
-        const qs = buildQuery(undefined, {page: 2, rpp: 100, hello: 'world'});
+        const qs = buildQuery(undefined, { page: 2, rpp: 100, hello: 'world' });
         qs.should.include(`page=2`);
         qs.should.include(`rpp=100`);
         qs.should.include(`hello=world`);

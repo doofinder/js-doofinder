@@ -35,7 +35,7 @@ export interface Facet {
  *
  */
 export interface RequestFiltersObject {
-  [field: string]: string[] | number[] | RangeFilter;
+  [field: string]: string | number | string[] | number[] | RangeFilter;
 }
 
 /**

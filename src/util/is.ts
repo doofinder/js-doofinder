@@ -8,6 +8,10 @@ export const isArray = (value: unknown): boolean => Array.isArray(value);
 
 export const isObject = (value: unknown): boolean => Object.prototype.toString.call(value) === '[object Object]';
 
+export function isEmptyObject(obj: any) {
+  return Object.keys(obj).length === 0 && obj.constructor === Object;
+}
+
 export const isPlainObject = (value: unknown): boolean =>
   isObject(value) && value.constructor === Object && !(value as Node).nodeType && !(value as Window).setInterval;
 
