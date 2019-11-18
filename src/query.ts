@@ -55,7 +55,7 @@ export class Query {
     } else if (hashid instanceof Query) {
       // Let's create a quick copy with this
       const params: SearchParameters = hashid.getParams();
-      params.query = hashid.text;
+      this.text = hashid.text;
       this.params = params;
     } else if (typeof hashid === 'object') {
       // It's a complete object to pass on
@@ -94,6 +94,7 @@ export class Query {
    */
   public clear(): void {
     this.params = {};
+    this.text = undefined;
     this._filters = new Map();
     this._excludedFilters = new Map();
   }
@@ -244,18 +245,6 @@ export class Query {
   public setParameters(parameters: SearchParameters): void {
     this.params = Object.assign({}, this.params, this._hydrate(parameters));
   }
-
-  /**
-   * Removes an exclusion to the current context
-   *
-   * @param  {String}     filterName         The exclusion filter to add
-   *
-   * @param  {Any}        value              The value to set the exclusion to
-   *
-   */
-  // public removeExclusion(filterName: string, value: FacetOption): void {
-  //   this._removeFilter(this._excludedFilter[filterName], value, 'exclude');
-  // }
 
   /**
    * Sets an exclusion structure to the current context
@@ -514,7 +503,7 @@ export class Query {
   }
 
   public dump(): GenericObject {
-    const dumpData: GenericObject = this.params;
+    const dumpData: GenericObject = JSON.parse(JSON.stringify(this.params));
 
     if (this.hashid) {
       dumpData.hashid = this.hashid;

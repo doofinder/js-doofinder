@@ -266,7 +266,6 @@ export class Client {
 
     // We get a no query
     if (query == null) {
-      q.text = '';
       q.setParameters(params || {});
     } else if (typeof query === 'string') {
       // We get a string query
@@ -274,7 +273,7 @@ export class Client {
       query = query.replace(/\s+/g, ' ');
       query = query === ' ' ? query : query.trim();
 
-      q.text = query;
+      q.searchText(query);
       q.setParameters(params || {});
     } else {
       q = query;
