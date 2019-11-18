@@ -43,7 +43,7 @@ export type AssignFilterValue = AssignTermsFilterValue | RangeFilter | GeoDistan
  */
 export class Query {
   public hashid: string = null;
-  public searchText = '';
+  public searchText: string;
   private params: SearchParameters = {};
   private _includedFilters: Filter = new Map();
   private _excludedFilters: Filter = new Map();
@@ -537,7 +537,7 @@ export class Query {
    *
    */
   public getQuery(): string {
-    return this.params.query;
+    return this.searchText;
   }
 
   private _parseSortingOptions(sortParams: RequestSortOptions): RequestSortOptions[] {
