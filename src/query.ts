@@ -45,7 +45,7 @@ export class Query {
   public hashid: string = null;
   public text: string;
   private params: SearchParameters = {};
-  private _includedFilters: Filter = new Map();
+  private _filters: Filter = new Map();
   private _excludedFilters: Filter = new Map();
 
   public constructor(hashid?: string | SearchParameters | Query) {
@@ -67,8 +67,8 @@ export class Query {
     }
   }
 
-  public get includedFilters(): GenericObject {
-    return this._getFilter(this._includedFilters);
+  public get filters(): GenericObject {
+    return this._getFilter(this._filters);
   }
 
   public get excludedFilters(): GenericObject {
@@ -94,7 +94,7 @@ export class Query {
    */
   public clear(): void {
     this.params = {};
-    this._includedFilters = new Map();
+    this._filters = new Map();
     this._excludedFilters = new Map();
   }
 
@@ -106,8 +106,8 @@ export class Query {
    *                                    (several can be added to the same filter)
    *
    */
-  public addIncludeFilter(filterName: string, value: AssignFilterValue): Query {
-    return this._addFilter(this._includedFilters, filterName, value);
+  public addFilter(filterName: string, value: AssignFilterValue): Query {
+    return this._addFilter(this._filters, filterName, value);
   }
 
   /**
@@ -126,8 +126,8 @@ export class Query {
    * @param filterName  The name of the filter to modify
    * @param value       The value to remove from the filter
    */
-  public removeIncludedFilter(filterName: string, value: AssignFilterValue): Query {
-    this._removeFilter(this._includedFilters, filterName, value);
+  public removeFilter(filterName: string, value: AssignFilterValue): Query {
+    this._removeFilter(this._filters, filterName, value);
     return this;
   }
 
@@ -158,8 +158,8 @@ export class Query {
    *                      filter set with any value
    *
    */
-  public hasIncludedFilter(filterName: string, value?: string): boolean {
-    return this._hasFilter(this._includedFilters, filterName, value);
+  public hasFilter(filterName: string, value?: string): boolean {
+    return this._hasFilter(this._filters, filterName, value);
   }
 
   public hasExcludedFilter(filterName: string, value?: string): boolean {
@@ -175,7 +175,7 @@ export class Query {
    * @param  filterType   If we are adding a "filter" (default) or an "exclude"
    *                      filter.
    */
-  public toggleIncludedFilter(filterName: string, value: FacetOption | string | number): void {
+  public toggleFilter(filterName: string, value: FacetOption | string | number): void {
     let values: Array<RangeFilter | string | number> = [];
 
     if (Array.isArray(value)) {
@@ -185,10 +185,10 @@ export class Query {
     }
 
     (values as Array<unknown>).forEach((value: any) => {
-      if (this.hasIncludedFilter(filterName, value)) {
-        this.removeIncludedFilter(filterName, [value]);
+      if (this.hasFilter(filterName, value)) {
+        this.removeFilter(filterName, [value]);
       } else {
-        this.addIncludeFilter(filterName, [value]);
+        this.addFilter(filterName, [value]);
       }
     });
   }
@@ -520,8 +520,8 @@ export class Query {
       dumpData.hashid = this.hashid;
     }
     dumpData.query = this.text ? this.text : '';
-    if (!isEmptyObject(this.includedFilters)) {
-      dumpData.filter = this.includedFilters;
+    if (!isEmptyObject(this.filters)) {
+      dumpData.filter = this.filters;
     }
     if (!isEmptyObject(this.excludedFilters)) {
       dumpData.excludedFilters = this.excludedFilters;

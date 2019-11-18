@@ -157,7 +157,7 @@ describe('Query', () => {
       const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
 
       // when
-      q.addIncludeFilter('brand', ['Ferrari']);
+      q.addFilter('brand', ['Ferrari']);
 
       // then
       const params = q.dump();
@@ -170,10 +170,10 @@ describe('Query', () => {
     it('removes a filter term correctly',(done) => {
       // given
       const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
-      q.addIncludeFilter('brand', ['Ferrari', 'ford']);
+      q.addFilter('brand', ['Ferrari', 'ford']);
 
       // when
-      q.removeIncludedFilter('brand', ['Ferrari']);
+      q.removeFilter('brand', ['Ferrari']);
 
       // then
       const dump = q.dump();
@@ -186,10 +186,10 @@ describe('Query', () => {
     it('does not remove a filter term if not present', (done) => {
       // given
       const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
-      q.addIncludeFilter('brand', ['Ferrari']);
+      q.addFilter('brand', ['Ferrari']);
 
       // when
-      q.removeIncludedFilter('brand', ['Lamborghini']);
+      q.removeFilter('brand', ['Lamborghini']);
 
       // then
       const params = q.dump();
@@ -205,7 +205,7 @@ describe('Query', () => {
       const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
 
       // when
-      q.toggleIncludedFilter('brand', 'Ferrari');
+      q.toggleFilter('brand', 'Ferrari');
 
       // then
       const dump = q.dump();
@@ -218,10 +218,10 @@ describe('Query', () => {
     it('toggling existing filter removes it', (done) => {
       // given
       const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
-      q.addIncludeFilter('brand', ['Ferrari']);
+      q.addFilter('brand', ['Ferrari']);
 
       // when
-      q.toggleIncludedFilter('brand', ['Ferrari']);
+      q.toggleFilter('brand', ['Ferrari']);
 
       // then
       const dump = q.dump();
@@ -235,13 +235,13 @@ describe('Query', () => {
     it('check a filter exists correctly', (done) => {
       // given
       const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
-      q.addIncludeFilter('brand', ['Ferrari']);
+      q.addFilter('brand', ['Ferrari']);
 
       // then
-      expect(q.hasIncludedFilter('brand', 'Ferrari')).to.be.true;
-      expect(q.hasIncludedFilter('brand', 'Lamborghini')).to.be.false;
-      expect(q.hasIncludedFilter('brand')).to.be.true;
-      expect(q.hasIncludedFilter('make')).to.be.false;
+      expect(q.hasFilter('brand', 'Ferrari')).to.be.true;
+      expect(q.hasFilter('brand', 'Lamborghini')).to.be.false;
+      expect(q.hasFilter('brand')).to.be.true;
+      expect(q.hasFilter('make')).to.be.false;
 
       done();
     });
@@ -249,7 +249,7 @@ describe('Query', () => {
     it('setting filters by hand works as expected', (done) => {
       // given
       const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
-      q.addIncludeFilter('brand', ['Ferrari']);
+      q.addFilter('brand', ['Ferrari']);
 
       // when
       q.setFilters({ model: ['F40'], color: ['red'] });
