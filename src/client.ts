@@ -266,7 +266,7 @@ export class Client {
 
     // We get a no query
     if (query == null) {
-      q.searchText = '';
+      q.text = '';
       q.setParameters(params || {});
     } else if (typeof query === 'string') {
       // We get a string query
@@ -274,7 +274,7 @@ export class Client {
       query = query.replace(/\s+/g, ' ');
       query = query === ' ' ? query : query.trim();
 
-      q.searchText = query;
+      q.text = query;
       q.setParameters(params || {});
     } else {
       q = query;
@@ -285,7 +285,6 @@ export class Client {
     }
 
     const queryParams = q.dump();
-    queryParams.query = q.searchText;
 
     if (isArray(queryParams.type) && queryParams.type.length === 1) {
       queryParams.type = queryParams.type[0];

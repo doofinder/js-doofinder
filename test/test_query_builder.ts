@@ -65,13 +65,13 @@ describe('Query', () => {
     it('sets the query correctly', (done) => {
       // given
       let q = new Query();
-      expect(q.getQuery()).to.be.undefined;
+      expect(q.text).to.be.undefined;
 
       // when
-      q.search('bag');
+      q.searchText('bag');
       
       // then
-      q.getQuery().should.equal('bag');
+      q.text.should.equal('bag');
       done();
     });
 
@@ -783,10 +783,10 @@ describe('Query', () => {
       let q = new Query({hashid: cfg.hashid, rpp: 20, page: 11});
 
       // when
-      q.search('smartphone');
+      q.searchText('smartphone');
 
       // then
-      q.getQuery().should.be.equal('smartphone');
+      q.text.should.be.equal('smartphone');
 
       done();
     });

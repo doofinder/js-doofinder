@@ -43,7 +43,7 @@ export type AssignFilterValue = AssignTermsFilterValue | RangeFilter | GeoDistan
  */
 export class Query {
   public hashid: string = null;
-  public searchText: string;
+  public text: string;
   private params: SearchParameters = {};
   private _includedFilters: Filter = new Map();
   private _excludedFilters: Filter = new Map();
@@ -55,7 +55,7 @@ export class Query {
     } else if (hashid instanceof Query) {
       // Let's create a quick copy with this
       const params: SearchParameters = hashid.getParams();
-      params.query = hashid.getQuery();
+      params.query = hashid.text;
       this.params = params;
     } else if (typeof hashid === 'object') {
       // It's a complete object to pass on
@@ -83,8 +83,8 @@ export class Query {
    * @param  {String}   query   The search query to be sent.
    *
    */
-  public search(query: string): Query {
-    this.searchText = query;
+  public searchText(query: string): Query {
+    this.text = query;
     return this;
   }
 
@@ -519,7 +519,7 @@ export class Query {
     if (this.hashid) {
       dumpData.hashid = this.hashid;
     }
-    dumpData.query = this.searchText ? this.searchText : '';
+    dumpData.query = this.text ? this.text : '';
     if (!isEmptyObject(this.includedFilters)) {
       dumpData.filter = this.includedFilters;
     }
@@ -528,16 +528,6 @@ export class Query {
     }
 
     return dumpData;
-  }
-
-  /**
-   * Gets the current query
-   *
-   * @return   {String}
-   *
-   */
-  public getQuery(): string {
-    return this.searchText;
   }
 
   private _parseSortingOptions(sortParams: RequestSortOptions): RequestSortOptions[] {
