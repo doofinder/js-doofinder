@@ -84,7 +84,7 @@ export class Query {
    *
    */
   public search(query: string): Query {
-    this.params.query = query;
+    this.searchText = query;
     return this;
   }
 
