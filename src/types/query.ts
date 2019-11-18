@@ -1,5 +1,4 @@
 import { DoofinderParameters } from './request';
-import { RangeFacet } from '../../types';
 
 /**
  * Extension of the DoofinderParameters interface to accept
