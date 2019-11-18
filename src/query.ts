@@ -4,13 +4,35 @@ import {
   DoofinderParameters,
   Facet,
   FacetOption,
-  RangeFacet,
   SearchParameters,
   Sort,
   GenericObject,
   RequestSortOptions,
 } from './types';
-import { isPlainObject, isArray } from './util/is';
+import { isPlainObject, isArray, isEmptyObject } from './util/is';
+
+export interface RangeFilter {
+  lte?: number;
+  gte?: number;
+  lt?: number;
+  gt?: number;
+}
+
+export interface GeoDistanceFilter {
+  distance: string;
+  position: string;
+}
+
+export type TermsFilter = Set<string | number>;
+
+export type Filter = Map<string, TermsFilter | RangeFilter | GeoDistanceFilter>;
+
+export type AssignTermsFilterValue = string | number | string[] | number[];
+
+/**
+ * All the possibles values to assign to the Filter.
+ */
+export type AssignFilterValue = AssignTermsFilterValue | RangeFilter | GeoDistanceFilter;
 
 /**
  * Main QueryBuilder interface, allows creating programmaticly
@@ -20,8 +42,11 @@ import { isPlainObject, isArray } from './util/is';
  *
  */
 export class Query {
+  public hashid: string = null;
+  public text: string;
   private params: SearchParameters = {};
-  private hashid: string = null;
+  private _filters: Filter = new Map();
+  private _excludedFilters: Filter = new Map();
 
   public constructor(hashid?: string | SearchParameters | Query) {
     if (typeof hashid === 'string') {
@@ -30,7 +55,7 @@ export class Query {
     } else if (hashid instanceof Query) {
       // Let's create a quick copy with this
       const params: SearchParameters = hashid.getParams();
-      params.query = hashid.getQuery();
+      this.text = hashid.text;
       this.params = params;
     } else if (typeof hashid === 'object') {
       // It's a complete object to pass on
@@ -42,41 +67,12 @@ export class Query {
     }
   }
 
-  private _parseSortingOptions(sortParams: RequestSortOptions): RequestSortOptions[] {
-    if (isPlainObject(sortParams) && Object.keys(sortParams).length > 1) {
-      throw new Error('To sort by multiple fields use an Array of Objects');
-    }
-
-    if (!isArray(sortParams)) {
-      if (isPlainObject(sortParams)) {
-        const res: Array<RequestSortOptions> = [];
-        res.push(sortParams);
-        return res;
-      } else if (typeof sortParams === 'string') {
-        const obj: RequestSortOptions = {};
-        obj[sortParams] = Sort.ASC;
-        const res: Array<RequestSortOptions> = [];
-        res.push(obj);
-        return res;
-      } else {
-        return null;
-      }
-    } else {
-      return sortParams as Array<RequestSortOptions>;
-    }
+  public get filters(): GenericObject {
+    return this._getFilter(this._filters);
   }
 
-  private _hydrate(params: SearchParameters): SearchParameters {
-    if ('sort' in params) {
-      params.sort = this._parseSortingOptions(params.sort) as RequestSortOptions;
-    }
-    // Filter nulls
-    Object.keys(params).forEach((key: string) => {
-      if (!params[key]) {
-        delete params[key];
-      }
-    });
-    return params;
+  public get excludedFilters(): GenericObject {
+    return this._getFilter(this._excludedFilters);
   }
 
   /**
@@ -87,8 +83,9 @@ export class Query {
    * @param  {String}   query   The search query to be sent.
    *
    */
-  public search(query: string): void {
-    this.params.query = query;
+  public searchText(query: string): Query {
+    this.text = query;
+    return this;
   }
 
   /**
@@ -97,6 +94,135 @@ export class Query {
    */
   public clear(): void {
     this.params = {};
+    this.text = undefined;
+    this._filters = new Map();
+    this._excludedFilters = new Map();
+  }
+
+  /**
+   * This method adds a concrete filter to the current search request.
+   *
+   * @param filterName  The name of the filter to set
+   * @param value       The value to set the filter to
+   *                                    (several can be added to the same filter)
+   *
+   */
+  public addFilter(filterName: string, value: AssignFilterValue): Query {
+    return this._addFilter(this._filters, filterName, value);
+  }
+
+  /**
+   * Add an exclude filter to the query instance.
+   *
+   * @param filterName  The name of the exclude filter
+   * @param value       The value to add to the exclude filter
+   */
+  public addExcludeFilter(filterName: string, value: AssignFilterValue): Query {
+    return this._addFilter(this._excludedFilters, filterName, value);
+  }
+
+  /**
+   * This method removes a given included filter to the current search request.
+   *
+   * @param filterName  The name of the filter to modify
+   * @param value       The value to remove from the filter
+   */
+  public removeFilter(filterName: string, value: AssignFilterValue): Query {
+    this._removeFilter(this._filters, filterName, value);
+    return this;
+  }
+
+  /**
+   * This method removes a given excluded filter to the current search request.
+   *
+   * @param filterName  The name of the filter to modify
+   * @param value       The value to remove from the filter
+   */
+  public removeExcludedFilter(filterName: string, value: AssignFilterValue): Query {
+    this._removeFilter(this._excludedFilters, filterName, value);
+    return this;
+  }
+
+  /**
+   * This method allows to check if a given filter is set in the current search
+   * request
+   *
+   * @param  {String}     filterName         The name of the filter to modify
+   *
+   * @param  {Any}        value              (Optional) The value to check from
+   *                                         the filter
+   *
+   * @param  {String}     filterType         If we are adding a "filter" (default)
+   *                                         or an "exclude" filter.
+   *
+   * @return  {Boolean}   The filter is set for the given value or there's a
+   *                      filter set with any value
+   *
+   */
+  public hasFilter(filterName: string, value?: string): boolean {
+    return this._hasFilter(this._filters, filterName, value);
+  }
+
+  public hasExcludedFilter(filterName: string, value?: string): boolean {
+    return this._hasFilter(this._excludedFilters, filterName, value);
+  }
+
+  /**
+   * Toggles a filter value from the given filter in the given context
+   *
+   * @param  context      The context to affect
+   * @param  filterName   The name of the filter to modify
+   * @param  value        The value to remove from the filter
+   * @param  filterType   If we are adding a "filter" (default) or an "exclude"
+   *                      filter.
+   */
+  public toggleFilter(filterName: string, value: FacetOption | string | number): void {
+    let values: Array<RangeFilter | string | number> = [];
+
+    if (Array.isArray(value)) {
+      values = value;
+    } else if (typeof value === 'string' || typeof value === 'number' || isPlainObject(value)) {
+      values = [value];
+    }
+
+    (values as Array<unknown>).forEach((value: any) => {
+      if (this.hasFilter(filterName, value)) {
+        this.removeFilter(filterName, [value]);
+      } else {
+        this.addFilter(filterName, [value]);
+      }
+    });
+  }
+
+  public toggleExcludedFilter(filterName: string, value: FacetOption | string | number): void {
+    let values: Array<RangeFilter | string | number> = [];
+
+    if (Array.isArray(value)) {
+      values = value;
+    } else if (typeof value === 'string' || typeof value === 'number' || isPlainObject(value)) {
+      values = [value];
+    }
+
+    (values as Array<unknown>).forEach((value: any) => {
+      if (this.hasExcludedFilter(filterName, value)) {
+        this.removeExcludedFilter(filterName, [value]);
+      } else {
+        this.addExcludeFilter(filterName, [value]);
+      }
+    });
+  }
+
+  /**
+   * Sets the filter structure directly to the requests of a given context
+   *
+   * @param  {Object}     filters            The filter structure
+   *
+   * @param  {String}     filterType         If we are adding a "filter" (default)
+   *                                         or an "exclude" filter.
+   *
+   */
+  public setFilters(filters: Facet, filterType = 'filter'): void {
+    this.params[filterType] = filters;
   }
 
   /**
@@ -121,162 +247,6 @@ export class Query {
   }
 
   /**
-   * This method adds a concrete filter to the current search request, and
-   * resets the page counter
-   *
-   * @param  {String}     filterName         The name of the filter to set
-   *
-   * @param  {Any}        value              The value to set the filter to
-   *                                         (several can be added to the same filter)
-   *
-   * @param  {String}     filterType         If we are adding a "filter" (default)
-   *                                         or an "exclude" filter.
-   *
-   */
-  public addFilter(filterName: string, value: FacetOption, filterType = 'filter'): void {
-    let filters: Facet = {};
-
-    if (filterType in this.params) {
-      filters = this.params[filterType] as Facet;
-    }
-
-    if (!filters[filterName]) {
-      filters[filterName] = [];
-    }
-
-    if (!isPlainObject(value)) {
-      (filters[filterName] as Array<unknown>) = (filters[filterName] as Array<unknown>).concat(value);
-    } else {
-      filters[filterName] = value;
-    }
-
-    this.params[filterType] = filters;
-    this.params.page = 1;
-  }
-
-  /**
-   * This method removes a given filter to the current search request, and
-   * resets the page counter
-   *
-   * @param  {String}     filterName         The name of the filter to modify
-   *
-   * @param  {Any}        value              The value to remove from the filter
-   *
-   * @param  {String}     filterType         If we are adding a "filter"
-   *                                         (default) or an "exclude" filter.
-   *
-   */
-  public removeFilter(filterName: string, value: FacetOption, filterType = 'filter'): void {
-    const filters: Facet = this.params[filterType] as Facet;
-
-    if (filters[filterName]) {
-      if (isArray(value)) {
-        (value as Array<unknown>).forEach((value: unknown) => {
-          const index: number = (filters[filterName] as Array<unknown>).indexOf(value);
-
-          if (index !== -1) {
-            (filters[filterName] as Array<unknown>).splice(index, 1);
-            this.params[filterType] = filters;
-          }
-        });
-      }
-    }
-  }
-
-  /**
-   * This method allows to check if a given filter is set in the current search
-   * request
-   *
-   * @param  {String}     filterName         The name of the filter to modify
-   *
-   * @param  {Any}        value              (Optional) The value to check from
-   *                                         the filter
-   *
-   * @param  {String}     filterType         If we are adding a "filter" (default)
-   *                                         or an "exclude" filter.
-   *
-   * @return  {Boolean}   The filter is set for the given value or there's a
-   *                      filter set with any value
-   *
-   */
-  public hasFilter(filterName: string, value?: FacetOption | string | number, filterType = 'filter'): boolean {
-    const filters: Facet = (this.params[filterType] as Facet) || {};
-    // This returns true if the filter is a range, we don't compare
-    return (
-      filterName in filters &&
-      (!value || isPlainObject(filters[filterName]) || (filters[filterName] as Array<unknown>).indexOf(value) !== -1)
-    );
-  }
-
-  /**
-   * Toggles a filter value from the given filter in the given context
-   *
-   * @param  {String}     context            The context to affect
-   *
-   * @param  {String}     filterName         The name of the filter to modify
-   *
-   * @param  {Any}        value              The value to remove from the filter
-   *
-   * @param  {String}     filterType         If we are adding a "filter"
-   *                                         (default) or an "exclude" filter.
-   *
-   */
-  public toggleFilter(filterName: string, value: FacetOption | string | number, filterType = 'filter'): void {
-    let values: Array<RangeFacet | string | number> = [];
-
-    if (Array.isArray(value)) {
-      values = value;
-    } else if (typeof value === 'string' || typeof value === 'number' || isPlainObject(value)) {
-      values = [value];
-    }
-
-    (values as Array<unknown>).forEach((value: any) => {
-      if (this.hasFilter(filterName, value, filterType)) {
-        this.removeFilter(filterName, [value], filterType);
-      } else {
-        this.addFilter(filterName, [value], filterType);
-      }
-    });
-  }
-
-  /**
-   * Sets the filter structure directly to the requests of a given context
-   *
-   * @param  {Object}     filters            The filter structure
-   *
-   * @param  {String}     filterType         If we are adding a "filter" (default)
-   *                                         or an "exclude" filter.
-   *
-   */
-  public setFilters(filters: Facet, filterType = 'filter'): void {
-    this.params[filterType] = filters;
-  }
-
-  /**
-   * Adds an exclusion to the current context
-   *
-   * @param  {String}     filterName         The exclusion filter to add
-   *
-   * @param  {Any}        value              The value to set the exclusion to
-   *
-   */
-  public addExclusion(filterName: string, value: FacetOption): void {
-    this.addFilter(filterName, value, 'exclude');
-  }
-
-  /**
-   * Removes an exclusion to the current context
-   *
-   * @param  {String}     filterName         The exclusion filter to add
-   *
-   * @param  {Any}        value              The value to set the exclusion to
-   *
-   */
-  public removeExclusion(filterName: string, value: FacetOption): void {
-    this.removeFilter(filterName, value, 'exclude');
-  }
-
-  /**
    * Sets an exclusion structure to the current context
    *
    * @param  {Object}        filters            The exclusion filter to add
@@ -284,17 +254,6 @@ export class Query {
    */
   public setExclusions(filters: Facet): void {
     this.setFilters(filters, 'exclude');
-  }
-
-  private _findSortField(field: string, sortParams: Array<RequestSortOptions>): number {
-    let index = -1;
-    sortParams.forEach((sort: RequestSortOptions, idx: number) => {
-      if (field in (sort as GenericObject)) {
-        index = idx;
-      }
-    });
-
-    return index;
   }
 
   /**
@@ -543,13 +502,140 @@ export class Query {
     return params;
   }
 
-  /**
-   * Gets the current query
-   *
-   * @return   {String}
-   *
-   */
-  public getQuery(): string {
-    return this.params.query;
+  public dump(): GenericObject {
+    const dumpData: GenericObject = JSON.parse(JSON.stringify(this.params));
+
+    if (this.hashid) {
+      dumpData.hashid = this.hashid;
+    }
+    dumpData.query = this.text ? this.text : '';
+    if (!isEmptyObject(this.filters)) {
+      dumpData.filter = this.filters;
+    }
+    if (!isEmptyObject(this.excludedFilters)) {
+      dumpData.excludedFilters = this.excludedFilters;
+    }
+
+    return dumpData;
+  }
+
+  private _parseSortingOptions(sortParams: RequestSortOptions): RequestSortOptions[] {
+    if (isPlainObject(sortParams) && Object.keys(sortParams).length > 1) {
+      throw new Error('To sort by multiple fields use an Array of Objects');
+    }
+
+    if (!isArray(sortParams)) {
+      if (isPlainObject(sortParams)) {
+        const res: Array<RequestSortOptions> = [];
+        res.push(sortParams);
+        return res;
+      } else if (typeof sortParams === 'string') {
+        const obj: RequestSortOptions = {};
+        obj[sortParams] = Sort.ASC;
+        const res: Array<RequestSortOptions> = [];
+        res.push(obj);
+        return res;
+      } else {
+        return null;
+      }
+    } else {
+      return sortParams as Array<RequestSortOptions>;
+    }
+  }
+
+  private _hydrate(params: SearchParameters): SearchParameters {
+    if ('sort' in params) {
+      params.sort = this._parseSortingOptions(params.sort) as RequestSortOptions;
+    }
+    // Filter nulls
+    Object.keys(params).forEach((key: string) => {
+      if (!params[key]) {
+        delete params[key];
+      }
+    });
+    return params;
+  }
+
+  private _findSortField(field: string, sortParams: Array<RequestSortOptions>): number {
+    let index = -1;
+    sortParams.forEach((sort: RequestSortOptions, idx: number) => {
+      if (field in (sort as GenericObject)) {
+        index = idx;
+      }
+    });
+
+    return index;
+  }
+
+  private _addListFilterValue(filter: Filter, filterName: string, values: string[]): void {
+    if (filter.has(filterName)) {
+      for (const value of values) {
+        (filter.get(filterName) as TermsFilter).add(value);
+      }
+    } else {
+      filter.set(filterName, new Set([...values]));
+    }
+  }
+
+  private _addObjectFilter(filter: Filter, filterName: string, value: RangeFilter | GeoDistanceFilter): void {
+    // TODO: implement current validations.
+    filter.set(filterName, value);
+  }
+
+  private _getFilter(filter: Filter): GenericObject {
+    const result: GenericObject = {};
+    filter.forEach((value, key) => {
+      if (value instanceof Set) {
+        result[key] = [...value];
+      } else {
+        result[key] = value;
+      }
+    });
+    return result;
+  }
+
+  private _addFilter(filter: Filter, filterName: string, value: AssignFilterValue): Query {
+    if (typeof value === 'string' || typeof value === 'number') {
+      value = [`${value}`];
+    }
+
+    if (isArray(value)) {
+      this._addListFilterValue(filter, filterName, value as string[]);
+    } else if (isPlainObject(value)) {
+      this._addObjectFilter(filter, filterName, value as RangeFilter | GeoDistanceFilter);
+    } else {
+      // TODO: Define this error better.
+      throw new Error('Error in filter value');
+    }
+    return this;
+  }
+
+  private _removeFilter(filter: Filter, filterName: string, value: AssignFilterValue): void {
+    if (filter.has(filterName)) {
+      const filterElement = filter.get(filterName);
+      if (filterElement instanceof Set || typeof value === 'string' || typeof value === 'number') {
+        this._removeTermFilterValue(filterElement as TermsFilter, value as AssignTermsFilterValue);
+      } else {
+        filter.delete(filterName);
+      }
+    }
+  }
+
+  private _removeTermFilterValue(filterElement: TermsFilter, value: AssignTermsFilterValue): void {
+    if (typeof value === 'string' || typeof value === 'number') {
+      filterElement.delete(value);
+    } else {
+      for (const subValue of value) {
+        filterElement.delete(subValue);
+      }
+    }
+  }
+
+  private _hasFilter(filter: Filter, filterName: string, value?: string): boolean {
+    // This returns true if the filter is a range, we don't compare
+    return (
+      filter.has(filterName) &&
+      (!value || isPlainObject(filter.get(filterName)) || (filter.get(filterName) as TermsFilter).has(value))
+    );
   }
 }

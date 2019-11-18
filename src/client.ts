@@ -266,7 +266,6 @@ export class Client {
 
     // We get a no query
     if (query == null) {
-      q.search('');
       q.setParameters(params || {});
     } else if (typeof query === 'string') {
       // We get a string query
@@ -274,18 +273,17 @@ export class Client {
       query = query.replace(/\s+/g, ' ');
       query = query === ' ' ? query : query.trim();
 
-      q.search(query);
+      q.searchText(query);
       q.setParameters(params || {});
     } else {
       q = query;
     }
 
-    if (this.hashid && !q.hasParameter('hashid')) {
-      q.setParameter('hashid', this.hashid);
+    if (this.hashid && !q.hashid) {
+      q.hashid = this.hashid;
     }
 
-    const queryParams: DoofinderParameters = q.getParams();
-    queryParams.query = q.getQuery();
+    const queryParams = q.dump();
 
     if (isArray(queryParams.type) && queryParams.type.length === 1) {
       queryParams.type = queryParams.type[0];

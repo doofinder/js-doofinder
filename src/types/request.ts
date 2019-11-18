@@ -1,6 +1,6 @@
 import { QueryTypes, Sort, TransformerOptions } from './base';
 
-export interface RangeFilter {
+interface RangeFilter {
   from: number;
   to: number;
 }
@@ -21,7 +21,7 @@ export interface RangeFacet {
 /**
  * Type definition of a single facet
  */
-export type FacetOption = RangeFacet | string[] | number[];
+export type FacetOption = RangeFacet | string[] | number[] | string | number;
 
 /**
  * Type holding all the current facets
@@ -30,14 +30,12 @@ export interface Facet {
   [facetName: string]: FacetOption;
 }
 
-export type TermsFilter = string | string[];
-
 /**
  * Doofinder Filter definition
  *
  */
 export interface RequestFiltersObject {
-  [field: string]: TermsFilter | RangeFilter;
+  [field: string]: string | number | string[] | number[] | RangeFilter;
 }
 
 /**

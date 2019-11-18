@@ -65,13 +65,13 @@ describe('Query', () => {
     it('sets the query correctly', (done) => {
       // given
       let q = new Query();
-      expect(q.getQuery()).to.be.undefined;
+      expect(q.text).to.be.undefined;
 
       // when
-      q.search('bag');
+      q.searchText('bag');
       
       // then
-      q.getQuery().should.equal('bag');
+      q.text.should.equal('bag');
       done();
     });
 
@@ -152,47 +152,47 @@ describe('Query', () => {
   });
 
   context('Query filter methods', () => {
-    it('adds a filter term correctly', (done) => {
+    it('adds a filter term correctly',(done) => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
 
       // when
       q.addFilter('brand', ['Ferrari']);
 
       // then
-      const params = q.getParams();
+      const params = q.dump();
       params.should.have.property('filter');
       params.filter.should.have.property('brand');
 
       done();
     });
 
-    it('removes a filter term correctly', (done) => {
+    it('removes a filter term correctly',(done) => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2});
-      q.addFilter('brand', ['Ferrari']);
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
+      q.addFilter('brand', ['Ferrari', 'ford']);
 
       // when
       q.removeFilter('brand', ['Ferrari']);
 
       // then
-      const params = q.getParams();
-      params.should.have.property('filter');
-      params.filter.brand.should.not.include('Ferrari');
+      const dump = q.dump();
+      dump.should.have.property('filter');
+      dump.filter.brand.should.not.include('Ferrari');
 
       done();
     });
-    
+
     it('does not remove a filter term if not present', (done) => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
       q.addFilter('brand', ['Ferrari']);
 
       // when
       q.removeFilter('brand', ['Lamborghini']);
 
       // then
-      const params = q.getParams();
+      const params = q.dump();
       params.should.have.property('filter');
       params.filter.should.have.property('brand');
       (params.filter.brand as Array<string>).length.should.be.equal(1);
@@ -200,46 +200,46 @@ describe('Query', () => {
       done();
     });
 
-    it('toggling non existing filter adds it', (done) => {
+    it('toggling non existing filter adds it',(done) => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
 
       // when
       q.toggleFilter('brand', 'Ferrari');
 
       // then
-      const params = q.getParams();
-      params.should.have.property('filter');
-      params.filter.should.have.property('brand');
+      const dump = q.dump();
+      dump.should.have.property('filter');
+      dump.filter.should.have.property('brand');
 
       done();
     });
 
     it('toggling existing filter removes it', (done) => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
       q.addFilter('brand', ['Ferrari']);
 
       // when
       q.toggleFilter('brand', ['Ferrari']);
 
       // then
-      const params = q.getParams();
-      params.should.have.property('filter');
-      params.filter.should.have.property('brand');
-      params.filter.brand.should.be.empty;
+      const dump = q.dump();
+      dump.should.have.property('filter');
+      dump.filter.should.have.property('brand');
+      dump.filter.brand.should.be.empty;
 
       done();
     });
 
     it('check a filter exists correctly', (done) => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
       q.addFilter('brand', ['Ferrari']);
 
       // then
-      expect(q.hasFilter('brand', 'Ferrari')).to.be.true; 
-      expect(q.hasFilter('brand', 'Lamborghini')).to.be.false; 
+      expect(q.hasFilter('brand', 'Ferrari')).to.be.true;
+      expect(q.hasFilter('brand', 'Lamborghini')).to.be.false;
       expect(q.hasFilter('brand')).to.be.true;
       expect(q.hasFilter('make')).to.be.false;
 
@@ -248,12 +248,11 @@ describe('Query', () => {
 
     it('setting filters by hand works as expected', (done) => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
       q.addFilter('brand', ['Ferrari']);
 
-
-      // when 
-      q.setFilters({'model': ['F40'], 'color': ['red']});
+      // when
+      q.setFilters({ model: ['F40'], color: ['red'] });
 
       // then
       const params = q.getParams();
@@ -268,7 +267,7 @@ describe('Query', () => {
   context('Query sorting parameter methods', () => {
     it('adding sort parameters works correctly', (done) => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
 
       // when
       q.addSorting('price');
@@ -282,36 +281,33 @@ describe('Query', () => {
       done();
     });
 
-    it('adding sort parameters when sort is a string', (done) => {
+    it('adding sort parameters when sort is a string',(done) => {
       // when
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
-        sort: 'color'});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2, sort: 'color' });
 
       // then
       const params = q.getParams();
       params.sort.length.should.be.equal(1);
-      params.sort.should.deep.include({'color': Sort.ASC});
+      params.sort.should.deep.include({ color: Sort.ASC });
 
       done();
     });
 
     it('adding sort parameters when sort is an object', (done) => {
       // when
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
-        sort: {color: Sort.DESC}});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2, sort: { color: Sort.DESC } });
 
       // then
       const params = q.getParams();
       params.sort.length.should.be.equal(1);
-      params.sort.should.deep.include({'color': Sort.DESC});
+      params.sort.should.deep.include({ color: Sort.DESC });
 
       done();
     });
 
     it('adding an existing sort parameter modifies it', (done) => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
-        sort: [{price: Sort.ASC}, {color: Sort.ASC}]});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2, sort: [{ price: Sort.ASC }, { color: Sort.ASC }] });
 
       // when
       q.addSorting('price', Sort.DESC);
@@ -319,27 +315,26 @@ describe('Query', () => {
       // then
       const params = q.getParams();
       params.sort.length.should.be.equal(2);
-      params.sort.should.deep.include({color: Sort.ASC});
-      params.sort.should.deep.include({price: Sort.DESC});
+      params.sort.should.deep.include({ color: Sort.ASC });
+      params.sort.should.deep.include({ price: Sort.DESC });
 
       done();
     });
 
     it('setting the sort parameters works', (done) => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
-        sort: [{price: Sort.ASC}, {color: Sort.ASC}]});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2, sort: [{ price: Sort.ASC }, { color: Sort.ASC }] });
 
       // when
-      q.setSorting([{size: Sort.DESC}, {name: Sort.ASC}]);
+      q.setSorting([{ size: Sort.DESC }, { name: Sort.ASC }]);
 
       // then
       const params = q.getParams();
       params.sort.length.should.be.equal(2);
-      params.sort.should.deep.include({size: Sort.DESC});
-      params.sort.should.deep.include({name: Sort.ASC});
-      params.sort.should.not.deep.include({price: Sort.ASC});
-      params.sort.should.not.deep.include({color: Sort.ASC});
+      params.sort.should.deep.include({ size: Sort.DESC });
+      params.sort.should.deep.include({ name: Sort.ASC });
+      params.sort.should.not.deep.include({ price: Sort.ASC });
+      params.sort.should.not.deep.include({ color: Sort.ASC });
 
       done();
     });
@@ -788,10 +783,10 @@ describe('Query', () => {
       let q = new Query({hashid: cfg.hashid, rpp: 20, page: 11});
 
       // when
-      q.search('smartphone');
+      q.searchText('smartphone');
 
       // then
-      q.getQuery().should.be.equal('smartphone');
+      q.text.should.be.equal('smartphone');
 
       done();
     });

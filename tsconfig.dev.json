@@ -2,7 +2,7 @@
   "compilerOptions": {
     "noImplicitAny": true,
     "moduleResolution": "Node",
-    "module": "esnext",
+    "module": "commonjs",
     "target": "esnext",
     "outDir": "out",
     "sourceMap": true
