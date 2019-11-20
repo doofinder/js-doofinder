@@ -444,14 +444,17 @@ Refresh your browser's cache and try again. If the error persists contact suppor
    * @return {String}
    * @public
   ###
-  serializeStatus: ->
+  serializeStatus: (include=[]) ->
     status = merge query: @query, @params
-    delete status[key] for key in [
+
+    ignored_keys = [
       'transformer',
       'rpp',
       'query_counter',
       'page'
-    ]
+    ].filter (x) -> include.indexOf(x) < 0
+
+    delete status[key] for key in ignored_keys
 
     delete status[key] for own key, value of status when not value
 
