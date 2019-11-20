@@ -51,7 +51,7 @@ class Controller extends EventEnabled
 
   ###*
    * Resets status and optionally forces query and params. As it is a reset
-   * aimed to perform a new search, page is forced to 1 in any case.
+   * aimed to perform a new search.
    *
    * @param  {String} query  Search terms.
    * @param  {Object} params Optional search parameters.
@@ -60,7 +60,7 @@ class Controller extends EventEnabled
   ###
   reset: (query = null, params = {}, items = []) ->
     @query = query
-    @params = merge {}, @defaults, params, page: 1
+    @params = merge {}, @defaults, params
     @items = items
     # At least one request sent, to detect if 1st page requested
     @requestDone = false
@@ -138,7 +138,6 @@ class Controller extends EventEnabled
    * @public
   ###
   refresh: ->
-    @params.page = 1
     @__doSearch()
     @trigger "df:refresh", [@query, @params]
 
