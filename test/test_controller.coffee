@@ -478,7 +478,7 @@ describe "Controller", ->
     it "can serialize include params to string", (done) ->
       controller = cfg.getController()
       controller.setParam "page", 2
-      controller.serializeStatus(["page"]).should.equal ""
+      controller.serializeStatus(["page"]).should.equal "page=2"
       controller.reset "hola", query_name: "match_and", transformer: null, rpp: 10, page: 2
       controller.serializeStatus(["page"]).should.equal "query=hola&page=2&query_name=match_and"
       done()
