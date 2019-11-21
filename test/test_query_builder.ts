@@ -10,14 +10,13 @@ import * as cfg from './config';
 
 // required for tests
 import { Query, OrderType, TransformerOptions } from '../src/query';
-import { QueryTypes } from '../src/types';
 
 describe('Query', () => {
   context('Creation of the Query object', () => {
     it('should accept just a hashid', done => {
       // when
       const q = new Query(cfg.hashid);
-      const params = q.getParams();
+      const params = q.dump();
 
       // then
       params.hashid.should.equal(cfg.hashid);
@@ -281,7 +280,6 @@ describe('Query', () => {
       q.addSort([{ size: OrderType.DESC }, { name: OrderType.ASC }]);
 
       // then
-      const params = q.getParams();
       q.sort.length.should.be.equal(2);
       q.sort.should.deep.include({ size: OrderType.DESC });
       q.sort.should.deep.include({ name: OrderType.ASC });
@@ -318,7 +316,7 @@ describe('Query', () => {
     it('hasSorting when it is an object works', done => {
       // given
       const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
-      q.addSort([{ color: OrderType.ASC }])
+      q.addSort([{ color: OrderType.ASC }]);
 
       // then
       q.hasSorting('color').should.be.true;
@@ -357,7 +355,7 @@ describe('Query', () => {
       // given
       const pageNum = Math.floor(Math.random() * 10 + 1);
       const q = new Query({ hashid: cfg.hashid });
-      q.page(pageNum)
+      q.page(pageNum);
 
       // when
       q.nextPage();
@@ -529,25 +527,26 @@ describe('Query', () => {
 
     it('Sets the query_name correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 20 });
+      const q = new Query({ hashid: cfg.hashid });
 
       // when
-      q.queryName(QueryTypes.MatchAnd);
+      q.queryName('match_and');
 
       // then
-      q.getParams().query_name.should.be.equal(QueryTypes.MatchAnd);
+      q.dump().query_name.should.be.equal('match_and');
       done();
     });
 
     it('Clears the query_name correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 20, query_name: QueryTypes.MatchAnd });
+      const q = new Query({ hashid: cfg.hashid });
+      q.queryName('match_and')
 
       // when
       q.queryName();
 
       // then
-      q.getParams().should.not.have.property('query_name');
+      q.dump().should.not.have.property('query_name');
       done();
     });
 
@@ -605,13 +604,15 @@ describe('Query', () => {
 
     it('getParams returns the current params, even the new ones', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 20, page: 11 });
+      const q = new Query({ hashid: cfg.hashid });
+      q.resultsPerPage(10);
+      q.page(3);
 
       // when
-      q.queryName(QueryTypes.Fuzzy);
+      q.queryName('fuzzy');
 
       // then
-      const params = q.getParams();
+      const params = q.dump();
       params.should.have.property('hashid');
       params.should.have.property('rpp');
       params.should.have.property('page');

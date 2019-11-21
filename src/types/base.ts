@@ -7,17 +7,6 @@ export enum Zone {
 }
 
 /**
- * These are the used query types
- * in the Doofinder system
- */
-export enum QueryTypes {
-  MatchAnd = 'match_and',
-  MatchOr = 'match_or',
-  Fuzzy = 'fuzzy',
-  PhoneticText = 'phonetic_text',
-}
-
-/**
  * Types for the stats event
  *
  */

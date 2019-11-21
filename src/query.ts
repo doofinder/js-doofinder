@@ -1,4 +1,4 @@
-import { QueryTypes, DoofinderParameters, FacetOption, SearchParameters, GenericObject } from './types';
+import { DoofinderParameters, FacetOption, SearchParameters, GenericObject } from './types';
 import { isPlainObject, isArray, isEmptyObject } from './util/is';
 
 /**
@@ -77,6 +77,7 @@ export class Query {
   private _transformer?: TransformerOptions;
   private _dataTypes?: DataTypes;
   private _noStats?: 0 | 1;
+  private _queryName?: string;
 
   public constructor(hashid?: string | SearchParameters | Query) {
     if (typeof hashid === 'string') {
@@ -271,6 +272,10 @@ export class Query {
       this.resultsPerPage(this.params['rpp']);
       delete this.params['rpp'];
     }
+    if ('page' in this.params) {
+      this.page(this.params['page']);
+      delete this.params['page'];
+    }
     if ('transformer' in this.params) {
       this.transformer(this.params['transformer']);
       delete this.params['transformer'];
@@ -278,6 +283,14 @@ export class Query {
     if ('type' in this.params) {
       this.addTypes(this.params['type']);
       delete this.params['type'];
+    }
+    if ('nostats' in this.params) {
+      this.noStats(this.params['nostats']);
+      delete this.params['nostats'];
+    }
+    if ('query_name' in this.params) {
+      this.queryName(this.params['query_name']);
+      delete this.params['query_name'];
     }
   }
 
@@ -423,22 +436,27 @@ export class Query {
    * @param  {String}   queryName   The query_name parameter value to set
    *
    */
-  public queryName(queryName?: QueryTypes): void {
-    if (queryName) {
-      this.setParameter('query_name', queryName);
+  public queryName(queryName?: string): Query {
+    if (typeof queryName === 'string' || typeof queryName === 'undefined') {
+      if (queryName) {
+        this._queryName = queryName;
+      } else {
+        delete this._queryName;
+      }
     } else {
-      delete this.params.query_name;
+      throw new QueryValueError('Value error: queryname must be an string value');
     }
+    return this;
   }
 
   /**
    * Sets the nostats flag, call without parameters to clear it
    *
-   * @param  {Boolean}    nostats   Wether to send the nostats flag or not
+   * @param - nostats   Wether to send the nostats flag or not
    *
    */
-  public noStats(noStats?: boolean): void {
-    if (typeof noStats === 'boolean' || typeof noStats === 'undefined') {
+  public noStats(noStats?: boolean | number): Query {
+    if (['boolean', 'string', 'undefined'].includes(typeof noStats)) {
       if (noStats) {
         this._noStats = 1;
       } else {
@@ -447,6 +465,7 @@ export class Query {
     } else {
       throw new QueryValueError('Value error: noStats must be a boolean value');
     }
+    return this;
   }
 
   /**
@@ -503,6 +522,9 @@ export class Query {
     }
     if (this._noStats) {
       dumpData.nostats = this._noStats;
+    }
+    if (this._queryName) {
+      dumpData.query_name = this._queryName;
     }
 
     return dumpData;
