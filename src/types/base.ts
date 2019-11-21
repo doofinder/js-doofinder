@@ -7,14 +7,6 @@ export enum Zone {
 }
 
 /**
- * The available transformer options
- */
-export enum TransformerOptions {
-  Basic = 'basic',
-  OnlyID = 'onlyid',
-}
-
-/**
  * These are the used query types
  * in the Doofinder system
  */

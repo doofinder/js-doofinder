@@ -1,11 +1,4 @@
-import {
-  QueryTypes,
-  TransformerOptions,
-  DoofinderParameters,
-  FacetOption,
-  SearchParameters,
-  GenericObject,
-} from './types';
+import { QueryTypes, DoofinderParameters, FacetOption, SearchParameters, GenericObject } from './types';
 import { isPlainObject, isArray, isEmptyObject } from './util/is';
 
 /**
@@ -15,6 +8,14 @@ import { isPlainObject, isArray, isEmptyObject } from './util/is';
 export enum SortType {
   ASC = 'asc',
   DESC = 'desc',
+}
+
+/**
+ * The available transformer options
+ */
+export enum TransformerOptions {
+  Basic = 'basic',
+  OnlyID = 'onlyid',
 }
 
 export interface RangeFilter {
@@ -69,8 +70,9 @@ export class Query {
   private _filters: Filter = new Map();
   private _excludedFilters: Filter = new Map();
   private _sort: SortValue = new Map();
-  private _rpp: number | undefined;
-  private _page: number | undefined;
+  private _rpp?: number;
+  private _page?: number;
+  private _transformer?: TransformerOptions;
 
   public constructor(hashid?: string | SearchParameters | Query) {
     if (typeof hashid === 'string') {
@@ -269,6 +271,10 @@ export class Query {
       this.resultsPerPage(this.params['rpp']);
       delete this.params['rpp'];
     }
+    if ('transformer' in this.params) {
+      this.transformer(this.params['transformer']);
+      delete this.params['transformer'];
+    }
   }
 
   public addSort(fieldOrList: InputSortValue[]): Query;
@@ -392,14 +398,17 @@ export class Query {
   /**
    * Sets the transformer, call it empty to reset it to null
    *
-   * @param  {String}   transformer   The transformer option to set
+   * @param  transformer - The transformer option to set
+   *
+   * @returns Query
    */
-  public transformer(transformer?: TransformerOptions): void {
+  public transformer(transformer?: string): Query {
     if (transformer) {
-      this.setParameter('transformer', transformer);
+      this._transformer = this._validateTransformer(transformer);
     } else {
-      delete this.params.transformer;
+      this._transformer = undefined;
     }
+    return this;
   }
 
   /**
@@ -506,6 +515,9 @@ export class Query {
     if (this._page) {
       dumpData.page = this._page;
     }
+    if (this._transformer) {
+      dumpData.transformer = this._transformer;
+    }
 
     return dumpData;
   }
@@ -598,6 +610,16 @@ export class Query {
       return SortType.DESC;
     } else {
       throw new QueryValueError('Value error: Sort type must be: "asc" or "desc"');
+    }
+  }
+
+  private _validateTransformer(transformer: string): TransformerOptions {
+    if (transformer.toLowerCase() === TransformerOptions.Basic) {
+      return TransformerOptions.Basic;
+    } else if (transformer.toLowerCase() === TransformerOptions.OnlyID) {
+      return TransformerOptions.OnlyID;
+    } else {
+      throw new QueryValueError('Value error: Transformer must be: "basic" or "onlyid"');
     }
   }
 }

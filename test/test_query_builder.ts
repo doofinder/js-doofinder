@@ -9,8 +9,8 @@ should();
 import * as cfg from './config';
 
 // required for tests
-import { Query, SortType, InputSortValue } from '../src/query';
-import { QueryTypes, TransformerOptions, FacetOption, SearchParameters } from '../src/types';
+import { Query, SortType, TransformerOptions } from '../src/query';
+import { QueryTypes } from '../src/types';
 
 describe('Query', () => {
   context('Creation of the Query object', () => {
@@ -505,25 +505,26 @@ describe('Query', () => {
   context('Other Query parameter methods', () => {
     it('Sets the transformer correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 20 });
+      const q = new Query({ hashid: cfg.hashid });
 
       // when
       q.transformer(TransformerOptions.Basic);
 
       // then
-      q.getParams().transformer.should.be.equal(TransformerOptions.Basic);
+      q.dump().transformer.should.be.equal(TransformerOptions.Basic);
       done();
     });
 
     it('Clears the transformer correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 20, transformer: TransformerOptions.Basic });
+      const q = new Query({ hashid: cfg.hashid });
+      q.transformer(TransformerOptions.Basic);
 
       // when
       q.transformer();
 
       // then
-      q.getParams().should.not.have.property('transformer');
+      q.dump().should.not.have.property('transformer');
       done();
     });
 
