@@ -1,4 +1,4 @@
-import { QueryTypes, TransformerOptions } from './base';
+import { QueryTypes } from './base';
 
 interface RangeFilter {
   from: number;
@@ -49,7 +49,7 @@ export interface DoofinderParameters {
   type?: string | string[];
   filter?: RequestFiltersObject;
   exclude?: RequestFiltersObject;
-  transformer?: TransformerOptions;
+  transformer?: any;
   sort?: any;
   timeout?: number;
   jsonp?: boolean;

@@ -9,7 +9,7 @@ should();
 import * as cfg from './config';
 
 // required for tests
-import { Query, SortType, TransformerOptions } from '../src/query';
+import { Query, OrderType, TransformerOptions } from '../src/query';
 import { QueryTypes } from '../src/types';
 
 describe('Query', () => {
@@ -252,7 +252,7 @@ describe('Query', () => {
       q.addSort('color', 'asc');
 
       // then
-      q.sort.should.deep.include({ color: SortType.ASC });
+      q.sort.should.deep.include({ color: OrderType.ASC });
 
       done();
     });
@@ -263,7 +263,7 @@ describe('Query', () => {
       q.addSort([{ color: 'desc' }]);
 
       // then
-      q.sort.should.deep.include({ color: SortType.DESC });
+      q.sort.should.deep.include({ color: OrderType.DESC });
 
       done();
     });
@@ -274,19 +274,19 @@ describe('Query', () => {
         hashid: cfg.hashid,
         rpp: 10,
         page: 2,
-        sort: [{ price: SortType.ASC }, { color: SortType.ASC }],
+        sort: [{ price: OrderType.ASC }, { color: OrderType.ASC }],
       });
 
       // when
-      q.addSort([{ size: SortType.DESC }, { name: SortType.ASC }]);
+      q.addSort([{ size: OrderType.DESC }, { name: OrderType.ASC }]);
 
       // then
       const params = q.getParams();
       q.sort.length.should.be.equal(2);
-      q.sort.should.deep.include({ size: SortType.DESC });
-      q.sort.should.deep.include({ name: SortType.ASC });
-      q.sort.should.not.deep.include({ price: SortType.ASC });
-      q.sort.should.not.deep.include({ color: SortType.ASC });
+      q.sort.should.deep.include({ size: OrderType.DESC });
+      q.sort.should.deep.include({ name: OrderType.ASC });
+      q.sort.should.not.deep.include({ price: OrderType.ASC });
+      q.sort.should.not.deep.include({ color: OrderType.ASC });
 
       done();
     });
@@ -294,7 +294,7 @@ describe('Query', () => {
     it('hasSorting returns proper values when asked', done => {
       // given
       const q = new Query();
-      q.addSort([{ price: SortType.ASC }, { color: SortType.ASC }]);
+      q.addSort([{ price: OrderType.ASC }, { color: OrderType.ASC }]);
       // then
       q.hasSorting('price').should.be.true;
       q.hasSorting('color').should.be.true;
@@ -318,7 +318,7 @@ describe('Query', () => {
     it('hasSorting when it is an object works', done => {
       // given
       const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
-      q.addSort([{ color: SortType.ASC }])
+      q.addSort([{ color: OrderType.ASC }])
 
       // then
       q.hasSorting('color').should.be.true;

@@ -10,7 +10,7 @@ should();
 
 // required for tests
 import { Client, ClientResponseError } from '../src/client';
-import { InputExtendedSortValue, SortType, InputSortValue } from '../src/query';
+import { InputExtendedSortValue, OrderType, InputSortValue } from '../src/query';
 
 // config, utils & mocks
 import * as cfg from './config';
@@ -254,14 +254,14 @@ describe('Client', () => {
 
       it('accepts an object for a single field to sort on', (done) => {
         const querystring = `hashid=${cfg.hashid}&query=&sort%5B0%5D%5Bbrand%5D=desc`;
-        const sorting: InputExtendedSortValue[] = [{ brand: SortType.DESC }];
+        const sorting: InputExtendedSortValue[] = [{ brand: OrderType.DESC }];
         buildQuery(undefined, { sort: sorting }).should.equal(querystring);
         done();
       });
 
       it('accepts an array of objects for a multiple fields to sort on', (done) => {
         const querystring = `hashid=${cfg.hashid}&query=&sort%5B0%5D%5B_score%5D=desc&sort%5B1%5D%5Bbrand%5D=asc`;
-        const sorting: InputSortValue[] = [{ _score: SortType.DESC }, { brand: SortType.ASC }];
+        const sorting: InputSortValue[] = [{ _score: OrderType.DESC }, { brand: OrderType.ASC }];
         buildQuery(undefined, { sort: sorting }).should.equal(querystring);
         done();
       });

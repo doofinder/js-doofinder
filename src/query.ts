@@ -5,7 +5,7 @@ import { isPlainObject, isArray, isEmptyObject } from './util/is';
  * Values available for the sorting options
  * TODO: If this is not used in the response, move to request.ts
  */
-export enum SortType {
+export enum OrderType {
   ASC = 'asc',
   DESC = 'desc',
 }
@@ -47,7 +47,7 @@ export type InputExtendedSortValue = {
 
 export type InputSortValue = string | InputExtendedSortValue;
 
-export type SortValue = Map<string, SortType>;
+export type SortValue = Map<string, OrderType>;
 
 export class QueryValueError extends Error {
   public constructor(message: string) {
@@ -68,7 +68,7 @@ export class Query {
   public text: string;
   private params: SearchParameters = {};
   private _filters: Filter = new Map();
-  private _excludedFilters: Filter = new Map();
+  private _exclusionFilters: Filter = new Map();
   private _sort: SortValue = new Map();
   private _rpp?: number;
   private _page?: number;
@@ -98,17 +98,13 @@ export class Query {
   }
 
   public get excludedFilters(): GenericObject {
-    return this._getFilter(this._excludedFilters);
+    return this._getFilter(this._exclusionFilters);
   }
 
-  public get sort(): GenericObject {
-    const result: InputExtendedSortValue[] = [];
-    this._sort.forEach((value, key) => {
-      const sortValue: GenericObject = {};
-      sortValue[key] = value;
-      result.push(sortValue);
-    });
-    return result;
+  public get sort(): InputExtendedSortValue[] {
+    const results: InputExtendedSortValue[] = [];
+    this._sort.forEach((ordering, field) => results.push({ [field]: ordering }));
+    return results;
   }
 
   /**
@@ -132,7 +128,7 @@ export class Query {
     this.params = {};
     this.text = undefined;
     this._filters = new Map();
-    this._excludedFilters = new Map();
+    this._exclusionFilters = new Map();
   }
 
   /**
@@ -154,7 +150,7 @@ export class Query {
    * @param value       The value to add to the exclude filter
    */
   public addExcludeFilter(filterName: string, value: InputFilterValue): Query {
-    return this._addFilter(this._excludedFilters, filterName, value);
+    return this._addFilter(this._exclusionFilters, filterName, value);
   }
 
   /**
@@ -174,8 +170,8 @@ export class Query {
    * @param filterName  The name of the filter to modify
    * @param value       The value to remove from the filter
    */
-  public removeExcludedFilter(filterName: string, value: InputFilterValue): Query {
-    this._removeFilter(this._excludedFilters, filterName, value);
+  public removeExclusionFilter(filterName: string, value: InputFilterValue): Query {
+    this._removeFilter(this._exclusionFilters, filterName, value);
     return this;
   }
 
@@ -199,8 +195,8 @@ export class Query {
     return this._hasFilter(this._filters, filterName, value);
   }
 
-  public hasExcludedFilter(filterName: string, value?: string): boolean {
-    return this._hasFilter(this._excludedFilters, filterName, value);
+  public hasExclusionFilter(filterName: string, value?: string): boolean {
+    return this._hasFilter(this._exclusionFilters, filterName, value);
   }
 
   /**
@@ -230,7 +226,7 @@ export class Query {
     });
   }
 
-  public toggleExcludedFilter(filterName: string, value: FacetOption | string | number): void {
+  public toggleExclusionFilter(filterName: string, value: FacetOption | string | number): void {
     let values: Array<RangeFilter | string | number> = [];
 
     if (Array.isArray(value)) {
@@ -240,8 +236,8 @@ export class Query {
     }
 
     (values as Array<unknown>).forEach((value: any) => {
-      if (this.hasExcludedFilter(filterName, value)) {
-        this.removeExcludedFilter(filterName, [value]);
+      if (this.hasExclusionFilter(filterName, value)) {
+        this.removeExclusionFilter(filterName, [value]);
       } else {
         this.addExcludeFilter(filterName, [value]);
       }
@@ -279,17 +275,17 @@ export class Query {
 
   public addSort(fieldOrList: InputSortValue[]): Query;
   public addSort(fieldOrList: string, sortType?: string): Query;
-  public addSort(fieldOrList: string | InputSortValue[], sortType: string = SortType.ASC): Query {
+  public addSort(fieldOrList: string | InputSortValue[], sortType: string = OrderType.ASC): Query {
     if (typeof fieldOrList === 'string') {
-      this._sort.set(fieldOrList, this._validateSortType(sortType));
+      this._sort.set(fieldOrList, this._validateOrderType(sortType));
     } else {
       for (const value of fieldOrList) {
         if (typeof value === 'string') {
-          this._sort.set(value, SortType.ASC);
+          this._sort.set(value, OrderType.ASC);
         } else {
           const field = Object.keys(value)[0];
           const sortType: string = Object.values(value)[0] as string;
-          this._sort.set(field, this._validateSortType(sortType));
+          this._sort.set(field, this._validateOrderType(sortType));
         }
       }
     }
@@ -603,11 +599,11 @@ export class Query {
     );
   }
 
-  private _validateSortType(sortType: string): SortType {
-    if (sortType.toLowerCase() === SortType.ASC) {
-      return SortType.ASC;
-    } else if (sortType.toLowerCase() === SortType.DESC) {
-      return SortType.DESC;
+  private _validateOrderType(sortType: string): OrderType {
+    if (sortType.toLowerCase() === OrderType.ASC) {
+      return OrderType.ASC;
+    } else if (sortType.toLowerCase() === OrderType.DESC) {
+      return OrderType.DESC;
     } else {
       throw new QueryValueError('Value error: Sort type must be: "asc" or "desc"');
     }
