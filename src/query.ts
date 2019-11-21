@@ -2,14 +2,20 @@ import {
   QueryTypes,
   TransformerOptions,
   DoofinderParameters,
-  Facet,
   FacetOption,
   SearchParameters,
-  Sort,
   GenericObject,
-  RequestSortOptions,
 } from './types';
 import { isPlainObject, isArray, isEmptyObject } from './util/is';
+
+/**
+ * Values available for the sorting options
+ * TODO: If this is not used in the response, move to request.ts
+ */
+export enum SortType {
+  ASC = 'asc',
+  DESC = 'desc',
+}
 
 export interface RangeFilter {
   lte?: number;
@@ -34,6 +40,14 @@ export type AssignTermsFilterValue = string | number | string[] | number[];
  */
 export type AssignFilterValue = AssignTermsFilterValue | RangeFilter | GeoDistanceFilter;
 
+export type InputExtendedSortValue = {
+  [key: string]: 'asc' | 'desc';
+};
+
+export type InputSortValue = string | InputExtendedSortValue;
+
+export type SortValue = Map<string, SortType>;
+
 /**
  * Main QueryBuilder interface, allows creating programmaticly
  * the query using methods instead of creating the JSON and
@@ -47,6 +61,7 @@ export class Query {
   private params: SearchParameters = {};
   private _filters: Filter = new Map();
   private _excludedFilters: Filter = new Map();
+  private _sort: SortValue = new Map();
 
   public constructor(hashid?: string | SearchParameters | Query) {
     if (typeof hashid === 'string') {
@@ -73,6 +88,16 @@ export class Query {
 
   public get excludedFilters(): GenericObject {
     return this._getFilter(this._excludedFilters);
+  }
+
+  public get sort(): GenericObject {
+    const result: InputExtendedSortValue[] = [];
+    this._sort.forEach((value, key) => {
+      const sortValue: GenericObject = {};
+      sortValue[key] = value;
+      result.push(sortValue);
+    });
+    return result;
   }
 
   /**
@@ -213,28 +238,11 @@ export class Query {
   }
 
   /**
-   * Sets the filter structure directly to the requests of a given context
-   *
-   * @param  {Object}     filters            The filter structure
-   *
-   * @param  {String}     filterType         If we are adding a "filter" (default)
-   *                                         or an "exclude" filter.
-   *
-   */
-  public setFilters(filters: Facet, filterType = 'filter'): void {
-    this.params[filterType] = filters;
-  }
-
-  /**
    * Allows to directly set a parameter on the query builder
    *
    */
   public setParameter(paramName: string, value: unknown): void {
-    if (paramName === 'sort') {
-      this.params['sort'] = this._parseSortingOptions(value as RequestSortOptions) as RequestSortOptions;
-    } else {
-      this.params[paramName] = value;
-    }
+    this.params[paramName] = value;
   }
 
   /**
@@ -244,77 +252,32 @@ export class Query {
    */
   public setParameters(parameters: SearchParameters): void {
     this.params = Object.assign({}, this.params, this._hydrate(parameters));
-  }
-
-  /**
-   * Sets an exclusion structure to the current context
-   *
-   * @param  {Object}        filters            The exclusion filter to add
-   *
-   */
-  public setExclusions(filters: Facet): void {
-    this.setFilters(filters, 'exclude');
-  }
-
-  /**
-   * Remove a sorting field from the parameters
-   *
-   * @param   {String}    field   The field we want to remove the ordering
-   *
-   */
-  public removeSorting(field: string): void {
-    if (!this.params.sort) {
-      return;
+    if ('sort' in this.params) {
+      this.addSort(this.params['sort']);
     }
+  }
 
-    const sortParams = this.params.sort;
-    const index = this._findSortField(field, sortParams as Array<RequestSortOptions>);
-    if (index !== -1) {
-      (sortParams as Array<RequestSortOptions>).splice(index, 1);
-      if (sortParams.length === 0) {
-        delete this.params.sort;
-      } else {
-        this.params.sort = sortParams;
+  public addSort(fieldOrList: InputSortValue[]): Query;
+  public addSort(fieldOrList: string, sortType?: string): Query;
+  public addSort(fieldOrList: string | InputSortValue[], sortType: string = SortType.ASC): Query {
+    if (typeof fieldOrList === 'string') {
+      this._sort.set(fieldOrList, this._validateSortType(sortType));
+    } else {
+      for (const value of fieldOrList) {
+        if (typeof value === 'string') {
+          this._sort.set(value, SortType.ASC);
+        } else {
+          const field = Object.keys(value)[0];
+          const sortType: string = Object.values(value)[0] as string;
+          this._sort.set(field, this._validateSortType(sortType));
+        }
       }
     }
-  }
-
-  /**
-   * Adds or alters a sorting parameter to the query
-   *
-   * @param  {String}   field   The field to order by
-   *
-   * @param  {String}   order   Order literal to order by
-   *
-   */
-  public addSorting(field: string, order = Sort.ASC): void {
-    // This is so Prettier won't change it to const automagically
-    let sortParams: RequestSortOptions = [];
-    sortParams = this.params.sort || [];
-    this.removeSorting(field);
-    const obj: GenericObject = {};
-    obj[field] = order;
-    (sortParams as Array<RequestSortOptions>).push(obj);
-
-    this.params.sort = sortParams;
-  }
-
-  /**
-   * Sets all the sorting options at once
-   *
-   * @param  {Array}  sortings    The sortings in the order wanted
-   *
-   */
-  public setSorting(sortings: Array<RequestSortOptions>): void {
-    this.params.sort = sortings as RequestSortOptions;
+    return this;
   }
 
   public hasSorting(field: string): boolean {
-    if (!this.params.sort) {
-      return false;
-    } else {
-      return this._findSortField(field, this.params.sort as Array<RequestSortOptions>) !== -1;
-    }
+    return this._sort.has(field);
   }
 
   /**
@@ -515,38 +478,14 @@ export class Query {
     if (!isEmptyObject(this.excludedFilters)) {
       dumpData.excludedFilters = this.excludedFilters;
     }
+    if (!isEmptyObject(this.sort)) {
+      dumpData.sort = this.sort;
+    }
 
     return dumpData;
   }
 
-  private _parseSortingOptions(sortParams: RequestSortOptions): RequestSortOptions[] {
-    if (isPlainObject(sortParams) && Object.keys(sortParams).length > 1) {
-      throw new Error('To sort by multiple fields use an Array of Objects');
-    }
-
-    if (!isArray(sortParams)) {
-      if (isPlainObject(sortParams)) {
-        const res: Array<RequestSortOptions> = [];
-        res.push(sortParams);
-        return res;
-      } else if (typeof sortParams === 'string') {
-        const obj: RequestSortOptions = {};
-        obj[sortParams] = Sort.ASC;
-        const res: Array<RequestSortOptions> = [];
-        res.push(obj);
-        return res;
-      } else {
-        return null;
-      }
-    } else {
-      return sortParams as Array<RequestSortOptions>;
-    }
-  }
-
   private _hydrate(params: SearchParameters): SearchParameters {
-    if ('sort' in params) {
-      params.sort = this._parseSortingOptions(params.sort) as RequestSortOptions;
-    }
     // Filter nulls
     Object.keys(params).forEach((key: string) => {
       if (!params[key]) {
@@ -554,17 +493,6 @@ export class Query {
       }
     });
     return params;
-  }
-
-  private _findSortField(field: string, sortParams: Array<RequestSortOptions>): number {
-    let index = -1;
-    sortParams.forEach((sort: RequestSortOptions, idx: number) => {
-      if (field in (sort as GenericObject)) {
-        index = idx;
-      }
-    });
-
-    return index;
   }
 
   private _addListFilterValue(filter: Filter, filterName: string, values: string[]): void {
@@ -637,5 +565,15 @@ export class Query {
       filter.has(filterName) &&
       (!value || isPlainObject(filter.get(filterName)) || (filter.get(filterName) as TermsFilter).has(value))
     );
+  }
+
+  private _validateSortType(sortType: string): SortType {
+    if (sortType.toLowerCase() === SortType.ASC) {
+      return SortType.ASC;
+    } else if (sortType.toLowerCase() === SortType.DESC) {
+      return SortType.DESC;
+    } else {
+      throw new Error('Invalid value for sort type, it must be: "asc" or "desc"');
+    }
   }
 }

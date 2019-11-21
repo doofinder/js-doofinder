@@ -10,13 +10,14 @@ should();
 
 // required for tests
 import { Client, ClientResponseError } from '../src/client';
+import { InputExtendedSortValue, SortType, InputSortValue } from '../src/query';
 
 // config, utils & mocks
 import * as cfg from './config';
 
 // Mock the fetch API
 import * as fetchMock from 'fetch-mock';
-import { Zone, DoofinderParameters, SortDefinition, Sort, StatsEvent, RequestSortOptions } from '../src/types';
+import { Zone, DoofinderParameters, StatsEvent } from '../src/types';
 import { isPlainObject } from '../src/util/is';
 
 function buildQuery(query?: string, params?: DoofinderParameters) {
@@ -245,26 +246,16 @@ describe('Client', () => {
     });
 
     context('Sorting', () => {
-      it('accepts a single field name to sort on', (done) => {
+      it('accepts a single field name to sort on',(done) => {
         const querystring = `sort%5B0%5D%5Bbrand%5D=asc&hashid=${cfg.hashid}&query=`;
-        (buildQuery(undefined, {sort: 'brand'})).should.equal(querystring);
+        buildQuery(undefined, { sort: 'brand' }).should.equal(querystring);
         done();
       });
 
       it('accepts an object for a single field to sort on', (done) => {
         const querystring = `sort%5B0%5D%5Bbrand%5D=desc&hashid=${cfg.hashid}&query=`;
-        const sorting: SortDefinition = { brand: Sort.DESC};
-        (buildQuery(undefined, {sort: sorting})).should.equal(querystring);
-        done();
-      });
-
-      it('fails with an object for a multiple fields to sort on', (done) => {
-        const sorting: RequestSortOptions = {
-          _score: Sort.DESC,
-          brand: Sort.ASC
-        };
-
-        (() => (buildQuery(undefined, {sort: sorting}))).should.throw();
+        const sorting: InputExtendedSortValue[] = [{ brand: SortType.DESC }];
+        buildQuery(undefined, { sort: sorting }).should.equal(querystring);
         done();
       });
 
@@ -273,11 +264,8 @@ describe('Client', () => {
           'sort%5B0%5D%5B_score%5D=desc',
           `&sort%5B1%5D%5Bbrand%5D=asc&hashid=${cfg.hashid}&query=`
         ].join('');
-        const sorting: RequestSortOptions = [
-          {_score: Sort.DESC},
-          {brand: Sort.ASC}
-        ];
-        (buildQuery(undefined, {sort: sorting})).should.equal(querystring);
+        const sorting: InputSortValue[] = [{ _score: SortType.DESC }, { brand: SortType.ASC }];
+        buildQuery(undefined, { sort: sorting }).should.equal(querystring);
         done();
       });
     });

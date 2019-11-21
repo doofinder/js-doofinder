@@ -9,14 +9,12 @@ should();
 import * as cfg from './config';
 
 // required for tests
-import { Query } from '../src/query';
-import { QueryTypes, TransformerOptions, DoofinderParameters,
- Facet, FacetOption, SearchParameters, Sort, RequestSortOptions } from '../src/types';
-
+import { Query, SortType, InputSortValue } from '../src/query';
+import { QueryTypes, TransformerOptions, FacetOption, SearchParameters } from '../src/types';
 
 describe('Query', () => {
   context('Creation of the Query object', () => {
-    it('should accept just a hashid', (done) => {
+    it('should accept just a hashid', done => {
       // when
       const q = new Query(cfg.hashid);
       const params = q.getParams();
@@ -26,7 +24,7 @@ describe('Query', () => {
       done();
     });
 
-    it('should accept and copy another query', (done) => {
+    it('should accept and copy another query', done => {
       // given
       const qOriginal = new Query(cfg.hashid);
       const paramsOriginal = qOriginal.getParams();
@@ -38,16 +36,16 @@ describe('Query', () => {
       // then
       (qOriginal === qCopy).should.not.be.true;
       paramsCopy.hashid.should.equal(paramsOriginal.hashid);
-      
+
       done();
     });
 
-    it('should accept search parameters', (done) => {
+    it('should accept search parameters', done => {
       // given
       const params = {
         hashid: cfg.hashid,
-        page: 2
-      }
+        page: 2,
+      };
 
       // when
       const q = new Query(params);
@@ -62,22 +60,22 @@ describe('Query', () => {
   });
 
   context('Query low level parameter methods', () => {
-    it('sets the query correctly', (done) => {
+    it('sets the query correctly', done => {
       // given
-      let q = new Query();
+      const q = new Query();
       expect(q.text).to.be.undefined;
 
       // when
       q.searchText('bag');
-      
+
       // then
       q.text.should.equal('bag');
       done();
     });
 
-    it('clears the query correctly', (done) => {
+    it('clears the query correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 20});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20 });
       let params = q.getParams();
       params.should.have.property('hashid');
       params.should.have.property('rpp');
@@ -94,9 +92,9 @@ describe('Query', () => {
       done();
     });
 
-    it('adds parameters correctly', (done) => {
+    it('adds parameters correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 20});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20 });
 
       // when
       q.setParameter('page', 2);
@@ -111,10 +109,10 @@ describe('Query', () => {
 
       done();
     });
-    
-    it('alters parameters correctly', (done) => {
+
+    it('alters parameters correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 20});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20 });
 
       // when
       q.setParameter('rpp', 10);
@@ -129,10 +127,10 @@ describe('Query', () => {
       done();
     });
 
-    it('setting several parameters at once correctly', (done) => {
+    it('setting several parameters at once correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 20, page: 2});
-      const newParams = {rpp: 10, transformer: TransformerOptions.Basic};
+      const q = new Query({ hashid: cfg.hashid, rpp: 20, page: 2 });
+      const newParams = { rpp: 10, transformer: TransformerOptions.Basic };
 
       // when
       q.setParameters(newParams);
@@ -152,7 +150,7 @@ describe('Query', () => {
   });
 
   context('Query filter methods', () => {
-    it('adds a filter term correctly',(done) => {
+    it('adds a filter term correctly', done => {
       // given
       const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
 
@@ -167,7 +165,7 @@ describe('Query', () => {
       done();
     });
 
-    it('removes a filter term correctly',(done) => {
+    it('removes a filter term correctly', done => {
       // given
       const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
       q.addFilter('brand', ['Ferrari', 'ford']);
@@ -183,7 +181,7 @@ describe('Query', () => {
       done();
     });
 
-    it('does not remove a filter term if not present', (done) => {
+    it('does not remove a filter term if not present', done => {
       // given
       const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
       q.addFilter('brand', ['Ferrari']);
@@ -200,7 +198,7 @@ describe('Query', () => {
       done();
     });
 
-    it('toggling non existing filter adds it',(done) => {
+    it('toggling non existing filter adds it', done => {
       // given
       const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
 
@@ -215,7 +213,7 @@ describe('Query', () => {
       done();
     });
 
-    it('toggling existing filter removes it', (done) => {
+    it('toggling existing filter removes it', done => {
       // given
       const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
       q.addFilter('brand', ['Ferrari']);
@@ -232,7 +230,7 @@ describe('Query', () => {
       done();
     });
 
-    it('check a filter exists correctly', (done) => {
+    it('check a filter exists correctly', done => {
       // given
       const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
       q.addFilter('brand', ['Ferrari']);
@@ -245,170 +243,58 @@ describe('Query', () => {
 
       done();
     });
-
-    it('setting filters by hand works as expected', (done) => {
-      // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
-      q.addFilter('brand', ['Ferrari']);
-
-      // when
-      q.setFilters({ model: ['F40'], color: ['red'] });
-
-      // then
-      const params = q.getParams();
-      params.filter.should.not.have.property('brand');
-      params.filter.should.have.property('model');
-      params.filter.should.have.property('color');
-
-      done();
-    });
   });
 
   context('Query sorting parameter methods', () => {
-    it('adding sort parameters works correctly', (done) => {
+    it('adding sort parameters when sort is a string', done => {
+      // when
+      const q = new Query();
+      q.addSort('color', 'asc');
+
+      // then
+      q.sort.should.deep.include({ color: SortType.ASC });
+
+      done();
+    });
+
+    it('adding sort parameters when sort is an object', done => {
+      // when
+      const q = new Query();
+      q.addSort([{ color: 'desc' }]);
+
+      // then
+      q.sort.should.deep.include({ color: SortType.DESC });
+
+      done();
+    });
+
+    it('setting the sort parameters works', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
+      const q = new Query({
+        hashid: cfg.hashid,
+        rpp: 10,
+        page: 2,
+        sort: [{ price: SortType.ASC }, { color: SortType.ASC }],
+      });
 
       // when
-      q.addSorting('price');
+      q.addSort([{ size: SortType.DESC }, { name: SortType.ASC }]);
 
       // then
       const params = q.getParams();
-      params.sort.length.should.be.equal(1);
-      (params.sort as Array<RequestSortOptions>)[0].should.have.property('price');
-      (params.sort as Array<any>)[0].price.should.be.equal(Sort.ASC);
+      q.sort.length.should.be.equal(2);
+      q.sort.should.deep.include({ size: SortType.DESC });
+      q.sort.should.deep.include({ name: SortType.ASC });
+      q.sort.should.not.deep.include({ price: SortType.ASC });
+      q.sort.should.not.deep.include({ color: SortType.ASC });
 
       done();
     });
 
-    it('adding sort parameters when sort is a string',(done) => {
-      // when
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2, sort: 'color' });
-
-      // then
-      const params = q.getParams();
-      params.sort.length.should.be.equal(1);
-      params.sort.should.deep.include({ color: Sort.ASC });
-
-      done();
-    });
-
-    it('adding sort parameters when sort is an object', (done) => {
-      // when
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2, sort: { color: Sort.DESC } });
-
-      // then
-      const params = q.getParams();
-      params.sort.length.should.be.equal(1);
-      params.sort.should.deep.include({ color: Sort.DESC });
-
-      done();
-    });
-
-    it('adding an existing sort parameter modifies it', (done) => {
+    it('hasSorting returns proper values when asked', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2, sort: [{ price: Sort.ASC }, { color: Sort.ASC }] });
-
-      // when
-      q.addSorting('price', Sort.DESC);
-
-      // then
-      const params = q.getParams();
-      params.sort.length.should.be.equal(2);
-      params.sort.should.deep.include({ color: Sort.ASC });
-      params.sort.should.deep.include({ price: Sort.DESC });
-
-      done();
-    });
-
-    it('setting the sort parameters works', (done) => {
-      // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2, sort: [{ price: Sort.ASC }, { color: Sort.ASC }] });
-
-      // when
-      q.setSorting([{ size: Sort.DESC }, { name: Sort.ASC }]);
-
-      // then
-      const params = q.getParams();
-      params.sort.length.should.be.equal(2);
-      params.sort.should.deep.include({ size: Sort.DESC });
-      params.sort.should.deep.include({ name: Sort.ASC });
-      params.sort.should.not.deep.include({ price: Sort.ASC });
-      params.sort.should.not.deep.include({ color: Sort.ASC });
-
-      done();
-    });
-
-    it('removing a sort parameter works correctly', (done) => {
-      // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
-        sort: [{price: Sort.ASC}, {color: Sort.ASC}]});
-
-      // when
-      q.removeSorting('color');
-
-      // then
-      const params = q.getParams();
-      params.sort.length.should.be.equal(1);
-      params.sort.should.deep.include({price: Sort.ASC});
-      params.sort.should.not.deep.include({color: Sort.ASC});
-      params.sort.should.not.deep.include({color: Sort.DESC});
-
-      done();
-    });
-
-    it('removing a sort parameter when it is a string works', (done) => {
-      // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
-        sort: 'color'});
-
-      // when
-      q.removeSorting('color');
-
-      // then
-      const params = q.getParams();
-      params.should.not.have.property('sort');
-
-      done();
-    });
-
-    it('removing a sort parameter when it is an object works', (done) => {
-      // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
-        sort: {'color': Sort.ASC}});
-
-      // when
-      q.removeSorting('color');
-
-      // then
-      const params = q.getParams();
-      params.should.not.have.property('sort');
-
-      done();
-    });
-
-    it('removing a non existent sort parameter does nothing', (done) => {
-      // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
-        sort: [{price: Sort.ASC}, {color: Sort.ASC}]});
-
-      // when
-      q.removeSorting('size');
-
-      // then
-      const params = q.getParams();
-      params.sort.length.should.be.equal(2);
-      params.sort.should.deep.include({price: Sort.ASC});
-      params.sort.should.deep.include({color: Sort.ASC});
-
-      done();
-    });
-
-    it('hasSorting returns proper values when asked', (done) => {
-      // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
-        sort: [{price: Sort.ASC}, {color: Sort.ASC}]});
-
+      const q = new Query();
+      q.addSort([{ price: SortType.ASC }, { color: SortType.ASC }]);
       // then
       q.hasSorting('price').should.be.true;
       q.hasSorting('color').should.be.true;
@@ -417,22 +303,10 @@ describe('Query', () => {
       done();
     });
 
-    it('hasSorting returns proper values when string sorting', (done) => {
+    it('hasSorting returns proper values when string sorting', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
-        sort: 'color'});
-      
-      // then
-      q.hasSorting('color').should.be.true;
-      q.hasSorting('price').should.be.false;
-
-      done();
-    });
-
-    it('hasSorting when it is an object works', (done) => {
-      // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2, 
-        sort: {'color': Sort.ASC}});
+      const q = new Query();
+      q.addSort('color');
 
       // then
       q.hasSorting('color').should.be.true;
@@ -441,9 +315,21 @@ describe('Query', () => {
       done();
     });
 
-    it('hasSorting when there is no sorting works', (done) => {
+    it('hasSorting when it is an object works', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
+      q.addSort([{ color: SortType.ASC }])
+
+      // then
+      q.hasSorting('color').should.be.true;
+      q.hasSorting('price').should.be.false;
+
+      done();
+    });
+
+    it('hasSorting when there is no sorting works', done => {
+      // given
+      const q = new Query();
 
       // then
       q.hasSorting('color').should.be.false;
@@ -454,9 +340,9 @@ describe('Query', () => {
   });
 
   context('Query page parameter methods', () => {
-    it('page should be set correctly', (done) => {
+    it('page should be set correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: 2});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
 
       // when
       q.page(3);
@@ -466,10 +352,10 @@ describe('Query', () => {
       done();
     });
 
-    it('next page should be set correctly', (done) => {
+    it('next page should be set correctly', done => {
       // given
-      const pageNum = Math.floor((Math.random() * 10) + 1);
-      let q = new Query({hashid: cfg.hashid, rpp: 10, page: pageNum});
+      const pageNum = Math.floor(Math.random() * 10 + 1);
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: pageNum });
 
       // when
       q.nextPage();
@@ -479,9 +365,9 @@ describe('Query', () => {
       done();
     });
 
-    it('next page should set page to two if none in Query', (done) => {
+    it('next page should set page to two if none in Query', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10 });
 
       // when
       q.nextPage();
@@ -491,9 +377,9 @@ describe('Query', () => {
       done();
     });
 
-    it('results per page works as intended', (done) => {
+    it('results per page works as intended', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10 });
 
       // when
       q.resultsPerPage(20);
@@ -502,10 +388,10 @@ describe('Query', () => {
       q.getParams().rpp.should.be.equal(20);
       done();
     });
-    
-    it('results per page can be reset with empty call', (done) => {
+
+    it('results per page can be reset with empty call', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10 });
 
       // when
       q.resultsPerPage();
@@ -517,9 +403,9 @@ describe('Query', () => {
   });
 
   context('Query type parameter methods', () => {
-    it('set type works correctly', (done) => {
+    it('set type works correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees']});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees'] });
 
       // when
       q.setTypes('product');
@@ -532,9 +418,9 @@ describe('Query', () => {
       done();
     });
 
-    it('adding a type works correctly', (done) => {
+    it('adding a type works correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees']});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees'] });
 
       // when
       q.addType('product');
@@ -548,9 +434,9 @@ describe('Query', () => {
       done();
     });
 
-    it('adding types transforms into an array', (done) => {
+    it('adding types transforms into an array', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, type: 'product'});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, type: 'product' });
 
       // when
       q.addType('blog');
@@ -563,11 +449,11 @@ describe('Query', () => {
       params.type.should.include('blog');
 
       done();
-    }); 
+    });
 
-    it('removing a type works correctly', (done) => {
+    it('removing a type works correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees']});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees'] });
 
       // when
       q.removeType('employees');
@@ -581,9 +467,9 @@ describe('Query', () => {
       done();
     });
 
-    it('removing a type that is not there works correctly', (done) => {
+    it('removing a type that is not there works correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees']});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees'] });
 
       // when
       q.removeType('product');
@@ -598,9 +484,9 @@ describe('Query', () => {
       done();
     });
 
-    it('empty call empties the types', (done) => {
+    it('empty call empties the types', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees']});
+      const q = new Query({ hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees'] });
 
       // when
       q.setTypes();
@@ -614,9 +500,9 @@ describe('Query', () => {
   });
 
   context('Other Query parameter methods', () => {
-    it('Sets the transformer correctly', (done) => {
+    it('Sets the transformer correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 20});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20 });
 
       // when
       q.transformer(TransformerOptions.Basic);
@@ -626,9 +512,9 @@ describe('Query', () => {
       done();
     });
 
-    it('Clears the transformer correctly', (done) => {
+    it('Clears the transformer correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 20, transformer: TransformerOptions.Basic});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20, transformer: TransformerOptions.Basic });
 
       // when
       q.transformer();
@@ -638,9 +524,9 @@ describe('Query', () => {
       done();
     });
 
-    it('Sets the timeout correctly', (done) => {
+    it('Sets the timeout correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 20});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20 });
 
       // when
       q.timeout(100);
@@ -650,9 +536,9 @@ describe('Query', () => {
       done();
     });
 
-    it('Clears the timeout correctly', (done) => {
+    it('Clears the timeout correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 20, timeout: 100});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20, timeout: 100 });
 
       // when
       q.timeout();
@@ -662,9 +548,9 @@ describe('Query', () => {
       done();
     });
 
-    it('Sets the jsonp correctly', (done) => {
+    it('Sets the jsonp correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 20});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20 });
 
       // when
       q.jsonp(true);
@@ -674,9 +560,9 @@ describe('Query', () => {
       done();
     });
 
-    it('Clears the jsonp correctly', (done) => {
+    it('Clears the jsonp correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 20, jsonp: true});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20, jsonp: true });
 
       // when
       q.jsonp();
@@ -686,9 +572,9 @@ describe('Query', () => {
       done();
     });
 
-    it('Sets the query_name correctly', (done) => {
+    it('Sets the query_name correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 20});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20 });
 
       // when
       q.queryName(QueryTypes.MatchAnd);
@@ -698,9 +584,9 @@ describe('Query', () => {
       done();
     });
 
-    it('Clears the query_name correctly', (done) => {
+    it('Clears the query_name correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 20, query_name: QueryTypes.MatchAnd});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20, query_name: QueryTypes.MatchAnd });
 
       // when
       q.queryName();
@@ -710,9 +596,9 @@ describe('Query', () => {
       done();
     });
 
-    it('Sets the nostats correctly', (done) => {
+    it('Sets the nostats correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 20});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20 });
 
       // when
       q.noStats(true);
@@ -722,9 +608,9 @@ describe('Query', () => {
       done();
     });
 
-    it('Clears the nostats correctly', (done) => {
+    it('Clears the nostats correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 20, nostats: 1});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20, nostats: 1 });
 
       // when
       q.noStats();
@@ -736,9 +622,9 @@ describe('Query', () => {
   });
 
   context('Parameter checking and fetching', () => {
-    it('hasParameter returns true if the parameter exists', (done) => {
+    it('hasParameter returns true if the parameter exists', done => {
       // when
-      let q = new Query({hashid: cfg.hashid, rpp: 20, page: 11});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20, page: 11 });
 
       // then
       q.hasParameter('rpp').should.be.true;
@@ -748,9 +634,9 @@ describe('Query', () => {
       done();
     });
 
-    it('getParams returns the current params', (done) => {
+    it('getParams returns the current params', done => {
       // when
-      let q = new Query({hashid: cfg.hashid, rpp: 20, page: 11});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20, page: 11 });
 
       // then
       const params = q.getParams();
@@ -761,9 +647,9 @@ describe('Query', () => {
       done();
     });
 
-    it('getParams returns the current params, even the new ones', (done) => {
+    it('getParams returns the current params, even the new ones', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 20, page: 11});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20, page: 11 });
 
       // when
       q.queryName(QueryTypes.Fuzzy);
@@ -778,9 +664,9 @@ describe('Query', () => {
       done();
     });
 
-    it('getQuery works correctly', (done) => {
+    it('getQuery works correctly', done => {
       // given
-      let q = new Query({hashid: cfg.hashid, rpp: 20, page: 11});
+      const q = new Query({ hashid: cfg.hashid, rpp: 20, page: 11 });
 
       // when
       q.searchText('smartphone');

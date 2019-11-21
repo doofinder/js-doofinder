@@ -7,15 +7,6 @@ export enum Zone {
 }
 
 /**
- * Values available for the sorting options
- * TODO: If this is not used in the response, move to request.ts
- */
-export enum Sort {
-  ASC = 'asc',
-  DESC = 'desc',
-}
-
-/**
  * The available transformer options
  */
 export enum TransformerOptions {
