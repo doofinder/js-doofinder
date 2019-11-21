@@ -78,6 +78,8 @@ export class Query {
   private _dataTypes?: DataTypes;
   private _noStats?: 0 | 1;
   private _queryName?: string;
+  private _timeout: number;
+  private _jsonp: boolean;
 
   public constructor(hashid?: string | SearchParameters | Query) {
     if (typeof hashid === 'string') {
@@ -250,14 +252,6 @@ export class Query {
   }
 
   /**
-   * Allows to directly set a parameter on the query builder
-   *
-   */
-  public setParameter(paramName: string, value: unknown): void {
-    this.params[paramName] = value;
-  }
-
-  /**
    * Overwrites the parameters with the object given, allowing
    * to change in one call several parameters
    *
@@ -291,6 +285,14 @@ export class Query {
     if ('query_name' in this.params) {
       this.queryName(this.params['query_name']);
       delete this.params['query_name'];
+    }
+    if ('timeout' in this.params) {
+      this.timeout(this.params['timeout']);
+      delete this.params['timeout'];
+    }
+    if ('jsonp' in this.params) {
+      this.jsonp(this.params['jsonp']);
+      delete this.params['jsonp'];
     }
   }
 
@@ -403,12 +405,12 @@ export class Query {
   /**
    * Sets the timeout for the query, call it empty to reset
    *
-   * @param  {Number}   timeout       The timeoout for the call
+   * @param  timeout - The timeoout for the call
    *
    */
   public timeout(timeout?: number): void {
     if (timeout) {
-      this.setParameter('timeout', timeout);
+      this._timeout = timeout;
     } else {
       delete this.params.timeout;
     }
@@ -418,12 +420,12 @@ export class Query {
    * Allows to ask for jsonp format, call without parameters
    * to clear the flag
    *
-   * @param  {Boolean}    jsonp   Wether to use jsonp or not
+   * @param  jsonp - Wether to use jsonp or not
    *
    */
   public jsonp(jsonp?: boolean): void {
     if (jsonp) {
-      this.setParameter('jsonp', jsonp);
+      this._jsonp = jsonp;
     } else {
       delete this.params.jsonp;
     }
@@ -526,7 +528,12 @@ export class Query {
     if (this._queryName) {
       dumpData.query_name = this._queryName;
     }
-
+    if (this._timeout) {
+      dumpData.timeout = this._timeout;
+    }
+    if (this._jsonp) {
+      dumpData.jsonp = this._jsonp;
+    }
     return dumpData;
   }
 

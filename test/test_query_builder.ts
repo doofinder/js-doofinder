@@ -91,41 +91,6 @@ describe('Query', () => {
       done();
     });
 
-    it('adds parameters correctly', done => {
-      // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 20 });
-
-      // when
-      q.setParameter('page', 2);
-
-      // then
-      const params = q.getParams();
-      params.should.have.property('hashid');
-      params.should.have.property('rpp');
-      params.should.have.property('page');
-
-      params.page.should.be.equal(2);
-
-      done();
-    });
-
-    it('alters parameters correctly', done => {
-      // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 20 });
-
-      // when
-      q.setParameter('rpp', 10);
-
-      // then
-      const params = q.getParams();
-      params.should.have.property('hashid');
-      params.should.have.property('rpp');
-
-      params.rpp.should.be.equal(10);
-
-      done();
-    });
-
     it('setting several parameters at once correctly', done => {
       // given
       const q = new Query({ hashid: cfg.hashid, page: 2 });
@@ -485,7 +450,7 @@ describe('Query', () => {
       q.timeout(100);
 
       // then
-      q.getParams().timeout.should.be.equal(100);
+      q.dump().timeout.should.be.equal(100);
       done();
     });
 
@@ -509,7 +474,7 @@ describe('Query', () => {
       q.jsonp(true);
 
       // then
-      q.getParams().jsonp.should.be.true;
+      q.dump().jsonp.should.be.true;
       done();
     });
 
