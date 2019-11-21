@@ -129,14 +129,14 @@ describe('Query', () => {
 
     it('setting several parameters at once correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 20, page: 2 });
+      const q = new Query({ hashid: cfg.hashid, page: 2 });
       const newParams = { rpp: 10, transformer: TransformerOptions.Basic };
 
       // when
       q.setParameters(newParams);
 
       // then
-      const params = q.getParams();
+      const params = q.dump();
       params.should.have.property('hashid');
       params.should.have.property('rpp');
       params.should.have.property('page');
@@ -385,19 +385,20 @@ describe('Query', () => {
       q.resultsPerPage(20);
 
       // then
-      q.getParams().rpp.should.be.equal(20);
+      q.dump().rpp.should.be.equal(20);
       done();
     });
 
     it('results per page can be reset with empty call', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10 });
+      const q = new Query({ hashid: cfg.hashid });
+      q.resultsPerPage(10);
 
       // when
       q.resultsPerPage();
 
       // then
-      q.getParams().should.not.have.property('rpp');
+      q.dump().should.not.have.property('rpp');
       done();
     });
   });

@@ -48,6 +48,13 @@ export type InputSortValue = string | InputExtendedSortValue;
 
 export type SortValue = Map<string, SortType>;
 
+export class QueryValueError extends Error {
+  public constructor(message: string) {
+    super(message);
+    this.name = 'QueryValueError';
+  }
+}
+
 /**
  * Main QueryBuilder interface, allows creating programmaticly
  * the query using methods instead of creating the JSON and
@@ -62,6 +69,7 @@ export class Query {
   private _filters: Filter = new Map();
   private _excludedFilters: Filter = new Map();
   private _sort: SortValue = new Map();
+  private _rpp: number | undefined;
 
   public constructor(hashid?: string | SearchParameters | Query) {
     if (typeof hashid === 'string') {
@@ -254,6 +262,11 @@ export class Query {
     this.params = Object.assign({}, this.params, this._hydrate(parameters));
     if ('sort' in this.params) {
       this.addSort(this.params['sort']);
+      delete this.params['sort'];
+    }
+    if ('rpp' in this.params) {
+      this.resultsPerPage(this.params['rpp']);
+      delete this.params['rpp'];
     }
   }
 
@@ -308,12 +321,13 @@ export class Query {
    * @param  {Number}   rpp   The results per page to set
    *
    */
-  public resultsPerPage(rpp?: number): void {
-    if (rpp) {
-      this.setParameter('rpp', rpp);
+  public resultsPerPage(rpp?: number): Query {
+    if (typeof rpp === 'number' || typeof rpp === 'undefined') {
+      this._rpp = rpp;
     } else {
-      delete this.params.rpp;
+      throw new QueryValueError('Value error: Result per page must be a number');
     }
+    return this;
   }
 
   /**
@@ -481,6 +495,9 @@ export class Query {
     if (!isEmptyObject(this.sort)) {
       dumpData.sort = this.sort;
     }
+    if (this._rpp) {
+      dumpData.rpp = this._rpp;
+    }
 
     return dumpData;
   }
@@ -532,8 +549,7 @@ export class Query {
     } else if (isPlainObject(value)) {
       this._addObjectFilter(filter, filterName, value as RangeFilter | GeoDistanceFilter);
     } else {
-      // TODO: Define this error better.
-      throw new Error('Error in filter value');
+      throw new QueryValueError('Value error: Error in filter definition value');
     }
     return this;
   }
@@ -573,7 +589,7 @@ export class Query {
     } else if (sortType.toLowerCase() === SortType.DESC) {
       return SortType.DESC;
     } else {
-      throw new Error('Invalid value for sort type, it must be: "asc" or "desc"');
+      throw new QueryValueError('Value error: Sort type must be: "asc" or "desc"');
     }
   }
 }

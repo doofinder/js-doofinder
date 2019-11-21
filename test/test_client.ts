@@ -247,23 +247,20 @@ describe('Client', () => {
 
     context('Sorting', () => {
       it('accepts a single field name to sort on',(done) => {
-        const querystring = `sort%5B0%5D%5Bbrand%5D=asc&hashid=${cfg.hashid}&query=`;
+        const querystring = `hashid=${cfg.hashid}&query=&sort%5B0%5D%5Bbrand%5D=asc`;
         buildQuery(undefined, { sort: 'brand' }).should.equal(querystring);
         done();
       });
 
       it('accepts an object for a single field to sort on', (done) => {
-        const querystring = `sort%5B0%5D%5Bbrand%5D=desc&hashid=${cfg.hashid}&query=`;
+        const querystring = `hashid=${cfg.hashid}&query=&sort%5B0%5D%5Bbrand%5D=desc`;
         const sorting: InputExtendedSortValue[] = [{ brand: SortType.DESC }];
         buildQuery(undefined, { sort: sorting }).should.equal(querystring);
         done();
       });
 
       it('accepts an array of objects for a multiple fields to sort on', (done) => {
-        const querystring = [
-          'sort%5B0%5D%5B_score%5D=desc',
-          `&sort%5B1%5D%5Bbrand%5D=asc&hashid=${cfg.hashid}&query=`
-        ].join('');
+        const querystring = `hashid=${cfg.hashid}&query=&sort%5B0%5D%5B_score%5D=desc&sort%5B1%5D%5Bbrand%5D=asc`;
         const sorting: InputSortValue[] = [{ _score: SortType.DESC }, { brand: SortType.ASC }];
         buildQuery(undefined, { sort: sorting }).should.equal(querystring);
         done();
