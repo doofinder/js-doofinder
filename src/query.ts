@@ -32,6 +32,8 @@ export interface GeoDistanceFilter {
 
 export type TermsFilter = Set<string | number>;
 
+export type DataTypes = Set<string>;
+
 export type Filter = Map<string, TermsFilter | RangeFilter | GeoDistanceFilter>;
 
 export type InputTermsFilterValue = string | number | string[] | number[];
@@ -73,6 +75,7 @@ export class Query {
   private _rpp?: number;
   private _page?: number;
   private _transformer?: TransformerOptions;
+  private _dataTypes?: DataTypes;
 
   public constructor(hashid?: string | SearchParameters | Query) {
     if (typeof hashid === 'string') {
@@ -271,6 +274,10 @@ export class Query {
       this.transformer(this.params['transformer']);
       delete this.params['transformer'];
     }
+    if ('type' in this.params) {
+      this.addTypes(this.params['type']);
+      delete this.params['type'];
+    }
   }
 
   public addSort(fieldOrList: InputSortValue[]): Query;
@@ -341,54 +348,26 @@ export class Query {
    * Sets the types to query in this query, call without
    * parameters to clear the setting
    *
-   * @param  {String | String[]}  type    The type or types to set
-   *                                      for this query
+   * @param  type - The type or types to set for this query
    *
+   * @returns Query
    */
-  public setTypes(type?: string | string[]): void {
-    if (type) {
-      this.setParameter('type', type);
-    } else {
-      delete this.params.type;
-    }
-  }
-
-  /**
-   * Adds a type to the current types in this query
-   *
-   * @param  {String}   type    The type to be added for the search
-   *
-   */
-  public addType(type: string): void {
-    let typeParam: string[] = [];
-
-    if (typeof this.params.type === 'string') {
-      typeParam.push(this.params.type);
-    } else if (this.params.type) {
-      typeParam = this.params.type;
-    }
-
-    typeParam.push(type);
-    this.setParameter('type', typeParam);
-  }
-
-  /**
-   * Remove a type from this query
-   *
-   * @param  {String}   type    The type to be removed for the search
-   *
-   */
-  public removeType(type: string): void {
-    if (this.params.type) {
-      if (isArray(this.params.type)) {
-        const index: number = this.params.type.indexOf(type);
-        if (index !== -1) {
-          (this.params.type as Array<unknown>).splice(1, index);
+  public addTypes(types?: string | string[]): Query {
+    if (types) {
+      this._dataTypes = new Set();
+      if (typeof types === 'string') {
+        this._dataTypes.add(types);
+      } else if (isArray(types)) {
+        for (const type of types) {
+          this._dataTypes.add(type);
         }
-      } else if (this.params.type === type) {
-        delete this.params.type;
+      } else {
+        throw new QueryValueError('Value error: Types value must be string or array of strings');
       }
+    } else {
+      delete this._dataTypes;
     }
+    return this;
   }
 
   /**
@@ -513,6 +492,9 @@ export class Query {
     }
     if (this._transformer) {
       dumpData.transformer = this._transformer;
+    }
+    if (this._dataTypes) {
+      dumpData.type = [...this._dataTypes];
     }
 
     return dumpData;

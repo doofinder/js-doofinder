@@ -408,94 +408,45 @@ describe('Query', () => {
   context('Query type parameter methods', () => {
     it('set type works correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees'] });
+      const q = new Query({ hashid: cfg.hashid });
+      q.addTypes(['blog', 'employees']);
 
       // when
-      q.setTypes('product');
+      q.addTypes('product');
 
       // then
-      const params = q.getParams();
+      const params = q.dump();
       params.should.have.property('type');
-      params.type.should.be.equal('product');
-
-      done();
-    });
-
-    it('adding a type works correctly', done => {
-      // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees'] });
-
-      // when
-      q.addType('product');
-
-      // then
-      const params = q.getParams();
-      params.should.have.property('type');
-      params.type.length.should.be.equal(3);
-      params.type.should.include('product');
-
-      done();
-    });
-
-    it('adding types transforms into an array', done => {
-      // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, type: 'product' });
-
-      // when
-      q.addType('blog');
-
-      // then
-      const params = q.getParams();
-      params.should.have.property('type');
-      params.type.length.should.be.equal(2);
-      params.type.should.include('product');
-      params.type.should.include('blog');
+      params.type.should.be.eql(['product']);
 
       done();
     });
 
     it('removing a type works correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees'] });
+      const q = new Query({ hashid: cfg.hashid });
+      q.addTypes(['blog', 'employees']);
 
       // when
-      q.removeType('employees');
+      q.addTypes();
 
       // then
-      const params = q.getParams();
-      params.should.have.property('type');
-      params.type.length.should.be.equal(1);
-      params.type.should.not.include('employees');
-
-      done();
-    });
-
-    it('removing a type that is not there works correctly', done => {
-      // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees'] });
-
-      // when
-      q.removeType('product');
-
-      // then
-      const params = q.getParams();
-      params.should.have.property('type');
-      params.type.length.should.be.equal(2);
-      params.type.should.include('blog');
-      params.type.should.include('employees');
+      const params = q.dump();
+      params.should.not.have.property('type');
 
       done();
     });
 
     it('empty call empties the types', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, type: ['blog', 'employees'] });
+      const q = new Query({ hashid: cfg.hashid });
+      q.addTypes(['blog', 'employees']);
 
       // when
-      q.setTypes();
+      q.addTypes();
 
       // then
-      const params = q.getParams();
+      const params = q.dump();
       params.should.not.have.property('type');
 
       done();

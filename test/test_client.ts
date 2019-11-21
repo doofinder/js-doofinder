@@ -183,25 +183,22 @@ describe('Client', () => {
     });
 
     context('Types', () => {
-      it('specifies no type if no specific type was set', (done) => {
+      it('specifies no type if no specific type was set', done => {
         const querystring = `hashid=${cfg.hashid}&query=`;
-        (buildQuery(undefined)).should.equal(querystring);
+        buildQuery(undefined).should.equal(querystring);
         done();
       });
 
-      it('handles one type if set', (done) => {
-        const querystring = `type=product&hashid=${cfg.hashid}&query=`;
-        (buildQuery(undefined, {type: 'product'})).should.equal(querystring);
-        (buildQuery(undefined, {type: ['product']})).should.equal(querystring);
+      it('handles one type if set', done => {
+        const querystring = `hashid=${cfg.hashid}&query=&type=product`;
+        buildQuery(undefined, { type: 'product' }).should.equal(querystring);
+        buildQuery(undefined, { type: ['product'] }).should.equal(querystring);
         done();
       });
 
-      it('handles several types if set', (done) => {
-        const querystring = [
-          `type%5B0%5D=product&type%5B1%5D=recipe`,
-          `&hashid=${cfg.hashid}&query=`
-        ].join('');
-        (buildQuery(undefined, {type: ['product', 'recipe']})).should.equal(querystring);
+      it('handles several types if set', done => {
+        const querystring = `hashid=${cfg.hashid}&query=&type%5B0%5D=product&type%5B1%5D=recipe`;
+        buildQuery(undefined, { type: ['product', 'recipe'] }).should.equal(querystring);
         done();
       });
     });
