@@ -33,12 +33,12 @@ export type TermsFilter = Set<string | number>;
 
 export type Filter = Map<string, TermsFilter | RangeFilter | GeoDistanceFilter>;
 
-export type AssignTermsFilterValue = string | number | string[] | number[];
+export type InputTermsFilterValue = string | number | string[] | number[];
 
 /**
  * All the possibles values to assign to the Filter.
  */
-export type AssignFilterValue = AssignTermsFilterValue | RangeFilter | GeoDistanceFilter;
+export type InputFilterValue = InputTermsFilterValue | RangeFilter | GeoDistanceFilter;
 
 export type InputExtendedSortValue = {
   [key: string]: 'asc' | 'desc';
@@ -132,7 +132,7 @@ export class Query {
    *                                    (several can be added to the same filter)
    *
    */
-  public addFilter(filterName: string, value: AssignFilterValue): Query {
+  public addFilter(filterName: string, value: InputFilterValue): Query {
     return this._addFilter(this._filters, filterName, value);
   }
 
@@ -142,7 +142,7 @@ export class Query {
    * @param filterName  The name of the exclude filter
    * @param value       The value to add to the exclude filter
    */
-  public addExcludeFilter(filterName: string, value: AssignFilterValue): Query {
+  public addExcludeFilter(filterName: string, value: InputFilterValue): Query {
     return this._addFilter(this._excludedFilters, filterName, value);
   }
 
@@ -152,7 +152,7 @@ export class Query {
    * @param filterName  The name of the filter to modify
    * @param value       The value to remove from the filter
    */
-  public removeFilter(filterName: string, value: AssignFilterValue): Query {
+  public removeFilter(filterName: string, value: InputFilterValue): Query {
     this._removeFilter(this._filters, filterName, value);
     return this;
   }
@@ -163,7 +163,7 @@ export class Query {
    * @param filterName  The name of the filter to modify
    * @param value       The value to remove from the filter
    */
-  public removeExcludedFilter(filterName: string, value: AssignFilterValue): Query {
+  public removeExcludedFilter(filterName: string, value: InputFilterValue): Query {
     this._removeFilter(this._excludedFilters, filterName, value);
     return this;
   }
@@ -522,7 +522,7 @@ export class Query {
     return result;
   }
 
-  private _addFilter(filter: Filter, filterName: string, value: AssignFilterValue): Query {
+  private _addFilter(filter: Filter, filterName: string, value: InputFilterValue): Query {
     if (typeof value === 'string' || typeof value === 'number') {
       value = [`${value}`];
     }
@@ -538,18 +538,18 @@ export class Query {
     return this;
   }
 
-  private _removeFilter(filter: Filter, filterName: string, value: AssignFilterValue): void {
+  private _removeFilter(filter: Filter, filterName: string, value: InputFilterValue): void {
     if (filter.has(filterName)) {
       const filterElement = filter.get(filterName);
       if (filterElement instanceof Set || typeof value === 'string' || typeof value === 'number') {
-        this._removeTermFilterValue(filterElement as TermsFilter, value as AssignTermsFilterValue);
+        this._removeTermFilterValue(filterElement as TermsFilter, value as InputTermsFilterValue);
       } else {
         filter.delete(filterName);
       }
     }
   }
 
-  private _removeTermFilterValue(filterElement: TermsFilter, value: AssignTermsFilterValue): void {
+  private _removeTermFilterValue(filterElement: TermsFilter, value: InputTermsFilterValue): void {
     if (typeof value === 'string' || typeof value === 'number') {
       filterElement.delete(value);
     } else {
