@@ -70,6 +70,7 @@ export class Query {
   private _excludedFilters: Filter = new Map();
   private _sort: SortValue = new Map();
   private _rpp: number | undefined;
+  private _page: number | undefined;
 
   public constructor(hashid?: string | SearchParameters | Query) {
     if (typeof hashid === 'string') {
@@ -296,15 +297,18 @@ export class Query {
   /**
    * Sets the page value of the request, useful for pagination
    *
-   * @param  {Number}     page              The page we want to set
+   * @param  page - The page we want to set
+   *
+   * @returns Query
    *
    */
-  public page(page?: number): void {
-    if (page) {
-      this.setParameter('page', page);
+  public page(page?: number): Query {
+    if (typeof page === 'number' || typeof page === 'undefined') {
+      this._page = page;
     } else {
-      delete this.params.page;
+      throw new QueryValueError('Value error: Page value must be a number');
     }
+    return this;
   }
 
   /**
@@ -312,14 +316,15 @@ export class Query {
    *
    */
   public nextPage(): void {
-    this.setParameter('page', (this.params.page || 1) + 1);
+    this._page = (this._page || 1) + 1;
   }
 
   /**
    * Sets the Results Per Page (rpp) parameter.
    *
-   * @param  {Number}   rpp   The results per page to set
+   * @param  rpp - The results per page to set
    *
+   * @returns Query
    */
   public resultsPerPage(rpp?: number): Query {
     if (typeof rpp === 'number' || typeof rpp === 'undefined') {
@@ -497,6 +502,9 @@ export class Query {
     }
     if (this._rpp) {
       dumpData.rpp = this._rpp;
+    }
+    if (this._page) {
+      dumpData.page = this._page;
     }
 
     return dumpData;

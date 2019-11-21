@@ -342,38 +342,40 @@ describe('Query', () => {
   context('Query page parameter methods', () => {
     it('page should be set correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
+      const q = new Query({ hashid: cfg.hashid });
 
       // when
       q.page(3);
 
       // then
-      q.getParams().page.should.be.equal(3);
+      const queryDump = q.dump();
+      queryDump.page.should.be.equal(3);
       done();
     });
 
     it('next page should be set correctly', done => {
       // given
       const pageNum = Math.floor(Math.random() * 10 + 1);
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: pageNum });
+      const q = new Query({ hashid: cfg.hashid });
+      q.page(pageNum)
 
       // when
       q.nextPage();
 
       // then
-      q.getParams().page.should.be.equal(pageNum + 1);
+      q.dump().page.should.be.equal(pageNum + 1);
       done();
     });
 
     it('next page should set page to two if none in Query', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10 });
+      const q = new Query({ hashid: cfg.hashid });
 
       // when
       q.nextPage();
 
       // then
-      q.getParams().page.should.be.equal(2);
+      q.dump().page.should.be.equal(2);
       done();
     });
 
