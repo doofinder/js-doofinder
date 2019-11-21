@@ -76,6 +76,7 @@ export class Query {
   private _page?: number;
   private _transformer?: TransformerOptions;
   private _dataTypes?: DataTypes;
+  private _noStats?: 0 | 1;
 
   public constructor(hashid?: string | SearchParameters | Query) {
     if (typeof hashid === 'string') {
@@ -436,11 +437,15 @@ export class Query {
    * @param  {Boolean}    nostats   Wether to send the nostats flag or not
    *
    */
-  public noStats(nostats?: boolean): void {
-    if (nostats && !!nostats) {
-      this.setParameter('nostats', 1);
+  public noStats(noStats?: boolean): void {
+    if (typeof noStats === 'boolean' || typeof noStats === 'undefined') {
+      if (noStats) {
+        this._noStats = 1;
+      } else {
+        delete this._noStats;
+      }
     } else {
-      delete this.params.nostats;
+      throw new QueryValueError('Value error: noStats must be a boolean value');
     }
   }
 
@@ -495,6 +500,9 @@ export class Query {
     }
     if (this._dataTypes) {
       dumpData.type = [...this._dataTypes];
+    }
+    if (this._noStats) {
+      dumpData.nostats = this._noStats;
     }
 
     return dumpData;

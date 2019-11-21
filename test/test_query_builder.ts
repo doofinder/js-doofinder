@@ -553,25 +553,26 @@ describe('Query', () => {
 
     it('Sets the nostats correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 20 });
+      const q = new Query({ hashid: cfg.hashid });
 
       // when
       q.noStats(true);
 
       // then
-      q.getParams().nostats.should.be.equal(1);
+      q.dump().nostats.should.be.equal(1);
       done();
     });
 
     it('Clears the nostats correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 20, nostats: 1 });
+      const q = new Query({ hashid: cfg.hashid });
+      q.noStats(true);
 
       // when
       q.noStats();
 
       // then
-      q.getParams().should.not.have.property('nostats');
+      q.dump().should.not.have.property('nostats');
       done();
     });
   });
