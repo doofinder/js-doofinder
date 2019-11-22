@@ -43,13 +43,13 @@ export type InputTermsFilterValue = string | number | string[] | number[];
  */
 export type InputFilterValue = InputTermsFilterValue | RangeFilter | GeoDistanceFilter;
 
-export type InputExtendedSortValue = {
+export type InputExtendedSort = {
   [key: string]: 'asc' | 'desc';
 };
 
-export type InputSortValue = string | InputExtendedSortValue;
+export type InputSort = string | InputExtendedSort;
 
-export type SortValue = Map<string, OrderType>;
+export type Sort = Map<string, OrderType>;
 
 export class QueryValueError extends Error {
   public constructor(message: string) {
@@ -68,10 +68,10 @@ export class QueryValueError extends Error {
 export class Query {
   public hashid: string = null;
   public text: string;
-  private params: SearchParameters = {};
+  private params: GenericObject = {};
   private _filters: Filter = new Map();
   private _exclusionFilters: Filter = new Map();
-  private _sort: SortValue = new Map();
+  private _sort: Sort = new Map();
   private _rpp?: number;
   private _page?: number;
   private _transformer?: TransformerOptions;
@@ -81,37 +81,24 @@ export class Query {
   private _timeout: number;
   private _jsonp: boolean;
 
-  public constructor(hashid?: string | SearchParameters | Query) {
-    if (typeof hashid === 'string') {
-      this.hashid = hashid;
-      this.params.hashid = this.hashid;
-    } else if (hashid instanceof Query) {
-      // Let's create a quick copy with this
-      const params: SearchParameters = hashid.getParams();
-      this.text = hashid.text;
-      this.params = params;
-    } else if (typeof hashid === 'object') {
-      // It's a complete object to pass on
-      if ('params' in hashid) {
-        this.params = this._hydrate(hashid['params'] as SearchParameters);
-      } else {
-        this.params = this._hydrate(hashid);
-      }
-    }
-  }
-
   public get filters(): GenericObject {
     return this._getFilter(this._filters);
   }
 
-  public get excludedFilters(): GenericObject {
+  public get exclusionFilters(): GenericObject {
     return this._getFilter(this._exclusionFilters);
   }
 
-  public get sort(): InputExtendedSortValue[] {
-    const results: InputExtendedSortValue[] = [];
+  public get getSort(): InputExtendedSort[] {
+    const results: InputExtendedSort[] = [];
     this._sort.forEach((ordering, field) => results.push({ [field]: ordering }));
     return results;
+  }
+
+  public constructor(hashid?: string) {
+    if (typeof hashid === 'string') {
+      this.hashid = hashid;
+    }
   }
 
   /**
@@ -125,17 +112,6 @@ export class Query {
   public searchText(query: string): Query {
     this.text = query;
     return this;
-  }
-
-  /**
-   * Puts the query in an empty state
-   *
-   */
-  public clear(): void {
-    this.params = {};
-    this.text = undefined;
-    this._filters = new Map();
-    this._exclusionFilters = new Map();
   }
 
   /**
@@ -186,17 +162,11 @@ export class Query {
    * This method allows to check if a given filter is set in the current search
    * request
    *
-   * @param  {String}     filterName         The name of the filter to modify
-   *
-   * @param  {Any}        value              (Optional) The value to check from
+   * @param  filterName - The name of the filter to modify
+   * @param  value - (Optional) The value to check from
    *                                         the filter
-   *
-   * @param  {String}     filterType         If we are adding a "filter" (default)
-   *                                         or an "exclude" filter.
-   *
-   * @return  {Boolean}   The filter is set for the given value or there's a
-   *                      filter set with any value
-   *
+   * @return  True or False depending if the filter is set for the given value
+   *          or there's a filter set with any value
    */
   public hasFilter(filterName: string, value?: string): boolean {
     return this._hasFilter(this._filters, filterName, value);
@@ -209,11 +179,8 @@ export class Query {
   /**
    * Toggles a filter value from the given filter in the given context
    *
-   * @param  context      The context to affect
-   * @param  filterName   The name of the filter to modify
-   * @param  value        The value to remove from the filter
-   * @param  filterType   If we are adding a "filter" (default) or an "exclude"
-   *                      filter.
+   * @param  filterName - The name of the filter to modify
+   * @param  value - The value to remove from the filter
    */
   public toggleFilter(filterName: string, value: FacetOption | string | number): void {
     let values: Array<RangeFilter | string | number> = [];
@@ -255,11 +222,18 @@ export class Query {
    * Overwrites the parameters with the object given, allowing
    * to change in one call several parameters
    *
+   * @param parameters - Parameters with the query definition
    */
-  public setParameters(parameters: SearchParameters): void {
+  public load(parameters: SearchParameters): void {
     this.params = Object.assign({}, this.params, this._hydrate(parameters));
+    if ('filter' in this.params) {
+      for (const field in this.params.filter) {
+        this.addFilter(field, this.params['filter'][field] as InputFilterValue);
+      }
+      delete this.params['filter'];
+    }
     if ('sort' in this.params) {
-      this.addSort(this.params['sort']);
+      this.sort(this.params['sort']);
       delete this.params['sort'];
     }
     if ('rpp' in this.params) {
@@ -296,21 +270,32 @@ export class Query {
     }
   }
 
-  public addSort(fieldOrList: InputSortValue[]): Query;
-  public addSort(fieldOrList: string, sortType?: string): Query;
-  public addSort(fieldOrList: string | InputSortValue[], sortType: string = OrderType.ASC): Query {
+  /**
+   * @param fieldOrList - Field to use in sort. It cant be use as:
+   *                        - string: 'price'
+   *                        - list of definition: [{price: 'asc}, {name: 'desc'}]
+   * @param sortType - Optional params in case of the first params is an string
+   *                   and an order is needed to define
+   */
+  public sort(fieldOrList: InputSort[]): Query;
+  public sort(fieldOrList: string, orderType?: string): Query;
+  public sort(fieldOrList: string | InputSort[], orderType: string = OrderType.ASC): Query {
     if (typeof fieldOrList === 'string') {
-      this._sort.set(fieldOrList, this._validateOrderType(sortType));
-    } else {
+      this._sort.clear();
+      this._sort.set(fieldOrList, this._validateOrderType(orderType));
+    } else if (isArray(fieldOrList)) {
+      this._sort.clear();
       for (const value of fieldOrList) {
         if (typeof value === 'string') {
           this._sort.set(value, OrderType.ASC);
         } else {
           const field = Object.keys(value)[0];
-          const sortType: string = Object.values(value)[0] as string;
-          this._sort.set(field, this._validateOrderType(sortType));
+          const orderType: string = Object.values(value)[0] as string;
+          this._sort.set(field, this._validateOrderType(orderType));
         }
       }
+    } else {
+      throw new QueryValueError('Value error: Sort must be an string or a list of sort definitions');
     }
     return this;
   }
@@ -364,7 +349,7 @@ export class Query {
    * Sets the types to query in this query, call without
    * parameters to clear the setting
    *
-   * @param  type - The type or types to set for this query
+   * @param  types - The type or types to set for this query
    *
    * @returns Query
    */
@@ -412,7 +397,7 @@ export class Query {
     if (timeout) {
       this._timeout = timeout;
     } else {
-      delete this.params.timeout;
+      delete this._timeout;
     }
   }
 
@@ -427,7 +412,7 @@ export class Query {
     if (jsonp) {
       this._jsonp = jsonp;
     } else {
-      delete this.params.jsonp;
+      delete this._jsonp;
     }
   }
 
@@ -454,7 +439,7 @@ export class Query {
   /**
    * Sets the nostats flag, call without parameters to clear it
    *
-   * @param - nostats   Wether to send the nostats flag or not
+   * @param - noStats   Wether to send the nostats flag or not
    *
    */
   public noStats(noStats?: boolean | number): Query {
@@ -471,29 +456,12 @@ export class Query {
   }
 
   /**
-   * Checks if a parameter is set
-   *
-   */
-  public hasParameter(param: string): boolean {
-    return param in this.params;
-  }
-
-  // Here starts the reading of the query
-
-  /**
    * Gets an structure body parameters ready to be sent through a post
    * to the Doofinder Search API
    *
    * @return  {Object}
    *
    */
-  public getParams(): DoofinderParameters {
-    // Create a copy of the current params
-    const params: SearchParameters = JSON.parse(JSON.stringify(this.params));
-    delete params.query;
-    return params;
-  }
-
   public dump(): GenericObject {
     const dumpData: GenericObject = JSON.parse(JSON.stringify(this.params));
 
@@ -501,14 +469,15 @@ export class Query {
       dumpData.hashid = this.hashid;
     }
     dumpData.query = this.text ? this.text : '';
-    if (!isEmptyObject(this.filters)) {
-      dumpData.filter = this.filters;
+    if (!isEmptyObject(this._filters)) {
+      dumpData.filter = this._getFilter(this._filters);
     }
-    if (!isEmptyObject(this.excludedFilters)) {
-      dumpData.excludedFilters = this.excludedFilters;
+    if (!isEmptyObject(this._exclusionFilters)) {
+      dumpData.excludedFilters = this._getFilter(this._exclusionFilters);
     }
-    if (!isEmptyObject(this.sort)) {
-      dumpData.sort = this.sort;
+    const sort = this.getSort;
+    if (!isEmptyObject(sort)) {
+      dumpData.sort = sort;
     }
     if (this._rpp) {
       dumpData.rpp = this._rpp;
@@ -618,10 +587,10 @@ export class Query {
     );
   }
 
-  private _validateOrderType(sortType: string): OrderType {
-    if (sortType.toLowerCase() === OrderType.ASC) {
+  private _validateOrderType(orderType: string): OrderType {
+    if (orderType.toLowerCase() === OrderType.ASC) {
       return OrderType.ASC;
-    } else if (sortType.toLowerCase() === OrderType.DESC) {
+    } else if (orderType.toLowerCase() === OrderType.DESC) {
       return OrderType.DESC;
     } else {
       throw new QueryValueError('Value error: Sort type must be: "asc" or "desc"');

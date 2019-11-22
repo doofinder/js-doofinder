@@ -9,7 +9,7 @@ should();
 import * as cfg from './config';
 
 // required for tests
-import { Query, OrderType, TransformerOptions } from '../src/query';
+import { Query, OrderType, TransformerOptions } from '../src';
 
 describe('Query', () => {
   context('Creation of the Query object', () => {
@@ -26,33 +26,16 @@ describe('Query', () => {
     it('should accept and copy another query', done => {
       // given
       const qOriginal = new Query(cfg.hashid);
-      const paramsOriginal = qOriginal.getParams();
+      const paramsOriginal = qOriginal.dump();
 
       // when
-      const qCopy = new Query(qOriginal);
-      const paramsCopy = qCopy.getParams();
+      const qCopy = new Query(cfg.hashid);
+      qCopy.load(paramsOriginal);
+      const paramsCopy = qCopy.dump();
 
       // then
       (qOriginal === qCopy).should.not.be.true;
       paramsCopy.hashid.should.equal(paramsOriginal.hashid);
-
-      done();
-    });
-
-    it('should accept search parameters', done => {
-      // given
-      const params = {
-        hashid: cfg.hashid,
-        page: 2,
-      };
-
-      // when
-      const q = new Query(params);
-
-      // then
-      q.getParams().hashid.should.equal(cfg.hashid);
-      q.getParams().page.should.equal(2);
-      q.getParams.should.not.have.property('rpp');
 
       done();
     });
@@ -72,32 +55,14 @@ describe('Query', () => {
       done();
     });
 
-    it('clears the query correctly', done => {
-      // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 20 });
-      let params = q.getParams();
-      params.should.have.property('hashid');
-      params.should.have.property('rpp');
-
-      // when
-      q.clear();
-
-      // then
-      params = q.getParams();
-      params.should.not.have.property('hashid');
-      params.should.not.have.property('rpp');
-      params.should.not.have.property('query');
-
-      done();
-    });
-
     it('setting several parameters at once correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, page: 2 });
+      const q = new Query(cfg.hashid);
+      q.page(2);
       const newParams = { rpp: 10, transformer: TransformerOptions.Basic };
 
       // when
-      q.setParameters(newParams);
+      q.load(newParams);
 
       // then
       const params = q.dump();
@@ -116,7 +81,9 @@ describe('Query', () => {
   context('Query filter methods', () => {
     it('adds a filter term correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
+      const q = new Query(cfg.hashid);
+      q.resultsPerPage(10);
+      q.page(2);
 
       // when
       q.addFilter('brand', ['Ferrari']);
@@ -131,7 +98,9 @@ describe('Query', () => {
 
     it('removes a filter term correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
+      const q = new Query(cfg.hashid);
+      q.resultsPerPage(10);
+      q.page(2);
       q.addFilter('brand', ['Ferrari', 'ford']);
 
       // when
@@ -147,7 +116,9 @@ describe('Query', () => {
 
     it('does not remove a filter term if not present', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
+      const q = new Query(cfg.hashid);
+      q.resultsPerPage(10);
+      q.page(2);
       q.addFilter('brand', ['Ferrari']);
 
       // when
@@ -164,7 +135,9 @@ describe('Query', () => {
 
     it('toggling non existing filter adds it', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
+      const q = new Query(cfg.hashid);
+      q.resultsPerPage(10);
+      q.page(2);
 
       // when
       q.toggleFilter('brand', 'Ferrari');
@@ -179,7 +152,9 @@ describe('Query', () => {
 
     it('toggling existing filter removes it', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
+      const q = new Query(cfg.hashid);
+      q.resultsPerPage(10);
+      q.page(2);
       q.addFilter('brand', ['Ferrari']);
 
       // when
@@ -196,7 +171,9 @@ describe('Query', () => {
 
     it('check a filter exists correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
+      const q = new Query(cfg.hashid);
+      q.resultsPerPage(10);
+      q.page(2);
       q.addFilter('brand', ['Ferrari']);
 
       // then
@@ -213,10 +190,10 @@ describe('Query', () => {
     it('adding sort parameters when sort is a string', done => {
       // when
       const q = new Query();
-      q.addSort('color', 'asc');
+      q.sort('color', 'asc');
 
       // then
-      q.sort.should.deep.include({ color: OrderType.ASC });
+      q.getSort.should.deep.include({ color: OrderType.ASC });
 
       done();
     });
@@ -224,32 +201,30 @@ describe('Query', () => {
     it('adding sort parameters when sort is an object', done => {
       // when
       const q = new Query();
-      q.addSort([{ color: 'desc' }]);
+      q.sort([{ color: 'desc' }]);
 
       // then
-      q.sort.should.deep.include({ color: OrderType.DESC });
+      q.getSort.should.deep.include({ color: OrderType.DESC });
 
       done();
     });
 
     it('setting the sort parameters works', done => {
       // given
-      const q = new Query({
-        hashid: cfg.hashid,
-        rpp: 10,
-        page: 2,
-        sort: [{ price: OrderType.ASC }, { color: OrderType.ASC }],
-      });
+      const q = new Query(cfg.hashid);
+      q.resultsPerPage(10);
+      q.page(2);
+      q.sort([{ price: OrderType.ASC }, { color: OrderType.ASC }]);
 
       // when
-      q.addSort([{ size: OrderType.DESC }, { name: OrderType.ASC }]);
+      q.sort([{ size: OrderType.DESC }, { name: OrderType.ASC }]);
 
       // then
-      q.sort.length.should.be.equal(2);
-      q.sort.should.deep.include({ size: OrderType.DESC });
-      q.sort.should.deep.include({ name: OrderType.ASC });
-      q.sort.should.not.deep.include({ price: OrderType.ASC });
-      q.sort.should.not.deep.include({ color: OrderType.ASC });
+      q.getSort.length.should.be.equal(2);
+      q.getSort.should.deep.include({ size: OrderType.DESC });
+      q.getSort.should.deep.include({ name: OrderType.ASC });
+      q.getSort.should.not.deep.include({ price: OrderType.ASC });
+      q.getSort.should.not.deep.include({ color: OrderType.ASC });
 
       done();
     });
@@ -257,7 +232,7 @@ describe('Query', () => {
     it('hasSorting returns proper values when asked', done => {
       // given
       const q = new Query();
-      q.addSort([{ price: OrderType.ASC }, { color: OrderType.ASC }]);
+      q.sort([{ price: OrderType.ASC }, { color: OrderType.ASC }]);
       // then
       q.hasSorting('price').should.be.true;
       q.hasSorting('color').should.be.true;
@@ -269,7 +244,7 @@ describe('Query', () => {
     it('hasSorting returns proper values when string sorting', done => {
       // given
       const q = new Query();
-      q.addSort('color');
+      q.sort('color');
 
       // then
       q.hasSorting('color').should.be.true;
@@ -280,8 +255,10 @@ describe('Query', () => {
 
     it('hasSorting when it is an object works', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10, page: 2 });
-      q.addSort([{ color: OrderType.ASC }]);
+      const q = new Query(cfg.hashid);
+      q.resultsPerPage(10);
+      q.page(2);
+      q.sort([{ color: OrderType.ASC }]);
 
       // then
       q.hasSorting('color').should.be.true;
@@ -305,7 +282,7 @@ describe('Query', () => {
   context('Query page parameter methods', () => {
     it('page should be set correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid });
+      const q = new Query(cfg.hashid);
 
       // when
       q.page(3);
@@ -319,7 +296,7 @@ describe('Query', () => {
     it('next page should be set correctly', done => {
       // given
       const pageNum = Math.floor(Math.random() * 10 + 1);
-      const q = new Query({ hashid: cfg.hashid });
+      const q = new Query(cfg.hashid);
       q.page(pageNum);
 
       // when
@@ -332,7 +309,7 @@ describe('Query', () => {
 
     it('next page should set page to two if none in Query', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid });
+      const q = new Query(cfg.hashid);
 
       // when
       q.nextPage();
@@ -344,7 +321,8 @@ describe('Query', () => {
 
     it('results per page works as intended', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 10 });
+      const q = new Query(cfg.hashid);
+      q.resultsPerPage(10);
 
       // when
       q.resultsPerPage(20);
@@ -356,7 +334,7 @@ describe('Query', () => {
 
     it('results per page can be reset with empty call', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid });
+      const q = new Query(cfg.hashid);
       q.resultsPerPage(10);
 
       // when
@@ -371,7 +349,7 @@ describe('Query', () => {
   context('Query type parameter methods', () => {
     it('set type works correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid });
+      const q = new Query(cfg.hashid);
       q.addTypes(['blog', 'employees']);
 
       // when
@@ -387,7 +365,7 @@ describe('Query', () => {
 
     it('removing a type works correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid });
+      const q = new Query(cfg.hashid);
       q.addTypes(['blog', 'employees']);
 
       // when
@@ -402,7 +380,7 @@ describe('Query', () => {
 
     it('empty call empties the types', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid });
+      const q = new Query(cfg.hashid);
       q.addTypes(['blog', 'employees']);
 
       // when
@@ -419,7 +397,7 @@ describe('Query', () => {
   context('Other Query parameter methods', () => {
     it('Sets the transformer correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid });
+      const q = new Query(cfg.hashid);
 
       // when
       q.transformer(TransformerOptions.Basic);
@@ -431,7 +409,7 @@ describe('Query', () => {
 
     it('Clears the transformer correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid });
+      const q = new Query(cfg.hashid);
       q.transformer(TransformerOptions.Basic);
 
       // when
@@ -444,7 +422,8 @@ describe('Query', () => {
 
     it('Sets the timeout correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 20 });
+      const q = new Query(cfg.hashid);
+      q.resultsPerPage(20);
 
       // when
       q.timeout(100);
@@ -456,19 +435,22 @@ describe('Query', () => {
 
     it('Clears the timeout correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 20, timeout: 100 });
+      const q = new Query(cfg.hashid);
+      q.resultsPerPage(20);
+      q.timeout(100);
 
       // when
       q.timeout();
 
       // then
-      q.getParams().should.not.have.property('timeout');
+      q.dump().should.not.have.property('timeout');
       done();
     });
 
     it('Sets the jsonp correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 20 });
+      const q = new Query(cfg.hashid);
+      q.resultsPerPage(20);
 
       // when
       q.jsonp(true);
@@ -480,19 +462,21 @@ describe('Query', () => {
 
     it('Clears the jsonp correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 20, jsonp: true });
+      const q = new Query(cfg.hashid);
+      q.resultsPerPage(20);
+      q.jsonp(true);
 
       // when
       q.jsonp();
 
       // then
-      q.getParams().should.not.have.property('jsonp');
+      q.dump().should.not.have.property('jsonp');
       done();
     });
 
     it('Sets the query_name correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid });
+      const q = new Query(cfg.hashid);
 
       // when
       q.queryName('match_and');
@@ -504,8 +488,8 @@ describe('Query', () => {
 
     it('Clears the query_name correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid });
-      q.queryName('match_and')
+      const q = new Query(cfg.hashid);
+      q.queryName('match_and');
 
       // when
       q.queryName();
@@ -517,7 +501,7 @@ describe('Query', () => {
 
     it('Sets the nostats correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid });
+      const q = new Query(cfg.hashid);
 
       // when
       q.noStats(true);
@@ -529,7 +513,7 @@ describe('Query', () => {
 
     it('Clears the nostats correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid });
+      const q = new Query(cfg.hashid);
       q.noStats(true);
 
       // when
@@ -542,24 +526,14 @@ describe('Query', () => {
   });
 
   context('Parameter checking and fetching', () => {
-    it('hasParameter returns true if the parameter exists', done => {
-      // when
-      const q = new Query({ hashid: cfg.hashid, rpp: 20, page: 11 });
-
-      // then
-      q.hasParameter('rpp').should.be.true;
-      q.hasParameter('page').should.be.true;
-      q.hasParameter('url').should.be.false;
-
-      done();
-    });
-
     it('getParams returns the current params', done => {
       // when
-      const q = new Query({ hashid: cfg.hashid, rpp: 20, page: 11 });
+      const q = new Query(cfg.hashid);
+      q.resultsPerPage(20);
+      q.page(11);
 
       // then
-      const params = q.getParams();
+      const params = q.dump();
       params.should.have.property('hashid');
       params.should.have.property('rpp');
       params.should.have.property('page');
@@ -569,7 +543,7 @@ describe('Query', () => {
 
     it('getParams returns the current params, even the new ones', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid });
+      const q = new Query(cfg.hashid);
       q.resultsPerPage(10);
       q.page(3);
 
@@ -588,7 +562,9 @@ describe('Query', () => {
 
     it('getQuery works correctly', done => {
       // given
-      const q = new Query({ hashid: cfg.hashid, rpp: 20, page: 11 });
+      const q = new Query(cfg.hashid);
+      q.resultsPerPage(20);
+      q.page(11);
 
       // when
       q.searchText('smartphone');
