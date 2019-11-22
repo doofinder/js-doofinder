@@ -10,14 +10,6 @@ export enum OrderType {
   DESC = 'desc',
 }
 
-/**
- * The available transformer options
- */
-export enum TransformerOptions {
-  Basic = 'basic',
-  OnlyID = 'onlyid',
-}
-
 export interface RangeFilter {
   lte?: number;
   gte?: number;
@@ -74,7 +66,7 @@ export class Query {
   private _sort: Sort = new Map();
   private _rpp?: number;
   private _page?: number;
-  private _transformer?: TransformerOptions;
+  private _transformer?: string;
   private _dataTypes?: DataTypes;
   private _noStats?: 0 | 1;
   private _queryName?: string;
@@ -237,7 +229,7 @@ export class Query {
       delete this.params['sort'];
     }
     if ('rpp' in this.params) {
-      this.resultsPerPage(this.params['rpp']);
+      this.rpp(this.params['rpp']);
       delete this.params['rpp'];
     }
     if ('page' in this.params) {
@@ -249,7 +241,7 @@ export class Query {
       delete this.params['transformer'];
     }
     if ('type' in this.params) {
-      this.addTypes(this.params['type']);
+      this.types(this.params['type']);
       delete this.params['type'];
     }
     if ('nostats' in this.params) {
@@ -313,8 +305,8 @@ export class Query {
    *
    */
   public page(page?: number): Query {
-    if (typeof page === 'number' || typeof page === 'undefined') {
-      this._page = page;
+    if (typeof page === 'number' || typeof page === 'undefined' || typeof page === null) {
+      this._page = page && page > 0 ? page : 0;
     } else {
       throw new QueryValueError('Value error: Page value must be a number');
     }
@@ -336,11 +328,11 @@ export class Query {
    *
    * @returns Query
    */
-  public resultsPerPage(rpp?: number): Query {
-    if (typeof rpp === 'number' || typeof rpp === 'undefined') {
+  public rpp(rpp?: number): Query {
+    if ((typeof rpp === 'number' && 0 < rpp && rpp <= 100) || typeof rpp === 'undefined') {
       this._rpp = rpp;
     } else {
-      throw new QueryValueError('Value error: Result per page must be a number');
+      throw new QueryValueError('Value error: Result per page must be a number > 0 and <= 100');
     }
     return this;
   }
@@ -353,7 +345,7 @@ export class Query {
    *
    * @returns Query
    */
-  public addTypes(types?: string | string[]): Query {
+  public types(types?: string | string[]): Query {
     if (types) {
       this._dataTypes = new Set();
       if (typeof types === 'string') {
@@ -378,11 +370,11 @@ export class Query {
    *
    * @returns Query
    */
-  public transformer(transformer?: string): Query {
-    if (transformer) {
-      this._transformer = this._validateTransformer(transformer);
+  public transformer(transformer?: string | null): Query {
+    if (transformer || transformer === null) {
+      this._transformer = transformer;
     } else {
-      this._transformer = undefined;
+      delete this._transformer;
     }
     return this;
   }
@@ -394,10 +386,10 @@ export class Query {
    *
    */
   public timeout(timeout?: number): void {
-    if (timeout) {
+    if ((typeof timeout === 'number' && timeout > 0) || typeof timeout == 'undefined') {
       this._timeout = timeout;
     } else {
-      delete this._timeout;
+      throw new QueryValueError('Value error: timeout must be a number > 0');
     }
   }
 
@@ -405,7 +397,7 @@ export class Query {
    * Allows to ask for jsonp format, call without parameters
    * to clear the flag
    *
-   * @param  jsonp - Wether to use jsonp or not
+   * @param  jsonp - Whether to use jsonp or not
    *
    */
   public jsonp(jsonp?: boolean): void {
@@ -425,11 +417,7 @@ export class Query {
    */
   public queryName(queryName?: string): Query {
     if (typeof queryName === 'string' || typeof queryName === 'undefined') {
-      if (queryName) {
-        this._queryName = queryName;
-      } else {
-        delete this._queryName;
-      }
+      this._queryName = queryName;
     } else {
       throw new QueryValueError('Value error: queryname must be an string value');
     }
@@ -442,8 +430,8 @@ export class Query {
    * @param - noStats   Wether to send the nostats flag or not
    *
    */
-  public noStats(noStats?: boolean | number): Query {
-    if (['boolean', 'string', 'undefined'].includes(typeof noStats)) {
+  public noStats(noStats?: boolean): Query {
+    if (['boolean', 'undefined'].includes(typeof noStats)) {
       if (noStats) {
         this._noStats = 1;
       } else {
@@ -485,8 +473,8 @@ export class Query {
     if (this._page) {
       dumpData.page = this._page;
     }
-    if (this._transformer) {
-      dumpData.transformer = this._transformer;
+    if (typeof this._transformer !== 'undefined') {
+      dumpData.transformer = this._transformer ? this._transformer : '';
     }
     if (this._dataTypes) {
       dumpData.type = [...this._dataTypes];
@@ -594,16 +582,6 @@ export class Query {
       return OrderType.DESC;
     } else {
       throw new QueryValueError('Value error: Sort type must be: "asc" or "desc"');
-    }
-  }
-
-  private _validateTransformer(transformer: string): TransformerOptions {
-    if (transformer.toLowerCase() === TransformerOptions.Basic) {
-      return TransformerOptions.Basic;
-    } else if (transformer.toLowerCase() === TransformerOptions.OnlyID) {
-      return TransformerOptions.OnlyID;
-    } else {
-      throw new QueryValueError('Value error: Transformer must be: "basic" or "onlyid"');
     }
   }
 }
