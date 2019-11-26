@@ -60,7 +60,7 @@ class Controller extends EventEnabled
   ###
   reset: (query = null, params = {}, items = []) ->
     @query = query
-    @params = merge {}, @defaults, params
+    @params = merge page: 1, @defaults, params
     @items = items
     # At least one request sent, to detect if 1st page requested
     @requestDone = false

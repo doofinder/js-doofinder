@@ -384,7 +384,9 @@
         items = [];
       }
       this.query = query;
-      this.params = merge({}, this.defaults, params);
+      this.params = merge({
+        page: 1
+      }, this.defaults, params);
       this.items = items;
       this.requestDone = false;
       return this.lastPage = null;
