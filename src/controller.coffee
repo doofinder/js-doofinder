@@ -51,7 +51,7 @@ class Controller extends EventEnabled
 
   ###*
    * Resets status and optionally forces query and params. As it is a reset
-   * aimed to perform a new search, page is forced to 1 in any case.
+   * aimed to perform a new search.
    *
    * @param  {String} query  Search terms.
    * @param  {Object} params Optional search parameters.
@@ -60,7 +60,7 @@ class Controller extends EventEnabled
   ###
   reset: (query = null, params = {}, items = []) ->
     @query = query
-    @params = merge {}, @defaults, params, page: 1
+    @params = merge page: 1, @defaults, params
     @items = items
     # At least one request sent, to detect if 1st page requested
     @requestDone = false
@@ -138,7 +138,6 @@ class Controller extends EventEnabled
    * @public
   ###
   refresh: ->
-    @params.page = 1
     @__doSearch()
     @trigger "df:refresh", [@query, @params]
 
@@ -444,14 +443,17 @@ Refresh your browser's cache and try again. If the error persists contact suppor
    * @return {String}
    * @public
   ###
-  serializeStatus: ->
+  serializeStatus: (include=[]) ->
     status = merge query: @query, @params
-    delete status[key] for key in [
+
+    ignored_keys = [
       'transformer',
       'rpp',
       'query_counter',
       'page'
-    ]
+    ].filter (x) -> include.indexOf(x) < 0
+
+    delete status[key] for key in ignored_keys
 
     delete status[key] for own key, value of status when not value
 

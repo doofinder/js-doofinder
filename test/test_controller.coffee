@@ -475,6 +475,14 @@ describe "Controller", ->
       controller.serializeStatus().should.equal "query=hola&query_name=match_and"
       done()
 
+    it "can serialize include params to string", (done) ->
+      controller = cfg.getController()
+      controller.setParam "page", 2
+      controller.serializeStatus(["page"]).should.equal "page=2"
+      controller.reset "hola", query_name: "match_and", transformer: null, rpp: 10, page: 2
+      controller.serializeStatus(["page"]).should.equal "query=hola&page=2&query_name=match_and"
+      done()
+
     it "does not perform request when de-serializing empty status", (done) ->
       controller = cfg.getController()
       (controller.loadStatus "").should.be.false
@@ -511,5 +519,32 @@ describe "Controller", ->
       controller.query.should.equal "hola"
       controller.params.query_name.should.equal "match_and"
       controller.params.page.should.equal 1
+      controller.params.rpp.should.equal 20
+      controller.requestDone.should.be.true
+
+    it "performs a request when de-serializing search status with include params from string", (done) ->
+      controller = cfg.getController rpp: 20, page: 2
+
+      controller.one "df:results:success", (res) ->
+        controller.serializeStatus(["page"]).should.equal "query=hola&page=2&query_name=match_and"
+        scope.isDone().should.be.true
+        done()
+
+      params =
+        query: "hola"
+        query_name: "match_and"
+        rpp: 20
+        page: 2
+        query_counter: 1
+
+      scope = serve.search params
+      status = controller.loadStatus "query=hola&page=2&query_name=match_and"
+      status.should.not.be.false
+      status.query.should.equal "hola"
+      status.query_name.should.equal "match_and"
+
+      controller.query.should.equal "hola"
+      controller.params.query_name.should.equal "match_and"
+      controller.params.page.should.equal '2'
       controller.params.rpp.should.equal 20
       controller.requestDone.should.be.true

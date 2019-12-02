@@ -365,7 +365,7 @@
 
     /**
      * Resets status and optionally forces query and params. As it is a reset
-     * aimed to perform a new search, page is forced to 1 in any case.
+     * aimed to perform a new search.
      *
      * @param  {String} query  Search terms.
      * @param  {Object} params Optional search parameters.
@@ -384,9 +384,9 @@
         items = [];
       }
       this.query = query;
-      this.params = merge({}, this.defaults, params, {
+      this.params = merge({
         page: 1
-      });
+      }, this.defaults, params);
       this.items = items;
       this.requestDone = false;
       return this.lastPage = null;
@@ -484,7 +484,6 @@
      */
 
     Controller.prototype.refresh = function() {
-      this.params.page = 1;
       this.__doSearch();
       return this.trigger("df:refresh", [this.query, this.params]);
     };
@@ -860,14 +859,19 @@
      * @public
      */
 
-    Controller.prototype.serializeStatus = function() {
-      var j, key, len, ref, status, value;
+    Controller.prototype.serializeStatus = function(include) {
+      var ignored_keys, j, key, len, status, value;
+      if (include == null) {
+        include = [];
+      }
       status = merge({
         query: this.query
       }, this.params);
-      ref = ['transformer', 'rpp', 'query_counter', 'page'];
-      for (j = 0, len = ref.length; j < len; j++) {
-        key = ref[j];
+      ignored_keys = ['transformer', 'rpp', 'query_counter', 'page'].filter(function(x) {
+        return include.indexOf(x) < 0;
+      });
+      for (j = 0, len = ignored_keys.length; j < len; j++) {
+        key = ignored_keys[j];
         delete status[key];
       }
       for (key in status) {
