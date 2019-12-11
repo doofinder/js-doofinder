@@ -306,7 +306,7 @@ export class Query {
    */
   public page(page?: number): Query {
     if (typeof page === 'number' || typeof page === 'undefined' || typeof page === null) {
-      this._page = page && page > 0 ? page : 0;
+      this._page = page && page > 0 ? page : 1;
     } else {
       throw new QueryValueError('Value error: Page value must be a number');
     }
@@ -419,7 +419,7 @@ export class Query {
     if (typeof queryName === 'string' || typeof queryName === 'undefined') {
       this._queryName = queryName;
     } else {
-      throw new QueryValueError('Value error: queryname must be an string value');
+      throw new QueryValueError('Value error: queryname must be a string value');
     }
     return this;
   }
