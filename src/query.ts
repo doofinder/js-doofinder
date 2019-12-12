@@ -442,7 +442,7 @@ export class Query {
    *
    */
   public noStats(noStats?: boolean): Query {
-    if (['boolean', 'undefined'].includes(typeof noStats)) {
+    if (['boolean', 'number', 'undefined'].includes(typeof noStats)) {
       if (noStats) {
         this._noStats = 1;
       } else {
