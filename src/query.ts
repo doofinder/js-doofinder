@@ -60,6 +60,7 @@ export class QueryValueError extends Error {
 export class Query {
   public hashid: string = null;
   public text: string;
+  public queryCounter: number = null;
   private params: GenericObject = {};
   private _filters: Filter = new Map();
   private _exclusionFilters: Filter = new Map();
@@ -72,7 +73,6 @@ export class Query {
   private _queryName?: string;
   private _timeout: number;
   private _jsonp: boolean;
-  private _queryCounter: number = null;
   private _initialConfig: GenericObject;
 
   public get filters(): GenericObject {
@@ -503,6 +503,7 @@ export class Query {
   public reset(): void {
     this.hashid = null;
     this.text = '';
+    this.queryCounter = null;
     this.params = {};
     this._filters = new Map();
     this._exclusionFilters = new Map();
@@ -531,7 +532,6 @@ export class Query {
     if (this._jsonp !== undefined) {
       delete this['_jsonp'];
     }
-    this._queryCounter = null;
     if (this._initialConfig) {
       this.load(this._initialConfig);
     }
