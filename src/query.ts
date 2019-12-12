@@ -72,6 +72,7 @@ export class Query {
   private _queryName?: string;
   private _timeout: number;
   private _jsonp: boolean;
+  private _queryCounter: number = null;
   private _initialConfig: GenericObject;
 
   public get filters(): GenericObject {
@@ -530,6 +531,7 @@ export class Query {
     if (this._jsonp !== undefined) {
       delete this['_jsonp'];
     }
+    this._queryCounter = null;
     if (this._initialConfig) {
       this.load(this._initialConfig);
     }
