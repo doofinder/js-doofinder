@@ -164,7 +164,7 @@ describe('Client', () => {
 
   context('Search', () => {
     context('Basic Parameters', () => {
-      it('uses default basic parameters if none set', (done) => {
+      it('uses default basic parameters if none set', done => {
         const qs = buildQuery();
         qs.should.include(`hashid=${cfg.hashid}`);
         qs.should.include(`query=`);

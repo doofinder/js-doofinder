@@ -16,7 +16,7 @@ describe('Query', () => {
   context('Creation of the Query object', () => {
     it('should accept just a hashid', done => {
       // when
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       const params = q.dump();
 
       // then
@@ -26,11 +26,11 @@ describe('Query', () => {
 
     it('should accept and copy another query', done => {
       // given
-      const qOriginal = new Query(cfg.hashid);
+      const qOriginal = new Query(cfg);
       const paramsOriginal = qOriginal.dump();
 
       // when
-      const qCopy = new Query(cfg.hashid);
+      const qCopy = new Query(cfg);
       qCopy.load(paramsOriginal);
       const paramsCopy = qCopy.dump();
 
@@ -58,7 +58,7 @@ describe('Query', () => {
 
     it('setting several parameters at once correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.page(2);
       const newParams = { rpp: 10, transformer: 'basic' };
 
@@ -82,7 +82,7 @@ describe('Query', () => {
   context('Query filter methods', () => {
     it('adds a filter term correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(10);
       q.page(2);
 
@@ -99,7 +99,7 @@ describe('Query', () => {
 
     it('removes a filter term correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(10);
       q.page(2);
       q.addFilter('brand', ['Ferrari', 'ford']);
@@ -117,7 +117,7 @@ describe('Query', () => {
 
     it('does not remove a filter term if not present', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(10);
       q.page(2);
       q.addFilter('brand', ['Ferrari']);
@@ -136,7 +136,7 @@ describe('Query', () => {
 
     it('toggling non existing filter adds it', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(10);
       q.page(2);
 
@@ -153,7 +153,7 @@ describe('Query', () => {
 
     it('toggling existing filter removes it', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(10);
       q.page(2);
       q.addFilter('brand', ['Ferrari']);
@@ -172,7 +172,7 @@ describe('Query', () => {
 
     it('check a filter exists correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(10);
       q.page(2);
       q.addFilter('brand', ['Ferrari']);
@@ -212,7 +212,7 @@ describe('Query', () => {
 
     it('setting the sort parameters works', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(10);
       q.page(2);
       q.sort([{ price: OrderType.ASC }, { color: OrderType.ASC }]);
@@ -256,7 +256,7 @@ describe('Query', () => {
 
     it('hasSorting when it is an object works', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(10);
       q.page(2);
       q.sort([{ color: OrderType.ASC }]);
@@ -283,7 +283,7 @@ describe('Query', () => {
   context('Query page parameter methods', () => {
     it('page should be set correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
 
       // when
       q.page(3);
@@ -297,7 +297,7 @@ describe('Query', () => {
     it('next page should be set correctly', done => {
       // given
       const pageNum = Math.floor(Math.random() * 10 + 1);
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.page(pageNum);
 
       // when
@@ -310,7 +310,7 @@ describe('Query', () => {
 
     it('next page should set page to two if none in Query', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
 
       // when
       q.nextPage();
@@ -322,7 +322,7 @@ describe('Query', () => {
 
     it('results per page works as intended', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(10);
 
       // when
@@ -335,7 +335,7 @@ describe('Query', () => {
 
     it('results per page can be reset with empty call', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(10);
 
       // when
@@ -350,7 +350,7 @@ describe('Query', () => {
   context('Query type parameter methods', () => {
     it('set type works correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.types(['blog', 'employees']);
 
       // when
@@ -366,7 +366,7 @@ describe('Query', () => {
 
     it('removing a type works correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.types(['blog', 'employees']);
 
       // when
@@ -381,7 +381,7 @@ describe('Query', () => {
 
     it('empty call empties the types', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.types(['blog', 'employees']);
 
       // when
@@ -398,7 +398,7 @@ describe('Query', () => {
   context('Other Query parameter methods', () => {
     it('Sets the transformer correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
 
       // when
       q.transformer('basic');
@@ -410,7 +410,7 @@ describe('Query', () => {
 
     it('Clears the transformer correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.transformer('basic');
 
       // when
@@ -422,7 +422,7 @@ describe('Query', () => {
     });
 
     it('Set transformer null and check the querystring', done => {
-      const query = new Query('123456');
+      const query = new Query({ hashid: '123456' });
       query.searchText('portatil');
       query.transformer(null);
       const params = query.dump();
@@ -435,7 +435,7 @@ describe('Query', () => {
 
     it('Sets the timeout correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(20);
 
       // when
@@ -448,7 +448,7 @@ describe('Query', () => {
 
     it('Clears the timeout correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(20);
       q.timeout(100);
 
@@ -462,7 +462,7 @@ describe('Query', () => {
 
     it('Sets the jsonp correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(20);
 
       // when
@@ -475,7 +475,7 @@ describe('Query', () => {
 
     it('Clears the jsonp correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(20);
       q.jsonp(true);
 
@@ -489,7 +489,7 @@ describe('Query', () => {
 
     it('Sets the query_name correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
 
       // when
       q.queryName('match_and');
@@ -501,7 +501,7 @@ describe('Query', () => {
 
     it('Clears the query_name correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.queryName('match_and');
 
       // when
@@ -514,7 +514,7 @@ describe('Query', () => {
 
     it('Sets the nostats correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
 
       // when
       q.noStats(true);
@@ -526,7 +526,7 @@ describe('Query', () => {
 
     it('Clears the nostats correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.noStats(true);
 
       // when
@@ -541,7 +541,7 @@ describe('Query', () => {
   context('Parameter checking and fetching', () => {
     it('getParams returns the current params', done => {
       // when
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(20);
       q.page(11);
 
@@ -556,7 +556,7 @@ describe('Query', () => {
 
     it('getParams returns the current params, even the new ones', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(10);
       q.page(3);
 
@@ -575,7 +575,7 @@ describe('Query', () => {
 
     it('getQuery works correctly', done => {
       // given
-      const q = new Query(cfg.hashid);
+      const q = new Query(cfg);
       q.rpp(20);
       q.page(11);
 
