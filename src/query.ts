@@ -225,6 +225,10 @@ export class Query {
       this.hashid = this.params.hashid;
       delete this.params['hashid'];
     }
+    if ('queryCounter' in this.params) {
+      this.queryCounter = this.params.queryCounter;
+      delete this.params['queryCounter'];
+    }
     if ('filter' in this.params) {
       for (const field in this.params.filter) {
         this.addFilter(field, this.params['filter'][field] as InputFilterValue);
@@ -464,6 +468,9 @@ export class Query {
       dumpData.hashid = this.hashid;
     }
     dumpData.query = this.text ? this.text : '';
+    if (this.queryCounter) {
+      dumpData.queryCounter = this.queryCounter;
+    }
     if (!isEmptyObject(this._filters)) {
       dumpData.filter = this._getFilter(this._filters);
     }
