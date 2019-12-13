@@ -1,4 +1,4 @@
-import { Facet, FacetOption, GenericObject, QueryTypes } from './types';
+import { Facet, FacetOption, GenericObject } from './types';
 
 export interface SingleResult {
   id?: string | number;
@@ -9,11 +9,6 @@ export interface SingleResult {
   image_url?: string;
   type: string;
   [propName: string]: any; // Extra fields go here
-}
-
-enum FilterType {
-  Terms = 'terms',
-  Range = 'range',
 }
 
 interface FilterResponse {
@@ -34,7 +29,7 @@ export class DoofinderResult {
   private _max_score: number = null;
   private _query: string = null;
   private _query_counter: number = null;
-  private _query_name: QueryTypes = null;
+  private _query_name: string = null;
   private _results_per_page: number = null;
   private _facets: Facet[] = null;
   private _filters: FilterResponse = null;
@@ -89,7 +84,7 @@ export class DoofinderResult {
   public get query_counter(): number {
     return this._query_counter;
   }
-  public get query_name(): QueryTypes {
+  public get query_name(): string {
     return this._query_name;
   }
   public get results_per_page(): number {

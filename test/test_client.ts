@@ -10,13 +10,14 @@ should();
 
 // required for tests
 import { Client, ClientResponseError } from '../src/client';
+import { InputExtendedSort, OrderType, InputSort } from '../src/query';
 
 // config, utils & mocks
 import * as cfg from './config';
 
 // Mock the fetch API
 import * as fetchMock from 'fetch-mock';
-import { Zone, DoofinderParameters, SortDefinition, Sort, StatsEvent, RequestSortOptions } from '../src/types';
+import { Zone, DoofinderParameters, StatsEvent } from '../src/types';
 import { isPlainObject } from '../src/util/is';
 
 function buildQuery(query?: string, params?: DoofinderParameters) {
@@ -163,7 +164,7 @@ describe('Client', () => {
 
   context('Search', () => {
     context('Basic Parameters', () => {
-      it('uses default basic parameters if none set', (done) => {
+      it('uses default basic parameters if none set', done => {
         const qs = buildQuery();
         qs.should.include(`hashid=${cfg.hashid}`);
         qs.should.include(`query=`);
@@ -182,25 +183,22 @@ describe('Client', () => {
     });
 
     context('Types', () => {
-      it('specifies no type if no specific type was set', (done) => {
+      it('specifies no type if no specific type was set', done => {
         const querystring = `hashid=${cfg.hashid}&query=`;
-        (buildQuery(undefined)).should.equal(querystring);
+        buildQuery(undefined).should.equal(querystring);
         done();
       });
 
-      it('handles one type if set', (done) => {
-        const querystring = `type=product&hashid=${cfg.hashid}&query=`;
-        (buildQuery(undefined, {type: 'product'})).should.equal(querystring);
-        (buildQuery(undefined, {type: ['product']})).should.equal(querystring);
+      it('handles one type if set', done => {
+        const querystring = `hashid=${cfg.hashid}&query=&type=product`;
+        buildQuery(undefined, { type: 'product' }).should.equal(querystring);
+        buildQuery(undefined, { type: ['product'] }).should.equal(querystring);
         done();
       });
 
-      it('handles several types if set', (done) => {
-        const querystring = [
-          `type%5B0%5D=product&type%5B1%5D=recipe`,
-          `&hashid=${cfg.hashid}&query=`
-        ].join('');
-        (buildQuery(undefined, {type: ['product', 'recipe']})).should.equal(querystring);
+      it('handles several types if set', done => {
+        const querystring = `hashid=${cfg.hashid}&query=&type%5B0%5D=product&type%5B1%5D=recipe`;
+        buildQuery(undefined, { type: ['product', 'recipe'] }).should.equal(querystring);
         done();
       });
     });
@@ -208,76 +206,60 @@ describe('Client', () => {
     context('Filters', () => {
       // Exclusion filters are the same with a different key so not testing here.
 
-      it('handles terms filters', (done) => {
+      it('handles terms filters', done => {
         const querystring = [
-          `filter%5Bbrand%5D=NIKE`,
-          `&filter%5Bcategory%5D%5B0%5D=SHOES&filter%5Bcategory%5D%5B1%5D=SHIRTS`,
-          `&hashid=${cfg.hashid}&query=`
+          `hashid=${cfg.hashid}&query=`,
+          '&filter%5Bbrand%5D%5B0%5D=NIKE&filter%5Bcategory%5D%5B0%5D=SHOES&',
+          'filter%5Bcategory%5D%5B1%5D=SHIRTS',
         ].join('');
-        const params: DoofinderParameters = {
+        const params = {
           filter: {
             brand: 'NIKE',
-            category: ['SHOES', 'SHIRTS']
-          }
+            category: ['SHOES', 'SHIRTS'],
+          },
         };
-        (buildQuery(undefined, params)).should.equal(querystring);
+        buildQuery(undefined, params).should.equal(querystring);
         done();
       });
 
-      it('handles range filters', (done) => {
+      it('handles range filters', done => {
         const querystring = [
-          'filter%5Bprice%5D%5Bfrom%5D=0',
-          `&filter%5Bprice%5D%5Bto%5D=150&hashid=${cfg.hashid}&query=`
+          `hashid=${cfg.hashid}&query=`,
+          '&filter%5Bprice%5D%5Bfrom%5D=0&filter%5Bprice%5D%5Bto%5D=150',
         ].join('');
 
         const params = {
           filter: {
             price: {
               from: 0,
-              to: 150
-            }
-          }
+              to: 150,
+            },
+          },
         };
 
-        (buildQuery(undefined, params)).should.equal(querystring);
+        buildQuery(undefined, params).should.equal(querystring);
         done();
       });
     });
 
     context('Sorting', () => {
-      it('accepts a single field name to sort on', (done) => {
-        const querystring = `sort%5B0%5D%5Bbrand%5D=asc&hashid=${cfg.hashid}&query=`;
-        (buildQuery(undefined, {sort: 'brand'})).should.equal(querystring);
+      it('accepts a single field name to sort on', done => {
+        const querystring = `hashid=${cfg.hashid}&query=&sort%5B0%5D%5Bbrand%5D=asc`;
+        buildQuery(undefined, { sort: 'brand' }).should.equal(querystring);
         done();
       });
 
-      it('accepts an object for a single field to sort on', (done) => {
-        const querystring = `sort%5B0%5D%5Bbrand%5D=desc&hashid=${cfg.hashid}&query=`;
-        const sorting: SortDefinition = { brand: Sort.DESC};
-        (buildQuery(undefined, {sort: sorting})).should.equal(querystring);
-        done();
-      });
-
-      it('fails with an object for a multiple fields to sort on', (done) => {
-        const sorting: RequestSortOptions = {
-          _score: Sort.DESC,
-          brand: Sort.ASC
-        };
-
-        (() => (buildQuery(undefined, {sort: sorting}))).should.throw();
+      it('accepts an object for a single field to sort on', done => {
+        const querystring = `hashid=${cfg.hashid}&query=&sort%5B0%5D%5Bbrand%5D=desc`;
+        const sorting: InputExtendedSort[] = [{ brand: OrderType.DESC }];
+        buildQuery(undefined, { sort: sorting }).should.equal(querystring);
         done();
       });
 
       it('accepts an array of objects for a multiple fields to sort on', (done) => {
-        const querystring = [
-          'sort%5B0%5D%5B_score%5D=desc',
-          `&sort%5B1%5D%5Bbrand%5D=asc&hashid=${cfg.hashid}&query=`
-        ].join('');
-        const sorting: RequestSortOptions = [
-          {_score: Sort.DESC},
-          {brand: Sort.ASC}
-        ];
-        (buildQuery(undefined, {sort: sorting})).should.equal(querystring);
+        const querystring = `hashid=${cfg.hashid}&query=&sort%5B0%5D%5B_score%5D=desc&sort%5B1%5D%5Bbrand%5D=asc`;
+        const sorting: InputSort[] = [{ _score: OrderType.DESC }, { brand: OrderType.ASC }];
+        buildQuery(undefined, { sort: sorting }).should.equal(querystring);
         done();
       });
     });
@@ -289,7 +271,7 @@ describe('Client', () => {
       await client.stats(StatsEvent.Init);
       fetchMock.called(`glob:${cfg.endpoint}/5/stats/init?*`).should.be.true;
 
-      await client.stats(StatsEvent.Click, {dfid: 'value'});
+      await client.stats(StatsEvent.Click, { dfid: 'value' });
       fetchMock.called(`glob:${cfg.endpoint}/5/stats/click?*dfid=value*`).should.be.true;
     });
   });

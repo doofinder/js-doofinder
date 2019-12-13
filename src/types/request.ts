@@ -1,4 +1,4 @@
-import { QueryTypes, Sort, TransformerOptions } from './base';
+import { InputExtendedSort, InputSort } from '../query';
 
 interface RangeFilter {
   from: number;
@@ -39,16 +39,6 @@ export interface RequestFiltersObject {
 }
 
 /**
- * A single sorting option definition
- *
- */
-export interface SortDefinition {
-  [field: string]: Sort;
-}
-
-export type RequestSortOptions = string | SortDefinition | SortDefinition[];
-
-/**
  * This type is the available fields and
  * parameters available for the search
  * endpoint at Doofinder
@@ -59,11 +49,11 @@ export interface DoofinderParameters {
   type?: string | string[];
   filter?: RequestFiltersObject;
   exclude?: RequestFiltersObject;
-  transformer?: TransformerOptions;
-  sort?: RequestSortOptions;
+  transformer?: string;
+  sort?: InputSort | InputSort[];
   timeout?: number;
   jsonp?: boolean;
-  query_name?: QueryTypes;
+  query_name?: string;
   nostats?: number;
   [paramName: string]: unknown;
 }
