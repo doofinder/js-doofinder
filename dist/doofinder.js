@@ -484,6 +484,7 @@
      */
 
     Controller.prototype.refresh = function() {
+      this.params.page = 1;
       this.__doSearch();
       return this.trigger("df:refresh", [this.query, this.params]);
     };
@@ -907,7 +908,7 @@
         delete requestParams.query;
         this.reset(query, requestParams);
         this.requestDone = true;
-        this.refresh();
+        this.__doSearch();
         return params;
       } else {
         return false;

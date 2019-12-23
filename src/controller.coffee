@@ -138,6 +138,7 @@ class Controller extends EventEnabled
    * @public
   ###
   refresh: ->
+    @params.page = 1
     @__doSearch()
     @trigger "df:refresh", [@query, @params]
 
@@ -480,7 +481,7 @@ Refresh your browser's cache and try again. If the error persists contact suppor
 
       @reset query, requestParams
       @requestDone = true
-      @refresh()
+      @__doSearch()
       params
     else
       false
