@@ -212,7 +212,7 @@ export class Client {
   // ? Should be a StatsClient wrapping Client to perform specific stats calls or a StatsQuery object like Query to wrap and validate calls?
   // https://doofinder.github.io/js-doofinder/stats
 
-  public async stats(eventName: StatsEvent, eventParams?: GenericObject<string>): Promise<GenericObject> {
+  public async stats(eventName: StatsEvent, eventParams?: GenericObject<string>): Promise<Response> {
     const params = Object.assign(
       {
         hashid: this.hashid,

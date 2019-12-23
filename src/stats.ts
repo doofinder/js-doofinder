@@ -46,7 +46,7 @@ export class StatsClient {
    *
    * @return  {String}     The newly generated Session ID
    */
-  public async registerSession({ sessionId, hashid }: BaseStatsParams): Promise<GenericObject> {
+  public async registerSession({ sessionId, hashid }: BaseStatsParams): Promise<Response> {
     if (!sessionId) {
       throw new Error(ERR_NO_SESSID);
     }
@@ -89,7 +89,7 @@ export class StatsClient {
     datatype,
     query,
     customResultsId,
-  }: ClickStatsParams): Promise<GenericObject> {
+  }: ClickStatsParams): Promise<Response> {
     if (!sessionId) {
       throw new Error(ERR_NO_SESSID);
     }
@@ -128,7 +128,7 @@ export class StatsClient {
    * @param   {String}    sessionId   Optional. The session ID
    *
    */
-  public async registerCheckout({ sessionId, hashid }: BaseStatsParams): Promise<GenericObject> {
+  public async registerCheckout({ sessionId, hashid }: BaseStatsParams): Promise<Response> {
     if (!sessionId) {
       throw new Error(ERR_NO_SESSID);
     }
@@ -151,7 +151,7 @@ export class StatsClient {
    * @param  {Number}    bannerId    The banner ID
    *
    */
-  public async registerBannerDisplayEvent({ sessionId, bannerId, hashid }: BannerStatsParams): Promise<GenericObject> {
+  public async registerBannerDisplayEvent({ sessionId, bannerId, hashid }: BannerStatsParams): Promise<Response> {
     if (!sessionId) {
       throw new Error(ERR_NO_SESSID);
     }
@@ -175,7 +175,7 @@ export class StatsClient {
    * @param  {Number}    bannerId    The banner ID
    *
    */
-  public async registerBannerClickEvent({ sessionId, bannerId, hashid }: BannerStatsParams): Promise<GenericObject> {
+  public async registerBannerClickEvent({ sessionId, bannerId, hashid }: BannerStatsParams): Promise<Response> {
     if (!sessionId) {
       throw new Error(ERR_NO_SESSID);
     }
