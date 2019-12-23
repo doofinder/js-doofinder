@@ -73,7 +73,6 @@ export class Query {
   private _queryName?: string;
   private _timeout: number;
   private _jsonp: boolean;
-  private _initialConfig: GenericObject;
 
   public get filters(): GenericObject {
     return this._getFilter(this._filters);
@@ -90,7 +89,6 @@ export class Query {
   }
 
   public constructor(initialConfig?: GenericObject) {
-    this._initialConfig = initialConfig;
     if (initialConfig) {
       this.load(initialConfig);
     }
@@ -277,7 +275,7 @@ export class Query {
    * @param fieldOrList - Field to use in sort. It cant be use as:
    *                        - string: 'price'
    *                        - list of definition: [{price: 'asc}, {name: 'desc'}]
-   * @param sortType - Optional params in case of the first params is an string
+   * @param orderType - Optional params in case of the first params is an string
    *                   and an order is needed to define
    */
   public sort(fieldOrList: InputSort[]): Query;
@@ -438,7 +436,7 @@ export class Query {
   /**
    * Sets the nostats flag, call without parameters to clear it
    *
-   * @param - noStats   Wether to send the nostats flag or not
+   * @param noStats - Wether to send the nostats flag or not
    *
    */
   public noStats(noStats?: boolean): Query {
@@ -506,42 +504,6 @@ export class Query {
       dumpData.jsonp = this._jsonp;
     }
     return dumpData;
-  }
-  public reset(): void {
-    this.hashid = null;
-    this.text = '';
-    this.queryCounter = null;
-    this.params = {};
-    this._filters = new Map();
-    this._exclusionFilters = new Map();
-    this._sort = new Map();
-    if (this._rpp !== undefined) {
-      delete this['_rpp'];
-    }
-    if (this._page !== undefined) {
-      delete this['_page'];
-    }
-    if (this._transformer !== undefined) {
-      delete this['_transformer'];
-    }
-    if (this._dataTypes !== undefined) {
-      delete this['_dataTypes'];
-    }
-    if (this._noStats !== undefined) {
-      delete this['_noStats'];
-    }
-    if (this._queryName !== undefined) {
-      delete this['_queryName'];
-    }
-    if (this._timeout !== undefined) {
-      delete this['_timeout'];
-    }
-    if (this._jsonp !== undefined) {
-      delete this['_jsonp'];
-    }
-    if (this._initialConfig) {
-      this.load(this._initialConfig);
-    }
   }
 
   private _hydrate(params: SearchParameters): SearchParameters {
