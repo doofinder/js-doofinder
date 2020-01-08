@@ -1,54 +1,57 @@
 import { Zone } from './types';
-import { Client } from './client';
-import { isValidZone } from './util/is';
-
-interface ClientPool {
-  [zoneKey: string]: Client;
-}
+import { Client, ClientOptions } from './client';
 
 /**
- * This class allows to retrieve a fully configured
- * Doofinder client and holds a pool of the previous
- * fetched clients.
+ * Manage clients for multiple zones as singletons with shared settings.
  *
- * It is a singleton and a reference to the object
- * instance can be retrieved through the call to the
- * static method `getInstance()`
- *
+ * @beta
  */
 export class ClientRepo {
-  private static instance: ClientRepo;
-  private pool: ClientPool = {};
-  private _zone: Zone = Zone.EU1;
+  private _pool: Map<Zone, Client>;
+  private _options: Partial<ClientOptions>;
 
-  private constructor() {
-    // Does nothing
+  /**
+   * Build a new repo.
+   * @param options - Optional client options shared by all clients.
+   */
+  public constructor(options: Partial<ClientOptions> = {}) {
+    this._pool = new Map();
+    this.options = options;
   }
 
-  public static getInstance(): ClientRepo {
-    if (!this.instance) {
-      this.instance = new ClientRepo();
+  /**
+   * Property to change shared options.
+   *
+   * When changed, all existing clients are removed so new ones get the
+   * new options.
+   *
+   * @beta
+   */
+  public get options(): Partial<ClientOptions> {
+    return this._options;
+  }
+  public set options(value: Partial<ClientOptions>) {
+    const { serverAddress, headers } = value;
+
+    this._options = {
+      serverAddress,
+      headers: { ...headers },
+    };
+
+    this._pool.clear();
+  }
+
+  /**
+   * Get a client for the given zone with the shared options.
+   *
+   * @param zone - A valid search zone.
+   * @beta
+   */
+  public getClient(zone: Zone): Client {
+    if (!this._pool.has(zone)) {
+      this._pool.set(zone, new Client({ ...this._options, zone }));
     }
 
-    return this.instance;
-  }
-
-  public getClient(): Client {
-    if (!(this.zone in this.pool)) {
-      this.pool[this.zone] = new Client({ zone: this.zone });
-    }
-    return this.pool[this.zone];
-  }
-
-  public set zone(zone: Zone) {
-    if (!isValidZone(zone)) {
-      throw new Error(`Invalid zone: ${zone}`);
-    } else {
-      this._zone = zone;
-    }
-  }
-
-  public get zone(): Zone {
-    return this._zone;
+    return this._pool.get(zone);
   }
 }
