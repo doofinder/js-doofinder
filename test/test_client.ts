@@ -49,7 +49,7 @@ describe('Client', () => {
 
     context('with API Key and zone', () => {
       it("should use API key's zone", (done) => {
-        const client = new Client({ hashid: cfg.hashid, zone: Zone.US, apiKey: 'eu1-abcd' });
+        const client = new Client({ hashid: cfg.hashid, zone: Zone.US1, apiKey: 'eu1-abcd' });
         client.endpoint.should.equal(cfg.endpoint);
         done();
       });

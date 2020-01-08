@@ -19,7 +19,7 @@ interface ClientPool {
 export class ClientRepo {
   private static instance: ClientRepo;
   private pool: ClientPool = {};
-  private _zone: Zone = Zone.EU;
+  private _zone: Zone = Zone.EU1;
 
   private constructor() {
     // Does nothing
