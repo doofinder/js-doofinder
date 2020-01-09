@@ -103,12 +103,10 @@ export class Client {
     this.endpoint = this.__buildEndpoint(serverAddress);
 
     this.hashid = hashid;
-    this.headers = Object.assign(
-      {
-        Accept: 'application/json',
-      },
-      headers || {}
-    );
+    this.headers = {
+      Accept: 'application/json',
+      ...headers,
+    };
 
     if (this.secret) {
       this.headers.Authorization = this.secret;

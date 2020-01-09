@@ -32,11 +32,15 @@ export class ClientPool {
   }
   public set options(value: Partial<ClientOptions>) {
     const { serverAddress, headers } = value;
-
-    this._options = {
-      serverAddress,
-      headers: { ...headers },
+    const options: Partial<ClientOptions> = {
+      headers: Object.freeze({ ...headers }),
     };
+
+    if (serverAddress) {
+      options.serverAddress = serverAddress;
+    }
+
+    this._options = Object.freeze(options);
 
     this._pool.clear();
   }
