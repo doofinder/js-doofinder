@@ -2,8 +2,8 @@
  * The zones the client can be from
  */
 export enum Zone {
-  EU = 'eu1',
-  US = 'us1',
+  EU1 = 'eu1',
+  US1 = 'us1',
 }
 
 /**

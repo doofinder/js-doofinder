@@ -22,7 +22,7 @@ import { isPlainObject } from '../src/util/is';
 
 const ENDPOINT = 'https://eu1-search.doofinder.com/5/stats/';
 const TEST_DFID = 'ffffffffffffffffffffffffffffffff@product@ffffffffffffffffffffffffffffffff';
-const TEST_CLIENT = new Client({zone: Zone.EU, apiKey: 'eu1-abcd'});
+const TEST_CLIENT = new Client({zone: Zone.EU1, apiKey: 'eu1-abcd'});
 
 describe('StatsClient', () => {
   beforeEach(() => {
@@ -43,7 +43,7 @@ describe('StatsClient', () => {
   context('StatsClient inner workings', () => {
     it('should set the correct hashid when sent with new session', async () => {
       // given
-      const client = new Client({zone: Zone.EU, apiKey: 'eu1-abcd'});
+      const client = new Client({zone: Zone.EU1, apiKey: 'eu1-abcd'});
       let sc = new StatsClient(client);
 
       // when
@@ -98,7 +98,7 @@ describe('StatsClient', () => {
       let sc = new StatsClient(TEST_CLIENT);
 
       // when
-      const response = await sc.registerClick({sessionId: 'SessionID', 
+      const response = await sc.registerClick({sessionId: 'SessionID',
                                                id: 'SKU10044', datatype: 'product'});
 
       // then
@@ -114,9 +114,9 @@ describe('StatsClient', () => {
       let sc = new StatsClient(TEST_CLIENT);
 
       // when
-      const response = await sc.registerClick({sessionId: 'SessionID', 
-                                               id: 'SKU10044', 
-                                               datatype: 'product', 
+      const response = await sc.registerClick({sessionId: 'SessionID',
+                                               id: 'SKU10044',
+                                               datatype: 'product',
                                                query: 'hammer'});
 
       // then
@@ -133,9 +133,9 @@ describe('StatsClient', () => {
       let sc = new StatsClient(TEST_CLIENT);
 
       // when
-      const response = await sc.registerClick({sessionId: 'SessionID', 
-                                               id: 'SKU10044', 
-                                               datatype: 'product', 
+      const response = await sc.registerClick({sessionId: 'SessionID',
+                                               id: 'SKU10044',
+                                               datatype: 'product',
                                                query: 'hammer',
                                                customResultsId: 140});
 

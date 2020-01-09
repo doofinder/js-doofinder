@@ -84,7 +84,7 @@ describe("Is Module", () => {
 
   it("can say if a zone is valid", (done) => {
     Thing.isValidZone('a').should.be.false;
-    Thing.isValidZone(Zone.EU).should.be.true;
+    Thing.isValidZone(Zone.EU1).should.be.true;
     done();
   });
 });
