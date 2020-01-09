@@ -223,6 +223,10 @@ export class Query {
       this.hashid = this.params.hashid;
       delete this.params['hashid'];
     }
+    if ('query' in this.params) {
+      this.text = this.params.query;
+      delete this.params['query'];
+    }
     if ('queryCounter' in this.params) {
       this.queryCounter = this.params.queryCounter;
       delete this.params['queryCounter'];
