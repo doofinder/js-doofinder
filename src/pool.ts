@@ -6,12 +6,12 @@ import { Client, ClientOptions } from './client';
  *
  * @beta
  */
-export class ClientRepo {
+export class ClientPool {
   private _pool: Map<Zone, Client>;
   private _options: Partial<ClientOptions>;
 
   /**
-   * Build a new repo.
+   * Build a new pool.
    * @param options - Optional client options shared by all clients.
    */
   public constructor(options: Partial<ClientOptions> = {}) {
