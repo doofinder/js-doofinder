@@ -5,6 +5,7 @@ function demo({ Client, Query, Zone }) {
   query.searchText('silla');
   query.addFilter('brand', 'JANE');
   query.addFilter('brand', 'RECARO');
+  query.queryCounter = 2;
 
   client.search(query).then(result => {
     console.log(result);
