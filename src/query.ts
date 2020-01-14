@@ -227,9 +227,9 @@ export class Query {
       this.text = this.params.query;
       delete this.params['query'];
     }
-    if ('queryCounter' in this.params) {
-      this.queryCounter = this.params.queryCounter;
-      delete this.params['queryCounter'];
+    if ('query_counter' in this.params) {
+      this.queryCounter = this.params.query_counter;
+      delete this.params['query_counter'];
     }
     if ('filter' in this.params) {
       for (const field in this.params.filter) {
@@ -471,7 +471,7 @@ export class Query {
     }
     dumpData.query = this.text ? this.text : '';
     if (this.queryCounter) {
-      dumpData.queryCounter = this.queryCounter;
+      dumpData.query_counter = this.queryCounter;
     }
     if (!isEmptyObject(this._filters)) {
       dumpData.filter = this._getFilter(this._filters);
