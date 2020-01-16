@@ -92,7 +92,7 @@ class TermsFacet extends Display
    * @fires TermsFacet#df:widget:render
   ###
   render: (res) ->
-    if res.page is 1
+    if res.page is 1 || Object.keys(@currentContext).length == 0
       if res.facets[@facet].terms.buckets.length > 0
         super res
       else

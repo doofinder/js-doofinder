@@ -212,7 +212,7 @@ class RangeFacet extends Display
    * @fires RangeFacet#df:widget:render
   ###
   render: (response) ->
-    if response.page is 1
+    if response.page is 1 || Object.keys(@currentContext).length == 0
       @range = @__getRangeFromResponse response
 
       if @range.min == @range.max
