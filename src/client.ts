@@ -270,12 +270,12 @@ export class Client {
   public buildSearchQueryString(query: string | Query | DoofinderParameters, params?: DoofinderParameters): string {
     let q: Query = new Query();
 
-    if (query instanceof Query) {
-      q = query;
-    } else if (typeof query === 'string') {
+    if (typeof query === 'string') {
       q.searchText(query);
       q.load(params || {});
-    } else if (isPlainObject(query)) {
+    } else if (query instanceof Query) {
+      q = query;
+    } else {
       q.load(query || {});
     }
 
