@@ -27,7 +27,8 @@
     "lint": "eslint --env browser --fix src/**/*.ts",
     "compile": "rimraf lib && rollup -c",
     "minify-iife": "terser lib/doofinder.js -c -m --comments /^nothing/ --keep-classnames --keep-fnames -o lib/doofinder.min.js",
-    "typings": "rimraf types && tsc --declaration --emitDeclarationOnly --outDir types"
+    "typings": "rimraf types && tsc --declaration --emitDeclarationOnly --outDir types",
+    "uml": "tplant -C -i src/index.ts -o doofinder.puml"
   },
   "author": "Doofinder",
   "contributors": [
@@ -81,6 +82,7 @@
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-typescript2": "^0.24.3",
     "terser": "^4.3.9",
+    "tplant": "^2.3.3",
     "ts-node": "^8.4.1",
     "typedoc": "^0.15.0",
     "typescript": "^3.6.3"
