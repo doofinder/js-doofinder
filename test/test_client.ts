@@ -10,7 +10,7 @@ should();
 
 // required for tests
 import { Client, ClientResponseError } from '../src/client';
-import { InputExtendedSort, OrderType, InputSort } from '../src/query';
+import { InputExtendedSort, OrderType, InputSort, Query } from '../src/query';
 
 // config, utils & mocks
 import * as cfg from './config';
@@ -20,8 +20,14 @@ import * as fetchMock from 'fetch-mock';
 import { Zone, DoofinderParameters, StatsEvent } from '../src/types';
 import { isPlainObject } from '../src/util/is';
 
-function buildQuery(query?: string, params?: DoofinderParameters) {
-  return cfg.getClient().buildSearchQueryString(query, params);
+function buildQuery(query: Query | DoofinderParameters): string;
+function buildQuery(query: string, params?: DoofinderParameters): string;
+function buildQuery(query: string | Query | DoofinderParameters, params?: DoofinderParameters): string {
+  if (typeof query === 'string') {
+    return cfg.getClient().buildSearchQueryString(query, params);
+  } else {
+    return cfg.getClient().buildSearchQueryString(query);
+  }
 }
 
 // test
@@ -165,14 +171,14 @@ describe('Client', () => {
   context('Search', () => {
     context('Basic Parameters', () => {
       it('uses default basic parameters if none set', done => {
-        const qs = buildQuery();
+        const qs = buildQuery('');
         qs.should.include(`hashid=${cfg.hashid}`);
         qs.should.include(`query=`);
         done();
       });
 
       it('accepts different basic parameters than the default ones', (done) => {
-        const qs = buildQuery(undefined, { page: 2, rpp: 100, hello: 'world' });
+        const qs = buildQuery({ page: 2, rpp: 100, hello: 'world' });
         qs.should.include(`page=2`);
         qs.should.include(`rpp=100`);
         qs.should.include(`hello=world`);
@@ -185,20 +191,20 @@ describe('Client', () => {
     context('Types', () => {
       it('specifies no type if no specific type was set', done => {
         const querystring = `hashid=${cfg.hashid}&query=`;
-        buildQuery(undefined).should.equal(querystring);
+        buildQuery('').should.equal(querystring);
         done();
       });
 
       it('handles one type if set', done => {
         const querystring = `hashid=${cfg.hashid}&query=&type=product`;
-        buildQuery(undefined, { type: 'product' }).should.equal(querystring);
-        buildQuery(undefined, { type: ['product'] }).should.equal(querystring);
+        buildQuery({ type: 'product' }).should.equal(querystring);
+        buildQuery({ type: ['product'] }).should.equal(querystring);
         done();
       });
 
       it('handles several types if set', done => {
         const querystring = `hashid=${cfg.hashid}&query=&type%5B0%5D=product&type%5B1%5D=recipe`;
-        buildQuery(undefined, { type: ['product', 'recipe'] }).should.equal(querystring);
+        buildQuery({ type: ['product', 'recipe'] }).should.equal(querystring);
         done();
       });
     });
@@ -218,7 +224,7 @@ describe('Client', () => {
             category: ['SHOES', 'SHIRTS'],
           },
         };
-        buildQuery(undefined, params).should.equal(querystring);
+        buildQuery(params).should.equal(querystring);
         done();
       });
 
@@ -237,7 +243,7 @@ describe('Client', () => {
           },
         };
 
-        buildQuery(undefined, params).should.equal(querystring);
+        buildQuery(params).should.equal(querystring);
         done();
       });
     });
@@ -245,21 +251,21 @@ describe('Client', () => {
     context('Sorting', () => {
       it('accepts a single field name to sort on', done => {
         const querystring = `hashid=${cfg.hashid}&query=&sort%5B0%5D%5Bbrand%5D=asc`;
-        buildQuery(undefined, { sort: 'brand' }).should.equal(querystring);
+        buildQuery({ sort: 'brand' }).should.equal(querystring);
         done();
       });
 
       it('accepts an object for a single field to sort on', done => {
         const querystring = `hashid=${cfg.hashid}&query=&sort%5B0%5D%5Bbrand%5D=desc`;
         const sorting: InputExtendedSort[] = [{ brand: OrderType.DESC }];
-        buildQuery(undefined, { sort: sorting }).should.equal(querystring);
+        buildQuery({ sort: sorting }).should.equal(querystring);
         done();
       });
 
       it('accepts an array of objects for a multiple fields to sort on', (done) => {
         const querystring = `hashid=${cfg.hashid}&query=&sort%5B0%5D%5B_score%5D=desc&sort%5B1%5D%5Bbrand%5D=asc`;
         const sorting: InputSort[] = [{ _score: OrderType.DESC }, { brand: OrderType.ASC }];
-        buildQuery(undefined, { sort: sorting }).should.equal(querystring);
+        buildQuery({ sort: sorting }).should.equal(querystring);
         done();
       });
     });
