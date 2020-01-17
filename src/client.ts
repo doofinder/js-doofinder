@@ -169,14 +169,20 @@ export class Client {
    * @return {Promise<Response>}
    */
   public async search(
-    query: string | Query,
-    params?: DoofinderParameters,
-    wrap = true
+    query: string | Query | DoofinderParameters,
+    params?: DoofinderParameters
   ): Promise<Response | DoofinderResult> {
-    const qs: string = this.buildSearchQueryString(query, params);
+    let qs: string;
+
+    if (typeof query === 'string') {
+      qs = this.buildSearchQueryString(query, params);
+    } else {
+      qs = this.buildSearchQueryString(query);
+    }
+
     const response: Response = await this.request(this.buildUrl('/search', qs));
     const data = await response.json();
-    return wrap ? new DoofinderResult(data) : data;
+    return new DoofinderResult(data);
   }
 
   /**
@@ -259,22 +265,18 @@ export class Client {
    *
    */
   // TODO: All validation should be done in Query
-  public buildSearchQueryString(query?: string | Query, params?: DoofinderParameters): string {
+  public buildSearchQueryString(query: Query | DoofinderParameters): string;
+  public buildSearchQueryString(query: string, params?: DoofinderParameters): string;
+  public buildSearchQueryString(query: string | Query | DoofinderParameters, params?: DoofinderParameters): string {
     let q: Query = new Query();
 
-    // We get a no query
-    if (query == null) {
-      q.load(params || {});
+    if (query instanceof Query) {
+      q = query;
     } else if (typeof query === 'string') {
-      // We get a string query
-      // clean it up
-      query = query.replace(/\s+/g, ' ');
-      query = query === ' ' ? query : query.trim();
-
       q.searchText(query);
       q.load(params || {});
-    } else {
-      q = query;
+    } else if (isPlainObject(query)) {
+      q.load(query || {});
     }
 
     if (this.hashid && !q.hashid) {
