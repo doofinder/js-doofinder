@@ -3,6 +3,7 @@ import { GenericObject, StatsEvent } from './types';
 import { isDfid } from './util/is';
 
 const ERR_NO_SESSID = 'Session ID must be defined';
+const ERR_NO_HASHID = 'HashID must be defined';
 
 interface BaseStatsParams {
   sessionId: string;
@@ -190,5 +191,24 @@ export class StatsClient {
     }
 
     return this.client.stats(StatsEvent.BannerClick, params);
+  }
+
+  /**
+   *
+   * Register any custom event
+   *
+   * @param  {Number}    bannerId    The banner ID
+   *
+   */
+  public async registerEvent(eventName: string, params: GenericObject): Promise<Response> {
+    if (!('sessionId' in params)) {
+      throw new Error(ERR_NO_SESSID);
+    }
+
+    if (!('hashid' in params)) {
+      throw new Error(ERR_NO_HASHID);
+    }
+
+    return this.client.stats(eventName as StatsEvent, params);
   }
 }
