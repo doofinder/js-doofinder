@@ -197,7 +197,11 @@ export class StatsClient {
    *
    * Register any custom event
    *
-   * @param  {Number}    bannerId    The banner ID
+   * @param  {String}    eventName    The event name to register
+   *
+   * @param  {Object}    params       The parameters to send alongside.
+   *                                  It expects to have a sessionID and
+   *                                  a hashid
    *
    */
   public async registerEvent(eventName: string, params: GenericObject): Promise<Response> {
