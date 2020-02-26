@@ -1,6 +1,6 @@
 import { encode } from 'qss';
 
-import { isArray, isPlainObject } from './is';
+import { isPlainObject } from './is';
 import { GenericObject } from '../types';
 
 /**
@@ -10,7 +10,7 @@ import { GenericObject } from '../types';
  */
 
 function _updateResult(result: GenericObject<string>, value: unknown, param: string): GenericObject {
-  if (isArray(value)) {
+  if (Array.isArray(value)) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return Object.assign(result, _processArray(value as Array<unknown>, param));
   } else if (isPlainObject(value)) {

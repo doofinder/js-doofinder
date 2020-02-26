@@ -1,10 +1,10 @@
-import { DoofinderParameters, Zone, GenericObject, StatsEvent } from './types';
+import { Zone, GenericObject, StatsEvent } from './types';
 
-import { Query } from './query';
+import { Query, QueryParams } from './query';
 import { DoofinderResult } from './result';
 
 import { buildQueryString } from './util/encode-params';
-import { isArray, isPlainObject, isValidZone } from './util/is';
+import { isValidZone } from './util/is';
 
 export interface ClientHeaders extends GenericObject<string> {
   Accept: string;
@@ -168,10 +168,7 @@ export class Client {
    *
    * @return {Promise<Response>}
    */
-  public async search(
-    query: string | Query | DoofinderParameters,
-    params?: DoofinderParameters
-  ): Promise<Response | DoofinderResult> {
+  public async search(query: string | Query | QueryParams, params?: QueryParams): Promise<Response | DoofinderResult> {
     let qs: string;
 
     if (typeof query === 'string') {
@@ -265,13 +262,13 @@ export class Client {
    *
    */
   // TODO: All validation should be done in Query
-  public buildSearchQueryString(query: Query | DoofinderParameters): string;
-  public buildSearchQueryString(query: string, params?: DoofinderParameters): string;
-  public buildSearchQueryString(query: string | Query | DoofinderParameters, params?: DoofinderParameters): string {
+  public buildSearchQueryString(query: Query | QueryParams): string;
+  public buildSearchQueryString(query: string, params?: QueryParams): string;
+  public buildSearchQueryString(query: string | Query | QueryParams, params?: QueryParams): string {
     let q: Query = new Query();
 
     if (typeof query === 'string') {
-      q.searchText(query);
+      q.query = query;
       q.load(params || {});
     } else if (query instanceof Query) {
       q = query;
@@ -285,7 +282,7 @@ export class Client {
 
     const queryParams = q.dump();
 
-    if (isArray(queryParams.type) && queryParams.type.length === 1) {
+    if (Array.isArray(queryParams.type) && queryParams.type.length === 1) {
       queryParams.type = queryParams.type[0];
     }
 

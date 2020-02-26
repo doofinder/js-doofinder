@@ -1,5 +1,3 @@
-import { InputExtendedSort, InputSort } from '../query';
-
 interface RangeFilter {
   from: number;
   to: number;
@@ -36,24 +34,4 @@ export interface Facet {
  */
 export interface RequestFiltersObject {
   [field: string]: string | number | string[] | number[] | RangeFilter;
-}
-
-/**
- * This type is the available fields and
- * parameters available for the search
- * endpoint at Doofinder
- */
-export interface DoofinderParameters {
-  page?: number;
-  rpp?: number;
-  type?: string | string[];
-  filter?: RequestFiltersObject;
-  exclude?: RequestFiltersObject;
-  transformer?: string;
-  sort?: InputSort | InputSort[];
-  timeout?: number;
-  jsonp?: boolean;
-  query_name?: string;
-  nostats?: number;
-  [paramName: string]: unknown;
 }

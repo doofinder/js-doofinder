@@ -1,0 +1,242 @@
+@startuml
+enum Zone {
+    EU1
+    US1
+}
+enum StatsEvent {
+    Init
+    Click
+    Checkout
+    BannerDisplay
+    BannerClick
+}
+interface GenericObject<T>
+enum OrderType {
+    ASC
+    DESC
+}
+interface RangeFilter {
+    +lte?: number
+    +gte?: number
+    +lt?: number
+    +gt?: number
+}
+interface GeoDistanceFilter {
+    +distance: string
+    +position: string
+}
+class QueryValueError extends Error
+interface QueryParams {
+    +hashid: string
+}
+class Query {
+    -_params: Partial<QueryParams>
+    +text: string
+    +queryCounter: number
+    -params: GenericObject<any>
+    -_filters: Filter
+    -_exclusionFilters: Filter
+    -_sort: Sort
+    -_rpp?: number
+    -_page?: number
+    -_transformer?: string
+    -_dataTypes?: DataTypes
+    -_noStats?: 0 | 1
+    -_queryName?: string
+    -_timeout: number
+    -_jsonp: boolean
+    +load(params?: Partial<QueryParams>): void
+    +hashid(value?: string): string
+    +filters: GenericObject<any>
+    +exclusionFilters: GenericObject<any>
+    +getSort: InputExtendedSort[]
+    +searchText(query: string): Query
+    +addFilter(filterName: string, value: InputFilterValue): Query
+    +addExcludeFilter(filterName: string, value: InputFilterValue): Query
+    +removeFilter(filterName: string, value: InputFilterValue): Query
+    +removeExclusionFilter(filterName: string, value: InputFilterValue): Query
+    +hasFilter(filterName: string, value?: string): boolean
+    +hasExclusionFilter(filterName: string, value?: string): boolean
+    +toggleFilter(filterName: string, value: FacetOption): void
+    +toggleExclusionFilter(filterName: string, value: FacetOption): void
+    +loadOld(parameters: SearchParameters): void
+    +sort(fieldOrList: InputSort[]): Query
+    +sort(fieldOrList: string, orderType?: string): Query
+    +sort(fieldOrList: string | InputSort[], orderType?: string): Query
+    +hasSorting(field: string): boolean
+    +page(page?: number): Query
+    +nextPage(): void
+    +rpp(rpp?: number): Query
+    +types(types?: string | string[]): Query
+    +transformer(transformer?: string): Query
+    +timeout(timeout?: number): void
+    +jsonp(jsonp?: boolean): void
+    +queryName(queryName?: string): Query
+    +noStats(noStats?: boolean): Query
+    +dump(): GenericObject<any>
+    -_hydrate(params: SearchParameters): SearchParameters
+    -_addListFilterValue(filter: Filter, filterName: string, values: string[]): void
+    -_addObjectFilter(filter: Filter, filterName: string, value: RangeFilter | GeoDistanceFilter): void
+    -_getFilter(filter: Filter): GenericObject<any>
+    -_addFilter(filter: Filter, filterName: string, value: InputFilterValue): Query
+    -_removeFilter(filter: Filter, filterName: string, value: InputFilterValue): void
+    -_removeTermFilterValue(filterElement: TermsFilter, value: InputTermsFilterValue): void
+    -_hasFilter(filter: Filter, filterName: string, value?: string): boolean
+    -_validateOrderType(orderType: string): OrderType
+}
+interface RangeFilter {
+    +from: number
+    +to: number
+}
+interface RangeFacet {
+    +lte?: number
+    +gte?: number
+    +lt?: number
+    +gt?: number
+}
+interface Facet
+interface RequestFiltersObject
+interface DoofinderParameters {
+    +page?: number
+    +rpp?: number
+    +type?: string | string[]
+    +filter?: RequestFiltersObject
+    +exclude?: RequestFiltersObject
+    +transformer?: string
+    +sort?: string | InputExtendedSort | InputSort[]
+    +timeout?: number
+    +jsonp?: boolean
+    +query_name?: string
+    +nostats?: number
+}
+interface SearchParameters extends DoofinderParameters {
+    +hashid?: string
+    +query?: string
+}
+interface SingleResult {
+    +id?: string | number
+    +description?: string
+    +dfid: string
+    +title?: string
+    +url?: string
+    +image_url?: string
+    +type: string
+}
+interface FilterResponse
+class DoofinderResult {
+    -_results: SingleResult[]
+    -_page: number
+    -_total: number
+    -_total_found: number
+    -_max_score: number
+    -_query: string
+    -_query_counter: number
+    -_query_name: string
+    -_results_per_page: number
+    -_facets: Facet[]
+    -_filters: FilterResponse
+    -_raw: GenericObject<any>
+    -loadFacets(facetObj: GenericObject<any>): void
+    +results: SingleResult[]
+    +page: number
+    +total: number
+    +total_found: number
+    +max_score: number
+    +query: string
+    +query_counter: number
+    +query_name: string
+    +results_per_page: number
+    +facets: Facet[]
+    +filters: FilterResponse
+    +raw: GenericObject<any>
+    +loadResults(results: GenericObject<any>): void
+    +copy(): DoofinderResult
+}
+interface ClientHeaders extends GenericObject {
+    +Accept: string
+    +Authorization: string
+}
+interface ClientOptions {
+    +apiKey: string
+    +zone: Zone
+    +hashid: string
+    +serverAddress: string
+    +headers: Partial<ClientHeaders>
+}
+class ClientResponseError extends Error {
+    +statusCode: number
+    +response: Response
+}
+class Client {
+    +version: number
+    +hashid: string
+    +secret: string
+    +zone: Zone
+    +endpoint: string
+    +headers: GenericObject<string>
+    +request(resource: string): Promise<Response>
+    +search(query: string | Query | DoofinderParameters, params?: DoofinderParameters): Promise<DoofinderResult | Response>
+    +options(qs?: string): Promise<GenericObject<any>>
+    +stats(eventName: StatsEvent, eventParams?: GenericObject<string>): Promise<Response>
+    +buildUrl(resource: string, querystring?: string): string
+    +buildSearchQueryString(query: Query | DoofinderParameters): string
+    +buildSearchQueryString(query: string, params?: DoofinderParameters): string
+    +buildSearchQueryString(query: string | Query | DoofinderParameters, params?: DoofinderParameters): string
+    -__buildEndpoint(serverAddress: string): string
+}
+class ClientPool {
+    -_pool: Map<Zone, Client>
+    -_options: Partial<ClientOptions>
+    +options: Partial<ClientOptions>
+    +options: Partial<ClientOptions>
+    +getClient(zone: Zone): Client
+}
+interface BaseStatsParams {
+    +sessionId: string
+    +hashid?: string
+}
+interface ClickStatsParams extends BaseStatsParams {
+    +id: string
+    +datatype?: string
+    +query?: string
+    +customResultsId?: string | number
+}
+interface BannerStatsParams extends BaseStatsParams {
+    +bannerId: number
+}
+class StatsClient {
+    -client: Client
+    +use(client: Client): void
+    +registerSession(__0: BaseStatsParams): Promise<Response>
+    +registerClick(__0: ClickStatsParams): Promise<Response>
+    +registerCheckout(__0: BaseStatsParams): Promise<Response>
+    +registerBannerDisplayEvent(__0: BannerStatsParams): Promise<Response>
+    +registerBannerClickEvent(__0: BannerStatsParams): Promise<Response>
+}
+Query *-- QueryParams
+Query *-- GenericObject
+Query *-- SearchParameters
+Query *-- RangeFilter
+Query *-- GeoDistanceFilter
+Query *-- OrderType
+DoofinderParameters *-- RequestFiltersObject
+DoofinderResult *-- SingleResult
+DoofinderResult *-- Facet
+DoofinderResult *-- FilterResponse
+DoofinderResult *-- GenericObject
+ClientOptions *-- Zone
+ClientOptions *-- ClientHeaders
+Client *-- Zone
+Client *-- GenericObject
+Client *-- Query
+Client *-- DoofinderParameters
+Client *-- DoofinderResult
+Client *-- StatsEvent
+ClientPool *-- Zone
+ClientPool *-- Client
+ClientPool *-- ClientOptions
+StatsClient *-- Client
+StatsClient *-- BaseStatsParams
+StatsClient *-- ClickStatsParams
+StatsClient *-- BannerStatsParams
+@enduml

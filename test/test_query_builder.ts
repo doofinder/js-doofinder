@@ -9,583 +9,471 @@ should();
 import * as cfg from './config';
 
 // required for tests
-import { Query, OrderType } from '../src';
+import { Query, QueryFilter } from '../src';
 import {buildQueryString} from "../src/util/encode-params";
 
-describe('Query', () => {
-  context('Creation of the Query object', () => {
-    it('should accept just a hashid', done => {
-      // when
-      const q = new Query(cfg);
-      const params = q.dump();
+describe('QueryFilter', () => {
+  const filter = new QueryFilter();
 
-      // then
-      params.hashid.should.equal(cfg.hashid);
-      done();
-    });
-
-    it('should accept and copy another query', done => {
-      // given
-      const qOriginal = new Query(cfg);
-      const paramsOriginal = qOriginal.dump();
-
-      // when
-      const qCopy = new Query(cfg);
-      qCopy.load(paramsOriginal);
-      const paramsCopy = qCopy.dump();
-
-      // then
-      (qOriginal === qCopy).should.not.be.true;
-      paramsCopy.hashid.should.equal(paramsOriginal.hashid);
-
-      done();
-    });
+  beforeEach(() => {
+    filter.clear();
   });
 
-  context('Query low level parameter methods', () => {
-    it('sets the query correctly', done => {
-      // given
-      const q = new Query();
-      expect(q.text).to.be.undefined;
-
-      // when
-      q.searchText('bag');
-
-      // then
-      q.text.should.equal('bag');
-      done();
-    });
-
-    it('setting several parameters at once correctly', done => {
-      // given
-      const q = new Query(cfg);
-      q.page(2);
-      const newParams = { rpp: 10, transformer: 'basic' };
-
-      // when
-      q.load(newParams);
-
-      // then
-      const params = q.dump();
-      params.should.have.property('hashid');
-      params.should.have.property('rpp');
-      params.should.have.property('page');
-      params.should.have.property('transformer');
-
-      params.rpp.should.be.equal(10);
-      params.transformer.should.be.equal('basic');
-
-      done();
-    });
-  });
-
-  context('Query filter methods', () => {
-    it('adds a filter term correctly', done => {
-      // given
-      const q = new Query(cfg);
-      q.rpp(10);
-      q.page(2);
-
-      // when
-      q.addFilter('brand', ['Ferrari']);
-
-      // then
-      const params = q.dump();
-      params.should.have.property('filter');
-      params.filter.should.have.property('brand');
-
-      done();
-    });
-
-    it('removes a filter term correctly', done => {
-      // given
-      const q = new Query(cfg);
-      q.rpp(10);
-      q.page(2);
-      q.addFilter('brand', ['Ferrari', 'ford']);
-
-      // when
-      q.removeFilter('brand', ['Ferrari']);
-
-      // then
-      const dump = q.dump();
-      dump.should.have.property('filter');
-      dump.filter.brand.should.not.include('Ferrari');
-
-      done();
-    });
-
-    it('does not remove a filter term if not present', done => {
-      // given
-      const q = new Query(cfg);
-      q.rpp(10);
-      q.page(2);
-      q.addFilter('brand', ['Ferrari']);
-
-      // when
-      q.removeFilter('brand', ['Lamborghini']);
-
-      // then
-      const params = q.dump();
-      params.should.have.property('filter');
-      params.filter.should.have.property('brand');
-      (params.filter.brand as Array<string>).length.should.be.equal(1);
-
-      done();
-    });
-
-    it('toggling non existing filter adds it', done => {
-      // given
-      const q = new Query(cfg);
-      q.rpp(10);
-      q.page(2);
-
-      // when
-      q.toggleFilter('brand', 'Ferrari');
-
-      // then
-      const dump = q.dump();
-      dump.should.have.property('filter');
-      dump.filter.should.have.property('brand');
-
-      done();
-    });
-
-    it('toggling existing filter removes it', done => {
-      // given
-      const q = new Query(cfg);
-      q.rpp(10);
-      q.page(2);
-      q.addFilter('brand', ['Ferrari']);
-
-      // when
-      q.toggleFilter('brand', ['Ferrari']);
-
-      // then
-      const dump = q.dump();
-      dump.should.have.property('filter');
-      dump.filter.should.have.property('brand');
-      dump.filter.brand.should.be.empty;
-
-      done();
-    });
-
-    it('check a filter exists correctly', done => {
-      // given
-      const q = new Query(cfg);
-      q.rpp(10);
-      q.page(2);
-      q.addFilter('brand', ['Ferrari']);
-
-      // then
-      expect(q.hasFilter('brand', 'Ferrari')).to.be.true;
-      expect(q.hasFilter('brand', 'Lamborghini')).to.be.false;
-      expect(q.hasFilter('brand')).to.be.true;
-      expect(q.hasFilter('make')).to.be.false;
-
-      done();
-    });
-  });
-
-  context('Query sorting parameter methods', () => {
-    it('adding sort parameters when sort is a string', done => {
-      // when
-      const q = new Query();
-      q.sort('color', 'asc');
-
-      // then
-      q.getSort.should.deep.include({ color: OrderType.ASC });
-
-      done();
-    });
-
-    it('adding sort parameters when sort is an object', done => {
-      // when
-      const q = new Query();
-      q.sort([{ color: 'desc' }]);
-
-      // then
-      q.getSort.should.deep.include({ color: OrderType.DESC });
-
-      done();
-    });
-
-    it('setting the sort parameters works', done => {
-      // given
-      const q = new Query(cfg);
-      q.rpp(10);
-      q.page(2);
-      q.sort([{ price: OrderType.ASC }, { color: OrderType.ASC }]);
-
-      // when
-      q.sort([{ size: OrderType.DESC }, { name: OrderType.ASC }]);
-
-      // then
-      q.getSort.length.should.be.equal(2);
-      q.getSort.should.deep.include({ size: OrderType.DESC });
-      q.getSort.should.deep.include({ name: OrderType.ASC });
-      q.getSort.should.not.deep.include({ price: OrderType.ASC });
-      q.getSort.should.not.deep.include({ color: OrderType.ASC });
-
-      done();
-    });
-
-    it('hasSorting returns proper values when asked', done => {
-      // given
-      const q = new Query();
-      q.sort([{ price: OrderType.ASC }, { color: OrderType.ASC }]);
-      // then
-      q.hasSorting('price').should.be.true;
-      q.hasSorting('color').should.be.true;
-      q.hasSorting('size').should.be.false;
-
-      done();
-    });
-
-    it('hasSorting returns proper values when string sorting', done => {
-      // given
-      const q = new Query();
-      q.sort('color');
-
-      // then
-      q.hasSorting('color').should.be.true;
-      q.hasSorting('price').should.be.false;
-
-      done();
-    });
-
-    it('hasSorting when it is an object works', done => {
-      // given
-      const q = new Query(cfg);
-      q.rpp(10);
-      q.page(2);
-      q.sort([{ color: OrderType.ASC }]);
-
-      // then
-      q.hasSorting('color').should.be.true;
-      q.hasSorting('price').should.be.false;
-
-      done();
-    });
-
-    it('hasSorting when there is no sorting works', done => {
-      // given
-      const q = new Query();
-
-      // then
-      q.hasSorting('color').should.be.false;
-      q.hasSorting('price').should.be.false;
-
-      done();
-    });
-  });
-
-  context('Query page parameter methods', () => {
-    it('page should be set correctly', done => {
-      // given
-      const q = new Query(cfg);
-
-      // when
-      q.page(3);
-
-      // then
-      const queryDump = q.dump();
-      queryDump.page.should.be.equal(3);
-      done();
-    });
-
-    it('next page should be set correctly', done => {
-      // given
-      const pageNum = Math.floor(Math.random() * 10 + 1);
-      const q = new Query(cfg);
-      q.page(pageNum);
-
-      // when
-      q.nextPage();
-
-      // then
-      q.dump().page.should.be.equal(pageNum + 1);
-      done();
-    });
-
-    it('next page should set page to two if none in Query', done => {
-      // given
-      const q = new Query(cfg);
-
-      // when
-      q.nextPage();
-
-      // then
-      q.dump().page.should.be.equal(2);
-      done();
-    });
-
-    it('results per page works as intended', done => {
-      // given
-      const q = new Query(cfg);
-      q.rpp(10);
-
-      // when
-      q.rpp(20);
-
-      // then
-      q.dump().rpp.should.be.equal(20);
-      done();
-    });
-
-    it('results per page can be reset with empty call', done => {
-      // given
-      const q = new Query(cfg);
-      q.rpp(10);
-
-      // when
-      q.rpp();
-
-      // then
-      q.dump().should.not.have.property('rpp');
-      done();
-    });
-  });
-
-  context('Query type parameter methods', () => {
-    it('set type works correctly', done => {
-      // given
-      const q = new Query(cfg);
-      q.types(['blog', 'employees']);
-
-      // when
-      q.types('product');
-
-      // then
-      const params = q.dump();
-      params.should.have.property('type');
-      params.type.should.be.eql(['product']);
-
-      done();
-    });
-
-    it('removing a type works correctly', done => {
-      // given
-      const q = new Query(cfg);
-      q.types(['blog', 'employees']);
-
-      // when
-      q.types();
-
-      // then
-      const params = q.dump();
-      params.should.not.have.property('type');
-
-      done();
-    });
-
-    it('empty call empties the types', done => {
-      // given
-      const q = new Query(cfg);
-      q.types(['blog', 'employees']);
-
-      // when
-      q.types();
-
-      // then
-      const params = q.dump();
-      params.should.not.have.property('type');
-
-      done();
-    });
-  });
-
-  context('Other Query parameter methods', () => {
-    it('Sets the transformer correctly', done => {
-      // given
-      const q = new Query(cfg);
-
-      // when
-      q.transformer('basic');
-
-      // then
-      q.dump().transformer.should.be.equal('basic');
-      done();
-    });
-
-    it('Clears the transformer correctly', done => {
-      // given
-      const q = new Query(cfg);
-      q.transformer('basic');
-
-      // when
-      q.transformer();
-
-      // then
-      q.dump().should.not.have.property('transformer');
-      done();
-    });
-
-    it('Set transformer null and check the querystring', done => {
-      const query = new Query({ hashid: '123456' });
-      query.searchText('portatil');
-      query.transformer(null);
-      const params = query.dump();
-
-      //then
-      params.transformer.should.be.equal('');
-      buildQueryString(params).should.be.equal('hashid=123456&query=portatil&transformer=');
+  context('empty QueryFilter', () => {
+    it('should dump as undefined', (done) => {
+      expect(filter.dump()).to.be.undefined;
       done();
     })
+  });
 
-    it('Sets the timeout correctly', done => {
-      // given
-      const q = new Query(cfg);
-      q.rpp(20);
+  context('set filters', () => {
+    it('can set terms filters from a single value', (done) => {
+      filter.set('brand', 'adidas');
+      filter.set('number', 3);
+      filter.dump().should.eql({
+        brand: ['adidas'],
+        number: [3]
+      });
+      done();
+    });
+    it('can set terms filters from an array of values', (done) => {
+      filter.set('brand', ['adidas', 'nike']);
+      filter.set('number', [1, 3, 5]);
+      filter.dump().should.eql({
+        brand: ['adidas', 'nike'],
+        number: [1, 3, 5]
+      });
+      done();
+    });
+    it('can set filters from a plain object', (done) => {
+      filter.set('geo_distance', {
+        distance: '200km',
+        position: '40,-70'
+      });
+      filter.set('best_price', {
+        gt: 0,
+        lte: 100
+      });
+      filter.dump().should.eql({
+        geo_distance: {
+          distance: '200km',
+          position: '40,-70'
+        },
+        best_price: {
+          gt: 0,
+          lte: 100
+        }
+      });
+      done();
+    });
+    it('throws if an empty object is passed', (done) => {
+      (() => {
+        filter.set('wrong', {});
+      }).should.throw();
+      done();
+    });
+    it(`can set unknown types at user's risk`, (done) => {
+      const dt = new Date();
+      filter.set('bool', true);
+      filter.set('date', dt);
+      filter.dump().should.eql({
+        bool: true,
+        date: dt
+      });
+      done();
+    });
+    it(`can manage arrays of unknown types at user's risk`, (done) => {
+      filter.set('value', [{lte: 10}, {gte: 10}]);
+      filter.get('value').should.eql([{lte: 10}, {gte: 10}]);
+      done();
+    })
+  });
 
-      // when
-      q.timeout(100);
+  context('filter checks', () => {
+    const dt = new Date();
 
-      // then
-      q.dump().timeout.should.be.equal(100);
+    beforeEach(() => {
+      filter.set('brand', ['adidas', 'nike']);
+      filter.set('geo_distance', {
+        distance: '200km',
+        position: '40,-70'
+      });
+      filter.set('bool', true);
+      filter.set('number', 10);
+      filter.set('date', dt);
+    });
+
+    it('can check if a filter is defined', (done) => {
+      filter.has('brand').should.be.true;
+      filter.has('unknown').should.be.false;
       done();
     });
 
-    it('Clears the timeout correctly', done => {
-      // given
-      const q = new Query(cfg);
-      q.rpp(20);
-      q.timeout(100);
+    it('can check if a filter contains a value', (done) => {
+      filter.contains('brand', 'adidas').should.be.true;
+      filter.contains('brand', 'nike').should.be.true;
+      filter.contains('brand', ['adidas', 'nike']).should.be.true;
 
-      // when
-      q.timeout();
+      filter.contains('brand', 'puma').should.be.false;
+      filter.contains('brand', ['adidas', 'nike', 'puma']).should.be.false;
 
-      // then
-      q.dump().should.not.have.property('timeout');
+      filter.contains('geo_distance', {
+        distance: '200km',
+        position: '40,-70'
+      }).should.be.true;
+      filter.contains('geo_distance', {
+        distance: '100km',
+        position: '40,-70'
+      }).should.be.false;
+
+      filter.contains('bool', true).should.be.true;
+      filter.contains('bool', false).should.be.false;
+
+      filter.contains('number', 10).should.be.true;
+      filter.contains('number', 11).should.be.false;
+
+      filter.contains('date', dt).should.be.true;
+
       done();
     });
 
-    it('Sets the jsonp correctly', done => {
-      // given
-      const q = new Query(cfg);
-      q.rpp(20);
+    it('can check if a filter equals a value', (done) => {
+      filter.equals('brand', 'adidas').should.be.false;
+      filter.equals('brand', ['adidas', 'nike']).should.be.true;
+      filter.equals('brand', ['adidas', 'nike', 'puma']).should.be.false;
 
-      // when
-      q.jsonp(true);
+      filter.equals('geo_distance', {
+        distance: '200km',
+        position: '40,-70'
+      }).should.be.true;
+      filter.equals('geo_distance', {
+        distance: '100km',
+        position: '40,-70'
+      }).should.be.false;
 
-      // then
-      q.dump().jsonp.should.be.true;
-      done();
-    });
+      filter.contains('bool', true).should.be.true;
+      filter.contains('bool', false).should.be.false;
 
-    it('Clears the jsonp correctly', done => {
-      // given
-      const q = new Query(cfg);
-      q.rpp(20);
-      q.jsonp(true);
+      filter.contains('number', 10).should.be.true;
+      filter.contains('number', 11).should.be.false;
 
-      // when
-      q.jsonp();
+      filter.contains('date', dt).should.be.true;
 
-      // then
-      q.dump().should.not.have.property('jsonp');
-      done();
-    });
-
-    it('Sets the query_name correctly', done => {
-      // given
-      const q = new Query(cfg);
-
-      // when
-      q.queryName('match_and');
-
-      // then
-      q.dump().query_name.should.be.equal('match_and');
-      done();
-    });
-
-    it('Clears the query_name correctly', done => {
-      // given
-      const q = new Query(cfg);
-      q.queryName('match_and');
-
-      // when
-      q.queryName();
-
-      // then
-      q.dump().should.not.have.property('query_name');
-      done();
-    });
-
-    it('Sets the nostats correctly', done => {
-      // given
-      const q = new Query(cfg);
-
-      // when
-      q.noStats(true);
-
-      // then
-      q.dump().nostats.should.be.equal(1);
-      done();
-    });
-
-    it('Clears the nostats correctly', done => {
-      // given
-      const q = new Query(cfg);
-      q.noStats(true);
-
-      // when
-      q.noStats();
-
-      // then
-      q.dump().should.not.have.property('nostats');
       done();
     });
   });
 
-  context('Parameter checking and fetching', () => {
-    it('getParams returns the current params', done => {
-      // when
-      const q = new Query(cfg);
-      q.rpp(20);
-      q.page(11);
+  context('get filters', () => {
+    it('returns terms as an array', (done) => {
+      filter.set('brand', 'adidas');
+      filter.get('brand').should.eql(['adidas']);
+      done();
+    });
+    it('returns other values as they are', (done) => {
+      filter.set('value', {gte: 10});
+      filter.get('value').should.eql({gte: 10});
+      done();
+    });
+  });
 
-      // then
-      const params = q.dump();
-      params.should.have.property('hashid');
-      params.should.have.property('rpp');
-      params.should.have.property('page');
+  context('add filters', () => {
+    it('can add filters from a single value', (done) => {
+      filter.set('brand', 'adidas');
+      filter.add('brand', 'adidas');
+      filter.add('brand', 'nike');
+      filter.get('brand').should.eql(['adidas', 'nike']);
+
+      filter.set('value', {gte: 10});
+      filter.add('value', {lte: 100});
+      filter.get('value').should.eql({lte: 100});
+      done();
+    });
+    it('can add terms filters from an array', (done) => {
+      filter.set('brand', 'adidas');
+      filter.add('brand', ['adidas', 'nike']);
+      filter.get('brand').should.eql(['adidas', 'nike']);
+      done();
+    });
+  });
+
+  context('toggle filters', () => {
+    it(`toggles a filter given the exact value`, (done) => {
+      filter.toggle('brand', 'adidas');
+      filter.get('brand').should.eql(['adidas']);
+      filter.toggle('brand', 'adidas');
+      expect(filter.get('brand')).to.be.undefined;
+
+      filter.toggle('brand', ['adidas', 'nike']);
+      filter.get('brand').should.eql(['adidas', 'nike']);
+      (() => {
+        filter.toggle('brand', 'adidas');
+      }).should.throw;
+      filter.toggle('brand', ['adidas', 'nike']);
+      expect(filter.get('brand')).to.be.undefined;
+
+      filter.toggle('value', true);
+      filter.get('value').should.be.true;
+      filter.toggle('value', true);
+      expect(filter.get('value')).to.be.undefined;
+
+      filter.toggle('best_price', {gte: 100, lte: 200});
+      filter.get('best_price').should.eql({gte: 100, lte: 200});
+      (() => {
+        filter.toggle('best_price', {gte: 100});
+      }).should.throw;
+      filter.toggle('best_price', {gte: 100, lte: 200});
+      expect(filter.get('best_price')).to.be.undefined;
 
       done();
     });
+  });
+});
 
-    it('getParams returns the current params, even the new ones', done => {
-      // given
-      const q = new Query(cfg);
-      q.rpp(10);
-      q.page(3);
+describe('Query', () => {
+  context('empty Query', () => {
+    it('should dump defaults', (done) => {
+      const query = new Query();
+      query.dump().should.eql(query.defaults);
+      done();
+    });
+  });
 
-      // when
-      q.queryName('fuzzy');
+  context('reset Query', () => {
+    it('should dump defaults', (done) => {
+      const query = new Query();
+      query.page = 10;
+      query.reset();
+      query.dump().should.eql(query.defaults);
+      query.query.should.equal('');
+      done();
+    });
+  });
 
-      // then
-      const params = q.dump();
-      params.should.have.property('hashid');
-      params.should.have.property('rpp');
-      params.should.have.property('page');
-      params.should.have.property('query_name');
+  context('new Query', () => {
+    it ('should accept initial params', (done) => {
+      const initial = {
+        query: 'chair',
+        page: 2,
+        rpp: 10,
+        type: ['product', 'article'],
+        filter: {
+          brand: ['adidas']
+        },
+        exclude: {
+          brand: ['nike']
+        }
+      };
+      const query = new Query(initial);
+      query.dump().should.eql(initial);
+      done();
+    });
+  });
 
+  context('regular Query', () => {
+    const query = new Query();
+
+    beforeEach(() => {
+      query.reset();
+    });
+
+    it('can be copied', (done) => {
+      query.query = 'chair';
+      query.types.add('product');
+      query.filters.add('brand', 'adidas');
+
+      const copy = new Query(query.dump());
+      copy.dump().should.eql({
+        query: 'chair',
+        page: 1,
+        rpp: 20,
+        type: ['product'],
+        filter: {
+          brand: ['adidas']
+        }
+      });
       done();
     });
 
-    it('getQuery works correctly', done => {
-      // given
-      const q = new Query(cfg);
-      q.rpp(20);
-      q.page(11);
-
-      // when
-      q.searchText('smartphone');
-
-      // then
-      q.text.should.be.equal('smartphone');
-
+    it('can be validated', (done) => {
+      // TODO: implement Query.isValid();
+      // - params (hashid, page, rpp)
+      // - filters (geo distance…)
+      // - sort (geo distance…)
       done();
+    });
+
+    context('query properties', () => {
+      it('properly sets basic parameters', (done) => {
+        query.hashid = 'asdf';
+        query.query = 'blah';
+        query.transformer = 'basic';
+        query.queryName = 'match_and';
+
+        query.hashid.should.equal('asdf');
+        query.query.should.equal('blah');
+        query.transformer.should.equal('basic');
+        query.queryName.should.equal('match_and');
+
+        query.dump().should.eql({
+          hashid: 'asdf',
+          query: 'blah',
+          page: 1,
+          rpp: 20,
+          transformer: 'basic',
+          query_name: 'match_and'
+        });
+        done();
+      });
+      it('properly sets page', (done) => {
+        query.page++;
+        query.page.should.equal(2);
+        query.page = 7;
+        query.page.should.equal(7);
+        query.dump().page.should.equal(7);
+
+        (() => query.page = 0).should.throw;
+        (() => query.page = -1).should.throw;
+        // @ts-ignore
+        (() => query.page = 'wrong').should.throw;
+
+        done();
+      });
+      it('properly sets rpp', (done) => {
+        query.rpp = 30;
+        query.rpp.should.equal(30);
+        query.dump().rpp.should.equal(30);
+
+        (() => query.rpp = 0).should.throw;
+        (() => query.rpp = -1).should.throw;
+        (() => query.rpp = 101).should.throw;
+        // @ts-ignore
+        (() => query.rpp = 'wrong').should.throw;
+        done();
+      });
+      it('properly sets query counter', (done) => {
+        query.queryCounter++;
+        expect(query.queryCounter).to.be.undefined;
+        query.queryCounter = 1;
+        query.queryCounter.should.equal(1);
+        query.queryCounter++;
+        query.queryCounter.should.equal(2);
+        query.queryCounter = undefined;
+        expect(query.queryCounter).to.be.undefined;
+        done();
+      });
+      it('properly sets nostats flag', (done) => {
+        query.noStats.should.be.false;
+        query.noStats = true;
+        query.noStats.should.be.true;
+        query.dump().nostats.should.be.true;
+        query.noStats = false;
+        query.noStats.should.be.false;
+        expect(query.dump().nostats).to.be.undefined;
+        done();
+      });
+      it('properly sets types', (done) => {
+        expect(query.dump().type).to.be.undefined;
+
+        query.types.add('product');
+        query.dump().type.should.eql(['product']);
+
+        query.types.add('article');
+        query.dump().type.should.eql(['product', 'article']);
+        done();
+      });
+    });
+
+    context('custom params', () => {
+      it('can get and set custom params', (done) => {
+        query.setParam('value', 3);
+        query.getParam('value').should.equal(3);
+
+        query.setParam('list', ['a', 'b', 'c']);
+        query.getParam('list').should.eql(['a', 'b', 'c']);
+
+        query.setParam('obj', {a: 1, b: 2, c: 3});
+        query.getParam('obj').should.eql({a: 1, b: 2, c: 3});
+
+        done();
+      });
+      it('removes param if value is undefined', (done) => {
+        query.load({
+          value: 3,
+          list: ['a', 'b', 'c'],
+          obj: {a: 1, b: 2, c: 3}
+        });
+        query.dump().should.eql({
+          ...query.defaults,
+          value: 3,
+          list: ['a', 'b', 'c'],
+          obj: {a: 1, b: 2, c: 3}
+        })
+
+        query.setParam('value', undefined);
+        expect(query.getParam('value')).to.be.undefined;
+
+        query.setParam('list', undefined);
+        expect(query.getParam('list')).to.be.undefined;
+
+        query.setParam('obj', undefined);
+        expect(query.getParam('obj')).to.be.undefined;
+        done();
+
+        query.dump().should.eql(query.defaults);
+      });
+    });
+
+    context('sorting', () => {
+      it('can load sorting and dump sorting', (done) => {
+        query.load({
+          sort: [
+            'brand',
+            {best_price: 'desc'},
+            {geo_distance: {position: '40,-70', order: 'asc'}}
+          ]
+        });
+        const result = [
+          {brand: 'asc'},
+          {best_price: 'desc'},
+          {geo_distance: {position: '40,-70', order: 'asc'}}
+        ];
+        query.sort.get().should.eql(result);
+        query.dump().sort.should.eql(result);
+        done();
+      });
+      it('can set sorting', (done) => {
+        query.sort.set('brand');
+        query.sort.get().should.eql([{brand: 'asc'}]);
+        query.sort.set([
+          'brand',
+          {best_price: 'desc'},
+          {geo_distance: {position: '40,-70', order: 'asc'}}
+        ]);
+        query.sort.get().should.eql([
+          {brand: 'asc'},
+          {best_price: 'desc'},
+          {geo_distance: {position: '40,-70', order: 'asc'}}
+        ]);
+        done();
+      });
+      it('can add sorting', (done) => {
+        query.sort.add('brand');
+        query.sort.add('best_price', 'desc');
+        query.sort.add({geo_distance: {location: '40,-70', order: 'desc'}});
+        query.sort.get().should.eql([
+          {brand: 'asc'},
+          {best_price: 'desc'},
+          {geo_distance: {location: '40,-70', order: 'desc'}}
+        ]);
+        done();
+      });
+      it('can reset sorting', (done) => {
+        query.sort.add('brand');
+        query.sort.clear();
+        query.sort.get().should.eql([]);
+        expect(query.dump().sort).to.be.undefined;
+        done();
+      });
     });
   });
 });
