@@ -263,8 +263,9 @@ export class QueryTypes {
     }
   }
 
-  public dump(): string[] {
-    return Array.from(this._types);
+  public dump(): string | string[] {
+    const types: string[] = Array.from(this._types);
+    return types.length === 1 ? types[0] : types;
   }
 
   public clear(): void {
@@ -430,13 +431,9 @@ export class Query {
       if (!data[key]) delete data[key];
     });
 
-    if (data.type.length === 0) {
-      delete data.type;
-    }
-
-    if (data.sort.length === 0) {
-      delete data.sort;
-    }
+    ['type', 'sort'].forEach(key => {
+      if (data[key].length === 0) delete data[key];
+    });
 
     return data;
   }

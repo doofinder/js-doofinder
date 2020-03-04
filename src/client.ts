@@ -280,13 +280,7 @@ export class Client {
       q.hashid = this.hashid;
     }
 
-    const queryParams = q.dump();
-
-    if (Array.isArray(queryParams.type) && queryParams.type.length === 1) {
-      queryParams.type = queryParams.type[0];
-    }
-
-    return buildQueryString(queryParams);
+    return buildQueryString(q.dump());
   }
 
   private __buildEndpoint(serverAddress: string): string {
