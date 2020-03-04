@@ -1,6 +1,8 @@
+// added nanoclone this way due to a lack of types and small size
 /* eslint-disable @typescript-eslint/no-use-before-define */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /*! MIT - https://github.com/Kelin2025/nanoclone */
-function baseClone(src: any, circulars: any[], clones: any[]) {
+function baseClone(src: any, circulars: any[], clones: any[]): any {
   // Null/undefined/functions/etc
   if (!src || typeof src !== 'object' || typeof src === 'function') {
     return src;
@@ -56,4 +58,5 @@ function baseClone(src: any, circulars: any[], clones: any[]) {
 export function clone(src: any): any {
   return baseClone(src, [], []);
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 /* eslint-enable @typescript-eslint/no-use-before-define */

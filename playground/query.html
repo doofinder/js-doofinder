@@ -16,7 +16,9 @@
     request.queryName = 'match_and';
     request.queryCounter++;
     request.noStats = false;
-    request.types = ['product', 'recipe', 'recipe', 1, 2, 3];
+
+    request.types.set(['product', 'product']); // product
+    request.types.add('recipe');
 
     request.filters.set('brand', ['adidas', 'nike']);
     request.filters.add('brand', ['adidas', 'munich']);
@@ -46,7 +48,7 @@
     request.filters.remove('something2');
 
     const request2 = new Query(request.dump());
-    request2.types = 'product';
+    request2.types.set('product');
 
     console.log(request.dump());
     console.log(request2.dump());

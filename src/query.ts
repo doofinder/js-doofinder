@@ -1,5 +1,5 @@
 import { GenericObject } from './types';
-import { isPlainObject, shallowEqual } from './util/is';
+import { isPlainObject, shallowEqual, isString } from './util/is';
 import { clone } from './util/clone';
 
 // filters
@@ -91,7 +91,7 @@ export type QueryParams = Partial<QueryParamsSpec>;
  * Manage filters applied to a query.
  * @beta
  */
-export class QueryFilter {
+class QueryFilter {
   private _filters: Map<string, Filter> = new Map();
 
   public get(name: string): FilterValue | unknown {
@@ -248,6 +248,43 @@ export class QueryFilter {
   }
 }
 
+export class QueryTypes {
+  private _types: Set<string> = new Set();
+
+  public set(value: string | string[]): void {
+    const types = Array.isArray(value) ? value : [value];
+    if (types.filter(isString).length === types.length) {
+      this._types = new Set(types);
+    } else {
+      throw new QueryValueError(`types must be strings`);
+    }
+  }
+
+  public dump(): string[] {
+    return Array.from(this._types);
+  }
+
+  public clear(): void {
+    this._types.clear();
+  }
+
+  public add(value: string): void {
+    if (typeof value === 'string') {
+      this._types.add(value);
+    } else {
+      throw new QueryValueError(`types must be strings`);
+    }
+  }
+
+  public has(value: string): boolean {
+    return this._types.has(value);
+  }
+
+  public remove(value: string) {
+    this._types.delete(value);
+  }
+}
+
 class QuerySort {
   private _sortings: Sorting[] = [];
 
@@ -321,7 +358,7 @@ class QuerySort {
 export class Query {
   private _defaults: QueryParams;
   private _params: QueryParams;
-  private _types: DataTypeSet;
+  private _types: QueryTypes;
   private _filters: QueryFilter;
   private _excludes: QueryFilter;
   private _sort: QuerySort;
@@ -339,7 +376,7 @@ export class Query {
       page: 1,
       rpp: 20,
     };
-    this._types = new Set();
+    this._types = new QueryTypes();
     this._filters = new QueryFilter();
     this._excludes = new QueryFilter();
     this._sort = new QuerySort();
@@ -363,14 +400,14 @@ export class Query {
         this.rpp = params.rpp;
       } else if (key === 'nostats') {
         this.noStats = !!params.nostats;
-      } else if (key === 'type') {
-        this._types = new Set(Array.isArray(params.type) ? params.type : [params.type]);
       } else if (key === 'filter') {
         this._filters.load(params.filter);
       } else if (key === 'exclude') {
         this._excludes.load(params.exclude);
+      } else if (key === 'type') {
+        this._types.set(params.type);
       } else if (key === 'sort') {
-        this.sort.set(params.sort);
+        this._sort.set(params.sort);
       } else {
         this.setParam(key, params[key]);
       }
@@ -380,7 +417,7 @@ export class Query {
   public dump(): QueryParams {
     const data: QueryParams = {
       ...this._params,
-      type: [...this.types].map(x => `${x}`),
+      type: this.types.dump(),
       filter: this.filters.dump(),
       exclude: this.excludes.dump(),
       sort: this.sort.get(),
@@ -491,7 +528,9 @@ export class Query {
     this.setParam('nostats', !!value);
   }
 
-  public get types(): DataTypeSet {
+  // types
+
+  public get types(): QueryTypes {
     return this._types;
   }
 

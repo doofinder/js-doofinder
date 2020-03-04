@@ -6,7 +6,7 @@ export const isNumber = (value: unknown): boolean => Object.prototype.toString.c
 
 export const isObject = (value: unknown): boolean => Object.prototype.toString.call(value) === '[object Object]';
 
-export function isEmptyObject(obj: any) {
+export function isEmptyObject(obj: unknown): boolean {
   return Object.keys(obj).length === 0 && obj.constructor === Object;
 }
 
@@ -37,8 +37,8 @@ export function isDfid(str: string): boolean {
  * @flow
  */
 
-/*eslint-disable no-self-compare */
-
+/* eslint-disable no-self-compare */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * inlined Object.is polyfill to avoid requiring consumers ship their own
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
@@ -87,4 +87,5 @@ export const shallowEqual = function(objA: any, objB: any): boolean {
   return true;
 };
 
+/* eslint-enable @typescript-eslint/no-explicit-any */
 /* eslint-enable no-self-compare */
