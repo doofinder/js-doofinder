@@ -17,7 +17,6 @@ export interface ClientHeaders extends GenericObject<string> {
 export interface ClientOptions {
   apiKey: string;
   zone: Zone;
-  hashid: string;
   serverAddress: string;
   headers: Partial<ClientHeaders>;
 }
@@ -39,7 +38,6 @@ export class ClientResponseError extends Error {
  */
 export class Client {
   public version = 5;
-  public hashid: string;
   public secret: string;
   public zone: Zone;
   public endpoint: string;
@@ -48,7 +46,6 @@ export class Client {
   /**
    * Constructor
    *
-   * @param  {String} hashid  Unique ID of the Search Engine.
    * @param  {Object} options Options object.
    *
    *                          {
@@ -78,9 +75,9 @@ export class Client {
    *                          them is required.
    *
    */
-  public constructor({ zone, hashid, serverAddress, headers }: Partial<ClientOptions>);
-  public constructor({ apiKey, hashid, serverAddress, headers }: Partial<ClientOptions>);
-  public constructor({ apiKey, zone, hashid, serverAddress, headers }: Partial<ClientOptions> = {}) {
+  public constructor({ zone, serverAddress, headers }: Partial<ClientOptions>);
+  public constructor({ apiKey, serverAddress, headers }: Partial<ClientOptions>);
+  public constructor({ apiKey, zone, serverAddress, headers }: Partial<ClientOptions> = {}) {
     if (apiKey) {
       const [z, k] = (apiKey || '').split('-');
 
@@ -102,7 +99,6 @@ export class Client {
 
     this.endpoint = this.__buildEndpoint(serverAddress);
 
-    this.hashid = hashid;
     this.headers = {
       Accept: 'application/json',
       ...headers,
@@ -193,8 +189,9 @@ export class Client {
    *                             and the second one is the response, if any.
    * @return {Promise<Response>}
    */
-  public async options(qs?: string): Promise<GenericObject> {
-    const response = await this.request(this.buildUrl(`/options/${this.hashid}`, qs));
+  public async options(hashid: string, params?: GenericObject): Promise<GenericObject> {
+    const qs = buildQueryString({ random: new Date().getTime(), ...params });
+    const response = await this.request(this.buildUrl(`/options/${hashid}`, qs));
     return await response.json();
   }
 
@@ -213,15 +210,8 @@ export class Client {
   // ? Should be a StatsClient wrapping Client to perform specific stats calls or a StatsQuery object like Query to wrap and validate calls?
   // https://doofinder.github.io/js-doofinder/stats
 
-  public async stats(eventName: StatsEvent, eventParams?: GenericObject<string>): Promise<Response> {
-    const params = Object.assign(
-      {
-        hashid: this.hashid,
-        random: new Date().getTime(),
-      },
-      eventParams
-    );
-    const qs = buildQueryString(params);
+  public async stats(eventName: StatsEvent, params?: GenericObject<string>): Promise<Response> {
+    const qs = buildQueryString({ random: new Date().getTime(), ...params });
     return await this.request(this.buildUrl(`/stats/${eventName}`, qs));
   }
 
@@ -261,7 +251,6 @@ export class Client {
    * @return {String}     Encoded query string to be used in a search URL.
    *
    */
-  // TODO: All validation should be done in Query
   public buildSearchQueryString(query: Query | QueryParams): string;
   public buildSearchQueryString(query: string, params?: QueryParams): string;
   public buildSearchQueryString(query: string | Query | QueryParams, params?: QueryParams): string {
@@ -276,11 +265,9 @@ export class Client {
       q.load(query || {});
     }
 
-    if (this.hashid && !q.hashid) {
-      q.hashid = this.hashid;
+    if (q.valid()) {
+      return buildQueryString({ random: new Date().getTime(), ...q.dump() });
     }
-
-    return buildQueryString(q.dump());
   }
 
   private __buildEndpoint(serverAddress: string): string {
