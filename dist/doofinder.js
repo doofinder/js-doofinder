@@ -4371,7 +4371,7 @@
      */
 
     RangeFacet.prototype.render = function(response) {
-      if (response.page === 1 || Object.keys(this.currentContext).length === 0) {
+      if (response.page === 1) {
         this.range = this.__getRangeFromResponse(response);
         if (this.range.min === this.range.max) {
           return this.clean();
@@ -4700,7 +4700,7 @@
      */
 
     TermsFacet.prototype.render = function(res) {
-      if (res.page === 1 || Object.keys(this.currentContext).length === 0) {
+      if (res.page === 1) {
         if (res.facets[this.facet].terms.buckets.length > 0) {
           return TermsFacet.__super__.render.call(this, res);
         } else {
@@ -8537,10 +8537,6 @@ var symbolValueOf;
 if (typeof Symbol === 'function') {
   symbolValueOf = Symbol.prototype.valueOf;
 }
-var bigIntValueOf;
-if (typeof BigInt === 'function') {
-  bigIntValueOf = BigInt.prototype.valueOf;
-}
 var isActualNaN = function (value) {
   return value !== value;
 };
@@ -8568,7 +8564,7 @@ var is = {};
  * is.type
  * Test if `value` is a type of `type`.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @param {String} type type
  * @return {Boolean} true if `value` is a type of `type`, false otherwise
  * @api public
@@ -8582,7 +8578,7 @@ is.a = is.type = function (value, type) {
  * is.defined
  * Test if `value` is defined.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if 'value' is defined, false otherwise
  * @api public
  */
@@ -8595,7 +8591,7 @@ is.defined = function (value) {
  * is.empty
  * Test if `value` is empty.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is empty, false otherwise
  * @api public
  */
@@ -8624,8 +8620,8 @@ is.empty = function (value) {
  * is.equal
  * Test if `value` is equal to `other`.
  *
- * @param {*} value value to test
- * @param {*} other value to compare with
+ * @param {Mixed} value value to test
+ * @param {Mixed} other value to compare with
  * @return {Boolean} true if `value` is equal to `other`, false otherwise
  */
 
@@ -8683,8 +8679,8 @@ is.equal = function equal(value, other) {
  * is.hosted
  * Test if `value` is hosted by `host`.
  *
- * @param {*} value to test
- * @param {*} host host to test with
+ * @param {Mixed} value to test
+ * @param {Mixed} host host to test with
  * @return {Boolean} true if `value` is hosted by `host`, false otherwise
  * @api public
  */
@@ -8698,7 +8694,7 @@ is.hosted = function (value, host) {
  * is.instance
  * Test if `value` is an instance of `constructor`.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is an instance of `constructor`
  * @api public
  */
@@ -8711,7 +8707,7 @@ is.instance = is['instanceof'] = function (value, constructor) {
  * is.nil / is.null
  * Test if `value` is null.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is null, false otherwise
  * @api public
  */
@@ -8724,7 +8720,7 @@ is.nil = is['null'] = function (value) {
  * is.undef / is.undefined
  * Test if `value` is undefined.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is undefined, false otherwise
  * @api public
  */
@@ -8741,7 +8737,7 @@ is.undef = is.undefined = function (value) {
  * is.args
  * Test if `value` is an arguments object.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is an arguments object, false otherwise
  * @api public
  */
@@ -8760,7 +8756,7 @@ is.args = is.arguments = function (value) {
  * is.array
  * Test if 'value' is an array.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is an array, false otherwise
  * @api public
  */
@@ -8773,7 +8769,7 @@ is.array = Array.isArray || function (value) {
  * is.arguments.empty
  * Test if `value` is an empty arguments object.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is an empty arguments object, false otherwise
  * @api public
  */
@@ -8785,7 +8781,7 @@ is.args.empty = function (value) {
  * is.array.empty
  * Test if `value` is an empty array.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is an empty array, false otherwise
  * @api public
  */
@@ -8797,7 +8793,7 @@ is.array.empty = function (value) {
  * is.arraylike
  * Test if `value` is an arraylike object.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is an arguments object, false otherwise
  * @api public
  */
@@ -8818,7 +8814,7 @@ is.arraylike = function (value) {
  * is.bool
  * Test if `value` is a boolean.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is a boolean, false otherwise
  * @api public
  */
@@ -8831,7 +8827,7 @@ is.bool = is['boolean'] = function (value) {
  * is.false
  * Test if `value` is false.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is false, false otherwise
  * @api public
  */
@@ -8844,7 +8840,7 @@ is['false'] = function (value) {
  * is.true
  * Test if `value` is true.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is true, false otherwise
  * @api public
  */
@@ -8861,7 +8857,7 @@ is['true'] = function (value) {
  * is.date
  * Test if `value` is a date.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is a date, false otherwise
  * @api public
  */
@@ -8874,7 +8870,7 @@ is.date = function (value) {
  * is.date.valid
  * Test if `value` is a valid date.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @returns {Boolean} true if `value` is a valid date, false otherwise
  */
 is.date.valid = function (value) {
@@ -8889,7 +8885,7 @@ is.date.valid = function (value) {
  * is.element
  * Test if `value` is an html element.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is an HTML Element, false otherwise
  * @api public
  */
@@ -8909,7 +8905,7 @@ is.element = function (value) {
  * is.error
  * Test if `value` is an error object.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is an error object, false otherwise
  * @api public
  */
@@ -8926,7 +8922,7 @@ is.error = function (value) {
  * is.fn / is.function (deprecated)
  * Test if `value` is a function.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is a function, false otherwise
  * @api public
  */
@@ -8948,7 +8944,7 @@ is.fn = is['function'] = function (value) {
  * is.number
  * Test if `value` is a number.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is a number, false otherwise
  * @api public
  */
@@ -8961,7 +8957,7 @@ is.number = function (value) {
  * is.infinite
  * Test if `value` is positive or negative infinity.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is positive or negative Infinity, false otherwise
  * @api public
  */
@@ -8973,7 +8969,7 @@ is.infinite = function (value) {
  * is.decimal
  * Test if `value` is a decimal number.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is a decimal number, false otherwise
  * @api public
  */
@@ -9070,7 +9066,7 @@ is.minimum = function (value, others) {
  * is.nan
  * Test if `value` is not a number.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is not a number, false otherwise
  * @api public
  */
@@ -9201,7 +9197,7 @@ is.within = function (value, start, finish) {
  * is.object
  * Test if `value` is an object.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is an object, false otherwise
  * @api public
  */
@@ -9213,7 +9209,7 @@ is.object = function (value) {
  * is.primitive
  * Test if `value` is a primitive.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is a primitive, false otherwise
  * @api public
  */
@@ -9231,7 +9227,7 @@ is.primitive = function isPrimitive(value) {
  * is.hash
  * Test if `value` is a hash - a plain object literal.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is a hash, false otherwise
  * @api public
  */
@@ -9248,7 +9244,7 @@ is.hash = function (value) {
  * is.regexp
  * Test if `value` is a regular expression.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is a regexp, false otherwise
  * @api public
  */
@@ -9265,7 +9261,7 @@ is.regexp = function (value) {
  * is.string
  * Test if `value` is a string.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if 'value' is a string, false otherwise
  * @api public
  */
@@ -9282,7 +9278,7 @@ is.string = function (value) {
  * is.base64
  * Test if `value` is a valid base64 encoded string.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if 'value' is a base64 encoded string, false otherwise
  * @api public
  */
@@ -9299,7 +9295,7 @@ is.base64 = function (value) {
  * is.hex
  * Test if `value` is a valid hex encoded string.
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if 'value' is a hex encoded string, false otherwise
  * @api public
  */
@@ -9312,27 +9308,13 @@ is.hex = function (value) {
  * is.symbol
  * Test if `value` is an ES6 Symbol
  *
- * @param {*} value value to test
+ * @param {Mixed} value value to test
  * @return {Boolean} true if `value` is a Symbol, false otherise
  * @api public
  */
 
 is.symbol = function (value) {
   return typeof Symbol === 'function' && toStr.call(value) === '[object Symbol]' && typeof symbolValueOf.call(value) === 'symbol';
-};
-
-/**
- * is.bigint
- * Test if `value` is an ES-proposed BigInt
- *
- * @param {*} value value to test
- * @return {Boolean} true if `value` is a BigInt, false otherise
- * @api public
- */
-
-is.bigint = function (value) {
-  // eslint-disable-next-line valid-typeof
-  return typeof BigInt === 'function' && toStr.call(value) === '[object BigInt]' && typeof bigIntValueOf.call(value) === 'bigint';
 };
 
 module.exports = is;
@@ -9346,14 +9328,14 @@ module.exports = Array.isArray || function (arr) {
 
 },{}],39:[function(require,module,exports){
 /*!
- * JavaScript Cookie v2.2.1
+ * JavaScript Cookie v2.2.0
  * https://github.com/js-cookie/js-cookie
  *
  * Copyright 2006, 2015 Klaus Hartl & Fagner Brack
  * Released under the MIT license
  */
 ;(function (factory) {
-	var registeredInModuleLoader;
+	var registeredInModuleLoader = false;
 	if (typeof define === 'function' && define.amd) {
 		define(factory);
 		registeredInModuleLoader = true;
@@ -9383,123 +9365,125 @@ module.exports = Array.isArray || function (arr) {
 		return result;
 	}
 
-	function decode (s) {
-		return s.replace(/(%[0-9A-Z]{2})+/g, decodeURIComponent);
-	}
-
 	function init (converter) {
-		function api() {}
-
-		function set (key, value, attributes) {
+		function api (key, value, attributes) {
+			var result;
 			if (typeof document === 'undefined') {
 				return;
 			}
 
-			attributes = extend({
-				path: '/'
-			}, api.defaults, attributes);
+			// Write
 
-			if (typeof attributes.expires === 'number') {
-				attributes.expires = new Date(new Date() * 1 + attributes.expires * 864e+5);
-			}
+			if (arguments.length > 1) {
+				attributes = extend({
+					path: '/'
+				}, api.defaults, attributes);
 
-			// We're using "expires" because "max-age" is not supported by IE
-			attributes.expires = attributes.expires ? attributes.expires.toUTCString() : '';
-
-			try {
-				var result = JSON.stringify(value);
-				if (/^[\{\[]/.test(result)) {
-					value = result;
-				}
-			} catch (e) {}
-
-			value = converter.write ?
-				converter.write(value, key) :
-				encodeURIComponent(String(value))
-					.replace(/%(23|24|26|2B|3A|3C|3E|3D|2F|3F|40|5B|5D|5E|60|7B|7D|7C)/g, decodeURIComponent);
-
-			key = encodeURIComponent(String(key))
-				.replace(/%(23|24|26|2B|5E|60|7C)/g, decodeURIComponent)
-				.replace(/[\(\)]/g, escape);
-
-			var stringifiedAttributes = '';
-			for (var attributeName in attributes) {
-				if (!attributes[attributeName]) {
-					continue;
-				}
-				stringifiedAttributes += '; ' + attributeName;
-				if (attributes[attributeName] === true) {
-					continue;
+				if (typeof attributes.expires === 'number') {
+					var expires = new Date();
+					expires.setMilliseconds(expires.getMilliseconds() + attributes.expires * 864e+5);
+					attributes.expires = expires;
 				}
 
-				// Considers RFC 6265 section 5.2:
-				// ...
-				// 3.  If the remaining unparsed-attributes contains a %x3B (";")
-				//     character:
-				// Consume the characters of the unparsed-attributes up to,
-				// not including, the first %x3B (";") character.
-				// ...
-				stringifiedAttributes += '=' + attributes[attributeName].split(';')[0];
+				// We're using "expires" because "max-age" is not supported by IE
+				attributes.expires = attributes.expires ? attributes.expires.toUTCString() : '';
+
+				try {
+					result = JSON.stringify(value);
+					if (/^[\{\[]/.test(result)) {
+						value = result;
+					}
+				} catch (e) {}
+
+				if (!converter.write) {
+					value = encodeURIComponent(String(value))
+						.replace(/%(23|24|26|2B|3A|3C|3E|3D|2F|3F|40|5B|5D|5E|60|7B|7D|7C)/g, decodeURIComponent);
+				} else {
+					value = converter.write(value, key);
+				}
+
+				key = encodeURIComponent(String(key));
+				key = key.replace(/%(23|24|26|2B|5E|60|7C)/g, decodeURIComponent);
+				key = key.replace(/[\(\)]/g, escape);
+
+				var stringifiedAttributes = '';
+
+				for (var attributeName in attributes) {
+					if (!attributes[attributeName]) {
+						continue;
+					}
+					stringifiedAttributes += '; ' + attributeName;
+					if (attributes[attributeName] === true) {
+						continue;
+					}
+					stringifiedAttributes += '=' + attributes[attributeName];
+				}
+				return (document.cookie = key + '=' + value + stringifiedAttributes);
 			}
 
-			return (document.cookie = key + '=' + value + stringifiedAttributes);
-		}
+			// Read
 
-		function get (key, json) {
-			if (typeof document === 'undefined') {
-				return;
+			if (!key) {
+				result = {};
 			}
 
-			var jar = {};
 			// To prevent the for loop in the first place assign an empty array
-			// in case there are no cookies at all.
+			// in case there are no cookies at all. Also prevents odd result when
+			// calling "get()"
 			var cookies = document.cookie ? document.cookie.split('; ') : [];
+			var rdecode = /(%[0-9A-Z]{2})+/g;
 			var i = 0;
 
 			for (; i < cookies.length; i++) {
 				var parts = cookies[i].split('=');
 				var cookie = parts.slice(1).join('=');
 
-				if (!json && cookie.charAt(0) === '"') {
+				if (!this.json && cookie.charAt(0) === '"') {
 					cookie = cookie.slice(1, -1);
 				}
 
 				try {
-					var name = decode(parts[0]);
-					cookie = (converter.read || converter)(cookie, name) ||
-						decode(cookie);
+					var name = parts[0].replace(rdecode, decodeURIComponent);
+					cookie = converter.read ?
+						converter.read(cookie, name) : converter(cookie, name) ||
+						cookie.replace(rdecode, decodeURIComponent);
 
-					if (json) {
+					if (this.json) {
 						try {
 							cookie = JSON.parse(cookie);
 						} catch (e) {}
 					}
 
-					jar[name] = cookie;
-
 					if (key === name) {
+						result = cookie;
 						break;
+					}
+
+					if (!key) {
+						result[name] = cookie;
 					}
 				} catch (e) {}
 			}
 
-			return key ? jar[key] : jar;
+			return result;
 		}
 
-		api.set = set;
+		api.set = api;
 		api.get = function (key) {
-			return get(key, false /* read as raw */);
+			return api.call(api, key);
 		};
-		api.getJSON = function (key) {
-			return get(key, true /* read as json */);
+		api.getJSON = function () {
+			return api.apply({
+				json: true
+			}, [].slice.call(arguments));
 		};
+		api.defaults = {};
+
 		api.remove = function (key, attributes) {
-			set(key, '', extend(attributes, {
+			api(key, '', extend(attributes, {
 				expires: -1
 			}));
 		};
-
-		api.defaults = {};
 
 		api.withConverter = init;
 
@@ -13984,29 +13968,21 @@ process.umask = function() { return 0; };
 var replace = String.prototype.replace;
 var percentTwenties = /%20/g;
 
-var util = require('./utils');
-
-var Format = {
+module.exports = {
+    'default': 'RFC3986',
+    formatters: {
+        RFC1738: function (value) {
+            return replace.call(value, percentTwenties, '+');
+        },
+        RFC3986: function (value) {
+            return value;
+        }
+    },
     RFC1738: 'RFC1738',
     RFC3986: 'RFC3986'
 };
 
-module.exports = util.assign(
-    {
-        'default': Format.RFC3986,
-        formatters: {
-            RFC1738: function (value) {
-                return replace.call(value, percentTwenties, '+');
-            },
-            RFC3986: function (value) {
-                return String(value);
-            }
-        }
-    },
-    Format
-);
-
-},{"./utils":51}],48:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 'use strict';
 
 var stringify = require('./stringify');
@@ -14025,7 +14001,6 @@ module.exports = {
 var utils = require('./utils');
 
 var has = Object.prototype.hasOwnProperty;
-var isArray = Array.isArray;
 
 var defaults = {
     allowDots: false,
@@ -14033,7 +14008,6 @@ var defaults = {
     arrayLimit: 20,
     charset: 'utf-8',
     charsetSentinel: false,
-    comma: false,
     decoder: utils.decode,
     delimiter: '&',
     depth: 5,
@@ -14095,25 +14069,16 @@ var parseValues = function parseQueryStringValues(str, options) {
 
         var key, val;
         if (pos === -1) {
-            key = options.decoder(part, defaults.decoder, charset, 'key');
+            key = options.decoder(part, defaults.decoder, charset);
             val = options.strictNullHandling ? null : '';
         } else {
-            key = options.decoder(part.slice(0, pos), defaults.decoder, charset, 'key');
-            val = options.decoder(part.slice(pos + 1), defaults.decoder, charset, 'value');
+            key = options.decoder(part.slice(0, pos), defaults.decoder, charset);
+            val = options.decoder(part.slice(pos + 1), defaults.decoder, charset);
         }
 
         if (val && options.interpretNumericEntities && charset === 'iso-8859-1') {
             val = interpretNumericEntities(val);
         }
-
-        if (val && typeof val === 'string' && options.comma && val.indexOf(',') > -1) {
-            val = val.split(',');
-        }
-
-        if (part.indexOf('[]=') > -1) {
-            val = isArray(val) ? [val] : val;
-        }
-
         if (has.call(obj, key)) {
             obj[key] = utils.combine(obj[key], val);
         } else {
@@ -14174,7 +14139,7 @@ var parseKeys = function parseQueryStringKeys(givenKey, val, options) {
 
     // Get the parent
 
-    var segment = options.depth > 0 && brackets.exec(key);
+    var segment = brackets.exec(key);
     var parent = segment ? key.slice(0, segment.index) : key;
 
     // Stash the parent if it exists
@@ -14194,7 +14159,7 @@ var parseKeys = function parseQueryStringKeys(givenKey, val, options) {
     // Loop through children appending to the array until we hit depth
 
     var i = 0;
-    while (options.depth > 0 && (segment = child.exec(key)) !== null && i < options.depth) {
+    while ((segment = child.exec(key)) !== null && i < options.depth) {
         i += 1;
         if (!options.plainObjects && has.call(Object.prototype, segment[1].slice(1, -1))) {
             if (!options.allowPrototypes) {
@@ -14213,42 +14178,31 @@ var parseKeys = function parseQueryStringKeys(givenKey, val, options) {
     return parseObject(keys, val, options);
 };
 
-var normalizeParseOptions = function normalizeParseOptions(opts) {
-    if (!opts) {
-        return defaults;
-    }
+module.exports = function (str, opts) {
+    var options = opts ? utils.assign({}, opts) : {};
 
-    if (opts.decoder !== null && opts.decoder !== undefined && typeof opts.decoder !== 'function') {
+    if (options.decoder !== null && options.decoder !== undefined && typeof options.decoder !== 'function') {
         throw new TypeError('Decoder has to be a function.');
     }
 
-    if (typeof opts.charset !== 'undefined' && opts.charset !== 'utf-8' && opts.charset !== 'iso-8859-1') {
+    options.ignoreQueryPrefix = options.ignoreQueryPrefix === true;
+    options.delimiter = typeof options.delimiter === 'string' || utils.isRegExp(options.delimiter) ? options.delimiter : defaults.delimiter;
+    options.depth = typeof options.depth === 'number' ? options.depth : defaults.depth;
+    options.arrayLimit = typeof options.arrayLimit === 'number' ? options.arrayLimit : defaults.arrayLimit;
+    options.parseArrays = options.parseArrays !== false;
+    options.decoder = typeof options.decoder === 'function' ? options.decoder : defaults.decoder;
+    options.allowDots = typeof options.allowDots === 'undefined' ? defaults.allowDots : !!options.allowDots;
+    options.plainObjects = typeof options.plainObjects === 'boolean' ? options.plainObjects : defaults.plainObjects;
+    options.allowPrototypes = typeof options.allowPrototypes === 'boolean' ? options.allowPrototypes : defaults.allowPrototypes;
+    options.parameterLimit = typeof options.parameterLimit === 'number' ? options.parameterLimit : defaults.parameterLimit;
+    options.strictNullHandling = typeof options.strictNullHandling === 'boolean' ? options.strictNullHandling : defaults.strictNullHandling;
+
+    if (typeof options.charset !== 'undefined' && options.charset !== 'utf-8' && options.charset !== 'iso-8859-1') {
         throw new Error('The charset option must be either utf-8, iso-8859-1, or undefined');
     }
-    var charset = typeof opts.charset === 'undefined' ? defaults.charset : opts.charset;
-
-    return {
-        allowDots: typeof opts.allowDots === 'undefined' ? defaults.allowDots : !!opts.allowDots,
-        allowPrototypes: typeof opts.allowPrototypes === 'boolean' ? opts.allowPrototypes : defaults.allowPrototypes,
-        arrayLimit: typeof opts.arrayLimit === 'number' ? opts.arrayLimit : defaults.arrayLimit,
-        charset: charset,
-        charsetSentinel: typeof opts.charsetSentinel === 'boolean' ? opts.charsetSentinel : defaults.charsetSentinel,
-        comma: typeof opts.comma === 'boolean' ? opts.comma : defaults.comma,
-        decoder: typeof opts.decoder === 'function' ? opts.decoder : defaults.decoder,
-        delimiter: typeof opts.delimiter === 'string' || utils.isRegExp(opts.delimiter) ? opts.delimiter : defaults.delimiter,
-        // eslint-disable-next-line no-implicit-coercion, no-extra-parens
-        depth: (typeof opts.depth === 'number' || opts.depth === false) ? +opts.depth : defaults.depth,
-        ignoreQueryPrefix: opts.ignoreQueryPrefix === true,
-        interpretNumericEntities: typeof opts.interpretNumericEntities === 'boolean' ? opts.interpretNumericEntities : defaults.interpretNumericEntities,
-        parameterLimit: typeof opts.parameterLimit === 'number' ? opts.parameterLimit : defaults.parameterLimit,
-        parseArrays: opts.parseArrays !== false,
-        plainObjects: typeof opts.plainObjects === 'boolean' ? opts.plainObjects : defaults.plainObjects,
-        strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : defaults.strictNullHandling
-    };
-};
-
-module.exports = function (str, opts) {
-    var options = normalizeParseOptions(opts);
+    if (typeof options.charset === 'undefined') {
+        options.charset = defaults.charset;
+    }
 
     if (str === '' || str === null || typeof str === 'undefined') {
         return options.plainObjects ? Object.create(null) : {};
@@ -14274,17 +14228,15 @@ module.exports = function (str, opts) {
 
 var utils = require('./utils');
 var formats = require('./formats');
-var has = Object.prototype.hasOwnProperty;
 
 var arrayPrefixGenerators = {
-    brackets: function brackets(prefix) {
+    brackets: function brackets(prefix) { // eslint-disable-line func-name-matching
         return prefix + '[]';
     },
-    comma: 'comma',
-    indices: function indices(prefix, key) {
+    indices: function indices(prefix, key) { // eslint-disable-line func-name-matching
         return prefix + '[' + key + ']';
     },
-    repeat: function repeat(prefix) {
+    repeat: function repeat(prefix) { // eslint-disable-line func-name-matching
         return prefix;
     }
 };
@@ -14297,7 +14249,6 @@ var pushToArray = function (arr, valueOrArray) {
 
 var toISO = Date.prototype.toISOString;
 
-var defaultFormat = formats['default'];
 var defaults = {
     addQueryPrefix: false,
     allowDots: false,
@@ -14307,26 +14258,16 @@ var defaults = {
     encode: true,
     encoder: utils.encode,
     encodeValuesOnly: false,
-    format: defaultFormat,
-    formatter: formats.formatters[defaultFormat],
     // deprecated
     indices: false,
-    serializeDate: function serializeDate(date) {
+    serializeDate: function serializeDate(date) { // eslint-disable-line func-name-matching
         return toISO.call(date);
     },
     skipNulls: false,
     strictNullHandling: false
 };
 
-var isNonNullishPrimitive = function isNonNullishPrimitive(v) {
-    return typeof v === 'string'
-        || typeof v === 'number'
-        || typeof v === 'boolean'
-        || typeof v === 'symbol'
-        || typeof v === 'bigint';
-};
-
-var stringify = function stringify(
+var stringify = function stringify( // eslint-disable-line func-name-matching
     object,
     prefix,
     generateArrayPrefix,
@@ -14346,22 +14287,20 @@ var stringify = function stringify(
         obj = filter(prefix, obj);
     } else if (obj instanceof Date) {
         obj = serializeDate(obj);
-    } else if (generateArrayPrefix === 'comma' && isArray(obj)) {
-        obj = obj.join(',');
     }
 
     if (obj === null) {
         if (strictNullHandling) {
-            return encoder && !encodeValuesOnly ? encoder(prefix, defaults.encoder, charset, 'key') : prefix;
+            return encoder && !encodeValuesOnly ? encoder(prefix, defaults.encoder, charset) : prefix;
         }
 
         obj = '';
     }
 
-    if (isNonNullishPrimitive(obj) || utils.isBuffer(obj)) {
+    if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean' || utils.isBuffer(obj)) {
         if (encoder) {
-            var keyValue = encodeValuesOnly ? prefix : encoder(prefix, defaults.encoder, charset, 'key');
-            return [formatter(keyValue) + '=' + formatter(encoder(obj, defaults.encoder, charset, 'value'))];
+            var keyValue = encodeValuesOnly ? prefix : encoder(prefix, defaults.encoder, charset);
+            return [formatter(keyValue) + '=' + formatter(encoder(obj, defaults.encoder, charset))];
         }
         return [formatter(prefix) + '=' + formatter(String(obj))];
     }
@@ -14373,7 +14312,7 @@ var stringify = function stringify(
     }
 
     var objKeys;
-    if (isArray(filter)) {
+    if (Array.isArray(filter)) {
         objKeys = filter;
     } else {
         var keys = Object.keys(obj);
@@ -14387,10 +14326,10 @@ var stringify = function stringify(
             continue;
         }
 
-        if (isArray(obj)) {
+        if (Array.isArray(obj)) {
             pushToArray(values, stringify(
                 obj[key],
-                typeof generateArrayPrefix === 'function' ? generateArrayPrefix(prefix, key) : prefix,
+                generateArrayPrefix(prefix, key),
                 generateArrayPrefix,
                 strictNullHandling,
                 skipNulls,
@@ -14425,63 +14364,41 @@ var stringify = function stringify(
     return values;
 };
 
-var normalizeStringifyOptions = function normalizeStringifyOptions(opts) {
-    if (!opts) {
-        return defaults;
-    }
+module.exports = function (object, opts) {
+    var obj = object;
+    var options = opts ? utils.assign({}, opts) : {};
 
-    if (opts.encoder !== null && opts.encoder !== undefined && typeof opts.encoder !== 'function') {
+    if (options.encoder !== null && options.encoder !== undefined && typeof options.encoder !== 'function') {
         throw new TypeError('Encoder has to be a function.');
     }
 
-    var charset = opts.charset || defaults.charset;
-    if (typeof opts.charset !== 'undefined' && opts.charset !== 'utf-8' && opts.charset !== 'iso-8859-1') {
-        throw new TypeError('The charset option must be either utf-8, iso-8859-1, or undefined');
+    var delimiter = typeof options.delimiter === 'undefined' ? defaults.delimiter : options.delimiter;
+    var strictNullHandling = typeof options.strictNullHandling === 'boolean' ? options.strictNullHandling : defaults.strictNullHandling;
+    var skipNulls = typeof options.skipNulls === 'boolean' ? options.skipNulls : defaults.skipNulls;
+    var encode = typeof options.encode === 'boolean' ? options.encode : defaults.encode;
+    var encoder = typeof options.encoder === 'function' ? options.encoder : defaults.encoder;
+    var sort = typeof options.sort === 'function' ? options.sort : null;
+    var allowDots = typeof options.allowDots === 'undefined' ? defaults.allowDots : !!options.allowDots;
+    var serializeDate = typeof options.serializeDate === 'function' ? options.serializeDate : defaults.serializeDate;
+    var encodeValuesOnly = typeof options.encodeValuesOnly === 'boolean' ? options.encodeValuesOnly : defaults.encodeValuesOnly;
+    var charset = options.charset || defaults.charset;
+    if (typeof options.charset !== 'undefined' && options.charset !== 'utf-8' && options.charset !== 'iso-8859-1') {
+        throw new Error('The charset option must be either utf-8, iso-8859-1, or undefined');
     }
 
-    var format = formats['default'];
-    if (typeof opts.format !== 'undefined') {
-        if (!has.call(formats.formatters, opts.format)) {
-            throw new TypeError('Unknown format option provided.');
-        }
-        format = opts.format;
+    if (typeof options.format === 'undefined') {
+        options.format = formats['default'];
+    } else if (!Object.prototype.hasOwnProperty.call(formats.formatters, options.format)) {
+        throw new TypeError('Unknown format option provided.');
     }
-    var formatter = formats.formatters[format];
-
-    var filter = defaults.filter;
-    if (typeof opts.filter === 'function' || isArray(opts.filter)) {
-        filter = opts.filter;
-    }
-
-    return {
-        addQueryPrefix: typeof opts.addQueryPrefix === 'boolean' ? opts.addQueryPrefix : defaults.addQueryPrefix,
-        allowDots: typeof opts.allowDots === 'undefined' ? defaults.allowDots : !!opts.allowDots,
-        charset: charset,
-        charsetSentinel: typeof opts.charsetSentinel === 'boolean' ? opts.charsetSentinel : defaults.charsetSentinel,
-        delimiter: typeof opts.delimiter === 'undefined' ? defaults.delimiter : opts.delimiter,
-        encode: typeof opts.encode === 'boolean' ? opts.encode : defaults.encode,
-        encoder: typeof opts.encoder === 'function' ? opts.encoder : defaults.encoder,
-        encodeValuesOnly: typeof opts.encodeValuesOnly === 'boolean' ? opts.encodeValuesOnly : defaults.encodeValuesOnly,
-        filter: filter,
-        formatter: formatter,
-        serializeDate: typeof opts.serializeDate === 'function' ? opts.serializeDate : defaults.serializeDate,
-        skipNulls: typeof opts.skipNulls === 'boolean' ? opts.skipNulls : defaults.skipNulls,
-        sort: typeof opts.sort === 'function' ? opts.sort : null,
-        strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : defaults.strictNullHandling
-    };
-};
-
-module.exports = function (object, opts) {
-    var obj = object;
-    var options = normalizeStringifyOptions(opts);
-
+    var formatter = formats.formatters[options.format];
     var objKeys;
     var filter;
 
     if (typeof options.filter === 'function') {
         filter = options.filter;
         obj = filter('', obj);
-    } else if (isArray(options.filter)) {
+    } else if (Array.isArray(options.filter)) {
         filter = options.filter;
         objKeys = filter;
     }
@@ -14493,10 +14410,10 @@ module.exports = function (object, opts) {
     }
 
     var arrayFormat;
-    if (opts && opts.arrayFormat in arrayPrefixGenerators) {
-        arrayFormat = opts.arrayFormat;
-    } else if (opts && 'indices' in opts) {
-        arrayFormat = opts.indices ? 'indices' : 'repeat';
+    if (options.arrayFormat in arrayPrefixGenerators) {
+        arrayFormat = options.arrayFormat;
+    } else if ('indices' in options) {
+        arrayFormat = options.indices ? 'indices' : 'repeat';
     } else {
         arrayFormat = 'indices';
     }
@@ -14507,38 +14424,38 @@ module.exports = function (object, opts) {
         objKeys = Object.keys(obj);
     }
 
-    if (options.sort) {
-        objKeys.sort(options.sort);
+    if (sort) {
+        objKeys.sort(sort);
     }
 
     for (var i = 0; i < objKeys.length; ++i) {
         var key = objKeys[i];
 
-        if (options.skipNulls && obj[key] === null) {
+        if (skipNulls && obj[key] === null) {
             continue;
         }
         pushToArray(keys, stringify(
             obj[key],
             key,
             generateArrayPrefix,
-            options.strictNullHandling,
-            options.skipNulls,
-            options.encode ? options.encoder : null,
-            options.filter,
-            options.sort,
-            options.allowDots,
-            options.serializeDate,
-            options.formatter,
-            options.encodeValuesOnly,
-            options.charset
+            strictNullHandling,
+            skipNulls,
+            encode ? encoder : null,
+            filter,
+            sort,
+            allowDots,
+            serializeDate,
+            formatter,
+            encodeValuesOnly,
+            charset
         ));
     }
 
-    var joined = keys.join(options.delimiter);
+    var joined = keys.join(delimiter);
     var prefix = options.addQueryPrefix === true ? '?' : '';
 
     if (options.charsetSentinel) {
-        if (options.charset === 'iso-8859-1') {
+        if (charset === 'iso-8859-1') {
             // encodeURIComponent('&#10003;'), the "numeric entity" representation of a checkmark
             prefix += 'utf8=%26%2310003%3B&';
         } else {
@@ -14554,7 +14471,6 @@ module.exports = function (object, opts) {
 'use strict';
 
 var has = Object.prototype.hasOwnProperty;
-var isArray = Array.isArray;
 
 var hexTable = (function () {
     var array = [];
@@ -14570,7 +14486,7 @@ var compactQueue = function compactQueue(queue) {
         var item = queue.pop();
         var obj = item.obj[item.prop];
 
-        if (isArray(obj)) {
+        if (Array.isArray(obj)) {
             var compacted = [];
 
             for (var j = 0; j < obj.length; ++j) {
@@ -14596,15 +14512,14 @@ var arrayToObject = function arrayToObject(source, options) {
 };
 
 var merge = function merge(target, source, options) {
-    /* eslint no-param-reassign: 0 */
     if (!source) {
         return target;
     }
 
     if (typeof source !== 'object') {
-        if (isArray(target)) {
+        if (Array.isArray(target)) {
             target.push(source);
-        } else if (target && typeof target === 'object') {
+        } else if (typeof target === 'object') {
             if ((options && (options.plainObjects || options.allowPrototypes)) || !has.call(Object.prototype, source)) {
                 target[source] = true;
             }
@@ -14615,21 +14530,20 @@ var merge = function merge(target, source, options) {
         return target;
     }
 
-    if (!target || typeof target !== 'object') {
+    if (typeof target !== 'object') {
         return [target].concat(source);
     }
 
     var mergeTarget = target;
-    if (isArray(target) && !isArray(source)) {
+    if (Array.isArray(target) && !Array.isArray(source)) {
         mergeTarget = arrayToObject(target, options);
     }
 
-    if (isArray(target) && isArray(source)) {
+    if (Array.isArray(target) && Array.isArray(source)) {
         source.forEach(function (item, i) {
             if (has.call(target, i)) {
-                var targetItem = target[i];
-                if (targetItem && typeof targetItem === 'object' && item && typeof item === 'object') {
-                    target[i] = merge(targetItem, item, options);
+                if (target[i] && typeof target[i] === 'object') {
+                    target[i] = merge(target[i], item, options);
                 } else {
                     target.push(item);
                 }
@@ -14680,12 +14594,7 @@ var encode = function encode(str, defaultEncoder, charset) {
         return str;
     }
 
-    var string = str;
-    if (typeof str === 'symbol') {
-        string = Symbol.prototype.toString.call(str);
-    } else if (typeof str !== 'string') {
-        string = String(str);
-    }
+    var string = typeof str === 'string' ? str : String(str);
 
     if (charset === 'iso-8859-1') {
         return escape(string).replace(/%u[0-9a-f]{4}/gi, function ($0) {
@@ -14765,7 +14674,7 @@ var isRegExp = function isRegExp(obj) {
 };
 
 var isBuffer = function isBuffer(obj) {
-    if (!obj || typeof obj !== 'object') {
+    if (obj === null || typeof obj === 'undefined') {
         return false;
     }
 
