@@ -91,7 +91,7 @@ export type QueryParams = Partial<QueryParamsSpec>;
  * Manage filters applied to a query.
  * @beta
  */
-class QueryFilter {
+export class QueryFilter {
   private _filters: Map<string, Filter> = new Map();
 
   public get(name: string): FilterValue | unknown {
@@ -184,7 +184,10 @@ class QueryFilter {
     this._filters.clear();
   }
 
-  public load(data: GenericObject<FilterValue>) {
+  public setMany(data: GenericObject<FilterValue>, replace = false) {
+    if (replace) {
+      this.clear();
+    }
     for (const key in data) {
       this.set(key, data[key]);
     }
@@ -401,9 +404,9 @@ export class Query {
       } else if (key === 'nostats') {
         this.noStats = !!params.nostats;
       } else if (key === 'filter') {
-        this._filters.load(params.filter);
+        this._filters.setMany(params.filter);
       } else if (key === 'exclude') {
-        this._excludes.load(params.exclude);
+        this._excludes.setMany(params.exclude);
       } else if (key === 'type') {
         this._types.set(params.type);
       } else if (key === 'sort') {

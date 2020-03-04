@@ -41,10 +41,12 @@
       lte: 500
     });
 
-    request.filters.add('something', ['blah', 'bleh', 'xxx']);
-    request.filters.remove('something', 'xxx');
+    request.filters.setMany({
+      something: ['blah', 'bleh', 'xxx'],
+      something2: 'blah'
+    });
 
-    request.filters.add('something2', 'blah');
+    request.filters.remove('something', 'xxx');
     request.filters.remove('something2');
 
     const request2 = new Query(request.dump());
