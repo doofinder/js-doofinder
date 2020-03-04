@@ -244,7 +244,7 @@ describe('Query', () => {
       query.page = 10;
       query.reset();
       query.dump().should.eql(query.defaults);
-      query.query.should.equal('');
+      query.text.should.equal('');
       done();
     });
   });
@@ -277,7 +277,7 @@ describe('Query', () => {
     });
 
     it('can be copied', (done) => {
-      query.query = 'chair';
+      query.text = 'chair';
       query.types.add('product');
       query.filters.add('brand', 'adidas');
 
@@ -305,12 +305,12 @@ describe('Query', () => {
     context('query properties', () => {
       it('properly sets basic parameters', (done) => {
         query.hashid = 'asdf';
-        query.query = 'blah';
+        query.text = 'blah';
         query.transformer = 'basic';
         query.queryName = 'match_and';
 
         query.hashid.should.equal('asdf');
-        query.query.should.equal('blah');
+        query.text.should.equal('blah');
         query.transformer.should.equal('basic');
         query.queryName.should.equal('match_and');
 

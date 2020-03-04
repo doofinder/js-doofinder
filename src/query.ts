@@ -471,10 +471,10 @@ export class Query {
     this.setParam('hashid', value);
   }
 
-  public get query(): string {
+  public get text(): string {
     return this.getParam('query');
   }
-  public set query(value: string) {
+  public set text(value: string) {
     this.setParam('query', value);
   }
 
