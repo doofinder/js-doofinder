@@ -418,6 +418,14 @@ export class Query {
     });
   }
 
+  public valid(): true | never {
+    if (this.hashid != null) {
+      return true;
+    } else {
+      throw new QueryValueError(`hashid parameter is mandatory`);
+    }
+  }
+
   public dump(): QueryParams {
     const data: QueryParams = {
       ...this._params,
