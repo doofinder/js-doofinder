@@ -15,17 +15,21 @@ export const isPlainObject = (value: unknown): boolean =>
 
 export const isValidZone = (zone: string): boolean => Object.values(Zone).includes(zone as Zone);
 
-const dfidRegex = /^([0-9a-f]{32})@([\w-]+)@([0-9a-f]{32})$/i;
+const DFID_REGEX = /^([0-9a-f]{32})@([\w-]+)@([0-9a-f]{32})$/i;
+const HASHID_REGEX = /^([0-9a-f]{32})(-.*)?/i;
 
 /**
  * Returns True if the string conforms to a
  * doofinder ID
  *
  */
-export function isDfid(str: string): boolean {
-  return dfidRegex.test(str);
+export function isValidDoofinderId(value: string): boolean {
+  return DFID_REGEX.test(value);
 }
 
+export function isValidHashId(value: string): boolean {
+  return HASHID_REGEX.test(value);
+}
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *

@@ -1,6 +1,7 @@
 import { GenericObject } from './types';
 import { isPlainObject, shallowEqual, isString } from './util/is';
 import { clone } from './util/clone';
+import { validateHashId } from './util/validators';
 
 // filters
 
@@ -264,8 +265,7 @@ export class QueryTypes {
   }
 
   public dump(): string | string[] {
-    const types: string[] = Array.from(this._types);
-    return types.length === 1 ? types[0] : types;
+    return Array.from(this._types);
   }
 
   public clear(): void {
@@ -419,11 +419,8 @@ export class Query {
   }
 
   public valid(): true | never {
-    if (this.hashid != null) {
-      return true;
-    } else {
-      throw new QueryValueError(`hashid parameter is mandatory`);
-    }
+    validateHashId(this.hashid);
+    return true;
   }
 
   public dump(): QueryParams {

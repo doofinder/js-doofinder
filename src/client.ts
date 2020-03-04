@@ -5,6 +5,7 @@ import { DoofinderResult } from './result';
 
 import { buildQueryString } from './util/encode-params';
 import { isValidZone } from './util/is';
+import { validateHashId } from './util/validators';
 
 export interface ClientHeaders extends GenericObject<string> {
   Accept: string;
@@ -20,6 +21,8 @@ export interface ClientOptions {
   serverAddress: string;
   headers: Partial<ClientHeaders>;
 }
+
+export class ClientError extends Error {}
 
 export class ClientResponseError extends Error {
   public statusCode: number;
@@ -161,21 +164,36 @@ export class Client {
    * @param  {Boolean}  wrapper  Tell the client to return a class object instead of
    *                             the raw value returned by the endpoint. Defaults to true
    *
+   * NOTICE:
+   *
+   * - qs library encodes "(" and ")" as "%28" and "%29" although is not
+   *   needed. Encoded parentheses must be supported in the search endpoint.
+   * - Iterating objects doesn't ensure the order of the keys so they can't be
+   *   reliabily used to specify sorting in multiple fields. That's why this
+   *   method validates sorting and raises an exception if the value is not
+   *   valid.
+   *
+   *   - sort: field                                         [OK]
+   *   - sort: {field: 'asc|desc'}                           [OK]
+   *   - sort: [{field1: 'asc|desc'}, {field2: 'asc|desc'}]  [OK]
+   *   - sort: {field1: 'asc|desc', field2: 'asc|desc'}      [ERR]
    *
    * @return {Promise<Response>}
    */
-  public async search(query: string | Query | QueryParams, params?: QueryParams): Promise<Response | DoofinderResult> {
-    let qs: string;
+  public async search(params: Query | QueryParams): Promise<Response | DoofinderResult> {
+    let request: Query;
 
-    if (typeof query === 'string') {
-      qs = this.buildSearchQueryString(query, params);
+    if (params instanceof Query) {
+      request = params;
     } else {
-      qs = this.buildSearchQueryString(query);
+      request = new Query(params);
     }
 
-    const response: Response = await this.request(this.buildUrl('/search', qs));
-    const data = await response.json();
-    return new DoofinderResult(data);
+    if (request.valid()) {
+      const qs = buildQueryString({ random: new Date().getTime(), ...request.dump() });
+      const response: Response = await this.request(this.buildUrl('/search', qs));
+      return new DoofinderResult(await response.json());
+    }
   }
 
   /**
@@ -189,8 +207,8 @@ export class Client {
    *                             and the second one is the response, if any.
    * @return {Promise<Response>}
    */
-  public async options(hashid: string, params?: GenericObject): Promise<GenericObject> {
-    const qs = buildQueryString({ random: new Date().getTime(), ...params });
+  public async options(hashid: string, qs?: string): Promise<GenericObject> {
+    validateHashId(hashid);
     const response = await this.request(this.buildUrl(`/options/${hashid}`, qs));
     return await response.json();
   }
@@ -207,7 +225,6 @@ export class Client {
    */
 
   // ? Should this method accept StatsParameters or something like that?
-  // ? Should be a StatsClient wrapping Client to perform specific stats calls or a StatsQuery object like Query to wrap and validate calls?
   // https://doofinder.github.io/js-doofinder/stats
 
   public async stats(eventName: StatsEvent, params?: GenericObject<string>): Promise<Response> {
@@ -225,49 +242,6 @@ export class Client {
   public buildUrl(resource: string, querystring?: string): string {
     const qs = querystring ? `?${querystring}` : '';
     return `${this.endpoint}/${this.version}${resource}${qs}`;
-  }
-
-  /**
-   * Creates a search query string for the specified query and parameters
-   * intended to be used in the search API endpoint.
-   *
-   * NOTICE:
-   *
-   * - qs library encodes "(" and ")" as "%28" and "%29" although is not
-   *   needed. Encoded parentheses must be supported in the search endpoint.
-   * - Iterating objects doesn't ensure the order of the keys so they can't be
-   *   reliabily used to specify sorting in multiple fields. That's why this
-   *   method validates sorting and raises an exception if the value is not
-   *   valid.
-   *
-   *   - sort: field                                         [OK]
-   *   - sort: {field: 'asc|desc'}                           [OK]
-   *   - sort: [{field1: 'asc|desc'}, {field2: 'asc|desc'}]  [OK]
-   *   - sort: {field1: 'asc|desc', field2: 'asc|desc'}      [ERR]
-   *
-   * @param  {String | Object} query  Cleaned search terms.
-   * @param  {Object}          params Search parameters object.
-   *
-   * @return {String}     Encoded query string to be used in a search URL.
-   *
-   */
-  public buildSearchQueryString(query: Query | QueryParams): string;
-  public buildSearchQueryString(query: string, params?: QueryParams): string;
-  public buildSearchQueryString(query: string | Query | QueryParams, params?: QueryParams): string {
-    let q: Query = new Query();
-
-    if (typeof query === 'string') {
-      q.query = query;
-      q.load(params || {});
-    } else if (query instanceof Query) {
-      q = query;
-    } else {
-      q.load(query || {});
-    }
-
-    if (q.valid()) {
-      return buildQueryString({ random: new Date().getTime(), ...q.dump() });
-    }
   }
 
   private __buildEndpoint(serverAddress: string): string {

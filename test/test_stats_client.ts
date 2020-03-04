@@ -17,8 +17,7 @@ import * as cfg from './config';
 
 // Mock the fetch API
 import * as fetchMock from 'fetch-mock';
-import { Zone, DoofinderParameters, StatsEvent } from '../src/types';
-import { isPlainObject } from '../src/util/is';
+import { Zone } from '../src/types';
 
 const ENDPOINT = 'https://eu1-search.doofinder.com/5/stats/';
 const TEST_DFID = 'ffffffffffffffffffffffffffffffff@product@ffffffffffffffffffffffffffffffff';
