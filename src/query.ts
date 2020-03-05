@@ -1,14 +1,9 @@
-import { DoofinderParameters, FacetOption, SearchParameters, GenericObject } from './types';
-import { isPlainObject, isArray, isEmptyObject } from './util/is';
+import { GenericObject } from './types';
+import { isPlainObject, shallowEqual, isString } from './util/is';
+import { clone } from './util/clone';
+import { validateHashId, validatePage, validateRpp } from './util/validators';
 
-/**
- * Values available for the sorting options
- * TODO: If this is not used in the response, move to request.ts
- */
-export enum OrderType {
-  ASC = 'asc',
-  DESC = 'desc',
-}
+// filters
 
 export interface RangeFilter {
   lte?: number;
@@ -17,36 +12,343 @@ export interface RangeFilter {
   gt?: number;
 }
 
-export interface GeoDistanceFilter {
+export interface GeoDistance {
+  [field: string]: string;
   distance: string;
-  position: string;
 }
+
+// filters: internal
 
 export type TermsFilter = Set<string | number>;
 
-export type DataTypes = Set<string>;
+export type DataTypeSet = Set<string>;
 
-export type Filter = Map<string, TermsFilter | RangeFilter | GeoDistanceFilter>;
+export type Filter = TermsFilter | RangeFilter | GeoDistance;
 
-export type InputTermsFilterValue = string | number | string[] | number[];
+// filters: external
+
+export type TermsFilterValue = string | number | string[] | number[];
 
 /**
  * All the possibles values to assign to the Filter.
  */
-export type InputFilterValue = InputTermsFilterValue | RangeFilter | GeoDistanceFilter;
+export type FilterValue = TermsFilterValue | RangeFilter | GeoDistance;
 
-export type InputExtendedSort = {
-  [key: string]: 'asc' | 'desc';
-};
+// sorting
 
-export type InputSort = string | InputExtendedSort;
+export type SortOrder = 'asc' | 'desc';
 
-export type Sort = Map<string, OrderType>;
+export interface GeoSortOrder {
+  [field: string]: string;
+  order: SortOrder;
+}
+
+// is this _geo_distance instead???
+export interface GeoSorting {
+  geo_distance: GeoSortOrder;
+}
+
+export interface FieldSorting {
+  [field: string]: SortOrder;
+}
+
+export type Sorting = FieldSorting | GeoSorting;
+
+export type SortingInput = string | Sorting;
+
+// exceptions
 
 export class QueryValueError extends Error {
   public constructor(message: string) {
     super(message);
     this.name = 'QueryValueError';
+  }
+}
+
+interface QueryParamsSpec {
+  // basic parameters
+  hashid: string;
+  query: string;
+  page: number;
+  rpp: number;
+  transformer: string;
+  // dark magic parameters
+  query_name: string;
+  query_counter: number;
+  nostats: boolean;
+  type: string | string[];
+  // filter parameters
+  filter: GenericObject<FilterValue>;
+  exclude: GenericObject<FilterValue>;
+  // sort parameters
+  sort: SortingInput[];
+  // custom parameters
+  [key: string]: any;
+}
+
+export type QueryParams = Partial<QueryParamsSpec>;
+
+/**
+ * Manage filters applied to a query.
+ * @beta
+ */
+export class QueryFilter {
+  private _filters: Map<string, Filter> = new Map();
+
+  public get(name: string): FilterValue | unknown {
+    return this._denormalize(this._filters.get(name));
+  }
+
+  /**
+   * Set the value of a filter.
+   *
+   * @remarks
+   *
+   * Setting the value of a filter will replace any existing value.
+   *
+   * @param name - Name of the filter.
+   * @param value - Value of the filter.
+   * @beta
+   */
+  public set(name: string, value: FilterValue | unknown): void {
+    const normalized = this._normalize(value);
+    if (normalized instanceof Set) {
+      this._filters.set(name, normalized);
+    } else if (isPlainObject(normalized) && Object.entries(normalized).length === 0) {
+      throw new QueryValueError(`plain object filters can't be empty`);
+    } else {
+      this._filters.set(name, clone(normalized));
+    }
+  }
+
+  public has(name: string): boolean {
+    return this._filters.has(name);
+  }
+
+  public contains(name: string, value: FilterValue | unknown): boolean {
+    return this.has(name) && this._filterContainsOrEqualsValue(name, value, false);
+  }
+
+  public equals(name: string, value: FilterValue | unknown): boolean {
+    return this.has(name) && this._filterContainsOrEqualsValue(name, value, true);
+  }
+
+  /**
+   * Add a value to filter.
+   *
+   * @remarks
+   *
+   * - If the filter does not exist, it is created.
+   * - If the value is an object, the value for the filter is replaced.
+   * - Otherwise is supposed to be a Set of terms / numbers.
+   *
+   * @param name - Name of the filter.
+   * @param value - Value to add to the filter.
+   * @beta
+   */
+  public add(name: string, value: FilterValue | unknown): void {
+    if (!(this._filters.get(name) instanceof Set)) {
+      this.set(name, value);
+    } else {
+      const existing: TermsFilter = (this._filters.get(name) || []) as TermsFilter;
+      const added: TermsFilter = this._normalize(value as TermsFilterValue);
+      this._filters.set(name, new Set([...existing, ...added]));
+    }
+  }
+
+  public remove(name: string, value?: FilterValue) {
+    const filter = this._filters.get(name);
+    if (filter instanceof Set && value != null) {
+      for (const term of this._normalizeTerms(value as TermsFilterValue)) {
+        filter.delete(term);
+      }
+    } else {
+      // no value passed or value is an object
+      // TODO: should delete only if is shallow equal???
+      this._filters.delete(name);
+    }
+  }
+
+  public toggle(name: string, value: FilterValue | unknown) {
+    if (this.has(name)) {
+      if (this.equals(name, value)) {
+        this.remove(name);
+      } else {
+        throw new QueryValueError(`can't toggle value: values don't match`);
+      }
+    } else {
+      this.set(name, value);
+    }
+  }
+
+  public clear() {
+    this._filters.clear();
+  }
+
+  public setMany(data: GenericObject<FilterValue>, replace = false) {
+    if (replace) {
+      this.clear();
+    }
+    for (const key in data) {
+      this.set(key, data[key]);
+    }
+  }
+
+  public dump() {
+    const data: GenericObject<FilterValue> = {};
+    this._filters.forEach((value, key) => {
+      data[key] = this._denormalize(value);
+    });
+    if (Object.keys(data).length > 0) {
+      return data;
+    }
+  }
+
+  private _isTerm(value: any): boolean {
+    return typeof value === 'string' || typeof value === 'number';
+  }
+
+  private _isTermsArray(value: any): boolean {
+    return Array.isArray(value) && value.filter(this._isTerm).length === value.length;
+  }
+
+  private _normalize(value: any): Filter | any {
+    if (this._isTerm(value)) {
+      return new Set([value]);
+    } else if (this._isTermsArray(value)) {
+      return new Set(value);
+    } else {
+      return value;
+    }
+  }
+
+  private _denormalize(value: Filter | unknown): FilterValue | unknown {
+    return value instanceof Set ? [...value] : value;
+  }
+
+  private _filterContainsOrEqualsValue(name: string, value: FilterValue | unknown, checkEquality: boolean): boolean {
+    const normalized = this._normalize(value);
+    const filterValue = this._filters.get(name);
+
+    if (filterValue instanceof Set && normalized instanceof Set) {
+      if (checkEquality && filterValue.size !== normalized.size) {
+        return false;
+      }
+
+      for (const term of normalized) {
+        if (!filterValue.has(term)) {
+          return false;
+        }
+      }
+
+      return true;
+    } else {
+      return shallowEqual(filterValue, normalized);
+    }
+  }
+
+  private _normalizeTerms(value: TermsFilterValue): TermsFilter {
+    return new Set(Array.isArray(value) ? value : [value]);
+  }
+}
+
+export class QueryTypes {
+  private _types: Set<string> = new Set();
+
+  public set(value: string | string[]): void {
+    const types = Array.isArray(value) ? value : [value];
+    if (types.filter(isString).length === types.length) {
+      this._types = new Set(types);
+    } else {
+      throw new QueryValueError(`types must be strings`);
+    }
+  }
+
+  public dump(): string | string[] {
+    return Array.from(this._types);
+  }
+
+  public clear(): void {
+    this._types.clear();
+  }
+
+  public add(value: string): void {
+    if (typeof value === 'string') {
+      this._types.add(value);
+    } else {
+      throw new QueryValueError(`types must be strings`);
+    }
+  }
+
+  public has(value: string): boolean {
+    return this._types.has(value);
+  }
+
+  public remove(value: string) {
+    this._types.delete(value);
+  }
+}
+
+class QuerySort {
+  private _sortings: Sorting[] = [];
+
+  public set(value: SortingInput | SortingInput[]): number {
+    this.clear();
+    (Array.isArray(value) ? value : [value]).forEach(sorting => {
+      if (typeof sorting === 'string') {
+        this.add({ [sorting]: 'asc' });
+      } else {
+        this.add(sorting);
+      }
+    });
+    return this._sortings.length;
+  }
+
+  public add(value: FieldSorting | GeoSorting): number;
+  public add(value: string, order?: SortOrder): number;
+  public add(value: string | SortingInput, order?: SortOrder): number {
+    if (typeof value === 'string') {
+      return this._addFieldSorting(value, order);
+    } else if (this._isLikeSorting(value)) {
+      const field: string = Object.keys(value)[0];
+      if (field === 'geo_distance') {
+        return this._addGeoDistanceSorting(clone(value[field]) as GeoSortOrder);
+      } else {
+        return this._addFieldSorting(field, (value as FieldSorting)[field]);
+      }
+    }
+  }
+
+  public get(): Sorting[] {
+    return clone(this._sortings);
+  }
+
+  public clear(): void {
+    this._sortings.length = 0;
+  }
+
+  private _isLikeSorting(value: Sorting): boolean {
+    return isPlainObject(value) && Object.keys(value).length === 1;
+  }
+
+  private _addFieldSorting(field: string, order: SortOrder = 'asc'): number {
+    if (['asc', 'desc'].includes(order)) {
+      return this._sortings.push({ [field]: order });
+    }
+
+    throw new QueryValueError(`wrong sorting value for field '${field}': ${JSON.stringify(order)}`);
+  }
+
+  private _addGeoDistanceSorting(value: GeoSortOrder): number {
+    if (isPlainObject(value) && Object.keys(value).length === 2 && 'order' in value) {
+      const field: string = Object.keys(value).find(key => key !== 'order');
+      if (typeof value[field] === 'string') {
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        return this._sortings.push({ geo_distance: value } as GeoSorting);
+      }
+    }
+
+    throw new QueryValueError(`wrong sorting value for 'geo_distance': ${JSON.stringify(value)}`);
   }
 }
 
@@ -58,546 +360,207 @@ export class QueryValueError extends Error {
  *
  */
 export class Query {
-  public hashid: string = null;
-  public text: string;
-  public queryCounter: number = null;
-  private params: GenericObject = {};
-  private _filters: Filter = new Map();
-  private _exclusionFilters: Filter = new Map();
-  private _sort: Sort = new Map();
-  private _rpp?: number;
-  private _page?: number;
-  private _transformer?: string;
-  private _dataTypes?: DataTypes;
-  private _noStats?: 0 | 1;
-  private _queryName?: string;
-  private _timeout: number;
-  private _jsonp: boolean;
+  private _defaults: QueryParams;
+  private _params: QueryParams;
+  private _types: QueryTypes;
+  private _filters: QueryFilter;
+  private _excludes: QueryFilter;
+  private _sort: QuerySort;
 
-  public get filters(): GenericObject {
-    return this._getFilter(this._filters);
+  public get defaults(): QueryParams {
+    return this._defaults;
+  }
+  public set defaults(value: QueryParams) {
+    this._defaults = clone(value);
+    this.reset();
   }
 
-  public get exclusionFilters(): GenericObject {
-    return this._getFilter(this._exclusionFilters);
+  public constructor(params: QueryParams = {}) {
+    this._defaults = {
+      query: '',
+      page: 1,
+      rpp: 20,
+    };
+    this._types = new QueryTypes();
+    this._filters = new QueryFilter();
+    this._excludes = new QueryFilter();
+    this._sort = new QuerySort();
+    this.reset();
+    this.load(params);
   }
 
-  public get getSort(): InputExtendedSort[] {
-    const results: InputExtendedSort[] = [];
-    this._sort.forEach((ordering, field) => results.push({ [field]: ordering }));
-    return results;
+  public reset(): void {
+    this._types.clear();
+    this._filters.clear();
+    this._excludes.clear();
+    this._sort.clear();
+    this._params = {};
+    this.load(clone(this.defaults));
   }
 
-  public constructor(initialConfig?: GenericObject) {
-    if (initialConfig) {
-      this.load(initialConfig);
-    }
-  }
-
-  /**
-   * Sets the query string to make a search
-   *
-   * NOTE: This does not search, just sets the parameter
-   *
-   * @param  {String}   query   The search query to be sent.
-   *
-   */
-  public searchText(query: string): Query {
-    this.text = query;
-    return this;
-  }
-
-  /**
-   * This method adds a concrete filter to the current search request.
-   *
-   * @param filterName  The name of the filter to set
-   * @param value       The value to set the filter to
-   *                                    (several can be added to the same filter)
-   *
-   */
-  public addFilter(filterName: string, value: InputFilterValue): Query {
-    return this._addFilter(this._filters, filterName, value);
-  }
-
-  /**
-   * Add an exclude filter to the query instance.
-   *
-   * @param filterName  The name of the exclude filter
-   * @param value       The value to add to the exclude filter
-   */
-  public addExcludeFilter(filterName: string, value: InputFilterValue): Query {
-    return this._addFilter(this._exclusionFilters, filterName, value);
-  }
-
-  /**
-   * This method removes a given included filter to the current search request.
-   *
-   * @param filterName  The name of the filter to modify
-   * @param value       The value to remove from the filter
-   */
-  public removeFilter(filterName: string, value: InputFilterValue): Query {
-    this._removeFilter(this._filters, filterName, value);
-    return this;
-  }
-
-  /**
-   * This method removes a given excluded filter to the current search request.
-   *
-   * @param filterName  The name of the filter to modify
-   * @param value       The value to remove from the filter
-   */
-  public removeExclusionFilter(filterName: string, value: InputFilterValue): Query {
-    this._removeFilter(this._exclusionFilters, filterName, value);
-    return this;
-  }
-
-  /**
-   * This method allows to check if a given filter is set in the current search
-   * request
-   *
-   * @param  filterName - The name of the filter to modify
-   * @param  value - (Optional) The value to check from
-   *                                         the filter
-   * @return  True or False depending if the filter is set for the given value
-   *          or there's a filter set with any value
-   */
-  public hasFilter(filterName: string, value?: string): boolean {
-    return this._hasFilter(this._filters, filterName, value);
-  }
-
-  public hasExclusionFilter(filterName: string, value?: string): boolean {
-    return this._hasFilter(this._exclusionFilters, filterName, value);
-  }
-
-  /**
-   * Toggles a filter value from the given filter in the given context
-   *
-   * @param  filterName - The name of the filter to modify
-   * @param  value - The value to remove from the filter
-   */
-  public toggleFilter(filterName: string, value: FacetOption | string | number): void {
-    let values: Array<RangeFilter | string | number> = [];
-
-    if (Array.isArray(value)) {
-      values = value;
-    } else if (typeof value === 'string' || typeof value === 'number' || isPlainObject(value)) {
-      values = [value];
-    }
-
-    (values as Array<unknown>).forEach((value: any) => {
-      if (this.hasFilter(filterName, value)) {
-        this.removeFilter(filterName, [value]);
+  public load(params: QueryParams = {}) {
+    Object.keys(params).forEach(key => {
+      if (key === 'nostats') {
+        this.noStats = !!params.nostats;
+      } else if (key === 'filter') {
+        this._filters.setMany(params.filter);
+      } else if (key === 'exclude') {
+        this._excludes.setMany(params.exclude);
+      } else if (key === 'type') {
+        this._types.set(params.type);
+      } else if (key === 'sort') {
+        this._sort.set(params.sort);
       } else {
-        this.addFilter(filterName, [value]);
+        this.setParam(key, params[key]);
       }
     });
   }
 
-  public toggleExclusionFilter(filterName: string, value: FacetOption | string | number): void {
-    let values: Array<RangeFilter | string | number> = [];
-
-    if (Array.isArray(value)) {
-      values = value;
-    } else if (typeof value === 'string' || typeof value === 'number' || isPlainObject(value)) {
-      values = [value];
+  public dump(validate = false): QueryParams {
+    if (validate) {
+      validateHashId(this.hashid);
+      validatePage(this.page);
+      validateRpp(this.rpp);
     }
 
-    (values as Array<unknown>).forEach((value: any) => {
-      if (this.hasExclusionFilter(filterName, value)) {
-        this.removeExclusionFilter(filterName, [value]);
-      } else {
-        this.addExcludeFilter(filterName, [value]);
-      }
+    const data: QueryParams = {
+      ...clone(this._params),
+      type: this.types.dump(),
+      filter: this.filters.dump(),
+      exclude: this.excludes.dump(),
+      sort: this.sort.get(),
+    };
+
+    ['nostats', 'filter', 'exclude'].forEach(key => {
+      if (!data[key]) delete data[key];
     });
-  }
 
-  /**
-   * Overwrites the parameters with the object given, allowing
-   * to change in one call several parameters
-   *
-   * @param parameters - Parameters with the query definition
-   */
-  public load(parameters: SearchParameters): void {
-    this.params = Object.assign({}, this.params, this._hydrate(parameters));
-    if ('hashid' in this.params) {
-      this.hashid = this.params.hashid;
-      delete this.params['hashid'];
-    }
-    if ('query' in this.params) {
-      this.text = this.params.query;
-      delete this.params['query'];
-    }
-    if ('query_counter' in this.params) {
-      this.queryCounter = this.params.query_counter;
-      delete this.params['query_counter'];
-    }
-    if ('filter' in this.params) {
-      for (const field in this.params.filter) {
-        this.addFilter(field, this.params['filter'][field] as InputFilterValue);
-      }
-      delete this.params['filter'];
-    }
-    if ('sort' in this.params) {
-      this.sort(this.params['sort']);
-      delete this.params['sort'];
-    }
-    if ('rpp' in this.params) {
-      this.rpp(this.params['rpp']);
-      delete this.params['rpp'];
-    }
-    if ('page' in this.params) {
-      this.page(this.params['page']);
-      delete this.params['page'];
-    }
-    if ('transformer' in this.params) {
-      this.transformer(this.params['transformer']);
-      delete this.params['transformer'];
-    }
-    if ('type' in this.params) {
-      this.types(this.params['type']);
-      delete this.params['type'];
-    }
-    if ('nostats' in this.params) {
-      this.noStats(this.params['nostats']);
-      delete this.params['nostats'];
-    }
-    if ('query_name' in this.params) {
-      this.queryName(this.params['query_name']);
-      delete this.params['query_name'];
-    }
-    if ('timeout' in this.params) {
-      this.timeout(this.params['timeout']);
-      delete this.params['timeout'];
-    }
-    if ('jsonp' in this.params) {
-      this.jsonp(this.params['jsonp']);
-      delete this.params['jsonp'];
-    }
-  }
-
-  /**
-   * @param fieldOrList - Field to use in sort. It cant be use as:
-   *                        - string: 'price'
-   *                        - list of definition: [{price: 'asc}, {name: 'desc'}]
-   * @param orderType - Optional params in case of the first params is an string
-   *                   and an order is needed to define
-   */
-  public sort(fieldOrList: InputSort[]): Query;
-  public sort(fieldOrList: string, orderType?: string): Query;
-  public sort(fieldOrList: string | InputSort[], orderType: string = OrderType.ASC): Query {
-    if (typeof fieldOrList === 'string') {
-      this._sort.clear();
-      this._sort.set(fieldOrList, this._validateOrderType(orderType));
-    } else if (isArray(fieldOrList)) {
-      this._sort.clear();
-      for (const value of fieldOrList) {
-        if (typeof value === 'string') {
-          this._sort.set(value, OrderType.ASC);
-        } else {
-          const field = Object.keys(value)[0];
-          const orderType: string = Object.values(value)[0] as string;
-          this._sort.set(field, this._validateOrderType(orderType));
-        }
-      }
-    } else {
-      throw new QueryValueError('Value error: Sort must be an string or a list of sort definitions');
-    }
-    return this;
-  }
-
-  public hasSorting(field: string): boolean {
-    return this._sort.has(field);
-  }
-
-  /**
-   * Sets the page value of the request, useful for pagination
-   *
-   * @param  page - The page we want to set
-   *
-   * @returns Query
-   *
-   */
-  public page(page?: number): Query {
-    if (typeof page === 'number' || typeof page === 'undefined' || typeof page === null) {
-      this._page = page && page > 0 ? page : 1;
-    } else {
-      throw new QueryValueError('Value error: Page value must be a number');
-    }
-    return this;
-  }
-
-  /**
-   * Advances the current page to the next one
-   *
-   */
-  public nextPage(): void {
-    this._page = (this._page || 1) + 1;
-  }
-
-  /**
-   * Sets the Results Per Page (rpp) parameter.
-   *
-   * @param  rpp - The results per page to set
-   *
-   * @returns Query
-   */
-  public rpp(rpp?: number): Query {
-    if ((typeof rpp === 'number' && 0 < rpp && rpp <= 100) || typeof rpp === 'undefined') {
-      this._rpp = rpp;
-    } else {
-      throw new QueryValueError('Value error: Result per page must be a number > 0 and <= 100');
-    }
-    return this;
-  }
-
-  /**
-   * Sets the types to query in this query, call without
-   * parameters to clear the setting
-   *
-   * @param  types - The type or types to set for this query
-   *
-   * @returns Query
-   */
-  public types(types?: string | string[]): Query {
-    if (types) {
-      this._dataTypes = new Set();
-      if (typeof types === 'string') {
-        this._dataTypes.add(types);
-      } else if (isArray(types)) {
-        for (const type of types) {
-          this._dataTypes.add(type);
-        }
-      } else {
-        throw new QueryValueError('Value error: Types value must be string or array of strings');
-      }
-    } else {
-      delete this._dataTypes;
-    }
-    return this;
-  }
-
-  /**
-   * Sets the transformer, call it empty to reset it to null
-   *
-   * @param  transformer - The transformer option to set
-   *
-   * @returns Query
-   */
-  public transformer(transformer?: string | null): Query {
-    if (transformer || transformer === null) {
-      this._transformer = transformer;
-    } else {
-      delete this._transformer;
-    }
-    return this;
-  }
-
-  /**
-   * Sets the timeout for the query, call it empty to reset
-   *
-   * @param  timeout - The timeoout for the call
-   *
-   */
-  public timeout(timeout?: number): void {
-    if ((typeof timeout === 'number' && timeout > 0) || typeof timeout == 'undefined') {
-      this._timeout = timeout;
-    } else {
-      throw new QueryValueError('Value error: timeout must be a number > 0');
-    }
-  }
-
-  /**
-   * Allows to ask for jsonp format, call without parameters
-   * to clear the flag
-   *
-   * @param  jsonp - Whether to use jsonp or not
-   *
-   */
-  public jsonp(jsonp?: boolean): void {
-    if (jsonp) {
-      this._jsonp = jsonp;
-    } else {
-      delete this._jsonp;
-    }
-  }
-
-  /**
-   * Sets the query name for this query, call without parameters
-   * to clear the value
-   *
-   * @param  {String}   queryName   The query_name parameter value to set
-   *
-   */
-  public queryName(queryName?: string): Query {
-    if (typeof queryName === 'string' || typeof queryName === 'undefined') {
-      this._queryName = queryName;
-    } else {
-      throw new QueryValueError('Value error: queryname must be a string value');
-    }
-    return this;
-  }
-
-  /**
-   * Sets the nostats flag, call without parameters to clear it
-   *
-   * @param noStats - Wether to send the nostats flag or not
-   *
-   */
-  public noStats(noStats?: boolean): Query {
-    if (['boolean', 'number', 'undefined'].includes(typeof noStats)) {
-      if (noStats) {
-        this._noStats = 1;
-      } else {
-        delete this._noStats;
-      }
-    } else {
-      throw new QueryValueError('Value error: noStats must be a boolean value');
-    }
-    return this;
-  }
-
-  /**
-   * Gets an structure body parameters ready to be sent through a post
-   * to the Doofinder Search API
-   *
-   * @return  {Object}
-   *
-   */
-  public dump(): GenericObject {
-    const dumpData: GenericObject = JSON.parse(JSON.stringify(this.params));
-
-    if (this.hashid) {
-      dumpData.hashid = this.hashid;
-    }
-    dumpData.query = this.text ? this.text : '';
-    if (this.queryCounter) {
-      dumpData.query_counter = this.queryCounter;
-    }
-    if (!isEmptyObject(this._filters)) {
-      dumpData.filter = this._getFilter(this._filters);
-    }
-    if (!isEmptyObject(this._exclusionFilters)) {
-      dumpData.excludedFilters = this._getFilter(this._exclusionFilters);
-    }
-    const sort = this.getSort;
-    if (!isEmptyObject(sort)) {
-      dumpData.sort = sort;
-    }
-    if (this._rpp) {
-      dumpData.rpp = this._rpp;
-    }
-    if (this._page) {
-      dumpData.page = this._page;
-    }
-    if (typeof this._transformer !== 'undefined') {
-      dumpData.transformer = this._transformer ? this._transformer : '';
-    }
-    if (this._dataTypes) {
-      dumpData.type = [...this._dataTypes];
-    }
-    if (this._noStats) {
-      dumpData.nostats = this._noStats;
-    }
-    if (this._queryName) {
-      dumpData.query_name = this._queryName;
-    }
-    if (this._timeout) {
-      dumpData.timeout = this._timeout;
-    }
-    if (this._jsonp) {
-      dumpData.jsonp = this._jsonp;
-    }
-    return dumpData;
-  }
-
-  private _hydrate(params: SearchParameters): SearchParameters {
-    // Filter nulls
-    Object.keys(params).forEach((key: string) => {
-      if (!params[key]) {
-        delete params[key];
-      }
+    ['type', 'sort'].forEach(key => {
+      if (data[key].length === 0) delete data[key];
     });
-    return params;
+
+    return data;
   }
 
-  private _addListFilterValue(filter: Filter, filterName: string, values: string[]): void {
-    if (filter.has(filterName)) {
-      for (const value of values) {
-        (filter.get(filterName) as TermsFilter).add(value);
+  public copy(): Query {
+    const query = new Query();
+    query.defaults = clone(this.defaults);
+    query.reset();
+    query.load(this.dump());
+    return query;
+  }
+
+  /**
+   * Retrieve the value of a given parameter.
+   *
+   * @param name - Name of the parameter to retrieve
+   * @returns the value of the parameter, if any
+   * @beta
+   */
+  public getParam(name: keyof QueryParams): any {
+    return this._params[name];
+  }
+
+  public setParam(name: keyof QueryParams, value: unknown): void {
+    if (typeof value !== 'undefined') {
+      if (name === 'hashid') {
+        validateHashId(value as string);
+      } else if (name === 'page') {
+        validatePage(value as number);
+      } else if (name === 'rpp') {
+        validateRpp(value as number);
       }
+
+      this._params[name] = value;
     } else {
-      filter.set(filterName, new Set([...values]));
+      delete this._params[name];
     }
   }
 
-  private _addObjectFilter(filter: Filter, filterName: string, value: RangeFilter | GeoDistanceFilter): void {
-    // TODO: implement current validations.
-    filter.set(filterName, value);
+  // basic parameters
+
+  public get hashid(): string {
+    return this.getParam('hashid');
+  }
+  public set hashid(value: string) {
+    this.setParam('hashid', value);
   }
 
-  private _getFilter(filter: Filter): GenericObject {
-    const result: GenericObject = {};
-    filter.forEach((value, key) => {
-      if (value instanceof Set) {
-        result[key] = [...value];
-      } else {
-        result[key] = value;
-      }
-    });
-    return result;
+  public get text(): string {
+    return this.getParam('query');
+  }
+  public set text(value: string) {
+    this.setParam('query', value);
   }
 
-  private _addFilter(filter: Filter, filterName: string, value: InputFilterValue): Query {
-    if (typeof value === 'string' || typeof value === 'number') {
-      value = [`${value}`];
-    }
+  public get page(): number {
+    return this.getParam('page');
+  }
+  public set page(value: number) {
+    this.setParam('page', value);
+  }
 
-    if (isArray(value)) {
-      this._addListFilterValue(filter, filterName, value as string[]);
-    } else if (isPlainObject(value)) {
-      this._addObjectFilter(filter, filterName, value as RangeFilter | GeoDistanceFilter);
+  public get rpp(): number {
+    return this.getParam('rpp');
+  }
+  public set rpp(value: number) {
+    this.setParam('rpp', value);
+  }
+
+  public get transformer(): string {
+    return this.getParam('transformer');
+  }
+  public set transformer(value: string) {
+    this.setParam('transformer', value);
+  }
+
+  // dark magic parameters
+
+  public get queryName(): string {
+    return this.getParam('query_name');
+  }
+  public set queryName(value: string) {
+    this.setParam('query_name', value);
+  }
+
+  public get queryCounter(): number {
+    // TODO: should this have a default value?
+    return this.getParam('query_counter');
+  }
+  public set queryCounter(value: number) {
+    if (isNaN(value)) {
+      this.setParam('query_counter', undefined);
     } else {
-      throw new QueryValueError('Value error: Error in filter definition value');
-    }
-    return this;
-  }
-
-  private _removeFilter(filter: Filter, filterName: string, value: InputFilterValue): void {
-    if (filter.has(filterName)) {
-      const filterElement = filter.get(filterName);
-      if (filterElement instanceof Set || typeof value === 'string' || typeof value === 'number') {
-        this._removeTermFilterValue(filterElement as TermsFilter, value as InputTermsFilterValue);
-      } else {
-        filter.delete(filterName);
-      }
+      this.setParam('query_counter', value);
     }
   }
 
-  private _removeTermFilterValue(filterElement: TermsFilter, value: InputTermsFilterValue): void {
-    if (typeof value === 'string' || typeof value === 'number') {
-      filterElement.delete(value);
-    } else {
-      for (const subValue of value) {
-        filterElement.delete(subValue);
-      }
-    }
+  public get noStats(): boolean {
+    return !!this.getParam('nostats');
+  }
+  public set noStats(value: boolean) {
+    this.setParam('nostats', !!value);
   }
 
-  private _hasFilter(filter: Filter, filterName: string, value?: string): boolean {
-    // This returns true if the filter is a range, we don't compare
-    return (
-      filter.has(filterName) &&
-      (!value || isPlainObject(filter.get(filterName)) || (filter.get(filterName) as TermsFilter).has(value))
-    );
+  // types
+
+  public get types(): QueryTypes {
+    return this._types;
   }
 
-  private _validateOrderType(orderType: string): OrderType {
-    if (orderType.toLowerCase() === OrderType.ASC) {
-      return OrderType.ASC;
-    } else if (orderType.toLowerCase() === OrderType.DESC) {
-      return OrderType.DESC;
-    } else {
-      throw new QueryValueError('Value error: Sort type must be: "asc" or "desc"');
-    }
+  // filter parameters
+
+  public get filters(): QueryFilter {
+    return this._filters;
+  }
+
+  public get excludes(): QueryFilter {
+    return this._excludes;
+  }
+
+  // sort parameters
+
+  public get sort(): QuerySort {
+    return this._sort;
   }
 }

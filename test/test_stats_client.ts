@@ -17,12 +17,11 @@ import * as cfg from './config';
 
 // Mock the fetch API
 import * as fetchMock from 'fetch-mock';
-import { Zone, DoofinderParameters, StatsEvent } from '../src/types';
-import { isPlainObject } from '../src/util/is';
+import { Zone } from '../src/types';
 
 const ENDPOINT = 'https://eu1-search.doofinder.com/5/stats/';
 const TEST_DFID = 'ffffffffffffffffffffffffffffffff@product@ffffffffffffffffffffffffffffffff';
-const TEST_CLIENT = new Client({zone: Zone.EU1, apiKey: 'eu1-abcd'});
+const TEST_CLIENT = new Client({zone: Zone.EU1, key: 'eu1-abcd'});
 
 describe('StatsClient', () => {
   beforeEach(() => {
@@ -43,7 +42,7 @@ describe('StatsClient', () => {
   context('StatsClient inner workings', () => {
     it('should set the correct hashid when sent with new session', async () => {
       // given
-      const client = new Client({zone: Zone.EU1, apiKey: 'eu1-abcd'});
+      const client = new Client({zone: Zone.EU1, key: 'eu1-abcd'});
       let sc = new StatsClient(client);
 
       // when

@@ -1,13 +1,15 @@
 function demo({ Client, Query, Zone }) {
   const client = new Client({ zone: Zone.EU1 });
-  const query = new Query({hashid: 'c0604b71c273c1fb3ef13eb2adfa4452'});
+  const request = new Query({hashid: 'c0604b71c273c1fb3ef13eb2adfa4452'});
 
-  query.searchText('silla');
-  query.addFilter('brand', 'JANE');
-  query.addFilter('brand', 'RECARO');
-  query.queryCounter = 2;
+  request.text = 'silla';
+  request.filters.add('brand', 'JANE');
+  request.filters.add('brand', 'RECARO');
+  request.queryCounter = 2;
 
-  client.search(query).then(result => {
+  console.log(request.dump());
+
+  client.search(request).then(result => {
     console.log(result);
   });
 }

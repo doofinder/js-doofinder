@@ -1,6 +1,6 @@
 import { Client } from './client';
 import { GenericObject, StatsEvent } from './types';
-import { isDfid } from './util/is';
+import { isValidDoofinderId } from './util/is';
 
 const ERR_NO_SESSID = 'Session ID must be defined';
 const ERR_NO_HASHID = 'HashID must be defined';
@@ -103,7 +103,7 @@ export class StatsClient {
       params['hashid'] = hashid;
     }
 
-    if (isDfid(id)) {
+    if (isValidDoofinderId(id)) {
       params['dfid'] = id;
     } else if (datatype) {
       params['id'] = id;
