@@ -35,29 +35,29 @@ describe('Client', () => {
   context('Instantiation', () => {
     context('with invalid API key', () => {
       it('should break', (done) => {
-        (() => new Client({ apiKey: 'abcd' })).should.throw();
+        (() => new Client({ key: 'abcd' })).should.throw();
         done();
       });
     });
 
     context('with API Key and zone', () => {
-      it("should use API key's zone", (done) => {
-        const client = new Client({ zone: Zone.US1, apiKey: 'eu1-abcd' });
-        client.endpoint.should.equal(cfg.endpoint);
+      it("should use specified zone", (done) => {
+        const client = new Client({ zone: Zone.US1, key: 'eu1-abcd' });
+        client.endpoint.should.equal(cfg.endpoint.replace('eu1', 'us1'));
         done();
       });
     });
 
     context('HTTP Headers', () => {
       it('should add passed headers to the request', (done) => {
-        const client = new Client({ apiKey: cfg.apiKey, headers: { 'X-Name': 'John Smith' } });
+        const client = new Client({ key: cfg.key, headers: { 'X-Name': 'John Smith' } });
         client.headers['X-Name'].should.equal('John Smith');
         done()
       });
 
       it ("won't replace API Keys passed in options", (done) => {
         const client = new Client({
-          apiKey: cfg.apiKey,
+          key: cfg.key,
           headers: {
           'X-Name': 'John Smith',
           'Authorization': 'abc'
@@ -76,7 +76,7 @@ describe('Client', () => {
       });
 
       it('should use custom address if defined', (done) => {
-        const client = new Client({ apiKey: cfg.apiKey, serverAddress: 'localhost:4000' });
+        const client = new Client({ key: cfg.key, serverAddress: 'localhost:4000' });
         client.endpoint.should.equal('https://localhost:4000');
         done();
       });

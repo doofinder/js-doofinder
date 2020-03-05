@@ -26,7 +26,7 @@ describe('ClientPool', () => {
     context('with options', () => {
       it('should accept only serverAddress and headers options', (done) => {
         const pool = new ClientPool({
-          apiKey: 'blah',
+          key: 'blah',
           headers: {
             'X-Whatever': 'value'
           },
@@ -54,7 +54,7 @@ describe('ClientPool', () => {
         }
       };
 
-      (() => { pool.options.apiKey = 'blah' }).should.throw;
+      (() => { pool.options.key = 'blah' }).should.throw;
       (() => { pool.options.headers['Other'] = 'value' }).should.throw;
       (() => { pool.options.headers['X-Whatever'] = 'changed' }).should.throw;
 

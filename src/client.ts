@@ -16,7 +16,7 @@ export interface ClientHeaders extends GenericObject<string> {
  * Options that can be used to create a Client instance.
  */
 export interface ClientOptions {
-  apiKey: string;
+  key: string;
   zone: Zone;
   serverAddress: string;
   headers: Partial<ClientHeaders>;
@@ -55,7 +55,7 @@ export class Client {
    *                            zone:    "eu1"            # Search Zone (eu1,
    *                                                      # us1, ...).
    *
-   *                            apiKey:  "eu1-abcd..."    # Complete API key,
+   *                            key:  "eu1-abcd..."    # Complete API key,
    *                                                      # including zone and
    *                                                      # secret key for auth.
    *
@@ -74,30 +74,28 @@ export class Client {
    *                            }
    *                          }
    *
-   *                          If you use `apiKey` you can omit `zone` but one of
+   *                          If you use `key` you can omit `zone` but one of
    *                          them is required.
    *
    */
-  public constructor({ zone, serverAddress, headers }: Partial<ClientOptions>);
-  public constructor({ apiKey, serverAddress, headers }: Partial<ClientOptions>);
-  public constructor({ apiKey, zone, serverAddress, headers }: Partial<ClientOptions> = {}) {
-    if (apiKey) {
-      const [z, k] = (apiKey || '').split('-');
+  public constructor({ key, zone, serverAddress, headers }: Partial<ClientOptions> = {}) {
+    if (typeof key === 'string') {
+      const [zone, secret] = key.split('-').map(x => x.trim());
 
-      if (k && z && isValidZone(z)) {
-        this.zone = z as Zone;
-        this.secret = k;
-      } else {
-        throw new Error(`Invalid API key`);
+      if (zone && secret) {
+        this.zone = zone as Zone;
+        this.secret = secret;
+      } else if (zone) {
+        this.secret = zone;
       }
-    } else if (zone) {
-      if (isValidZone(zone)) {
-        this.zone = zone;
-      } else {
-        throw new Error(`Invalid zone '${zone}'`);
-      }
-    } else {
-      throw new Error(`Must configure API key or zone`);
+    }
+
+    if (typeof zone === 'string' && zone.trim()) {
+      this.zone = zone.trim() as Zone;
+    }
+
+    if (!isValidZone(this.zone)) {
+      throw new ClientError(`invalid zone '${this.zone}'`);
     }
 
     this.endpoint = this.__buildEndpoint(serverAddress);
