@@ -1,7 +1,7 @@
 import { GenericObject } from './types';
 import { isPlainObject, shallowEqual, isString } from './util/is';
 import { clone } from './util/clone';
-import { validateHashId } from './util/validators';
+import { validateHashId, validatePage, validateRpp } from './util/validators';
 
 // filters
 
@@ -372,6 +372,7 @@ export class Query {
   }
   public set defaults(value: QueryParams) {
     this._defaults = clone(value);
+    this.reset();
   }
 
   public constructor(params: QueryParams = {}) {
@@ -393,16 +394,13 @@ export class Query {
     this._filters.clear();
     this._excludes.clear();
     this._sort.clear();
-    this._params = clone(this.defaults);
+    this._params = {};
+    this.load(clone(this.defaults));
   }
 
   public load(params: QueryParams = {}) {
     Object.keys(params).forEach(key => {
-      if (key === 'page') {
-        this.page = params.page;
-      } else if (key === 'rpp') {
-        this.rpp = params.rpp;
-      } else if (key === 'nostats') {
+      if (key === 'nostats') {
         this.noStats = !!params.nostats;
       } else if (key === 'filter') {
         this._filters.setMany(params.filter);
@@ -418,14 +416,15 @@ export class Query {
     });
   }
 
-  public valid(): true | never {
-    validateHashId(this.hashid);
-    return true;
-  }
+  public dump(validate = false): QueryParams {
+    if (validate) {
+      validateHashId(this.hashid);
+      validatePage(this.page);
+      validateRpp(this.rpp);
+    }
 
-  public dump(): QueryParams {
     const data: QueryParams = {
-      ...this._params,
+      ...clone(this._params),
       type: this.types.dump(),
       filter: this.filters.dump(),
       exclude: this.excludes.dump(),
@@ -443,6 +442,14 @@ export class Query {
     return data;
   }
 
+  public copy(): Query {
+    const query = new Query();
+    query.defaults = clone(this.defaults);
+    query.reset();
+    query.load(this.dump());
+    return query;
+  }
+
   /**
    * Retrieve the value of a given parameter.
    *
@@ -456,6 +463,14 @@ export class Query {
 
   public setParam(name: keyof QueryParams, value: unknown): void {
     if (typeof value !== 'undefined') {
+      if (name === 'hashid') {
+        validateHashId(value as string);
+      } else if (name === 'page') {
+        validatePage(value as number);
+      } else if (name === 'rpp') {
+        validateRpp(value as number);
+      }
+
       this._params[name] = value;
     } else {
       delete this._params[name];
@@ -482,9 +497,6 @@ export class Query {
     return this.getParam('page');
   }
   public set page(value: number) {
-    if (typeof value !== 'number' || value <= 0) {
-      throw new QueryValueError('page must be an integer greater than 0');
-    }
     this.setParam('page', value);
   }
 
@@ -492,9 +504,6 @@ export class Query {
     return this.getParam('rpp');
   }
   public set rpp(value: number) {
-    if (typeof value !== 'number' || value <= 0 || value > 100) {
-      throw new QueryValueError('rpp must be a number between 1 and 100');
-    }
     this.setParam('rpp', value);
   }
 

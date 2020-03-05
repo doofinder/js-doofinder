@@ -11,3 +11,19 @@ export function validateHashId(hashid: string): boolean {
     return true;
   }
 }
+
+export function validatePage(page: number): boolean {
+  if (typeof page !== 'number' || page <= 0) {
+    throw new ValidationError('page must be an integer greater than 0');
+  } else {
+    return true;
+  }
+}
+
+export function validateRpp(rpp: number): boolean {
+  if (typeof rpp !== 'number' || rpp <= 0 || rpp > 100) {
+    throw new ValidationError('rpp must be a number between 1 and 100');
+  } else {
+    return true;
+  }
+}

@@ -189,11 +189,9 @@ export class Client {
       request = new Query(params);
     }
 
-    if (request.valid()) {
-      const qs = buildQueryString({ random: new Date().getTime(), ...request.dump() });
-      const response: Response = await this.request(this.buildUrl('/search', qs));
-      return new DoofinderResult(await response.json());
-    }
+    const qs = buildQueryString({ random: new Date().getTime(), ...request.dump(true) });
+    const response: Response = await this.request(this.buildUrl('/search', qs));
+    return new DoofinderResult(await response.json());
   }
 
   /**
@@ -228,6 +226,7 @@ export class Client {
   // https://doofinder.github.io/js-doofinder/stats
 
   public async stats(eventName: StatsEvent, params?: GenericObject<string>): Promise<Response> {
+    // TODO: validate params (hashid)
     const qs = buildQueryString({ random: new Date().getTime(), ...params });
     return await this.request(this.buildUrl(`/stats/${eventName}`, qs));
   }

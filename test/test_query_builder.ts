@@ -10,7 +10,6 @@ import * as cfg from './config';
 
 // required for tests
 import { Query, QueryFilter } from '../src';
-import {buildQueryString} from "../src/util/encode-params";
 
 describe('QueryFilter', () => {
   const filter = new QueryFilter();
@@ -20,14 +19,14 @@ describe('QueryFilter', () => {
   });
 
   context('empty QueryFilter', () => {
-    it('should dump as undefined', (done) => {
+    it('should dump as undefined', done => {
       expect(filter.dump()).to.be.undefined;
       done();
     })
   });
 
   context('set filters', () => {
-    it('can set terms filters from a single value', (done) => {
+    it('can set terms filters from a single value', done => {
       filter.set('brand', 'adidas');
       filter.set('number', 3);
       filter.dump().should.eql({
@@ -36,7 +35,7 @@ describe('QueryFilter', () => {
       });
       done();
     });
-    it('can set terms filters from an array of values', (done) => {
+    it('can set terms filters from an array of values', done => {
       filter.set('brand', ['adidas', 'nike']);
       filter.set('number', [1, 3, 5]);
       filter.dump().should.eql({
@@ -45,7 +44,7 @@ describe('QueryFilter', () => {
       });
       done();
     });
-    it('can set filters from a plain object', (done) => {
+    it('can set filters from a plain object', done => {
       filter.set('geo_distance', {
         distance: '200km',
         position: '40,-70'
@@ -66,13 +65,13 @@ describe('QueryFilter', () => {
       });
       done();
     });
-    it('throws if an empty object is passed', (done) => {
+    it('throws if an empty object is passed', done => {
       (() => {
         filter.set('wrong', {});
       }).should.throw();
       done();
     });
-    it(`can set unknown types at user's risk`, (done) => {
+    it(`can set unknown types at user's risk`, done => {
       const dt = new Date();
       filter.set('bool', true);
       filter.set('date', dt);
@@ -82,7 +81,7 @@ describe('QueryFilter', () => {
       });
       done();
     });
-    it(`can manage arrays of unknown types at user's risk`, (done) => {
+    it(`can manage arrays of unknown types at user's risk`, done => {
       filter.set('value', [{lte: 10}, {gte: 10}]);
       filter.get('value').should.eql([{lte: 10}, {gte: 10}]);
       done();
@@ -103,13 +102,13 @@ describe('QueryFilter', () => {
       filter.set('date', dt);
     });
 
-    it('can check if a filter is defined', (done) => {
+    it('can check if a filter is defined', done => {
       filter.has('brand').should.be.true;
       filter.has('unknown').should.be.false;
       done();
     });
 
-    it('can check if a filter contains a value', (done) => {
+    it('can check if a filter contains a value', done => {
       filter.contains('brand', 'adidas').should.be.true;
       filter.contains('brand', 'nike').should.be.true;
       filter.contains('brand', ['adidas', 'nike']).should.be.true;
@@ -137,7 +136,7 @@ describe('QueryFilter', () => {
       done();
     });
 
-    it('can check if a filter equals a value', (done) => {
+    it('can check if a filter equals a value', done => {
       filter.equals('brand', 'adidas').should.be.false;
       filter.equals('brand', ['adidas', 'nike']).should.be.true;
       filter.equals('brand', ['adidas', 'nike', 'puma']).should.be.false;
@@ -164,12 +163,12 @@ describe('QueryFilter', () => {
   });
 
   context('get filters', () => {
-    it('returns terms as an array', (done) => {
+    it('returns terms as an array', done => {
       filter.set('brand', 'adidas');
       filter.get('brand').should.eql(['adidas']);
       done();
     });
-    it('returns other values as they are', (done) => {
+    it('returns other values as they are', done => {
       filter.set('value', {gte: 10});
       filter.get('value').should.eql({gte: 10});
       done();
@@ -177,7 +176,7 @@ describe('QueryFilter', () => {
   });
 
   context('add filters', () => {
-    it('can add filters from a single value', (done) => {
+    it('can add filters from a single value', done => {
       filter.set('brand', 'adidas');
       filter.add('brand', 'adidas');
       filter.add('brand', 'nike');
@@ -188,7 +187,7 @@ describe('QueryFilter', () => {
       filter.get('value').should.eql({lte: 100});
       done();
     });
-    it('can add terms filters from an array', (done) => {
+    it('can add terms filters from an array', done => {
       filter.set('brand', 'adidas');
       filter.add('brand', ['adidas', 'nike']);
       filter.get('brand').should.eql(['adidas', 'nike']);
@@ -197,7 +196,7 @@ describe('QueryFilter', () => {
   });
 
   context('toggle filters', () => {
-    it(`toggles a filter given the exact value`, (done) => {
+    it(`toggles a filter given the exact value`, done => {
       filter.toggle('brand', 'adidas');
       filter.get('brand').should.eql(['adidas']);
       filter.toggle('brand', 'adidas');
@@ -230,41 +229,137 @@ describe('QueryFilter', () => {
 });
 
 describe('Query', () => {
-  context('empty Query', () => {
-    it('should dump defaults', (done) => {
+  context('defaults / reset', () => {
+    it('should dump defaults if empty', done => {
       const query = new Query();
       query.dump().should.eql(query.defaults);
       done();
     });
-  });
 
-  context('reset Query', () => {
-    it('should dump defaults', (done) => {
+    it('should dump defaults after a reset', done => {
       const query = new Query();
-      query.page = 10;
+      query.setParam('hello', 'world');
       query.reset();
       query.dump().should.eql(query.defaults);
-      query.text.should.equal('');
+      done();
+    });
+
+    it('supports changing defaults', done => {
+      const query = new Query();
+      const defaults = {
+        ...query.defaults,
+        hashid: cfg.hashid,
+        text: 'something',
+      };
+      query.defaults = defaults;
+      query.reset();
+      query.dump().should.eql(defaults);
       done();
     });
   });
 
-  context('new Query', () => {
-    it ('should accept initial params', (done) => {
-      const initial = {
-        query: 'chair',
-        page: 2,
-        rpp: 10,
-        type: ['product', 'article'],
-        filter: {
-          brand: ['adidas']
-        },
-        exclude: {
-          brand: ['nike']
-        }
+  context('initial / load params', () => {
+    const params = {
+      query: 'chair',
+      page: 2,
+      rpp: 10,
+      type: ['product', 'article'],
+      filter: {
+        brand: ['adidas']
+      },
+      exclude: {
+        brand: ['nike']
+      }
+    };
+
+    it('accepts initial parameters', done => {
+      const query = new Query(params);
+      query.dump().should.eql(params);
+      done();
+    });
+
+    it('accepts loading params', done => {
+      const query = new Query();
+      query.load(params);
+      query.dump().should.eql(params);
+      done();
+    });
+
+    it('preserves existing params on load', done => {
+      const query = new Query(params);
+      query.load({ page: 3 });
+      query.dump().should.eql({...params, page: 3 });
+      done();
+    });
+  });
+
+  context('copying', () => {
+    it('can be copied', done => {
+      const query = new Query();
+      const defaults = {
+        text: 'hello world!',
+        page: 1,
+        rpp: 100,
       };
-      const query = new Query(initial);
-      query.dump().should.eql(initial);
+      query.defaults = defaults;
+      query.reset();
+      query.page = 2;
+      query.types.add('product');
+      query.filters.add('brand', 'adidas');
+      const copy = query.copy();
+      copy.dump().should.eql(query.dump());
+      copy.reset();
+      copy.dump().should.eql(defaults);
+      done();
+    });
+  });
+
+  context('validation', () => {
+    it('validates hashid in setter', done => {
+      const query = new Query();
+      query.hashid = cfg.hashid;
+      query.hashid.should.equal(cfg.hashid);
+
+      (() => query.hashid = 'hello world').should.throw;
+      // @ts-ignore
+      (() => query.hashid = null).should.throw;
+      done();
+    });
+
+    it('validates page in setter', done => {
+      const query = new Query();
+      query.page = 3;
+      query.page.should.equal(3);
+
+      (() => query.page = 0).should.throw;
+      (() => query.page = -1).should.throw;
+      // @ts-ignore
+      (() => query.page = null).should.throw;
+      // @ts-ignore
+      (() => query.page = 'hello world').should.throw;
+      done();
+    });
+
+    it('validates rpp in setter', done => {
+      const query = new Query();
+      query.rpp = 5;
+      query.rpp.should.equal(5);
+
+      (() => query.rpp = 0).should.throw;
+      (() => query.rpp = -1).should.throw;
+      (() => query.rpp = 101).should.throw;
+      // @ts-ignore
+      (() => query.rpp = null).should.throw;
+      // @ts-ignore
+      (() => query.rpp = 'hello world').should.throw;
+      done();
+    });
+
+    it ('validates even via setParam', done => {
+      const query = new Query();
+      (() => query.setParam('hashid', 'hello world!')).should.throw;
+      (() => query.setParam('page', -1)).should.throw;
+      (() => query.setParam('rpp', 101)).should.throw;
       done();
     });
   });
@@ -276,25 +371,7 @@ describe('Query', () => {
       query.reset();
     });
 
-    it('can be copied', (done) => {
-      query.text = 'chair';
-      query.types.add('product');
-      query.filters.add('brand', 'adidas');
-
-      const copy = new Query(query.dump());
-      copy.dump().should.eql({
-        query: 'chair',
-        page: 1,
-        rpp: 20,
-        type: ['product'],
-        filter: {
-          brand: ['adidas']
-        }
-      });
-      done();
-    });
-
-    it('can be validated', (done) => {
+    it('can be validated', done => {
       // TODO: implement Query.isValid();
       // - params (hashid, page, rpp)
       // - filters (geo distance…)
@@ -303,19 +380,19 @@ describe('Query', () => {
     });
 
     context('query properties', () => {
-      it('properly sets basic parameters', (done) => {
-        query.hashid = 'asdf';
+      it('properly sets defaults parameters', done => {
+        query.hashid = cfg.hashid;
         query.text = 'blah';
         query.transformer = 'basic';
         query.queryName = 'match_and';
 
-        query.hashid.should.equal('asdf');
+        query.hashid.should.equal(cfg.hashid);
         query.text.should.equal('blah');
         query.transformer.should.equal('basic');
         query.queryName.should.equal('match_and');
 
         query.dump().should.eql({
-          hashid: 'asdf',
+          hashid: cfg.hashid,
           query: 'blah',
           page: 1,
           rpp: 20,
@@ -324,7 +401,10 @@ describe('Query', () => {
         });
         done();
       });
-      it('properly sets page', (done) => {
+      // it('properly sets hashid', done => {
+      //   query.hashid
+      // });
+      it('properly sets page', done => {
         query.page++;
         query.page.should.equal(2);
         query.page = 7;
@@ -338,7 +418,7 @@ describe('Query', () => {
 
         done();
       });
-      it('properly sets rpp', (done) => {
+      it('properly sets rpp', done => {
         query.rpp = 30;
         query.rpp.should.equal(30);
         query.dump().rpp.should.equal(30);
@@ -350,7 +430,7 @@ describe('Query', () => {
         (() => query.rpp = 'wrong').should.throw;
         done();
       });
-      it('properly sets query counter', (done) => {
+      it('properly sets query counter', done => {
         query.queryCounter++;
         expect(query.queryCounter).to.be.undefined;
         query.queryCounter = 1;
@@ -361,7 +441,7 @@ describe('Query', () => {
         expect(query.queryCounter).to.be.undefined;
         done();
       });
-      it('properly sets nostats flag', (done) => {
+      it('properly sets nostats flag', done => {
         query.noStats.should.be.false;
         query.noStats = true;
         query.noStats.should.be.true;
@@ -371,7 +451,7 @@ describe('Query', () => {
         expect(query.dump().nostats).to.be.undefined;
         done();
       });
-      it('properly sets types', (done) => {
+      it('properly sets types', done => {
         expect(query.dump().type).to.be.undefined;
 
         query.types.add('product');
@@ -384,7 +464,7 @@ describe('Query', () => {
     });
 
     context('custom params', () => {
-      it('can get and set custom params', (done) => {
+      it('can get and set custom params', done => {
         query.setParam('value', 3);
         query.getParam('value').should.equal(3);
 
@@ -396,7 +476,7 @@ describe('Query', () => {
 
         done();
       });
-      it('removes param if value is undefined', (done) => {
+      it('removes param if value is undefined', done => {
         query.load({
           value: 3,
           list: ['a', 'b', 'c'],
@@ -424,7 +504,7 @@ describe('Query', () => {
     });
 
     context('sorting', () => {
-      it('can load sorting and dump sorting', (done) => {
+      it('can load sorting and dump sorting', done => {
         query.load({
           sort: [
             'brand',
@@ -441,7 +521,7 @@ describe('Query', () => {
         query.dump().sort.should.eql(result);
         done();
       });
-      it('can set sorting', (done) => {
+      it('can set sorting', done => {
         query.sort.set('brand');
         query.sort.get().should.eql([{brand: 'asc'}]);
         query.sort.set([
@@ -456,7 +536,7 @@ describe('Query', () => {
         ]);
         done();
       });
-      it('can add sorting', (done) => {
+      it('can add sorting', done => {
         query.sort.add('brand');
         query.sort.add('best_price', 'desc');
         query.sort.add({geo_distance: {location: '40,-70', order: 'desc'}});
@@ -467,7 +547,7 @@ describe('Query', () => {
         ]);
         done();
       });
-      it('can reset sorting', (done) => {
+      it('can reset sorting', done => {
         query.sort.add('brand');
         query.sort.clear();
         query.sort.get().should.eql([]);
