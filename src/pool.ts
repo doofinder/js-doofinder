@@ -1,22 +1,35 @@
 import { Zone } from './types';
 import { Client, ClientOptions } from './client';
 
+export interface ClientPool {
+  options: Partial<ClientOptions>;
+  getClient(zone: Zone): Client;
+}
+
 /**
  * Manage clients for multiple zones as singletons with shared settings.
  *
  * @beta
  */
-export class ClientPool {
+class ClientPoolSingleton implements ClientPool {
+  private static _instance: ClientPoolSingleton;
+
   private _pool: Map<Zone, Client>;
   private _options: Partial<ClientOptions>;
 
   /**
    * Build a new pool.
-   * @param options - Optional client options shared by all clients.
    */
-  public constructor(options: Partial<ClientOptions> = {}) {
+  private constructor() {
     this._pool = new Map();
-    this.options = options;
+    this.options = {};
+  }
+
+  public static getInstance(): ClientPoolSingleton {
+    if (this._instance == null) {
+      this._instance = new ClientPoolSingleton();
+    }
+    return this._instance;
   }
 
   /**
@@ -61,3 +74,5 @@ export class ClientPool {
     return this._pool.get(zone);
   }
 }
+
+export const pool: ClientPool = ClientPoolSingleton.getInstance();
