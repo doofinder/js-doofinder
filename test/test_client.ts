@@ -33,29 +33,37 @@ describe('Client', () => {
   });
 
   context('Instantiation', () => {
-    context('with invalid API key', () => {
-      it('should break', (done) => {
+    context('with no zone', () => {
+      it('should break', done => {
         (() => new Client({ key: 'abcd' })).should.throw();
         done();
       });
     });
 
-    context('with API Key and zone', () => {
-      it("should use specified zone", (done) => {
-        const client = new Client({ zone: Zone.US1, key: 'eu1-abcd' });
-        client.endpoint.should.equal(cfg.endpoint.replace('eu1', 'us1'));
+    context('with key with zone and no zone', () => {
+      it('should use zone from key', done => {
+        const client = new Client({ key: 'us1-abcd' });
+        client.zone.should.equal('us1');
+        done();
+      })
+    });
+
+    context('with key with zone and zone', () => {
+      it("should use specified zone", done => {
+        const client = new Client({ key: 'eu1-abcd', zone: Zone.US1 });
+        client.zone.should.equal('us1');
         done();
       });
     });
 
     context('HTTP Headers', () => {
-      it('should add passed headers to the request', (done) => {
+      it('should add passed headers to the request', done => {
         const client = new Client({ key: cfg.key, headers: { 'X-Name': 'John Smith' } });
         client.headers['X-Name'].should.equal('John Smith');
         done()
       });
 
-      it ("won't replace API Keys passed in options", (done) => {
+      it ("won't replace API Keys passed in options", done => {
         const client = new Client({
           key: cfg.key,
           headers: {
@@ -69,13 +77,13 @@ describe('Client', () => {
     });
 
     context('Custom Address', () => {
-      it('should use default address if not defined', (done) => {
+      it('should use default address if not defined', done => {
         const client = cfg.getClient();
         client.endpoint.should.equal(cfg.endpoint);
         done();
       });
 
-      it('should use custom address if defined', (done) => {
+      it('should use custom address if defined', done => {
         const client = new Client({ key: cfg.key, serverAddress: 'localhost:4000' });
         client.endpoint.should.equal('https://localhost:4000');
         done();
