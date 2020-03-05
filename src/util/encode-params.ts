@@ -2,6 +2,7 @@ import { encode } from 'qss';
 
 import { isPlainObject } from './is';
 import { GenericObject } from '../types';
+import { clone } from './clone';
 
 /**
  * As qss is incapable of processing objects for query params, we preprocess
@@ -46,5 +47,15 @@ export function buildQueryString(paramsObj: GenericObject): string {
     throw new Error('Not an object');
   }
 
-  return encode(_processObject(paramsObj));
+  const params: GenericObject = clone(paramsObj);
+
+  for (const key in params) {
+    if (typeof params[key] === 'undefined') {
+      delete params[key];
+    } else if (params[key] === null) {
+      params[key] = '';
+    }
+  }
+
+  return encode(_processObject(params));
 }
