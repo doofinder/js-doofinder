@@ -8,6 +8,7 @@ should();
 
 // tests
 import { buildQueryString } from '../src/util/encode-params';
+import { GenericObject } from '../src';
 
 describe("buildQueryString function", () => {
   it("only accepts plain objects", done => {
@@ -120,20 +121,29 @@ describe("buildQueryString function", () => {
     done();
   });
 
-  it('removes undefined values but not falsy ones', done => {
-    const qs = buildQueryString({
+  it('does not dump undefined values but respects falsy values, in a non-destructive way', done => {
+    const params: GenericObject = {
       a: null,
       b: undefined,
       c: 0,
       d: false,
       e: ''
-    });
+    };
+    const qs = buildQueryString(params);
 
     qs.should.not.match(/a=null/);
     qs.should.match(/c=0/);
     qs.should.match(/d=false/);
     qs.should.match(/e=&?/);
     qs.should.not.match(/b=/);
+
+    params.should.eql({
+      a: null,
+      b: undefined,
+      c: 0,
+      d: false,
+      e: ''
+    });
 
     done();
   });
