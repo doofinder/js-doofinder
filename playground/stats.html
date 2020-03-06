@@ -6,9 +6,9 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Doofinder Library Playground</title>
   <script type="module">
-    import { StatsClient } from '../lib/index.mjs';
+    import { pool } from '../lib/index.mjs';
 
-    const stats = new StatsClient('eu1');
+    const stats = pool.getStatsClient('eu1');
     window.stats = stats;
   </script>
 </head>

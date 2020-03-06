@@ -1,7 +1,7 @@
 import { Client } from './client';
 import { pool } from './pool';
 import { GenericObject, StatsEvent, Zone } from './types';
-import { validateRequired, validateDoofinderId } from './util/validators';
+import { validateRequired, validateDoofinderId, ValidationError } from './util/validators';
 
 export interface StatsParams {
   session_id: string;
@@ -24,7 +24,11 @@ export class StatsClient {
   private _client: Client;
 
   public constructor(client: Client) {
-    this._client = client;
+    if (client instanceof Client) {
+      this._client = client;
+    } else {
+      throw new ValidationError(`expected an instance of Client`);
+    }
   }
 
   public get client(): Client {
