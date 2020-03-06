@@ -35,4 +35,28 @@ describe('ClientPool', () => {
 
     done();
   });
+
+  it('creates stats clients that depend on clients', done => {
+    let firstClient = pool.getClient(Zone.EU1);
+    let stats = pool.getStatsClient(Zone.EU1);
+
+    stats.client.should.equal(firstClient);
+    expect(stats.client.secret).to.be.undefined;
+
+    firstClient.secret = 'abc';
+    stats.client.secret.should.equal(firstClient.secret);
+
+    pool.options = {
+      headers: {
+        'X-Whatever': 'something'
+      }
+    }
+
+    stats = pool.getStatsClient(Zone.EU1);
+    stats.client.should.not.equal(firstClient);
+    Object.keys(stats.client.headers).should.include('X-Whatever');
+    expect(stats.client.secret).to.be.undefined;
+
+    done();
+  });
 });

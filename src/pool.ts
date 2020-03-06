@@ -1,5 +1,6 @@
 import { Zone } from './types';
 import { Client, ClientOptions } from './client';
+import { StatsClient } from './stats';
 
 /**
  * Manage clients for multiple zones as singletons with shared settings.
@@ -9,14 +10,16 @@ import { Client, ClientOptions } from './client';
 class ClientPoolSingleton {
   private static _instance: ClientPoolSingleton;
 
-  private _pool: Map<Zone, Client>;
+  private _clientsPool: Map<Zone, Client>;
+  private _statsClientsPool: Map<Zone, StatsClient>;
   private _options: Partial<ClientOptions>;
 
   /**
    * Build a new pool.
    */
   private constructor() {
-    this._pool = new Map();
+    this._clientsPool = new Map();
+    this._statsClientsPool = new Map();
     this.reset();
   }
 
@@ -62,11 +65,19 @@ class ClientPoolSingleton {
    * @beta
    */
   public getClient(zone: Zone): Client {
-    if (!this._pool.has(zone)) {
-      this._pool.set(zone, new Client({ ...this._options, zone }));
+    if (!this._clientsPool.has(zone)) {
+      this._clientsPool.set(zone, new Client({ ...this._options, zone }));
     }
 
-    return this._pool.get(zone);
+    return this._clientsPool.get(zone);
+  }
+
+  public getStatsClient(zone: Zone): StatsClient {
+    if (!this._statsClientsPool.has(zone)) {
+      this._statsClientsPool.set(zone, new StatsClient(this.getClient(zone)));
+    }
+
+    return this._statsClientsPool.get(zone);
   }
 
   public reset() {
@@ -74,7 +85,8 @@ class ClientPoolSingleton {
   }
 
   public clear() {
-    this._pool.clear();
+    this._clientsPool.clear();
+    this._statsClientsPool.clear();
   }
 }
 
