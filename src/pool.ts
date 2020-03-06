@@ -1,35 +1,27 @@
 import { Zone } from './types';
 import { Client, ClientOptions } from './client';
+import { StatsClient } from './stats';
 
-export interface ClientPool {
-  options: Partial<ClientOptions>;
-  getClient(zone: Zone): Client;
-}
+/*
+  GOLDEN RULE: Do not save references to clients obtained from the pool,
+  always request new ones.
+*/
 
 /**
  * Manage clients for multiple zones as singletons with shared settings.
  *
  * @beta
  */
-class ClientPoolSingleton implements ClientPool {
-  private static _instance: ClientPoolSingleton;
-
-  private _pool: Map<Zone, Client>;
-  private _options: Partial<ClientOptions>;
+export class ClientPool {
+  private static _clientsPool: Map<Zone, Client> = new Map();
+  private static _statsClientsPool: Map<Zone, StatsClient> = new Map();
+  private static _options: Partial<ClientOptions> = {};
 
   /**
    * Build a new pool.
    */
   private constructor() {
-    this._pool = new Map();
-    this.options = {};
-  }
-
-  public static getInstance(): ClientPoolSingleton {
-    if (this._instance == null) {
-      this._instance = new ClientPoolSingleton();
-    }
-    return this._instance;
+    throw new Error(`can't create instances of this class`);
   }
 
   /**
@@ -40,10 +32,10 @@ class ClientPoolSingleton implements ClientPool {
    *
    * @beta
    */
-  public get options(): Partial<ClientOptions> {
+  public static get options(): Partial<ClientOptions> {
     return this._options;
   }
-  public set options(value: Partial<ClientOptions>) {
+  public static set options(value: Partial<ClientOptions>) {
     const { serverAddress, headers } = value;
     const options: Partial<ClientOptions> = {};
 
@@ -57,7 +49,7 @@ class ClientPoolSingleton implements ClientPool {
 
     this._options = Object.freeze(options);
 
-    this._pool.clear();
+    this.clear();
   }
 
   /**
@@ -66,13 +58,28 @@ class ClientPoolSingleton implements ClientPool {
    * @param zone - A valid search zone.
    * @beta
    */
-  public getClient(zone: Zone): Client {
-    if (!this._pool.has(zone)) {
-      this._pool.set(zone, new Client({ ...this._options, zone }));
+  public static getClient(zone: Zone): Client {
+    if (!this._clientsPool.has(zone)) {
+      this._clientsPool.set(zone, new Client({ ...this._options, zone }));
     }
 
-    return this._pool.get(zone);
+    return this._clientsPool.get(zone);
+  }
+
+  public static getStatsClient(zone: Zone): StatsClient {
+    if (!this._statsClientsPool.has(zone)) {
+      this._statsClientsPool.set(zone, new StatsClient(this.getClient(zone)));
+    }
+
+    return this._statsClientsPool.get(zone);
+  }
+
+  public static reset() {
+    this.options = {};
+  }
+
+  public static clear() {
+    this._clientsPool.clear();
+    this._statsClientsPool.clear();
   }
 }
-
-export const pool: ClientPool = ClientPoolSingleton.getInstance();

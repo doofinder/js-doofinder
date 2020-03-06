@@ -13,29 +13,31 @@ should();
 
 // required for tests
 import { Client, ClientResponseError } from '../src/client';
-import { Query, QueryParams } from '../src/query';
+import { ClientPool } from '../src/pool';
+import { isPlainObject } from '../src/util/is';
+import { Query } from '../src/query';
+import { StatsEvent } from '../src/stats';
+import { ValidationError } from '../src/util/validators';
+import { Zone } from '../src/types';
 
 // config, utils & mocks
 import * as cfg from './config';
 
 // Mock the fetch API
 import * as fetchMock from 'fetch-mock';
-import { Zone, StatsEvent } from '../src/types';
-import { isPlainObject } from '../src/util/is';
-import { ValidationError } from '../src/util/validators';
-
-const host: string = 'https://eu1-search.doofinder.com';
 
 // test
 describe('Client', () => {
   afterEach(() => {
+    ClientPool.reset();
     fetchMock.reset();
   });
 
   context('Instantiation', () => {
     context('with no zone', () => {
-      it('should break', done => {
-        (() => new Client({ key: 'abcd' })).should.throw();
+      it('should use EU1', done => {
+        (new Client()).zone.should.equal(Zone.EU1);
+        (new Client({ key: 'abcd' })).zone.should.equal(Zone.EU1);
         done();
       });
     });
@@ -46,12 +48,22 @@ describe('Client', () => {
         client.zone.should.equal('us1');
         done();
       })
+
+      it('should break if api key is malformed', done => {
+        (() => new Client({ key: '-abcd' })).should.throw();
+        done();
+      });
+
+      it('should break if zone in api key does not exist', done => {
+        (() => new Client({ key: 'kk-abcd' })).should.throw();
+        done();
+      });
     });
 
     context('with key with zone and zone', () => {
-      it("should use specified zone", done => {
+      it("should use key's zone", done => {
         const client = new Client({ key: 'eu1-abcd', zone: Zone.US1 });
-        client.zone.should.equal('us1');
+        client.zone.should.equal('eu1');
         done();
       });
     });
@@ -93,25 +105,25 @@ describe('Client', () => {
 
   context('request() method', () => {
     it('throws error if bad request sent', done => {
-      const BAD_REQUEST_URL = `${host}/5/error`;
+      const BAD_REQUEST_URL = `${cfg.endpoint}/5/error`;
       fetchMock.get(BAD_REQUEST_URL, { body: { message: 'Invalid' }, status: 400 });
       cfg.getClient().request(BAD_REQUEST_URL).should.be.rejectedWith(ClientResponseError).notify(done);
     });
 
     it('throws error if wrong url sent', done => {
-      const NOT_FOUND_URL = `${host}/5/notfound`;
+      const NOT_FOUND_URL = `${cfg.endpoint}/5/notfound`;
       fetchMock.get(NOT_FOUND_URL,{body: {error: 'search engine not found'}, status: 404});
       cfg.getClient().request(NOT_FOUND_URL).should.be.rejectedWith(ClientResponseError).notify(done);
     });
 
     it('throws error in case of internal server error', done => {
-      const INTERNAL_ERROR_URL = `${host}/5/catastrophe`;
+      const INTERNAL_ERROR_URL = `${cfg.endpoint}/5/catastrophe`;
       fetchMock.get(INTERNAL_ERROR_URL, 503);
       cfg.getClient().request(INTERNAL_ERROR_URL).should.be.rejectedWith(ClientResponseError).notify(done);
     });
 
     it('handles response success', async () => {
-      const SUCCESS_URL = `${host}/5/success`;
+      const SUCCESS_URL = `${cfg.endpoint}/5/success`;
       fetchMock.get(SUCCESS_URL, { body: {}, status: 200 });
 
       const client = cfg.getClient();
@@ -132,30 +144,16 @@ describe('Client', () => {
       cfg.getClient().options('meh').should.be.rejectedWith(ValidationError).notify(done);
     });
 
-    it('works if called with hashid only', async () => {
-      const url = `${host}/5/options/${cfg.hashid}`;
-      fetchMock.get(url, {body: {}, status: 200});
-
-      const response = await cfg.getClient().options(cfg.hashid);
-
-      fetchMock.called(url).should.be.true;
-      expect(isPlainObject(response)).to.be.true;
-    });
-
-    it('works if called with a suffix', async () => {
-      const url = `${host}/5/options/${cfg.hashid}?example.com`;
-      fetchMock.get(url, {body: {}, status: 200});
-
-      const client = cfg.getClient();
-      const response = await client.options(cfg.hashid, 'example.com');
-
-      fetchMock.called(url).should.be.true;
-      expect(isPlainObject(response)).to.be.true;
+    it('works if called with valid hashid', done => {
+      const url = `${cfg.endpoint}/5/options/${cfg.hashid}`;
+      // @ts-ignore
+      fetchMock.get({url, query: {}}, {body: {}, status: 200});
+      cfg.getClient().options(cfg.hashid).should.be.fulfilled.notify(done);
     });
   });
 
   context('search()', () => {
-    const url = `glob:${host}/5/search?*random=*`;
+    const url = `glob:${cfg.endpoint}/5/search?*random=*`;
 
     beforeEach(() => {
       fetchMock.get(url, { body: {}, status: 200 });
@@ -177,7 +175,7 @@ describe('Client', () => {
 
   context('stats()', () => {
     it('works with sent params', done => {
-      const url = `${host}/5/stats/init`;
+      const url = `${cfg.endpoint}/5/stats/init`;
       const query = {
         hashid: cfg.hashid,
         session_id: 'abc'
@@ -185,6 +183,28 @@ describe('Client', () => {
       // @ts-ignore
       fetchMock.get({ url, query }, { body: {}, status: 200 });
       cfg.getClient().stats(StatsEvent.Init, { hashid: cfg.hashid, session_id: 'abc'}).should.be.fulfilled.notify(done);
+    });
+  });
+
+  context('topStats()', () => {
+    const query = {
+      hashid: cfg.hashid,
+      days: '7',
+      withresults: 'true'
+    }
+
+    it('searches', done => {
+      const url = `${cfg.endpoint}/5/topstats/searches`;
+      // @ts-ignore
+      fetchMock.get({ url, query }, { body: {}, status: 200 });
+      cfg.getClient().topStats('searches', query).should.be.fulfilled.notify(done);
+    });
+
+    it('clicks', done => {
+      const url = `${cfg.endpoint}/5/topstats/clicks`;
+      // @ts-ignore
+      fetchMock.get({ url, query }, { body: {}, status: 200 });
+      cfg.getClient().topStats('clicks', query).should.be.fulfilled.notify(done);
     });
   });
 });

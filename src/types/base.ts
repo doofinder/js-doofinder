@@ -7,18 +7,6 @@ export enum Zone {
 }
 
 /**
- * Types for the stats event
- *
- */
-export enum StatsEvent {
-  Init = 'init',
-  Click = 'click',
-  Checkout = 'checkout',
-  BannerDisplay = 'banner_display',
-  BannerClick = 'banner_click',
-}
-
-/**
  * This interface allow to use object[key: string] without
  * TypeScript giving problems about it.
  *
