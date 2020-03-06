@@ -246,8 +246,9 @@ export class Client {
    *                             and the second one is the response, if any.
    * @return {Promise<Response>}
    */
-  public async options(hashid: string, qs?: string): Promise<GenericObject> {
+  public async options(hashid: string): Promise<GenericObject> {
     validateHashId(hashid);
+    const qs = buildQueryString({ random: new Date().getTime() });
     const response = await this.request(this.buildUrl(`/options/${hashid}`, qs));
     return await response.json();
   }
@@ -267,9 +268,8 @@ export class Client {
   // https://doofinder.github.io/js-doofinder/stats
 
   public async stats(eventName: string, params: GenericObject<string>): Promise<Response> {
-    const { hashid, session_id } = params;
-    validateRequired(session_id, 'session_id is required');
-    validateHashId(hashid);
+    validateRequired(params.session_id, 'session_id is required');
+    validateHashId(params.hashid);
     const qs = buildQueryString({ random: new Date().getTime(), ...params });
     return await this.request(this.buildUrl(`/stats/${eventName}`, qs));
   }

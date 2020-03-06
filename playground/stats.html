@@ -8,7 +8,10 @@
   <script type="module">
     import { ClientPool } from '../lib/index.mjs';
 
+    const hashid = 'c0604b71c273c1fb3ef13eb2adfa4452';
     const stats = ClientPool.getStatsClient('eu1');
+
+    stats.client.options(hashid).then(value => console.log(value));
     window.stats = stats;
   </script>
 </head>

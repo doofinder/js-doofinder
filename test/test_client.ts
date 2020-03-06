@@ -144,25 +144,11 @@ describe('Client', () => {
       cfg.getClient().options('meh').should.be.rejectedWith(ValidationError).notify(done);
     });
 
-    it('works if called with hashid only', async () => {
+    it('works if called with valid hashid', done => {
       const url = `${cfg.endpoint}/5/options/${cfg.hashid}`;
-      fetchMock.get(url, {body: {}, status: 200});
-
-      const response = await cfg.getClient().options(cfg.hashid);
-
-      fetchMock.called(url).should.be.true;
-      expect(isPlainObject(response)).to.be.true;
-    });
-
-    it('works if called with a suffix', async () => {
-      const url = `${cfg.endpoint}/5/options/${cfg.hashid}?example.com`;
-      fetchMock.get(url, {body: {}, status: 200});
-
-      const client = cfg.getClient();
-      const response = await client.options(cfg.hashid, 'example.com');
-
-      fetchMock.called(url).should.be.true;
-      expect(isPlainObject(response)).to.be.true;
+      // @ts-ignore
+      fetchMock.get({url, query: {}}, {body: {}, status: 200});
+      cfg.getClient().options(cfg.hashid).should.be.fulfilled.notify(done);
     });
   });
 
