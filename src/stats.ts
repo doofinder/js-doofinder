@@ -7,20 +7,20 @@ export interface StatsParams {
   hashid: string;
 }
 
-export interface ClickStatsParamsDfid extends StatsParams {
+export interface ClickStatsParamsWithDfid extends StatsParams {
   dfid: string;
   query?: string;
   custom_results_id?: string | number;
 }
 
-export interface ClickStatsParamsId extends StatsParams {
+export interface ClickStatsParamsWithId extends StatsParams {
   id: string | number;
   datatype: string;
   query?: string;
   custom_results_id?: string | number;
 }
 
-export type ClickStatsParams = ClickStatsParamsDfid | ClickStatsParamsId;
+export type ClickStatsParams = ClickStatsParamsWithDfid | ClickStatsParamsWithId;
 
 export interface BannerStatsParams extends StatsParams {
   banner_id: string | number;
