@@ -2,6 +2,11 @@ import { Zone } from './types';
 import { Client, ClientOptions } from './client';
 import { StatsClient } from './stats';
 
+/*
+  GOLDEN RULE: Do not save references to clients obtained from the pool,
+  always request new ones.
+*/
+
 /**
  * Manage clients for multiple zones as singletons with shared settings.
  *
