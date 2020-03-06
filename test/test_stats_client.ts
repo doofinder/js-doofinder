@@ -80,11 +80,13 @@ describe('StatsClient', () => {
 
     it('should fail if no id is provided for the given datatype', done => {
       const query = { ...params, datatype };
+      // @ts-ignore
       stats.registerClick(query).should.be.rejectedWith(ValidationError).notify(done);
     });
 
     it('should fail if no datatype is provided for the given id', done => {
       const query = { ...params, id };
+      // @ts-ignore
       stats.registerClick(query).should.be.rejectedWith(ValidationError).notify(done);
     });
 

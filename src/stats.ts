@@ -1,6 +1,5 @@
 import { Client } from './client';
-import { pool } from './pool';
-import { GenericObject, StatsEvent, Zone } from './types';
+import { GenericObject, StatsEvent } from './types';
 import { validateRequired, validateDoofinderId, ValidationError } from './util/validators';
 
 export interface StatsParams {
@@ -8,13 +7,20 @@ export interface StatsParams {
   hashid: string;
 }
 
-export interface ClickStatsParams extends StatsParams {
-  dfid?: string;
-  id?: string | number;
-  datatype?: string;
+export interface ClickStatsParamsDfid extends StatsParams {
+  dfid: string;
   query?: string;
   custom_results_id?: string | number;
 }
+
+export interface ClickStatsParamsId extends StatsParams {
+  id: string | number;
+  datatype: string;
+  query?: string;
+  custom_results_id?: string | number;
+}
+
+export type ClickStatsParams = ClickStatsParamsDfid | ClickStatsParamsId;
 
 export interface BannerStatsParams extends StatsParams {
   banner_id: string | number;
@@ -68,15 +74,21 @@ export class StatsClient {
    *
    */
   public async registerClick(params: ClickStatsParams): Promise<Response> {
-    try {
+    if ('dfid' in params) {
       validateDoofinderId(params.dfid);
+      /* eslint-disable @typescript-eslint/ban-ts-ignore */
+      // @ts-ignore
       delete params.id;
+      // @ts-ignore
       delete params.datatype;
-    } catch (e) {
+      /* eslint-enable @typescript-eslint/ban-ts-ignore */
+    } else {
       validateRequired([params.id, params.datatype], 'dfid or id + datatype are required');
+      /* eslint-disable @typescript-eslint/ban-ts-ignore */
+      // @ts-ignore
       delete params.dfid;
+      /* eslint-enable @typescript-eslint/ban-ts-ignore */
     }
-
     return this.client.stats(StatsEvent.Click, params as GenericObject);
   }
 
