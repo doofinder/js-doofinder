@@ -13,17 +13,18 @@ should();
 
 // required for tests
 import { Client, ClientResponseError } from '../src/client';
+import { ClientPool } from '../src/pool';
+import { isPlainObject } from '../src/util/is';
 import { Query } from '../src/query';
+import { StatsEvent } from '../src/stats';
+import { ValidationError } from '../src/util/validators';
+import { Zone } from '../src/types';
 
 // config, utils & mocks
 import * as cfg from './config';
 
 // Mock the fetch API
 import * as fetchMock from 'fetch-mock';
-import { Zone, StatsEvent } from '../src/types';
-import { isPlainObject } from '../src/util/is';
-import { ValidationError } from '../src/util/validators';
-import { ClientPool } from '../src/pool';
 
 // test
 describe('Client', () => {

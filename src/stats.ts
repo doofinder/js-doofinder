@@ -1,6 +1,25 @@
 import { Client } from './client';
-import { GenericObject, StatsEvent } from './types';
+import { GenericObject } from './types';
 import { validateRequired, validateDoofinderId, ValidationError } from './util/validators';
+
+export enum StatsEvent {
+  Init = 'init',
+  Click = 'click',
+  Checkout = 'checkout',
+  BannerDisplay = 'banner_display',
+  BannerClick = 'banner_click',
+}
+
+/*
+For banner displays:
+/5/stats/img_display?hashid=<hashid>&img_id=<img_id>
+
+For banner clicks:
+/5/stats/img_click?hashid=<hashid>&img_id=<img_id>
+
+For redirections:
+/5/stats/redirect?hashid=<hashid>&redirection_id=<redirection_id>&query=<term>&link=<link>
+*/
 
 export interface StatsParams {
   session_id: string;

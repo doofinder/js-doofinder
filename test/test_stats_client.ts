@@ -10,15 +10,14 @@ should();
 
 // required for tests
 import { Client } from '../src/client';
-import { StatsClient } from '../src/stats';
+import { StatsClient, StatsEvent } from '../src/stats';
+import { ValidationError } from '../src/util/validators';
 
 // config, utils & mocks
 import * as cfg from './config';
 
 // Mock the fetch API
 import * as fetchMock from 'fetch-mock';
-import { StatsEvent } from '../src/types';
-import { ValidationError } from '../src/util/validators';
 
 const client = new Client({ key: 'eu1-0123456789abcdef' });
 const stats = new StatsClient(client);
