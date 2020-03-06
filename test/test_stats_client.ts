@@ -21,43 +21,15 @@ import { Zone, StatsEvent } from '../src/types';
 import { pool } from '../src/pool';
 import { ValidationError } from '../src/util/validators';
 
-describe('StatsClient', () => {
-  beforeEach(() => {
-    pool.reset();
-    // required to get https in requests and mocks to work
-    pool.getClient(Zone.EU1).secret = '0123456789abcdef';
-    pool.getClient(Zone.US1).secret = '0123456789abcdef';
-  });
+const client = new Client({ key: 'eu1-0123456789abcdef' });
+const stats = new StatsClient(client);
 
+describe('StatsClient', () => {
   afterEach(() => {
-    pool.reset();
     fetchMock.reset();
   });
 
-  context('client', () => {
-    it('is not affected by search client changes', done => {
-      pool.reset();
-
-      const stats = new StatsClient(Zone.EU1);
-      const client = stats.client;
-
-      Object.keys(stats.client.headers).length.should.equal(1);
-
-      pool.options = {
-        headers: {
-          'X-Whatever': 'some value'
-        }
-      }
-
-      stats.client.should.not.equal(client);
-      Object.keys(stats.client.headers).length.should.equal(2);
-      stats.client.headers['X-Whatever'].should.equal('some value');
-      done();
-    });
-  });
-
   context('session / checkout', () => {
-    const stats = new StatsClient(Zone.EU1);
     const query = {
       hashid: cfg.hashid,
       session_id: 'mysessionid'
@@ -77,8 +49,6 @@ describe('StatsClient', () => {
   });
 
   context('result clicks', () => {
-    const stats = new StatsClient(Zone.EU1);
-
     const url = `${cfg.endpoint}/5/stats/${StatsEvent.Click}`;
     const params = {
       session_id: 'mysessionid',
@@ -134,7 +104,6 @@ describe('StatsClient', () => {
   });
 
   context('banners', () => {
-    const stats = new StatsClient(Zone.EU1);
     const query = {
       session_id: 'mysessionid',
       hashid: cfg.hashid,

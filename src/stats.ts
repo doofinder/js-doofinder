@@ -21,14 +21,14 @@ export interface BannerStatsParams extends StatsParams {
 }
 
 export class StatsClient {
-  private _zone: Zone;
+  private _client: Client;
 
-  public constructor(zone: Zone) {
-    this._zone = zone;
+  public constructor(client: Client) {
+    this._client = client;
   }
 
   public get client(): Client {
-    return pool.getClient(this._zone);
+    return this._client;
   }
 
   /**
