@@ -7,27 +7,16 @@ import { StatsClient } from './stats';
  *
  * @beta
  */
-class ClientPoolSingleton {
-  private static _instance: ClientPoolSingleton;
-
-  private _clientsPool: Map<Zone, Client>;
-  private _statsClientsPool: Map<Zone, StatsClient>;
-  private _options: Partial<ClientOptions>;
+export class ClientPool {
+  private static _clientsPool: Map<Zone, Client> = new Map();
+  private static _statsClientsPool: Map<Zone, StatsClient> = new Map();
+  private static _options: Partial<ClientOptions> = {};
 
   /**
    * Build a new pool.
    */
   private constructor() {
-    this._clientsPool = new Map();
-    this._statsClientsPool = new Map();
-    this.reset();
-  }
-
-  public static getInstance(): ClientPoolSingleton {
-    if (this._instance == null) {
-      this._instance = new ClientPoolSingleton();
-    }
-    return this._instance;
+    throw new Error(`can't create instances of this class`);
   }
 
   /**
@@ -38,10 +27,10 @@ class ClientPoolSingleton {
    *
    * @beta
    */
-  public get options(): Partial<ClientOptions> {
+  public static get options(): Partial<ClientOptions> {
     return this._options;
   }
-  public set options(value: Partial<ClientOptions>) {
+  public static set options(value: Partial<ClientOptions>) {
     const { serverAddress, headers } = value;
     const options: Partial<ClientOptions> = {};
 
@@ -64,7 +53,7 @@ class ClientPoolSingleton {
    * @param zone - A valid search zone.
    * @beta
    */
-  public getClient(zone: Zone): Client {
+  public static getClient(zone: Zone): Client {
     if (!this._clientsPool.has(zone)) {
       this._clientsPool.set(zone, new Client({ ...this._options, zone }));
     }
@@ -72,7 +61,7 @@ class ClientPoolSingleton {
     return this._clientsPool.get(zone);
   }
 
-  public getStatsClient(zone: Zone): StatsClient {
+  public static getStatsClient(zone: Zone): StatsClient {
     if (!this._statsClientsPool.has(zone)) {
       this._statsClientsPool.set(zone, new StatsClient(this.getClient(zone)));
     }
@@ -80,16 +69,12 @@ class ClientPoolSingleton {
     return this._statsClientsPool.get(zone);
   }
 
-  public reset() {
+  public static reset() {
     this.options = {};
   }
 
-  public clear() {
+  public static clear() {
     this._clientsPool.clear();
     this._statsClientsPool.clear();
   }
 }
-
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface ClientPool extends ClientPoolSingleton {}
-export const pool: ClientPool = ClientPoolSingleton.getInstance();

@@ -17,8 +17,7 @@ import * as cfg from './config';
 
 // Mock the fetch API
 import * as fetchMock from 'fetch-mock';
-import { Zone, StatsEvent } from '../src/types';
-import { pool } from '../src/pool';
+import { StatsEvent } from '../src/types';
 import { ValidationError } from '../src/util/validators';
 
 const client = new Client({ key: 'eu1-0123456789abcdef' });

@@ -13,7 +13,7 @@ should();
 
 // required for tests
 import { Client, ClientResponseError } from '../src/client';
-import { Query, QueryParams } from '../src/query';
+import { Query } from '../src/query';
 
 // config, utils & mocks
 import * as cfg from './config';
@@ -23,12 +23,12 @@ import * as fetchMock from 'fetch-mock';
 import { Zone, StatsEvent } from '../src/types';
 import { isPlainObject } from '../src/util/is';
 import { ValidationError } from '../src/util/validators';
-import { pool } from '../src/pool';
+import { ClientPool } from '../src/pool';
 
 // test
 describe('Client', () => {
   afterEach(() => {
-    pool.reset();
+    ClientPool.reset();
     fetchMock.reset();
   });
 
