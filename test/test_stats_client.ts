@@ -17,180 +17,142 @@ import * as cfg from './config';
 
 // Mock the fetch API
 import * as fetchMock from 'fetch-mock';
-import { Zone } from '../src/types';
-
-const ENDPOINT = 'https://eu1-search.doofinder.com/5/stats/';
-const TEST_DFID = 'ffffffffffffffffffffffffffffffff@product@ffffffffffffffffffffffffffffffff';
-const TEST_CLIENT = new Client({zone: Zone.EU1, key: 'eu1-abcd'});
+import { Zone, StatsEvent } from '../src/types';
+import { pool } from '../src/pool';
+import { ValidationError } from '../src/util/validators';
 
 describe('StatsClient', () => {
   beforeEach(() => {
-    fetchMock.get(`glob:${ENDPOINT}init*`, {body: {value: true}, status: 200});
-    fetchMock.get(`glob:${ENDPOINT}checkout*`, {body: {value: true}, status: 200});
-    fetchMock.get(`glob:${ENDPOINT}click*`, {body: {value: true}, status: 200});
-    fetchMock.get(`glob:${ENDPOINT}banner_click*`, {body: {value: true}, status: 200});
-    fetchMock.get(`glob:${ENDPOINT}banner_display*`, {body: {value: true}, status: 200});
-    fetchMock.get(`glob:${ENDPOINT}*`,{body: {message: 'Invalid'}, status: 400});
-    fetchMock.get(`${ENDPOINT}notfound`,{body: {error: 'search engine not found'}, status: 404});
-    fetchMock.get(`${ENDPOINT}catastrophe`, 503);
+    pool.reset();
+    // required to get https in requests and mocks to work
+    pool.getClient(Zone.EU1).secret = '0123456789abcdef';
+    pool.getClient(Zone.US1).secret = '0123456789abcdef';
   });
 
   afterEach(() => {
+    pool.reset();
     fetchMock.reset();
   });
 
-  context('StatsClient inner workings', () => {
-    it('should set the correct hashid when sent with new session', async () => {
-      // given
-      const client = new Client({zone: Zone.EU1, key: 'eu1-abcd'});
-      let sc = new StatsClient(client);
+  context('client', () => {
+    it('is not affected by search client changes', done => {
+      pool.reset();
 
-      // when
-      const req = await sc.registerSession({sessionId: 'myInventedSessionId', hashid: 'ffffffffffffffffffffffffffffffff'});
+      const stats = new StatsClient(Zone.EU1);
+      const client = stats.client;
 
-      // then
-      fetchMock.lastUrl().should.include('hashid=ffffffffffffffffffffffffffffffff');
+      Object.keys(stats.client.headers).length.should.equal(1);
+
+      pool.options = {
+        headers: {
+          'X-Whatever': 'some value'
+        }
+      }
+
+      stats.client.should.not.equal(client);
+      Object.keys(stats.client.headers).length.should.equal(2);
+      stats.client.headers['X-Whatever'].should.equal('some value');
+      done();
     });
   });
 
-  context('StatsClient session requests', () => {
-    it('should make a correct init call in registerSession', async () => {
-      // given
-      let sc = new StatsClient(TEST_CLIENT);
+  context('session / checkout', () => {
+    const stats = new StatsClient(Zone.EU1);
+    const query = {
+      hashid: cfg.hashid,
+      session_id: 'mysessionid'
+    };
 
-      // when
-      const response = await sc.registerSession({sessionId: 'anotherSessionID', hashid: cfg.hashid});
+    it('should init session', done => {
+      // @ts-ignore
+      fetchMock.get({ url: `${cfg.endpoint}/5/stats/${StatsEvent.Init}`, query }, { body: {}, status: 200 });
+      stats.registerSession(query).should.be.fulfilled.notify(done);
+    });
 
-      // then
-      fetchMock.lastUrl().should.include('init');
-      fetchMock.lastUrl().should.include(`hashid=${cfg.hashid}`);
-      fetchMock.lastUrl().should.include('session_id=anotherSessionID');
-      response.status.should.be.equal(200);
+    it('should register checkout', done => {
+      // @ts-ignore
+      fetchMock.get({ url: `${cfg.endpoint}/5/stats/${StatsEvent.Checkout}`, query }, { body: {}, status: 200 });
+      stats.registerCheckout(query).should.be.fulfilled.notify(done);
     });
   });
 
-  context('StatsClient click registration', () => {
-    it('should make a correct click call in registerClick with dfid', async () => {
-      // given
-      let sc = new StatsClient(TEST_CLIENT);
+  context('result clicks', () => {
+    const stats = new StatsClient(Zone.EU1);
 
-      // when
-      const response = await sc.registerClick({sessionId: 'SessionID', id: TEST_DFID});
+    const url = `${cfg.endpoint}/5/stats/${StatsEvent.Click}`;
+    const params = {
+      session_id: 'mysessionid',
+      hashid: cfg.hashid,
+    }
 
-      // then
-      fetchMock.lastUrl().should.include('click');
-      fetchMock.lastUrl().should.include(`dfid=${TEST_DFID}`.replace(/@/g,'%40'));
-      fetchMock.lastUrl().should.include('session_id=SessionID');
-      response.status.should.be.equal(200);
+    const id = '42'; // fetch mock expects it as string or will fail even with the same url
+    const datatype = 'product';
+    const dfid = `${cfg.hashid}@${datatype}@a1d0c6e83f027327d8461063f4ac58a6`;
+
+    it('should properly register clicks given a dfid', done => {
+      const query = { ...params, dfid };
+      // @ts-ignore
+      fetchMock.get({ url, query }, { body: {}, status: 200 });
+      stats.registerClick(query).should.be.fulfilled.notify(done);
     });
 
-    it('registerClick should reject incorrect dfid', () => {
-      // given
-      let sc = new StatsClient(TEST_CLIENT);
-
-      // when
-      return sc.registerClick({sessionId: 'SessionID', id: TEST_DFID}).should.eventually.throw;
+    it('should properly register clicks given an id and a datatype', done => {
+      const query = { ...params, id, datatype };
+      // @ts-ignore
+      fetchMock.get({ url, query }, { body: {}, status: 200 });
+      stats.registerClick(query).should.be.fulfilled.notify(done);
     });
 
-    it('should make a correct click call in registerClick with id and datatype', async () => {
-      // given
-      let sc = new StatsClient(TEST_CLIENT);
-
-      // when
-      const response = await sc.registerClick({sessionId: 'SessionID',
-                                               id: 'SKU10044', datatype: 'product'});
-
-      // then
-      fetchMock.lastUrl().should.include('click');
-      fetchMock.lastUrl().should.include('id=SKU10044');
-      fetchMock.lastUrl().should.include('session_id=SessionID');
-      fetchMock.lastUrl().should.include('datatype=product');
-      response.status.should.be.equal(200);
+    it('should fail if a wrong dfid is provided', done => {
+      const query = { ...params, dfid: 'hello world' };
+      stats.registerClick(query).should.be.rejectedWith(ValidationError).notify(done);
     });
 
-    it('should add query correctly', async () => {
-      // given
-      let sc = new StatsClient(TEST_CLIENT);
-
-      // when
-      const response = await sc.registerClick({sessionId: 'SessionID',
-                                               id: 'SKU10044',
-                                               datatype: 'product',
-                                               query: 'hammer'});
-
-      // then
-      fetchMock.lastUrl().should.include('click');
-      fetchMock.lastUrl().should.include('id=SKU10044');
-      fetchMock.lastUrl().should.include('session_id=SessionID');
-      fetchMock.lastUrl().should.include('datatype=product');
-      fetchMock.lastUrl().should.include('query=hammer');
-      response.status.should.be.equal(200);
+    it('should fail if no id is provided for the given datatype', done => {
+      const query = { ...params, datatype };
+      stats.registerClick(query).should.be.rejectedWith(ValidationError).notify(done);
     });
 
-    it('should add custom results id correctly', async () => {
-      // given
-      let sc = new StatsClient(TEST_CLIENT);
+    it('should fail if no datatype is provided for the given id', done => {
+      const query = { ...params, id };
+      stats.registerClick(query).should.be.rejectedWith(ValidationError).notify(done);
+    });
 
-      // when
-      const response = await sc.registerClick({sessionId: 'SessionID',
-                                               id: 'SKU10044',
-                                               datatype: 'product',
-                                               query: 'hammer',
-                                               customResultsId: 140});
+    it('should allow sending the search query along with the rest of the parameters', done => {
+      const query = { ...params, dfid, query: 'hello world' };
+      // @ts-ignore
+      fetchMock.get({ url, query }, { body: {}, status: 200 });
+      stats.registerClick(query).should.be.fulfilled.notify(done);
+    });
 
-      // then
-      fetchMock.lastUrl().should.include('click');
-      fetchMock.lastUrl().should.include('id=SKU10044');
-      fetchMock.lastUrl().should.include('session_id=SessionID');
-      fetchMock.lastUrl().should.include('datatype=product');
-      fetchMock.lastUrl().should.include('query=hammer');
-      fetchMock.lastUrl().should.include('custom_results_id=140');
-      response.status.should.be.equal(200);
+    it('should allow sending a custom result id along with the rest of the parameters', done => {
+      const query = { ...params, dfid, custom_results_id: '21' };
+      // @ts-ignore
+      fetchMock.get({ url, query }, { body: {}, status: 200 });
+      stats.registerClick(query).should.be.fulfilled.notify(done);
     });
   });
 
-  context('should register checkouts correctly', () => {
-    it('passes commands as expected', async () => {
-      // given
-      let sc = new StatsClient(TEST_CLIENT);
+  context('banners', () => {
+    const stats = new StatsClient(Zone.EU1);
+    const query = {
+      session_id: 'mysessionid',
+      hashid: cfg.hashid,
+      banner_id: '33',
+    }
 
-      // when
-      const response = await sc.registerCheckout({sessionId: 'SessionID'});
-
-      // then
-      fetchMock.lastUrl().should.include('checkout');
-      fetchMock.lastUrl().should.include('session_id=SessionID');
-      response.status.should.be.equal(200);
-    });
-  });
-
-  context('should banner events correctly', () => {
-    it('registers banner displays as expected', async () => {
-      // given
-      let sc = new StatsClient(TEST_CLIENT);
-
-      // when
-      const response = await sc.registerBannerDisplayEvent({sessionId: 'SessionID', bannerId: 33});
-
-      // then
-      fetchMock.lastUrl().should.include('banner_display');
-      fetchMock.lastUrl().should.include('session_id=SessionID');
-      fetchMock.lastUrl().should.include('banner_id=33');
-      response.status.should.be.equal(200);
+    it('should properly register banner impressions', done => {
+      const url = `${cfg.endpoint}/5/stats/${StatsEvent.BannerDisplay}`;
+      // @ts-ignore
+      fetchMock.get({ url, query }, { body: {}, status: 200 });
+      stats.registerBannerDisplayEvent(query).should.be.fulfilled.notify(done);
     });
 
-    it('registers banner clicks as expected', async () => {
-      // given
-      let sc = new StatsClient(TEST_CLIENT);
-
-      // when
-      const response = await sc.registerBannerClickEvent({sessionId: 'SessionID', bannerId: 33});
-
-      // then
-      fetchMock.lastUrl().should.include('banner_click');
-      fetchMock.lastUrl().should.include('session_id=SessionID');
-      fetchMock.lastUrl().should.include('banner_id=33');
-      response.status.should.be.equal(200);
+    it('should properly register banner clicks', done => {
+      const url = `${cfg.endpoint}/5/stats/${StatsEvent.BannerClick}`;
+      // @ts-ignore
+      fetchMock.get({ url, query }, { body: {}, status: 200 });
+      stats.registerBannerClickEvent(query).should.be.fulfilled.notify(done);
     });
   });
 });

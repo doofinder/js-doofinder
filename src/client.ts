@@ -1,11 +1,11 @@
-import { Zone, GenericObject, StatsEvent } from './types';
+import { Zone, GenericObject } from './types';
 
 import { Query, QueryParams } from './query';
 import { DoofinderResult } from './result';
 
 import { buildQueryString } from './util/encode-params';
-import { isValidZone } from './util/is';
-import { validateHashId } from './util/validators';
+import { isValidZone, isString } from './util/is';
+import { validateHashId, validateRequired, ValidationError } from './util/validators';
 
 export interface ClientHeaders extends GenericObject<string> {
   Accept: string;
@@ -40,11 +40,78 @@ export class ClientResponseError extends Error {
  * This class allows searching and sending stats using the Doofinder service.
  */
 export class Client {
-  public version = 5;
-  public secret: string;
-  public zone: Zone;
-  public endpoint: string;
-  public headers: GenericObject<string>;
+  private _version = 5;
+  private _secret: string;
+  private _zone: Zone;
+  private _serverAddress: string;
+  private _endpoint: string;
+  private _headers: GenericObject<string>;
+
+  public get zone(): Zone {
+    return this._zone;
+  }
+  public set zone(value: Zone) {
+    if (typeof value !== undefined) {
+      if (isValidZone(value)) {
+        this._zone = value;
+        this._updateEndpoint();
+      } else {
+        throw new ClientError(`invalid zone '${value}'`);
+      }
+    }
+  }
+
+  public get secret(): string {
+    return this._secret;
+  }
+  public set secret(value: string) {
+    if (value != null && !isString(value)) {
+      throw new ValidationError(`invalid api key`);
+    } else if (value == null) {
+      this._secret = undefined;
+    } else {
+      const [zone, secret] = value.split('-').map(x => x.trim());
+
+      if (zone && secret) {
+        this.zone = zone as Zone;
+        this._secret = secret;
+      } else if (zone) {
+        this._secret = zone;
+      } else {
+        throw new ValidationError(`invalid api key`);
+      }
+    }
+
+    this._updateEndpoint();
+
+    if (this._headers) {
+      this._updateHeaders();
+    }
+  }
+
+  public get serverAddress(): string {
+    return this._serverAddress;
+  }
+  public set serverAddress(value: string) {
+    this._serverAddress = value;
+    this._updateEndpoint();
+  }
+
+  public get headers(): GenericObject<string> {
+    return this._headers;
+  }
+
+  public set headers(value: GenericObject<string>) {
+    this._headers = {
+      Accept: 'application/json',
+      ...value,
+    };
+    this._updateHeaders();
+  }
+
+  public get endpoint(): string {
+    return this._endpoint;
+  }
 
   /**
    * Constructor
@@ -79,35 +146,11 @@ export class Client {
    *
    */
   public constructor({ key, zone, serverAddress, headers }: Partial<ClientOptions> = {}) {
-    if (typeof key === 'string') {
-      const [zone, secret] = key.split('-').map(x => x.trim());
-
-      if (zone && secret) {
-        this.zone = zone as Zone;
-        this.secret = secret;
-      } else if (zone) {
-        this.secret = zone;
-      }
-    }
-
-    if (typeof zone === 'string' && zone.trim()) {
-      this.zone = zone.trim() as Zone;
-    }
-
-    if (!isValidZone(this.zone)) {
-      throw new ClientError(`invalid zone '${this.zone}'`);
-    }
-
-    this.endpoint = this.__buildEndpoint(serverAddress);
-
-    this.headers = {
-      Accept: 'application/json',
-      ...headers,
-    };
-
-    if (this.secret) {
-      this.headers.Authorization = this.secret;
-    }
+    // order matters!
+    this.zone = zone || Zone.EU1;
+    this.secret = key;
+    this.headers = headers || {};
+    this.serverAddress = serverAddress;
   }
 
   /**
@@ -223,8 +266,10 @@ export class Client {
   // ? Should this method accept StatsParameters or something like that?
   // https://doofinder.github.io/js-doofinder/stats
 
-  public async stats(eventName: StatsEvent, params?: GenericObject<string>): Promise<Response> {
-    // TODO: validate params (hashid)
+  public async stats(eventName: string, params: GenericObject<string>): Promise<Response> {
+    const { hashid, session_id } = params;
+    validateRequired(session_id, 'session_id is required');
+    validateHashId(hashid);
     const qs = buildQueryString({ random: new Date().getTime(), ...params });
     return await this.request(this.buildUrl(`/stats/${eventName}`, qs));
   }
@@ -238,17 +283,39 @@ export class Client {
    */
   public buildUrl(resource: string, querystring?: string): string {
     const qs = querystring ? `?${querystring}` : '';
-    return `${this.endpoint}/${this.version}${resource}${qs}`;
+    return `${this._endpoint}/${this._version}${resource}${qs}`;
   }
 
-  private __buildEndpoint(serverAddress: string): string {
-    let [protocol, address] = (serverAddress || `${this.zone}-search.doofinder.com`).split('://');
+  private _updateEndpoint(): void {
+    // ! DON'T USE PUBLIC PROPERTIES HERE TO PREVENT INFINITE LOOPS!
+
+    if (!this._serverAddress && !this._zone) {
+      throw new ClientError(`missing api key or search zone`);
+    }
+
+    let [protocol, address] = (this._serverAddress || `${this._zone}-search.doofinder.com`).split('://');
 
     if (!address) {
       address = protocol;
-      protocol = null;
+      protocol = '';
     }
 
-    return `${protocol || (this.secret ? 'https:' : '')}//${address}`;
+    if (this._secret) {
+      protocol = 'https:';
+    }
+
+    this._endpoint = `${protocol}//${address}`;
+  }
+
+  private _updateHeaders(): void {
+    if (this._secret) {
+      this._headers.Authorization = this._secret;
+    } else {
+      delete this._headers.Authorization;
+    }
+  }
+
+  public toString(): string {
+    return `Client(${this.endpoint}${this.secret ? ' (+secret)' : ''})`;
   }
 }

@@ -1,73 +1,53 @@
 import { Client } from './client';
-import { GenericObject, StatsEvent } from './types';
-import { isValidDoofinderId } from './util/is';
+import { pool } from './pool';
+import { GenericObject, StatsEvent, Zone } from './types';
+import { validateRequired, validateDoofinderId } from './util/validators';
 
-const ERR_NO_SESSID = 'Session ID must be defined';
-const ERR_NO_HASHID = 'HashID must be defined';
-
-interface BaseStatsParams {
-  sessionId: string;
-  hashid?: string;
+export interface StatsParams {
+  session_id: string;
+  hashid: string;
 }
 
-interface ClickStatsParams extends BaseStatsParams {
-  id: string;
+export interface ClickStatsParams extends StatsParams {
+  dfid?: string;
+  id?: string | number;
   datatype?: string;
   query?: string;
-  customResultsId?: string | number;
+  custom_results_id?: string | number;
 }
 
-interface BannerStatsParams extends BaseStatsParams {
-  bannerId: number;
+export interface BannerStatsParams extends StatsParams {
+  banner_id: string | number;
 }
 
 export class StatsClient {
-  private client: Client;
+  private _zone: Zone;
 
-  public constructor(client: Client) {
-    this.client = client;
+  public constructor(zone: Zone) {
+    this._zone = zone;
   }
 
-  /**
-   * Allows changing the current client we
-   * are using
-   *
-   * @param  {Object}   client    The new Doofinder Client to use
-   *
-   */
-  public use(client: Client): void {
-    this.client = client;
+  public get client(): Client {
+    return pool.getClient(this._zone);
   }
 
   /**
    * Registers a new session with Doofinder, and returns
    * the session ID generated for this session
    *
-   * @param   {String}     sessionId   The sessionId
+   * @param   {String}     session_id   The session_id
    *
    * @return  {String}     The newly generated Session ID
    */
-  public async registerSession({ sessionId, hashid }: BaseStatsParams): Promise<Response> {
-    if (!sessionId) {
-      throw new Error(ERR_NO_SESSID);
-    }
-
-    const params: GenericObject = {
-      session_id: sessionId,
-    };
-
-    if (hashid) {
-      params['hashid'] = hashid;
-    }
-
-    return this.client.stats(StatsEvent.Init, params);
+  public async registerSession(params: StatsParams): Promise<Response> {
+    return this.client.stats(StatsEvent.Init, params as GenericObject);
   }
 
   /**
    * Registers a click within this session, using the dfid
    * or the database id and datatype.
    *
-   * @param  {String}   sessionId           The sessionId
+   * @param  {String}   session_id           The session_id
    *
    * @param  {String}   id                  Id of the result or Doofinder's internal ID
    *                                        for the result.
@@ -83,114 +63,51 @@ export class StatsClient {
    *                                        being clicked.
    *
    */
-  public async registerClick({
-    sessionId,
-    hashid,
-    id,
-    datatype,
-    query,
-    customResultsId,
-  }: ClickStatsParams): Promise<Response> {
-    if (!sessionId) {
-      throw new Error(ERR_NO_SESSID);
+  public async registerClick(params: ClickStatsParams): Promise<Response> {
+    try {
+      validateDoofinderId(params.dfid);
+      delete params.id;
+      delete params.datatype;
+    } catch (e) {
+      validateRequired([params.id, params.datatype], 'dfid or id + datatype are required');
+      delete params.dfid;
     }
 
-    const params: GenericObject = {
-      session_id: sessionId,
-    };
-
-    if (hashid) {
-      params['hashid'] = hashid;
-    }
-
-    if (isValidDoofinderId(id)) {
-      params['dfid'] = id;
-    } else if (datatype) {
-      params['id'] = id;
-      params['datatype'] = datatype;
-    } else {
-      throw new Error('Must declare a dfid or an id and datatype');
-    }
-
-    if (query) {
-      params['query'] = query;
-    }
-
-    if (customResultsId) {
-      params['custom_results_id'] = customResultsId;
-    }
-
-    return this.client.stats(StatsEvent.Click, params);
+    return this.client.stats(StatsEvent.Click, params as GenericObject);
   }
 
   /**
    * Register a checkout within the session
    *
-   * @param   {String}    sessionId   Optional. The session ID
+   * @param   {String}    session_id   Optional. The session ID
    *
    */
-  public async registerCheckout({ sessionId, hashid }: BaseStatsParams): Promise<Response> {
-    if (!sessionId) {
-      throw new Error(ERR_NO_SESSID);
-    }
-
-    const params: GenericObject = {
-      session_id: sessionId,
-    };
-
-    if (hashid) {
-      params['hashid'] = hashid;
-    }
-
-    return this.client.stats(StatsEvent.Checkout, params);
+  public async registerCheckout(params: StatsParams): Promise<Response> {
+    return this.client.stats(StatsEvent.Checkout, params as GenericObject);
   }
 
   /**
    *
    * Register the display banner events
    *
-   * @param  {Number}    bannerId    The banner ID
+   * @param  {Number}    banner_id    The banner ID
    *
    */
-  public async registerBannerDisplayEvent({ sessionId, bannerId, hashid }: BannerStatsParams): Promise<Response> {
-    if (!sessionId) {
-      throw new Error(ERR_NO_SESSID);
-    }
-
-    const params: GenericObject = {
-      session_id: sessionId,
-      banner_id: bannerId,
-    };
-
-    if (hashid) {
-      params['hashid'] = hashid;
-    }
-
-    return this.client.stats(StatsEvent.BannerDisplay, params);
+  public async registerBannerDisplayEvent(params: BannerStatsParams): Promise<Response> {
+    validateRequired(params.banner_id, 'banner_id is required');
+    return this.client.stats(StatsEvent.BannerDisplay, params as GenericObject);
   }
 
   /**
    *
    * Register the display banner events
    *
-   * @param  {Number}    bannerId    The banner ID
+   * @param  {Number}    banner_id    The banner ID
    *
    */
-  public async registerBannerClickEvent({ sessionId, bannerId, hashid }: BannerStatsParams): Promise<Response> {
-    if (!sessionId) {
-      throw new Error(ERR_NO_SESSID);
-    }
-
-    const params: GenericObject = {
-      session_id: sessionId,
-      banner_id: bannerId,
-    };
-
-    if (hashid) {
-      params['hashid'] = hashid;
-    }
-
-    return this.client.stats(StatsEvent.BannerClick, params);
+  public async registerBannerClickEvent(params: BannerStatsParams): Promise<Response> {
+    validateRequired(params.banner_id, 'banner_id is required');
+    return this.client.stats(StatsEvent.BannerClick, params as GenericObject);
   }
 
   /**
@@ -200,19 +117,11 @@ export class StatsClient {
    * @param  {String}    eventName    The event name to register
    *
    * @param  {Object}    params       The parameters to send alongside.
-   *                                  It expects to have a sessionID and
+   *                                  It expects to have a session_id and
    *                                  a hashid
    *
    */
   public async registerEvent(eventName: string, params: GenericObject): Promise<Response> {
-    if (!('sessionId' in params)) {
-      throw new Error(ERR_NO_SESSID);
-    }
-
-    if (!('hashid' in params)) {
-      throw new Error(ERR_NO_HASHID);
-    }
-
     return this.client.stats(eventName as StatsEvent, params);
   }
 }

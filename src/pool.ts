@@ -1,17 +1,12 @@
 import { Zone } from './types';
 import { Client, ClientOptions } from './client';
 
-export interface ClientPool {
-  options: Partial<ClientOptions>;
-  getClient(zone: Zone): Client;
-}
-
 /**
  * Manage clients for multiple zones as singletons with shared settings.
  *
  * @beta
  */
-class ClientPoolSingleton implements ClientPool {
+class ClientPoolSingleton {
   private static _instance: ClientPoolSingleton;
 
   private _pool: Map<Zone, Client>;
@@ -22,7 +17,7 @@ class ClientPoolSingleton implements ClientPool {
    */
   private constructor() {
     this._pool = new Map();
-    this.options = {};
+    this.reset();
   }
 
   public static getInstance(): ClientPoolSingleton {
@@ -57,7 +52,7 @@ class ClientPoolSingleton implements ClientPool {
 
     this._options = Object.freeze(options);
 
-    this._pool.clear();
+    this.clear();
   }
 
   /**
@@ -73,6 +68,16 @@ class ClientPoolSingleton implements ClientPool {
 
     return this._pool.get(zone);
   }
+
+  public reset() {
+    this.options = {};
+  }
+
+  public clear() {
+    this._pool.clear();
+  }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface ClientPool extends ClientPoolSingleton {}
 export const pool: ClientPool = ClientPoolSingleton.getInstance();

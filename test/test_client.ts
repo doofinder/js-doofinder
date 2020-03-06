@@ -23,19 +23,20 @@ import * as fetchMock from 'fetch-mock';
 import { Zone, StatsEvent } from '../src/types';
 import { isPlainObject } from '../src/util/is';
 import { ValidationError } from '../src/util/validators';
-
-const host: string = 'https://eu1-search.doofinder.com';
+import { pool } from '../src/pool';
 
 // test
 describe('Client', () => {
   afterEach(() => {
+    pool.reset();
     fetchMock.reset();
   });
 
   context('Instantiation', () => {
     context('with no zone', () => {
-      it('should break', done => {
-        (() => new Client({ key: 'abcd' })).should.throw();
+      it('should use EU1', done => {
+        (new Client()).zone.should.equal(Zone.EU1);
+        (new Client({ key: 'abcd' })).zone.should.equal(Zone.EU1);
         done();
       });
     });
@@ -46,12 +47,22 @@ describe('Client', () => {
         client.zone.should.equal('us1');
         done();
       })
+
+      it('should break if api key is malformed', done => {
+        (() => new Client({ key: '-abcd' })).should.throw();
+        done();
+      });
+
+      it('should break if zone in api key does not exist', done => {
+        (() => new Client({ key: 'kk-abcd' })).should.throw();
+        done();
+      });
     });
 
     context('with key with zone and zone', () => {
-      it("should use specified zone", done => {
+      it("should use key's zone", done => {
         const client = new Client({ key: 'eu1-abcd', zone: Zone.US1 });
-        client.zone.should.equal('us1');
+        client.zone.should.equal('eu1');
         done();
       });
     });
@@ -93,25 +104,25 @@ describe('Client', () => {
 
   context('request() method', () => {
     it('throws error if bad request sent', done => {
-      const BAD_REQUEST_URL = `${host}/5/error`;
+      const BAD_REQUEST_URL = `${cfg.endpoint}/5/error`;
       fetchMock.get(BAD_REQUEST_URL, { body: { message: 'Invalid' }, status: 400 });
       cfg.getClient().request(BAD_REQUEST_URL).should.be.rejectedWith(ClientResponseError).notify(done);
     });
 
     it('throws error if wrong url sent', done => {
-      const NOT_FOUND_URL = `${host}/5/notfound`;
+      const NOT_FOUND_URL = `${cfg.endpoint}/5/notfound`;
       fetchMock.get(NOT_FOUND_URL,{body: {error: 'search engine not found'}, status: 404});
       cfg.getClient().request(NOT_FOUND_URL).should.be.rejectedWith(ClientResponseError).notify(done);
     });
 
     it('throws error in case of internal server error', done => {
-      const INTERNAL_ERROR_URL = `${host}/5/catastrophe`;
+      const INTERNAL_ERROR_URL = `${cfg.endpoint}/5/catastrophe`;
       fetchMock.get(INTERNAL_ERROR_URL, 503);
       cfg.getClient().request(INTERNAL_ERROR_URL).should.be.rejectedWith(ClientResponseError).notify(done);
     });
 
     it('handles response success', async () => {
-      const SUCCESS_URL = `${host}/5/success`;
+      const SUCCESS_URL = `${cfg.endpoint}/5/success`;
       fetchMock.get(SUCCESS_URL, { body: {}, status: 200 });
 
       const client = cfg.getClient();
@@ -133,7 +144,7 @@ describe('Client', () => {
     });
 
     it('works if called with hashid only', async () => {
-      const url = `${host}/5/options/${cfg.hashid}`;
+      const url = `${cfg.endpoint}/5/options/${cfg.hashid}`;
       fetchMock.get(url, {body: {}, status: 200});
 
       const response = await cfg.getClient().options(cfg.hashid);
@@ -143,7 +154,7 @@ describe('Client', () => {
     });
 
     it('works if called with a suffix', async () => {
-      const url = `${host}/5/options/${cfg.hashid}?example.com`;
+      const url = `${cfg.endpoint}/5/options/${cfg.hashid}?example.com`;
       fetchMock.get(url, {body: {}, status: 200});
 
       const client = cfg.getClient();
@@ -155,7 +166,7 @@ describe('Client', () => {
   });
 
   context('search()', () => {
-    const url = `glob:${host}/5/search?*random=*`;
+    const url = `glob:${cfg.endpoint}/5/search?*random=*`;
 
     beforeEach(() => {
       fetchMock.get(url, { body: {}, status: 200 });
@@ -177,7 +188,7 @@ describe('Client', () => {
 
   context('stats()', () => {
     it('works with sent params', done => {
-      const url = `${host}/5/stats/init`;
+      const url = `${cfg.endpoint}/5/stats/init`;
       const query = {
         hashid: cfg.hashid,
         session_id: 'abc'
