@@ -185,4 +185,26 @@ describe('Client', () => {
       cfg.getClient().stats(StatsEvent.Init, { hashid: cfg.hashid, session_id: 'abc'}).should.be.fulfilled.notify(done);
     });
   });
+
+  context('topStats()', () => {
+    const query = {
+      hashid: cfg.hashid,
+      days: '7',
+      withresults: 'true'
+    }
+
+    it('searches', done => {
+      const url = `${cfg.endpoint}/5/topstats/searches`;
+      // @ts-ignore
+      fetchMock.get({ url, query }, { body: {}, status: 200 });
+      cfg.getClient().topStats('searches', query).should.be.fulfilled.notify(done);
+    });
+
+    it('clicks', done => {
+      const url = `${cfg.endpoint}/5/topstats/clicks`;
+      // @ts-ignore
+      fetchMock.get({ url, query }, { body: {}, status: 200 });
+      cfg.getClient().topStats('clicks', query).should.be.fulfilled.notify(done);
+    });
+  });
 });

@@ -8,10 +8,12 @@
   <script type="module">
     import { ClientPool } from '../lib/index.mjs';
 
-    const hashid = 'c0604b71c273c1fb3ef13eb2adfa4452';
+    const hashid = '6a96504dc173514cab1e0198af92e6e9';
     const stats = ClientPool.getStatsClient('eu1');
+    const session_id = 'mysessid';
 
-    stats.client.options(hashid).then(value => console.log(value));
+    // waiting for API fix
+    stats.client.topStats('searches', { hashid, days: 7, withresult: true }).then(value => console.log(value));
     window.stats = stats;
   </script>
 </head>

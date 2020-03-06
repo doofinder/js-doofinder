@@ -9,14 +9,14 @@ import { ValidationError, validateHashId, validateDoofinderId, validatePage, val
 
 describe('Validators', () => {
   it('validates hashids', done => {
-    validateHashId('c0604b71c273c1fb3ef13eb2adfa4452').should.be.true;
+    validateHashId('6a96504dc173514cab1e0198af92e6e9').should.be.true;
     (() => validateHashId(null)).should.throw(ValidationError);
     (() => validateHashId(undefined)).should.throw(ValidationError);
     (() => validateHashId('hello world')).should.throw(ValidationError);
     done();
   });
   it('validates dfids', done => {
-    validateDoofinderId(`c0604b71c273c1fb3ef13eb2adfa4452@product@a1d0c6e83f027327d8461063f4ac58a6`).should.be.true;
+    validateDoofinderId(`6a96504dc173514cab1e0198af92e6e9@product@a1d0c6e83f027327d8461063f4ac58a6`).should.be.true;
     (() => validateDoofinderId(null)).should.throw(ValidationError);
     (() => validateDoofinderId(undefined)).should.throw(ValidationError);
     (() => validateDoofinderId('hello world')).should.throw(ValidationError);

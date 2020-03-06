@@ -36,6 +36,13 @@ export class ClientResponseError extends Error {
   }
 }
 
+export type TopStatsType = 'searches' | 'clicks';
+export interface TopStatsParams {
+  hashid: string;
+  days?: number | string;
+  withresult?: boolean | string;
+}
+
 /**
  * This class allows searching and sending stats using the Doofinder service.
  */
@@ -272,6 +279,12 @@ export class Client {
     validateHashId(params.hashid);
     const qs = buildQueryString({ random: new Date().getTime(), ...params });
     return await this.request(this.buildUrl(`/stats/${eventName}`, qs));
+  }
+
+  public async topStats(type: TopStatsType, params: TopStatsParams): Promise<Response> {
+    validateHashId(params.hashid);
+    const qs = buildQueryString({ random: new Date().getTime(), ...params });
+    return await this.request(this.buildUrl(`/topstats/${type}`, qs));
   }
 
   /**
