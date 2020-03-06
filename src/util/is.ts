@@ -23,12 +23,12 @@ const HASHID_REGEX = /^([0-9a-f]{32})(-.*)?/i;
  * doofinder ID
  *
  */
-export function isValidDoofinderId(value: string): boolean {
-  return DFID_REGEX.test(value);
+export function isValidDoofinderId(value: unknown): boolean {
+  return isString(value) && DFID_REGEX.test(value as string);
 }
 
-export function isValidHashId(value: string): boolean {
-  return HASHID_REGEX.test(value);
+export function isValidHashId(value: unknown): boolean {
+  return isString(value) && HASHID_REGEX.test(value as string);
 }
 /**
  * Copyright (c) 2013-present, Facebook, Inc.

@@ -1,8 +1,8 @@
-import { isValidHashId, isValidDoofinderId } from './is';
+import { isValidHashId, isValidDoofinderId, isNumber } from './is';
 
 export class ValidationError extends Error {}
 
-export function validateHashId(hashid: string): boolean {
+export function validateHashId(hashid: unknown): boolean {
   if (hashid == null) {
     throw new ValidationError(`hashid parameter is mandatory`);
   } else if (!isValidHashId(hashid)) {
@@ -12,23 +12,23 @@ export function validateHashId(hashid: string): boolean {
   }
 }
 
-export function validatePage(page: number): boolean {
-  if (typeof page !== 'number' || page <= 0) {
+export function validatePage(page: unknown): boolean {
+  if (!isNumber(page) || page <= 0) {
     throw new ValidationError('page must be an integer greater than 0');
   } else {
     return true;
   }
 }
 
-export function validateRpp(rpp: number): boolean {
-  if (typeof rpp !== 'number' || rpp <= 0 || rpp > 100) {
+export function validateRpp(rpp: unknown): boolean {
+  if (!isNumber(rpp) || rpp <= 0 || rpp > 100) {
     throw new ValidationError('rpp must be a number between 1 and 100');
   } else {
     return true;
   }
 }
 
-export function validateDoofinderId(value: string): boolean {
+export function validateDoofinderId(value: unknown): boolean {
   if (!isValidDoofinderId(value)) {
     throw new ValidationError('invalid doofinder id');
   } else {
