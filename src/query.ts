@@ -1,7 +1,7 @@
 import { GenericObject } from './types';
 import { isPlainObject, shallowEqual, isString } from './util/is';
 import { clone } from './util/clone';
-import { validateHashId, validatePage, validateRpp, ValidationError } from './util/validators';
+import { validateHashId, validatePage, validateRpp, validateItems } from './util/validators';
 
 // filters
 
@@ -441,8 +441,12 @@ export class Query {
       if (data[key].length === 0) delete data[key];
     });
 
-    if ('items' in data && 'query' in data) {
-      throw new ValidationError(`provide either query or items but not both`);
+    if ('items' in data) {
+      if (data.items.length > 0) {
+        delete data.query;
+      } else {
+        delete data.items;
+      }
     }
 
     return data;
@@ -467,7 +471,7 @@ export class Query {
     return this._params[name];
   }
 
-  public setParam(name: keyof QueryParams, value: unknown): void {
+  public setParam(name: keyof QueryParams, value?: unknown): void {
     if (typeof value !== 'undefined') {
       if (name === 'hashid') {
         validateHashId(value as string);
@@ -475,6 +479,8 @@ export class Query {
         validatePage(value as number);
       } else if (name === 'rpp') {
         validateRpp(value as number);
+      } else if (name === 'items') {
+        validateItems(value);
       }
 
       this._params[name] = value;

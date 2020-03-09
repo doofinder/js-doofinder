@@ -243,15 +243,10 @@ export class Client {
     }
 
     const data: GenericObject = request.dump(true);
-    const items = data.items;
-    delete data.items;
 
-    if (items != null) {
-      if (items.length === 0) {
-        throw new ClientError(`items query requires at least one item`);
-      } else {
-        payload = { items };
-      }
+    if (data.items != null) {
+      payload = { items: data.items };
+      delete data.items;
     }
 
     const qs = buildQueryString({ random: new Date().getTime(), ...data });
