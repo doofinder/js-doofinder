@@ -6,20 +6,10 @@ export enum StatsEvent {
   Init = 'init',
   Click = 'click',
   Checkout = 'checkout',
-  BannerDisplay = 'banner_display',
-  BannerClick = 'banner_click',
+  ImageDisplay = 'img_display',
+  ImageClick = 'img_click',
+  Redirection = 'redirect',
 }
-
-/*
-For banner displays:
-/5/stats/img_display?hashid=<hashid>&img_id=<img_id>
-
-For banner clicks:
-/5/stats/img_click?hashid=<hashid>&img_id=<img_id>
-
-For redirections:
-/5/stats/redirect?hashid=<hashid>&redirection_id=<redirection_id>&query=<term>&link=<link>
-*/
 
 export interface StatsParams {
   session_id: string;
@@ -41,8 +31,14 @@ export interface ClickStatsParamsWithId extends StatsParams {
 
 export type ClickStatsParams = ClickStatsParamsWithDfid | ClickStatsParamsWithId;
 
-export interface BannerStatsParams extends StatsParams {
-  banner_id: string | number;
+export interface ImageStatsParams extends StatsParams {
+  img_id: string | number;
+}
+
+export interface RedirectionStatsParams extends StatsParams {
+  redirection_id: string | number;
+  link: string;
+  query?: string;
 }
 
 export class StatsClient {
@@ -125,24 +121,29 @@ export class StatsClient {
    *
    * Register the display banner events
    *
-   * @param  {Number}    banner_id    The banner ID
+   * @param  {Number}    img_id    The banner ID
    *
    */
-  public async registerBannerDisplayEvent(params: BannerStatsParams): Promise<Response> {
-    validateRequired(params.banner_id, 'banner_id is required');
-    return this.client.stats(StatsEvent.BannerDisplay, params as GenericObject);
+  public async registerImageDisplay(params: ImageStatsParams): Promise<Response> {
+    validateRequired(params.img_id, 'img_id is required');
+    return this.client.stats(StatsEvent.ImageDisplay, params as GenericObject);
   }
 
   /**
    *
    * Register the display banner events
    *
-   * @param  {Number}    banner_id    The banner ID
+   * @param  {Number}    img_id    The banner ID
    *
    */
-  public async registerBannerClickEvent(params: BannerStatsParams): Promise<Response> {
-    validateRequired(params.banner_id, 'banner_id is required');
-    return this.client.stats(StatsEvent.BannerClick, params as GenericObject);
+  public async registerImageClick(params: ImageStatsParams): Promise<Response> {
+    validateRequired(params.img_id, 'img_id is required');
+    return this.client.stats(StatsEvent.ImageClick, params as GenericObject);
+  }
+
+  public async registerRedirection(params: RedirectionStatsParams): Promise<Response> {
+    validateRequired([params.redirection_id, params.link], 'redirection_id and link are required');
+    return this.client.stats(StatsEvent.Redirection, params as GenericObject);
   }
 
   /**

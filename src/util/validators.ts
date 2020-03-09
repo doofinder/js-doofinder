@@ -36,6 +36,14 @@ export function validateDoofinderId(value: unknown): boolean {
   }
 }
 
+export function validateItems(value: unknown): boolean {
+  if (!Array.isArray(value) || value.length !== value.filter(isValidDoofinderId).length) {
+    throw new ValidationError(`items must be an array of doofinder ids`);
+  } else {
+    return true;
+  }
+}
+
 export function validateRequired(values: unknown | unknown[], message: string): boolean {
   const errors = (Array.isArray(values) ? values : [values]).filter(value => {
     return value == null || (typeof value === 'string' && value.trim().length === 0);

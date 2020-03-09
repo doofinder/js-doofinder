@@ -107,21 +107,53 @@ describe('StatsClient', () => {
     const query = {
       session_id: 'mysessionid',
       hashid: cfg.hashid,
-      banner_id: '33',
+      img_id: '42',
     }
 
     it('should properly register banner impressions', done => {
-      const url = `${cfg.endpoint}/5/stats/${StatsEvent.BannerDisplay}`;
+      const url = `${cfg.endpoint}/5/stats/${StatsEvent.ImageDisplay}`;
       // @ts-ignore
       fetchMock.get({ url, query }, { body: {}, status: 200 });
-      stats.registerBannerDisplayEvent(query).should.be.fulfilled.notify(done);
+      stats.registerImageDisplay(query).should.be.fulfilled.notify(done);
     });
 
     it('should properly register banner clicks', done => {
-      const url = `${cfg.endpoint}/5/stats/${StatsEvent.BannerClick}`;
+      const url = `${cfg.endpoint}/5/stats/${StatsEvent.ImageClick}`;
       // @ts-ignore
       fetchMock.get({ url, query }, { body: {}, status: 200 });
-      stats.registerBannerClickEvent(query).should.be.fulfilled.notify(done);
+      stats.registerImageClick(query).should.be.fulfilled.notify(done);
     });
+  });
+
+  context('redirections', () => {
+    const url = `${cfg.endpoint}/5/stats/${StatsEvent.Redirection}`;
+    const query = {
+      session_id: 'mysessionid',
+      hashid: cfg.hashid,
+      redirection_id: '42',
+      link: 'https://www.google.com',
+    };
+
+    it('should properly register redirection executions', done => {
+      // @ts-ignore
+      fetchMock.get({ url, query }, { body: {}, status: 200 });
+      stats.registerRedirection(query).should.be.fulfilled.notify(done);
+    });
+
+    it('should allow passing a query parameter', done => {
+      const params = { ...query, query: 'hello world' };
+      // @ts-ignore
+      fetchMock.get({ url, query: params }, { body: {}, status: 200 });
+      stats.registerRedirection(params).should.be.fulfilled.notify(done);
+    });
+
+    it('should break if no redirection id nor link are passed', done => {
+      const params = { ...query };
+      delete params.redirection_id;
+      delete params.link;
+      // @ts-ignore
+      fetchMock.get({ url, query: params }, { body: {}, status: 200 });
+      stats.registerRedirection(params).should.be.rejectedWith(ValidationError).notify(done);
+    })
   });
 });

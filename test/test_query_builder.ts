@@ -10,6 +10,9 @@ import * as cfg from './config';
 
 // required for tests
 import { Query, QueryFilter } from '../src';
+import { ValidationError } from '../src/util/validators';
+
+const DFID: string = `6a96504dc173514cab1e0198af92e6e9@product@a1d0c6e83f027327d8461063f4ac58a6`;
 
 describe('QueryFilter', () => {
   const filter = new QueryFilter();
@@ -355,11 +358,31 @@ describe('Query', () => {
       done();
     });
 
+    it('validates items in setter', done => {
+      const query = new Query();
+
+      query.items = [DFID];
+      query.items.should.eql([DFID]);
+
+      query.items = [];
+      query.items.should.eql([]);
+
+      // @ts-ignore
+      query.items = undefined;
+      expect(query.items).to.be.undefined;
+
+      (() => query.items = ['hello world']).should.throw;
+      // @ts-ignore
+      (() => query.items = null).should.throw;
+      done();
+    })
+
     it ('validates even via setParam', done => {
       const query = new Query();
       (() => query.setParam('hashid', 'hello world!')).should.throw;
       (() => query.setParam('page', -1)).should.throw;
       (() => query.setParam('rpp', 101)).should.throw;
+      (() => query.setParam('items', 101)).should.throw;
       done();
     });
   });
@@ -372,10 +395,8 @@ describe('Query', () => {
     });
 
     it('can be validated', done => {
-      // TODO: implement Query.isValid();
-      // - params (hashid, page, rpp)
-      // - filters (geo distance…)
-      // - sort (geo distance…)
+      const query = new Query();
+      (() => query.dump(true)).should.throw(ValidationError);
       done();
     });
 
@@ -401,9 +422,6 @@ describe('Query', () => {
         });
         done();
       });
-      // it('properly sets hashid', done => {
-      //   query.hashid
-      // });
       it('properly sets page', done => {
         query.page++;
         query.page.should.equal(2);
@@ -552,6 +570,18 @@ describe('Query', () => {
         query.sort.clear();
         query.sort.get().should.eql([]);
         expect(query.dump().sort).to.be.undefined;
+        done();
+      });
+    });
+
+    context('items', () => {
+      it('removes query in dump if there are items', done => {
+        const query = new Query({ query: 'blah'});
+        query.items = [DFID];
+        query.text.should.equal('blah');
+        const data = query.dump();
+        data.items.should.eql([DFID]);
+        expect(data.query).to.be.undefined;
         done();
       });
     });
