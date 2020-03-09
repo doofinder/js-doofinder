@@ -167,11 +167,15 @@ export class Client {
    * @param  {String}   resource Resource to be called by GET.
    * @return {Promise<Response>}
    */
-  public async request(resource: string): Promise<Response> {
+  public async request(resource: string, payload?: GenericObject): Promise<Response> {
+    const method: string = payload ? 'POST' : 'GET';
+    const headers: GenericObject<string> = payload ? { 'Content-Type': 'application/json' } : {};
+    const body: string = payload ? JSON.stringify(payload) : undefined;
     const response = await fetch(resource, {
-      method: 'GET',
       mode: 'cors',
-      headers: Object.assign({}, this.headers),
+      headers: { ...this.headers, ...headers },
+      method,
+      body,
     });
 
     if (response.ok) {
@@ -230,6 +234,7 @@ export class Client {
    */
   public async search(params: Query | QueryParams): Promise<Response | DoofinderResult> {
     let request: Query;
+    let payload: GenericObject;
 
     if (params instanceof Query) {
       request = params;
@@ -237,8 +242,20 @@ export class Client {
       request = new Query(params);
     }
 
-    const qs = buildQueryString({ random: new Date().getTime(), ...request.dump(true) });
-    const response: Response = await this.request(this.buildUrl('/search', qs));
+    const data: GenericObject = request.dump(true);
+    const items = data.items;
+    delete data.items;
+
+    if (items != null) {
+      if (items.length === 0) {
+        throw new ClientError(`items query requires at least one item`);
+      } else {
+        payload = { items };
+      }
+    }
+
+    const qs = buildQueryString({ random: new Date().getTime(), ...data });
+    const response: Response = await this.request(this.buildUrl('/search', qs), payload);
     return new DoofinderResult(await response.json());
   }
 

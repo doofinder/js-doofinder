@@ -1,7 +1,7 @@
 import { GenericObject } from './types';
 import { isPlainObject, shallowEqual, isString } from './util/is';
 import { clone } from './util/clone';
-import { validateHashId, validatePage, validateRpp } from './util/validators';
+import { validateHashId, validatePage, validateRpp, ValidationError } from './util/validators';
 
 // filters
 
@@ -82,6 +82,8 @@ interface QueryParamsSpec {
   exclude: GenericObject<FilterValue>;
   // sort parameters
   sort: SortingInput[];
+  // items
+  items: string[];
   // custom parameters
   [key: string]: any;
 }
@@ -439,6 +441,10 @@ export class Query {
       if (data[key].length === 0) delete data[key];
     });
 
+    if ('items' in data && 'query' in data) {
+      throw new ValidationError(`provide either query or items but not both`);
+    }
+
     return data;
   }
 
@@ -491,6 +497,13 @@ export class Query {
   }
   public set text(value: string) {
     this.setParam('query', value);
+  }
+
+  public get items(): string[] {
+    return this.getParam('items');
+  }
+  public set items(value: string[]) {
+    this.setParam('items', value);
   }
 
   public get page(): number {
