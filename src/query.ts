@@ -1,60 +1,20 @@
-import { GenericObject } from './types';
-import { isPlainObject, shallowEqual, isString } from './util/is';
+import { GenericObject } from './types/base';
+import {
+  FilterInputValue,
+  SortingInput,
+  TermsFilterInputValue,
+  Sorting,
+  FieldSorting,
+  GeoSorting,
+  SortOrder,
+  GeoSortOrder,
+  RangeFilterInputValue,
+  GeoDistanceFilterInputValue,
+} from './types/request';
+
 import { clone } from './util/clone';
+import { isPlainObject, shallowEqual, isString } from './util/is';
 import { validateHashId, validatePage, validateRpp, validateItems } from './util/validators';
-
-// filters
-
-export interface RangeFilter {
-  lte?: number;
-  gte?: number;
-  lt?: number;
-  gt?: number;
-}
-
-export interface GeoDistance {
-  [field: string]: string;
-  distance: string;
-}
-
-// filters: internal
-
-export type TermsFilter = Set<string | number>;
-
-export type DataTypeSet = Set<string>;
-
-export type Filter = TermsFilter | RangeFilter | GeoDistance;
-
-// filters: external
-
-export type TermsFilterValue = string | number | string[] | number[];
-
-/**
- * All the possibles values to assign to the Filter.
- */
-export type FilterValue = TermsFilterValue | RangeFilter | GeoDistance;
-
-// sorting
-
-export type SortOrder = 'asc' | 'desc';
-
-export interface GeoSortOrder {
-  [field: string]: string;
-  order: SortOrder;
-}
-
-// is this _geo_distance instead???
-export interface GeoSorting {
-  geo_distance: GeoSortOrder;
-}
-
-export interface FieldSorting {
-  [field: string]: SortOrder;
-}
-
-export type Sorting = FieldSorting | GeoSorting;
-
-export type SortingInput = string | Sorting;
 
 // exceptions
 
@@ -78,8 +38,8 @@ interface QueryParamsSpec {
   nostats: boolean;
   type: string | string[];
   // filter parameters
-  filter: GenericObject<FilterValue>;
-  exclude: GenericObject<FilterValue>;
+  filter: GenericObject<FilterInputValue>;
+  exclude: GenericObject<FilterInputValue>;
   // sort parameters
   sort: SortingInput[];
   // items
@@ -90,14 +50,17 @@ interface QueryParamsSpec {
 
 export type QueryParams = Partial<QueryParamsSpec>;
 
+type TermsQueryFilter = Set<string | number>;
+type QueryFilterValue = TermsQueryFilter | RangeFilterInputValue | GeoDistanceFilterInputValue;
+
 /**
  * Manage filters applied to a query.
  * @beta
  */
 export class QueryFilter {
-  private _filters: Map<string, Filter> = new Map();
+  private _filters: Map<string, QueryFilterValue> = new Map();
 
-  public get(name: string): FilterValue | unknown {
+  public get(name: string): FilterInputValue | unknown {
     return this._denormalize(this._filters.get(name));
   }
 
@@ -112,7 +75,7 @@ export class QueryFilter {
    * @param value - Value of the filter.
    * @beta
    */
-  public set(name: string, value: FilterValue | unknown): void {
+  public set(name: string, value: FilterInputValue | unknown): void {
     const normalized = this._normalize(value);
     if (normalized instanceof Set) {
       this._filters.set(name, normalized);
@@ -127,11 +90,11 @@ export class QueryFilter {
     return this._filters.has(name);
   }
 
-  public contains(name: string, value: FilterValue | unknown): boolean {
+  public contains(name: string, value: FilterInputValue | unknown): boolean {
     return this.has(name) && this._filterContainsOrEqualsValue(name, value, false);
   }
 
-  public equals(name: string, value: FilterValue | unknown): boolean {
+  public equals(name: string, value: FilterInputValue | unknown): boolean {
     return this.has(name) && this._filterContainsOrEqualsValue(name, value, true);
   }
 
@@ -148,20 +111,20 @@ export class QueryFilter {
    * @param value - Value to add to the filter.
    * @beta
    */
-  public add(name: string, value: FilterValue | unknown): void {
+  public add(name: string, value: FilterInputValue | unknown): void {
     if (!(this._filters.get(name) instanceof Set)) {
       this.set(name, value);
     } else {
-      const existing: TermsFilter = (this._filters.get(name) || []) as TermsFilter;
-      const added: TermsFilter = this._normalize(value as TermsFilterValue);
+      const existing: TermsQueryFilter = (this._filters.get(name) || []) as TermsQueryFilter;
+      const added: TermsQueryFilter = this._normalize(value as TermsFilterInputValue);
       this._filters.set(name, new Set([...existing, ...added]));
     }
   }
 
-  public remove(name: string, value?: FilterValue) {
+  public remove(name: string, value?: FilterInputValue) {
     const filter = this._filters.get(name);
     if (filter instanceof Set && value != null) {
-      for (const term of this._normalizeTerms(value as TermsFilterValue)) {
+      for (const term of this._normalizeTerms(value as TermsFilterInputValue)) {
         filter.delete(term);
       }
     } else {
@@ -171,7 +134,7 @@ export class QueryFilter {
     }
   }
 
-  public toggle(name: string, value: FilterValue | unknown) {
+  public toggle(name: string, value: FilterInputValue | unknown) {
     if (this.has(name)) {
       if (this.equals(name, value)) {
         this.remove(name);
@@ -187,7 +150,7 @@ export class QueryFilter {
     this._filters.clear();
   }
 
-  public setMany(data: GenericObject<FilterValue>, replace = false) {
+  public setMany(data: GenericObject<FilterInputValue>, replace = false) {
     if (replace) {
       this.clear();
     }
@@ -197,7 +160,7 @@ export class QueryFilter {
   }
 
   public dump() {
-    const data: GenericObject<FilterValue> = {};
+    const data: GenericObject<FilterInputValue> = {};
     this._filters.forEach((value, key) => {
       data[key] = this._denormalize(value);
     });
@@ -214,7 +177,7 @@ export class QueryFilter {
     return Array.isArray(value) && value.filter(this._isTerm).length === value.length;
   }
 
-  private _normalize(value: any): Filter | any {
+  private _normalize(value: any): QueryFilterValue | any {
     if (this._isTerm(value)) {
       return new Set([value]);
     } else if (this._isTermsArray(value)) {
@@ -224,11 +187,15 @@ export class QueryFilter {
     }
   }
 
-  private _denormalize(value: Filter | unknown): FilterValue | unknown {
+  private _denormalize(value: QueryFilterValue | unknown): FilterInputValue | unknown {
     return value instanceof Set ? [...value] : value;
   }
 
-  private _filterContainsOrEqualsValue(name: string, value: FilterValue | unknown, checkEquality: boolean): boolean {
+  private _filterContainsOrEqualsValue(
+    name: string,
+    value: FilterInputValue | unknown,
+    checkEquality: boolean
+  ): boolean {
     const normalized = this._normalize(value);
     const filterValue = this._filters.get(name);
 
@@ -249,7 +216,7 @@ export class QueryFilter {
     }
   }
 
-  private _normalizeTerms(value: TermsFilterValue): TermsFilter {
+  private _normalizeTerms(value: TermsFilterInputValue): TermsQueryFilter {
     return new Set(Array.isArray(value) ? value : [value]);
   }
 }

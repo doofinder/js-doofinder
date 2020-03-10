@@ -1,7 +1,7 @@
-import { Zone, GenericObject } from './types';
+import { Zone, GenericObject, SearchResponse, RawSearchResponse } from './types';
 
 import { Query, QueryParams } from './query';
-import { DoofinderResult } from './result';
+import { processResponse } from './response';
 
 import { buildQueryString } from './util/encode-params';
 import { isValidZone, isString } from './util/is';
@@ -232,7 +232,7 @@ export class Client {
    *
    * @return {Promise<Response>}
    */
-  public async search(params: Query | QueryParams): Promise<Response | DoofinderResult> {
+  public async search(params: Query | QueryParams): Promise<SearchResponse> {
     let request: Query;
     let payload: GenericObject;
 
@@ -251,7 +251,7 @@ export class Client {
 
     const qs = buildQueryString({ random: new Date().getTime(), ...data });
     const response: Response = await this.request(this.buildUrl('/search', qs), payload);
-    return new DoofinderResult(await response.json());
+    return processResponse((await response.json()) as RawSearchResponse);
   }
 
   /**

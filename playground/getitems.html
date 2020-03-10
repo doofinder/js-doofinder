@@ -11,8 +11,8 @@
     const client = ClientPool.getClient('eu1');
     const hashid = '6a96504dc173514cab1e0198af92e6e9';
 
-    client.search({ hashid, query: 'silla' }).then(console.log);
-    client.search({ hashid, items: [
+    client.search({ hashid, query: 'silla', transformer: 'onlyid' }).then(console.log);
+    client.search({ hashid, transformer: 'basic', items: [
       `${hashid}@product@f7e47cabc89aa734c3c9aec9aa9692c0`
     ]}).then(console.log);
   </script>

@@ -1,37 +1,34 @@
-interface RangeFilter {
-  from: number;
-  to: number;
-}
-
-/**
- * Defines the fields for a facet
- * that is a range. Beware, we need
- * either one of the lt or lte fields
- * and either one of the gt or gte fields
- */
-export interface RangeFacet {
+export interface RangeFilterInputValue {
   lte?: number;
   gte?: number;
   lt?: number;
   gt?: number;
 }
 
-/**
- * Type definition of a single facet
- */
-export type FacetOption = RangeFacet | string[] | number[] | string | number;
-
-/**
- * Type holding all the current facets
- */
-export interface Facet {
-  [facetName: string]: FacetOption;
+export interface GeoDistanceFilterInputValue {
+  [field: string]: string;
+  distance: string;
 }
 
-/**
- * Doofinder Filter definition
- *
- */
-export interface RequestFiltersObject {
-  [field: string]: string | number | string[] | number[] | RangeFilter;
+export type TermsFilterInputValue = string | number | string[] | number[];
+export type FilterInputValue = TermsFilterInputValue | RangeFilterInputValue | GeoDistanceFilterInputValue;
+
+export type SortOrder = 'asc' | 'desc';
+
+export interface GeoSortOrder {
+  [field: string]: string;
+  order: SortOrder;
 }
+
+// is this _geo_distance instead???
+export interface GeoSorting {
+  geo_distance: GeoSortOrder;
+}
+
+export interface FieldSorting {
+  [field: string]: SortOrder;
+}
+
+export type Sorting = FieldSorting | GeoSorting;
+
+export type SortingInput = string | Sorting;
