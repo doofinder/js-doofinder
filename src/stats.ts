@@ -1,5 +1,6 @@
+import { GenericObject } from './types/base';
+
 import { Client } from './client';
-import { GenericObject } from './types';
 import { validateRequired, validateDoofinderId, ValidationError } from './util/validators';
 
 export enum StatsEvent {

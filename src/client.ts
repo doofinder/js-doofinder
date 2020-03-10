@@ -1,4 +1,5 @@
-import { Zone, GenericObject, SearchResponse, RawSearchResponse } from './types';
+import { GenericObject, Zone } from './types/base';
+import { SearchResponse, RawSearchResponse } from './types/response';
 
 import { Query, QueryParams } from './query';
 import { processResponse } from './response';
