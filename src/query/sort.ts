@@ -40,7 +40,7 @@ export class QuerySort {
 
   public add(value: FieldSorting | GeoSorting): number;
   public add(value: string, order?: SortOrder): number;
-  public add(value: string | SortingInput, order?: SortOrder): number {
+  public add(value: SortingInput, order?: SortOrder): number {
     if (typeof value === 'string') {
       return this._addFieldSorting(value, order);
     } else if (this._isLikeSorting(value)) {
