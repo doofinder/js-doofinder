@@ -4,10 +4,12 @@ export * from './query';
 export * from './stats';
 
 /* eslint-disable prettier/prettier */
-export type { GenericObject } from './types';
 export type {
+  GenericObject,
   RangeFilter,
   GeoDistanceFilter,
+} from './types';
+export type {
   RangeStats,
   BasicResult,
   OnlyIdResult,

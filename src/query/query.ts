@@ -1,6 +1,5 @@
 /* eslint-disable prettier/prettier */
 import type { GenericObject } from '../types';
-import type { FilterInputValue } from './filter';
 import type { SortingInput } from './sort';
 /* eslint-enable prettier/prettier */
 
@@ -26,14 +25,14 @@ interface QueryParamsSpec {
   nostats: boolean;
   type: string | string[];
   // filter parameters
-  filter: GenericObject<FilterInputValue>;
-  exclude: GenericObject<FilterInputValue>;
+  filter: GenericObject<unknown>;
+  exclude: GenericObject<unknown>;
   // sort parameters
   sort: SortingInput[];
   // items
   items: string[];
   // custom parameters
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export type QueryParams = Partial<QueryParamsSpec>;
@@ -84,7 +83,7 @@ export class Query {
     this.load(clone(this.defaults));
   }
 
-  public load(params: QueryParams = {}) {
+  public load(params: QueryParams = {}): void {
     Object.keys(params).forEach(key => {
       if (key === 'nostats') {
         this.noStats = !!params.nostats;
@@ -102,6 +101,8 @@ export class Query {
     });
   }
 
+  // TODO: esto no es QueryParams sino los datos ya normalizados
+  // TODO: llamarlo SearchParams mejor
   public dump(validate = false): QueryParams {
     if (validate) {
       validateHashId(this.hashid);
@@ -122,7 +123,7 @@ export class Query {
     });
 
     ['type', 'sort'].forEach(key => {
-      if (data[key].length === 0) delete data[key];
+      if ((data[key] as unknown[]).length === 0) delete data[key];
     });
 
     if ('items' in data) {
@@ -151,7 +152,7 @@ export class Query {
    * @returns the value of the parameter, if any
    * @beta
    */
-  public getParam(name: keyof QueryParams): any {
+  public getParam(name: keyof QueryParams): unknown {
     return this._params[name];
   }
 
@@ -176,42 +177,42 @@ export class Query {
   // basic parameters
 
   public get hashid(): string {
-    return this.getParam('hashid');
+    return this.getParam('hashid') as string;
   }
   public set hashid(value: string) {
     this.setParam('hashid', value);
   }
 
   public get text(): string {
-    return this.getParam('query');
+    return this.getParam('query') as string;
   }
   public set text(value: string) {
     this.setParam('query', value);
   }
 
   public get items(): string[] {
-    return this.getParam('items');
+    return this.getParam('items') as string[];
   }
   public set items(value: string[]) {
     this.setParam('items', value);
   }
 
   public get page(): number {
-    return this.getParam('page');
+    return this.getParam('page') as number;
   }
   public set page(value: number) {
     this.setParam('page', value);
   }
 
   public get rpp(): number {
-    return this.getParam('rpp');
+    return this.getParam('rpp') as number;
   }
   public set rpp(value: number) {
     this.setParam('rpp', value);
   }
 
   public get transformer(): string {
-    return this.getParam('transformer');
+    return this.getParam('transformer') as string;
   }
   public set transformer(value: string) {
     this.setParam('transformer', value);
@@ -220,7 +221,7 @@ export class Query {
   // dark magic parameters
 
   public get queryName(): string {
-    return this.getParam('query_name');
+    return this.getParam('query_name') as string;
   }
   public set queryName(value: string) {
     this.setParam('query_name', value);
@@ -228,7 +229,7 @@ export class Query {
 
   public get queryCounter(): number {
     // TODO: should this have a default value?
-    return this.getParam('query_counter');
+    return this.getParam('query_counter') as number;
   }
   public set queryCounter(value: number) {
     if (isNaN(value)) {

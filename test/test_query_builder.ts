@@ -31,20 +31,12 @@ describe('QueryFilter', () => {
   context('set filters', () => {
     it('can set terms filters from a single value', done => {
       filter.set('brand', 'adidas');
-      filter.set('number', 3);
-      filter.dump().should.eql({
-        brand: ['adidas'],
-        number: [3]
-      });
+      filter.dump().should.eql({ brand: ['adidas'] });
       done();
     });
     it('can set terms filters from an array of values', done => {
       filter.set('brand', ['adidas', 'nike']);
-      filter.set('number', [1, 3, 5]);
-      filter.dump().should.eql({
-        brand: ['adidas', 'nike'],
-        number: [1, 3, 5]
-      });
+      filter.dump().should.eql({ brand: ['adidas', 'nike'] });
       done();
     });
     it('can set filters from a plain object', done => {
@@ -86,7 +78,22 @@ describe('QueryFilter', () => {
     });
     it(`can manage arrays of unknown types at user's risk`, done => {
       filter.set('value', [{lte: 10}, {gte: 10}]);
-      filter.get('value').should.eql([{lte: 10}, {gte: 10}]);
+      filter.add('value', 'value 3');
+      filter.add('value', ['value 4', 'value 5']);
+      filter.get('value').should.eql([{lte: 10}, {gte: 10}, 'value 3', 'value 4', 'value 5']);
+      done();
+    });
+    it('manages single numbers like terms', done => {
+      filter.set('number', 42);
+      filter.add('number', 43);
+      filter.get('number').should.eql([42, 43]);
+      done();
+    });
+    it('manages lists of numbers like terms', done => {
+      filter.set('number', [42]);
+      filter.add('number', 43);
+      filter.add('number', [43, 44, 45]);
+      filter.get('number').should.eql([42, 43, 44, 45]);
       done();
     })
   });
@@ -184,7 +191,6 @@ describe('QueryFilter', () => {
       filter.add('brand', 'adidas');
       filter.add('brand', 'nike');
       filter.get('brand').should.eql(['adidas', 'nike']);
-
       filter.set('value', {gte: 10});
       filter.add('value', {lte: 100});
       filter.get('value').should.eql({lte: 100});
@@ -194,6 +200,25 @@ describe('QueryFilter', () => {
       filter.set('brand', 'adidas');
       filter.add('brand', ['adidas', 'nike']);
       filter.get('brand').should.eql(['adidas', 'nike']);
+      done();
+    });
+  });
+
+  context('remove filters', () => {
+    it('can remove filters from a single value', done => {
+      filter.set('brand', 'adidas');
+      filter.add('brand', ['puma', 'nike']);
+      filter.add('brand', 42);
+      filter.remove('brand', 'adidas');
+      filter.remove('brand', 42);
+      filter.get('brand').should.eql(['puma', 'nike']);
+      done();
+    });
+    it('can remove filters from a list of values', done => {
+      filter.set('brand', 'adidas');
+      filter.add('brand', ['puma', 'nike', 42]);
+      filter.remove('brand', ['adidas', 42]);
+      filter.get('brand').should.eql(['puma', 'nike']);
       done();
     });
   });

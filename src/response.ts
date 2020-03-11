@@ -1,20 +1,8 @@
 /* eslint-disable prettier/prettier */
-import type { GenericObject } from './types';
+import type { GenericObject, RangeFilter, GeoDistanceFilter } from './types';
 /* eslint-enable prettier/prettier */
 
 import { clone } from './util/clone';
-
-export interface RangeFilter {
-  lte?: number;
-  gte?: number;
-  lt?: number;
-  gt?: number;
-}
-
-export interface GeoDistanceFilter {
-  [field: string]: string;
-  distance: string;
-}
 
 export interface RangeStats {
   avg: number;
@@ -75,6 +63,9 @@ export interface BaseSearchResponse extends GenericObject {
     terms: {
       [key: string]: string[];
     };
+    geo_distance: {
+      [key: string]: GeoDistanceFilter;
+    }
     [key: string]: GenericObject;
   };
 }

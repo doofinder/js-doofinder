@@ -3,35 +3,17 @@ import type { GenericObject } from '../types';
 /* eslint-enable prettier/prettier */
 
 import { QueryValueError } from './error';
-import { isPlainObject, shallowEqual } from '../util/is';
+import { isPlainObject, shallowEqual, isString, isNumber } from '../util/is';
 import { clone } from '../util/clone';
-
-export interface RangeFilterInputValue {
-  lte?: number;
-  gte?: number;
-  lt?: number;
-  gt?: number;
-}
-
-export interface GeoDistanceFilterInputValue {
-  [field: string]: string;
-  distance: string;
-}
-
-export type TermsFilterInputValue = string | number | string[] | number[];
-export type FilterInputValue = TermsFilterInputValue | RangeFilterInputValue | GeoDistanceFilterInputValue;
-
-type TermsQueryFilter = Set<string | number>;
-type QueryFilterValue = TermsQueryFilter | RangeFilterInputValue | GeoDistanceFilterInputValue;
 
 /**
  * Manage filters applied to a query.
  * @beta
  */
 export class QueryFilter {
-  private _filters: Map<string, QueryFilterValue> = new Map();
+  private _filters: Map<string, unknown> = new Map();
 
-  public get(name: string): FilterInputValue | unknown {
+  public get(name: string): unknown {
     return this._denormalize(this._filters.get(name));
   }
 
@@ -46,7 +28,7 @@ export class QueryFilter {
    * @param value - Value of the filter.
    * @beta
    */
-  public set(name: string, value: FilterInputValue | unknown): void {
+  public set(name: string, value: unknown): void {
     const normalized = this._normalize(value);
     if (normalized instanceof Set) {
       this._filters.set(name, normalized);
@@ -61,11 +43,11 @@ export class QueryFilter {
     return this._filters.has(name);
   }
 
-  public contains(name: string, value: FilterInputValue | unknown): boolean {
+  public contains(name: string, value: unknown): boolean {
     return this.has(name) && this._filterContainsOrEqualsValue(name, value, false);
   }
 
-  public equals(name: string, value: FilterInputValue | unknown): boolean {
+  public equals(name: string, value: unknown): boolean {
     return this.has(name) && this._filterContainsOrEqualsValue(name, value, true);
   }
 
@@ -82,30 +64,41 @@ export class QueryFilter {
    * @param value - Value to add to the filter.
    * @beta
    */
-  public add(name: string, value: FilterInputValue | unknown): void {
-    if (!(this._filters.get(name) instanceof Set)) {
-      this.set(name, value);
+  public add(name: string, value: unknown): void {
+    const added: Set<unknown> | unknown = this._normalize(value);
+    const existing: Set<unknown> | unknown = this._filters.get(name);
+
+    if (existing instanceof Set) {
+      if (added instanceof Set) {
+        this._filters.set(name, new Set([...existing, ...added]));
+      } else {
+        existing.add(added);
+      }
     } else {
-      const existing: TermsQueryFilter = (this._filters.get(name) || []) as TermsQueryFilter;
-      const added: TermsQueryFilter = this._normalize(value as TermsFilterInputValue);
-      this._filters.set(name, new Set([...existing, ...added]));
+      this.set(name, value);
     }
   }
 
-  public remove(name: string, value?: FilterInputValue) {
-    const filter = this._filters.get(name);
-    if (filter instanceof Set && value != null) {
-      for (const term of this._normalizeTerms(value as TermsFilterInputValue)) {
-        filter.delete(term);
+  public remove(name: string, value?: unknown) {
+    const existing: Set<unknown> | unknown = this._filters.get(name);
+    if (existing instanceof Set && value != null) {
+      const deleted: Set<unknown> | unknown = this._normalize(value);
+      if (deleted instanceof Set) {
+        for (const item of deleted) {
+          existing.delete(item);
+        }
+      } else {
+        existing.delete(deleted);
+      }
+      if (existing.size === 0) {
+        this._filters.delete(name);
       }
     } else {
-      // no value passed or value is an object
-      // TODO: should delete only if is shallow equal???
       this._filters.delete(name);
     }
   }
 
-  public toggle(name: string, value: FilterInputValue | unknown) {
+  public toggle(name: string, value: unknown) {
     if (this.has(name)) {
       if (this.equals(name, value)) {
         this.remove(name);
@@ -121,7 +114,7 @@ export class QueryFilter {
     this._filters.clear();
   }
 
-  public setMany(data: GenericObject<FilterInputValue>, replace = false) {
+  public setMany(data: GenericObject<unknown>, replace = false) {
     if (replace) {
       this.clear();
     }
@@ -131,7 +124,7 @@ export class QueryFilter {
   }
 
   public dump() {
-    const data: GenericObject<FilterInputValue> = {};
+    const data: GenericObject<unknown> = {};
     this._filters.forEach((value, key) => {
       data[key] = this._denormalize(value);
     });
@@ -140,31 +133,23 @@ export class QueryFilter {
     }
   }
 
-  private _isTerm(value: any): boolean {
-    return typeof value === 'string' || typeof value === 'number';
-  }
-
-  private _isTermsArray(value: any): boolean {
-    return Array.isArray(value) && value.filter(this._isTerm).length === value.length;
-  }
-
-  private _normalize(value: any): QueryFilterValue | any {
-    if (this._isTerm(value)) {
+  private _normalize(value: unknown): Set<unknown> | unknown {
+    if (isString(value) || isNumber(value)) {
       return new Set([value]);
-    } else if (this._isTermsArray(value)) {
+    } else if (Array.isArray(value)) {
       return new Set(value);
     } else {
       return value;
     }
   }
 
-  private _denormalize(value: QueryFilterValue | unknown): FilterInputValue | unknown {
+  private _denormalize(value: unknown): unknown {
     return value instanceof Set ? [...value] : value;
   }
 
   private _filterContainsOrEqualsValue(
     name: string,
-    value: FilterInputValue | unknown,
+    value: unknown,
     checkEquality: boolean
   ): boolean {
     const normalized = this._normalize(value);
@@ -185,9 +170,5 @@ export class QueryFilter {
     } else {
       return shallowEqual(filterValue, normalized);
     }
-  }
-
-  private _normalizeTerms(value: TermsFilterInputValue): TermsQueryFilter {
-    return new Set(Array.isArray(value) ? value : [value]);
   }
 }

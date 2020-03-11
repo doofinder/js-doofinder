@@ -10,3 +10,15 @@
 export interface GenericObject<T = any> {
   [key: string]: T;
 }
+
+export interface RangeFilter {
+  lte?: number;
+  gte?: number;
+  lt?: number;
+  gt?: number;
+}
+
+export interface GeoDistanceFilter {
+  [field: string]: string;
+  distance: string;
+}
