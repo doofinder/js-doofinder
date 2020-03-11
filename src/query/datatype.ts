@@ -33,7 +33,7 @@ export class QueryTypes {
     return this._types.has(value);
   }
 
-  public remove(value: string) {
+  public remove(value: string): void {
     this._types.delete(value);
   }
 }

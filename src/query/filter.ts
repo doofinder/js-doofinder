@@ -75,11 +75,11 @@ export class QueryFilter {
         existing.add(added);
       }
     } else {
-      this.set(name, value);
+      this._filters.set(name, added);
     }
   }
 
-  public remove(name: string, value?: unknown) {
+  public remove(name: string, value?: unknown): void {
     const existing: Set<unknown> | unknown = this._filters.get(name);
     if (existing instanceof Set && value != null) {
       const deleted: Set<unknown> | unknown = this._normalize(value);
@@ -98,7 +98,7 @@ export class QueryFilter {
     }
   }
 
-  public toggle(name: string, value: unknown) {
+  public toggle(name: string, value: unknown): void {
     if (this.has(name)) {
       if (this.equals(name, value)) {
         this.remove(name);
@@ -110,11 +110,11 @@ export class QueryFilter {
     }
   }
 
-  public clear() {
+  public clear(): void {
     this._filters.clear();
   }
 
-  public setMany(data: GenericObject<unknown>, replace = false) {
+  public setMany(data: GenericObject<unknown>, replace = false): void {
     if (replace) {
       this.clear();
     }
@@ -123,7 +123,7 @@ export class QueryFilter {
     }
   }
 
-  public dump() {
+  public dump(): GenericObject<unknown> {
     const data: GenericObject<unknown> = {};
     this._filters.forEach((value, key) => {
       data[key] = this._denormalize(value);
