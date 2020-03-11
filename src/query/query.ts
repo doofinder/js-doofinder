@@ -1,4 +1,4 @@
-import { GenericObject } from './types/base';
+import { GenericObject } from '../types/base';
 import {
   FilterInputValue,
   SortingInput,
@@ -10,11 +10,11 @@ import {
   GeoSortOrder,
   RangeFilterInputValue,
   GeoDistanceFilterInputValue,
-} from './types/request';
+} from '../types/request';
 
-import { clone } from './util/clone';
-import { isPlainObject, shallowEqual, isString } from './util/is';
-import { validateHashId, validatePage, validateRpp, validateItems } from './util/validators';
+import { clone } from '../util/clone';
+import { isPlainObject, shallowEqual, isString } from '../util/is';
+import { validateHashId, validatePage, validateRpp, validateItems } from '../util/validators';
 
 // exceptions
 
