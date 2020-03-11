@@ -1,11 +1,15 @@
-import { GenericObject } from '../types/base';
+/* eslint-disable prettier/prettier */
+import type { GenericObject } from '../types';
+import type { FilterInputValue } from './filter';
+import type { SortingInput } from './sort';
+/* eslint-enable prettier/prettier */
 
-import { QueryFilter, FilterInputValue } from './filter';
 import { QueryTypes } from './datatype';
+import { QueryFilter } from './filter';
+import { QuerySort } from './sort';
 
 import { clone } from '../util/clone';
 import { validateHashId, validatePage, validateRpp, validateItems } from '../util/validators';
-import { QuerySort, SortingInput } from './sort';
 
 // exceptions
 

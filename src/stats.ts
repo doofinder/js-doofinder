@@ -1,4 +1,4 @@
-import { GenericObject } from './types/base';
+import { GenericObject } from './types';
 
 import { Client } from './client';
 import { validateRequired, validateDoofinderId, ValidationError } from './util/validators';

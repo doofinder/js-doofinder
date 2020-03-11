@@ -1,12 +1,23 @@
-import { GenericObject, Zone } from './types/base';
-import { SearchResponse, RawSearchResponse } from './types/response';
+/* eslint-disable prettier/prettier */
+import type { GenericObject } from './types';
+import type { QueryParams } from './query';
+import type { SearchResponse, RawSearchResponse } from './response';
+/* eslint-enable prettier/prettier */
 
-import { Query, QueryParams } from './query';
+import { Query } from './query';
 import { processResponse } from './response';
 
 import { buildQueryString } from './util/encode-params';
-import { isValidZone, isString } from './util/is';
+import { isString } from './util/is';
 import { validateHashId, validateRequired, ValidationError } from './util/validators';
+
+/**
+ * The zones the client can be from
+ */
+export enum Zone {
+  EU1 = 'eu1',
+  US1 = 'us1',
+}
 
 export interface ClientHeaders extends GenericObject<string> {
   Accept: string;
@@ -60,12 +71,8 @@ export class Client {
   }
   public set zone(value: Zone) {
     if (typeof value !== undefined) {
-      if (isValidZone(value)) {
-        this._zone = value;
-        this._updateEndpoint();
-      } else {
-        throw new ClientError(`invalid zone '${value}'`);
-      }
+      this._zone = value;
+      this._updateEndpoint();
     }
   }
 

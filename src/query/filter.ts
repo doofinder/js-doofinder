@@ -1,7 +1,10 @@
+/* eslint-disable prettier/prettier */
+import type { GenericObject } from '../types';
+/* eslint-enable prettier/prettier */
+
 import { QueryValueError } from './error';
 import { isPlainObject, shallowEqual } from '../util/is';
 import { clone } from '../util/clone';
-import { GenericObject } from '../types';
 
 export interface RangeFilterInputValue {
   lte?: number;
