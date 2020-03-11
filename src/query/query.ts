@@ -43,7 +43,7 @@ export type QueryParams = Partial<QueryParamsSpec>;
  */
 export class Query {
   private _defaults: QueryParams;
-  private _params: QueryParams;
+  private _params: Omit<QueryParams, 'exclude' | 'filter' | 'sort' | 'type'>;
   private _types: QueryTypes;
   private _filters: QueryFilter;
   private _excludes: QueryFilter;
