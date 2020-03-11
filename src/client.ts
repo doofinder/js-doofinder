@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import type { GenericObject } from './types';
-import type { QueryParams } from './query';
+import type { SearchParams } from './query';
 import type { SearchResponse, RawSearchResponse } from './response';
 /* eslint-enable prettier/prettier */
 
@@ -240,7 +240,7 @@ export class Client {
    *
    * @return {Promise<Response>}
    */
-  public async search(params: Query | QueryParams): Promise<SearchResponse> {
+  public async search(params: Query | SearchParams): Promise<SearchResponse> {
     let request: Query;
     let payload: GenericObject;
 

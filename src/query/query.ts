@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import type { GenericObject } from '../types';
-import type { SortingInput } from './sort';
+import type { SortingInput, Sorting } from './sort';
 /* eslint-enable prettier/prettier */
 
 import { QueryTypes } from './datatype';
@@ -12,30 +12,35 @@ import { validateHashId, validatePage, validateRpp, validateItems } from '../uti
 
 // exceptions
 
-interface QueryParamsSpec {
+interface QueryParamsBase {
   // basic parameters
   hashid: string;
-  query: string;
-  page: number;
-  rpp: number;
-  transformer: string;
+  query?: string;
+  page?: number;
+  rpp?: number;
+  transformer?: string;
   // dark magic parameters
-  query_name: string;
-  query_counter: number;
-  nostats: boolean;
-  type: string | string[];
+  query_name?: string;
+  query_counter?: number;
+  nostats?: boolean;
+  type?: string | string[];
   // filter parameters
-  filter: GenericObject<unknown>;
-  exclude: GenericObject<unknown>;
+  filter?: GenericObject<unknown>;
+  exclude?: GenericObject<unknown>;
   // sort parameters
-  sort: SortingInput[];
+  sort?: SortingInput[];
   // items
-  items: string[];
+  items?: string[];
   // custom parameters
   [key: string]: unknown;
 }
 
-export type QueryParams = Partial<QueryParamsSpec>;
+export type QueryParams = Partial<QueryParamsBase>;
+
+export interface SearchParams extends QueryParamsBase {
+  type?: string[];
+  sort?: Sorting[];
+}
 
 /**
  * Main QueryBuilder interface, allows creating programmaticly
@@ -101,16 +106,14 @@ export class Query {
     });
   }
 
-  // TODO: esto no es QueryParams sino los datos ya normalizados
-  // TODO: llamarlo SearchParams mejor
-  public dump(validate = false): QueryParams {
+  public dump(validate = false): SearchParams {
     if (validate) {
       validateHashId(this.hashid);
       validatePage(this.page);
       validateRpp(this.rpp);
     }
 
-    const data: QueryParams = {
+    const data: SearchParams = {
       ...clone(this._params),
       type: this.types.dump(),
       filter: this.filters.dump(),

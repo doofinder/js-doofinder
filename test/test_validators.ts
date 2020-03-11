@@ -26,16 +26,16 @@ describe('Validators', () => {
   });
   it('validates page param for searches', done => {
     validatePage(14).should.be.true;
+    validatePage(undefined).should.be.true;
     (() => validatePage(null)).should.throw(ValidationError);
-    (() => validatePage(undefined)).should.throw(ValidationError);
     (() => validatePage('14')).should.throw(ValidationError);
     (() => validatePage(-1)).should.throw(ValidationError);
     done();
   });
   it('validates rpp param for searches', done => {
     validateRpp(10).should.be.true;
+    validateRpp(undefined).should.be.true;
     (() => validateRpp(null)).should.throw(ValidationError);
-    (() => validateRpp(undefined)).should.throw(ValidationError);
     (() => validateRpp('10')).should.throw(ValidationError);
     (() => validateRpp(-1)).should.throw(ValidationError);
     (() => validateRpp(101)).should.throw(ValidationError);

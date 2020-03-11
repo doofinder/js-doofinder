@@ -13,7 +13,7 @@ export class QueryTypes {
     }
   }
 
-  public dump(): string | string[] {
+  public dump(): string[] {
     return Array.from(this._types);
   }
 

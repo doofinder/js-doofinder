@@ -154,6 +154,7 @@ describe('Client', () => {
     });
 
     it('throws if passed parameters with no hashid', done => {
+      // @ts-ignore
       cfg.getClient().search({}).should.be.rejectedWith(ValidationError).notify(done);
     });
     it('throws if passed Query instance with no hashid', done => {
