@@ -12,13 +12,12 @@ import { expectAsync } from './util/async';
 should();
 
 // required for tests
-import { Client, ClientResponseError } from '../src/client';
+import { Client, ClientResponseError, Zone } from '../src/client';
 import { ClientPool } from '../src/pool';
 import { isPlainObject } from '../src/util/is';
 import { Query } from '../src/query';
 import { StatsEvent } from '../src/stats';
 import { ValidationError } from '../src/util/validators';
-import { Zone } from '../src/types';
 
 // config, utils & mocks
 import * as cfg from './config';
@@ -51,11 +50,6 @@ describe('Client', () => {
 
       it('should break if api key is malformed', done => {
         (() => new Client({ key: '-abcd' })).should.throw();
-        done();
-      });
-
-      it('should break if zone in api key does not exist', done => {
-        (() => new Client({ key: 'kk-abcd' })).should.throw();
         done();
       });
     });
