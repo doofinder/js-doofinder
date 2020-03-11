@@ -1,18 +1,3 @@
-export interface RangeFilterInputValue {
-  lte?: number;
-  gte?: number;
-  lt?: number;
-  gt?: number;
-}
-
-export interface GeoDistanceFilterInputValue {
-  [field: string]: string;
-  distance: string;
-}
-
-export type TermsFilterInputValue = string | number | string[] | number[];
-export type FilterInputValue = TermsFilterInputValue | RangeFilterInputValue | GeoDistanceFilterInputValue;
-
 export type SortOrder = 'asc' | 'desc';
 
 export interface GeoSortOrder {
