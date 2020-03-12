@@ -13,7 +13,7 @@ export function validateHashId(hashid: unknown): boolean {
 }
 
 export function validatePage(page: unknown): boolean {
-  if (!isNumber(page) || page <= 0) {
+  if (typeof page !== 'undefined' && (!isNumber(page) || page <= 0)) {
     throw new ValidationError('page must be an integer greater than 0');
   } else {
     return true;
@@ -21,7 +21,7 @@ export function validatePage(page: unknown): boolean {
 }
 
 export function validateRpp(rpp: unknown): boolean {
-  if (!isNumber(rpp) || rpp <= 0 || rpp > 100) {
+  if (typeof rpp !== 'undefined' && (!isNumber(rpp) || rpp <= 0 || rpp > 100)) {
     throw new ValidationError('rpp must be a number between 1 and 100');
   } else {
     return true;

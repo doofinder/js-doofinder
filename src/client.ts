@@ -1,11 +1,23 @@
-import { Zone, GenericObject } from './types';
+/* eslint-disable prettier/prettier */
+import type { GenericObject } from './types';
+import type { SearchParams } from './query';
+import type { SearchResponse, RawSearchResponse } from './response';
+/* eslint-enable prettier/prettier */
 
-import { Query, QueryParams } from './query';
-import { DoofinderResult } from './result';
+import { Query } from './query';
+import { processResponse } from './response';
 
 import { buildQueryString } from './util/encode-params';
-import { isValidZone, isString } from './util/is';
+import { isString } from './util/is';
 import { validateHashId, validateRequired, ValidationError } from './util/validators';
+
+/**
+ * The zones the client can be from
+ */
+export enum Zone {
+  EU1 = 'eu1',
+  US1 = 'us1',
+}
 
 export interface ClientHeaders extends GenericObject<string> {
   Accept: string;
@@ -59,12 +71,8 @@ export class Client {
   }
   public set zone(value: Zone) {
     if (typeof value !== undefined) {
-      if (isValidZone(value)) {
-        this._zone = value;
-        this._updateEndpoint();
-      } else {
-        throw new ClientError(`invalid zone '${value}'`);
-      }
+      this._zone = value;
+      this._updateEndpoint();
     }
   }
 
@@ -232,7 +240,7 @@ export class Client {
    *
    * @return {Promise<Response>}
    */
-  public async search(params: Query | QueryParams): Promise<Response | DoofinderResult> {
+  public async search(params: Query | SearchParams): Promise<SearchResponse> {
     let request: Query;
     let payload: GenericObject;
 
@@ -251,7 +259,7 @@ export class Client {
 
     const qs = buildQueryString({ random: new Date().getTime(), ...data });
     const response: Response = await this.request(this.buildUrl('/search', qs), payload);
-    return new DoofinderResult(await response.json());
+    return processResponse((await response.json()) as RawSearchResponse);
   }
 
   /**

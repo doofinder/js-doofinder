@@ -6,7 +6,6 @@ should();
 
 // tests
 import * as Thing from '../src/util/is';
-import { Zone } from '../src/types';
 
 const ARRAY_SAMPLE = ["a", "b", "c"];
 const OBJECT_SAMPLE = ((cls) => new cls())(class A {});
@@ -66,12 +65,6 @@ describe("Is Module", () => {
     Thing.isNumber(NUMBER_SAMPLE_FLOAT).should.be.true;
     Thing.isNumber(null).should.be.false;
     Thing.isNumber(undefined).should.be.false;
-    done();
-  });
-
-  it("can say if a zone is valid", (done) => {
-    Thing.isValidZone('a').should.be.false;
-    Thing.isValidZone(Zone.EU1).should.be.true;
     done();
   });
 });

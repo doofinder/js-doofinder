@@ -5,8 +5,8 @@ import { should, expect } from 'chai';
 // chai
 should();
 
+import { Zone } from '../src/client';
 import { ClientPool } from '../src/pool';
-import { Zone } from '../src/types';
 
 describe('ClientClientPool', () => {
   it('creates clients with default options', (done) => {
