@@ -10,10 +10,10 @@ export * from './util/merge';
 /* eslint-disable prettier/prettier */
 export type {
   GenericObject,
-  RangeFilter,
-  GeoDistanceFilter,
 } from './types';
 export type {
+  RangeFilter,
+  GeoDistanceFilter,
   RangeStats,
   BasicResult,
   OnlyIdResult,
