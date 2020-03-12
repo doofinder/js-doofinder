@@ -5,7 +5,6 @@ import { should } from 'chai';
 should();
 
 // tests
-import { Zone } from '../src/client';
 import * as Thing from '../src/util/is';
 
 const ARRAY_SAMPLE = ["a", "b", "c"];
