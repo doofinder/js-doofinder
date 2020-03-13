@@ -14,7 +14,6 @@ export {
   RangeStats,
   BasicResult,
   OnlyIdResult,
-  BaseSearchResponse,
   RawRangeFacet,
   RawTermStats,
   RawTermsInfo,
@@ -24,6 +23,5 @@ export {
   TermStats,
   TermsFacet,
   Facet,
-  RawSearchResponse,
   SearchResponse,
 } from './response';

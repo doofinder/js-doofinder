@@ -4,75 +4,19 @@
 
 ```ts
 
-// @public (undocumented)
-export interface BaseSearchResponse extends GenericObject {
-    // (undocumented)
-    autocomplete_suggest?: string;
-    // (undocumented)
-    banner?: {
-        id: number;
-        image: string;
-        mobile_image: string;
-        html_code: string;
-        link: string;
-        blank: boolean;
-    };
-    // (undocumented)
-    filter?: {
-        range: {
-            [key: string]: RangeFilter;
-        };
-        terms: {
-            [key: string]: string[];
-        };
-        geo_distance: {
-            [key: string]: GeoDistanceFilter;
-        };
-        [key: string]: GenericObject;
-    };
-    // (undocumented)
-    max_score: number;
-    // (undocumented)
-    page: number;
-    // (undocumented)
-    query: string;
-    // (undocumented)
-    query_counter: number;
-    // (undocumented)
-    query_name: string;
-    // (undocumented)
-    results: GenericObject[];
-    // (undocumented)
-    results_per_page: number;
-    // (undocumented)
-    total: number;
-    // (undocumented)
-    total_found: number;
-}
-
-// @public (undocumented)
+// @public
 export interface BasicResult {
-    // (undocumented)
+    // @deprecated
     add_to_cart?: string;
-    // (undocumented)
     description?: string;
-    // (undocumented)
     df_rating?: number;
-    // (undocumented)
     dfid: string;
-    // (undocumented)
     id: string | number;
-    // (undocumented)
     image_link?: string;
-    // (undocumented)
     link: string;
-    // (undocumented)
     price?: number;
-    // (undocumented)
     sale_price?: number;
-    // (undocumented)
     title: string;
-    // (undocumented)
     type: string;
 }
 
@@ -179,8 +123,8 @@ export class ClientResponseError extends Error {
 // @public (undocumented)
 export function clone(src: any): any;
 
-// @public (undocumented)
-export type Facet = RangeFacet | TermsFacet;
+// @public
+export type Facet = RangeFacet | TermsFacet | unknown;
 
 // @public (undocumented)
 export interface FieldSorting {
@@ -194,11 +138,9 @@ export interface GenericObject<T = any> {
     [key: string]: T;
 }
 
-// @public (undocumented)
+// @public
 export interface GeoDistanceFilter {
-    // (undocumented)
     [field: string]: string;
-    // (undocumented)
     distance: string;
 }
 
@@ -249,7 +191,7 @@ export function isValidHashId(value: unknown): boolean;
 // @public
 export function merge(...objects: GenericObject[]): GenericObject;
 
-// @public (undocumented)
+// @public
 export type OnlyIdResult = Pick<BasicResult, 'id'>;
 
 // @public
@@ -375,48 +317,35 @@ export class QueryValueError extends Error {
     constructor(message: string);
 }
 
-// @public (undocumented)
+// @public
 export interface RangeFacet {
-    // (undocumented)
     range: RangeStats;
-    // (undocumented)
     type: 'range';
 }
 
-// @public (undocumented)
+// @public
 export interface RangeFilter {
-    // (undocumented)
     gt?: number;
-    // (undocumented)
     gte?: number;
-    // (undocumented)
     lt?: number;
-    // (undocumented)
     lte?: number;
 }
 
-// @public (undocumented)
+// @public
 export interface RangeStats {
-    // (undocumented)
     avg: number;
-    // (undocumented)
     count: number;
-    // (undocumented)
     max: number;
-    // (undocumented)
     min: number;
-    // (undocumented)
     sum: number;
 }
 
-// @public (undocumented)
-export type RawFacet = RawRangeFacet | RawTermsFacet;
+// @public
+export type RawFacet = RawRangeFacet | RawTermsFacet | unknown;
 
-// @public (undocumented)
+// @public
 export interface RawRangeFacet {
-    // (undocumented)
     doc_count: number;
-    // (undocumented)
     range: {
         buckets: {
             doc_count: number;
@@ -427,41 +356,26 @@ export interface RawRangeFacet {
     };
 }
 
-// @public (undocumented)
-export interface RawSearchResponse extends BaseSearchResponse {
-    // (undocumented)
-    facets: GenericObject<RawFacet>;
-}
-
-// @public (undocumented)
+// @public
 export interface RawTermsFacet {
-    // (undocumented)
     doc_count: number;
-    // (undocumented)
     selected: RawTermsInfo;
-    // (undocumented)
     terms: RawTermsInfo;
-    // (undocumented)
     total: {
         value: number;
     };
 }
 
-// @public (undocumented)
+// @public
 export interface RawTermsInfo {
-    // (undocumented)
     buckets: RawTermStats[];
-    // (undocumented)
     doc_count_error_upper_bound: number;
-    // (undocumented)
     sum_other_doc_count: number;
 }
 
-// @public (undocumented)
+// @public
 export interface RawTermStats {
-    // (undocumented)
     doc_count: number;
-    // (undocumented)
     key: string;
 }
 
@@ -483,12 +397,38 @@ export interface SearchParams extends QueryParamsBase {
     type?: string[];
 }
 
-// @public (undocumented)
-export interface SearchResponse extends BaseSearchResponse {
-    // (undocumented)
-    facets: GenericObject<Facet>;
-    // (undocumented)
-    _rawFacets: GenericObject<RawFacet>;
+// @public
+export interface SearchResponse extends GenericObject {
+    autocomplete_suggest?: string;
+    banner?: {
+        id: number;
+        image: string;
+        mobile_image: string;
+        html_code: string;
+        link: string;
+        blank: boolean;
+    };
+    facets?: GenericObject<Facet>;
+    filter?: {
+        range: {
+            [key: string]: RangeFilter;
+        };
+        terms: {
+            [key: string]: string[];
+        };
+        geo_distance: GeoDistanceFilter;
+        [key: string]: GenericObject;
+    };
+    max_score: number;
+    page: number;
+    query: string;
+    query_counter: number;
+    query_name: string;
+    _rawFacets?: GenericObject<RawFacet>;
+    results: GenericObject[];
+    results_per_page: number;
+    total: number;
+    total_found: number;
 }
 
 // @public
@@ -542,7 +482,7 @@ export interface StatsParams {
     session_id: string;
 }
 
-// @public (undocumented)
+// @public
 export interface TermsFacet {
     // (undocumented)
     terms: TermStats[];
@@ -550,13 +490,10 @@ export interface TermsFacet {
     type: 'terms';
 }
 
-// @public (undocumented)
+// @public
 export interface TermStats {
-    // (undocumented)
     selected?: boolean;
-    // (undocumented)
     total: number;
-    // (undocumented)
     value: string;
 }
 
