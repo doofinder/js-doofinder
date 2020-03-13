@@ -7,11 +7,8 @@ export * from './util/is';
 export * from './util/clone';
 export * from './util/merge';
 
-/* eslint-disable prettier/prettier */
-export type {
-  GenericObject,
-} from './types';
-export type {
+export { GenericObject } from './types';
+export {
   RangeFilter,
   GeoDistanceFilter,
   RangeStats,
@@ -30,4 +27,3 @@ export type {
   RawSearchResponse,
   SearchResponse,
 } from './response';
-/* eslint-enable prettier/prettier */

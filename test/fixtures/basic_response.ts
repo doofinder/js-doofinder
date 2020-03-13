@@ -1,4 +1,4 @@
-import type { RawSearchResponse } from "../../src/response";
+import { RawSearchResponse } from "../../src/response";
 
 export const basicResponse: RawSearchResponse = {
   autocomplete_suggest: 'Silla',

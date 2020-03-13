@@ -1,6 +1,4 @@
-/* eslint-disable prettier/prettier */
-import type { GenericObject } from '../types';
-/* eslint-enable prettier/prettier */
+import { GenericObject } from '../types';
 
 import { QueryValueError } from './error';
 import { isPlainObject, shallowEqual, isString, isNumber } from '../util/is';
@@ -65,7 +63,7 @@ export class QueryFilter {
    * @beta
    */
   public add(name: string, value: unknown): void {
-    const added: Set<unknown> | unknown = this._normalize(value);
+    const added: Set<unknown> | unknown = this._normalize(value);
     const existing: Set<unknown> | unknown = this._filters.get(name);
 
     if (existing instanceof Set) {
@@ -82,7 +80,7 @@ export class QueryFilter {
   public remove(name: string, value?: unknown): void {
     const existing: Set<unknown> | unknown = this._filters.get(name);
     if (existing instanceof Set && value != null) {
-      const deleted: Set<unknown> | unknown = this._normalize(value);
+      const deleted: Set<unknown> | unknown = this._normalize(value);
       if (deleted instanceof Set) {
         for (const item of deleted) {
           existing.delete(item);
@@ -134,7 +132,7 @@ export class QueryFilter {
   }
 
   private _normalize(value: unknown): Set<unknown> | unknown {
-    if (isString(value) || isNumber(value)) {
+    if (isString(value) || isNumber(value)) {
       return new Set([value]);
     } else if (Array.isArray(value)) {
       return new Set(value);
@@ -147,11 +145,7 @@ export class QueryFilter {
     return value instanceof Set ? [...value] : value;
   }
 
-  private _filterContainsOrEqualsValue(
-    name: string,
-    value: unknown,
-    checkEquality: boolean
-  ): boolean {
+  private _filterContainsOrEqualsValue(name: string, value: unknown, checkEquality: boolean): boolean {
     const normalized = this._normalize(value);
     const filterValue = this._filters.get(name);
 

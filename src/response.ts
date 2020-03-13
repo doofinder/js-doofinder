@@ -1,6 +1,4 @@
-/* eslint-disable prettier/prettier */
-import type { GenericObject } from './types';
-/* eslint-enable prettier/prettier */
+import { GenericObject } from './types';
 
 import { clone } from './util/clone';
 
@@ -77,7 +75,7 @@ export interface BaseSearchResponse extends GenericObject {
     };
     geo_distance: {
       [key: string]: GeoDistanceFilter;
-    }
+    };
     [key: string]: GenericObject;
   };
 }

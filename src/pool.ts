@@ -1,8 +1,4 @@
-/* eslint-disable prettier/prettier */
-import type { ClientOptions } from './client';
-/* eslint-enable prettier/prettier */
-
-import { Client, Zone } from './client';
+import { Client, ClientOptions, Zone } from './client';
 import { StatsClient } from './stats';
 
 /*

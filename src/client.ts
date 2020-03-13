@@ -1,11 +1,7 @@
-/* eslint-disable prettier/prettier */
-import type { GenericObject } from './types';
-import type { SearchParams } from './query';
-import type { SearchResponse, RawSearchResponse } from './response';
-/* eslint-enable prettier/prettier */
+import { GenericObject } from './types';
 
-import { Query } from './query';
-import { processResponse } from './response';
+import { Query, SearchParams } from './query';
+import { processResponse, SearchResponse, RawSearchResponse } from './response';
 
 import { buildQueryString } from './util/encode-params';
 import { isString } from './util/is';
