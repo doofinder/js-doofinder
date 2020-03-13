@@ -28,7 +28,7 @@
     "typings": "rimraf types && tsc --declaration --declarationMap --emitDeclarationOnly --outDir types && api-extractor run --local",
 
     "build": "yarn lint && yarn compile && yarn minify-iife && yarn typings",
-    "docs": "api-documenter markdown -i ./doc-models -o ./docs/reference",
+    "docs": "api-documenter markdown -i ./temp -o ./docs",
 
     "test": "export TS_NODE_PROJECT=tsconfig.test.json ; mocha --reporter spec --require ts-node/register \"test/**/*.ts\""
   },
