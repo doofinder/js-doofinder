@@ -5,6 +5,7 @@ docs/html
 lib/
 node_modules/
 types/
+temp/
 
 !src/lib/
 !src/types/
