@@ -19,7 +19,7 @@ import * as cfg from './config';
 // Mock the fetch API
 import * as fetchMock from 'fetch-mock';
 
-const client = new Client({ key: 'eu1-0123456789abcdef' });
+const client = new Client({ secret: 'eu1-0123456789abcdef0123456789abcdef01234567' });
 const stats = new StatsClient(client);
 
 describe('StatsClient', () => {

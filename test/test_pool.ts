@@ -27,7 +27,7 @@ describe('ClientClientPool', () => {
       }
     };
 
-    (() => { ClientPool.options.key = 'blah' }).should.throw;
+    (() => { ClientPool.options.secret = 'blah' }).should.throw;
     (() => { ClientPool.options.headers['Other'] = 'value' }).should.throw;
     (() => { ClientPool.options.headers['X-Whatever'] = 'changed' }).should.throw;
 
@@ -43,8 +43,8 @@ describe('ClientClientPool', () => {
     stats.client.should.equal(firstClient);
     expect(stats.client.secret).to.be.undefined;
 
-    firstClient.secret = 'abc';
-    stats.client.secret.should.equal(firstClient.secret);
+    firstClient.headers.Authorization = 'abc';
+    stats.client.headers.Authorization.should.equal(firstClient.headers.Authorization);
 
     ClientPool.options = {
       headers: {

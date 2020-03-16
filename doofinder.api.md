@@ -47,31 +47,25 @@ export interface ClickStatsParamsWithId extends StatsParams {
 
 // @public
 export class Client {
-    constructor({ key, zone, serverAddress, headers }?: Partial<ClientOptions>);
+    constructor({ zone, secret, headers, serverAddress }?: Partial<ClientOptions>);
     // (undocumented)
     buildUrl(resource: string, querystring?: string): string;
     // (undocumented)
     get endpoint(): string;
     // (undocumented)
     get headers(): GenericObject<string>;
-    set headers(value: GenericObject<string>);
     options(hashid: string): Promise<GenericObject>;
     request(resource: string, payload?: GenericObject): Promise<Response>;
     search(params: Query | SearchParams): Promise<SearchResponse>;
     // (undocumented)
     get secret(): string;
-    set secret(value: string);
-    // (undocumented)
-    get serverAddress(): string;
-    set serverAddress(value: string);
     stats(eventName: string, params: GenericObject<string>): Promise<Response>;
     // (undocumented)
     topStats(type: TopStatsType, params: TopStatsParams): Promise<Response>;
     // (undocumented)
     toString(): string;
     // (undocumented)
-    get zone(): Zone;
-    set zone(value: Zone);
+    get zone(): string;
     }
 
 // @public (undocumented)
@@ -91,7 +85,7 @@ export interface ClientOptions {
     // (undocumented)
     headers: Partial<ClientHeaders>;
     // (undocumented)
-    key: string;
+    secret: string;
     // (undocumented)
     serverAddress: string;
     // (undocumented)

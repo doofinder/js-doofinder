@@ -4,7 +4,6 @@ import { Query, SearchParams } from './query';
 import { processResponse, SearchResponse, RawSearchResponse } from './response';
 
 import { buildQueryString } from './util/encode-params';
-import { isString } from './util/is';
 import { validateHashId, validateRequired, ValidationError } from './util/validators';
 
 /**
@@ -24,8 +23,8 @@ export interface ClientHeaders extends GenericObject<string> {
  * Options that can be used to create a Client instance.
  */
 export interface ClientOptions {
-  key: string;
   zone: Zone;
+  secret: string;
   serverAddress: string;
   headers: Partial<ClientHeaders>;
 }
@@ -51,73 +50,28 @@ export interface TopStatsParams {
   withresult?: boolean | string;
 }
 
+const API_KEY_RE = /^(([^-]+)-)?([a-f0-9]{40})$/i;
+
 /**
  * This class allows searching and sending stats using the Doofinder service.
  */
 export class Client {
   private _version = 5;
+  private _zone: string;
   private _secret: string;
-  private _zone: Zone;
-  private _serverAddress: string;
   private _endpoint: string;
   private _headers: GenericObject<string>;
 
-  public get zone(): Zone {
+  public get zone(): string {
     return this._zone;
-  }
-  public set zone(value: Zone) {
-    if (typeof value !== undefined) {
-      this._zone = value;
-      this._updateEndpoint();
-    }
   }
 
   public get secret(): string {
     return this._secret;
   }
-  public set secret(value: string) {
-    if (value != null && !isString(value)) {
-      throw new ValidationError(`invalid api key`);
-    } else if (value == null) {
-      this._secret = undefined;
-    } else {
-      const [zone, secret] = value.split('-').map(x => x.trim());
-
-      if (zone && secret) {
-        this.zone = zone as Zone;
-        this._secret = secret;
-      } else if (zone) {
-        this._secret = zone;
-      } else {
-        throw new ValidationError(`invalid api key`);
-      }
-    }
-
-    this._updateEndpoint();
-
-    if (this._headers) {
-      this._updateHeaders();
-    }
-  }
-
-  public get serverAddress(): string {
-    return this._serverAddress;
-  }
-  public set serverAddress(value: string) {
-    this._serverAddress = value;
-    this._updateEndpoint();
-  }
 
   public get headers(): GenericObject<string> {
     return this._headers;
-  }
-
-  public set headers(value: GenericObject<string>) {
-    this._headers = {
-      Accept: 'application/json',
-      ...value,
-    };
-    this._updateHeaders();
   }
 
   public get endpoint(): string {
@@ -156,12 +110,35 @@ export class Client {
    *                          them is required.
    *
    */
-  public constructor({ key, zone, serverAddress, headers }: Partial<ClientOptions> = {}) {
-    // order matters!
-    this.zone = zone || Zone.EU1;
-    this.secret = key;
-    this.headers = headers || {};
-    this.serverAddress = serverAddress;
+  public constructor({ zone, secret, headers, serverAddress }: Partial<ClientOptions> = {}) {
+    const matches = API_KEY_RE.exec(secret);
+    if (matches) {
+      this._zone = matches[2] || zone || Zone.EU1;
+      this._secret = matches[3];
+    } else if (secret) {
+      throw new ValidationError(`invalid api key`);
+    } else {
+      this._zone = zone || Zone.EU1;
+    }
+
+    let [protocol, address] = (serverAddress || `${this._zone}-search.doofinder.com`).split('://');
+
+    if (!address) {
+      address = protocol;
+      protocol = '';
+    }
+
+    if (this._secret) {
+      protocol = 'https:';
+    }
+
+    this._endpoint = `${protocol}//${address}`;
+
+    this._headers = {
+      Accept: 'application/json',
+      ...(headers || {}),
+      ...(this._secret ? { Authorization: this._secret } : {}),
+    };
   }
 
   /**
@@ -315,36 +292,7 @@ export class Client {
     return `${this._endpoint}/${this._version}${resource}${qs}`;
   }
 
-  private _updateEndpoint(): void {
-    // ! DON'T USE PUBLIC PROPERTIES HERE TO PREVENT INFINITE LOOPS!
-
-    if (!this._serverAddress && !this._zone) {
-      throw new ClientError(`missing api key or search zone`);
-    }
-
-    let [protocol, address] = (this._serverAddress || `${this._zone}-search.doofinder.com`).split('://');
-
-    if (!address) {
-      address = protocol;
-      protocol = '';
-    }
-
-    if (this._secret) {
-      protocol = 'https:';
-    }
-
-    this._endpoint = `${protocol}//${address}`;
-  }
-
-  private _updateHeaders(): void {
-    if (this._secret) {
-      this._headers.Authorization = this._secret;
-    } else {
-      delete this._headers.Authorization;
-    }
-  }
-
   public toString(): string {
-    return `Client(${this.endpoint}${this.secret ? ' (+secret)' : ''})`;
+    return `Client(${this.endpoint}${this._headers.Authorization ? ' (+secret)' : ''})`;
   }
 }
