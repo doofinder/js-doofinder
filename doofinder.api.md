@@ -83,9 +83,8 @@ export function clone(src: any): any;
 // @public
 export type Facet = RangeFacet | TermsFacet | unknown;
 
-// @public (undocumented)
+// @public
 export interface FieldSorting {
-    // (undocumented)
     [field: string]: SortOrder;
 }
 
@@ -101,17 +100,15 @@ export interface GeoDistanceFilter {
     distance: string;
 }
 
-// @public (undocumented)
+// @public
 export interface GeoSorting {
     // (undocumented)
-    geo_distance: GeoSortOrder;
+    _geo_distance: GeoSortOrder;
 }
 
-// @public (undocumented)
+// @public
 export interface GeoSortOrder {
-    // (undocumented)
     [field: string]: string;
-    // (undocumented)
     order: SortOrder;
 }
 
@@ -153,124 +150,95 @@ export type OnlyIdResult = Pick<BasicResult, 'id'>;
 // @public
 export class Query {
     constructor(params?: QueryParams);
-    // (undocumented)
     copy(): Query;
-    // (undocumented)
     get defaults(): QueryParams;
     set defaults(value: QueryParams);
-    // (undocumented)
     dump(validate?: boolean): SearchParams;
-    // Warning: (ae-incompatible-release-tags) The symbol "excludes" is marked as @public, but its signature references "QueryFilter" which is marked as @beta
-    //
-    // (undocumented)
     get excludes(): QueryFilter;
-    // Warning: (ae-incompatible-release-tags) The symbol "filters" is marked as @public, but its signature references "QueryFilter" which is marked as @beta
-    //
-    // (undocumented)
     get filters(): QueryFilter;
-    // @beta
     getParam(name: keyof QueryParams): unknown;
-    // (undocumented)
     get hashid(): string;
     set hashid(value: string);
-    // (undocumented)
     get items(): string[];
     set items(value: string[]);
-    // (undocumented)
     load(params?: QueryParams): void;
-    // (undocumented)
     get noStats(): boolean;
     set noStats(value: boolean);
-    // (undocumented)
     get page(): number;
     set page(value: number);
-    // (undocumented)
     get queryCounter(): number;
     set queryCounter(value: number);
-    // (undocumented)
     get queryName(): string;
     set queryName(value: string);
-    // (undocumented)
     reset(): void;
-    // (undocumented)
     get rpp(): number;
     set rpp(value: number);
-    // (undocumented)
     setParam(name: keyof QueryParams, value?: unknown): void;
-    // (undocumented)
     get sort(): QuerySort;
-    // (undocumented)
     get text(): string;
     set text(value: string);
-    // (undocumented)
     get transformer(): string;
     set transformer(value: string);
-    // (undocumented)
     get types(): QueryTypes;
     }
 
-// @beta
+// @public
 export class QueryFilter {
     add(name: string, value: unknown): void;
-    // (undocumented)
     clear(): void;
-    // (undocumented)
     contains(name: string, value: unknown): boolean;
-    // (undocumented)
     dump(): GenericObject<unknown>;
-    // (undocumented)
     equals(name: string, value: unknown): boolean;
-    // (undocumented)
     get(name: string): unknown;
-    // (undocumented)
     has(name: string): boolean;
-    // (undocumented)
     remove(name: string, value?: unknown): void;
     set(name: string, value: unknown): void;
-    // (undocumented)
     setMany(data: GenericObject<unknown>, replace?: boolean): void;
-    // (undocumented)
-    toggle(name: string, value: unknown): void;
 }
 
-// Warning: (ae-forgotten-export) The symbol "QueryParamsBase" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
+// @public
 export type QueryParams = Partial<QueryParamsBase>;
 
-// @public (undocumented)
+// @public
+export interface QueryParamsBase {
+    [key: string]: unknown;
+    exclude?: GenericObject<unknown>;
+    filter?: GenericObject<unknown>;
+    hashid: string;
+    items?: string[];
+    nostats?: boolean;
+    page?: number;
+    query?: string;
+    query_counter?: number;
+    query_name?: string;
+    rpp?: number;
+    sort?: SortingInput[];
+    transformer?: string;
+    type?: string | string[];
+}
+
+// @public
 export class QuerySort {
-    // (undocumented)
     add(value: FieldSorting | GeoSorting): number;
     // (undocumented)
     add(value: string, order?: SortOrder): number;
-    // (undocumented)
     clear(): void;
-    // (undocumented)
     get(): Sorting[];
-    // (undocumented)
     set(value: SortingInput | SortingInput[]): number;
     }
 
-// @public (undocumented)
+// @public
 export class QueryTypes {
-    // (undocumented)
     add(value: string): void;
-    // (undocumented)
     clear(): void;
-    // (undocumented)
     dump(): string[];
-    // (undocumented)
     has(value: string): boolean;
-    // (undocumented)
     remove(value: string): void;
-    // (undocumented)
     set(value: string | string[]): void;
     }
 
-// @public (undocumented)
+// @public
 export class QueryValueError extends Error {
-    constructor(message: string);
 }
 
 // @public
@@ -342,7 +310,7 @@ export interface RedirectionStatsParams extends StatsParams {
     redirection_id: string | number;
 }
 
-// @public (undocumented)
+// @public
 export interface SearchParams extends QueryParamsBase {
     // (undocumented)
     sort?: Sorting[];
@@ -387,13 +355,13 @@ export interface SearchResponse extends GenericObject {
 // @public
 export const shallowEqual: (objA: any, objB: any) => boolean;
 
-// @public (undocumented)
+// @public
 export type Sorting = FieldSorting | GeoSorting;
 
-// @public (undocumented)
+// @public
 export type SortingInput = string | Sorting;
 
-// @public (undocumented)
+// @public
 export type SortOrder = 'asc' | 'desc';
 
 // @public

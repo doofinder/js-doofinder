@@ -3,29 +3,67 @@ import { QueryValueError } from './error';
 import { clone } from '../util/clone';
 import { isPlainObject } from '../util/is';
 
+/**
+ * Valid sort order values.
+ * @public
+ */
 export type SortOrder = 'asc' | 'desc';
 
+/**
+ * Specification to sort by geo distance.
+ * @public
+ */
 export interface GeoSortOrder {
+  /** A geo point field, the value is a valid position. */
   [field: string]: string;
+  /** How to sort relative to the provided geo point (asc or desc) */
   order: SortOrder;
 }
 
-// is this _geo_distance instead???
+/**
+ * Interface to specify a sorting by geo distance.
+ * @public
+ */
 export interface GeoSorting {
-  geo_distance: GeoSortOrder;
+  _geo_distance: GeoSortOrder;
 }
 
+/**
+ * Specification to sort by a field.
+ * @public
+ */
 export interface FieldSorting {
+  /** A regular field and the sort direction. */
   [field: string]: SortOrder;
 }
 
+/**
+ * A field or geo distance sorting.
+ * @public
+ */
 export type Sorting = FieldSorting | GeoSorting;
 
+/**
+ * Valid input for a field or geo distance sorting.
+ * @public
+ */
 export type SortingInput = string | Sorting;
 
+/**
+ * Class to manage sorting information for a search query.
+ * @public
+ */
 export class QuerySort {
   private _sortings: Sorting[] = [];
 
+  /**
+   * Set one or more values to sort the query.
+   *
+   * @param value - Field or fields to sort the query.
+   * @returns the new length of the list of sortings.
+   *
+   * @public
+   */
   public set(value: SortingInput | SortingInput[]): number {
     this.clear();
     (Array.isArray(value) ? value : [value]).forEach(sorting => {
@@ -38,6 +76,14 @@ export class QuerySort {
     return this._sortings.length;
   }
 
+  /**
+   * Add a sorting to the end of the list of sortings.
+   *
+   * @param value - A valid input sorting value.
+   * @returns the new length of the list of sortings.
+   *
+   * @public
+   */
   public add(value: FieldSorting | GeoSorting): number;
   public add(value: string, order?: SortOrder): number;
   public add(value: SortingInput, order?: SortOrder): number {
@@ -45,7 +91,7 @@ export class QuerySort {
       return this._addFieldSorting(value, order);
     } else if (this._isLikeSorting(value)) {
       const field: string = Object.keys(value)[0];
-      if (field === 'geo_distance') {
+      if (field === '_geo_distance') {
         return this._addGeoDistanceSorting(clone(value[field]) as GeoSortOrder);
       } else {
         return this._addFieldSorting(field, (value as FieldSorting)[field]);
@@ -53,10 +99,19 @@ export class QuerySort {
     }
   }
 
+  /**
+   * Get the current list of sortings.
+   * @returns An array of sort values.
+   * @public
+   */
   public get(): Sorting[] {
     return clone(this._sortings);
   }
 
+  /**
+   * Clear the current list of sortings.
+   * @public
+   */
   public clear(): void {
     this._sortings.length = 0;
   }
@@ -78,7 +133,7 @@ export class QuerySort {
       const field: string = Object.keys(value).find(key => key !== 'order');
       if (typeof value[field] === 'string') {
         // eslint-disable-next-line @typescript-eslint/camelcase
-        return this._sortings.push({ geo_distance: value } as GeoSorting);
+        return this._sortings.push({ _geo_distance: value } as GeoSorting);
       }
     }
 
