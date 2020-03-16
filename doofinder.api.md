@@ -48,64 +48,40 @@ export interface ClickStatsParamsWithId extends StatsParams {
 // @public
 export class Client {
     constructor({ zone, secret, headers, serverAddress }?: Partial<ClientOptions>);
-    // (undocumented)
     buildUrl(resource: string, querystring?: string): string;
-    // (undocumented)
     get endpoint(): string;
-    // (undocumented)
     get headers(): GenericObject<string>;
     options(hashid: string): Promise<GenericObject>;
     request(resource: string, payload?: GenericObject): Promise<Response>;
     search(params: Query | SearchParams): Promise<SearchResponse>;
-    // (undocumented)
     get secret(): string;
     stats(eventName: string, params: GenericObject<string>): Promise<Response>;
-    // (undocumented)
-    topStats(type: TopStatsType, params: TopStatsParams): Promise<Response>;
-    // (undocumented)
     toString(): string;
-    // (undocumented)
     get zone(): string;
     }
 
-// @public (undocumented)
-export class ClientError extends Error {
-}
-
-// @public (undocumented)
-export interface ClientHeaders extends GenericObject<string> {
-    // (undocumented)
-    Accept: string;
-    // (undocumented)
-    Authorization: string;
-}
-
 // @public
 export interface ClientOptions {
-    // (undocumented)
-    headers: Partial<ClientHeaders>;
-    // (undocumented)
+    headers: GenericObject<string>;
     secret: string;
-    // (undocumented)
     serverAddress: string;
-    // (undocumented)
-    zone: Zone;
+    zone: string;
 }
 
 // @beta
 export class ClientPool {
     // (undocumented)
     static clear(): void;
-    static getClient(zone: Zone): Client;
+    static getClient(zone: string): Client;
     // (undocumented)
-    static getStatsClient(zone: Zone): StatsClient;
+    static getStatsClient(zone: string): StatsClient;
     static get options(): Partial<ClientOptions>;
     static set options(value: Partial<ClientOptions>);
     // (undocumented)
     static reset(): void;
     }
 
-// @public (undocumented)
+// @public
 export class ClientResponseError extends Error {
     constructor(response: Response);
     // (undocumented)
@@ -489,27 +465,6 @@ export interface TermStats {
     selected?: boolean;
     total: number;
     value: string;
-}
-
-// @public (undocumented)
-export interface TopStatsParams {
-    // (undocumented)
-    days?: number | string;
-    // (undocumented)
-    hashid: string;
-    // (undocumented)
-    withresult?: boolean | string;
-}
-
-// @public (undocumented)
-export type TopStatsType = 'searches' | 'clicks';
-
-// @public
-export enum Zone {
-    // (undocumented)
-    EU1 = "eu1",
-    // (undocumented)
-    US1 = "us1"
 }
 
 

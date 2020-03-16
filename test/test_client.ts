@@ -12,7 +12,7 @@ import { expectAsync } from './util/async';
 should();
 
 // required for tests
-import { Client, ClientResponseError, Zone } from '../src/client';
+import { Client, ClientResponseError } from '../src/client';
 import { ClientPool } from '../src/pool';
 import { isPlainObject } from '../src/util/is';
 import { Query } from '../src/query';
@@ -35,8 +35,8 @@ describe('Client', () => {
   context('Instantiation', () => {
     context('with no zone', () => {
       it('should use EU1', done => {
-        (new Client()).zone.should.equal(Zone.EU1);
-        (new Client({ secret: cfg.secret })).zone.should.equal(Zone.EU1);
+        (new Client()).zone.should.equal('eu1');
+        (new Client({ secret: cfg.secret })).zone.should.equal('eu1');
         done();
       });
     });
@@ -56,7 +56,7 @@ describe('Client', () => {
 
     context('with key with zone and zone', () => {
       it("should use key's zone", done => {
-        const client = new Client({ secret: cfg.key, zone: Zone.US1 });
+        const client = new Client({ secret: cfg.key, zone: 'us1' });
         client.zone.should.equal('eu1');
         done();
       });
@@ -181,25 +181,25 @@ describe('Client', () => {
     });
   });
 
-  context('topStats()', () => {
-    const query = {
-      hashid: cfg.hashid,
-      days: '7',
-      withresults: 'true'
-    }
+  // context('topStats()', () => {
+  //   const query = {
+  //     hashid: cfg.hashid,
+  //     days: '7',
+  //     withresults: 'true'
+  //   }
 
-    it('searches', done => {
-      const url = `${cfg.endpoint}/5/topstats/searches`;
-      // @ts-ignore
-      fetchMock.get({ url, query }, { body: {}, status: 200 });
-      cfg.getClient().topStats('searches', query).should.be.fulfilled.notify(done);
-    });
+  //   it('searches', done => {
+  //     const url = `${cfg.endpoint}/5/topstats/searches`;
+  //     // @ts-ignore
+  //     fetchMock.get({ url, query }, { body: {}, status: 200 });
+  //     cfg.getClient().topStats('searches', query).should.be.fulfilled.notify(done);
+  //   });
 
-    it('clicks', done => {
-      const url = `${cfg.endpoint}/5/topstats/clicks`;
-      // @ts-ignore
-      fetchMock.get({ url, query }, { body: {}, status: 200 });
-      cfg.getClient().topStats('clicks', query).should.be.fulfilled.notify(done);
-    });
-  });
+  //   it('clicks', done => {
+  //     const url = `${cfg.endpoint}/5/topstats/clicks`;
+  //     // @ts-ignore
+  //     fetchMock.get({ url, query }, { body: {}, status: 200 });
+  //     cfg.getClient().topStats('clicks', query).should.be.fulfilled.notify(done);
+  //   });
+  // });
 });

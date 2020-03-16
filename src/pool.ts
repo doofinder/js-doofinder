@@ -1,4 +1,4 @@
-import { Client, ClientOptions, Zone } from './client';
+import { Client, ClientOptions } from './client';
 import { StatsClient } from './stats';
 
 /*
@@ -12,8 +12,8 @@ import { StatsClient } from './stats';
  * @beta
  */
 export class ClientPool {
-  private static _clientsPool: Map<Zone, Client> = new Map();
-  private static _statsClientsPool: Map<Zone, StatsClient> = new Map();
+  private static _clientsPool: Map<string, Client> = new Map();
+  private static _statsClientsPool: Map<string, StatsClient> = new Map();
   private static _options: Partial<ClientOptions> = {};
 
   /**
@@ -57,7 +57,7 @@ export class ClientPool {
    * @param zone - A valid search zone.
    * @beta
    */
-  public static getClient(zone: Zone): Client {
+  public static getClient(zone: string): Client {
     if (!this._clientsPool.has(zone)) {
       this._clientsPool.set(zone, new Client({ ...this._options, zone }));
     }
@@ -65,7 +65,7 @@ export class ClientPool {
     return this._clientsPool.get(zone);
   }
 
-  public static getStatsClient(zone: Zone): StatsClient {
+  public static getStatsClient(zone: string): StatsClient {
     if (!this._statsClientsPool.has(zone)) {
       this._statsClientsPool.set(zone, new StatsClient(this.getClient(zone)));
     }
