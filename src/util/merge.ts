@@ -2,6 +2,10 @@ import { isPlainObject } from './is';
 import { GenericObject } from '../types';
 
 /**
+ * Merge multiple objects into one.
+ *
+ * @remarks
+ *
  * Heavily based on https://www.npmjs.com/package/extend.
  *
  * While extend() fully extends objects, this version only touches own
@@ -13,7 +17,11 @@ import { GenericObject } from '../types';
  *
  * Works the same as extend, but merge is always "deep"
  *
- * WARNING: Be careful with arrays of objects, you can end having duplicates.
+ * __WARNING:__ Be careful with arrays of objects, you can end having duplicates.
+ *
+ * @param objects - An undetermined number of objects to merge.
+ * @returns An object resulting of merging the provided objects.
+ * @public
  */
 export function merge(...objects: GenericObject[]): GenericObject {
   let target: GenericObject = objects.shift();

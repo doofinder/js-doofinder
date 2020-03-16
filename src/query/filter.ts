@@ -1,7 +1,7 @@
 import { GenericObject } from '../types';
 
 import { QueryValueError } from './error';
-import { isPlainObject, shallowEqual, isString, isNumber } from '../util/is';
+import { isPlainObject, isShallowEqual, isString, isNumber } from '../util/is';
 import { clone } from '../util/clone';
 
 /**
@@ -210,7 +210,7 @@ export class QueryFilter {
 
       return true;
     } else {
-      return shallowEqual(filterValue, normalized);
+      return isShallowEqual(filterValue, normalized);
     }
   }
 }

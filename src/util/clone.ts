@@ -55,6 +55,13 @@ function baseClone(src: any, circulars: any[], clones: any[]): any {
   return src;
 }
 
+/**
+ * Create a copy of the provided data.
+ *
+ * @param src - The data to clone.
+ * @returns A copy of the data.
+ * @public
+ */
 export function clone(src: any): any {
   return baseClone(src, [], []);
 }

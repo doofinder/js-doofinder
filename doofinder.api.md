@@ -46,6 +46,8 @@ export class Client {
     search(params: Query | SearchParams): Promise<SearchResponse>;
     get secret(): string;
     stats(eventName: string, params: GenericObject<string>): Promise<Response>;
+    // (undocumented)
+    topStats(type: TopStatsType, params: TopStatsParams): Promise<Response>;
     toString(): string;
     get zone(): string;
     }
@@ -71,13 +73,11 @@ export class ClientPool {
 // @public
 export class ClientResponseError extends Error {
     constructor(response: Response);
-    // (undocumented)
     response: Response;
-    // (undocumented)
     statusCode: number;
 }
 
-// @public (undocumented)
+// @public
 export function clone(src: any): any;
 
 // @public
@@ -90,7 +90,6 @@ export interface FieldSorting {
 
 // @public
 export interface GenericObject<T = any> {
-    // (undocumented)
     [key: string]: T;
 }
 
@@ -102,7 +101,6 @@ export interface GeoDistanceFilter {
 
 // @public
 export interface GeoSorting {
-    // (undocumented)
     _geo_distance: GeoSortOrder;
 }
 
@@ -113,32 +111,35 @@ export interface GeoSortOrder {
 }
 
 // @public
-export const identical: (x: any, y: any) => boolean;
-
-// @public
 export interface ImageStatsParams extends StatsParams {
     img_id: string | number;
 }
 
-// @public (undocumented)
+// @public
 export function isEmptyObject(obj: unknown): boolean;
 
-// @public (undocumented)
+// @public
+export const isIdentical: (x: any, y: any) => boolean;
+
+// @public
 export const isNumber: (value: unknown) => boolean;
 
-// @public (undocumented)
+// @public
 export const isObject: (value: unknown) => boolean;
 
-// @public (undocumented)
+// @public
 export const isPlainObject: (value: unknown) => boolean;
 
-// @public (undocumented)
+// @public
+export const isShallowEqual: (objA: any, objB: any) => boolean;
+
+// @public
 export const isString: (value: unknown) => boolean;
 
 // @public
 export function isValidDoofinderId(value: unknown): boolean;
 
-// @public (undocumented)
+// @public
 export function isValidHashId(value: unknown): boolean;
 
 // @public
@@ -353,9 +354,6 @@ export interface SearchResponse extends GenericObject {
 }
 
 // @public
-export const shallowEqual: (objA: any, objB: any) => boolean;
-
-// @public
 export type Sorting = FieldSorting | GeoSorting;
 
 // @public
@@ -398,6 +396,16 @@ export interface TermStats {
     total: number;
     value: string;
 }
+
+// @public
+export interface TopStatsParams {
+    days?: number | string;
+    hashid: string;
+    withresult?: boolean | string;
+}
+
+// @public
+export type TopStatsType = 'searches' | 'clicks';
 
 
 // (No @packageDocumentation comment for this package)

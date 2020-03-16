@@ -10,6 +10,10 @@
  * @public
  */
 export interface GenericObject<T = any> {
+  /**
+   * Custom key for the object.
+   * @public
+   */
   [key: string]: T;
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */

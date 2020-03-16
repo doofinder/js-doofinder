@@ -5,9 +5,6 @@ import { use, should, expect } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 use(chaiAsPromised);
 
-// TODO: Using chai-as-promised this can be removed
-import { expectAsync } from './util/async';
-
 // chai
 should();
 
@@ -179,25 +176,25 @@ describe('Client', () => {
     });
   });
 
-  // context('topStats()', () => {
-  //   const query = {
-  //     hashid: cfg.hashid,
-  //     days: '7',
-  //     withresults: 'true'
-  //   }
+  context('topStats()', () => {
+    const query = {
+      hashid: cfg.hashid,
+      days: '7',
+      withresults: 'true'
+    }
 
-  //   it('searches', done => {
-  //     const url = `${cfg.endpoint}/5/topstats/searches`;
-  //     // @ts-ignore
-  //     fetchMock.get({ url, query }, { body: {}, status: 200 });
-  //     cfg.getClient().topStats('searches', query).should.be.fulfilled.notify(done);
-  //   });
+    it('searches', done => {
+      const url = `${cfg.endpoint}/5/topstats/searches`;
+      // @ts-ignore
+      fetchMock.get({ url, query }, { body: {}, status: 200 });
+      cfg.getClient().topStats('searches', query).should.be.fulfilled.notify(done);
+    });
 
-  //   it('clicks', done => {
-  //     const url = `${cfg.endpoint}/5/topstats/clicks`;
-  //     // @ts-ignore
-  //     fetchMock.get({ url, query }, { body: {}, status: 200 });
-  //     cfg.getClient().topStats('clicks', query).should.be.fulfilled.notify(done);
-  //   });
-  // });
+    it('clicks', done => {
+      const url = `${cfg.endpoint}/5/topstats/clicks`;
+      // @ts-ignore
+      fetchMock.get({ url, query }, { body: {}, status: 200 });
+      cfg.getClient().topStats('clicks', query).should.be.fulfilled.notify(done);
+    });
+  });
 });

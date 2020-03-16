@@ -35,7 +35,15 @@ export interface ClientOptions {
  * @public
  */
 export class ClientResponseError extends Error {
+  /**
+   * Status code of the HTTP response.
+   * @public
+   */
   public statusCode: number;
+  /**
+   * The Response received by the client.
+   * @public
+   */
   public response: Response;
 
   /**
@@ -51,12 +59,24 @@ export class ClientResponseError extends Error {
   }
 }
 
-// export type TopStatsType = 'searches' | 'clicks';
-// export interface TopStatsParams {
-//   hashid: string;
-//   days?: number | string;
-//   withresult?: boolean | string;
-// }
+/**
+ * Types of top stats.
+ * @public
+ */
+export type TopStatsType = 'searches' | 'clicks';
+
+/**
+ * Parameters for a top stats request.
+ * @public
+ */
+export interface TopStatsParams {
+  /** Unique Id of the search engine. */
+  hashid: string;
+  /** Optional. Number of days to retrieve. */
+  days?: number | string;
+  /** Optional. */
+  withresult?: boolean | string;
+}
 
 const API_KEY_RE = /^(([^-]+)-)?([a-f0-9]{40})$/i;
 
@@ -249,11 +269,11 @@ export class Client {
     return await this.request(this.buildUrl(`/stats/${eventName}`, qs));
   }
 
-  // public async topStats(type: TopStatsType, params: TopStatsParams): Promise<Response> {
-  //   validateHashId(params.hashid);
-  //   const qs = buildQueryString({ random: new Date().getTime(), ...params });
-  //   return await this.request(this.buildUrl(`/topstats/${type}`, qs));
-  // }
+  public async topStats(type: TopStatsType, params: TopStatsParams): Promise<Response> {
+    validateHashId(params.hashid);
+    const qs = buildQueryString({ random: new Date().getTime(), ...params });
+    return await this.request(this.buildUrl(`/topstats/${type}`, qs));
+  }
 
   /**
    * Build a URL for the provided resource.

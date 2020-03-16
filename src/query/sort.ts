@@ -25,6 +25,10 @@ export interface GeoSortOrder {
  * @public
  */
 export interface GeoSorting {
+  /**
+   * The geo distance sorting info.
+   * @public
+   */
   _geo_distance: GeoSortOrder;
 }
 
