@@ -68,16 +68,13 @@ export interface ClientOptions {
     zone: string;
 }
 
-// @beta
+// @public
 export class ClientPool {
-    // (undocumented)
     static clear(): void;
     static getClient(zone: string): Client;
-    // (undocumented)
     static getStatsClient(zone: string): StatsClient;
     static get options(): Partial<ClientOptions>;
     static set options(value: Partial<ClientOptions>);
-    // (undocumented)
     static reset(): void;
     }
 
