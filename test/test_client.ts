@@ -5,18 +5,13 @@ import { use, should, expect } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 use(chaiAsPromised);
 
-// TODO: Using chai-as-promised this can be removed
-import { expectAsync } from './util/async';
-
 // chai
 should();
 
 // required for tests
-import { Client, ClientResponseError, Zone } from '../src/client';
+import { Client, ClientResponseError } from '../src/client';
 import { ClientPool } from '../src/pool';
-import { isPlainObject } from '../src/util/is';
 import { Query } from '../src/query';
-import { StatsEvent } from '../src/stats';
 import { ValidationError } from '../src/util/validators';
 
 // config, utils & mocks
@@ -35,28 +30,28 @@ describe('Client', () => {
   context('Instantiation', () => {
     context('with no zone', () => {
       it('should use EU1', done => {
-        (new Client()).zone.should.equal(Zone.EU1);
-        (new Client({ key: 'abcd' })).zone.should.equal(Zone.EU1);
+        (new Client()).zone.should.equal('eu1');
+        (new Client({ secret: cfg.secret })).zone.should.equal('eu1');
         done();
       });
     });
 
     context('with key with zone and no zone', () => {
       it('should use zone from key', done => {
-        const client = new Client({ key: 'us1-abcd' });
+        const client = new Client({ secret: `us1-${cfg.secret}` });
         client.zone.should.equal('us1');
         done();
       })
 
       it('should break if api key is malformed', done => {
-        (() => new Client({ key: '-abcd' })).should.throw();
+        (() => new Client({ secret: '-abcd' })).should.throw();
         done();
       });
     });
 
     context('with key with zone and zone', () => {
       it("should use key's zone", done => {
-        const client = new Client({ key: 'eu1-abcd', zone: Zone.US1 });
+        const client = new Client({ secret: cfg.key, zone: 'us1' });
         client.zone.should.equal('eu1');
         done();
       });
@@ -64,14 +59,14 @@ describe('Client', () => {
 
     context('HTTP Headers', () => {
       it('should add passed headers to the request', done => {
-        const client = new Client({ key: cfg.key, headers: { 'X-Name': 'John Smith' } });
+        const client = new Client({ secret: cfg.key, headers: { 'X-Name': 'John Smith' } });
         client.headers['X-Name'].should.equal('John Smith');
         done()
       });
 
       it ("won't replace API Keys passed in options", done => {
         const client = new Client({
-          key: cfg.key,
+          secret: cfg.key,
           headers: {
           'X-Name': 'John Smith',
           'Authorization': 'abc'
@@ -90,7 +85,7 @@ describe('Client', () => {
       });
 
       it('should use custom address if defined', done => {
-        const client = new Client({ key: cfg.key, serverAddress: 'localhost:4000' });
+        const client = new Client({ secret: cfg.key, serverAddress: 'localhost:4000' });
         client.endpoint.should.equal('https://localhost:4000');
         done();
       });
@@ -177,7 +172,7 @@ describe('Client', () => {
       }
       // @ts-ignore
       fetchMock.get({ url, query }, { body: {}, status: 200 });
-      cfg.getClient().stats(StatsEvent.Init, { hashid: cfg.hashid, session_id: 'abc'}).should.be.fulfilled.notify(done);
+      cfg.getClient().stats('init', { hashid: cfg.hashid, session_id: 'abc'}).should.be.fulfilled.notify(done);
     });
   });
 

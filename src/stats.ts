@@ -2,46 +2,73 @@ import { GenericObject } from './types';
 
 import { Client } from './client';
 import { validateRequired, validateDoofinderId, ValidationError } from './util/validators';
+import { clone } from './util/clone';
 
-export enum StatsEvent {
-  Init = 'init',
-  Click = 'click',
-  Checkout = 'checkout',
-  ImageDisplay = 'img_display',
-  ImageClick = 'img_click',
-  Redirection = 'redirect',
-}
-
+/**
+ * Basic parameters for stats requests.
+ * @public
+ */
 export interface StatsParams {
+  /** Unique ID of the user session. */
   session_id: string;
+  /** Unique ID of the search engine. */
   hashid: string;
 }
 
+/**
+ * Parameters for click stats with dfid.
+ * @public
+ */
 export interface ClickStatsParamsWithDfid extends StatsParams {
+  /** Unique ID of the clicked result. */
   dfid: string;
+  /** Optional search terms. */
   query?: string;
+  /** Optional ID of the custom results that produced the current set of results. */
   custom_results_id?: string | number;
 }
 
+/**
+ * Parameters for click stats without dfid.
+ * @public
+ */
 export interface ClickStatsParamsWithId extends StatsParams {
+  /** Unique ID of the clicked result as provided in the data source. */
   id: string | number;
+  /** Data type of the clicked result. */
   datatype: string;
+  /** Optional search terms. */
   query?: string;
+  /** Optional ID of the custom results that produced the current set of results. */
   custom_results_id?: string | number;
 }
 
-export type ClickStatsParams = ClickStatsParamsWithDfid | ClickStatsParamsWithId;
-
+/**
+ * Parameters for image stats.
+ * @public
+ */
 export interface ImageStatsParams extends StatsParams {
+  /** Unique ID of the image in Doofinder. */
   img_id: string | number;
 }
 
+/**
+ * Parameters for redirection stats.
+ * @public
+ */
 export interface RedirectionStatsParams extends StatsParams {
+  /** Unique ID of the redirection in Doofinder. */
   redirection_id: string | number;
+  /** The target of the redirection. */
   link: string;
+  /** Optional search terms. */
   query?: string;
 }
 
+/**
+ * Wrapper class to simplify stats calls.
+ * @public
+ */
 export class StatsClient {
   private _client: Client;
 
@@ -58,107 +85,114 @@ export class StatsClient {
   }
 
   /**
-   * Registers a new session with Doofinder, and returns
-   * the session ID generated for this session
+   * Registers a session ID in Doofinder.
    *
-   * @param   {String}     session_id   The session_id
+   * @param params - An options object. See {@link StatsParams}.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
    *
-   * @return  {String}     The newly generated Session ID
+   * @public
    */
   public async registerSession(params: StatsParams): Promise<Response> {
-    return this.client.stats(StatsEvent.Init, params as GenericObject);
+    return this.client.stats('init', params as GenericObject);
   }
 
   /**
-   * Registers a click within this session, using the dfid
-   * or the database id and datatype.
+   * Register a click on a result.
    *
-   * @param  {String}   session_id           The session_id
+   * @param params - An options object. See {@link ClickStatsParamsWithDfid} and {@link ClickStatsParamsWithId}.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
    *
-   * @param  {String}   id                  Id of the result or Doofinder's internal ID
-   *                                        for the result.
-   *
-   * @param  {String}   datatype            Optional. If the id is not a Doofinder id
-   *                                        this argument is required.
-   *
-   * @param  {String}   query               Optional. Search terms.
-   *
-   * @param  {String}   custom_results_id   Optional. Id of the custom results
-   *                                        that produced the current set of
-   *                                        results, including the current one
-   *                                        being clicked.
-   *
+   * @public
    */
-  public async registerClick(params: ClickStatsParams): Promise<Response> {
-    if ('dfid' in params) {
-      validateDoofinderId(params.dfid);
+  public async registerClick(params: ClickStatsParamsWithDfid | ClickStatsParamsWithId): Promise<Response> {
+    const options = clone(params);
+    if ('dfid' in options) {
+      validateDoofinderId(options.dfid);
       /* eslint-disable @typescript-eslint/ban-ts-ignore */
       // @ts-ignore
-      delete params.id;
+      delete options.id;
       // @ts-ignore
-      delete params.datatype;
+      delete options.datatype;
       /* eslint-enable @typescript-eslint/ban-ts-ignore */
     } else {
-      validateRequired([params.id, params.datatype], 'dfid or id + datatype are required');
+      validateRequired([options.id, options.datatype], 'dfid or id + datatype are required');
       /* eslint-disable @typescript-eslint/ban-ts-ignore */
       // @ts-ignore
-      delete params.dfid;
+      delete options.dfid;
       /* eslint-enable @typescript-eslint/ban-ts-ignore */
     }
-    return this.client.stats(StatsEvent.Click, params as GenericObject);
+    return this.client.stats('click', options as GenericObject);
   }
 
   /**
-   * Register a checkout within the session
+   * Register a checkout within the session.
    *
-   * @param   {String}    session_id   Optional. The session ID
+   * @param params - An options object. See {@link StatsParams}.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
    *
+   * @public
    */
   public async registerCheckout(params: StatsParams): Promise<Response> {
-    return this.client.stats(StatsEvent.Checkout, params as GenericObject);
+    return this.client.stats('checkout', params as GenericObject);
   }
 
   /**
+   * Register an image display during the current session.
    *
-   * Register the display banner events
+   * @param params - An options object. See {@link ImageStatsParams}.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
    *
-   * @param  {Number}    img_id    The banner ID
-   *
+   * @public
    */
   public async registerImageDisplay(params: ImageStatsParams): Promise<Response> {
     validateRequired(params.img_id, 'img_id is required');
-    return this.client.stats(StatsEvent.ImageDisplay, params as GenericObject);
+    return this.client.stats('img_display', params as GenericObject);
   }
 
   /**
+   * Register an image click during the current session.
    *
-   * Register the display banner events
+   * @param params - An options object. See {@link ImageStatsParams}.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
    *
-   * @param  {Number}    img_id    The banner ID
-   *
+   * @public
    */
   public async registerImageClick(params: ImageStatsParams): Promise<Response> {
     validateRequired(params.img_id, 'img_id is required');
-    return this.client.stats(StatsEvent.ImageClick, params as GenericObject);
-  }
-
-  public async registerRedirection(params: RedirectionStatsParams): Promise<Response> {
-    validateRequired([params.redirection_id, params.link], 'redirection_id and link are required');
-    return this.client.stats(StatsEvent.Redirection, params as GenericObject);
+    return this.client.stats('img_click', params as GenericObject);
   }
 
   /**
+   * Register a redirection occurred during the current session.
    *
-   * Register any custom event
+   * @param params - An options object. See {@link RedirectionStatsParams}.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
    *
-   * @param  {String}    eventName    The event name to register
+   * @public
+   */
+  public async registerRedirection(params: RedirectionStatsParams): Promise<Response> {
+    validateRequired([params.redirection_id, params.link], 'redirection_id and link are required');
+    return this.client.stats('redirect', params as GenericObject);
+  }
+
+  /**
+   * Pass-through to register any custom event.
    *
-   * @param  {Object}    params       The parameters to send alongside.
-   *                                  It expects to have a session_id and
-   *                                  a hashid
+   * @param eventName - The event name to register.
+   * @param params - The params object associated to the event call.
+   * It should have at least a session_id and a hashid.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
    *
+   * @public
    */
   public async registerEvent(eventName: string, params: GenericObject): Promise<Response> {
-    return this.client.stats(eventName as StatsEvent, params);
+    return this.client.stats(eventName, params);
   }
 }

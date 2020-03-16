@@ -222,38 +222,6 @@ describe('QueryFilter', () => {
       done();
     });
   });
-
-  context('toggle filters', () => {
-    it(`toggles a filter given the exact value`, done => {
-      filter.toggle('brand', 'adidas');
-      filter.get('brand').should.eql(['adidas']);
-      filter.toggle('brand', 'adidas');
-      expect(filter.get('brand')).to.be.undefined;
-
-      filter.toggle('brand', ['adidas', 'nike']);
-      filter.get('brand').should.eql(['adidas', 'nike']);
-      (() => {
-        filter.toggle('brand', 'adidas');
-      }).should.throw;
-      filter.toggle('brand', ['adidas', 'nike']);
-      expect(filter.get('brand')).to.be.undefined;
-
-      filter.toggle('value', true);
-      filter.get('value').should.be.true;
-      filter.toggle('value', true);
-      expect(filter.get('value')).to.be.undefined;
-
-      filter.toggle('best_price', {gte: 100, lte: 200});
-      filter.get('best_price').should.eql({gte: 100, lte: 200});
-      (() => {
-        filter.toggle('best_price', {gte: 100});
-      }).should.throw;
-      filter.toggle('best_price', {gte: 100, lte: 200});
-      expect(filter.get('best_price')).to.be.undefined;
-
-      done();
-    });
-  });
 });
 
 describe('Query', () => {
@@ -552,13 +520,13 @@ describe('Query', () => {
           sort: [
             'brand',
             {best_price: 'desc'},
-            {geo_distance: {position: '40,-70', order: 'asc'}}
+            {_geo_distance: {position: '40,-70', order: 'asc'}}
           ]
         });
         const result = [
           {brand: 'asc'},
           {best_price: 'desc'},
-          {geo_distance: {position: '40,-70', order: 'asc'}}
+          {_geo_distance: {position: '40,-70', order: 'asc'}}
         ];
         query.sort.get().should.eql(result);
         query.dump().sort.should.eql(result);
@@ -570,23 +538,23 @@ describe('Query', () => {
         query.sort.set([
           'brand',
           {best_price: 'desc'},
-          {geo_distance: {position: '40,-70', order: 'asc'}}
+          {_geo_distance: {position: '40,-70', order: 'asc'}}
         ]);
         query.sort.get().should.eql([
           {brand: 'asc'},
           {best_price: 'desc'},
-          {geo_distance: {position: '40,-70', order: 'asc'}}
+          {_geo_distance: {position: '40,-70', order: 'asc'}}
         ]);
         done();
       });
       it('can add sorting', done => {
         query.sort.add('brand');
         query.sort.add('best_price', 'desc');
-        query.sort.add({geo_distance: {location: '40,-70', order: 'desc'}});
+        query.sort.add({_geo_distance: {location: '40,-70', order: 'desc'}});
         query.sort.get().should.eql([
           {brand: 'asc'},
           {best_price: 'desc'},
-          {geo_distance: {location: '40,-70', order: 'desc'}}
+          {_geo_distance: {location: '40,-70', order: 'desc'}}
         ]);
         done();
       });

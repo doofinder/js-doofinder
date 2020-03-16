@@ -1,53 +1,83 @@
-/* eslint-disable prettier/prettier */
-import type { GenericObject } from '../types';
-import type { SortingInput, Sorting } from './sort';
-/* eslint-enable prettier/prettier */
+import { GenericObject } from '../types';
 
 import { QueryTypes } from './datatype';
 import { QueryFilter } from './filter';
-import { QuerySort } from './sort';
+import { QuerySort, SortingInput, Sorting } from './sort';
 
 import { clone } from '../util/clone';
 import { validateHashId, validatePage, validateRpp, validateItems } from '../util/validators';
 
 // exceptions
 
-interface QueryParamsBase {
+/**
+ * Base parameters for a query.
+ * @public
+ */
+export interface QueryParamsBase {
   // basic parameters
+
+  /** Unique id of the search engine. */
   hashid: string;
+  /** Search terms. */
   query?: string;
+  /** Results page to retrieve. */
   page?: number;
+  /** Number of results to retrieve for each page. */
   rpp?: number;
+  /** Name of the transformer to use to normalize the results. */
   transformer?: string;
+
   // dark magic parameters
+
+  /** Name of the query to use to get the results. */
   query_name?: string;
+  /** Internal counter to manage request/response flow. */
   query_counter?: number;
+  /** Whether to count the request in the search stats or not. */
   nostats?: boolean;
+  /** Restrict the types of data to retrieve results. */
   type?: string | string[];
+
   // filter parameters
+
+  /** Filters to include results in the response. */
   filter?: GenericObject<unknown>;
+  /** Filters to exclude results from the response. */
   exclude?: GenericObject<unknown>;
+
   // sort parameters
+
+  /** Parameters to sort the results */
   sort?: SortingInput[];
+
   // items
+  /** List of dfids to be retrieved from the server. */
   items?: string[];
+
   // custom parameters
+  /** Other custom parameters */
   [key: string]: unknown;
 }
 
+/**
+ * Set of params that can be passed when creating a {@link Query}.
+ * @public
+ */
 export type QueryParams = Partial<QueryParamsBase>;
 
+/**
+ * Set of params that are dump from a {@link Query}.
+ * @public
+ */
 export interface SearchParams extends QueryParamsBase {
   type?: string[];
   sort?: Sorting[];
 }
 
 /**
- * Main QueryBuilder interface, allows creating programmaticly
- * the query using methods instead of creating the JSON and
- * parameters by hand, and doing the searches in a deferred
- * mode
- *
+ * Allows creating a search query programmatically instead of creating
+ * the JSON and parameters by hand.
+ * @public
  */
 export class Query {
   private _defaults: QueryParams;
@@ -57,6 +87,10 @@ export class Query {
   private _excludes: QueryFilter;
   private _sort: QuerySort;
 
+  /**
+   * Get / set the default parameters set when the query is reset.
+   * @public
+   */
   public get defaults(): QueryParams {
     return this._defaults;
   }
@@ -65,6 +99,12 @@ export class Query {
     this.reset();
   }
 
+  /**
+   * Constructor.
+   *
+   * @param params - Initial parameters to load for this query.
+   * @public
+   */
   public constructor(params: QueryParams = {}) {
     this._defaults = {
       query: '',
@@ -79,6 +119,10 @@ export class Query {
     this.load(params);
   }
 
+  /**
+   * Reset the current query to the defaults.
+   * @public
+   */
   public reset(): void {
     this._types.clear();
     this._filters.clear();
@@ -88,6 +132,11 @@ export class Query {
     this.load(clone(this.defaults));
   }
 
+  /**
+   * Configure the query with the provided params.
+   * @param params - Params to load.
+   * @public
+   */
   public load(params: QueryParams = {}): void {
     Object.keys(params).forEach(key => {
       if (key === 'nostats') {
@@ -106,6 +155,14 @@ export class Query {
     });
   }
 
+  /**
+   * Export the query as a params object.
+   *
+   * @param validate - Whether to validate the exported data or not.
+   * @returns An object with all the parameters in the query.
+   *
+   * @public
+   */
   public dump(validate = false): SearchParams {
     if (validate) {
       validateHashId(this.hashid);
@@ -140,6 +197,11 @@ export class Query {
     return data;
   }
 
+  /**
+   * Create a copy of the current query.
+   * @returns A new instance of Query.
+   * @public
+   */
   public copy(): Query {
     const query = new Query();
     query.defaults = clone(this.defaults);
@@ -153,12 +215,23 @@ export class Query {
    *
    * @param name - Name of the parameter to retrieve
    * @returns the value of the parameter, if any
-   * @beta
+   * @public
    */
   public getParam(name: keyof QueryParams): unknown {
     return this._params[name];
   }
 
+  /**
+   * Set the value of a given parameter.
+   *
+   * @remarks
+   *
+   * If the value is `undefined` the parameter is removed.
+   *
+   * @param name - Name of the parameter to set.
+   * @param value - The value of the parameter.
+   * @public
+   */
   public setParam(name: keyof QueryParams, value?: unknown): void {
     if (typeof value !== 'undefined') {
       if (name === 'hashid') {
@@ -179,6 +252,11 @@ export class Query {
 
   // basic parameters
 
+  /**
+   * Get / set the `hashid` parameter.
+   * @param value - The hashid as string.
+   * @public
+   */
   public get hashid(): string {
     return this.getParam('hashid') as string;
   }
@@ -186,6 +264,11 @@ export class Query {
     this.setParam('hashid', value);
   }
 
+  /**
+   * Get / set the `query` parameter.
+   * @param value - The query as string.
+   * @public
+   */
   public get text(): string {
     return this.getParam('query') as string;
   }
@@ -193,6 +276,11 @@ export class Query {
     this.setParam('query', value);
   }
 
+  /**
+   * Get / set the `items` parameter.
+   * @param value - The items as an array of strings.
+   * @public
+   */
   public get items(): string[] {
     return this.getParam('items') as string[];
   }
@@ -200,6 +288,11 @@ export class Query {
     this.setParam('items', value);
   }
 
+  /**
+   * Get / set the `page` parameter.
+   * @param value - The page as a number.
+   * @public
+   */
   public get page(): number {
     return this.getParam('page') as number;
   }
@@ -207,6 +300,11 @@ export class Query {
     this.setParam('page', value);
   }
 
+  /**
+   * Get / set the `rpp` parameter.
+   * @param value - The rpp as a number.
+   * @public
+   */
   public get rpp(): number {
     return this.getParam('rpp') as number;
   }
@@ -214,6 +312,11 @@ export class Query {
     this.setParam('rpp', value);
   }
 
+  /**
+   * Get / set the `transformer` parameter.
+   * @param value - The transformer as string.
+   * @public
+   */
   public get transformer(): string {
     return this.getParam('transformer') as string;
   }
@@ -223,6 +326,11 @@ export class Query {
 
   // dark magic parameters
 
+  /**
+   * Get / set the `query_name` parameter.
+   * @param value - The query name as string.
+   * @public
+   */
   public get queryName(): string {
     return this.getParam('query_name') as string;
   }
@@ -230,6 +338,11 @@ export class Query {
     this.setParam('query_name', value);
   }
 
+  /**
+   * Get / set the `query_counter` parameter.
+   * @param value - The query counter as a number.
+   * @public
+   */
   public get queryCounter(): number {
     // TODO: should this have a default value?
     return this.getParam('query_counter') as number;
@@ -242,6 +355,11 @@ export class Query {
     }
   }
 
+  /**
+   * Get / set the `nostats` parameter.
+   * @param value - The nostats as boolean.
+   * @public
+   */
   public get noStats(): boolean {
     return !!this.getParam('nostats');
   }
@@ -251,22 +369,38 @@ export class Query {
 
   // types
 
+  /**
+   * Return the instance of the query types manager for the current query.
+   * @public
+   */
   public get types(): QueryTypes {
     return this._types;
   }
 
   // filter parameters
 
+  /**
+   * Return the instance of the query filters manager for the current query.
+   * @public
+   */
   public get filters(): QueryFilter {
     return this._filters;
   }
 
+  /**
+   * Return the instance of the query excludes manager for the current query.
+   * @public
+   */
   public get excludes(): QueryFilter {
     return this._excludes;
   }
 
   // sort parameters
 
+  /**
+   * Return the instance of the sort manager for the current query.
+   * @public
+   */
   public get sort(): QuerySort {
     return this._sort;
   }

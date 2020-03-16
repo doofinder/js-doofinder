@@ -3,8 +3,7 @@ import 'mocha';
 import { should, expect } from 'chai';
 import { basicResponse } from './fixtures/basic_response';
 
-import type { SearchResponse } from '../src/response';
-import { processResponse } from '../src/response';
+import { processResponse, SearchResponse } from '../src/response';
 
 // chai
 should();

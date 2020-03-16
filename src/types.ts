@@ -1,12 +1,19 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * This interface allow to use object[key: string] without
- * TypeScript giving problems about it.
+ * Represents an object with an unspecific set of keys and values.
  *
- * Beware, as this invalidates some of the type checkings
- * we want from TypeScript, and maybe that is not what you
- * want
+ * @remarks
+ *
+ * You can enforce the type of all values in the object by passing a
+ * type instead of using the default `any`.
+ *
+ * @public
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface GenericObject<T = any> {
+  /**
+   * Custom key for the object.
+   * @public
+   */
   [key: string]: T;
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */

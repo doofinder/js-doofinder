@@ -16,18 +16,21 @@
     "lib": "lib",
     "test": "test"
   },
-  "types": "types/index.d.ts",
+  "types": "lib/doofinder.d.ts",
   "repository": "git@github.com:doofinder/js-doofinder.git",
   "scripts": {
-    "build": "yarn lint && yarn compile && yarn minify-iife && yarn typings",
-    "test": "export TS_NODE_PROJECT=tsconfig.test.json ; mocha --reporter spec --require ts-node/register \"test/**/*.ts\"",
-    "doc": "typedoc",
     "dev": "es-dev-server --node-resolve --open /playground/",
     "dev:compat": "es-dev-server --node-resolve --compatibility esm --open /playground/",
+
     "lint": "eslint --env browser --fix src/**/*.ts",
     "compile": "rimraf lib && rollup -c",
     "minify-iife": "terser lib/doofinder.js -c -m --comments /^nothing/ --keep-classnames --keep-fnames -o lib/doofinder.min.js",
-    "typings": "rimraf types && tsc --declaration --emitDeclarationOnly --outDir types"
+    "typings": "rimraf types && tsc --declaration --declarationMap --emitDeclarationOnly --outDir types && api-extractor run --local",
+
+    "build": "yarn lint && yarn compile && yarn minify-iife && yarn typings",
+    "docs": "api-documenter markdown -i ./temp -o ./docs",
+
+    "test": "export TS_NODE_PROJECT=tsconfig.test.json ; mocha --reporter spec --require ts-node/register \"test/**/*.ts\""
   },
   "author": "Doofinder",
   "contributors": [
@@ -54,6 +57,8 @@
   "devDependencies": {
     "@commitlint/cli": "^8.2.0",
     "@commitlint/config-conventional": "^8.2.0",
+    "@microsoft/api-documenter": "^7.7.12",
+    "@microsoft/api-extractor": "^7.7.8",
     "@types/chai": "^4.2.3",
     "@types/chai-as-promised": "^7.1.2",
     "@types/fetch-mock": "^7.3.2",
@@ -83,7 +88,7 @@
     "terser": "^4.3.9",
     "ts-node": "^8.4.1",
     "typedoc": "^0.15.0",
-    "typescript": "^3.8.3"
+    "typescript": "3.7.2"
   },
   "dependencies": {
     "node-fetch": "^2.6.0",

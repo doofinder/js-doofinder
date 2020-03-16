@@ -1,18 +1,23 @@
-/* eslint-disable prettier/prettier */
-import type { GenericObject } from '../types';
-/* eslint-enable prettier/prettier */
+import { GenericObject } from '../types';
 
 import { QueryValueError } from './error';
-import { isPlainObject, shallowEqual, isString, isNumber } from '../util/is';
+import { isPlainObject, isShallowEqual, isString, isNumber } from '../util/is';
 import { clone } from '../util/clone';
 
 /**
  * Manage filters applied to a query.
- * @beta
+ * @public
  */
 export class QueryFilter {
   private _filters: Map<string, unknown> = new Map();
 
+  /**
+   * Retrieve the value of a filter.
+   *
+   * @param name - Name of the filter.
+   * @returns The value of the filter.
+   * @public
+   */
   public get(name: string): unknown {
     return this._denormalize(this._filters.get(name));
   }
@@ -24,9 +29,9 @@ export class QueryFilter {
    *
    * Setting the value of a filter will replace any existing value.
    *
-   * @param name - Name of the filter.
+   * @param name - Name of the field.
    * @param value - Value of the filter.
-   * @beta
+   * @public
    */
   public set(name: string, value: unknown): void {
     const normalized = this._normalize(value);
@@ -39,20 +44,42 @@ export class QueryFilter {
     }
   }
 
+  /**
+   * Check whether there's a filter for the provided name or not.
+   *
+   * @param name - Name of the field.
+   * @returns A boolean value.
+   */
   public has(name: string): boolean {
     return this._filters.has(name);
   }
 
+  /**
+   * Check whether there's a filter for the provided name and it contains
+   * the provided value or not.
+   *
+   * @param name - Name of the field.
+   * @param value - The value for the filter.
+   * @returns A boolean value.
+   */
   public contains(name: string, value: unknown): boolean {
     return this.has(name) && this._filterContainsOrEqualsValue(name, value, false);
   }
 
+  /**
+   * Check whether there's a filter for the provided name and it's
+   * equal to the provided value or not.
+   *
+   * @param name - Name of the field.
+   * @param value - The value for the filter.
+   * @returns A boolean value.
+   */
   public equals(name: string, value: unknown): boolean {
     return this.has(name) && this._filterContainsOrEqualsValue(name, value, true);
   }
 
   /**
-   * Add a value to filter.
+   * Add a value to filter by a field.
    *
    * @remarks
    *
@@ -62,10 +89,10 @@ export class QueryFilter {
    *
    * @param name - Name of the filter.
    * @param value - Value to add to the filter.
-   * @beta
+   * @public
    */
   public add(name: string, value: unknown): void {
-    const added: Set<unknown> | unknown = this._normalize(value);
+    const added: Set<unknown> | unknown = this._normalize(value);
     const existing: Set<unknown> | unknown = this._filters.get(name);
 
     if (existing instanceof Set) {
@@ -79,10 +106,23 @@ export class QueryFilter {
     }
   }
 
+  /**
+   * Remove a filter by a field.
+   *
+   * @remarks
+   *
+   * - If the value is not provided, the filter is removed.
+   * - If the value is an object, the filter is removed.
+   * - Otherwise the value is removed from the list of terms.
+   *
+   * @param name - Name of the filter.
+   * @param value - Optional. Value to remove from the filter.
+   * @public
+   */
   public remove(name: string, value?: unknown): void {
     const existing: Set<unknown> | unknown = this._filters.get(name);
     if (existing instanceof Set && value != null) {
-      const deleted: Set<unknown> | unknown = this._normalize(value);
+      const deleted: Set<unknown> | unknown = this._normalize(value);
       if (deleted instanceof Set) {
         for (const item of deleted) {
           existing.delete(item);
@@ -98,22 +138,23 @@ export class QueryFilter {
     }
   }
 
-  public toggle(name: string, value: unknown): void {
-    if (this.has(name)) {
-      if (this.equals(name, value)) {
-        this.remove(name);
-      } else {
-        throw new QueryValueError(`can't toggle value: values don't match`);
-      }
-    } else {
-      this.set(name, value);
-    }
-  }
-
+  /**
+   * Clear all filters.
+   * @public
+   */
   public clear(): void {
     this._filters.clear();
   }
 
+  /**
+   * Set multiple filters at once.
+   *
+   * @param data - An object with all the filters to be set.
+   * @param replace - Boolean value telling whether to replace any
+   * existing filter or not.
+   *
+   * @public
+   */
   public setMany(data: GenericObject<unknown>, replace = false): void {
     if (replace) {
       this.clear();
@@ -123,6 +164,11 @@ export class QueryFilter {
     }
   }
 
+  /**
+   * Dump all filters as an object.
+   * @returns An object with fields as keys and filter values as values.
+   * @public
+   */
   public dump(): GenericObject<unknown> {
     const data: GenericObject<unknown> = {};
     this._filters.forEach((value, key) => {
@@ -134,7 +180,7 @@ export class QueryFilter {
   }
 
   private _normalize(value: unknown): Set<unknown> | unknown {
-    if (isString(value) || isNumber(value)) {
+    if (isString(value) || isNumber(value)) {
       return new Set([value]);
     } else if (Array.isArray(value)) {
       return new Set(value);
@@ -147,11 +193,7 @@ export class QueryFilter {
     return value instanceof Set ? [...value] : value;
   }
 
-  private _filterContainsOrEqualsValue(
-    name: string,
-    value: unknown,
-    checkEquality: boolean
-  ): boolean {
+  private _filterContainsOrEqualsValue(name: string, value: unknown, checkEquality: boolean): boolean {
     const normalized = this._normalize(value);
     const filterValue = this._filters.get(name);
 
@@ -168,7 +210,7 @@ export class QueryFilter {
 
       return true;
     } else {
-      return shallowEqual(filterValue, normalized);
+      return isShallowEqual(filterValue, normalized);
     }
   }
 }

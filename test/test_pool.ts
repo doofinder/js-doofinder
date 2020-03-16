@@ -5,17 +5,16 @@ import { should, expect } from 'chai';
 // chai
 should();
 
-import { Zone } from '../src/client';
 import { ClientPool } from '../src/pool';
 
 describe('ClientClientPool', () => {
   it('creates clients with default options', (done) => {
-    let client = ClientPool.getClient(Zone.EU1);
+    let client = ClientPool.getClient('eu1');
     client.endpoint.should.equal('//eu1-search.doofinder.com');
     Object.keys(client.headers).length.should.equal(1);
     client.headers.Accept.should.equal('application/json');
 
-    client = ClientPool.getClient(Zone.US1);
+    client = ClientPool.getClient('us1');
     client.endpoint.should.equal('//us1-search.doofinder.com');
     done();
   });
@@ -27,7 +26,7 @@ describe('ClientClientPool', () => {
       }
     };
 
-    (() => { ClientPool.options.key = 'blah' }).should.throw;
+    (() => { ClientPool.options.secret = 'blah' }).should.throw;
     (() => { ClientPool.options.headers['Other'] = 'value' }).should.throw;
     (() => { ClientPool.options.headers['X-Whatever'] = 'changed' }).should.throw;
 
@@ -37,14 +36,14 @@ describe('ClientClientPool', () => {
   });
 
   it('creates stats clients that depend on clients', done => {
-    let firstClient = ClientPool.getClient(Zone.EU1);
-    let stats = ClientPool.getStatsClient(Zone.EU1);
+    let firstClient = ClientPool.getClient('eu1');
+    let stats = ClientPool.getStatsClient('eu1');
 
     stats.client.should.equal(firstClient);
     expect(stats.client.secret).to.be.undefined;
 
-    firstClient.secret = 'abc';
-    stats.client.secret.should.equal(firstClient.secret);
+    firstClient.headers.Authorization = 'abc';
+    stats.client.headers.Authorization.should.equal(firstClient.headers.Authorization);
 
     ClientPool.options = {
       headers: {
@@ -52,7 +51,7 @@ describe('ClientClientPool', () => {
       }
     }
 
-    stats = ClientPool.getStatsClient(Zone.EU1);
+    stats = ClientPool.getStatsClient('eu1');
     stats.client.should.not.equal(firstClient);
     Object.keys(stats.client.headers).should.include('X-Whatever');
     expect(stats.client.secret).to.be.undefined;

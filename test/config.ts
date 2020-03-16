@@ -7,5 +7,5 @@ export const zone = 'eu1';
 export const key = `${zone}-${secret}`;
 
 export const getClient = (): Client => {
-  return new Client({ key });
+  return new Client({ secret: key });
 }

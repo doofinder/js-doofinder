@@ -1,6 +1,5 @@
-export class QueryValueError extends Error {
-  public constructor(message: string) {
-    super(message);
-    this.name = 'QueryValueError';
-  }
-}
+/**
+ * Represents an error thrown for a wrong value in a Query.
+ * @public
+ */
+export class QueryValueError extends Error {}
