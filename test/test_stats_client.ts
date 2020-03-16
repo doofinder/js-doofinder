@@ -10,7 +10,7 @@ should();
 
 // required for tests
 import { Client } from '../src/client';
-import { StatsClient, StatsEvent } from '../src/stats';
+import { StatsClient } from '../src/stats';
 import { ValidationError } from '../src/util/validators';
 
 // config, utils & mocks
@@ -35,19 +35,19 @@ describe('StatsClient', () => {
 
     it('should init session', done => {
       // @ts-ignore
-      fetchMock.get({ url: `${cfg.endpoint}/5/stats/${StatsEvent.Init}`, query }, { body: {}, status: 200 });
+      fetchMock.get({ url: `${cfg.endpoint}/5/stats/init`, query }, { body: {}, status: 200 });
       stats.registerSession(query).should.be.fulfilled.notify(done);
     });
 
     it('should register checkout', done => {
       // @ts-ignore
-      fetchMock.get({ url: `${cfg.endpoint}/5/stats/${StatsEvent.Checkout}`, query }, { body: {}, status: 200 });
+      fetchMock.get({ url: `${cfg.endpoint}/5/stats/checkout`, query }, { body: {}, status: 200 });
       stats.registerCheckout(query).should.be.fulfilled.notify(done);
     });
   });
 
   context('result clicks', () => {
-    const url = `${cfg.endpoint}/5/stats/${StatsEvent.Click}`;
+    const url = `${cfg.endpoint}/5/stats/click`;
     const params = {
       session_id: 'mysessionid',
       hashid: cfg.hashid,
@@ -111,14 +111,14 @@ describe('StatsClient', () => {
     }
 
     it('should properly register banner impressions', done => {
-      const url = `${cfg.endpoint}/5/stats/${StatsEvent.ImageDisplay}`;
+      const url = `${cfg.endpoint}/5/stats/img_display`;
       // @ts-ignore
       fetchMock.get({ url, query }, { body: {}, status: 200 });
       stats.registerImageDisplay(query).should.be.fulfilled.notify(done);
     });
 
     it('should properly register banner clicks', done => {
-      const url = `${cfg.endpoint}/5/stats/${StatsEvent.ImageClick}`;
+      const url = `${cfg.endpoint}/5/stats/img_click`;
       // @ts-ignore
       fetchMock.get({ url, query }, { body: {}, status: 200 });
       stats.registerImageClick(query).should.be.fulfilled.notify(done);
@@ -126,7 +126,7 @@ describe('StatsClient', () => {
   });
 
   context('redirections', () => {
-    const url = `${cfg.endpoint}/5/stats/${StatsEvent.Redirection}`;
+    const url = `${cfg.endpoint}/5/stats/redirect`;
     const query = {
       session_id: 'mysessionid',
       hashid: cfg.hashid,

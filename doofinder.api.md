@@ -20,28 +20,18 @@ export interface BasicResult {
     type: string;
 }
 
-// @public (undocumented)
-export type ClickStatsParams = ClickStatsParamsWithDfid | ClickStatsParamsWithId;
-
-// @public (undocumented)
+// @public
 export interface ClickStatsParamsWithDfid extends StatsParams {
-    // (undocumented)
     custom_results_id?: string | number;
-    // (undocumented)
     dfid: string;
-    // (undocumented)
     query?: string;
 }
 
-// @public (undocumented)
+// @public
 export interface ClickStatsParamsWithId extends StatsParams {
-    // (undocumented)
     custom_results_id?: string | number;
-    // (undocumented)
     datatype: string;
-    // (undocumented)
     id: string | number;
-    // (undocumented)
     query?: string;
 }
 
@@ -128,9 +118,8 @@ export interface GeoSortOrder {
 // @public
 export const identical: (x: any, y: any) => boolean;
 
-// @public (undocumented)
+// @public
 export interface ImageStatsParams extends StatsParams {
-    // (undocumented)
     img_id: string | number;
 }
 
@@ -346,13 +335,10 @@ export interface RawTermStats {
     key: string;
 }
 
-// @public (undocumented)
+// @public
 export interface RedirectionStatsParams extends StatsParams {
-    // (undocumented)
     link: string;
-    // (undocumented)
     query?: string;
-    // (undocumented)
     redirection_id: string | number;
 }
 
@@ -410,42 +396,23 @@ export type SortingInput = string | Sorting;
 // @public (undocumented)
 export type SortOrder = 'asc' | 'desc';
 
-// @public (undocumented)
+// @public
 export class StatsClient {
     constructor(client: Client);
     // (undocumented)
     get client(): Client;
     registerCheckout(params: StatsParams): Promise<Response>;
-    registerClick(params: ClickStatsParams): Promise<Response>;
+    registerClick(params: ClickStatsParamsWithDfid | ClickStatsParamsWithId): Promise<Response>;
     registerEvent(eventName: string, params: GenericObject): Promise<Response>;
     registerImageClick(params: ImageStatsParams): Promise<Response>;
     registerImageDisplay(params: ImageStatsParams): Promise<Response>;
-    // (undocumented)
     registerRedirection(params: RedirectionStatsParams): Promise<Response>;
     registerSession(params: StatsParams): Promise<Response>;
 }
 
-// @public (undocumented)
-export enum StatsEvent {
-    // (undocumented)
-    Checkout = "checkout",
-    // (undocumented)
-    Click = "click",
-    // (undocumented)
-    ImageClick = "img_click",
-    // (undocumented)
-    ImageDisplay = "img_display",
-    // (undocumented)
-    Init = "init",
-    // (undocumented)
-    Redirection = "redirect"
-}
-
-// @public (undocumented)
+// @public
 export interface StatsParams {
-    // (undocumented)
     hashid: string;
-    // (undocumented)
     session_id: string;
 }
 

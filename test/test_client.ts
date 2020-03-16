@@ -14,9 +14,7 @@ should();
 // required for tests
 import { Client, ClientResponseError } from '../src/client';
 import { ClientPool } from '../src/pool';
-import { isPlainObject } from '../src/util/is';
 import { Query } from '../src/query';
-import { StatsEvent } from '../src/stats';
 import { ValidationError } from '../src/util/validators';
 
 // config, utils & mocks
@@ -177,7 +175,7 @@ describe('Client', () => {
       }
       // @ts-ignore
       fetchMock.get({ url, query }, { body: {}, status: 200 });
-      cfg.getClient().stats(StatsEvent.Init, { hashid: cfg.hashid, session_id: 'abc'}).should.be.fulfilled.notify(done);
+      cfg.getClient().stats('init', { hashid: cfg.hashid, session_id: 'abc'}).should.be.fulfilled.notify(done);
     });
   });
 
