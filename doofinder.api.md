@@ -220,12 +220,13 @@ export interface QueryParamsBase {
 
 // @public
 export class QuerySort {
-    add(value: FieldSorting | GeoSorting): number;
-    // (undocumented)
     add(value: string, order?: SortOrder): number;
+    add(value: FieldSorting | GeoSorting): number;
     clear(): void;
     get(): Sorting[];
-    set(value: SortingInput | SortingInput[]): number;
+    set(value: string, order?: SortOrder): number;
+    set(value: Sorting): number;
+    set(value: SortingInput[]): number;
     }
 
 // @public

@@ -63,23 +63,57 @@ export class QuerySort {
   /**
    * Set one or more values to sort the query.
    *
-   * @param value - Field or fields to sort the query.
+   * @param value - Field name to sort the query.
+   * @param order - Order of the sorting.
    * @returns the new length of the list of sortings.
    *
    * @public
    */
-  public set(value: SortingInput | SortingInput[]): number {
+  public set(value: string, order?: SortOrder): number;
+  /**
+   * Set one or more values to sort the query.
+   *
+   * @param value - Object describing the sorting.
+   * @returns the new length of the list of sortings.
+   *
+   * @public
+   */
+  public set(value: Sorting): number;
+  /**
+   * Set one or more values to sort the query.
+   *
+   * @param value - Array of objects describing the sorting.
+   * @returns the new length of the list of sortings.
+   *
+   * @public
+   */
+  public set(value: SortingInput[]): number;
+  public set(value: string | Sorting | SortingInput[], order?: SortOrder): number {
     this.clear();
-    (Array.isArray(value) ? value : [value]).forEach(sorting => {
-      if (typeof sorting === 'string') {
-        this.add({ [sorting]: 'asc' });
-      } else {
-        this.add(sorting);
-      }
-    });
+    if (typeof value === 'string') {
+      this.add(value, order);
+    } else {
+      (Array.isArray(value) ? value : [value]).forEach(sorting => {
+        if (typeof sorting === 'string') {
+          this.add({ [sorting]: 'asc' });
+        } else {
+          this.add(sorting);
+        }
+      });
+    }
     return this._sortings.length;
   }
 
+  /**
+   * Add a sorting to the end of the list of sortings.
+   *
+   * @param value - A field name as string.
+   * @param order - The order of the sorting.
+   * @returns the new length of the list of sortings.
+   *
+   * @public
+   */
+  public add(value: string, order?: SortOrder): number;
   /**
    * Add a sorting to the end of the list of sortings.
    *
@@ -89,7 +123,6 @@ export class QuerySort {
    * @public
    */
   public add(value: FieldSorting | GeoSorting): number;
-  public add(value: string, order?: SortOrder): number;
   public add(value: SortingInput, order?: SortOrder): number {
     if (typeof value === 'string') {
       return this._addFieldSorting(value, order);

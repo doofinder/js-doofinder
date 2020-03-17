@@ -533,8 +533,18 @@ describe('Query', () => {
         done();
       });
       it('can set sorting', done => {
+        query.sort.set('brand', 'desc');
+        query.sort.get().should.eql([{brand: 'desc'}]);
+
+        query.sort.set({ brand: 'desc' });
+        query.sort.get().should.eql([{brand: 'desc'}]);
+
+        query.sort.set([{ brand: 'desc' }]);
+        query.sort.get().should.eql([{brand: 'desc'}]);
+
         query.sort.set('brand');
         query.sort.get().should.eql([{brand: 'asc'}]);
+
         query.sort.set([
           'brand',
           {best_price: 'desc'},
