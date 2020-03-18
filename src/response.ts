@@ -107,6 +107,25 @@ export interface BasicResult {
 export type OnlyIdResult = Pick<BasicResult, 'id'>;
 
 /**
+ * Represents the information received for a banner for certain search.
+ * @public
+ */
+export interface BannerInfo {
+  /** Id of the banner. */
+  id: number;
+  /** Desktop image of the banner. */
+  image: string;
+  /** Mobile image of the banner. */
+  mobile_image: string;
+  /** Custom HTML code of the banner. */
+  html_code: string;
+  /** Target link of the banner. */
+  link: string;
+  /** Whether to open the banner in a new window or not. */
+  blank: boolean;
+}
+
+/**
  * Represents the basic search response from Doofinder.
  *
  * @public
@@ -137,20 +156,7 @@ export interface SearchResponse extends GenericObject {
   /** Autocomplete suggestion. Optional. */
   autocomplete_suggest?: string;
   /** Banner information for these search results, if any. Optional. */
-  banner?: {
-    /** Id of the banner. */
-    id: number;
-    /** Desktop image of the banner. */
-    image: string;
-    /** Mobile image of the banner. */
-    mobile_image: string;
-    /** Custom HTML code of the banner. */
-    html_code: string;
-    /** Target link of the banner. */
-    link: string;
-    /** Whether to open the banner in a new window or not. */
-    blank: boolean;
-  };
+  banner?: BannerInfo;
 
   /** Facets information for this set of results. */
   facets?: GenericObject<Facet>;

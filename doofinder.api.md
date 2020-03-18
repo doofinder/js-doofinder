@@ -4,6 +4,16 @@
 
 ```ts
 
+// @public (undocumented)
+export interface BannerInfo {
+    blank: boolean;
+    html_code: string;
+    id: number;
+    image: string;
+    link: string;
+    mobile_image: string;
+}
+
 // @public
 export interface BasicResult {
     // @deprecated
@@ -148,6 +158,11 @@ export function merge(...objects: GenericObject[]): GenericObject;
 // @public
 export type OnlyIdResult = Pick<BasicResult, 'id'>;
 
+// Warning: (ae-internal-missing-underscore) The name "processResponse" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
+export function processResponse(response: RawSearchResponse): SearchResponse;
+
 // @public
 export class Query {
     constructor(params?: QueryParams);
@@ -283,6 +298,12 @@ export interface RawRangeFacet {
 }
 
 // @public
+export interface RawSearchResponse extends Omit<SearchResponse, 'facets' | '_rawFacets'> {
+    // (undocumented)
+    facets: GenericObject<RawFacet>;
+}
+
+// @public
 export interface RawTermsFacet {
     doc_count: number;
     selected: RawTermsInfo;
@@ -323,14 +344,7 @@ export interface SearchParams extends QueryParamsBase {
 // @public
 export interface SearchResponse extends GenericObject {
     autocomplete_suggest?: string;
-    banner?: {
-        id: number;
-        image: string;
-        mobile_image: string;
-        html_code: string;
-        link: string;
-        blank: boolean;
-    };
+    banner?: BannerInfo;
     facets?: GenericObject<Facet>;
     filter?: {
         range: {
