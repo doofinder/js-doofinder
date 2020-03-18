@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Doofinder: Query</title>
+  <script type="module">
+    import { Query } from '../lib/index.mjs';
+
+    const request = new Query({hashid: '6a96504dc173514cab1e0198af92e6e9'});
+    request.text = 'silla';
+    request.page = 1;
+    request.rpp = 100;
+    request.transformer = 'basic';
+    request.queryName = 'match_and';
+    request.queryCounter++;
+    request.noStats = false;
+
+    request.types.set(['product', 'product']); // product
+    request.types.add('recipe');
+
+    request.filters.set('brand', ['adidas', 'nike']);
+    request.filters.add('brand', ['adidas', 'munich']);
+
+    request.filters.add('geo', {
+      distance: '200km',
+      position: '40,-70'
+    });
+    request.filters.add('geo', {
+      distance: '100km',
+      position: '40,-70'
+    });
+
+    request.filters.add('best_price', {
+      gte: 0,
+      lte: 100
+    });
+    request.filters.add('best_price', {
+      gte: 100,
+      lte: 500
+    });
+
+    request.filters.setMany({
+      something: ['blah', 'bleh', 'xxx'],
+      something2: 'blah'
+    });
+
+    request.filters.remove('something', 'xxx');
+    request.filters.remove('something2');
+
+    const request2 = new Query(request.dump());
+    request2.types.set('product');
+
+    console.log(request.dump());
+    console.log(request2.dump());
+
+    window.request = request;
+  </script>
+</head>
+<body>
+  <a href="./index.html">← Back</a>
+</body>
+</html>

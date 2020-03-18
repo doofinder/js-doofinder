@@ -6,61 +6,56 @@ import { should, expect } from 'chai';
 should();
 
 import { ClientPool } from '../src/pool';
-import { Zone } from '../src/types';
 
-describe('ClientPool', () => {
-  context('Creation', () => {
-    context('without options', () => {
-      it('should create clients with default options', (done) => {
-        const pool = new ClientPool();
-        const client = pool.getClient(Zone.EU1);
+describe('ClientClientPool', () => {
+  it('creates clients with default options', (done) => {
+    let client = ClientPool.getClient('eu1');
+    client.endpoint.should.equal('//eu1-search.doofinder.com');
+    Object.keys(client.headers).length.should.equal(1);
+    client.headers.Accept.should.equal('application/json');
 
-        client.endpoint.should.equal('//eu1-search.doofinder.com');
-        Object.keys(client.headers).length.should.equal(1);
-        client.headers.Accept.should.equal('application/json');
+    client = ClientPool.getClient('us1');
+    client.endpoint.should.equal('//us1-search.doofinder.com');
+    done();
+  });
 
-        done();
-      })
-    })
+  it('freezes pool options', done => {
+    ClientPool.options = {
+      headers: {
+        'X-Whatever': 'value'
+      }
+    };
 
-    context('with options', () => {
-      it('should accept only serverAddress and headers options', (done) => {
-        const pool = new ClientPool({
-          apiKey: 'blah',
-          headers: {
-            'X-Whatever': 'value'
-          },
-          serverAddress: 'localhost:8080'
-        });
-        const client = pool.getClient(Zone.EU1);
+    (() => { ClientPool.options.secret = 'blah' }).should.throw;
+    (() => { ClientPool.options.headers['Other'] = 'value' }).should.throw;
+    (() => { ClientPool.options.headers['X-Whatever'] = 'changed' }).should.throw;
 
-        client.endpoint.should.equal('//localhost:8080');
-        expect(client.secret).to.be.undefined;
-        Object.keys(client.headers).length.should.equal(2);
-        client.headers['Accept'].should.equal('application/json');
-        client.headers['X-Whatever'].should.equal('value');
+    Object.keys(ClientPool.options).length.should.equal(1);
 
-        done();
-      })
-    })
-  })
+    done();
+  });
 
-  context('Options', () => {
-    it('freezes pool options', (done) => {
-      const pool = new ClientPool();
-      pool.options = {
-        headers: {
-          'X-Whatever': 'value'
-        }
-      };
+  it('creates stats clients that depend on clients', done => {
+    let firstClient = ClientPool.getClient('eu1');
+    let stats = ClientPool.getStatsClient('eu1');
 
-      (() => { pool.options.apiKey = 'blah' }).should.throw;
-      (() => { pool.options.headers['Other'] = 'value' }).should.throw;
-      (() => { pool.options.headers['X-Whatever'] = 'changed' }).should.throw;
+    stats.client.should.equal(firstClient);
+    expect(stats.client.secret).to.be.undefined;
 
-      Object.keys(pool.options).length.should.equal(1);
+    firstClient.headers.Authorization = 'abc';
+    stats.client.headers.Authorization.should.equal(firstClient.headers.Authorization);
 
-      done();
-    })
-  })
+    ClientPool.options = {
+      headers: {
+        'X-Whatever': 'something'
+      }
+    }
+
+    stats = ClientPool.getStatsClient('eu1');
+    stats.client.should.not.equal(firstClient);
+    Object.keys(stats.client.headers).should.include('X-Whatever');
+    expect(stats.client.secret).to.be.undefined;
+
+    done();
+  });
 });

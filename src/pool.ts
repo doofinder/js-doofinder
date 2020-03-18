@@ -1,22 +1,30 @@
-import { Zone } from './types';
 import { Client, ClientOptions } from './client';
+import { StatsClient } from './stats';
 
 /**
  * Manage clients for multiple zones as singletons with shared settings.
  *
- * @beta
+ * @remarks
+ *
+ * GOLDEN RULE: Don't save references to clients obtained from the pool,
+ * always request new ones.
+ *
+ * @example
+ *
+ * ```ts
+ * ClientPool.getClient('eu1');
+ * ClientPool.getStatsClient('eu1');
+ * ```
+ *
+ * @public
  */
 export class ClientPool {
-  private _pool: Map<Zone, Client>;
-  private _options: Partial<ClientOptions>;
+  private static _clientsPool: Map<string, Client> = new Map();
+  private static _statsClientsPool: Map<string, StatsClient> = new Map();
+  private static _options: Partial<ClientOptions> = {};
 
-  /**
-   * Build a new pool.
-   * @param options - Optional client options shared by all clients.
-   */
-  public constructor(options: Partial<ClientOptions> = {}) {
-    this._pool = new Map();
-    this.options = options;
+  private constructor() {
+    throw new Error(`can't create instances of this class`);
   }
 
   /**
@@ -25,12 +33,12 @@ export class ClientPool {
    * When changed, all existing clients are removed so new ones get the
    * new options.
    *
-   * @beta
+   * @public
    */
-  public get options(): Partial<ClientOptions> {
+  public static get options(): Partial<ClientOptions> {
     return this._options;
   }
-  public set options(value: Partial<ClientOptions>) {
+  public static set options(value: Partial<ClientOptions>) {
     const { serverAddress, headers } = value;
     const options: Partial<ClientOptions> = {};
 
@@ -44,20 +52,55 @@ export class ClientPool {
 
     this._options = Object.freeze(options);
 
-    this._pool.clear();
+    this.clear();
   }
 
   /**
    * Get a client for the given zone with the shared options.
    *
    * @param zone - A valid search zone.
-   * @beta
+   * @returns An instance of `Client`.
+   *
+   * @public
    */
-  public getClient(zone: Zone): Client {
-    if (!this._pool.has(zone)) {
-      this._pool.set(zone, new Client({ ...this._options, zone }));
+  public static getClient(zone: string): Client {
+    if (!this._clientsPool.has(zone)) {
+      this._clientsPool.set(zone, new Client({ ...this._options, zone }));
     }
 
-    return this._pool.get(zone);
+    return this._clientsPool.get(zone);
+  }
+
+  /**
+   * Get a stats client for the given zone with the shared options.
+   *
+   * @param zone - A valid search zone.
+   * @returns An instance of `StatsClient`.
+   *
+   * @public
+   */
+  public static getStatsClient(zone: string): StatsClient {
+    if (!this._statsClientsPool.has(zone)) {
+      this._statsClientsPool.set(zone, new StatsClient(this.getClient(zone)));
+    }
+
+    return this._statsClientsPool.get(zone);
+  }
+
+  /**
+   * Reset the shared options of the pool.
+   * @public
+   */
+  public static reset() {
+    this.options = {};
+  }
+
+  /**
+   * Remove al existing clients from the pool.
+   * @public
+   */
+  public static clear() {
+    this._clientsPool.clear();
+    this._statsClientsPool.clear();
   }
 }

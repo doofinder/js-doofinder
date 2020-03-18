@@ -6,7 +6,6 @@ should();
 
 // tests
 import * as Thing from '../src/util/is';
-import { Zone } from '../src/types';
 
 const ARRAY_SAMPLE = ["a", "b", "c"];
 const OBJECT_SAMPLE = ((cls) => new cls())(class A {});
@@ -17,19 +16,6 @@ const NUMBER_SAMPLE_INT = 123;
 const NUMBER_SAMPLE_FLOAT = 123.45;
 
 describe("Is Module", () => {
-  it("can detect arrays", (done) => {
-    Thing.isArray(ARRAY_SAMPLE).should.be.true;
-    Thing.isArray(OBJECT_SAMPLE).should.be.false;
-    Thing.isArray(PLAIN_OBJECT_SAMPLE).should.be.false;
-    Thing.isArray(STRING_SAMPLE).should.be.false;
-    Thing.isArray(STRING_OBJ_SAMPLE).should.be.false;
-    Thing.isArray(NUMBER_SAMPLE_INT).should.be.false;
-    Thing.isArray(NUMBER_SAMPLE_FLOAT).should.be.false;
-    Thing.isArray(null).should.be.false;
-    Thing.isArray(undefined).should.be.false;
-    done();
-  });
-
   it("can detect objects", (done) => {
     Thing.isObject(ARRAY_SAMPLE).should.be.false;
     Thing.isObject(OBJECT_SAMPLE).should.be.true;
@@ -79,12 +65,6 @@ describe("Is Module", () => {
     Thing.isNumber(NUMBER_SAMPLE_FLOAT).should.be.true;
     Thing.isNumber(null).should.be.false;
     Thing.isNumber(undefined).should.be.false;
-    done();
-  });
-
-  it("can say if a zone is valid", (done) => {
-    Thing.isValidZone('a').should.be.false;
-    Thing.isValidZone(Zone.EU1).should.be.true;
     done();
   });
 });

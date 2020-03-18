@@ -1,11 +1,10 @@
 {
   "compilerOptions": {
+    "declaration": false,
     "noImplicitAny": true,
     "moduleResolution": "Node",
     "module": "esnext",
-    "target": "esnext",
-    "outDir": "out",
-    "sourceMap": true
+    "target": "esnext"
   },
   "include": [
     "src/**/*.ts"

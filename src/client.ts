@@ -1,31 +1,56 @@
-import { DoofinderParameters, Zone, GenericObject, StatsEvent } from './types';
+import { GenericObject } from './types';
 
-import { Query } from './query';
-import { DoofinderResult } from './result';
+import { Query, SearchParams } from './query';
+import { processResponse, SearchResponse, RawSearchResponse } from './response';
 
 import { buildQueryString } from './util/encode-params';
-import { isArray, isPlainObject, isValidZone } from './util/is';
-
-export interface ClientHeaders extends GenericObject<string> {
-  Accept: string;
-  Authorization: string;
-}
+import { validateHashId, validateRequired, ValidationError } from './util/validators';
 
 /**
  * Options that can be used to create a Client instance.
+ * @public
  */
 export interface ClientOptions {
-  apiKey: string;
-  zone: Zone;
-  hashid: string;
+  /**
+   * Search zone: eu1, us1, …
+   * @public
+   */
+  zone: string;
+  /**
+   * Secret token. May include or not the search zone.
+   */
+  secret: string;
+  /**
+   * Address of the search server to use. Optional. Use it to override the default search server.
+   */
   serverAddress: string;
-  headers: Partial<ClientHeaders>;
+  /**
+   * Additional HTTP headers to send, if any.
+   */
+  headers: GenericObject<string>;
 }
 
+/**
+ * Represents an error response for a failed HTTP response from Doofinder.
+ * @public
+ */
 export class ClientResponseError extends Error {
+  /**
+   * Status code of the HTTP response.
+   * @public
+   */
   public statusCode: number;
+  /**
+   * The Response received by the client.
+   * @public
+   */
   public response: Response;
 
+  /**
+   * The constructor for the response error.
+   * @param response - An HTTP response from the fetch API.
+   * @public
+   */
   public constructor(response: Response) {
     super(response.statusText);
     this.name = 'ClientResponseError';
@@ -35,96 +60,137 @@ export class ClientResponseError extends Error {
 }
 
 /**
- * This class allows searching and sending stats using the Doofinder service.
+ * Types of top stats.
+ * @public
+ */
+export type TopStatsType = 'searches' | 'clicks';
+
+/**
+ * Parameters for a top stats request.
+ * @public
+ */
+export interface TopStatsParams {
+  /** Unique Id of the search engine. */
+  hashid: string;
+  /** Optional. Number of days to retrieve. */
+  days?: number | string;
+  /** Optional. */
+  withresult?: boolean | string;
+}
+
+const API_KEY_RE = /^(([^-]+)-)?([a-f0-9]{40})$/i;
+
+/**
+ * Class that allows interacting with the Doofinder service.
+ * @public
  */
 export class Client {
-  public version = 5;
-  public hashid: string;
-  public secret: string;
-  public zone: Zone;
-  public endpoint: string;
-  public headers: GenericObject<string>;
+  private _version = 5;
+  private _zone: string;
+  private _secret: string;
+  private _endpoint: string;
+  private _headers: GenericObject<string>;
 
   /**
-   * Constructor
-   *
-   * @param  {String} hashid  Unique ID of the Search Engine.
-   * @param  {Object} options Options object.
-   *
-   *                          {
-   *                            zone:    "eu1"            # Search Zone (eu1,
-   *                                                      # us1, ...).
-   *
-   *                            apiKey:  "eu1-abcd..."    # Complete API key,
-   *                                                      # including zone and
-   *                                                      # secret key for auth.
-   *
-   *                            address: "localhost:4000" # Force server address
-   *                                                      # for development
-   *                                                      # purposes.
-   *
-   *                            version: "5"              # API version. Better
-   *                                                      # not to touch this.
-   *                                                      # For development
-   *                                                      # purposes.
-   *
-   *                            headers: {                # You know, for HTTP.
-   *                              "Origin": "...",
-   *                              "...": "..."
-   *                            }
-   *                          }
-   *
-   *                          If you use `apiKey` you can omit `zone` but one of
-   *                          them is required.
-   *
+   * Returns the search zone for this client.
+   * @public
    */
-  public constructor({ zone, hashid, serverAddress, headers }: Partial<ClientOptions>);
-  public constructor({ apiKey, hashid, serverAddress, headers }: Partial<ClientOptions>);
-  public constructor({ apiKey, zone, hashid, serverAddress, headers }: Partial<ClientOptions> = {}) {
-    if (apiKey) {
-      const [z, k] = (apiKey || '').split('-');
-
-      if (k && z && isValidZone(z)) {
-        this.zone = z as Zone;
-        this.secret = k;
-      } else {
-        throw new Error(`Invalid API key`);
-      }
-    } else if (zone) {
-      if (isValidZone(zone)) {
-        this.zone = zone;
-      } else {
-        throw new Error(`Invalid zone '${zone}'`);
-      }
-    } else {
-      throw new Error(`Must configure API key or zone`);
-    }
-
-    this.endpoint = this.__buildEndpoint(serverAddress);
-
-    this.hashid = hashid;
-    this.headers = {
-      Accept: 'application/json',
-      ...headers,
-    };
-
-    if (this.secret) {
-      this.headers.Authorization = this.secret;
-    }
+  public get zone(): string {
+    return this._zone;
   }
 
   /**
-   * Performs a HTTP request to the endpoint specified with the default
-   * options of the client.
-   *
-   * @param  {String}   resource Resource to be called by GET.
-   * @return {Promise<Response>}
+   * Returns the secret token for this client, if any.
+   * @public
    */
-  public async request(resource: string): Promise<Response> {
+  public get secret(): string {
+    return this._secret;
+  }
+
+  /**
+   * Returns the headers set for this client.
+   * @public
+   */
+  public get headers(): GenericObject<string> {
+    return this._headers;
+  }
+
+  /**
+   * Returns the configured endpoint for this client.
+   * @public
+   */
+  public get endpoint(): string {
+    return this._endpoint;
+  }
+
+  /**
+   * Constructor.
+   *
+   * @remarks
+   *
+   * At least a search zone is required. If none provided via the `zone`
+   * or the `secret` options, the default `'eu1'` will be used.
+   *
+   * Provide a custom `serverAddress` options to override the default
+   * endpoint for development purposes.
+   *
+   * @param options - options to instantiate the client.
+   */
+  public constructor({ zone, secret, headers, serverAddress }: Partial<ClientOptions> = {}) {
+    const matches = API_KEY_RE.exec(secret);
+    if (matches) {
+      this._zone = matches[2] || zone || 'eu1';
+      this._secret = matches[3];
+    } else if (secret) {
+      throw new ValidationError(`invalid api key`);
+    } else {
+      this._zone = zone || 'eu1';
+    }
+
+    let [protocol, address] = (serverAddress || `${this._zone}-search.doofinder.com`).split('://');
+
+    if (!address) {
+      address = protocol;
+      protocol = '';
+    }
+
+    if (this._secret) {
+      protocol = 'https:';
+    }
+
+    this._endpoint = `${protocol}//${address}`;
+
+    this._headers = {
+      Accept: 'application/json',
+      ...(headers || {}),
+      ...(this._secret ? { Authorization: this._secret } : {}),
+    };
+  }
+
+  /**
+   * Perform a request to a HTTP resource.
+   *
+   * @remarks
+   *
+   * If a payload is provided the request will be done via `POST` instead
+   * of `GET`.
+   *
+   * @param resource - URL of the resource to request.
+   * @param payload - An object to send via POST. Optional.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
+   *
+   * @public
+   */
+  public async request(resource: string, payload?: GenericObject): Promise<Response> {
+    const method: string = payload ? 'POST' : 'GET';
+    const headers: GenericObject<string> = payload ? { 'Content-Type': 'application/json' } : {};
+    const body: string = payload ? JSON.stringify(payload) : undefined;
     const response = await fetch(resource, {
-      method: 'GET',
       mode: 'cors',
-      headers: Object.assign({}, this.headers),
+      headers: { ...this.headers, ...headers },
+      method,
+      body,
     });
 
     if (response.ok) {
@@ -139,167 +205,98 @@ export class Client {
   //
 
   /**
-   * Performs a search request.
+   * Perform a search in Doofinder based on the provided parameters.
    *
-   * @param  {String}   query    Search terms.
-   * @param  {Object}   params   Parameters for the request. Optional.
+   * @param params - An instance of `Query` or an object with valid
+   * search parameters.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
    *
-   *                             params =
-   *                               page: Number
-   *                               rpp: Number
-   *                               type: String | [String]
-   *                               filter:
-   *                                 field: [String]
-   *                                 field:
-   *                                   from: Number
-   *                                   to: Number
-   *                               exclude:
-   *                                 field: [String]
-   *                                 field:
-   *                                   from: Number
-   *                                   to: Number
-   *                               sort: String
-   *                               sort:
-   *                                 field: "asc" | "desc"
-   *                               sort: [{field: "asc|desc"}]
-   * @param  {Boolean}  wrapper  Tell the client to return a class object instead of
-   *                             the raw value returned by the endpoint. Defaults to true
-   *
-   *
-   * @return {Promise<Response>}
+   * @public
    */
-  public async search(
-    query: string | Query | DoofinderParameters,
-    params?: DoofinderParameters
-  ): Promise<Response | DoofinderResult> {
-    let qs: string;
+  public async search(params: Query | SearchParams): Promise<SearchResponse> {
+    let request: Query;
+    let payload: GenericObject;
 
-    if (typeof query === 'string') {
-      qs = this.buildSearchQueryString(query, params);
+    if (params instanceof Query) {
+      request = params;
     } else {
-      qs = this.buildSearchQueryString(query);
+      request = new Query(params);
     }
 
-    const response: Response = await this.request(this.buildUrl('/search', qs));
-    const data = await response.json();
-    return new DoofinderResult(data);
+    const data: GenericObject = request.dump(true);
+
+    if (data.items != null) {
+      payload = { items: data.items };
+      delete data.items;
+    }
+
+    const qs = buildQueryString({ random: new Date().getTime(), ...data });
+    const response: Response = await this.request(this.buildUrl('/search', qs), payload);
+    return processResponse((await response.json()) as RawSearchResponse);
   }
 
   /**
-   * Perform a request to get options for a search engine.
+   * Perform a request to get the options of a search engine.
    *
-   * @param  {String}   suffix   Optional suffix to add to the request URL. Can
-   *                             be something like a domain, so the URL looks
-   *                             like /<version>/options/<hashid>?example.com.
-   * @param  {Function} callback Callback to be called when the response is
-   *                             received. First param is the error, if any,
-   *                             and the second one is the response, if any.
-   * @return {Promise<Response>}
+   * @param hashid - A valid hashid for a search engine.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
+   *
+   * @public
    */
-  public async options(qs?: string): Promise<GenericObject> {
-    const response = await this.request(this.buildUrl(`/options/${this.hashid}`, qs));
+  public async options(hashid: string): Promise<GenericObject> {
+    validateHashId(hashid);
+    const qs = buildQueryString({ random: new Date().getTime() });
+    const response = await this.request(this.buildUrl(`/options/${hashid}`, qs));
     return await response.json();
   }
 
   /**
-   * Performs a request to submit stats events to Doofinder.
+   * Perform a request to submit stats events to Doofinder.
    *
-   * @param  {String}   eventName Type of stats. Configures the endpoint.
-   * @param  {Object}   params    Parameters for the query string.
-   * @param  {Function} callback  Callback to be called when the response is
-   *                              received. First param is the error, if any,
-   *                              and the second one is the response, if any.
-   * @return {Promise<Response>}
+   * @param eventName - Type of stats to send.
+   * @param params - Parameters for the query string.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
+   *
+   * @public
    */
-
-  // ? Should this method accept StatsParameters or something like that?
-  // ? Should be a StatsClient wrapping Client to perform specific stats calls or a StatsQuery object like Query to wrap and validate calls?
-  // https://doofinder.github.io/js-doofinder/stats
-
-  public async stats(eventName: StatsEvent, eventParams?: GenericObject<string>): Promise<Response> {
-    const params = Object.assign(
-      {
-        hashid: this.hashid,
-        random: new Date().getTime(),
-      },
-      eventParams
-    );
-    const qs = buildQueryString(params);
+  public async stats(eventName: string, params: GenericObject<string>): Promise<Response> {
+    validateRequired(params.session_id, 'session_id is required');
+    validateHashId(params.hashid);
+    const qs = buildQueryString({ random: new Date().getTime(), ...params });
     return await this.request(this.buildUrl(`/stats/${eventName}`, qs));
   }
 
+  public async topStats(type: TopStatsType, params: TopStatsParams): Promise<Response> {
+    validateHashId(params.hashid);
+    const qs = buildQueryString({ random: new Date().getTime(), ...params });
+    return await this.request(this.buildUrl(`/topstats/${type}`, qs));
+  }
+
   /**
+   * Build a URL for the provided resource.
    *
-   * @param resource    URL part specifying the resource to be fetched from
-   *                    the current version of the API. Should start by '/'.
-   * @param querystring A query string to be attached to the URL. Should not
-   *                    start by '?'.
+   * @param resource - URL part specifying the resource to be fetched
+   * from the current version of the API. Should start by '/'.
+   * @param querystring - A query string to be attached to the URL.
+   * Should not start by '?'.
+   * @returns A valid URL.
+   *
+   * @public
    */
   public buildUrl(resource: string, querystring?: string): string {
     const qs = querystring ? `?${querystring}` : '';
-    return `${this.endpoint}/${this.version}${resource}${qs}`;
+    return `${this._endpoint}/${this._version}${resource}${qs}`;
   }
 
   /**
-   * Creates a search query string for the specified query and parameters
-   * intended to be used in the search API endpoint.
-   *
-   * NOTICE:
-   *
-   * - qs library encodes "(" and ")" as "%28" and "%29" although is not
-   *   needed. Encoded parentheses must be supported in the search endpoint.
-   * - Iterating objects doesn't ensure the order of the keys so they can't be
-   *   reliabily used to specify sorting in multiple fields. That's why this
-   *   method validates sorting and raises an exception if the value is not
-   *   valid.
-   *
-   *   - sort: field                                         [OK]
-   *   - sort: {field: 'asc|desc'}                           [OK]
-   *   - sort: [{field1: 'asc|desc'}, {field2: 'asc|desc'}]  [OK]
-   *   - sort: {field1: 'asc|desc', field2: 'asc|desc'}      [ERR]
-   *
-   * @param  {String | Object} query  Cleaned search terms.
-   * @param  {Object}          params Search parameters object.
-   *
-   * @return {String}     Encoded query string to be used in a search URL.
-   *
+   * Return a string representation of this class.
+   * @returns A string.
+   * @public
    */
-  // TODO: All validation should be done in Query
-  public buildSearchQueryString(query: Query | DoofinderParameters): string;
-  public buildSearchQueryString(query: string, params?: DoofinderParameters): string;
-  public buildSearchQueryString(query: string | Query | DoofinderParameters, params?: DoofinderParameters): string {
-    let q: Query = new Query();
-
-    if (typeof query === 'string') {
-      q.searchText(query);
-      q.load(params || {});
-    } else if (query instanceof Query) {
-      q = query;
-    } else {
-      q.load(query || {});
-    }
-
-    if (this.hashid && !q.hashid) {
-      q.hashid = this.hashid;
-    }
-
-    const queryParams = q.dump();
-
-    if (isArray(queryParams.type) && queryParams.type.length === 1) {
-      queryParams.type = queryParams.type[0];
-    }
-
-    return buildQueryString(queryParams);
-  }
-
-  private __buildEndpoint(serverAddress: string): string {
-    let [protocol, address] = (serverAddress || `${this.zone}-search.doofinder.com`).split('://');
-
-    if (!address) {
-      address = protocol;
-      protocol = null;
-    }
-
-    return `${protocol || (this.secret ? 'https:' : '')}//${address}`;
+  public toString(): string {
+    return `Client(${this.endpoint}${this._secret ? ' (+secret)' : ''})`;
   }
 }
