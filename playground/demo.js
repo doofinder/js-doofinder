@@ -12,4 +12,8 @@ function demo({ Client, Query }) {
   client.search(request).then(result => {
     console.log(result);
   });
+
+  client.suggest(request).then(result => {
+    console.log(result);
+  });
 }
