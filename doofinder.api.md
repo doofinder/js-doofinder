@@ -4,7 +4,7 @@
 
 ```ts
 
-// @public (undocumented)
+// @public
 export interface BannerInfo {
     blank: boolean;
     html_code: string;
@@ -56,6 +56,7 @@ export class Client {
     search(params: Query | SearchParams): Promise<SearchResponse>;
     get secret(): string;
     stats(eventName: string, params: GenericObject<string>): Promise<Response>;
+    suggest(params: Query | SearchParams): Promise<SearchResponse>;
     // (undocumented)
     topStats(type: TopStatsType, params: TopStatsParams): Promise<Response>;
     toString(): string;

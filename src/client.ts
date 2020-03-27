@@ -237,6 +237,30 @@ export class Client {
   }
 
   /**
+   * Perform a suggestion query in Doofinder based on the provided parameters.
+   *
+   * @param params - An instance of `Query` or an object with valid
+   * search parameters.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
+   *
+   * @public
+   */
+  public async suggest(params: Query | SearchParams): Promise<SearchResponse> {
+    let request: Query;
+
+    if (params instanceof Query) {
+      request = params;
+    } else {
+      request = new Query(params);
+    }
+
+    const qs = buildQueryString({ random: new Date().getTime(), hashid: request.hashid, query: request.text });
+    const response: Response = await this.request(this.buildUrl('/suggest', qs), null);
+    return processResponse((await response.json()) as RawSearchResponse);
+  }
+
+  /**
    * Perform a request to get the options of a search engine.
    *
    * @param hashid - A valid hashid for a search engine.
