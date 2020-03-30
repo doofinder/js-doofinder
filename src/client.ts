@@ -255,12 +255,10 @@ export class Client {
       request = new Query(params);
     }
 
-    const qs = buildQueryString({
-      random: new Date().getTime(),
-      hashid: request.hashid,
-      query: request.text,
-      query_counter: request.queryCounter,
-    });
+    const data: GenericObject = request.dump(true);
+
+    const qs = buildQueryString({ random: new Date().getTime(), ...data });
+
     const response: Response = await this.request(this.buildUrl('/suggest', qs), null);
     return processResponse((await response.json()) as RawSearchResponse);
   }
