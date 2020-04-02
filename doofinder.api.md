@@ -5,10 +5,10 @@
 ```ts
 
 // @public
-export const __VERSION__ = "6.0.0";
+export const __API_VERSION__ = 5;
 
 // @public
-export const API_VERSION = 5;
+export const __VERSION__ = "6.0.0";
 
 // @public
 export interface BannerInfo {

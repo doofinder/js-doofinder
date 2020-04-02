@@ -10,7 +10,7 @@ import { validateHashId, validateRequired, ValidationError } from './util/valida
  * Version of the search API being used.
  * @public
  */
-export const API_VERSION = 5;
+export const __API_VERSION__ = 5;
 
 /**
  * Options that can be used to create a Client instance.
@@ -317,7 +317,7 @@ export class Client {
    */
   public buildUrl(resource: string, querystring?: string): string {
     const qs = querystring ? `?${querystring}` : '';
-    return `${this.endpoint}/${API_VERSION}${resource}${qs}`;
+    return `${this.endpoint}/${__API_VERSION__}${resource}${qs}`;
   }
 
   /**
