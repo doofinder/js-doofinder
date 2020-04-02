@@ -85,7 +85,6 @@ const API_KEY_RE = /^(([^-]+)-)?([a-f0-9]{40})$/i;
  * @public
  */
 export class Client {
-  private _version = 5;
   private _zone: string;
   private _secret: string;
   private _endpoint: string;
@@ -158,7 +157,7 @@ export class Client {
       protocol = 'https:';
     }
 
-    this._endpoint = `${protocol}//${address}`;
+    this._endpoint = `${protocol}//${address}/5`;
 
     this._headers = {
       Accept: 'application/json',
@@ -315,7 +314,7 @@ export class Client {
    */
   public buildUrl(resource: string, querystring?: string): string {
     const qs = querystring ? `?${querystring}` : '';
-    return `${this._endpoint}/${this._version}${resource}${qs}`;
+    return `${this.endpoint}/${resource}${qs}`;
   }
 
   /**
