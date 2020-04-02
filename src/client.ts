@@ -7,6 +7,12 @@ import { buildQueryString } from './util/encode-params';
 import { validateHashId, validateRequired, ValidationError } from './util/validators';
 
 /**
+ * Version of the search API being used.
+ * @public
+ */
+export const API_VERSION = 5;
+
+/**
  * Options that can be used to create a Client instance.
  * @public
  */
@@ -78,8 +84,6 @@ export interface TopStatsParams {
   withresult?: boolean | string;
 }
 
-const API_KEY_RE = /^(([^-]+)-)?([a-f0-9]{40})$/i;
-
 /**
  * Class that allows interacting with the Doofinder service.
  * @public
@@ -136,16 +140,13 @@ export class Client {
    * @param options - options to instantiate the client.
    */
   public constructor({ zone, secret, headers, serverAddress }: Partial<ClientOptions> = {}) {
-    const matches = API_KEY_RE.exec(secret);
-    if (matches) {
-      this._zone = matches[2] || zone || 'eu1';
-      this._secret = matches[3];
-    } else if (secret) {
-      throw new ValidationError(`invalid api key`);
-    } else {
-      this._zone = zone || 'eu1';
+    if (zone == null) {
+      throw new ValidationError(`search zone is required`);
     }
 
+    this._zone = zone;
+
+    const httpHeaders: GenericObject<string> = { ...(headers || {}) };
     let [protocol, address] = (serverAddress || `${this._zone}-search.doofinder.com`).split('://');
 
     if (!address) {
@@ -153,16 +154,18 @@ export class Client {
       protocol = '';
     }
 
-    if (this._secret) {
+    if (secret != null) {
+      this._secret = secret.trim();
+
+      httpHeaders['Authorization'] = `Token ${this._secret}`;
       protocol = 'https:';
     }
 
-    this._endpoint = `${protocol}//${address}/5`;
+    this._endpoint = `${protocol}//${address}`;
 
     this._headers = {
       Accept: 'application/json',
-      ...(headers || {}),
-      ...(this._secret ? { Authorization: this._secret } : {}),
+      ...httpHeaders,
     };
   }
 
@@ -314,7 +317,7 @@ export class Client {
    */
   public buildUrl(resource: string, querystring?: string): string {
     const qs = querystring ? `?${querystring}` : '';
-    return `${this.endpoint}/${resource}${qs}`;
+    return `${this.endpoint}/${API_VERSION}${resource}${qs}`;
   }
 
   /**
