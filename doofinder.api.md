@@ -5,6 +5,12 @@
 ```ts
 
 // @public
+export const __VERSION__ = "6.0.0";
+
+// @public
+export const API_VERSION = 5;
+
+// @public
 export interface BannerInfo {
     blank: boolean;
     html_code: string;

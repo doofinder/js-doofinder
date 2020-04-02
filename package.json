@@ -27,7 +27,10 @@
     "typings": "rimraf types && tsc --declaration --declarationMap --emitDeclarationOnly --outDir types && api-extractor run --local",
     "build": "yarn lint && yarn compile && yarn minify-iife && yarn typings",
     "docs": "api-documenter markdown -i ./temp -o ./docs/reference",
-    "test": "export TS_NODE_PROJECT=tsconfig.test.json ; mocha --reporter spec --require ts-node/register \"test/**/*.ts\""
+    "test": "export TS_NODE_PROJECT=tsconfig.test.json ; mocha --reporter spec --require ts-node/register \"test/**/*.ts\"",
+    "release:patch": "bin/version.sh patch && yarn build",
+    "release:minor": "bin/version.sh minor && yarn build",
+    "release:major": "bin/version.sh major && yarn build"
   },
   "author": "Doofinder",
   "contributors": [
