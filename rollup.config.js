@@ -1,4 +1,5 @@
 import clear from 'rollup-plugin-clear';
+import commonjs from '@rollup/plugin-commonjs';
 import inject from '@rollup/plugin-inject';
 import resolve from '@rollup/plugin-node-resolve';
 import typescript from 'rollup-plugin-typescript2';
@@ -10,9 +11,9 @@ function defaultPlugins(file, options = {}) {
       watch: true
     }),
     resolve({
-      dedupe: ['qss'],
       browser: options.browser || false
     }),
+    commonjs(),
     typescript({
       typescript: require('typescript')
     })
@@ -45,7 +46,6 @@ export default [
     },
     external: [
       'node-fetch',
-      'qss'
     ],
     plugins: defaultPlugins('lib/index.js').concat([
       inject({

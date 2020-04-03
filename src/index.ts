@@ -5,6 +5,7 @@ export * from './stats';
 
 export * from './util/is';
 export * from './util/clone';
+export * from './util/encode-params';
 export * from './util/merge';
 
 export * from './response';
