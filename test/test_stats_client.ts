@@ -9,7 +9,6 @@ use(chaiAsPromised);
 should();
 
 // required for tests
-import { Client } from '../src/client';
 import { StatsClient } from '../src/stats';
 import { ValidationError } from '../src/util/validators';
 
@@ -19,8 +18,7 @@ import * as cfg from './config';
 // Mock the fetch API
 import * as fetchMock from 'fetch-mock';
 
-const client = new Client({ secret: 'eu1-0123456789abcdef0123456789abcdef01234567' });
-const stats = new StatsClient(client);
+const stats = new StatsClient(cfg.getClient());
 
 describe('StatsClient', () => {
   afterEach(() => {

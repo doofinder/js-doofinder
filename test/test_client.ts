@@ -29,50 +29,45 @@ describe('Client', () => {
 
   context('Instantiation', () => {
     context('with no zone', () => {
-      it('should use EU1', done => {
-        (new Client()).zone.should.equal('eu1');
-        (new Client({ secret: cfg.secret })).zone.should.equal('eu1');
+      it('should throw', done => {
+        (() => new Client()).should.throw(ValidationError);
         done();
       });
     });
 
-    context('with key with zone and no zone', () => {
-      it('should use zone from key', done => {
-        const client = new Client({ secret: `us1-${cfg.secret}` });
+    context('with secret key', () => {
+      it('should use https', done => {
+        const client = new Client({ zone: 'eu1', secret: 'any' });
+        client.endpoint.substring(0, 6).should.equal('https:');
+        done();
+      });
+    });
+
+    context('with secret key with zone and zone', () => {
+      it("should use zone", done => {
+        const client = new Client({ zone: 'us1', secret: cfg.key });
         client.zone.should.equal('us1');
-        done();
-      })
-
-      it('should break if api key is malformed', done => {
-        (() => new Client({ secret: '-abcd' })).should.throw();
-        done();
-      });
-    });
-
-    context('with key with zone and zone', () => {
-      it("should use key's zone", done => {
-        const client = new Client({ secret: cfg.key, zone: 'us1' });
-        client.zone.should.equal('eu1');
         done();
       });
     });
 
     context('HTTP Headers', () => {
       it('should add passed headers to the request', done => {
-        const client = new Client({ secret: cfg.key, headers: { 'X-Name': 'John Smith' } });
+        const client = new Client({ zone: cfg.zone, headers: { 'X-Name': 'John Smith' } });
         client.headers['X-Name'].should.equal('John Smith');
         done()
       });
 
       it ("won't replace API Keys passed in options", done => {
         const client = new Client({
-          secret: cfg.key,
+          zone: cfg.zone,
+          secret: cfg.secret,
           headers: {
           'X-Name': 'John Smith',
           'Authorization': 'abc'
         }});
         client.headers['X-Name'].should.equal('John Smith');
-        client.headers.Authorization.should.equal('aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd');
+        client.headers.Authorization.should.equal('Token aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd');
         done();
       });
     });
@@ -85,8 +80,8 @@ describe('Client', () => {
       });
 
       it('should use custom address if defined', done => {
-        const client = new Client({ secret: cfg.key, serverAddress: 'localhost:4000' });
-        client.endpoint.should.equal('https://localhost:4000');
+        const client = new Client({ zone: cfg.zone, serverAddress: 'localhost:4000' });
+        client.endpoint.should.equal('//localhost:4000');
         done();
       });
     });
