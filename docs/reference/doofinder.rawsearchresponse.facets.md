@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-facets: GenericObject<RawFacet>;
+facets: Record<string, RawFacet>;
 ```

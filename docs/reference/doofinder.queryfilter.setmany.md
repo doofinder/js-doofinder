@@ -9,14 +9,14 @@ Set multiple filters at once.
 <b>Signature:</b>
 
 ```typescript
-setMany(data: GenericObject<unknown>, replace?: boolean): void;
+setMany(data: Record<string, any>, replace?: boolean): void;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  data | <code>GenericObject&lt;unknown&gt;</code> | An object with all the filters to be set. |
+|  data | <code>Record&lt;string, any&gt;</code> | An object with all the filters to be set. |
 |  replace | <code>boolean</code> | Boolean value telling whether to replace any existing filter or not. |
 
 <b>Returns:</b>

@@ -9,5 +9,5 @@ Facets information for this set of results.
 <b>Signature:</b>
 
 ```typescript
-facets?: GenericObject<Facet>;
+facets?: Record<string, Facet>;
 ```

@@ -23,7 +23,7 @@ export declare class Client
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [endpoint](./doofinder.client.endpoint.md) |  | <code>string</code> | Returns the configured endpoint for this client. |
-|  [headers](./doofinder.client.headers.md) |  | <code>GenericObject&lt;string&gt;</code> | Returns the headers set for this client. |
+|  [headers](./doofinder.client.headers.md) |  | <code>Record&lt;string, string&gt;</code> | Returns the headers set for this client. |
 |  [secret](./doofinder.client.secret.md) |  | <code>string</code> | Returns the secret token for this client, if any. |
 |  [zone](./doofinder.client.zone.md) |  | <code>string</code> | Returns the search zone for this client. |
 

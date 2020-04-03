@@ -9,5 +9,5 @@ Additional HTTP headers to send, if any.
 <b>Signature:</b>
 
 ```typescript
-headers: GenericObject<string>;
+headers: Record<string, string>;
 ```

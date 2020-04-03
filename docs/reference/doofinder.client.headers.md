@@ -9,5 +9,5 @@ Returns the headers set for this client.
 <b>Signature:</b>
 
 ```typescript
-get headers(): GenericObject<string>;
+get headers(): Record<string, string>;
 ```

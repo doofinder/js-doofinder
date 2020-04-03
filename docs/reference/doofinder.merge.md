@@ -9,18 +9,18 @@ Merge multiple objects into one.
 <b>Signature:</b>
 
 ```typescript
-export declare function merge(...objects: GenericObject[]): GenericObject;
+export declare function merge(...objects: Record<string, any>[]): Record<string, any>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  objects | <code>GenericObject[]</code> | An undetermined number of objects to merge. |
+|  objects | <code>Record&lt;string, any&gt;[]</code> | An undetermined number of objects to merge. |
 
 <b>Returns:</b>
 
-`GenericObject`
+`Record<string, any>`
 
 An object resulting of merging the provided objects.
 

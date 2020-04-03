@@ -16,8 +16,8 @@ export interface QueryParamsBase
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [exclude](./doofinder.queryparamsbase.exclude.md) | <code>GenericObject&lt;unknown&gt;</code> | Filters to exclude results from the response. |
-|  [filter](./doofinder.queryparamsbase.filter.md) | <code>GenericObject&lt;unknown&gt;</code> | Filters to include results in the response. |
+|  [exclude](./doofinder.queryparamsbase.exclude.md) | <code>Record&lt;string, any&gt;</code> | Filters to exclude results from the response. |
+|  [filter](./doofinder.queryparamsbase.filter.md) | <code>Record&lt;string, any&gt;</code> | Filters to include results in the response. |
 |  [hashid](./doofinder.queryparamsbase.hashid.md) | <code>string</code> | Unique id of the search engine. |
 |  [items](./doofinder.queryparamsbase.items.md) | <code>string[]</code> | List of dfids to be retrieved from the server. |
 |  [nostats](./doofinder.queryparamsbase.nostats.md) | <code>boolean</code> | Whether to count the request in the search stats or not. |

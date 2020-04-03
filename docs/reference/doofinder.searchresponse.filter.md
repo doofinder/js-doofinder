@@ -17,6 +17,6 @@ filter?: {
             [key: string]: string[];
         };
         geo_distance: GeoDistanceFilter;
-        [key: string]: GenericObject;
+        [key: string]: Record<string, any>;
     };
 ```

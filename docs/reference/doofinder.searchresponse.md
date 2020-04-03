@@ -9,25 +9,25 @@ Represents the basic search response from Doofinder.
 <b>Signature:</b>
 
 ```typescript
-export interface SearchResponse extends GenericObject 
+export interface SearchResponse extends Record<string, any> 
 ```
 
 ## Properties
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [\_rawFacets](./doofinder.searchresponse._rawfacets.md) | <code>GenericObject&lt;RawFacet&gt;</code> | RAW facets information received from the search server with no further processing. |
+|  [\_rawFacets](./doofinder.searchresponse._rawfacets.md) | <code>Record&lt;string, RawFacet&gt;</code> | RAW facets information received from the search server with no further processing. |
 |  [autocomplete\_suggest](./doofinder.searchresponse.autocomplete_suggest.md) | <code>string</code> | Autocomplete suggestion. Optional. |
 |  [banner](./doofinder.searchresponse.banner.md) | <code>BannerInfo</code> | Banner information for these search results, if any. Optional. |
-|  [facets](./doofinder.searchresponse.facets.md) | <code>GenericObject&lt;Facet&gt;</code> | Facets information for this set of results. |
-|  [filter](./doofinder.searchresponse.filter.md) | <code>{</code><br/><code>        range: {</code><br/><code>            [key: string]: RangeFilter;</code><br/><code>        };</code><br/><code>        terms: {</code><br/><code>            [key: string]: string[];</code><br/><code>        };</code><br/><code>        geo_distance: GeoDistanceFilter;</code><br/><code>        [key: string]: GenericObject;</code><br/><code>    }</code> | Filters applied to the search. |
+|  [facets](./doofinder.searchresponse.facets.md) | <code>Record&lt;string, Facet&gt;</code> | Facets information for this set of results. |
+|  [filter](./doofinder.searchresponse.filter.md) | <code>{</code><br/><code>        range: {</code><br/><code>            [key: string]: RangeFilter;</code><br/><code>        };</code><br/><code>        terms: {</code><br/><code>            [key: string]: string[];</code><br/><code>        };</code><br/><code>        geo_distance: GeoDistanceFilter;</code><br/><code>        [key: string]: Record&lt;string, any&gt;;</code><br/><code>    }</code> | Filters applied to the search. |
 |  [max\_score](./doofinder.searchresponse.max_score.md) | <code>number</code> | The maximum score of the results for the current search. |
 |  [page](./doofinder.searchresponse.page.md) | <code>number</code> | The page number for the current set of results. |
 |  [query\_counter](./doofinder.searchresponse.query_counter.md) | <code>number</code> | The counter sent in the request to control the flow of responses. |
 |  [query\_name](./doofinder.searchresponse.query_name.md) | <code>string</code> | The name of the internal query chosen by Doofinder to provide the results. |
 |  [query](./doofinder.searchresponse.query.md) | <code>string</code> | The search terms provided. |
 |  [results\_per\_page](./doofinder.searchresponse.results_per_page.md) | <code>number</code> | The number of results sent for each page. |
-|  [results](./doofinder.searchresponse.results.md) | <code>GenericObject[]</code> | Array of results. |
+|  [results](./doofinder.searchresponse.results.md) | <code>Record&lt;string, any&gt;[]</code> | Array of results. |
 |  [total\_found](./doofinder.searchresponse.total_found.md) | <code>number</code> | The number of results found for the current search. |
 |  [total](./doofinder.searchresponse.total.md) | <code>number</code> | The number of search results that can be retrieved. May be lower than the total number of results. |
 

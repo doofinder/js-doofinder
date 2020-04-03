@@ -9,5 +9,5 @@ Array of results.
 <b>Signature:</b>
 
 ```typescript
-results: GenericObject[];
+results: Record<string, any>[];
 ```

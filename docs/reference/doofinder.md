@@ -38,7 +38,6 @@
 |  [ClickStatsParamsWithId](./doofinder.clickstatsparamswithid.md) | Parameters for click stats without dfid. |
 |  [ClientOptions](./doofinder.clientoptions.md) | Options that can be used to create a Client instance. |
 |  [FieldSorting](./doofinder.fieldsorting.md) | Specification to sort by a field. |
-|  [GenericObject](./doofinder.genericobject.md) | Represents an object with an unspecific set of keys and values. |
 |  [GeoDistanceFilter](./doofinder.geodistancefilter.md) | Represents a filter by geographical distance. |
 |  [GeoSorting](./doofinder.geosorting.md) | Interface to specify a sorting by geo distance. |
 |  [GeoSortOrder](./doofinder.geosortorder.md) | Specification to sort by geo distance. |

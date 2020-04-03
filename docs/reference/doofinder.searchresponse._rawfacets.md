@@ -9,5 +9,5 @@ RAW facets information received from the search server with no further processin
 <b>Signature:</b>
 
 ```typescript
-_rawFacets?: GenericObject<RawFacet>;
+_rawFacets?: Record<string, RawFacet>;
 ```

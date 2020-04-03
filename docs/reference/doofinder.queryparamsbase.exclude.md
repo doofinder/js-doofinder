@@ -9,5 +9,5 @@ Filters to exclude results from the response.
 <b>Signature:</b>
 
 ```typescript
-exclude?: GenericObject<unknown>;
+exclude?: Record<string, any>;
 ```

@@ -9,7 +9,7 @@ Perform a request to a HTTP resource.
 <b>Signature:</b>
 
 ```typescript
-request(resource: string, payload?: GenericObject): Promise<Response>;
+request(resource: string, payload?: Record<string, any>): Promise<Response>;
 ```
 
 ## Parameters
@@ -17,7 +17,7 @@ request(resource: string, payload?: GenericObject): Promise<Response>;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  resource | <code>string</code> | URL of the resource to request. |
-|  payload | <code>GenericObject</code> | An object to send via POST. Optional. |
+|  payload | <code>Record&lt;string, any&gt;</code> | An object to send via POST. Optional. |
 
 <b>Returns:</b>
 

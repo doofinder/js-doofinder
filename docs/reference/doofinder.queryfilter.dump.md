@@ -9,11 +9,11 @@ Dump all filters as an object.
 <b>Signature:</b>
 
 ```typescript
-dump(): GenericObject<unknown>;
+dump(): Record<string, any>;
 ```
 <b>Returns:</b>
 
-`GenericObject<unknown>`
+`Record<string, any>`
 
 An object with fields as keys and filter values as values.
 

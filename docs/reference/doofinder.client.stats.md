@@ -9,7 +9,7 @@ Perform a request to submit stats events to Doofinder.
 <b>Signature:</b>
 
 ```typescript
-stats(eventName: string, params: GenericObject<string>): Promise<Response>;
+stats(eventName: string, params: Record<string, string>): Promise<Response>;
 ```
 
 ## Parameters
@@ -17,7 +17,7 @@ stats(eventName: string, params: GenericObject<string>): Promise<Response>;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  eventName | <code>string</code> | Type of stats to send. |
-|  params | <code>GenericObject&lt;string&gt;</code> | Parameters for the query string. |
+|  params | <code>Record&lt;string, string&gt;</code> | Parameters for the query string. |
 
 <b>Returns:</b>
 

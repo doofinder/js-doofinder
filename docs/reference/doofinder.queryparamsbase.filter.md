@@ -9,5 +9,5 @@ Filters to include results in the response.
 <b>Signature:</b>
 
 ```typescript
-filter?: GenericObject<unknown>;
+filter?: Record<string, any>;
 ```

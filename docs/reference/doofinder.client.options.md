@@ -9,7 +9,7 @@ Perform a request to get the options of a search engine.
 <b>Signature:</b>
 
 ```typescript
-options(hashid: string): Promise<GenericObject>;
+options(hashid: string): Promise<Record<string, any>>;
 ```
 
 ## Parameters
@@ -20,7 +20,7 @@ options(hashid: string): Promise<GenericObject>;
 
 <b>Returns:</b>
 
-`Promise<GenericObject>`
+`Promise<Record<string, any>>`
 
 A promise to be fullfilled with the response or rejected with a `ClientResponseError`<!-- -->.
 

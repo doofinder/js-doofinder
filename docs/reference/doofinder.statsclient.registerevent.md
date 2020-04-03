@@ -9,7 +9,7 @@ Pass-through to register any custom event.
 <b>Signature:</b>
 
 ```typescript
-registerEvent(eventName: string, params: GenericObject): Promise<Response>;
+registerEvent(eventName: string, params: Record<string, any>): Promise<Response>;
 ```
 
 ## Parameters
@@ -17,7 +17,7 @@ registerEvent(eventName: string, params: GenericObject): Promise<Response>;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  eventName | <code>string</code> | The event name to register. |
-|  params | <code>GenericObject</code> | The params object associated to the event call. It should have at least a session\_id and a hashid. |
+|  params | <code>Record&lt;string, any&gt;</code> | The params object associated to the event call. It should have at least a session\_id and a hashid. |
 
 <b>Returns:</b>
 
