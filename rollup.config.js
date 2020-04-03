@@ -1,6 +1,6 @@
 import clear from 'rollup-plugin-clear';
-import inject from 'rollup-plugin-inject';
-import resolve from 'rollup-plugin-node-resolve';
+import inject from '@rollup/plugin-inject';
+import resolve from '@rollup/plugin-node-resolve';
 import typescript from 'rollup-plugin-typescript2';
 
 function defaultPlugins(file, options = {}) {
