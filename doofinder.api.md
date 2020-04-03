@@ -56,12 +56,12 @@ export class Client {
     constructor({ zone, secret, headers, serverAddress }?: Partial<ClientOptions>);
     buildUrl(resource: string, querystring?: string): string;
     get endpoint(): string;
-    get headers(): GenericObject<string>;
-    options(hashid: string): Promise<GenericObject>;
-    request(resource: string, payload?: GenericObject): Promise<Response>;
+    get headers(): Record<string, string>;
+    options(hashid: string): Promise<Record<string, any>>;
+    request(resource: string, payload?: Record<string, any>): Promise<Response>;
     search(params: Query | SearchParams): Promise<SearchResponse>;
     get secret(): string;
-    stats(eventName: string, params: GenericObject<string>): Promise<Response>;
+    stats(eventName: string, params: Record<string, string>): Promise<Response>;
     suggest(params: Query | SearchParams): Promise<SearchResponse>;
     // (undocumented)
     topStats(type: TopStatsType, params: TopStatsParams): Promise<Response>;
@@ -71,7 +71,7 @@ export class Client {
 
 // @public
 export interface ClientOptions {
-    headers: GenericObject<string>;
+    headers: Record<string, string>;
     secret: string;
     serverAddress: string;
     zone: string;
@@ -103,11 +103,6 @@ export type Facet = RangeFacet | TermsFacet | unknown;
 // @public
 export interface FieldSorting {
     [field: string]: SortOrder;
-}
-
-// @public
-export interface GenericObject<T = any> {
-    [key: string]: T;
 }
 
 // @public
@@ -160,7 +155,7 @@ export function isValidDoofinderId(value: unknown): boolean;
 export function isValidHashId(value: unknown): boolean;
 
 // @public
-export function merge(...objects: GenericObject[]): GenericObject;
+export function merge(...objects: Record<string, any>[]): Record<string, any>;
 
 // @public
 export type OnlyIdResult = Pick<BasicResult, 'id'>;
@@ -210,13 +205,13 @@ export class QueryFilter {
     add(name: string, value: unknown): void;
     clear(): void;
     contains(name: string, value: unknown): boolean;
-    dump(): GenericObject<unknown>;
+    dump(): Record<string, any>;
     equals(name: string, value: unknown): boolean;
     get(name: string): unknown;
     has(name: string): boolean;
     remove(name: string, value?: unknown): void;
     set(name: string, value: unknown): void;
-    setMany(data: GenericObject<unknown>, replace?: boolean): void;
+    setMany(data: Record<string, any>, replace?: boolean): void;
 }
 
 // @public
@@ -225,8 +220,8 @@ export type QueryParams = Partial<QueryParamsBase>;
 // @public
 export interface QueryParamsBase {
     [key: string]: unknown;
-    exclude?: GenericObject<unknown>;
-    filter?: GenericObject<unknown>;
+    exclude?: Record<string, any>;
+    filter?: Record<string, any>;
     hashid: string;
     items?: string[];
     nostats?: boolean;
@@ -307,7 +302,7 @@ export interface RawRangeFacet {
 // @public
 export interface RawSearchResponse extends Omit<SearchResponse, 'facets' | '_rawFacets'> {
     // (undocumented)
-    facets: GenericObject<RawFacet>;
+    facets: Record<string, RawFacet>;
 }
 
 // @public
@@ -349,10 +344,10 @@ export interface SearchParams extends QueryParamsBase {
 }
 
 // @public
-export interface SearchResponse extends GenericObject {
+export interface SearchResponse extends Record<string, any> {
     autocomplete_suggest?: string;
     banner?: BannerInfo;
-    facets?: GenericObject<Facet>;
+    facets?: Record<string, Facet>;
     filter?: {
         range: {
             [key: string]: RangeFilter;
@@ -361,15 +356,15 @@ export interface SearchResponse extends GenericObject {
             [key: string]: string[];
         };
         geo_distance: GeoDistanceFilter;
-        [key: string]: GenericObject;
+        [key: string]: Record<string, any>;
     };
     max_score: number;
     page: number;
     query: string;
     query_counter: number;
     query_name: string;
-    _rawFacets?: GenericObject<RawFacet>;
-    results: GenericObject[];
+    _rawFacets?: Record<string, RawFacet>;
+    results: Record<string, any>[];
     results_per_page: number;
     total: number;
     total_found: number;
@@ -391,7 +386,7 @@ export class StatsClient {
     get client(): Client;
     registerCheckout(params: StatsParams): Promise<Response>;
     registerClick(params: ClickStatsParamsWithDfid | ClickStatsParamsWithId): Promise<Response>;
-    registerEvent(eventName: string, params: GenericObject): Promise<Response>;
+    registerEvent(eventName: string, params: Record<string, any>): Promise<Response>;
     registerImageClick(params: ImageStatsParams): Promise<Response>;
     registerImageDisplay(params: ImageStatsParams): Promise<Response>;
     registerRedirection(params: RedirectionStatsParams): Promise<Response>;

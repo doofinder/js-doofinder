@@ -1,5 +1,3 @@
-import { GenericObject } from '../types';
-
 import { QueryTypes } from './datatype';
 import { QueryFilter } from './filter';
 import { QuerySort, SortingInput, Sorting } from './sort';
@@ -41,9 +39,9 @@ export interface QueryParamsBase {
   // filter parameters
 
   /** Filters to include results in the response. */
-  filter?: GenericObject<unknown>;
+  filter?: Record<string, any>;
   /** Filters to exclude results from the response. */
-  exclude?: GenericObject<unknown>;
+  exclude?: Record<string, any>;
 
   // sort parameters
 

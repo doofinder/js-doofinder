@@ -1,5 +1,3 @@
-import { GenericObject } from '../types';
-
 import { QueryValueError } from './error';
 import { isPlainObject, isShallowEqual, isString, isNumber } from '../util/is';
 import { clone } from '../util/clone';
@@ -155,7 +153,7 @@ export class QueryFilter {
    *
    * @public
    */
-  public setMany(data: GenericObject<unknown>, replace = false): void {
+  public setMany(data: Record<string, any>, replace = false): void {
     if (replace) {
       this.clear();
     }
@@ -169,8 +167,8 @@ export class QueryFilter {
    * @returns An object with fields as keys and filter values as values.
    * @public
    */
-  public dump(): GenericObject<unknown> {
-    const data: GenericObject<unknown> = {};
+  public dump(): Record<string, any> {
+    const data: Record<string, any> = {};
     this._filters.forEach((value, key) => {
       data[key] = this._denormalize(value);
     });

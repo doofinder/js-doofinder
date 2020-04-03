@@ -1,5 +1,3 @@
-import { GenericObject } from './types';
-
 import { clone } from './util/clone';
 
 /**
@@ -130,7 +128,7 @@ export interface BannerInfo {
  *
  * @public
  */
-export interface SearchResponse extends GenericObject {
+export interface SearchResponse extends Record<string, any> {
   /** The search terms provided. */
   query: string;
   /** The name of the internal query chosen by Doofinder to provide the results. */
@@ -151,7 +149,7 @@ export interface SearchResponse extends GenericObject {
   results_per_page: number;
 
   /** Array of results. */
-  results: GenericObject[];
+  results: Record<string, any>[];
 
   /** Autocomplete suggestion. Optional. */
   autocomplete_suggest?: string;
@@ -159,9 +157,9 @@ export interface SearchResponse extends GenericObject {
   banner?: BannerInfo;
 
   /** Facets information for this set of results. */
-  facets?: GenericObject<Facet>;
+  facets?: Record<string, Facet>;
   /** RAW facets information received from the search server with no further processing. */
-  _rawFacets?: GenericObject<RawFacet>;
+  _rawFacets?: Record<string, RawFacet>;
 
   /** Filters applied to the search. */
   filter?: {
@@ -176,7 +174,7 @@ export interface SearchResponse extends GenericObject {
     /** Geo distance filters applied to the search. */
     geo_distance: GeoDistanceFilter;
     /** Other unknown types of filters. */
-    [key: string]: GenericObject;
+    [key: string]: Record<string, any>;
   };
 }
 
@@ -300,7 +298,7 @@ export type Facet = RangeFacet | TermsFacet | unknown;
  * @public
  */
 export interface RawSearchResponse extends Omit<SearchResponse, 'facets' | '_rawFacets'> {
-  facets: GenericObject<RawFacet>;
+  facets: Record<string, RawFacet>;
 }
 
 /**
@@ -380,8 +378,8 @@ function processRangeFacet(facet: RawRangeFacet): RangeFacet {
  *
  * @internal
  */
-function processFacets(rawFacets: GenericObject<RawFacet>): GenericObject<Facet> {
-  const facets: GenericObject<Facet> = {};
+function processFacets(rawFacets: Record<string, RawFacet>): Record<string, Facet> {
+  const facets: Record<string, Facet> = {};
   for (const field in rawFacets) {
     if ('terms' in (rawFacets[field] as RawTermsFacet)) {
       facets[field] = processTermsFacet(rawFacets[field] as RawTermsFacet);

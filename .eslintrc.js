@@ -30,6 +30,7 @@ module.exports = {
     // https://github.com/typescript-eslint/typescript-eslint/blob/master/packages/eslint-plugin/docs/rules/explicit-member-accessibility.md
     '@typescript-eslint/explicit-member-accessibility': ['error', { overrides: { accessors: 'off' } }],
     // https://github.com/typescript-eslint/typescript-eslint/blob/master/packages/eslint-plugin/docs/rules/explicit-function-return-type.md
-    '@typescript-eslint/explicit-function-return-type': ['warn', { allowExpressions: true }]
+    '@typescript-eslint/explicit-function-return-type': ['warn', { allowExpressions: true }],
+    '@typescript-eslint/no-explicit-any': 'off'
   }
 }
