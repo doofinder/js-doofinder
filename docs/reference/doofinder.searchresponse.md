@@ -18,7 +18,7 @@ export interface SearchResponse extends GenericObject
 |  --- | --- | --- |
 |  [\_rawFacets](./doofinder.searchresponse._rawfacets.md) | <code>GenericObject&lt;RawFacet&gt;</code> | RAW facets information received from the search server with no further processing. |
 |  [autocomplete\_suggest](./doofinder.searchresponse.autocomplete_suggest.md) | <code>string</code> | Autocomplete suggestion. Optional. |
-|  [banner](./doofinder.searchresponse.banner.md) | <code>{</code><br/><code>        id: number;</code><br/><code>        image: string;</code><br/><code>        mobile_image: string;</code><br/><code>        html_code: string;</code><br/><code>        link: string;</code><br/><code>        blank: boolean;</code><br/><code>    }</code> | Banner information for these search results, if any. Optional. |
+|  [banner](./doofinder.searchresponse.banner.md) | <code>BannerInfo</code> | Banner information for these search results, if any. Optional. |
 |  [facets](./doofinder.searchresponse.facets.md) | <code>GenericObject&lt;Facet&gt;</code> | Facets information for this set of results. |
 |  [filter](./doofinder.searchresponse.filter.md) | <code>{</code><br/><code>        range: {</code><br/><code>            [key: string]: RangeFilter;</code><br/><code>        };</code><br/><code>        terms: {</code><br/><code>            [key: string]: string[];</code><br/><code>        };</code><br/><code>        geo_distance: GeoDistanceFilter;</code><br/><code>        [key: string]: GenericObject;</code><br/><code>    }</code> | Filters applied to the search. |
 |  [max\_score](./doofinder.searchresponse.max_score.md) | <code>number</code> | The maximum score of the results for the current search. |

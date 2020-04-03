@@ -9,12 +9,5 @@ Banner information for these search results, if any. Optional.
 <b>Signature:</b>
 
 ```typescript
-banner?: {
-        id: number;
-        image: string;
-        mobile_image: string;
-        html_code: string;
-        link: string;
-        blank: boolean;
-    };
+banner?: BannerInfo;
 ```

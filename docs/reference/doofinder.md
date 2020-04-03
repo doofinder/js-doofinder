@@ -32,6 +32,7 @@
 
 |  Interface | Description |
 |  --- | --- |
+|  [BannerInfo](./doofinder.bannerinfo.md) | Represents the information received for a banner for certain search. |
 |  [BasicResult](./doofinder.basicresult.md) | Represents a single search result when the <code>basic</code> transformer is used. |
 |  [ClickStatsParamsWithDfid](./doofinder.clickstatsparamswithdfid.md) | Parameters for click stats with dfid. |
 |  [ClickStatsParamsWithId](./doofinder.clickstatsparamswithid.md) | Parameters for click stats without dfid. |
@@ -47,6 +48,7 @@
 |  [RangeFilter](./doofinder.rangefilter.md) | Represents a filter by numeric range. |
 |  [RangeStats](./doofinder.rangestats.md) | Represents the information returned in the search response for a range filter. |
 |  [RawRangeFacet](./doofinder.rawrangefacet.md) | RAW information received for a range filter. |
+|  [RawSearchResponse](./doofinder.rawsearchresponse.md) | Represents the search response with no processing. |
 |  [RawTermsFacet](./doofinder.rawtermsfacet.md) | RAW information received as a facet for a terms filter. |
 |  [RawTermsInfo](./doofinder.rawtermsinfo.md) | RAW information for a set of terms belonging to a terms facet. |
 |  [RawTermStats](./doofinder.rawtermstats.md) | RAW information for a term belonging to a terms facet. |
@@ -62,6 +64,8 @@
 
 |  Variable | Description |
 |  --- | --- |
+|  [\_\_API\_VERSION\_\_](./doofinder.__api_version__.md) | Version of the search API being used. |
+|  [\_\_VERSION\_\_](./doofinder.__version__.md) | Current version of the library. |
 |  [isIdentical](./doofinder.isidentical.md) | Check whether two values are identical or not. |
 |  [isNumber](./doofinder.isnumber.md) | Check if the provided value is a number. |
 |  [isObject](./doofinder.isobject.md) | Check if the provided value is an object. |
