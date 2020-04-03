@@ -1,7 +1,6 @@
 import { encode } from 'qss';
 
 import { isPlainObject } from './is';
-import { GenericObject } from '../types';
 import { clone } from './clone';
 
 /**
@@ -10,28 +9,28 @@ import { clone } from './clone';
  *
  */
 
-function _updateResult(result: GenericObject<string>, value: unknown, param: string): GenericObject {
+function _updateResult(result: Record<string, string>, value: unknown, param: string): Record<string, any> {
   if (Array.isArray(value)) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return Object.assign(result, _processArray(value as Array<unknown>, param));
   } else if (isPlainObject(value)) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return Object.assign(result, _processObject(value as GenericObject, param));
+    return Object.assign(result, _processObject(value as Record<string, any>, param));
   } else {
     return Object.assign(result, { [param]: value });
   }
 }
 
-function _processObject(keyValueObj: GenericObject, targetKey = ''): GenericObject {
-  return Object.keys(keyValueObj).reduce((result: GenericObject, key: string): GenericObject => {
+function _processObject(keyValueObj: Record<string, any>, targetKey = ''): Record<string, any> {
+  return Object.keys(keyValueObj).reduce((result: Record<string, any>, key: string): Record<string, any> => {
     const value = keyValueObj[key];
     const param = targetKey.length > 0 ? `${targetKey}[${key}]` : key;
     return _updateResult(result, value, param);
   }, {});
 }
 
-function _processArray(valueList: Array<unknown>, key: string | number): GenericObject {
-  return valueList.reduce((result: GenericObject, value: unknown, index: number) => {
+function _processArray(valueList: Array<unknown>, key: string | number): Record<string, any> {
+  return valueList.reduce((result: Record<string, any>, value: unknown, index: number) => {
     const param = `${key}[${index}]`;
     return _updateResult(result, value, param);
   }, {});
@@ -42,12 +41,12 @@ function _processArray(valueList: Array<unknown>, key: string | number): Generic
  * correctly in the query params string resulting
  *
  */
-export function buildQueryString(paramsObj: GenericObject): string {
+export function buildQueryString(paramsObj: Record<string, any>): string {
   if (!isPlainObject(paramsObj)) {
     throw new Error('Not an object');
   }
 
-  const params: GenericObject = clone(paramsObj);
+  const params: Record<string, any> = clone(paramsObj);
 
   for (const key in params) {
     if (typeof params[key] === 'undefined') {

@@ -1,5 +1,4 @@
 import { isPlainObject } from './is';
-import { GenericObject } from '../types';
 
 /**
  * Merge multiple objects into one.
@@ -23,8 +22,8 @@ import { GenericObject } from '../types';
  * @returns An object resulting of merging the provided objects.
  * @public
  */
-export function merge(...objects: GenericObject[]): GenericObject {
-  let target: GenericObject = objects.shift();
+export function merge(...objects: Record<string, any>[]): Record<string, any> {
+  let target: Record<string, any> = objects.shift();
 
   if (target == null || (!isPlainObject(target) && !Array.isArray(target))) {
     target = {};
@@ -32,7 +31,7 @@ export function merge(...objects: GenericObject[]): GenericObject {
 
   objects
     .filter(x => isPlainObject(x) || Array.isArray(x))
-    .forEach(function(obj: GenericObject) {
+    .forEach(function(obj: Record<string, any>) {
       if (obj == null) return;
 
       for (const propName in obj) {

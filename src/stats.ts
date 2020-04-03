@@ -1,5 +1,3 @@
-import { GenericObject } from './types';
-
 import { Client } from './client';
 import { validateRequired, validateDoofinderId, ValidationError } from './util/validators';
 import { clone } from './util/clone';
@@ -94,7 +92,7 @@ export class StatsClient {
    * @public
    */
   public async registerSession(params: StatsParams): Promise<Response> {
-    return this.client.stats('init', params as GenericObject);
+    return this.client.stats('init', params as Record<string, any>);
   }
 
   /**
@@ -123,7 +121,7 @@ export class StatsClient {
       delete options.dfid;
       /* eslint-enable @typescript-eslint/ban-ts-ignore */
     }
-    return this.client.stats('click', options as GenericObject);
+    return this.client.stats('click', options as Record<string, any>);
   }
 
   /**
@@ -136,7 +134,7 @@ export class StatsClient {
    * @public
    */
   public async registerCheckout(params: StatsParams): Promise<Response> {
-    return this.client.stats('checkout', params as GenericObject);
+    return this.client.stats('checkout', params as Record<string, any>);
   }
 
   /**
@@ -150,7 +148,7 @@ export class StatsClient {
    */
   public async registerImageDisplay(params: ImageStatsParams): Promise<Response> {
     validateRequired(params.img_id, 'img_id is required');
-    return this.client.stats('img_display', params as GenericObject);
+    return this.client.stats('img_display', params as Record<string, any>);
   }
 
   /**
@@ -164,7 +162,7 @@ export class StatsClient {
    */
   public async registerImageClick(params: ImageStatsParams): Promise<Response> {
     validateRequired(params.img_id, 'img_id is required');
-    return this.client.stats('img_click', params as GenericObject);
+    return this.client.stats('img_click', params as Record<string, any>);
   }
 
   /**
@@ -178,7 +176,7 @@ export class StatsClient {
    */
   public async registerRedirection(params: RedirectionStatsParams): Promise<Response> {
     validateRequired([params.redirection_id, params.link], 'redirection_id and link are required');
-    return this.client.stats('redirect', params as GenericObject);
+    return this.client.stats('redirect', params as Record<string, any>);
   }
 
   /**
@@ -192,7 +190,7 @@ export class StatsClient {
    *
    * @public
    */
-  public async registerEvent(eventName: string, params: GenericObject): Promise<Response> {
+  public async registerEvent(eventName: string, params: Record<string, any>): Promise<Response> {
     return this.client.stats(eventName, params);
   }
 }

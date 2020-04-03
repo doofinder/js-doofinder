@@ -8,7 +8,6 @@ should();
 
 // tests
 import { buildQueryString } from '../src/util/encode-params';
-import { GenericObject } from '../src';
 
 describe("buildQueryString function", () => {
   it("only accepts plain objects", done => {
@@ -122,7 +121,7 @@ describe("buildQueryString function", () => {
   });
 
   it('does not dump undefined values but respects falsy values, in a non-destructive way', done => {
-    const params: GenericObject = {
+    const params: Record<string, any> = {
       a: null,
       b: undefined,
       c: 0,

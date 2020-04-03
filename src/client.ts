@@ -1,5 +1,3 @@
-import { GenericObject } from './types';
-
 import { Query, SearchParams } from './query';
 import { processResponse, SearchResponse, RawSearchResponse } from './response';
 
@@ -33,7 +31,7 @@ export interface ClientOptions {
   /**
    * Additional HTTP headers to send, if any.
    */
-  headers: GenericObject<string>;
+  headers: Record<string, string>;
 }
 
 /**
@@ -92,7 +90,7 @@ export class Client {
   private _zone: string;
   private _secret: string;
   private _endpoint: string;
-  private _headers: GenericObject<string>;
+  private _headers: Record<string, string>;
 
   /**
    * Returns the search zone for this client.
@@ -114,7 +112,7 @@ export class Client {
    * Returns the headers set for this client.
    * @public
    */
-  public get headers(): GenericObject<string> {
+  public get headers(): Record<string, string> {
     return this._headers;
   }
 
@@ -146,7 +144,7 @@ export class Client {
 
     this._zone = zone;
 
-    const httpHeaders: GenericObject<string> = { ...(headers || {}) };
+    const httpHeaders: Record<string, string> = { ...(headers || {}) };
     let [protocol, address] = (serverAddress || `${this._zone}-search.doofinder.com`).split('://');
 
     if (!address) {
@@ -184,9 +182,9 @@ export class Client {
    *
    * @public
    */
-  public async request(resource: string, payload?: GenericObject): Promise<Response> {
+  public async request(resource: string, payload?: Record<string, any>): Promise<Response> {
     const method: string = payload ? 'POST' : 'GET';
-    const headers: GenericObject<string> = payload ? { 'Content-Type': 'application/json' } : {};
+    const headers: Record<string, string> = payload ? { 'Content-Type': 'application/json' } : {};
     const body: string = payload ? JSON.stringify(payload) : undefined;
     const response = await fetch(resource, {
       mode: 'cors',
@@ -218,7 +216,7 @@ export class Client {
    */
   public async search(params: Query | SearchParams): Promise<SearchResponse> {
     let request: Query;
-    let payload: GenericObject;
+    let payload: Record<string, any>;
 
     if (params instanceof Query) {
       request = params;
@@ -226,7 +224,7 @@ export class Client {
       request = new Query(params);
     }
 
-    const data: GenericObject = request.dump(true);
+    const data: Record<string, any> = request.dump(true);
 
     if (data.items != null) {
       payload = { items: data.items };
@@ -257,7 +255,7 @@ export class Client {
       request = new Query(params);
     }
 
-    const data: GenericObject = request.dump(true);
+    const data: Record<string, any> = request.dump(true);
 
     const qs = buildQueryString({ random: new Date().getTime(), ...data });
 
@@ -274,7 +272,7 @@ export class Client {
    *
    * @public
    */
-  public async options(hashid: string): Promise<GenericObject> {
+  public async options(hashid: string): Promise<Record<string, any>> {
     validateHashId(hashid);
     const qs = buildQueryString({ random: new Date().getTime() });
     const response = await this.request(this.buildUrl(`/options/${hashid}`, qs));
@@ -291,7 +289,7 @@ export class Client {
    *
    * @public
    */
-  public async stats(eventName: string, params: GenericObject<string>): Promise<Response> {
+  public async stats(eventName: string, params: Record<string, string>): Promise<Response> {
     validateRequired(params.session_id, 'session_id is required');
     validateHashId(params.hashid);
     const qs = buildQueryString({ random: new Date().getTime(), ...params });

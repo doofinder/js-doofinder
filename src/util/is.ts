@@ -75,7 +75,6 @@ export function isValidHashId(value: unknown): boolean {
  */
 
 /* eslint-disable no-self-compare */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Check whether two values are identical or not.
  *
@@ -141,6 +140,4 @@ export const isShallowEqual = function(objA: any, objB: any): boolean {
 
   return true;
 };
-
-/* eslint-enable @typescript-eslint/no-explicit-any */
 /* eslint-enable no-self-compare */
