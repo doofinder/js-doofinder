@@ -1,7 +1,7 @@
 import { Query, SearchParams } from './query';
 import { processResponse, SearchResponse, RawSearchResponse } from './response';
 
-import { buildQueryString } from './util/encode-params';
+import { encode } from './util/encode-params';
 import { validateHashId, validateRequired, ValidationError } from './util/validators';
 
 /**
@@ -231,7 +231,7 @@ export class Client {
       delete data.items;
     }
 
-    const qs = buildQueryString({ random: new Date().getTime(), ...data });
+    const qs = encode({ random: new Date().getTime(), ...data });
     const response: Response = await this.request(this.buildUrl('/search', qs), payload);
     return processResponse((await response.json()) as RawSearchResponse);
   }
@@ -257,7 +257,7 @@ export class Client {
 
     const data: Record<string, any> = request.dump(true);
 
-    const qs = buildQueryString({ random: new Date().getTime(), ...data });
+    const qs = encode({ random: new Date().getTime(), ...data });
 
     const response: Response = await this.request(this.buildUrl('/suggest', qs), null);
     return processResponse((await response.json()) as RawSearchResponse);
@@ -274,7 +274,7 @@ export class Client {
    */
   public async options(hashid: string): Promise<Record<string, any>> {
     validateHashId(hashid);
-    const qs = buildQueryString({ random: new Date().getTime() });
+    const qs = encode({ random: new Date().getTime() });
     const response = await this.request(this.buildUrl(`/options/${hashid}`, qs));
     return await response.json();
   }
@@ -292,13 +292,13 @@ export class Client {
   public async stats(eventName: string, params: Record<string, string>): Promise<Response> {
     validateRequired(params.session_id, 'session_id is required');
     validateHashId(params.hashid);
-    const qs = buildQueryString({ random: new Date().getTime(), ...params });
+    const qs = encode({ random: new Date().getTime(), ...params });
     return await this.request(this.buildUrl(`/stats/${eventName}`, qs));
   }
 
   public async topStats(type: TopStatsType, params: TopStatsParams): Promise<Response> {
     validateHashId(params.hashid);
-    const qs = buildQueryString({ random: new Date().getTime(), ...params });
+    const qs = encode({ random: new Date().getTime(), ...params });
     return await this.request(this.buildUrl(`/topstats/${type}`, qs));
   }
 

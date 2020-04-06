@@ -4,6 +4,8 @@
 
 ```ts
 
+import * as qs from 'qs';
+
 // @public
 export const __API_VERSION__ = 5;
 
@@ -96,6 +98,12 @@ export class ClientResponseError extends Error {
 
 // @public
 export function clone(src: any): any;
+
+// @public
+export const decode: typeof qs.parse;
+
+// @public
+export const encode: typeof qs.stringify;
 
 // @public
 export type Facet = RangeFacet | TermsFacet | unknown;

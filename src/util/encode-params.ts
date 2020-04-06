@@ -1,60 +1,35 @@
-import { encode } from 'qss';
-
-import { isPlainObject } from './is';
-import { clone } from './clone';
+import * as qs from 'qs';
 
 /**
- * As qss is incapable of processing objects for query params, we preprocess
- * the params to create string keys where needed so it will work as expected
+ * Encode parameters for use in a querystring.
  *
+ * @remarks
+ *
+ * This is a wrapper of `qs.stringify` from the `qs` library.
+ *
+ * See the {@link https://www.npmjs.com/package/qs | qs} package for more info.
+ *
+ * @param params - A plain object with request parameters
+ * @param options - Options to serialize the parameters.
+ *
+ * @returns A valid querystring.
+ * @public
  */
-
-function _updateResult(result: Record<string, string>, value: unknown, param: string): Record<string, any> {
-  if (Array.isArray(value)) {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return Object.assign(result, _processArray(value as Array<unknown>, param));
-  } else if (isPlainObject(value)) {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return Object.assign(result, _processObject(value as Record<string, any>, param));
-  } else {
-    return Object.assign(result, { [param]: value });
-  }
-}
-
-function _processObject(keyValueObj: Record<string, any>, targetKey = ''): Record<string, any> {
-  return Object.keys(keyValueObj).reduce((result: Record<string, any>, key: string): Record<string, any> => {
-    const value = keyValueObj[key];
-    const param = targetKey.length > 0 ? `${targetKey}[${key}]` : key;
-    return _updateResult(result, value, param);
-  }, {});
-}
-
-function _processArray(valueList: Array<unknown>, key: string | number): Record<string, any> {
-  return valueList.reduce((result: Record<string, any>, value: unknown, index: number) => {
-    const param = `${key}[${index}]`;
-    return _updateResult(result, value, param);
-  }, {});
-}
+export const encode = qs.stringify;
 
 /**
- * Wrapper function to parse objects in a way qss will encode nested structures
- * correctly in the query params string resulting
+ * Parse a querystring into a parameters object.
  *
+ * @remarks
+ *
+ * This is a wrapper of `qs.parse` from the `qs` library.
+ *
+ * See the {@link https://www.npmjs.com/package/qs | qs} package for more info.
+ *
+ * @param querystring - The querystring from a URL.
+ * @param options - Options to parse the querystring.
+ *
+ * @returns A parameters object.
+ * @public
  */
-export function buildQueryString(paramsObj: Record<string, any>): string {
-  if (!isPlainObject(paramsObj)) {
-    throw new Error('Not an object');
-  }
-
-  const params: Record<string, any> = clone(paramsObj);
-
-  for (const key in params) {
-    if (typeof params[key] === 'undefined') {
-      delete params[key];
-    } else if (params[key] === null) {
-      params[key] = '';
-    }
-  }
-
-  return encode(_processObject(params));
-}
+export const decode = qs.parse;
