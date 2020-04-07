@@ -9,5 +9,5 @@ Union type of both the RAW range and terms facets.
 <b>Signature:</b>
 
 ```typescript
-export declare type RawFacet = RawRangeFacet | RawTermsFacet | unknown;
+export declare type RawFacet = RawRangeFacet | RawTermsFacet;
 ```

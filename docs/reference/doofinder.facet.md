@@ -9,5 +9,5 @@ Union type of both the simplified range and terms facets.
 <b>Signature:</b>
 
 ```typescript
-export declare type Facet = RangeFacet | TermsFacet | unknown;
+export declare type Facet = RangeFacet | TermsFacet;
 ```
