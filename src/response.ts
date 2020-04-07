@@ -283,14 +283,14 @@ export interface TermsFacet {
  *
  * @public
  */
-export type RawFacet = RawRangeFacet | RawTermsFacet | unknown;
+export type RawFacet = RawRangeFacet | RawTermsFacet;
 
 /**
  * Union type of both the simplified range and terms facets.
  *
  * @public
  */
-export type Facet = RangeFacet | TermsFacet | unknown;
+export type Facet = RangeFacet | TermsFacet;
 
 /**
  * Represents the search response with no processing.
@@ -385,9 +385,6 @@ function processFacets(rawFacets: Record<string, RawFacet>): Record<string, Face
       facets[field] = processTermsFacet(rawFacets[field] as RawTermsFacet);
     } else if ('range' in (rawFacets[field] as RawRangeFacet)) {
       facets[field] = processRangeFacet(rawFacets[field] as RawRangeFacet);
-    } else {
-      // TODO: Geodistance…
-      facets[field] = rawFacets[field] as unknown;
     }
   }
   return facets;

@@ -106,7 +106,7 @@ export const decode: typeof qs.parse;
 export const encode: typeof qs.stringify;
 
 // @public
-export type Facet = RangeFacet | TermsFacet | unknown;
+export type Facet = RangeFacet | TermsFacet;
 
 // @public
 export interface FieldSorting {
@@ -292,7 +292,7 @@ export interface RangeStats {
 }
 
 // @public
-export type RawFacet = RawRangeFacet | RawTermsFacet | unknown;
+export type RawFacet = RawRangeFacet | RawTermsFacet;
 
 // @public
 export interface RawRangeFacet {
