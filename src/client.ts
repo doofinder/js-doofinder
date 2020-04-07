@@ -1,5 +1,5 @@
 import { Query, SearchParams } from './query';
-import { processSearchResponse, SearchResponse, RawSearchResponse } from './response';
+import { _processSearchResponse, SearchResponse, RawSearchResponse } from './response';
 
 import { encode } from './util/encode-params';
 import { validateHashId, validateRequired, ValidationError } from './util/validators';
@@ -233,7 +233,7 @@ export class Client {
     }
 
     const response: Response = await this.request('/search', params, payload);
-    return processSearchResponse((await response.json()) as RawSearchResponse);
+    return _processSearchResponse((await response.json()) as RawSearchResponse);
   }
 
   /**
@@ -249,7 +249,7 @@ export class Client {
   public async suggest(query: Query | SearchParams): Promise<SearchResponse> {
     const params: Record<string, any> = this._buildSearchQueryObject(query).dump(true);
     const response: Response = await this.request('/suggest', params);
-    return processSearchResponse((await response.json()) as RawSearchResponse);
+    return _processSearchResponse((await response.json()) as RawSearchResponse);
   }
 
   /**

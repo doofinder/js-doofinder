@@ -167,10 +167,8 @@ export function merge(...objects: Record<string, any>[]): Record<string, any>;
 // @public
 export type OnlyIdResult = Pick<BasicResult, 'id'>;
 
-// Warning: (ae-internal-missing-underscore) The name "processSearchResponse" should be prefixed with an underscore because the declaration is marked as @internal
-//
 // @internal
-export function processSearchResponse(response: RawSearchResponse): SearchResponse;
+export function _processSearchResponse(response: RawSearchResponse): SearchResponse;
 
 // @public
 export class Query {

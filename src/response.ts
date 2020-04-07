@@ -398,7 +398,7 @@ function processFacets(rawFacets: Record<string, RawFacet>): Record<string, Face
  *
  * @internal
  */
-export function processSearchResponse(response: RawSearchResponse): SearchResponse {
+export function _processSearchResponse(response: RawSearchResponse): SearchResponse {
   const result: SearchResponse = (response as unknown) as SearchResponse;
   if (response.facets != null) {
     result._rawFacets = clone(response.facets);
