@@ -1,5 +1,5 @@
 import { Query, SearchParams } from './query';
-import { processResponse, SearchResponse, RawSearchResponse } from './response';
+import { processSearchResponse, SearchResponse, RawSearchResponse } from './response';
 
 import { encode } from './util/encode-params';
 import { validateHashId, validateRequired, ValidationError } from './util/validators';
@@ -215,25 +215,25 @@ export class Client {
    * @public
    */
   public async search(params: Query | SearchParams): Promise<SearchResponse> {
-    let request: Query;
+    const data: Record<string, any> = this._buildSearchQueryObject(params).dump(true);
     let payload: Record<string, any>;
-
-    if (params instanceof Query) {
-      request = params;
-    } else {
-      request = new Query(params);
-    }
-
-    const data: Record<string, any> = request.dump(true);
 
     if (data.items != null) {
       payload = { items: data.items };
       delete data.items;
     }
 
-    const qs = encode({ random: new Date().getTime(), ...data });
-    const response: Response = await this.request(this.buildUrl('/search', qs), payload);
-    return processResponse((await response.json()) as RawSearchResponse);
+    return this._performSearchRequest('/search', data, payload);
+  }
+
+  private async _performSearchRequest(
+    endpoint: string,
+    data: Record<string, any>,
+    payload?: Record<string, any>
+  ): Promise<SearchResponse> {
+    const qs: string = encode({ random: new Date().getTime(), ...data });
+    const response: Response = await this.request(this.buildUrl(endpoint, qs), payload);
+    return processSearchResponse((await response.json()) as RawSearchResponse);
   }
 
   /**
@@ -247,20 +247,7 @@ export class Client {
    * @public
    */
   public async suggest(params: Query | SearchParams): Promise<SearchResponse> {
-    let request: Query;
-
-    if (params instanceof Query) {
-      request = params;
-    } else {
-      request = new Query(params);
-    }
-
-    const data: Record<string, any> = request.dump(true);
-
-    const qs = encode({ random: new Date().getTime(), ...data });
-
-    const response: Response = await this.request(this.buildUrl('/suggest', qs), null);
-    return processResponse((await response.json()) as RawSearchResponse);
+    return this._performSearchRequest('/suggest', this._buildSearchQueryObject(params).dump(true));
   }
 
   /**
@@ -325,5 +312,20 @@ export class Client {
    */
   public toString(): string {
     return `Client(${this.endpoint}${this._secret ? ' (+secret)' : ''})`;
+  }
+
+  /**
+   * Normalize search params to a Query object.
+   *
+   * @param params - An instance of `Query` or an object with valid
+   * search parameters.
+   * @returns An instance of `Query`.
+   */
+  private _buildSearchQueryObject(params: Query | SearchParams): Query {
+    if (params instanceof Query) {
+      return params;
+    } else {
+      return new Query(params);
+    }
   }
 }

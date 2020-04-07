@@ -3,14 +3,14 @@ import 'mocha';
 import { should, expect } from 'chai';
 import { basicResponse } from './fixtures/basic_response';
 
-import { processResponse, SearchResponse } from '../src/response';
+import { processSearchResponse, SearchResponse } from '../src/response';
 
 // chai
 should();
 
 describe('Search Response', () => {
   it('should properly transform facets', done => {
-    const response: SearchResponse = processResponse(basicResponse);
+    const response: SearchResponse = processSearchResponse(basicResponse);
     response._rawFacets.should.not.be.undefined;
     response.facets.best_price.should.eql({
       type: 'range',
