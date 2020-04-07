@@ -38,7 +38,7 @@ describe('Client', () => {
     context('with secret key', () => {
       it('should use https', done => {
         const client = new Client({ zone: 'eu1', secret: 'any' });
-        client.endpoint.substring(0, 6).should.equal('https:');
+        client.endpoint.should.equal('https://eu1-search.doofinder.com');
         done();
       });
     });
@@ -87,31 +87,54 @@ describe('Client', () => {
     });
   });
 
+  context('_buildUrl() method', () => {
+    const client = cfg.getClient();
+
+    it('can handle resources that already have a querystring', done => {
+      // @ts-ignore
+      client._buildUrl('/blah?param=value', 'param2=value2').should.equal('https://eu1-search.doofinder.com/5/blah?param=value&param2=value2');
+      done();
+    });
+    it(`can handle resources that don't already have a querystring`, done => {
+      // @ts-ignore
+      client._buildUrl('/blah', 'param=value').should.equal('https://eu1-search.doofinder.com/5/blah?param=value');
+      done();
+    });
+    it('can handle resources without passing a querystring at all', done => {
+      // @ts-ignore
+      client._buildUrl('/blah').should.equal('https://eu1-search.doofinder.com/5/blah');
+      done();
+    });
+  });
+
   context('request() method', () => {
     it('throws error if bad request sent', done => {
-      const BAD_REQUEST_URL = `${cfg.endpoint}/5/error`;
+      const BAD_REQUEST_URL = `glob:${cfg.endpoint}/5/error?*random=*`;
       fetchMock.get(BAD_REQUEST_URL, { body: { message: 'Invalid' }, status: 400 });
-      cfg.getClient().request(BAD_REQUEST_URL).should.be.rejectedWith(ClientResponseError).notify(done);
+      cfg.getClient().request('/error').should.be.rejectedWith(ClientResponseError).notify(done);
     });
 
     it('throws error if wrong url sent', done => {
-      const NOT_FOUND_URL = `${cfg.endpoint}/5/notfound`;
-      fetchMock.get(NOT_FOUND_URL,{body: {error: 'search engine not found'}, status: 404});
-      cfg.getClient().request(NOT_FOUND_URL).should.be.rejectedWith(ClientResponseError).notify(done);
+      fetchMock.get(`glob:${cfg.endpoint}/5/notfound?*random=*`, {
+        body: {
+          error: 'search engine not found'
+        },
+        status: 404
+      });
+      cfg.getClient().request('/notfound').should.be.rejectedWith(ClientResponseError).notify(done);
     });
 
     it('throws error in case of internal server error', done => {
-      const INTERNAL_ERROR_URL = `${cfg.endpoint}/5/catastrophe`;
-      fetchMock.get(INTERNAL_ERROR_URL, 503);
-      cfg.getClient().request(INTERNAL_ERROR_URL).should.be.rejectedWith(ClientResponseError).notify(done);
+      fetchMock.get(`glob:${cfg.endpoint}/5/catastrophe?*random=*`, 503);
+      cfg.getClient().request('/catastrophe').should.be.rejectedWith(ClientResponseError).notify(done);
     });
 
     it('handles response success', async () => {
-      const SUCCESS_URL = `${cfg.endpoint}/5/success`;
+      const SUCCESS_URL = `glob:${cfg.endpoint}/5/success?*random=*`;
       fetchMock.get(SUCCESS_URL, { body: {}, status: 200 });
 
       const client = cfg.getClient();
-      const response = await client.request(SUCCESS_URL);
+      const response = await client.request('/success');
 
       fetchMock.called(SUCCESS_URL).should.be.true;
       response.status.should.equal(200);

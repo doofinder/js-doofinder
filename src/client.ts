@@ -175,18 +175,27 @@ export class Client {
    * If a payload is provided the request will be done via `POST` instead
    * of `GET`.
    *
-   * @param resource - URL of the resource to request.
+   * @param resource - The resource to request.
+   * @param params - An object with the parameters to serialize in the
+   * URL querystring. Optional.
    * @param payload - An object to send via POST. Optional.
    * @returns A promise to be fullfilled with the response or rejected
    * with a `ClientResponseError`.
    *
    * @public
    */
-  public async request(resource: string, payload?: Record<string, any>): Promise<Response> {
+  public async request(
+    resource: string,
+    params: Record<string, any> = {},
+    payload?: Record<string, any>
+  ): Promise<Response> {
+    const qs: string = encode({ random: new Date().getTime(), ...params });
+    const url: string = this._buildUrl(resource, qs);
+
     const method: string = payload ? 'POST' : 'GET';
     const headers: Record<string, string> = payload ? { 'Content-Type': 'application/json' } : {};
     const body: string = payload ? JSON.stringify(payload) : undefined;
-    const response = await fetch(resource, {
+    const response = await fetch(url, {
       mode: 'cors',
       headers: { ...this.headers, ...headers },
       method,
@@ -207,47 +216,40 @@ export class Client {
   /**
    * Perform a search in Doofinder based on the provided parameters.
    *
-   * @param params - An instance of `Query` or an object with valid
+   * @param query - An instance of `Query` or an object with valid
    * search parameters.
    * @returns A promise to be fullfilled with the response or rejected
    * with a `ClientResponseError`.
    *
    * @public
    */
-  public async search(params: Query | SearchParams): Promise<SearchResponse> {
-    const data: Record<string, any> = this._buildSearchQueryObject(params).dump(true);
+  public async search(query: Query | SearchParams): Promise<SearchResponse> {
+    const params: Record<string, any> = this._buildSearchQueryObject(query).dump(true);
     let payload: Record<string, any>;
 
-    if (data.items != null) {
-      payload = { items: data.items };
-      delete data.items;
+    if (params.items != null) {
+      payload = { items: params.items };
+      delete params.items;
     }
 
-    return this._performSearchRequest('/search', data, payload);
-  }
-
-  private async _performSearchRequest(
-    endpoint: string,
-    data: Record<string, any>,
-    payload?: Record<string, any>
-  ): Promise<SearchResponse> {
-    const qs: string = encode({ random: new Date().getTime(), ...data });
-    const response: Response = await this.request(this.buildUrl(endpoint, qs), payload);
+    const response: Response = await this.request('/search', params, payload);
     return processSearchResponse((await response.json()) as RawSearchResponse);
   }
 
   /**
    * Perform a suggestion query in Doofinder based on the provided parameters.
    *
-   * @param params - An instance of `Query` or an object with valid
+   * @param query - An instance of `Query` or an object with valid
    * search parameters.
    * @returns A promise to be fullfilled with the response or rejected
    * with a `ClientResponseError`.
    *
    * @public
    */
-  public async suggest(params: Query | SearchParams): Promise<SearchResponse> {
-    return this._performSearchRequest('/suggest', this._buildSearchQueryObject(params).dump(true));
+  public async suggest(query: Query | SearchParams): Promise<SearchResponse> {
+    const params: Record<string, any> = this._buildSearchQueryObject(query).dump(true);
+    const response: Response = await this.request('/suggest', params);
+    return processSearchResponse((await response.json()) as RawSearchResponse);
   }
 
   /**
@@ -261,8 +263,7 @@ export class Client {
    */
   public async options(hashid: string): Promise<Record<string, any>> {
     validateHashId(hashid);
-    const qs = encode({ random: new Date().getTime() });
-    const response = await this.request(this.buildUrl(`/options/${hashid}`, qs));
+    const response = await this.request(`/options/${hashid}`);
     return await response.json();
   }
 
@@ -279,14 +280,12 @@ export class Client {
   public async stats(eventName: string, params: Record<string, string>): Promise<Response> {
     validateRequired(params.session_id, 'session_id is required');
     validateHashId(params.hashid);
-    const qs = encode({ random: new Date().getTime(), ...params });
-    return await this.request(this.buildUrl(`/stats/${eventName}`, qs));
+    return await this.request(`/stats/${eventName}`, params);
   }
 
   public async topStats(type: TopStatsType, params: TopStatsParams): Promise<Response> {
     validateHashId(params.hashid);
-    const qs = encode({ random: new Date().getTime(), ...params });
-    return await this.request(this.buildUrl(`/topstats/${type}`, qs));
+    return await this.request(`/topstats/${type}`, params);
   }
 
   /**
@@ -295,14 +294,20 @@ export class Client {
    * @param resource - URL part specifying the resource to be fetched
    * from the current version of the API. Should start by '/'.
    * @param querystring - A query string to be attached to the URL.
-   * Should not start by '?'.
+   * Must not start by '?' nor '&'.
    * @returns A valid URL.
-   *
-   * @public
    */
-  public buildUrl(resource: string, querystring?: string): string {
-    const qs = querystring ? `?${querystring}` : '';
-    return `${this.endpoint}/${__API_VERSION__}${resource}${qs}`;
+  private _buildUrl(resource: string, querystring: string): string {
+    const [prefix, qs]: string[] = resource.split('?');
+    let suffix: string;
+
+    if (qs != null) {
+      suffix = `?${qs}${querystring ? `&${querystring}` : ''}`;
+    } else {
+      suffix = querystring ? `?${querystring}` : '';
+    }
+
+    return `${this.endpoint}/${__API_VERSION__}${prefix}${suffix}`;
   }
 
   /**

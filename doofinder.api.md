@@ -56,15 +56,14 @@ export interface ClickStatsParamsWithId extends StatsParams {
 // @public
 export class Client {
     constructor({ zone, secret, headers, serverAddress }?: Partial<ClientOptions>);
-    buildUrl(resource: string, querystring?: string): string;
     get endpoint(): string;
     get headers(): Record<string, string>;
     options(hashid: string): Promise<Record<string, any>>;
-    request(resource: string, payload?: Record<string, any>): Promise<Response>;
-    search(params: Query | SearchParams): Promise<SearchResponse>;
+    request(resource: string, params?: Record<string, any>, payload?: Record<string, any>): Promise<Response>;
+    search(query: Query | SearchParams): Promise<SearchResponse>;
     get secret(): string;
     stats(eventName: string, params: Record<string, string>): Promise<Response>;
-    suggest(params: Query | SearchParams): Promise<SearchResponse>;
+    suggest(query: Query | SearchParams): Promise<SearchResponse>;
     // (undocumented)
     topStats(type: TopStatsType, params: TopStatsParams): Promise<Response>;
     toString(): string;
