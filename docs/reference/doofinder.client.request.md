@@ -9,14 +9,15 @@ Perform a request to a HTTP resource.
 <b>Signature:</b>
 
 ```typescript
-request(resource: string, payload?: Record<string, any>): Promise<Response>;
+request(resource: string, params?: Record<string, any>, payload?: Record<string, any>): Promise<Response>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  resource | <code>string</code> | URL of the resource to request. |
+|  resource | <code>string</code> | The resource to request. |
+|  params | <code>Record&lt;string, any&gt;</code> | An object with the parameters to serialize in the URL querystring. Optional. |
 |  payload | <code>Record&lt;string, any&gt;</code> | An object to send via POST. Optional. |
 
 <b>Returns:</b>

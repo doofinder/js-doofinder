@@ -9,14 +9,14 @@ Perform a search in Doofinder based on the provided parameters.
 <b>Signature:</b>
 
 ```typescript
-search(params: Query | SearchParams): Promise<SearchResponse>;
+search(query: Query | SearchParams): Promise<SearchResponse>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | <code>Query &#124; SearchParams</code> | An instance of <code>Query</code> or an object with valid search parameters. |
+|  query | <code>Query &#124; SearchParams</code> | An instance of <code>Query</code> or an object with valid search parameters. |
 
 <b>Returns:</b>
 

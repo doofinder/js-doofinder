@@ -31,12 +31,11 @@ export declare class Client
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [buildUrl(resource, querystring)](./doofinder.client.buildurl.md) |  | Build a URL for the provided resource. |
 |  [options(hashid)](./doofinder.client.options.md) |  | Perform a request to get the options of a search engine. |
-|  [request(resource, payload)](./doofinder.client.request.md) |  | Perform a request to a HTTP resource. |
-|  [search(params)](./doofinder.client.search.md) |  | Perform a search in Doofinder based on the provided parameters. |
+|  [request(resource, params, payload)](./doofinder.client.request.md) |  | Perform a request to a HTTP resource. |
+|  [search(query)](./doofinder.client.search.md) |  | Perform a search in Doofinder based on the provided parameters. |
 |  [stats(eventName, params)](./doofinder.client.stats.md) |  | Perform a request to submit stats events to Doofinder. |
-|  [suggest(params)](./doofinder.client.suggest.md) |  | Perform a suggestion query in Doofinder based on the provided parameters. |
+|  [suggest(query)](./doofinder.client.suggest.md) |  | Perform a suggestion query in Doofinder based on the provided parameters. |
 |  [topStats(type, params)](./doofinder.client.topstats.md) |  |  |
 |  [toString()](./doofinder.client.tostring.md) |  | Return a string representation of this class. |
 
