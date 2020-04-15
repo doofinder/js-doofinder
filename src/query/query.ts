@@ -186,7 +186,13 @@ export class Query {
 
     if ('items' in data) {
       if (data.items.length > 0) {
+        const { page, rpp } = data;
+
         delete data.query;
+        delete data.page;
+        delete data.rpp;
+
+        data.items = data.items.slice((page - 1) * rpp, page * rpp);
       } else {
         delete data.items;
       }
