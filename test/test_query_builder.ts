@@ -634,6 +634,8 @@ describe('Query', () => {
         dump.items.length.should.equal(5);
         expect(dump.page).to.be.undefined;
         expect(dump.rpp).to.be.undefined;
+
+        query.hasMoreItems.should.be.false;
         done();
       });
 
@@ -643,16 +645,19 @@ describe('Query', () => {
 
         dump.items.length.should.equal(10);
         dump.items[9].should.equal(items[9]);
+        query.hasMoreItems.should.be.true;
         query.page++;
 
         dump = query.dump();
         dump.items.length.should.equal(10);
         dump.items[9].should.equal(items[19]);
+        query.hasMoreItems.should.be.true;
         query.page++;
 
         dump = query.dump();
         dump.items.length.should.equal(8);
         dump.items[7].should.equal(items[27]);
+        query.hasMoreItems.should.be.false;
         done();
       });
     });
