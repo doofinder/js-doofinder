@@ -141,24 +141,6 @@ describe('Client', () => {
     });
   });
 
-  context('options() method', () => {
-    it('throws if called with no hashid', done => {
-      // @ts-ignore
-      cfg.getClient().options().should.be.rejectedWith(ValidationError).notify(done);
-    });
-
-    it('throws if called with wrong hashid', done => {
-      cfg.getClient().options('meh').should.be.rejectedWith(ValidationError).notify(done);
-    });
-
-    it('works if called with valid hashid', done => {
-      const url = `${cfg.endpoint}/5/options/${cfg.hashid}`;
-      // @ts-ignore
-      fetchMock.get({url, query: {}}, {body: {}, status: 200});
-      cfg.getClient().options(cfg.hashid).should.be.fulfilled.notify(done);
-    });
-  });
-
   context('search()', () => {
     const url = `glob:${cfg.endpoint}/5/search?*random=*`;
 
