@@ -123,6 +123,7 @@ export const basicResponse: RawSearchResponse = {
       },
       terms: {
         buckets: [
+          { doc_count: null, key: 'Special Value' },
           { doc_count: 1, key: 'Capazo solo' }, // artifically added by the server
           { doc_count: 915, key: 'Ofertas - Outlet' },
           { doc_count: 881, key: 'Cochecitos de bebé' },

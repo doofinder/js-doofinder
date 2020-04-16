@@ -100,6 +100,7 @@ describe('Search Response', () => {
         { doc_count: 135, key: 'Grupo 0-0+ (0 - 13kg)' },
         { doc_count: 135, key: 'Grupo 2-3 (15 - 36kg)' },
         { doc_count: 1, key: 'Capazo solo', selected: true }, // artifically added by the server
+        { doc_count: null, key: 'Special Value' },
       ]
     });
     done();
