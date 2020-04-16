@@ -31,7 +31,6 @@ export declare class Client
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [options(hashid)](./doofinder.client.options.md) |  | Perform a request to get the options of a search engine. |
 |  [request(resource, params, payload)](./doofinder.client.request.md) |  | Perform a request to a HTTP resource. |
 |  [search(query)](./doofinder.client.search.md) |  | Perform a search in Doofinder based on the provided parameters. |
 |  [stats(eventName, params)](./doofinder.client.stats.md) |  | Perform a request to submit stats events to Doofinder. |

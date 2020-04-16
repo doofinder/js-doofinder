@@ -26,6 +26,7 @@ export declare class Query
 |  [excludes](./doofinder.query.excludes.md) |  | <code>QueryFilter</code> | Return the instance of the query excludes manager for the current query. |
 |  [filters](./doofinder.query.filters.md) |  | <code>QueryFilter</code> | Return the instance of the query filters manager for the current query. |
 |  [hashid](./doofinder.query.hashid.md) |  | <code>string</code> | Get / set the <code>hashid</code> parameter. |
+|  [hasMoreItems](./doofinder.query.hasmoreitems.md) |  | <code>boolean</code> | Tell if there's a next page of items available after this one. |
 |  [items](./doofinder.query.items.md) |  | <code>string[]</code> | Get / set the <code>items</code> parameter. |
 |  [noStats](./doofinder.query.nostats.md) |  | <code>boolean</code> | Get / set the <code>nostats</code> parameter. |
 |  [page](./doofinder.query.page.md) |  | <code>number</code> | Get / set the <code>page</code> parameter. |

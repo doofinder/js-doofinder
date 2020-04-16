@@ -17,5 +17,7 @@ export interface RawTermStats
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [doc\_count](./doofinder.rawtermstats.doc_count.md) | <code>number</code> | Number of matching documents. |
+|  [from](./doofinder.rawtermstats.from.md) | <code>number</code> | <b><i>(BETA)</i></b> |
 |  [key](./doofinder.rawtermstats.key.md) | <code>string</code> | Value of the term. |
+|  [to](./doofinder.rawtermstats.to.md) | <code>number</code> | <b><i>(BETA)</i></b> |
 

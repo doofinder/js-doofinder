@@ -67,6 +67,7 @@
 |  [\_\_VERSION\_\_](./doofinder.__version__.md) | Current version of the library. |
 |  [decode](./doofinder.decode.md) | Parse a querystring into a parameters object. |
 |  [encode](./doofinder.encode.md) | Encode parameters for use in a querystring. |
+|  [extend](./doofinder.extend.md) | Merge the contents of two or more objects together into the first object. |
 |  [isIdentical](./doofinder.isidentical.md) | Check whether two values are identical or not. |
 |  [isNumber](./doofinder.isnumber.md) | Check if the provided value is a number. |
 |  [isObject](./doofinder.isobject.md) | Check if the provided value is an object. |

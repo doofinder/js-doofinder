@@ -9,7 +9,7 @@ Simplified stats for a term in a terms facet.
 <b>Signature:</b>
 
 ```typescript
-export interface TermStats 
+export interface TermStats extends RawTermStats 
 ```
 
 ## Properties
@@ -17,6 +17,4 @@ export interface TermStats
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [selected](./doofinder.termstats.selected.md) | <code>boolean</code> | If the term was selected or not when filtering. |
-|  [total](./doofinder.termstats.total.md) | <code>number</code> | Number of matching documents. |
-|  [value](./doofinder.termstats.value.md) | <code>string</code> | The value of the term. |
 
