@@ -23,6 +23,8 @@ import { isPlainObject } from './is';
  * @param objectN - Object. Additional objects containing properties
  * to merge in.
  * @returns A copy of the provided object.
+ *
+ * @public
  */
 export const extend = function(...args: unknown[]): Record<string, any> | Array<any> {
   const length: number = args.length;
@@ -98,6 +100,7 @@ export const extend = function(...args: unknown[]): Record<string, any> | Array<
  *
  * @param src - The data to clone.
  * @returns A copy of the data.
+ *
  * @public
  */
 export function clone(src: any): any {
