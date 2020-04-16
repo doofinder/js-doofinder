@@ -208,6 +208,10 @@ export interface RawTermStats {
   doc_count: number;
   /** Value of the term. */
   key: string;
+  /** @beta */
+  from?: number;
+  /** @beta */
+  to?: number;
 }
 
 /**
@@ -240,6 +244,20 @@ export interface RawTermsFacet {
   total: {
     value: number;
   };
+  /**
+   * Indicates that the facet is created as a partition of a numeric
+   * range. In the front will be managed as a terms facet but will be
+   * interpreted as a range in the back.
+   * @beta
+   */
+  slots?: boolean;
+  /**
+   * How pertinent is the facet compared to the other facets in the
+   * response. If only one facet could be displayed, it should be the
+   * one with the hightst score.
+   * @beta
+   */
+  score?: number;
 }
 
 /**
@@ -259,11 +277,7 @@ export interface RangeFacet {
  *
  * @public
  */
-export interface TermStats {
-  /** Number of matching documents. */
-  total: number;
-  /** The value of the term. */
-  value: string;
+export interface TermStats extends RawTermStats {
   /** If the term was selected or not when filtering. */
   selected?: boolean;
 }
@@ -302,21 +316,6 @@ export interface RawSearchResponse extends Omit<SearchResponse, 'facets' | '_raw
 }
 
 /**
- * Transform stats info for a term.
- *
- * @param term - A term stats info from the RAW response.
- * @returns A simplified version for the processed search response.
- *
- * @internal
- */
-function transformTerm(term: RawTermStats): TermStats {
-  return {
-    total: term.doc_count,
-    value: term.key,
-  };
-}
-
-/**
  * Transform information for a terms facet.
  *
  * @param facet - A terms facet information from the RAW response.
@@ -325,28 +324,30 @@ function transformTerm(term: RawTermStats): TermStats {
  * @internal
  */
 function processTermsFacet(facet: RawTermsFacet): TermsFacet {
-  const transformed: TermStats[] = facet.terms.buckets.map(transformTerm);
-  const extra: TermStats[] = [];
-
-  facet.selected.buckets.forEach((selected: RawTermStats) => {
-    const found: TermStats = transformed.find((term: TermStats) => term.value === selected.key);
-    if (found) {
-      found.selected = true;
-    } else {
-      extra.push({ selected: true, ...transformTerm(selected) });
+  const selected: string[] = facet.selected.buckets.map(value => value.key);
+  const terms: TermStats[] = facet.terms.buckets.map(
+    (value: RawTermStats): TermStats => {
+      if (selected.includes(value.key)) {
+        (value as TermStats).selected = true;
+      }
+      return value;
     }
-  });
+  );
 
-  const terms: TermStats[] = transformed.concat(extra);
-  terms.sort((a: TermStats, b: TermStats) => {
-    if (a.total < b.total) {
-      return 1;
-    } else if (a.total > b.total) {
-      return -1;
-    } else {
-      return a.value.localeCompare(b.value);
-    }
-  });
+  // sort unless all terms have a null doc_count value
+  if (terms.filter(term => term.doc_count == null).length !== terms.length) {
+    terms.sort((a: TermStats, b: TermStats) => {
+      const aTotal: number = a.doc_count || 0;
+      const bTotal: number = b.doc_count || 0;
+      if (aTotal < bTotal) {
+        return 1;
+      } else if (aTotal > bTotal) {
+        return -1;
+      } else {
+        return a.key.localeCompare(b.key);
+      }
+    });
+  }
 
   return {
     type: 'terms',
@@ -401,7 +402,7 @@ function processFacets(rawFacets: Record<string, RawFacet>): Record<string, Face
 export function _processSearchResponse(response: RawSearchResponse): SearchResponse {
   const result: SearchResponse = (response as unknown) as SearchResponse;
   if (response.facets != null) {
-    result._rawFacets = clone(response.facets);
+    result._rawFacets = clone(response.facets) as Record<string, RawFacet>;
     result.facets = processFacets(response.facets);
   }
   return result;
