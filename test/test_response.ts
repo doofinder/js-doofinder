@@ -75,7 +75,7 @@ describe('Search Response', () => {
     done();
   });
 
-  it('should properly sort terms artifially added by the server', done => {
+  it('should properly sort terms artificially added by the server', done => {
     response.facets.categories.should.be.eql({
       type: 'terms',
       terms: [
