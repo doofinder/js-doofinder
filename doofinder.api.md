@@ -58,7 +58,6 @@ export class Client {
     constructor({ zone, secret, headers, serverAddress }?: Partial<ClientOptions>);
     get endpoint(): string;
     get headers(): Record<string, string>;
-    options(hashid: string): Promise<Record<string, any>>;
     request(resource: string, params?: Record<string, any>, payload?: Record<string, any>): Promise<Response>;
     search(query: Query | SearchParams): Promise<SearchResponse>;
     get secret(): string;
