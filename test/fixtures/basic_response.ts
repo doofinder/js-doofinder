@@ -25,6 +25,60 @@ export const basicResponse: RawSearchResponse = {
         ],
       },
     },
+    price_range_slot: {
+      doc_count: null,
+      score: 99,
+      selected: {
+        buckets: [],
+        doc_count_error_upper_bound: 0,
+        sum_other_doc_count: 0
+      },
+      slots: true,
+      terms: {
+        buckets: [
+          {
+            doc_count: null,
+            from: 0,
+            key: "0 - 20",
+            to: 20
+          },
+          {
+            doc_count: null,
+            from: 20,
+            key: "20 - 50",
+            to: 50
+          },
+          {
+            doc_count: null,
+            from: 50,
+            key: "50 - 90",
+            to: 90
+          },
+          {
+            doc_count: null,
+            from: 90,
+            key: "90 - 180",
+            to: 180
+          },
+          {
+            doc_count: null,
+            from: 180,
+            key: "180 - 540",
+            to: 540
+          },
+          {
+            doc_count: null,
+            from: 540,
+            key: "540"
+          }
+        ],
+        doc_count_error_upper_bound: 0,
+        sum_other_doc_count: 0
+      },
+      total: {
+        value: null
+      }
+    },
     brand: {
       doc_count: 2295,
       selected: { buckets: [{ doc_count: 426, key: 'JANE' }], doc_count_error_upper_bound: 0, sum_other_doc_count: 0 },
@@ -58,9 +112,19 @@ export const basicResponse: RawSearchResponse = {
     },
     categories: {
       doc_count: 2295,
-      selected: { buckets: [], doc_count_error_upper_bound: 0, sum_other_doc_count: 0 },
+      selected: {
+        buckets: [
+          { doc_count: 915, key: 'Ofertas - Outlet' },
+          { doc_count: 419, key: 'Sillas de paseo' },
+          { doc_count: 1, key: 'Capazo solo' },
+        ],
+        doc_count_error_upper_bound: 0,
+        sum_other_doc_count: 0
+      },
       terms: {
         buckets: [
+          { doc_count: null, key: 'Special Value' },
+          { doc_count: 1, key: 'Capazo solo' }, // artifically added by the server
           { doc_count: 915, key: 'Ofertas - Outlet' },
           { doc_count: 881, key: 'Cochecitos de bebé' },
           { doc_count: 711, key: 'Sillas de paseo bebé' },

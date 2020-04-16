@@ -104,6 +104,9 @@ export const decode: typeof qs.parse;
 export const encode: typeof qs.stringify;
 
 // @public
+export const extend: (...args: unknown[]) => any[] | Record<string, any>;
+
+// @public
 export type Facet = RangeFacet | TermsFacet;
 
 // @public
@@ -313,7 +316,11 @@ export interface RawSearchResponse extends Omit<SearchResponse, 'facets' | '_raw
 // @public
 export interface RawTermsFacet {
     doc_count: number;
+    // @beta
+    score?: number;
     selected: RawTermsInfo;
+    // @beta
+    slots?: boolean;
     terms: RawTermsInfo;
     total: {
         value: number;
@@ -330,7 +337,11 @@ export interface RawTermsInfo {
 // @public
 export interface RawTermStats {
     doc_count: number;
+    // @beta (undocumented)
+    from?: number;
     key: string;
+    // @beta (undocumented)
+    to?: number;
 }
 
 // @public
@@ -413,10 +424,8 @@ export interface TermsFacet {
 }
 
 // @public
-export interface TermStats {
+export interface TermStats extends RawTermStats {
     selected?: boolean;
-    total: number;
-    value: string;
 }
 
 // @public
