@@ -9,7 +9,7 @@ should();
 import * as cfg from './config';
 
 // required for tests
-import { Query, QueryFilter } from '../src';
+import { Query, QueryFilter, clone } from '../src';
 import { ValidationError } from '../src/util/validators';
 
 const DFID: string = `6a96504dc173514cab1e0198af92e6e9@product@a1d0c6e83f027327d8461063f4ac58a6`;
@@ -627,33 +627,9 @@ describe('Query', () => {
         done();
       });
 
-      it('returns all items if there are less than rpp', done => {
-        const query = new Query({ items: items.slice(0, 5) });
-        const dump = query.dump();
-
-        dump.items.length.should.equal(5);
-        expect(dump.page).to.be.undefined;
-        expect(dump.rpp).to.be.undefined;
-
-        done();
-      });
-
-      it('paginates items in dump', done => {
-        const query = new Query({ items, rpp: 10 });
-        let dump = query.dump();
-
-        dump.items.length.should.equal(10);
-        dump.items[9].should.equal(items[9]);
-        query.page++;
-
-        dump = query.dump();
-        dump.items.length.should.equal(10);
-        dump.items[9].should.equal(items[19]);
-        query.page++;
-
-        dump = query.dump();
-        dump.items.length.should.equal(8);
-        dump.items[7].should.equal(items[27]);
+      it('returns all items in dump', done => {
+        const query = new Query({ items: clone(items) });
+        query.dump().items.should.eql(items);
         done();
       });
     });
