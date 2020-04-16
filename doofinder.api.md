@@ -181,6 +181,7 @@ export class Query {
     getParam(name: keyof QueryParams): unknown;
     get hashid(): string;
     set hashid(value: string);
+    get hasMoreItems(): boolean;
     get items(): string[];
     set items(value: string[]);
     load(params?: QueryParams): void;

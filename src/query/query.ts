@@ -317,6 +317,25 @@ export class Query {
   }
 
   /**
+   * Tell if there's a next page of items available after this one.
+   *
+   * @remarks
+   *
+   * This is useful for items queries only.
+   *
+   * @returns `true` if, after this items query, you can perform another one.
+   */
+  public get hasMoreItems(): boolean {
+    if (this.items != null) {
+      const start: number = this.page * this.rpp;
+      const end: number = (this.page + 1) * this.rpp;
+      return this.items.slice(start, end).length > 0;
+    }
+
+    return false;
+  }
+
+  /**
    * Get / set the `transformer` parameter.
    * @param value - The transformer as string.
    * @public
