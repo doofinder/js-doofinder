@@ -253,21 +253,6 @@ export class Client {
   }
 
   /**
-   * Perform a request to get the options of a search engine.
-   *
-   * @param hashid - A valid hashid for a search engine.
-   * @returns A promise to be fullfilled with the response or rejected
-   * with a `ClientResponseError`.
-   *
-   * @public
-   */
-  public async options(hashid: string): Promise<Record<string, any>> {
-    validateHashId(hashid);
-    const response = await this.request(`/options/${hashid}`);
-    return await response.json();
-  }
-
-  /**
    * Perform a request to submit stats events to Doofinder.
    *
    * @param eventName - Type of stats to send.
