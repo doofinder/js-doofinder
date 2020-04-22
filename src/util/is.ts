@@ -12,7 +12,8 @@ export const isString = (value: unknown): boolean => Object.prototype.toString.c
  * @returns `true` if the value is a number, `false` otherwise.
  * @public
  */
-export const isNumber = (value: unknown): boolean => Object.prototype.toString.call(value) === '[object Number]';
+export const isNumber = (value: unknown): boolean =>
+  Object.prototype.toString.call(value) === '[object Number]' && !isNaN(value as number);
 
 /**
  * Check if the provided value is an object.

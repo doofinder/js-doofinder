@@ -19,9 +19,9 @@ export interface QueryParamsBase {
   /** Search terms. */
   query?: string;
   /** Results page to retrieve. */
-  page?: number;
+  page?: string | number;
   /** Number of results to retrieve for each page. */
-  rpp?: number;
+  rpp?: string | number;
   /** Name of the transformer to use to normalize the results. */
   transformer?: string;
 
@@ -30,7 +30,7 @@ export interface QueryParamsBase {
   /** Name of the query to use to get the results. */
   query_name?: string;
   /** Internal counter to manage request/response flow. */
-  query_counter?: number;
+  query_counter?: string | number;
   /** Whether to count the request in the search stats or not. */
   nostats?: boolean;
   /** Restrict the types of data to retrieve results. */
@@ -233,16 +233,16 @@ export class Query {
   public setParam(name: keyof QueryParams, value?: unknown): void {
     if (typeof value !== 'undefined') {
       if (name === 'hashid') {
-        validateHashId(value as string);
+        this._params.hashid = validateHashId(value as string);
       } else if (name === 'page') {
-        validatePage(value as number);
+        this._params.page = validatePage(value);
       } else if (name === 'rpp') {
-        validateRpp(value as number);
+        this._params.rpp = validateRpp(value);
       } else if (name === 'items') {
-        validateItems(value);
+        this._params.items = validateItems(value);
+      } else {
+        this._params[name] = value;
       }
-
-      this._params[name] = value;
     } else {
       delete this._params[name];
     }

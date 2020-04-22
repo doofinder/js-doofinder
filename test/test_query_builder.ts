@@ -287,6 +287,14 @@ describe('Query', () => {
       query.dump().should.eql({...params, page: 3 });
       done();
     });
+
+    it('accepts page and rpp as string', done => {
+      const query = new Query();
+      query.load({ page: '42', rpp: '20'});
+      query.page.should.equal(42);
+      query.rpp.should.equal(20);
+      done();
+    })
   });
 
   context('copying', () => {

@@ -65,6 +65,7 @@ describe("Is Module", () => {
     Thing.isNumber(NUMBER_SAMPLE_FLOAT).should.be.true;
     Thing.isNumber(null).should.be.false;
     Thing.isNumber(undefined).should.be.false;
+    Thing.isNumber(parseInt('hello', 10)).should.be.false;
     done();
   });
 });
