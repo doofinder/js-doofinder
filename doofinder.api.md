@@ -232,11 +232,11 @@ export interface QueryParamsBase {
     hashid: string;
     items?: string[];
     nostats?: boolean;
-    page?: number;
+    page?: string | number;
     query?: string;
-    query_counter?: number;
+    query_counter?: string | number;
     query_name?: string;
-    rpp?: number;
+    rpp?: string | number;
     sort?: SortingInput[];
     transformer?: string;
     type?: string | string[];
