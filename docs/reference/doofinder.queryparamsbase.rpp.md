@@ -9,5 +9,5 @@ Number of results to retrieve for each page.
 <b>Signature:</b>
 
 ```typescript
-rpp?: number;
+rpp?: string | number;
 ```

@@ -21,11 +21,11 @@ export interface QueryParamsBase
 |  [hashid](./doofinder.queryparamsbase.hashid.md) | <code>string</code> | Unique id of the search engine. |
 |  [items](./doofinder.queryparamsbase.items.md) | <code>string[]</code> | List of dfids to be retrieved from the server. |
 |  [nostats](./doofinder.queryparamsbase.nostats.md) | <code>boolean</code> | Whether to count the request in the search stats or not. |
-|  [page](./doofinder.queryparamsbase.page.md) | <code>number</code> | Results page to retrieve. |
-|  [query\_counter](./doofinder.queryparamsbase.query_counter.md) | <code>number</code> | Internal counter to manage request/response flow. |
+|  [page](./doofinder.queryparamsbase.page.md) | <code>string &#124; number</code> | Results page to retrieve. |
+|  [query\_counter](./doofinder.queryparamsbase.query_counter.md) | <code>string &#124; number</code> | Internal counter to manage request/response flow. |
 |  [query\_name](./doofinder.queryparamsbase.query_name.md) | <code>string</code> | Name of the query to use to get the results. |
 |  [query](./doofinder.queryparamsbase.query.md) | <code>string</code> | Search terms. |
-|  [rpp](./doofinder.queryparamsbase.rpp.md) | <code>number</code> | Number of results to retrieve for each page. |
+|  [rpp](./doofinder.queryparamsbase.rpp.md) | <code>string &#124; number</code> | Number of results to retrieve for each page. |
 |  [sort](./doofinder.queryparamsbase.sort.md) | <code>SortingInput[]</code> | Parameters to sort the results |
 |  [transformer](./doofinder.queryparamsbase.transformer.md) | <code>string</code> | Name of the transformer to use to normalize the results. |
 |  [type](./doofinder.queryparamsbase.type.md) | <code>string &#124; string[]</code> | Restrict the types of data to retrieve results. |

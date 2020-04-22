@@ -9,5 +9,5 @@ Internal counter to manage request/response flow.
 <b>Signature:</b>
 
 ```typescript
-query_counter?: number;
+query_counter?: string | number;
 ```

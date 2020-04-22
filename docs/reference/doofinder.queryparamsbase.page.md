@@ -9,5 +9,5 @@ Results page to retrieve.
 <b>Signature:</b>
 
 ```typescript
-page?: number;
+page?: string | number;
 ```
