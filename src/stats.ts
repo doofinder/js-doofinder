@@ -64,6 +64,21 @@ export interface RedirectionStatsParams extends StatsParams {
 }
 
 /**
+ * Parameters for the cart stats.
+ * @public
+ */
+export interface CartItemStatsParams extends StatsParams {
+  /** Unique ID of the clicked result. */
+  item_id: string;
+  /** Amount of the given item **/
+  amount: number;
+  /** Datatype where the item can be found **/
+  datatype: string;
+  /** Optional ID of the custom results that produced the current set of results. */
+  custom_results_id?: string | number;
+}
+
+/**
  * Wrapper class to simplify stats calls.
  * @public
  */
@@ -177,6 +192,51 @@ export class StatsClient {
   public async registerRedirection(params: RedirectionStatsParams): Promise<Response> {
     validateRequired([params.redirection_id, params.link], 'redirection_id and link are required');
     return this.client.stats('redirect', params as Record<string, any>);
+  }
+
+  /**
+   * Adds an amount of item to the cart in the current session. The cart will be automatically
+   * stored in stats if there's any call to registerCheckout. If the item is already in the
+   * cart, the amount is automatically added to the current amount.
+   *
+   * @param params - An options object. See {@link CartItemStatsParams}.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
+   *
+   * @public
+   */
+  public async addToCart(params: CartItemStatsParams): Promise<Response> {
+    validateRequired([params.item_id, params.amount], 'item_id and amount are required');
+    return this.client.stats('add_to_cart', params as Record<string, any>);
+  }
+
+  /**
+   * Removes an amount of item to the cart in the current session. The cart will be automatically
+   * stored in stats if there's any call to registerCheckout. If any of the items' amount drops
+   * to zero or below, it is automatically removed from the cart
+   *
+   * @param params - An options object. See {@link CartItemStatsParams}.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
+   *
+   * @public
+   */
+  public async removeFromCart(params: CartItemStatsParams): Promise<Response> {
+    validateRequired([params.item_id, params.amount], 'item_id and amount are required');
+    return this.client.stats('remove_from_cart', params as Record<string, any>);
+  }
+
+  /**
+   * Clears the cart in the current session.
+   *
+   * @param params - An options object. See {@link StatsParams}.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
+   *
+   * @public
+   */
+  public async clearCart(params: StatsParams): Promise<Response> {
+    return this.client.stats('clear_cart', params as Record<string, any>);
   }
 
   /**
