@@ -181,7 +181,7 @@ class Stats
   clearCart: (sessionId, callback) ->
     errors.requireVal sessionId, "sessionId"
 
-    @client.stats "clear_cart", session_id, (err, res) ->
+    @client.stats "clear_cart", session_id: sessionId, (err, res) ->
       callback? err, res # Client requires a callback, we don't
 
 module.exports = Stats
