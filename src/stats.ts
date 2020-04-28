@@ -195,7 +195,11 @@ export class StatsClient {
   }
 
   /**
-   * Adds an amount of item to the cart in the current session. The cart will be automatically
+   * Adds an amount of item to the cart in the current session.
+   *
+   * @remarks
+   *
+   * The cart will be automatically
    * stored in stats if there's any call to registerCheckout. If the item is already in the
    * cart, the amount is automatically added to the current amount.
    *
@@ -203,7 +207,7 @@ export class StatsClient {
    * @returns A promise to be fullfilled with the response or rejected
    * with a `ClientResponseError`.
    *
-   * @public
+   * @beta
    */
   public async addToCart(params: CartItemStatsParams): Promise<Response> {
     validateRequired([params.item_id, params.amount], 'item_id and amount are required');
@@ -211,7 +215,11 @@ export class StatsClient {
   }
 
   /**
-   * Removes an amount of item to the cart in the current session. The cart will be automatically
+   * Removes an amount of item to the cart in the current session.
+   *
+   * @remark
+   *
+   * The cart will be automatically
    * stored in stats if there's any call to registerCheckout. If any of the items' amount drops
    * to zero or below, it is automatically removed from the cart
    *
@@ -219,7 +227,7 @@ export class StatsClient {
    * @returns A promise to be fullfilled with the response or rejected
    * with a `ClientResponseError`.
    *
-   * @public
+   * @beta
    */
   public async removeFromCart(params: CartItemStatsParams): Promise<Response> {
     validateRequired([params.item_id, params.amount], 'item_id and amount are required');
@@ -233,7 +241,7 @@ export class StatsClient {
    * @returns A promise to be fullfilled with the response or rejected
    * with a `ClientResponseError`.
    *
-   * @public
+   * @beta
    */
   public async clearCart(params: StatsParams): Promise<Response> {
     return this.client.stats('clear_cart', params as Record<string, any>);
