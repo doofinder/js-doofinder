@@ -9,7 +9,7 @@ use(chaiAsPromised);
 should();
 
 // required for tests
-import { StatsClient } from '../src/stats';
+import { StatsClient, StatsParams, CartItemStatsParams } from '../src/stats';
 import { ValidationError } from '../src/util/validators';
 
 // config, utils & mocks
@@ -153,5 +153,36 @@ describe('StatsClient', () => {
       fetchMock.get({ url, query: params }, { body: {}, status: 200 });
       stats.registerRedirection(params).should.be.rejectedWith(ValidationError).notify(done);
     })
+  });
+
+  context('cart api', () => {
+    const baseUrl: string = `${cfg.endpoint}/5/stats`;
+    const baseParams: StatsParams = {
+      session_id: 'mysessionid',
+      hashid: cfg.hashid
+    };
+    const itemParams: CartItemStatsParams = {
+      item_id: '1',
+      amount: '1',
+      ...baseParams
+    };
+
+    it('should properly add an item to cart', done => {
+      // @ts-ignore
+      fetchMock.get({ url: `${baseUrl}/add-to-cart`, query: itemParams }, { body: {}, status: 200 });
+      stats.addToCart(itemParams).should.be.fulfilled.notify(done);
+    });
+
+    it('should properly remove an item from cart', done => {
+      // @ts-ignore
+      fetchMock.get({ url: `${baseUrl}/remove-from-cart`, query: itemParams }, { body: {}, status: 200 });
+      stats.removeFromCart(itemParams).should.be.fulfilled.notify(done);
+    });
+
+    it('should properly empty the cart', done => {
+      // @ts-ignore
+      fetchMock.get({ url: `${baseUrl}/clear-cart`, query: baseParams }, { body: {}, status: 200 });
+      stats.clearCart(baseParams).should.be.fulfilled.notify(done);
+    });
   });
 });
