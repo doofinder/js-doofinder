@@ -1436,7 +1436,7 @@
      * @param  {String}  	sessionId Session id.
      * @param  {String}  	itemId    The item ID to add to the cart.
      * @param  {String}  	amount    The amount of the item to be added.
-     * @param  {String}  	datatype  (Default: product) The datatype of the 
+     * @param  {String}  	datatype  (Default: product) The datatype of the
      *                              item we are adding
      * @param  {Function} callback  Optional callback to be called when the
      *                              response is received. First param is the
@@ -1459,7 +1459,7 @@
         amount: amount,
         datatype: datatype
       };
-      return this.client.stats("add_to_cart", params, function(err, res) {
+      return this.client.stats("add-to-cart", params, function(err, res) {
         return typeof callback === "function" ? callback(err, res) : void 0;
       });
     };
@@ -1470,7 +1470,7 @@
      * @param  {String}  	sessionId Session id.
      * @param  {String}  	itemId    The item ID to add to the cart.
      * @param  {String}  	amount    The amount of the item to be removed.
-     * @param  {String}  	datatype  (Default: product) The datatype of the 
+     * @param  {String}  	datatype  (Default: product) The datatype of the
      *                              item we are adding
      * @param  {Function} callback  Optional callback to be called when the
      *                              response is received. First param is the
@@ -1493,7 +1493,7 @@
         amount: amount,
         datatype: datatype
       };
-      return this.client.stats("remove_from_cart", params, function(err, res) {
+      return this.client.stats("remove-from-cart", params, function(err, res) {
         return typeof callback === "function" ? callback(err, res) : void 0;
       });
     };
@@ -1511,7 +1511,7 @@
 
     Stats.prototype.clearCart = function(sessionId, callback) {
       errors.requireVal(sessionId, "sessionId");
-      return this.client.stats("clear_cart", {
+      return this.client.stats("clear-cart", {
         session_id: sessionId
       }, function(err, res) {
         return typeof callback === "function" ? callback(err, res) : void 0;

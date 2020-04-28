@@ -120,7 +120,7 @@ class Stats
    * @param  {String}  	sessionId Session id.
    * @param  {String}  	itemId    The item ID to add to the cart.
    * @param  {String}  	amount    The amount of the item to be added.
-   * @param  {String}  	datatype  (Default: product) The datatype of the 
+   * @param  {String}  	datatype  (Default: product) The datatype of the
    *                              item we are adding
    * @param  {Function} callback  Optional callback to be called when the
    *                              response is received. First param is the
@@ -138,8 +138,8 @@ class Stats
       item_id: itemId
       amount: amount
       datatype: datatype
-             
-    @client.stats "add_to_cart", params, (err, res) ->
+
+    @client.stats "add-to-cart", params, (err, res) ->
       callback? err, res # Client requires a callback, we don't
 
   ###*
@@ -147,7 +147,7 @@ class Stats
    * @param  {String}  	sessionId Session id.
    * @param  {String}  	itemId    The item ID to add to the cart.
    * @param  {String}  	amount    The amount of the item to be removed.
-   * @param  {String}  	datatype  (Default: product) The datatype of the 
+   * @param  {String}  	datatype  (Default: product) The datatype of the
    *                              item we are adding
    * @param  {Function} callback  Optional callback to be called when the
    *                              response is received. First param is the
@@ -165,8 +165,8 @@ class Stats
       item_id: itemId
       amount: amount
       datatype: datatype
-             
-    @client.stats "remove_from_cart", params, (err, res) ->
+
+    @client.stats "remove-from-cart", params, (err, res) ->
       callback? err, res # Client requires a callback, we don't
 
   ###*
@@ -181,7 +181,7 @@ class Stats
   clearCart: (sessionId, callback) ->
     errors.requireVal sessionId, "sessionId"
 
-    @client.stats "clear_cart", session_id: sessionId, (err, res) ->
+    @client.stats "clear-cart", session_id: sessionId, (err, res) ->
       callback? err, res # Client requires a callback, we don't
 
 module.exports = Stats
