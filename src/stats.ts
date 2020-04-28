@@ -69,11 +69,11 @@ export interface RedirectionStatsParams extends StatsParams {
  */
 export interface CartItemStatsParams extends StatsParams {
   /** Unique ID of the clicked result. */
-  item_id: string;
+  item_id: string | number;
   /** Amount of the given item **/
-  amount: number;
+  amount: string | number;
   /** Datatype where the item can be found **/
-  datatype: string;
+  datatype?: string;
   /** Optional ID of the custom results that produced the current set of results. */
   custom_results_id?: string | number;
 }
@@ -211,7 +211,7 @@ export class StatsClient {
    */
   public async addToCart(params: CartItemStatsParams): Promise<Response> {
     validateRequired([params.item_id, params.amount], 'item_id and amount are required');
-    return this.client.stats('add_to_cart', params as Record<string, any>);
+    return this.client.stats('add-to-cart', params as Record<string, any>);
   }
 
   /**
@@ -231,7 +231,7 @@ export class StatsClient {
    */
   public async removeFromCart(params: CartItemStatsParams): Promise<Response> {
     validateRequired([params.item_id, params.amount], 'item_id and amount are required');
-    return this.client.stats('remove_from_cart', params as Record<string, any>);
+    return this.client.stats('remove-from-cart', params as Record<string, any>);
   }
 
   /**
@@ -244,7 +244,7 @@ export class StatsClient {
    * @beta
    */
   public async clearCart(params: StatsParams): Promise<Response> {
-    return this.client.stats('clear_cart', params as Record<string, any>);
+    return this.client.stats('clear-cart', params as Record<string, any>);
   }
 
   /**
