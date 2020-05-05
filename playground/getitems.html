@@ -8,8 +8,8 @@
   <script type="module">
     import { ClientPool } from '../lib/index.mjs';
 
-    const client = ClientPool.getClient('eu1');
-    const hashid = '6a96504dc173514cab1e0198af92e6e9';
+    const client = ClientPool.getClient('eu1-search.doofinder.com');
+    const hashid = '7a6100c782c09126479e9270ecc619b3';
 
     client.search({ hashid, query: 'silla', transformer: 'onlyid' }).then(console.log);
     client.search({ hashid, transformer: 'basic', items: [

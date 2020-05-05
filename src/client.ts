@@ -16,18 +16,14 @@ export const __API_VERSION__ = 5;
  */
 export interface ClientOptions {
   /**
-   * Search zone: eu1, us1, …
+   * Search server: eu1-search.doofinder.com, us1-search.doofinder.com
    * @public
    */
-  zone: string;
+  server: string;
   /**
-   * Secret token. May include or not the search zone.
+   * Secret token. May include or not the search server.
    */
   secret: string;
-  /**
-   * Address of the search server to use. Optional. Use it to override the default search server.
-   */
-  serverAddress: string;
   /**
    * Additional HTTP headers to send, if any.
    */
@@ -87,17 +83,17 @@ export interface TopStatsParams {
  * @public
  */
 export class Client {
-  private _zone: string;
+  private _server: string;
   private _secret: string;
   private _endpoint: string;
   private _headers: Record<string, string>;
 
   /**
-   * Returns the search zone for this client.
+   * Returns the search server for this client.
    * @public
    */
-  public get zone(): string {
-    return this._zone;
+  public get server(): string {
+    return this._server;
   }
 
   /**
@@ -129,28 +125,19 @@ export class Client {
    *
    * @remarks
    *
-   * At least a search zone is required. If none provided via the `zone`
-   * or the `secret` options, the default `'eu1'` will be used.
-   *
-   * Provide a custom `serverAddress` options to override the default
-   * endpoint for development purposes.
+   * At least a search server is required. If none provided via the `server`
+   * or the `secret` options, the default `'eu1-search.doofinder.com'` will be used.
    *
    * @param options - options to instantiate the client.
    */
-  public constructor({ zone, secret, headers, serverAddress }: Partial<ClientOptions> = {}) {
-    if (zone == null) {
-      throw new ValidationError(`search zone is required`);
+  public constructor({ server, secret, headers }: Partial<ClientOptions> = {}) {
+    if (server == null) {
+      throw new ValidationError(`search server is required`);
     }
 
-    this._zone = zone;
-
+    this._server = server;
     const httpHeaders: Record<string, string> = { ...(headers || {}) };
-    let [protocol, address] = (serverAddress || `${this._zone}-search.doofinder.com`).split('://');
-
-    if (!address) {
-      address = protocol;
-      protocol = '';
-    }
+    let protocol = '';
 
     if (secret != null) {
       this._secret = secret.trim();
@@ -159,7 +146,7 @@ export class Client {
       protocol = 'https:';
     }
 
-    this._endpoint = `${protocol}//${address}`;
+    this._endpoint = `${protocol}//${server}`;
 
     this._headers = {
       Accept: 'application/json',

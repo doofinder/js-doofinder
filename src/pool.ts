@@ -2,7 +2,7 @@ import { Client, ClientOptions } from './client';
 import { StatsClient } from './stats';
 
 /**
- * Manage clients for multiple zones as singletons with shared settings.
+ * Manage clients for multiple servers as singletons with shared settings.
  *
  * @remarks
  *
@@ -39,11 +39,11 @@ export class ClientPool {
     return this._options;
   }
   public static set options(value: Partial<ClientOptions>) {
-    const { serverAddress, headers } = value;
+    const { server, headers } = value;
     const options: Partial<ClientOptions> = {};
 
-    if (serverAddress) {
-      options.serverAddress = serverAddress;
+    if (server) {
+      options.server = server;
     }
 
     if (headers) {
@@ -56,35 +56,35 @@ export class ClientPool {
   }
 
   /**
-   * Get a client for the given zone with the shared options.
+   * Get a client for the given server with the shared options.
    *
-   * @param zone - A valid search zone.
+   * @param server - A valid search server.
    * @returns An instance of `Client`.
    *
    * @public
    */
-  public static getClient(zone: string): Client {
-    if (!this._clientsPool.has(zone)) {
-      this._clientsPool.set(zone, new Client({ ...this._options, zone }));
+  public static getClient(server: string): Client {
+    if (!this._clientsPool.has(server)) {
+      this._clientsPool.set(server, new Client({ ...this._options, server }));
     }
 
-    return this._clientsPool.get(zone);
+    return this._clientsPool.get(server);
   }
 
   /**
-   * Get a stats client for the given zone with the shared options.
+   * Get a stats client for the given server with the shared options.
    *
-   * @param zone - A valid search zone.
+   * @param server - A valid search server.
    * @returns An instance of `StatsClient`.
    *
    * @public
    */
-  public static getStatsClient(zone: string): StatsClient {
-    if (!this._statsClientsPool.has(zone)) {
-      this._statsClientsPool.set(zone, new StatsClient(this.getClient(zone)));
+  public static getStatsClient(server: string): StatsClient {
+    if (!this._statsClientsPool.has(server)) {
+      this._statsClientsPool.set(server, new StatsClient(this.getClient(server)));
     }
 
-    return this._statsClientsPool.get(zone);
+    return this._statsClientsPool.get(server);
   }
 
   /**
