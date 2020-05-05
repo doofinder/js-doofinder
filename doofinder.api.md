@@ -402,7 +402,6 @@ export class StatsClient {
     registerClick(params: ClickStatsParamsWithDfid | ClickStatsParamsWithId): Promise<Response>;
     registerEvent(eventName: string, params: Record<string, any>): Promise<Response>;
     registerImageClick(params: ImageStatsParams): Promise<Response>;
-    registerImageDisplay(params: ImageStatsParams): Promise<Response>;
     registerRedirection(params: RedirectionStatsParams): Promise<Response>;
     registerSession(params: StatsParams): Promise<Response>;
 }

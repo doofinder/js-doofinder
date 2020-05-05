@@ -138,20 +138,6 @@ export class StatsClient {
   }
 
   /**
-   * Register an image display during the current session.
-   *
-   * @param params - An options object. See {@link ImageStatsParams}.
-   * @returns A promise to be fullfilled with the response or rejected
-   * with a `ClientResponseError`.
-   *
-   * @public
-   */
-  public async registerImageDisplay(params: ImageStatsParams): Promise<Response> {
-    validateRequired(params.img_id, 'img_id is required');
-    return this.client.stats('img_display', params as Record<string, any>);
-  }
-
-  /**
    * Register an image click during the current session.
    *
    * @param params - An options object. See {@link ImageStatsParams}.
