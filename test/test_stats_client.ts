@@ -108,13 +108,6 @@ describe('StatsClient', () => {
       img_id: '42',
     }
 
-    it('should properly register banner impressions', done => {
-      const url = `${cfg.endpoint}/5/stats/img_display`;
-      // @ts-ignore
-      fetchMock.get({ url, query }, { body: {}, status: 200 });
-      stats.registerImageDisplay(query).should.be.fulfilled.notify(done);
-    });
-
     it('should properly register banner clicks', done => {
       const url = `${cfg.endpoint}/5/stats/img_click`;
       // @ts-ignore
