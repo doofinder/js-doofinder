@@ -9,12 +9,12 @@ import { ClientPool } from '../src/pool';
 
 describe('ClientClientPool', () => {
   it('creates clients with default options', (done) => {
-    let client = ClientPool.getClient('eu1');
+    let client = ClientPool.getClient('eu1-search.doofinder.com');
     client.endpoint.should.equal('//eu1-search.doofinder.com');
     Object.keys(client.headers).length.should.equal(1);
     client.headers.Accept.should.equal('application/json');
 
-    client = ClientPool.getClient('us1');
+    client = ClientPool.getClient('us1-search.doofinder.com');
     client.endpoint.should.equal('//us1-search.doofinder.com');
     done();
   });

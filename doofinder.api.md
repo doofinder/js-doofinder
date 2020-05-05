@@ -55,33 +55,32 @@ export interface ClickStatsParamsWithId extends StatsParams {
 
 // @public
 export class Client {
-    constructor({ zone, secret, headers, serverAddress }?: Partial<ClientOptions>);
+    constructor({ server, secret, headers }?: Partial<ClientOptions>);
     get endpoint(): string;
     get headers(): Record<string, string>;
     request(resource: string, params?: Record<string, any>, payload?: Record<string, any>): Promise<Response>;
     search(query: Query | SearchParams): Promise<SearchResponse>;
     get secret(): string;
+    get server(): string;
     stats(eventName: string, params: Record<string, string>): Promise<Response>;
     suggest(query: Query | SearchParams): Promise<SearchResponse>;
     // (undocumented)
     topStats(type: TopStatsType, params: TopStatsParams): Promise<Response>;
     toString(): string;
-    get zone(): string;
-    }
+}
 
 // @public
 export interface ClientOptions {
     headers: Record<string, string>;
     secret: string;
-    serverAddress: string;
-    zone: string;
+    server: string;
 }
 
 // @public
 export class ClientPool {
     static clear(): void;
-    static getClient(zone: string): Client;
-    static getStatsClient(zone: string): StatsClient;
+    static getClient(server: string): Client;
+    static getStatsClient(server: string): StatsClient;
     static get options(): Partial<ClientOptions>;
     static set options(value: Partial<ClientOptions>);
     static reset(): void;

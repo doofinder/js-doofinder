@@ -1,10 +1,10 @@
 function demo({ Client, Query }) {
-  const client = new Client({ zone: 'eu1' });
-  const request = new Query({hashid: 'c0604b71c273c1fb3ef13eb2adfa4452'});
+  const client = new Client({ server: 'eu1-search.doofinder.com' });
+  const request = new Query({hashid: '7a6100c782c09126479e9270ecc619b3'});
 
-  request.text = 'silla';
-  request.filters.add('brand', 'JANE');
-  request.filters.add('brand', 'RECARO');
+  request.text = 'shoes';
+  request.filters.add('condition', 'new');
+  request.filters.add('color', 'Red');
   request.queryCounter = 2;
 
   console.log(request.dump());

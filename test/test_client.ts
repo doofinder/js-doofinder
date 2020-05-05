@@ -28,7 +28,7 @@ describe('Client', () => {
   });
 
   context('Instantiation', () => {
-    context('with no zone', () => {
+    context('with no server', () => {
       it('should throw', done => {
         (() => new Client()).should.throw(ValidationError);
         done();
@@ -37,30 +37,30 @@ describe('Client', () => {
 
     context('with secret key', () => {
       it('should use https', done => {
-        const client = new Client({ zone: 'eu1', secret: 'any' });
+        const client = new Client({ server: 'eu1-search.doofinder.com', secret: 'any' });
         client.endpoint.should.equal('https://eu1-search.doofinder.com');
         done();
       });
     });
 
-    context('with secret key with zone and zone', () => {
-      it("should use zone", done => {
-        const client = new Client({ zone: 'us1', secret: cfg.key });
-        client.zone.should.equal('us1');
+    context('with secret key with server and server', () => {
+      it("should use server", done => {
+        const client = new Client({ server: 'us1-search.doofinder.com', secret: cfg.key });
+        client.server.should.equal('us1-search.doofinder.com');
         done();
       });
     });
 
     context('HTTP Headers', () => {
       it('should add passed headers to the request', done => {
-        const client = new Client({ zone: cfg.zone, headers: { 'X-Name': 'John Smith' } });
+        const client = new Client({ server: cfg.server, headers: { 'X-Name': 'John Smith' } });
         client.headers['X-Name'].should.equal('John Smith');
         done()
       });
 
       it ("won't replace API Keys passed in options", done => {
         const client = new Client({
-          zone: cfg.zone,
+          server: cfg.server,
           secret: cfg.secret,
           headers: {
           'X-Name': 'John Smith',
@@ -80,7 +80,7 @@ describe('Client', () => {
       });
 
       it('should use custom address if defined', done => {
-        const client = new Client({ zone: cfg.zone, serverAddress: 'localhost:4000' });
+        const client = new Client({ server: 'localhost:4000' });
         client.endpoint.should.equal('//localhost:4000');
         done();
       });
