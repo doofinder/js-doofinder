@@ -4,7 +4,7 @@
 
 ## ClientPool class
 
-Manage clients for multiple zones as singletons with shared settings.
+Manage clients for multiple servers as singletons with shared settings.
 
 <b>Signature:</b>
 
@@ -36,7 +36,7 @@ ClientPool.getStatsClient('eu1');
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
 |  [clear()](./doofinder.clientpool.clear.md) | <code>static</code> | Remove al existing clients from the pool. |
-|  [getClient(zone)](./doofinder.clientpool.getclient.md) | <code>static</code> | Get a client for the given zone with the shared options. |
-|  [getStatsClient(zone)](./doofinder.clientpool.getstatsclient.md) | <code>static</code> | Get a stats client for the given zone with the shared options. |
+|  [getClient(server)](./doofinder.clientpool.getclient.md) | <code>static</code> | Get a client for the given server with the shared options. |
+|  [getStatsClient(server)](./doofinder.clientpool.getstatsclient.md) | <code>static</code> | Get a stats client for the given server with the shared options. |
 |  [reset()](./doofinder.clientpool.reset.md) | <code>static</code> | Reset the shared options of the pool. |
 

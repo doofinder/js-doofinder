@@ -4,19 +4,19 @@
 
 ## ClientPool.getClient() method
 
-Get a client for the given zone with the shared options.
+Get a client for the given server with the shared options.
 
 <b>Signature:</b>
 
 ```typescript
-static getClient(zone: string): Client;
+static getClient(server: string): Client;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  zone | <code>string</code> | A valid search zone. |
+|  server | <code>string</code> | A valid search server. |
 
 <b>Returns:</b>
 

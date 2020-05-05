@@ -9,7 +9,7 @@
 |  Class | Description |
 |  --- | --- |
 |  [Client](./doofinder.client.md) | Class that allows interacting with the Doofinder service. |
-|  [ClientPool](./doofinder.clientpool.md) | Manage clients for multiple zones as singletons with shared settings. |
+|  [ClientPool](./doofinder.clientpool.md) | Manage clients for multiple servers as singletons with shared settings. |
 |  [ClientResponseError](./doofinder.clientresponseerror.md) | Represents an error response for a failed HTTP response from Doofinder. |
 |  [Query](./doofinder.query.md) | Allows creating a search query programmatically instead of creating the JSON and parameters by hand. |
 |  [QueryFilter](./doofinder.queryfilter.md) | Manage filters applied to a query. |

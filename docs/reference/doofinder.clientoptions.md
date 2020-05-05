@@ -17,7 +17,6 @@ export interface ClientOptions
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [headers](./doofinder.clientoptions.headers.md) | <code>Record&lt;string, string&gt;</code> | Additional HTTP headers to send, if any. |
-|  [secret](./doofinder.clientoptions.secret.md) | <code>string</code> | Secret token. May include or not the search zone. |
-|  [serverAddress](./doofinder.clientoptions.serveraddress.md) | <code>string</code> | Address of the search server to use. Optional. Use it to override the default search server. |
-|  [zone](./doofinder.clientoptions.zone.md) | <code>string</code> | Search zone: eu1, us1, … |
+|  [secret](./doofinder.clientoptions.secret.md) | <code>string</code> | Secret token. May include or not the search server. |
+|  [server](./doofinder.clientoptions.server.md) | <code>string</code> | Search server: eu1-search.doofinder.com, us1-search.doofinder.com |
 

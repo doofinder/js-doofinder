@@ -4,19 +4,19 @@
 
 ## ClientPool.getStatsClient() method
 
-Get a stats client for the given zone with the shared options.
+Get a stats client for the given server with the shared options.
 
 <b>Signature:</b>
 
 ```typescript
-static getStatsClient(zone: string): StatsClient;
+static getStatsClient(server: string): StatsClient;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  zone | <code>string</code> | A valid search zone. |
+|  server | <code>string</code> | A valid search server. |
 
 <b>Returns:</b>
 

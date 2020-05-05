@@ -4,7 +4,7 @@
 
 ## ClientOptions.secret property
 
-Secret token. May include or not the search zone.
+Secret token. May include or not the search server.
 
 <b>Signature:</b>
 

@@ -9,18 +9,16 @@ Constructor.
 <b>Signature:</b>
 
 ```typescript
-constructor({ zone, secret, headers, serverAddress }?: Partial<ClientOptions>);
+constructor({ server, secret, headers }?: Partial<ClientOptions>);
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  { zone, secret, headers, serverAddress } | <code>Partial&lt;ClientOptions&gt;</code> |  |
+|  { server, secret, headers } | <code>Partial&lt;ClientOptions&gt;</code> |  |
 
 ## Remarks
 
-At least a search zone is required. If none provided via the `zone` or the `secret` options, the default `'eu1'` will be used.
-
-Provide a custom `serverAddress` options to override the default endpoint for development purposes.
+At least a search server is required. If none provided via the `server` or the `secret` options, the default `'eu1-search.doofinder.com'` will be used.
 
