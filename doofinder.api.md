@@ -39,6 +39,14 @@ export interface BasicResult {
 }
 
 // @public
+export interface CartItemStatsParams extends StatsParams {
+    amount: string | number;
+    custom_results_id?: string | number;
+    datatype?: string;
+    item_id: string | number;
+}
+
+// @public
 export interface ClickStatsParamsWithDfid extends StatsParams {
     custom_results_id?: string | number;
     dfid: string;
@@ -396,6 +404,10 @@ export type SortOrder = 'asc' | 'desc';
 // @public
 export class StatsClient {
     constructor(client: Client);
+    // @beta
+    addToCart(params: CartItemStatsParams): Promise<Response>;
+    // @beta
+    clearCart(params: StatsParams): Promise<Response>;
     // (undocumented)
     get client(): Client;
     registerCheckout(params: StatsParams): Promise<Response>;
@@ -404,6 +416,8 @@ export class StatsClient {
     registerImageClick(params: ImageStatsParams): Promise<Response>;
     registerRedirection(params: RedirectionStatsParams): Promise<Response>;
     registerSession(params: StatsParams): Promise<Response>;
+    // @beta
+    removeFromCart(params: CartItemStatsParams): Promise<Response>;
 }
 
 // @public

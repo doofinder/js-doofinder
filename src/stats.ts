@@ -203,7 +203,7 @@ export class StatsClient {
   /**
    * Removes an amount of item to the cart in the current session.
    *
-   * @remark
+   * @remarks
    *
    * The cart will be automatically
    * stored in stats if there's any call to registerCheckout. If any of the items' amount drops

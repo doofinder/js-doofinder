@@ -28,11 +28,13 @@ export declare class StatsClient
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
+|  [addToCart(params)](./doofinder.statsclient.addtocart.md) |  | <b><i>(BETA)</i></b> Adds an amount of item to the cart in the current session. |
+|  [clearCart(params)](./doofinder.statsclient.clearcart.md) |  | <b><i>(BETA)</i></b> Clears the cart in the current session. |
 |  [registerCheckout(params)](./doofinder.statsclient.registercheckout.md) |  | Register a checkout within the session. |
 |  [registerClick(params)](./doofinder.statsclient.registerclick.md) |  | Register a click on a result. |
 |  [registerEvent(eventName, params)](./doofinder.statsclient.registerevent.md) |  | Pass-through to register any custom event. |
 |  [registerImageClick(params)](./doofinder.statsclient.registerimageclick.md) |  | Register an image click during the current session. |
-|  [registerImageDisplay(params)](./doofinder.statsclient.registerimagedisplay.md) |  | Register an image display during the current session. |
 |  [registerRedirection(params)](./doofinder.statsclient.registerredirection.md) |  | Register a redirection occurred during the current session. |
 |  [registerSession(params)](./doofinder.statsclient.registersession.md) |  | Registers a session ID in Doofinder. |
+|  [removeFromCart(params)](./doofinder.statsclient.removefromcart.md) |  | <b><i>(BETA)</i></b> Removes an amount of item to the cart in the current session. |
 

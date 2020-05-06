@@ -34,6 +34,7 @@
 |  --- | --- |
 |  [BannerInfo](./doofinder.bannerinfo.md) | Represents the information received for a banner for certain search. |
 |  [BasicResult](./doofinder.basicresult.md) | Represents a single search result when the <code>basic</code> transformer is used. |
+|  [CartItemStatsParams](./doofinder.cartitemstatsparams.md) | Parameters for the cart stats. |
 |  [ClickStatsParamsWithDfid](./doofinder.clickstatsparamswithdfid.md) | Parameters for click stats with dfid. |
 |  [ClickStatsParamsWithId](./doofinder.clickstatsparamswithid.md) | Parameters for click stats without dfid. |
 |  [ClientOptions](./doofinder.clientoptions.md) | Options that can be used to create a Client instance. |
