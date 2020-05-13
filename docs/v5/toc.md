@@ -1,7 +1,7 @@
 ## Table Of Contents
 
-- [Overview]({{ site.baseurl }}{% link index.md %}#overview)
-  - [Basic building blocks: client, widgets & controller]({{ site.baseurl }}{% link index.md %}#basic-building-blocks-client-widgets--controller)
+- [Overview]({% link v5/index.md %}#overview)
+  - [Basic building blocks: client, widgets & controller]({% link v5/index.md %}#basic-building-blocks-client-widgets--controller)
 - [The Client](client#the-client)
   - [Instantiating the class](client#instantiating-the-class)
   - [Using the class](client#using-the-class)

@@ -42,6 +42,13 @@ defaults:
     values:
       layout: "page"
 
+  -
+    scope:
+      path: "v5"
+      type: "pages"
+    values:
+      layout: "page"
+
 # Theme settings
 # theme: minima
 github_username: doofinder

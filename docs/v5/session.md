@@ -1,12 +1,8 @@
----
-layout: default
----
-
 {% include_relative toc.md %}
 
 ## The Session
 
-A `Session` object is used to store user data. 
+A `Session` object is used to store user data.
 
 ### Instantiating the class
 
@@ -181,4 +177,3 @@ var store = new doofinder.session.CookieSessionStore(cookieName, {
 | :--- | :---: | :---: | :---: | :--- |
 | `prefix` | No | `String` | `""` | Prefix to be added to the cookie name. |
 | `expiry` | Yes | `Number` | `1/24` | Duration of the cookie in days. 1 hour by default. |
-

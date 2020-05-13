@@ -1,7 +1,3 @@
----
-layout: default
----
-
 {% include_relative toc.md %}
 
 ## Overview

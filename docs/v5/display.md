@@ -1,7 +1,3 @@
----
-layout: default
----
-
 {% include_relative toc.md %}
 
 ## doofinder.widgets.Display
@@ -20,7 +16,8 @@ These kind of widgets are ment to display content inside some DOM element and ma
 
 Constructor now accepts options for templating.
 
-```html
+{% raw %}
+```mustache
 <script type="text/x-mustache-template" id="myTemplate">
   <ul>
     <li>{{#translate}}Hello!{{/translate}}<>
@@ -31,6 +28,7 @@ Constructor now accepts options for templating.
   </ul>
 </script>
 ```
+{% endraw %}
 
 ```javascript
 var display = new doofinder.widgets.Display("#myDiv", {
@@ -62,11 +60,13 @@ var display = new doofinder.widgets.Display("#myDiv", {
 
 ##### <a name="default-template"></a>Default Template
 
+{% raw %}
 ```mustache
 {{#results}}
   <a href="{{link}}" class="df-card">{{title}}</a>
 {{/results}}
 ```
+{% endraw %}
 
 ##### <a name="default-template-variables"></a>Default Template Variables
 
@@ -95,6 +95,7 @@ When the user performs scrolling and reaches the end of the results, a new searc
 
 ### Scroll Display: Instantiating the class
 
+{% raw %}
 ```mustache
 <style>
 .container {
@@ -114,6 +115,7 @@ When the user performs scrolling and reaches the end of the results, a new searc
   {{/results}}
 </script>
 ```
+{% endraw %}
 
 ```javascript
 var resultsWidget = new doofinder.widgets.ScrollDisplay("#scroller", {
@@ -183,6 +185,7 @@ var facet = new doofinder.widgets.TermsFacet("#brandFilter", "brand");
 
 #### Default Template
 
+{% raw %}
 ```mustache
 {{#terms}}
   <div class="df-term" data-facet="{{name}}" data-value="{{key}}"
@@ -192,6 +195,7 @@ var facet = new doofinder.widgets.TermsFacet("#brandFilter", "brand");
   </div>
 {{/terms}}
 ```
+{% endraw %}
 
 #### Template requirements
 
@@ -248,9 +252,11 @@ var rangeWidget = new doofinder.widgets.RangeFacet("#price", {
 
 **NOTICE:** If you change the `df-slider` CSS class, remember to update CSS to match the new one.
 
+{% raw %}
 ```mustache
 <div class="df-slider" data-facet="{{name}}"></div>
 ```
+{% endraw %}
 
 #### The received data
 
@@ -284,5 +290,3 @@ rangeWidget.set([10, 100]);
 | Event | Triggered when ... | Triggered with the arguments ... |
 | :--- | :--- | :--- |
 | `df:range:set` | ... the slider range is changed by user | `value` (object with `start` `end` keys representing the starting and ending selected values), and `range` (object with `min` and `max` keys representing range's minumum and maximum)|
-
-

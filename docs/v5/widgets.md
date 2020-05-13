@@ -1,7 +1,3 @@
----
-layout: default
----
-
 {% include_relative toc.md %}
 
 ## Widgets
@@ -161,5 +157,3 @@ No arguments.
 | :--- | :---: | :---: | :--- |
 | `eventName` | Yes | `String` | Event name (or multiple events, space separated). |
 | `args` | No | `Array` | Array of arguments to pass to the event handler. |
-
-

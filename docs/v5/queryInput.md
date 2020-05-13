@@ -1,13 +1,9 @@
----
-layout: default
----
-
 {% include_relative toc.md %}
 
 ## doofinder.widgets.QueryInput
 
 This is a special widget. It is linked to one or more HTML text input or textarea controls and listens the `input` event so, when value changes due to user input, it uses its value to perform a new search via its registered controller(s).
- 
+
 This widget can also be registered in multiple controllers at the same time so you could share the same text input and perform the same search in different search engines.
 
 ### Instantiating the class
@@ -59,14 +55,14 @@ queryInput.on('df:user:bored', function(value){
 #### Extra attributes of QueryInput
 
    - `currentElement` the currently active input: it's value can be changed with the `.val()` method, but it doesn't trigger a search
-  
+
   ```javascript
   var input = myQueryInput.currentElement;
   input.val('pipo'); //changes value of search box, but doesn't trigger a search
   ```
-  
+
   - `value` the value of the active input. Changing it triggers a search:
-  
+
   ```javascript
   myQueryInput.value = 'choco boy'; // changes value of search box and triggers search for "choco boy"
   ```

@@ -1,7 +1,3 @@
----
-layout: default
----
-
 {% include_relative toc.md %}
 
 ## The Stats
@@ -87,7 +83,7 @@ stats.registerBannerEvent("click", bannerId, function(err, res){});
 #### Stats.registerClick()
 
   * Using doofinder's internal id (`dfid`):
-  
+
   | Argument | Required | Type | Description |
   | :--- | :---: | :---: | :--- |
   | `sessionId` | Yes | `String` | The anonymous user session id. |
@@ -96,7 +92,7 @@ stats.registerBannerEvent("click", bannerId, function(err, res){});
   | `callback` | No | `Function` | Method to be called when the response or an error is received. |
 
   * Using your database id and datatype
-  
+
   | Argument | Required | Type | Description |
   | :--- | :---: | :---: | :--- |
   | `sessionId` | Yes | `String` | The anonymous user session id. |
