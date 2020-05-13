@@ -5,3 +5,5 @@ items:
 
   - title: Reference
     path: reference/index.md
+  - title: v5.x Reference
+    path: v5/index.md
