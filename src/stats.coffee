@@ -115,5 +115,73 @@ class Stats
     @client.stats "banner_#{eventName}", banner_id: bannerId, (err, res) ->
       callback? err, res # Client requires a callback, we don't
 
+  ###*
+   * Adds an amount of item in the current session cart
+   * @param  {String}  	sessionId Session id.
+   * @param  {String}  	itemId    The item ID to add to the cart.
+   * @param  {String}  	amount    The amount of the item to be added.
+   * @param  {String}  	datatype  (Default: product) The datatype of the
+   *                              item we are adding
+   * @param  {Function} callback  Optional callback to be called when the
+   *                              response is received. First param is the
+   *                              error, if any, and the second one is the
+   *                              response, if any.
+   * @public
+  ###
+  addToCart: (sessionId, itemId, amount, datatype = "product", callback) ->
+    errors.requireVal sessionId, "sessionId"
+    errors.requireVal itemId, "itemId"
+    errors.requireVal amount, "amount"
+
+    params =
+      session_id: sessionId
+      item_id: itemId
+      amount: amount
+      datatype: datatype
+
+    @client.stats "add-to-cart", params, (err, res) ->
+      callback? err, res # Client requires a callback, we don't
+
+  ###*
+   * Removes an amount of item in the current session cart
+   * @param  {String}  	sessionId Session id.
+   * @param  {String}  	itemId    The item ID to add to the cart.
+   * @param  {String}  	amount    The amount of the item to be removed.
+   * @param  {String}  	datatype  (Default: product) The datatype of the
+   *                              item we are adding
+   * @param  {Function} callback  Optional callback to be called when the
+   *                              response is received. First param is the
+   *                              error, if any, and the second one is the
+   *                              response, if any.
+   * @public
+  ###
+  removeFromCart: (sessionId, itemId, amount, datatype = "product", callback) ->
+    errors.requireVal sessionId, "sessionId"
+    errors.requireVal itemId, "itemId"
+    errors.requireVal amount, "amount"
+
+    params =
+      session_id: sessionId
+      item_id: itemId
+      amount: amount
+      datatype: datatype
+
+    @client.stats "remove-from-cart", params, (err, res) ->
+      callback? err, res # Client requires a callback, we don't
+
+  ###*
+   * Clears a cart from the current session, removing it all
+   * @param  {String}  	sessionId Session id.
+   * @param  {Function} callback  Optional callback to be called when the
+   *                              response is received. First param is the
+   *                              error, if any, and the second one is the
+   *                              response, if any.
+   * @public
+  ###
+  clearCart: (sessionId, callback) ->
+    errors.requireVal sessionId, "sessionId"
+
+    @client.stats "clear-cart", session_id: sessionId, (err, res) ->
+      callback? err, res # Client requires a callback, we don't
 
 module.exports = Stats
