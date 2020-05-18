@@ -963,7 +963,7 @@
 
 },{"./client":1,"./controller":2,"./session":4,"./stats":5,"./util/dfdom":6,"./util/errors":7,"./util/eventEnabled":8,"./util/helpers":10,"./util/http":11,"./util/merge":12,"./util/scrollManager":13,"./util/text":14,"./util/thing":15,"./util/uniqueid":16,"./widgets/display":17,"./widgets/pager":18,"./widgets/queryinput":19,"./widgets/rangefacet":20,"./widgets/scrolldisplay":21,"./widgets/termsfacet":22,"./widgets/widget":23,"bean":25,"lodash.throttle":40,"md5":41,"mustache":42,"qs":48}],4:[function(require,module,exports){
 (function() {
-  var CookieSessionStore, Cookies, ISessionStore, ObjectSessionStore, Session, errors, md5, merge, uniqueId,
+  var CookieSessionStore, Cookies, ISessionStore, LocalStorageSessionStore, ObjectSessionStore, Session, errors, md5, merge, uniqueId,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -1096,8 +1096,8 @@
      * @param  {Object} data Session data.
      */
 
-    function ObjectSessionStore(data) {
-      this.data = data != null ? data : {};
+    function ObjectSessionStore(data1) {
+      this.data = data1 != null ? data1 : {};
     }
 
     ObjectSessionStore.prototype.__getData = function() {
@@ -1108,8 +1108,8 @@
       return this.data;
     };
 
-    ObjectSessionStore.prototype.__setData = function(data) {
-      this.data = data;
+    ObjectSessionStore.prototype.__setData = function(data1) {
+      this.data = data1;
     };
 
     ObjectSessionStore.prototype.clean = function() {
@@ -1120,7 +1120,90 @@
       return this.data.session_id != null;
     };
 
+    ObjectSessionStore.prototype.registered = function(value) {
+      if (value == null) {
+        return this.data.registered != null;
+      } else if (value === true) {
+        return this.data.registered = new Date().getTime();
+      } else {
+        return delete this.data.registered;
+      }
+    };
+
+    ObjectSessionStore.prototype.expired = function() {
+      return false;
+    };
+
     return ObjectSessionStore;
+
+  })(ISessionStore);
+
+  LocalStorageSessionStore = (function(superClass) {
+    extend(LocalStorageSessionStore, superClass);
+
+    function LocalStorageSessionStore(hashid, ttl) {
+      if (ttl == null) {
+        ttl = 24;
+      }
+      this.bucket = hashid + ".session";
+      this.ttl = ttl;
+      if (this.expired()) {
+        console.log("expired!: clear…");
+        this.clean();
+      }
+    }
+
+    LocalStorageSessionStore.prototype.__getJSON = function() {
+      var data;
+      data = window.localStorage.getItem(this.bucket);
+      if (data != null) {
+        return JSON.parse(data);
+      }
+    };
+
+    LocalStorageSessionStore.prototype.__getData = function() {
+      var dataObj;
+      dataObj = this.__getJSON();
+      if (dataObj == null) {
+        dataObj = this.__setData({
+          session_id: uniqueId.generate.browserHash()
+        });
+      }
+      return dataObj;
+    };
+
+    LocalStorageSessionStore.prototype.__setData = function(dataObj) {
+      window.localStorage.setItem(this.bucket, JSON.stringify(dataObj));
+      return dataObj;
+    };
+
+    LocalStorageSessionStore.prototype.clean = function() {
+      return window.localStorage.removeItem(this.bucket);
+    };
+
+    LocalStorageSessionStore.prototype.exists = function() {
+      return (this.__getJSON() || {}).session_id != null;
+    };
+
+    LocalStorageSessionStore.prototype.registered = function(value) {
+      if (value == null) {
+        return (this.__getJSON() || {}).registered != null;
+      } else if (value === true) {
+        return this.set('registered', new Date().getTime());
+      } else {
+        return this.del('registered');
+      }
+    };
+
+    LocalStorageSessionStore.prototype.expired = function() {
+      if (!this.registered()) {
+        return false;
+      } else {
+        return new Date().getTime() - this.registered() > this.ttl * 60 * 60 * 1000;
+      }
+    };
+
+    return LocalStorageSessionStore;
 
   })(ISessionStore);
 
@@ -1155,9 +1238,13 @@
       this.expiry = options.expiry;
     }
 
+    CookieSessionStore.prototype.__getJSON = function() {
+      return Cookies.getJSON(this.cookieName);
+    };
+
     CookieSessionStore.prototype.__getData = function() {
       var dataObj;
-      dataObj = Cookies.getJSON(this.cookieName);
+      dataObj = this.__getJSON();
       if (dataObj == null) {
         dataObj = this.__setData({
           session_id: uniqueId.generate.browserHash()
@@ -1178,7 +1265,21 @@
     };
 
     CookieSessionStore.prototype.exists = function() {
-      return ((Cookies.getJSON(this.cookieName)) || {}).session_id != null;
+      return (this.__getJSON() || {}).session_id != null;
+    };
+
+    CookieSessionStore.prototype.registered = function(value) {
+      if (value == null) {
+        return (this.__getJSON() || {}).registered != null;
+      } else if (value === true) {
+        return this.set('registered', new Date().getTime());
+      } else {
+        return this.del('registered');
+      }
+    };
+
+    CookieSessionStore.prototype.expired = function() {
+      return false;
     };
 
     return CookieSessionStore;
@@ -1255,6 +1356,14 @@
       return this.store.exists();
     };
 
+    Session.prototype.registered = function(value) {
+      return this.store.registered(value);
+    };
+
+    Session.prototype.expired = function() {
+      return this.store.expired();
+    };
+
     return Session;
 
   })();
@@ -1263,7 +1372,8 @@
     Session: Session,
     ISessionStore: ISessionStore,
     ObjectSessionStore: ObjectSessionStore,
-    CookieSessionStore: CookieSessionStore
+    CookieSessionStore: CookieSessionStore,
+    LocalStorageSessionStore: LocalStorageSessionStore
   };
 
 }).call(this);

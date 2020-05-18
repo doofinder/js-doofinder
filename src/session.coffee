@@ -102,6 +102,59 @@ class ObjectSessionStore extends ISessionStore
   exists: ->
     @data.session_id?
 
+  registered: (value) ->
+    unless value?
+      @data.registered?
+    else if value is true
+      @data.registered = new Date().getTime()
+    else
+      delete @data.registered
+
+  expired: -> false
+
+
+class LocalStorageSessionStore extends ISessionStore
+  constructor: (hashid, ttl = 24) ->
+    @bucket = "#{hashid}.session"
+    @ttl = ttl
+
+    if @expired()
+      @clean()
+
+  __getJSON: ->
+    data = window.localStorage.getItem @bucket
+    JSON.parse data if data?
+
+  __getData: ->
+    dataObj = @__getJSON()
+    unless dataObj?
+      # ensure session id
+      dataObj = @__setData session_id: uniqueId.generate.browserHash()
+    dataObj
+
+  __setData: (dataObj) ->
+    window.localStorage.setItem @bucket, (JSON.stringify dataObj)
+    dataObj
+
+  clean: ->
+    window.localStorage.removeItem @bucket
+
+  exists: ->
+    (@__getJSON() or {}).session_id?
+
+  registered: (value) ->
+    unless value?
+      (@__getJSON() or {}).registered?
+    else if value is true
+      @set 'registered', new Date().getTime()
+    else
+      @del 'registered'
+
+  expired: ->
+    if not @registered()
+      false
+    else
+      new Date().getTime() - @registered() > @ttl * 60 * 60 * 1000
 
 ###*
  * Holds session data in a browser cookie.
@@ -122,8 +175,11 @@ class CookieSessionStore extends ISessionStore
     @cookieName = "#{options.prefix}#{cookieName}"
     @expiry = options.expiry
 
+  __getJSON: ->
+    Cookies.getJSON @cookieName
+
   __getData: ->
-    dataObj = Cookies.getJSON @cookieName
+    dataObj = @__getJSON()
     unless dataObj?
       # ensure session id
       dataObj = @__setData session_id: uniqueId.generate.browserHash()
@@ -137,7 +193,17 @@ class CookieSessionStore extends ISessionStore
     Cookies.remove @cookieName
 
   exists: ->
-    ((Cookies.getJSON @cookieName) or {}).session_id?
+    (@__getJSON() or {}).session_id?
+
+  registered: (value) ->
+    unless value?
+      (@__getJSON() or {}).registered?
+    else if value is true
+      @set 'registered', new Date().getTime()
+    else
+      @del 'registered'
+
+  expired: -> false
 
 
 ###*
@@ -190,9 +256,16 @@ class Session
   exists: ->
     @store.exists()
 
+  registered: (value) ->
+    @store.registered value
+
+  expired: ->
+    @store.expired()
+
 
 module.exports =
   Session: Session
   ISessionStore: ISessionStore
   ObjectSessionStore: ObjectSessionStore
   CookieSessionStore: CookieSessionStore
+  LocalStorageSessionStore: LocalStorageSessionStore
