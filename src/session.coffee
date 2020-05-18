@@ -119,7 +119,6 @@ class LocalStorageSessionStore extends ISessionStore
     @ttl = ttl
 
     if @expired()
-      console.log "expired!: clear…"
       @clean()
 
   __getJSON: ->
