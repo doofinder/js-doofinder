@@ -123,7 +123,8 @@ class LocalStorageSessionStore extends ISessionStore
       @clean()
 
   __getJSON: ->
-    JSON.parse window.localStorage.getItem @bucket
+    data = window.localStorage.getItem @bucket
+    JSON.parse data if data?
 
   __getData: ->
     dataObj = @__getJSON()
