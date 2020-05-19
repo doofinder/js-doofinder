@@ -1,4 +1,4 @@
-import * as qs from 'qs';
+import { stringify, parse } from 'qs';
 
 /**
  * Encode parameters for use in a querystring.
@@ -15,7 +15,7 @@ import * as qs from 'qs';
  * @returns A valid querystring.
  * @public
  */
-export const encode = qs.stringify;
+export const encode = stringify;
 
 /**
  * Parse a querystring into a parameters object.
@@ -32,4 +32,4 @@ export const encode = qs.stringify;
  * @returns A parameters object.
  * @public
  */
-export const decode = qs.parse;
+export const decode = parse;

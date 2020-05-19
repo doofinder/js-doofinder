@@ -4,7 +4,8 @@
 
 ```ts
 
-import * as qs_2 from 'qs';
+import { parse } from 'qs';
+import { stringify } from 'qs';
 
 // @public
 export const __API_VERSION__ = 5;
@@ -105,10 +106,10 @@ export class ClientResponseError extends Error {
 export function clone(src: any): any;
 
 // @public
-export const decode: typeof qs_2.parse;
+export const decode: typeof parse;
 
 // @public
-export const encode: typeof qs_2.stringify;
+export const encode: typeof stringify;
 
 // @public
 export const extend: (...args: unknown[]) => any[] | Record<string, any>;
