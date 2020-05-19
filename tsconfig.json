@@ -2,7 +2,7 @@
   "compilerOptions": {
     "declaration": false,
     "noImplicitAny": true,
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "module": "esnext",
     "target": "esnext"
   },
