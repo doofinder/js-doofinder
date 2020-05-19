@@ -4,7 +4,6 @@
   "description": "Javascript Library for Doofinder Search API",
   "main": "lib/doofinder.common.js",
   "module": "lib/doofinder.mjs",
-  "browser": "lib/doofinder.min.js",
   "engines": {
     "node": ">=10.15.0"
   },

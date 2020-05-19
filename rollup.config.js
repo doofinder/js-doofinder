@@ -22,6 +22,7 @@ function defaultPlugins(file, options = {}) {
 }
 
 export default [
+  // ES module
   {
     input: 'src/index.ts',
     output: {
@@ -30,6 +31,7 @@ export default [
     },
     plugins: defaultPlugins('lib/doofinder.mjs'),
   },
+  // for browsers, all included
   {
     input: 'src/index.ts',
     output: {
@@ -39,6 +41,7 @@ export default [
     },
     plugins: defaultPlugins('lib/doofinder.min.js', { browser: true, terser: true }),
   },
+  // Commonjs module for old node (not ES modules)
   {
     input: 'src/index.ts',
     output: {
