@@ -2,58 +2,57 @@ import clear from 'rollup-plugin-clear';
 import commonjs from '@rollup/plugin-commonjs';
 import inject from '@rollup/plugin-inject';
 import resolve from '@rollup/plugin-node-resolve';
-import typescript from 'rollup-plugin-typescript2';
+import typescript from '@rollup/plugin-typescript';
+import { terser } from 'rollup-plugin-terser';
 
 function defaultPlugins(file, options = {}) {
-  return [
+  const plugins = [
     clear({
       targets: [file],
-      watch: true
+      watch: true,
     }),
     resolve({
-      browser: options.browser || false
+      browser: options.browser || false,
     }),
-    commonjs(),
-    typescript({
-      typescript: require('typescript')
-    })
-  ]
+    typescript({ module: 'CommonJS' }),
+    commonjs({ extensions: ['.js', '.ts'] }), // the ".ts" extension is required
+  ];
+  if (options.terser) plugins.push(terser());
+  return plugins;
 }
 
 export default [
   {
     input: 'src/index.ts',
     output: {
-      file: 'lib/index.mjs',
-      format: 'esm'
+      file: 'lib/doofinder.mjs',
+      format: 'esm',
     },
-    plugins: defaultPlugins('lib/index.mjs')
+    plugins: defaultPlugins('lib/doofinder.mjs'),
   },
   {
     input: 'src/index.ts',
     output: {
-      file: 'lib/doofinder.js',
+      file: 'lib/doofinder.min.js',
       format: 'iife',
-      name: 'doofinder'
+      name: 'doofinder',
     },
-    plugins: defaultPlugins('lib/doofinder.js', { browser: true })
+    plugins: defaultPlugins('lib/doofinder.min.js', { browser: true, terser: true }),
   },
   {
     input: 'src/index.ts',
     output: {
-      file: 'lib/index.js',
-      format: 'cjs'
+      file: 'lib/doofinder.common.js',
+      format: 'cjs',
     },
-    external: [
-      'node-fetch',
-    ],
-    plugins: defaultPlugins('lib/index.js').concat([
+    external: ['node-fetch'],
+    plugins: defaultPlugins('lib/doofinder.common.js').concat([
       inject({
         exclude: 'node_modules/**',
         modules: {
-          fetch: 'node-fetch'
-        }
-      })
-    ])
-  }
-]
+          fetch: 'node-fetch',
+        },
+      }),
+    ]),
+  },
+];
