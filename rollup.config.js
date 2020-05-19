@@ -35,6 +35,16 @@ export default [
   {
     input: 'src/index.ts',
     output: {
+      file: 'lib/doofinder.js',
+      format: 'iife',
+      name: 'doofinder',
+    },
+    plugins: defaultPlugins('lib/doofinder.js', { browser: true }),
+  },
+  // for browsers, all included and minified
+  {
+    input: 'src/index.ts',
+    output: {
       file: 'lib/doofinder.min.js',
       format: 'iife',
       name: 'doofinder',
