@@ -14,7 +14,7 @@ function defaultPlugins(file, options = {}) {
     resolve({
       browser: options.browser || false,
     }),
-    typescript({ module: 'CommonJS' }),
+    typescript(),
     commonjs({ extensions: ['.js', '.ts'] }), // the ".ts" extension is required
   ];
   if (options.terser) plugins.push(terser());
