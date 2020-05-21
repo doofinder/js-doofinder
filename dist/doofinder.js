@@ -1198,7 +1198,7 @@
       if (!this.registered()) {
         return false;
       } else {
-        return new Date().getTime() - this.registered() > this.ttl * 60 * 60 * 1000;
+        return (new Date().getTime()) - this.__getJSON().registered > this.ttl * 60 * 60 * 1000;
       }
     };
 

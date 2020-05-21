@@ -146,7 +146,7 @@ class LocalStorageSessionStore extends ISessionStore
     unless value?
       (@__getJSON() or {}).registered?
     else if value is true
-      @set 'registered', new Date().getTime()
+      @set 'registered', (new Date().getTime())
     else
       @del 'registered'
 
@@ -154,7 +154,7 @@ class LocalStorageSessionStore extends ISessionStore
     if not @registered()
       false
     else
-      new Date().getTime() - @registered() > @ttl * 60 * 60 * 1000
+      (new Date().getTime()) - @__getJSON().registered > @ttl * 60 * 60 * 1000
 
 ###*
  * Holds session data in a browser cookie.
