@@ -926,7 +926,7 @@
 },{"./client":1,"./util/errors":7,"./util/eventEnabled":8,"./util/freezer":9,"./util/merge":12,"./util/thing":15,"./widgets/widget":23,"qs":48}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.12.1",
+    version: "5.12.2",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
@@ -1532,8 +1532,8 @@
     Stats.prototype.registerBannerEvent = function(eventName, bannerId, callback) {
       errors.requireVal(eventName, "eventName");
       errors.requireVal(bannerId, "bannerId");
-      return this.client.stats("banner_" + eventName, {
-        banner_id: bannerId
+      return this.client.stats("img_" + eventName, {
+        img_id: bannerId
       }, function(err, res) {
         return typeof callback === "function" ? callback(err, res) : void 0;
       });

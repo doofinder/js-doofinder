@@ -123,7 +123,7 @@ describe "Stats", ->
       done()
 
     it "properly registers a banner event", (done) ->
-      scope = serve.stats "banner_display", banner_id: "1"
+      scope = serve.stats "img_display", img_id: "1"
       stats = getStats()
       stats.registerBannerEvent "display", 1, (err, res) ->
         (expect err).to.be.undefined
