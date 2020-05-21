@@ -4,8 +4,9 @@
 
 ```ts
 
-import { parse } from 'qs';
-import { stringify } from 'qs';
+import { IParseOptions } from 'qs';
+import { IStringifyOptions } from 'qs';
+import { ParsedQs } from 'qs';
 
 // @public
 export const __API_VERSION__ = 5;
@@ -106,13 +107,13 @@ export class ClientResponseError extends Error {
 export function clone(src: any): any;
 
 // @public
-export const decode: typeof parse;
+export function decode(str: string, options?: IParseOptions): ParsedQs | unknown;
 
 // @public
-export const encode: typeof stringify;
+export function encode(obj: any, options?: IStringifyOptions): string;
 
 // @public
-export const extend: (...args: unknown[]) => any[] | Record<string, any>;
+export function extend(...args: unknown[]): Record<string, any> | Array<any>;
 
 // @public
 export type Facet = RangeFacet | TermsFacet;
@@ -148,22 +149,22 @@ export interface ImageStatsParams extends StatsParams {
 export function isEmptyObject(obj: unknown): boolean;
 
 // @public
-export const isIdentical: (x: any, y: any) => boolean;
+export function isIdentical(x: any, y: any): boolean;
 
 // @public
-export const isNumber: (value: unknown) => boolean;
+export function isNumber(value: unknown): boolean;
 
 // @public
-export const isObject: (value: unknown) => boolean;
+export function isObject(value: unknown): boolean;
 
 // @public
-export const isPlainObject: (value: unknown) => boolean;
+export function isPlainObject(value: unknown): boolean;
 
 // @public
-export const isShallowEqual: (objA: any, objB: any) => boolean;
+export function isShallowEqual(objA: any, objB: any): boolean;
 
 // @public
-export const isString: (value: unknown) => boolean;
+export function isString(value: unknown): boolean;
 
 // @public
 export function isValidDoofinderId(value: unknown): boolean;

@@ -26,7 +26,7 @@ import { isPlainObject } from './is';
  *
  * @public
  */
-export const extend = function(...args: unknown[]): Record<string, any> | Array<any> {
+export function extend(...args: unknown[]): Record<string, any> | Array<any> {
   const length: number = args.length;
   let target: Record<string, any> = args[0] || {},
     i = 1,
@@ -93,7 +93,7 @@ export const extend = function(...args: unknown[]): Record<string, any> | Array<
 
   // Return the modified object
   return target;
-};
+}
 
 /**
  * Create a copy of the provided data.

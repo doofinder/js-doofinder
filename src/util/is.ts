@@ -4,7 +4,9 @@
  * @returns `true` if the value is a string, `false` otherwise.
  * @public
  */
-export const isString = (value: unknown): boolean => Object.prototype.toString.call(value) === '[object String]';
+export function isString(value: unknown): boolean {
+  return Object.prototype.toString.call(value) === '[object String]';
+}
 
 /**
  * Check if the provided value is a number.
@@ -12,8 +14,9 @@ export const isString = (value: unknown): boolean => Object.prototype.toString.c
  * @returns `true` if the value is a number, `false` otherwise.
  * @public
  */
-export const isNumber = (value: unknown): boolean =>
-  Object.prototype.toString.call(value) === '[object Number]' && !isNaN(value as number);
+export function isNumber(value: unknown): boolean {
+  return Object.prototype.toString.call(value) === '[object Number]' && !isNaN(value as number);
+}
 
 /**
  * Check if the provided value is an object.
@@ -21,7 +24,9 @@ export const isNumber = (value: unknown): boolean =>
  * @returns `true` if the value is an object, `false` otherwise.
  * @public
  */
-export const isObject = (value: unknown): boolean => Object.prototype.toString.call(value) === '[object Object]';
+export function isObject(value: unknown): boolean {
+  return Object.prototype.toString.call(value) === '[object Object]';
+}
 
 /**
  * Check if the provided value is an empty object.
@@ -39,8 +44,9 @@ export function isEmptyObject(obj: unknown): boolean {
  * @returns `true` if the value is a plain object, `false` otherwise.
  * @public
  */
-export const isPlainObject = (value: unknown): boolean =>
-  isObject(value) && value.constructor === Object && !(value as Node).nodeType && !(value as Window).setInterval;
+export function isPlainObject(value: unknown): boolean {
+  return isObject(value) && value.constructor === Object && !(value as Node).nodeType && !(value as Window).setInterval;
+}
 
 const DFID_REGEX = /^([0-9a-f]{32})@([\w-]+)@([0-9a-f]{32})$/i;
 const HASHID_REGEX = /^([0-9a-f]{32})(-.*)?/i;
@@ -89,7 +95,7 @@ export function isValidHashId(value: unknown): boolean {
  * @returns A boolean value indicating if both values are identical.
  * @public
  */
-export const isIdentical = function(x: any, y: any): boolean {
+export function isIdentical(x: any, y: any): boolean {
   // SameValue algorithm
   if (x === y) {
     // Steps 1-5, 7-10
@@ -100,7 +106,7 @@ export const isIdentical = function(x: any, y: any): boolean {
     // Step 6.a: NaN == NaN
     return x !== x && y !== y;
   }
-};
+}
 
 /**
  * Check whether two values are equivalent or not.
@@ -116,7 +122,7 @@ export const isIdentical = function(x: any, y: any): boolean {
  * @returns A boolean value.
  * @public
  */
-export const isShallowEqual = function(objA: any, objB: any): boolean {
+export function isShallowEqual(objA: any, objB: any): boolean {
   if (isIdentical(objA, objB)) {
     return true;
   }
@@ -140,5 +146,5 @@ export const isShallowEqual = function(objA: any, objB: any): boolean {
   }
 
   return true;
-};
+}
 /* eslint-enable no-self-compare */

@@ -1,6 +1,6 @@
 {
   "name": "doofinder",
-  "version": "6.0.0-beta.1",
+  "version": "6.0.0-beta.2",
   "description": "Javascript Library for Doofinder Search API",
   "main": "lib/doofinder.common.js",
   "module": "lib/doofinder.mjs",

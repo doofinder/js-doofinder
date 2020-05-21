@@ -1,4 +1,4 @@
-import { stringify, parse } from 'qs';
+import { stringify, parse, IStringifyOptions, IParseOptions, ParsedQs } from 'qs';
 
 /**
  * Encode parameters for use in a querystring.
@@ -15,7 +15,9 @@ import { stringify, parse } from 'qs';
  * @returns A valid querystring.
  * @public
  */
-export const encode = stringify;
+export function encode(obj: any, options?: IStringifyOptions): string {
+  return stringify(obj, options);
+}
 
 /**
  * Parse a querystring into a parameters object.
@@ -32,4 +34,6 @@ export const encode = stringify;
  * @returns A parameters object.
  * @public
  */
-export const decode = parse;
+export function decode(str: string, options?: IParseOptions): ParsedQs | unknown {
+  return parse(str, options);
+}
