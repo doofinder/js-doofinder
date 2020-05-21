@@ -112,7 +112,7 @@ class Stats
   registerBannerEvent: (eventName, bannerId, callback) ->
     errors.requireVal eventName, "eventName"
     errors.requireVal bannerId, "bannerId"
-    @client.stats "banner_#{eventName}", banner_id: bannerId, (err, res) ->
+    @client.stats "img_#{eventName}", img_id: bannerId, (err, res) ->
       callback? err, res # Client requires a callback, we don't
 
   ###*
