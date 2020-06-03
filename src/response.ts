@@ -268,6 +268,7 @@ export interface RawTermsFacet {
 export interface RangeFacet {
   /** Indicates this facet is of type range. */
   type: 'range';
+  label: string;
   /** Stats for this facet. */
   range: RangeStats;
 }
@@ -289,6 +290,7 @@ export interface TermStats extends RawTermStats {
  */
 export interface TermsFacet {
   type: 'terms';
+  label: string;
   terms: TermStats[];
 }
 
