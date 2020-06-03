@@ -186,6 +186,7 @@ export interface SearchResponse extends Record<string, any> {
 export interface RawRangeFacet {
   /** Number of matching documents. */
   doc_count: number;
+  label: string;
   /** Range information. */
   range: {
     buckets: {
@@ -240,6 +241,8 @@ export interface RawTermsFacet {
   selected: RawTermsInfo;
   /** The terms returned for the filter. */
   terms: RawTermsInfo;
+  /** Label for facet. */
+  label: string;
   /** Number of matching documents. */
   total: {
     value: number;
@@ -353,6 +356,7 @@ function processTermsFacet(facet: RawTermsFacet): TermsFacet {
 
   return {
     type: 'terms',
+    label: facet.label,
     terms,
   };
 }
@@ -368,6 +372,7 @@ function processTermsFacet(facet: RawTermsFacet): TermsFacet {
 function processRangeFacet(facet: RawRangeFacet): RangeFacet {
   return {
     type: 'range',
+    label: facet.label,
     range: facet.range.buckets[0].stats,
   };
 }

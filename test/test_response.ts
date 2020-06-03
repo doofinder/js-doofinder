@@ -20,6 +20,7 @@ describe('Search Response', () => {
   it('should properly transform range facets', done => {
     response.facets.best_price.should.be.eql({
       type: 'range',
+      label: '',
       range: {
         avg: 283.44241397604185,
         count: 2295,
@@ -34,6 +35,7 @@ describe('Search Response', () => {
   it('should properly transform basic terms facets', done => {
     response.facets.brand.should.be.eql({
       type: 'terms',
+      label: '',
       terms: [
         { doc_count: 426, key: 'JANE', selected: true },
         { doc_count: 275, key: 'BE COOL' },
@@ -63,6 +65,7 @@ describe('Search Response', () => {
   it('should properly sort terms with unknown doc_count', done => {
     response.facets.price_range_slot.should.be.eql({
       type: 'terms',
+      label: '',
       terms: [
         { doc_count: null, key: "0 - 20", from: 0, to: 20 },
         { doc_count: null, key: "20 - 50", from: 20, to: 50 },
@@ -78,6 +81,7 @@ describe('Search Response', () => {
   it('should properly sort terms artificially added by the server', done => {
     response.facets.categories.should.be.eql({
       type: 'terms',
+      label: '',
       terms: [
         { doc_count: 915, key: 'Ofertas - Outlet', selected: true },
         { doc_count: 881, key: 'Cochecitos de bebé' },
