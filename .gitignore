@@ -1,4 +1,11 @@
-node_modules/
-test_karma/doofinder.*
 *.swp
 *~
+
+docs/html
+lib/
+node_modules/
+types/
+temp/
+
+!src/lib/
+!src/types/

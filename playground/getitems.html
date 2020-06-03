@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Doofinder Library Playground: Get Items</title>
+  <script type="module">
+    import { ClientPool } from '../lib/index.mjs';
+
+    const client = ClientPool.getClient('eu1-search.doofinder.com');
+    const hashid = '7a6100c782c09126479e9270ecc619b3';
+
+    client.search({ hashid, query: 'silla', transformer: 'onlyid' }).then(console.log);
+    client.search({ hashid, transformer: 'basic', items: [
+      `${hashid}@product@f7e47cabc89aa734c3c9aec9aa9692c0`
+    ]}).then(console.log);
+  </script>
+</head>
+<body>
+  <a href="./index.html">← Back</a>
+</body>
+</html>

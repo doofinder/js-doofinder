@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Playground</title>
+  <style>
+    #search {
+      width: 400px;
+    }
+    #distance {
+      width: 100px;
+    }
+  </style>
+  <script src="../lib/doofinder.js"></script>
+  <script src="./demo.js"></script>
+</head>
+<body>
+  <a href="./index.html">← Back</a>
+
+  <h1>Airports of the World</h1>
+
+  <div>
+    <input type="search" id="search" placeholder="Gathering your position…">
+    <input type="text" id="distance" value="50km">
+    <button type="button" id="submit" disabled>Search</button>
+  </div>
+
+  <h2>Query</h2>
+
+  <pre id="json">…</pre>
+
+  <h2>Results</h2>
+
+  <ol id="results"></ol>
+
+  <script>
+    const { Client, Query } = doofinder;
+
+    const hashid = '313b6895df43c68a7979df720619c166';
+    const client = new Client({ server: 'eu1-search.doofinder.com' });
+    let coords;
+
+    const input = document.getElementById('search');
+    const distanceInput = document.getElementById('distance');
+    const button = document.getElementById('submit');
+    const results = document.getElementById('results');
+    const jsonQuery = document.getElementById('json');
+
+    navigator.geolocation.getCurrentPosition(init);
+
+    button.addEventListener('click', search);
+
+    function init(position) {
+      coords = position.coords;
+
+      input.setAttribute('placeholder', 'Type a country, a city, an airport name or IATA…');
+      input.setAttribute('value', 'Spain');
+      submit.removeAttribute('disabled');
+      input.focus();
+    }
+
+    function search(event) {
+      const { latitude, longitude } = coords;
+      const query = new Query({ hashid });
+      query.text = input.value;
+      query.rpp = 100;
+      query.filters.set('geo_distance', {
+        distance: distanceInput.value,
+        coords: `${latitude},${longitude}`
+      });
+      jsonQuery.innerHTML = JSON.stringify(query.dump(), null, 2);
+      client.search(query).then(paint);
+    }
+
+    function paint(response) {
+      results.innerHTML = '';
+      response.results.forEach(({ title, iata, city, country }) => {
+        const node = document.createElement('li');
+        node.innerHTML = `${title}${iata ? (` - ${iata}`) : ''} (${city}, ${country})`;
+        results.appendChild(node);
+      })
+    }
+
+  </script>
+</body>
+</html>
