@@ -15,6 +15,7 @@ export const basicResponse: RawSearchResponse = {
     best_price: {
       doc_count: 2295,
       label: '',
+      visible: true,
       range: {
         buckets: [
           {
@@ -29,6 +30,7 @@ export const basicResponse: RawSearchResponse = {
     price_range_slot: {
       doc_count: null,
       label: '',
+      visible: true,
       score: 99,
       selected: {
         buckets: [],
@@ -84,6 +86,7 @@ export const basicResponse: RawSearchResponse = {
     brand: {
       doc_count: 2295,
       label: '',
+      visible: true,
       selected: { buckets: [{ doc_count: 426, key: 'JANE' }], doc_count_error_upper_bound: 0, sum_other_doc_count: 0 },
       terms: {
         buckets: [
@@ -116,6 +119,7 @@ export const basicResponse: RawSearchResponse = {
     categories: {
       doc_count: 2295,
       label: '',
+      visible: true,
       selected: {
         buckets: [
           { doc_count: 915, key: 'Ofertas - Outlet' },
@@ -158,6 +162,7 @@ export const basicResponse: RawSearchResponse = {
     df_object_validated: {
       doc_count: 2295,
       label: '',
+      visible: true,
       selected: { buckets: [], doc_count_error_upper_bound: 0, sum_other_doc_count: 0 },
       terms: { buckets: [], doc_count_error_upper_bound: 0, sum_other_doc_count: 0 },
       total: { value: 0 },
@@ -165,6 +170,7 @@ export const basicResponse: RawSearchResponse = {
     df_object_value: {
       doc_count: 2295,
       label: '',
+      visible: true,
       selected: { buckets: [], doc_count_error_upper_bound: 0, sum_other_doc_count: 0 },
       terms: { buckets: [], doc_count_error_upper_bound: 0, sum_other_doc_count: 0 },
       total: { value: 0 },

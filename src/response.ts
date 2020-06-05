@@ -187,6 +187,7 @@ export interface RawRangeFacet {
   /** Number of matching documents. */
   doc_count: number;
   label: string;
+  visible: boolean;
   /** Range information. */
   range: {
     buckets: {
@@ -243,6 +244,7 @@ export interface RawTermsFacet {
   terms: RawTermsInfo;
   /** Label for facet. */
   label: string;
+  visible: boolean;
   /** Number of matching documents. */
   total: {
     value: number;
@@ -272,6 +274,7 @@ export interface RangeFacet {
   /** Indicates this facet is of type range. */
   type: 'range';
   label: string;
+  visible: boolean;
   /** Stats for this facet. */
   range: RangeStats;
 }
@@ -294,6 +297,7 @@ export interface TermStats extends RawTermStats {
 export interface TermsFacet {
   type: 'terms';
   label: string;
+  visible: boolean;
   terms: TermStats[];
 }
 
@@ -357,6 +361,7 @@ function processTermsFacet(facet: RawTermsFacet): TermsFacet {
   return {
     type: 'terms',
     label: facet.label,
+    visible: facet.visible,
     terms,
   };
 }
@@ -373,6 +378,7 @@ function processRangeFacet(facet: RawRangeFacet): RangeFacet {
   return {
     type: 'range',
     label: facet.label,
+    visible: facet.visible,
     range: facet.range.buckets[0].stats,
   };
 }
