@@ -16,6 +16,6 @@ export interface RangeFacet
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [range](./doofinder.rangefacet.range.md) | <code>RangeStats</code> | Stats for this facet. |
-|  [type](./doofinder.rangefacet.type.md) | <code>'range'</code> | Indicates this facet is of type range. |
+|  [range](./doofinder.rangefacet.range.md) | [RangeStats](./doofinder.rangestats.md) | Stats for this facet. |
+|  [type](./doofinder.rangefacet.type.md) | 'range' | Indicates this facet is of type range. |
 

@@ -14,10 +14,10 @@ topStats(type: TopStatsType, params: TopStatsParams): Promise<Response>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  type | <code>TopStatsType</code> |  |
-|  params | <code>TopStatsParams</code> |  |
+|  type | [TopStatsType](./doofinder.topstatstype.md) |  |
+|  params | [TopStatsParams](./doofinder.topstatsparams.md) |  |
 
 <b>Returns:</b>
 
-`Promise<Response>`
+Promise&lt;Response&gt;
 

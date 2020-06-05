@@ -2,12 +2,25 @@
 
 [Home](./index.md) &gt; [doofinder](./doofinder.md) &gt; [isPlainObject](./doofinder.isplainobject.md)
 
-## isPlainObject variable
+## isPlainObject() function
 
 Check if the provided value is a plain object.
 
 <b>Signature:</b>
 
 ```typescript
-isPlainObject: (value: unknown) => boolean
+export declare function isPlainObject(value: unknown): boolean;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  value | unknown | The value to check. |
+
+<b>Returns:</b>
+
+boolean
+
+`true` if the value is a plain object, `false` otherwise.
+

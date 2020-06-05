@@ -16,10 +16,10 @@ export interface RawTermsFacet
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [doc\_count](./doofinder.rawtermsfacet.doc_count.md) | <code>number</code> | Number of matching documents. |
-|  [score](./doofinder.rawtermsfacet.score.md) | <code>number</code> | <b><i>(BETA)</i></b> How pertinent is the facet compared to the other facets in the response. If only one facet could be displayed, it should be the one with the hightst score. |
-|  [selected](./doofinder.rawtermsfacet.selected.md) | <code>RawTermsInfo</code> | Information about the selected terms. |
-|  [slots](./doofinder.rawtermsfacet.slots.md) | <code>boolean</code> | <b><i>(BETA)</i></b> Indicates that the facet is created as a partition of a numeric range. In the front will be managed as a terms facet but will be interpreted as a range in the back. |
-|  [terms](./doofinder.rawtermsfacet.terms.md) | <code>RawTermsInfo</code> | The terms returned for the filter. |
-|  [total](./doofinder.rawtermsfacet.total.md) | <code>{</code><br/><code>        value: number;</code><br/><code>    }</code> | Number of matching documents. |
+|  [doc\_count](./doofinder.rawtermsfacet.doc_count.md) | number | Number of matching documents. |
+|  [score](./doofinder.rawtermsfacet.score.md) | number | <b><i>(BETA)</i></b> How pertinent is the facet compared to the other facets in the response. If only one facet could be displayed, it should be the one with the hightst score. |
+|  [selected](./doofinder.rawtermsfacet.selected.md) | [RawTermsInfo](./doofinder.rawtermsinfo.md) | Information about the selected terms. |
+|  [slots](./doofinder.rawtermsfacet.slots.md) | boolean | <b><i>(BETA)</i></b> Indicates that the facet is created as a partition of a numeric range. In the front will be managed as a terms facet but will be interpreted as a range in the back. |
+|  [terms](./doofinder.rawtermsfacet.terms.md) | [RawTermsInfo](./doofinder.rawtermsinfo.md) | The terms returned for the filter. |
+|  [total](./doofinder.rawtermsfacet.total.md) | { value: number; } | Number of matching documents. |
 

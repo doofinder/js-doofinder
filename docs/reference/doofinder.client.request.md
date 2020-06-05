@@ -16,13 +16,13 @@ request(resource: string, params?: Record<string, any>, payload?: Record<string,
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  resource | <code>string</code> | The resource to request. |
-|  params | <code>Record&lt;string, any&gt;</code> | An object with the parameters to serialize in the URL querystring. Optional. |
-|  payload | <code>Record&lt;string, any&gt;</code> | An object to send via POST. Optional. |
+|  resource | string | The resource to request. |
+|  params | Record&lt;string, any&gt; | An object with the parameters to serialize in the URL querystring. Optional. |
+|  payload | Record&lt;string, any&gt; | An object to send via POST. Optional. |
 
 <b>Returns:</b>
 
-`Promise<Response>`
+Promise&lt;Response&gt;
 
 A promise to be fullfilled with the response or rejected with a `ClientResponseError`<!-- -->.
 

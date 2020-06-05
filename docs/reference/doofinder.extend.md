@@ -2,15 +2,27 @@
 
 [Home](./index.md) &gt; [doofinder](./doofinder.md) &gt; [extend](./doofinder.extend.md)
 
-## extend variable
+## extend() function
 
 Merge the contents of two or more objects together into the first object.
 
 <b>Signature:</b>
 
 ```typescript
-extend: (...args: unknown[]) => any[] | Record<string, any>
+export declare function extend(...args: unknown[]): Record<string, any> | Array<any>;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  args | unknown\[\] |  |
+
+<b>Returns:</b>
+
+Record&lt;string, any&gt; \| Array&lt;any&gt;
+
+A copy of the provided object.
 
 ## Remarks
 

@@ -16,11 +16,11 @@ export declare function merge(...objects: Record<string, any>[]): Record<string,
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  objects | <code>Record&lt;string, any&gt;[]</code> | An undetermined number of objects to merge. |
+|  objects | Record&lt;string, any&gt;\[\] | An undetermined number of objects to merge. |
 
 <b>Returns:</b>
 
-`Record<string, any>`
+Record&lt;string, any&gt;
 
 An object resulting of merging the provided objects.
 

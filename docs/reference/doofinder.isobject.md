@@ -2,12 +2,25 @@
 
 [Home](./index.md) &gt; [doofinder](./doofinder.md) &gt; [isObject](./doofinder.isobject.md)
 
-## isObject variable
+## isObject() function
 
 Check if the provided value is an object.
 
 <b>Signature:</b>
 
 ```typescript
-isObject: (value: unknown) => boolean
+export declare function isObject(value: unknown): boolean;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  value | unknown | The value to check. |
+
+<b>Returns:</b>
+
+boolean
+
+`true` if the value is an object, `false` otherwise.
+

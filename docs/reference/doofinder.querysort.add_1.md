@@ -16,11 +16,11 @@ add(value: FieldSorting | GeoSorting): number;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  value | <code>FieldSorting &#124; GeoSorting</code> | A valid input sorting value. |
+|  value | [FieldSorting](./doofinder.fieldsorting.md) \| [GeoSorting](./doofinder.geosorting.md) | A valid input sorting value. |
 
 <b>Returns:</b>
 
-`number`
+number
 
 the new length of the list of sortings.
 

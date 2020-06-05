@@ -2,12 +2,26 @@
 
 [Home](./index.md) &gt; [doofinder](./doofinder.md) &gt; [isIdentical](./doofinder.isidentical.md)
 
-## isIdentical variable
+## isIdentical() function
 
 Check whether two values are identical or not.
 
 <b>Signature:</b>
 
 ```typescript
-isIdentical: (x: any, y: any) => boolean
+export declare function isIdentical(x: any, y: any): boolean;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  x | any | First value to check. |
+|  y | any | Second value to check. |
+
+<b>Returns:</b>
+
+boolean
+
+A boolean value indicating if both values are identical.
+

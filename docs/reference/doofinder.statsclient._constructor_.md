@@ -16,5 +16,5 @@ constructor(client: Client);
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  client | <code>Client</code> |  |
+|  client | [Client](./doofinder.client.md) |  |
 

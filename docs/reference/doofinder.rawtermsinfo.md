@@ -16,7 +16,7 @@ export interface RawTermsInfo
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [buckets](./doofinder.rawtermsinfo.buckets.md) | <code>RawTermStats[]</code> | The list of terms stats. |
-|  [doc\_count\_error\_upper\_bound](./doofinder.rawtermsinfo.doc_count_error_upper_bound.md) | <code>number</code> | An upper bound of the error on the document counts for each term. |
-|  [sum\_other\_doc\_count](./doofinder.rawtermsinfo.sum_other_doc_count.md) | <code>number</code> | sum of the document counts that are not part of the response. |
+|  [buckets](./doofinder.rawtermsinfo.buckets.md) | [RawTermStats](./doofinder.rawtermstats.md)<!-- -->\[\] | The list of terms stats. |
+|  [doc\_count\_error\_upper\_bound](./doofinder.rawtermsinfo.doc_count_error_upper_bound.md) | number | An upper bound of the error on the document counts for each term. |
+|  [sum\_other\_doc\_count](./doofinder.rawtermsinfo.sum_other_doc_count.md) | number | sum of the document counts that are not part of the response. |
 

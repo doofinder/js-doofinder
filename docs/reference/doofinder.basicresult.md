@@ -16,15 +16,15 @@ export interface BasicResult
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [add\_to\_cart](./doofinder.basicresult.add_to_cart.md) | <code>string</code> | Information provided from the data source to add the result to the shopping cart. |
-|  [description](./doofinder.basicresult.description.md) | <code>string</code> | Description of the result. |
-|  [df\_rating](./doofinder.basicresult.df_rating.md) | <code>number</code> | Users score for the result. |
-|  [dfid](./doofinder.basicresult.dfid.md) | <code>string</code> | Id of the result in Doofinder. |
-|  [id](./doofinder.basicresult.id.md) | <code>string &#124; number</code> | Id of the result. |
-|  [image\_link](./doofinder.basicresult.image_link.md) | <code>string</code> | Image of the result. |
-|  [link](./doofinder.basicresult.link.md) | <code>string</code> | Link to the result. |
-|  [price](./doofinder.basicresult.price.md) | <code>number</code> | Price of the result. Optional. |
-|  [sale\_price](./doofinder.basicresult.sale_price.md) | <code>number</code> | Sale price of the result. Optional. |
-|  [title](./doofinder.basicresult.title.md) | <code>string</code> | Title of the result. |
-|  [type](./doofinder.basicresult.type.md) | <code>string</code> | Type of the result in Doofinder. |
+|  [add\_to\_cart](./doofinder.basicresult.add_to_cart.md) | string | Information provided from the data source to add the result to the shopping cart. |
+|  [description](./doofinder.basicresult.description.md) | string | Description of the result. |
+|  [df\_rating](./doofinder.basicresult.df_rating.md) | number | Users score for the result. |
+|  [dfid](./doofinder.basicresult.dfid.md) | string | Id of the result in Doofinder. |
+|  [id](./doofinder.basicresult.id.md) | string \| number | Id of the result. |
+|  [image\_link](./doofinder.basicresult.image_link.md) | string | Image of the result. |
+|  [link](./doofinder.basicresult.link.md) | string | Link to the result. |
+|  [price](./doofinder.basicresult.price.md) | number | Price of the result. Optional. |
+|  [sale\_price](./doofinder.basicresult.sale_price.md) | number | Sale price of the result. Optional. |
+|  [title](./doofinder.basicresult.title.md) | string | Title of the result. |
+|  [type](./doofinder.basicresult.type.md) | string | Type of the result in Doofinder. |
 

@@ -16,11 +16,11 @@ static getClient(server: string): Client;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  server | <code>string</code> | A valid search server. |
+|  server | string | A valid search server. |
 
 <b>Returns:</b>
 
-`Client`
+[Client](./doofinder.client.md)
 
 An instance of `Client`<!-- -->.
 

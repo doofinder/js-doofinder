@@ -2,15 +2,28 @@
 
 [Home](./index.md) &gt; [doofinder](./doofinder.md) &gt; [decode](./doofinder.decode.md)
 
-## decode variable
+## decode() function
 
 Parse a querystring into a parameters object.
 
 <b>Signature:</b>
 
 ```typescript
-decode: typeof qs.parse
+export declare function decode(str: string, options?: IParseOptions): ParsedQs | unknown;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  str | string |  |
+|  options | IParseOptions | Options to parse the querystring. |
+
+<b>Returns:</b>
+
+ParsedQs \| unknown
+
+A parameters object.
 
 ## Remarks
 

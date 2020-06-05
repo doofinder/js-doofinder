@@ -16,6 +16,6 @@ export interface TermsFacet
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [terms](./doofinder.termsfacet.terms.md) | <code>TermStats[]</code> |  |
-|  [type](./doofinder.termsfacet.type.md) | <code>'terms'</code> |  |
+|  [terms](./doofinder.termsfacet.terms.md) | [TermStats](./doofinder.termstats.md)<!-- -->\[\] |  |
+|  [type](./doofinder.termsfacet.type.md) | 'terms' |  |
 

@@ -19,11 +19,11 @@ clearCart(params: StatsParams): Promise<Response>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | <code>StatsParams</code> | An options object. See [StatsParams](./doofinder.statsparams.md)<!-- -->. |
+|  params | [StatsParams](./doofinder.statsparams.md) | An options object. See [StatsParams](./doofinder.statsparams.md)<!-- -->. |
 
 <b>Returns:</b>
 
-`Promise<Response>`
+Promise&lt;Response&gt;
 
 A promise to be fullfilled with the response or rejected with a `ClientResponseError`<!-- -->.
 

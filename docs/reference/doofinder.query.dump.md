@@ -16,11 +16,11 @@ dump(validate?: boolean): SearchParams;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  validate | <code>boolean</code> | Whether to validate the exported data or not. |
+|  validate | boolean | Whether to validate the exported data or not. |
 
 <b>Returns:</b>
 
-`SearchParams`
+[SearchParams](./doofinder.searchparams.md)
 
 An object with all the parameters in the query.
 

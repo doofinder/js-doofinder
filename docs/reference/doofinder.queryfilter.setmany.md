@@ -16,10 +16,10 @@ setMany(data: Record<string, any>, replace?: boolean): void;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  data | <code>Record&lt;string, any&gt;</code> | An object with all the filters to be set. |
-|  replace | <code>boolean</code> | Boolean value telling whether to replace any existing filter or not. |
+|  data | Record&lt;string, any&gt; | An object with all the filters to be set. |
+|  replace | boolean | Boolean value telling whether to replace any existing filter or not. |
 
 <b>Returns:</b>
 
-`void`
+void
 

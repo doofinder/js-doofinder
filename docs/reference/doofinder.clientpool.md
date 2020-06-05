@@ -29,7 +29,7 @@ ClientPool.getStatsClient('eu1');
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [options](./doofinder.clientpool.options.md) | <code>static</code> | <code>Partial&lt;ClientOptions&gt;</code> | Property to change shared options.<!-- -->When changed, all existing clients are removed so new ones get the new options. |
+|  [options](./doofinder.clientpool.options.md) | <code>static</code> | Partial&lt;[ClientOptions](./doofinder.clientoptions.md)<!-- -->&gt; | Property to change shared options.<!-- -->When changed, all existing clients are removed so new ones get the new options. |
 
 ## Methods
 

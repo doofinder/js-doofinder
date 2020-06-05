@@ -16,5 +16,5 @@ export interface GeoSorting
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [\_geo\_distance](./doofinder.geosorting._geo_distance.md) | <code>GeoSortOrder</code> | The geo distance sorting info. |
+|  [\_geo\_distance](./doofinder.geosorting._geo_distance.md) | [GeoSortOrder](./doofinder.geosortorder.md) | The geo distance sorting info. |
 

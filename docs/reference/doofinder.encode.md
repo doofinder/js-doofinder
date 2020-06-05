@@ -2,15 +2,28 @@
 
 [Home](./index.md) &gt; [doofinder](./doofinder.md) &gt; [encode](./doofinder.encode.md)
 
-## encode variable
+## encode() function
 
 Encode parameters for use in a querystring.
 
 <b>Signature:</b>
 
 ```typescript
-encode: typeof qs.stringify
+export declare function encode(obj: any, options?: IStringifyOptions): string;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  obj | any |  |
+|  options | IStringifyOptions | Options to serialize the parameters. |
+
+<b>Returns:</b>
+
+string
+
+A valid querystring.
 
 ## Remarks
 

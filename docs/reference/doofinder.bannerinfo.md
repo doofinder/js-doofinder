@@ -16,10 +16,10 @@ export interface BannerInfo
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [blank](./doofinder.bannerinfo.blank.md) | <code>boolean</code> | Whether to open the banner in a new window or not. |
-|  [html\_code](./doofinder.bannerinfo.html_code.md) | <code>string</code> | Custom HTML code of the banner. |
-|  [id](./doofinder.bannerinfo.id.md) | <code>number</code> | Id of the banner. |
-|  [image](./doofinder.bannerinfo.image.md) | <code>string</code> | Desktop image of the banner. |
-|  [link](./doofinder.bannerinfo.link.md) | <code>string</code> | Target link of the banner. |
-|  [mobile\_image](./doofinder.bannerinfo.mobile_image.md) | <code>string</code> | Mobile image of the banner. |
+|  [blank](./doofinder.bannerinfo.blank.md) | boolean | Whether to open the banner in a new window or not. |
+|  [html\_code](./doofinder.bannerinfo.html_code.md) | string | Custom HTML code of the banner. |
+|  [id](./doofinder.bannerinfo.id.md) | number | Id of the banner. |
+|  [image](./doofinder.bannerinfo.image.md) | string | Desktop image of the banner. |
+|  [link](./doofinder.bannerinfo.link.md) | string | Target link of the banner. |
+|  [mobile\_image](./doofinder.bannerinfo.mobile_image.md) | string | Mobile image of the banner. |
 

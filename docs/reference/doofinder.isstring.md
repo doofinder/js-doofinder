@@ -2,12 +2,25 @@
 
 [Home](./index.md) &gt; [doofinder](./doofinder.md) &gt; [isString](./doofinder.isstring.md)
 
-## isString variable
+## isString() function
 
 Check if the provided value is a string.
 
 <b>Signature:</b>
 
 ```typescript
-isString: (value: unknown) => boolean
+export declare function isString(value: unknown): boolean;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  value | unknown | The value to check. |
+
+<b>Returns:</b>
+
+boolean
+
+`true` if the value is a string, `false` otherwise.
+

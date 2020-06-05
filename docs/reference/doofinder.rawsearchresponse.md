@@ -16,5 +16,5 @@ export interface RawSearchResponse extends Omit<SearchResponse, 'facets' | '_raw
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [facets](./doofinder.rawsearchresponse.facets.md) | <code>Record&lt;string, RawFacet&gt;</code> |  |
+|  [facets](./doofinder.rawsearchresponse.facets.md) | Record&lt;string, [RawFacet](./doofinder.rawfacet.md)<!-- -->&gt; |  |
 

@@ -19,11 +19,11 @@ addToCart(params: CartItemStatsParams): Promise<Response>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | <code>CartItemStatsParams</code> | An options object. See [CartItemStatsParams](./doofinder.cartitemstatsparams.md)<!-- -->. |
+|  params | [CartItemStatsParams](./doofinder.cartitemstatsparams.md) | An options object. See [CartItemStatsParams](./doofinder.cartitemstatsparams.md)<!-- -->. |
 
 <b>Returns:</b>
 
-`Promise<Response>`
+Promise&lt;Response&gt;
 
 A promise to be fullfilled with the response or rejected with a `ClientResponseError`<!-- -->.
 

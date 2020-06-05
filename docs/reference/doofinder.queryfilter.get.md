@@ -16,11 +16,11 @@ get(name: string): unknown;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  name | <code>string</code> | Name of the filter. |
+|  name | string | Name of the filter. |
 
 <b>Returns:</b>
 
-`unknown`
+unknown
 
 The value of the filter.
 

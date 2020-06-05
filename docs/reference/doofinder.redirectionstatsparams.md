@@ -16,7 +16,7 @@ export interface RedirectionStatsParams extends StatsParams
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [link](./doofinder.redirectionstatsparams.link.md) | <code>string</code> | The target of the redirection. |
-|  [query](./doofinder.redirectionstatsparams.query.md) | <code>string</code> | Optional search terms. |
-|  [redirection\_id](./doofinder.redirectionstatsparams.redirection_id.md) | <code>string &#124; number</code> | Unique ID of the redirection in Doofinder. |
+|  [link](./doofinder.redirectionstatsparams.link.md) | string | The target of the redirection. |
+|  [query](./doofinder.redirectionstatsparams.query.md) | string | Optional search terms. |
+|  [redirection\_id](./doofinder.redirectionstatsparams.redirection_id.md) | string \| number | Unique ID of the redirection in Doofinder. |
 

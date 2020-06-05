@@ -2,15 +2,28 @@
 
 [Home](./index.md) &gt; [doofinder](./doofinder.md) &gt; [isShallowEqual](./doofinder.isshallowequal.md)
 
-## isShallowEqual variable
+## isShallowEqual() function
 
 Check whether two values are equivalent or not.
 
 <b>Signature:</b>
 
 ```typescript
-isShallowEqual: (objA: any, objB: any) => boolean
+export declare function isShallowEqual(objA: any, objB: any): boolean;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  objA | any | First value to check. |
+|  objB | any | Second value to check. |
+
+<b>Returns:</b>
+
+boolean
+
+A boolean value.
 
 ## Remarks
 

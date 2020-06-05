@@ -23,7 +23,16 @@
 |  Function | Description |
 |  --- | --- |
 |  [clone(src)](./doofinder.clone.md) | Create a copy of the provided data. |
+|  [decode(str, options)](./doofinder.decode.md) | Parse a querystring into a parameters object. |
+|  [encode(obj, options)](./doofinder.encode.md) | Encode parameters for use in a querystring. |
+|  [extend(args)](./doofinder.extend.md) | Merge the contents of two or more objects together into the first object. |
 |  [isEmptyObject(obj)](./doofinder.isemptyobject.md) | Check if the provided value is an empty object. |
+|  [isIdentical(x, y)](./doofinder.isidentical.md) | Check whether two values are identical or not. |
+|  [isNumber(value)](./doofinder.isnumber.md) | Check if the provided value is a number. |
+|  [isObject(value)](./doofinder.isobject.md) | Check if the provided value is an object. |
+|  [isPlainObject(value)](./doofinder.isplainobject.md) | Check if the provided value is a plain object. |
+|  [isShallowEqual(objA, objB)](./doofinder.isshallowequal.md) | Check whether two values are equivalent or not. |
+|  [isString(value)](./doofinder.isstring.md) | Check if the provided value is a string. |
 |  [isValidDoofinderId(value)](./doofinder.isvaliddoofinderid.md) | Check if the provided value is a valid Doofinder Id. |
 |  [isValidHashId(value)](./doofinder.isvalidhashid.md) | Check if the provided value is a valid Hash Id. |
 |  [merge(objects)](./doofinder.merge.md) | Merge multiple objects into one. |
@@ -66,15 +75,6 @@
 |  --- | --- |
 |  [\_\_API\_VERSION\_\_](./doofinder.__api_version__.md) | Version of the search API being used. |
 |  [\_\_VERSION\_\_](./doofinder.__version__.md) | Current version of the library. |
-|  [decode](./doofinder.decode.md) | Parse a querystring into a parameters object. |
-|  [encode](./doofinder.encode.md) | Encode parameters for use in a querystring. |
-|  [extend](./doofinder.extend.md) | Merge the contents of two or more objects together into the first object. |
-|  [isIdentical](./doofinder.isidentical.md) | Check whether two values are identical or not. |
-|  [isNumber](./doofinder.isnumber.md) | Check if the provided value is a number. |
-|  [isObject](./doofinder.isobject.md) | Check if the provided value is an object. |
-|  [isPlainObject](./doofinder.isplainobject.md) | Check if the provided value is a plain object. |
-|  [isShallowEqual](./doofinder.isshallowequal.md) | Check whether two values are equivalent or not. |
-|  [isString](./doofinder.isstring.md) | Check if the provided value is a string. |
 
 ## Type Aliases
 

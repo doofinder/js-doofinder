@@ -22,7 +22,7 @@ export declare class StatsClient
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [client](./doofinder.statsclient.client.md) |  | <code>Client</code> |  |
+|  [client](./doofinder.statsclient.client.md) |  | [Client](./doofinder.client.md) |  |
 
 ## Methods
 

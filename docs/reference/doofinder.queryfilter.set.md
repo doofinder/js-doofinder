@@ -16,12 +16,12 @@ set(name: string, value: unknown): void;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  name | <code>string</code> | Name of the field. |
-|  value | <code>unknown</code> | Value of the filter. |
+|  name | string | Name of the field. |
+|  value | unknown | Value of the filter. |
 
 <b>Returns:</b>
 
-`void`
+void
 
 ## Remarks
 

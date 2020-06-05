@@ -16,7 +16,7 @@ constructor({ server, secret, headers }?: Partial<ClientOptions>);
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  { server, secret, headers } | <code>Partial&lt;ClientOptions&gt;</code> |  |
+|  { server, secret, headers } | Partial&lt;[ClientOptions](./doofinder.clientoptions.md)<!-- -->&gt; |  |
 
 ## Remarks
 

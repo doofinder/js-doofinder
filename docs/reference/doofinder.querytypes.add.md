@@ -16,9 +16,9 @@ add(value: string): void;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  value | <code>string</code> | A type as string. |
+|  value | string | A type as string. |
 
 <b>Returns:</b>
 
-`void`
+void
 

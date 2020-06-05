@@ -16,9 +16,9 @@ remove(value: string): void;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  value | <code>string</code> | The type name to be removed. |
+|  value | string | The type name to be removed. |
 
 <b>Returns:</b>
 
-`void`
+void
 

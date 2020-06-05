@@ -16,9 +16,9 @@ export interface RangeStats
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [avg](./doofinder.rangestats.avg.md) | <code>number</code> | Average value for the field for all the matching results. |
-|  [count](./doofinder.rangestats.count.md) | <code>number</code> | Number of matching results. |
-|  [max](./doofinder.rangestats.max.md) | <code>number</code> | Max value for the field for all the matching results. |
-|  [min](./doofinder.rangestats.min.md) | <code>number</code> | Min value for the field for all the matching results. |
-|  [sum](./doofinder.rangestats.sum.md) | <code>number</code> | Sum of the values for the field for all the matching results. |
+|  [avg](./doofinder.rangestats.avg.md) | number | Average value for the field for all the matching results. |
+|  [count](./doofinder.rangestats.count.md) | number | Number of matching results. |
+|  [max](./doofinder.rangestats.max.md) | number | Max value for the field for all the matching results. |
+|  [min](./doofinder.rangestats.min.md) | number | Min value for the field for all the matching results. |
+|  [sum](./doofinder.rangestats.sum.md) | number | Sum of the values for the field for all the matching results. |
 

@@ -16,11 +16,11 @@ suggest(query: Query | SearchParams): Promise<SearchResponse>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  query | <code>Query &#124; SearchParams</code> | An instance of <code>Query</code> or an object with valid search parameters. |
+|  query | [Query](./doofinder.query.md) \| [SearchParams](./doofinder.searchparams.md) | An instance of <code>Query</code> or an object with valid search parameters. |
 
 <b>Returns:</b>
 
-`Promise<SearchResponse>`
+Promise&lt;[SearchResponse](./doofinder.searchresponse.md)<!-- -->&gt;
 
 A promise to be fullfilled with the response or rejected with a `ClientResponseError`<!-- -->.
 

@@ -16,5 +16,5 @@ constructor(response: Response);
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  response | <code>Response</code> | An HTTP response from the fetch API. |
+|  response | Response | An HTTP response from the fetch API. |
 

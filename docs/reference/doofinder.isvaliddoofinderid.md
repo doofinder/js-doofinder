@@ -16,11 +16,11 @@ export declare function isValidDoofinderId(value: unknown): boolean;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  value | <code>unknown</code> | The value to check. |
+|  value | unknown | The value to check. |
 
 <b>Returns:</b>
 
-`boolean`
+boolean
 
 `true` if the value is a valid Doofinder Id, `false` otherwise.
 

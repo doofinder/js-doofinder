@@ -16,6 +16,6 @@ export interface StatsParams
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [hashid](./doofinder.statsparams.hashid.md) | <code>string</code> | Unique ID of the search engine. |
-|  [session\_id](./doofinder.statsparams.session_id.md) | <code>string</code> | Unique ID of the user session. |
+|  [hashid](./doofinder.statsparams.hashid.md) | string | Unique ID of the search engine. |
+|  [session\_id](./doofinder.statsparams.session_id.md) | string | Unique ID of the user session. |
 

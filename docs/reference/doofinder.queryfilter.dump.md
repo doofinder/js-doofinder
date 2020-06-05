@@ -13,7 +13,7 @@ dump(): Record<string, any>;
 ```
 <b>Returns:</b>
 
-`Record<string, any>`
+Record&lt;string, any&gt;
 
 An object with fields as keys and filter values as values.
 

@@ -16,7 +16,7 @@ export interface TopStatsParams
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [days](./doofinder.topstatsparams.days.md) | <code>number &#124; string</code> | Optional. Number of days to retrieve. |
-|  [hashid](./doofinder.topstatsparams.hashid.md) | <code>string</code> | Unique Id of the search engine. |
-|  [withresult](./doofinder.topstatsparams.withresult.md) | <code>boolean &#124; string</code> | Optional. |
+|  [days](./doofinder.topstatsparams.days.md) | number \| string | Optional. Number of days to retrieve. |
+|  [hashid](./doofinder.topstatsparams.hashid.md) | string | Unique Id of the search engine. |
+|  [withresult](./doofinder.topstatsparams.withresult.md) | boolean \| string | Optional. |
 

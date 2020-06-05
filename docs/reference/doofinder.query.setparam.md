@@ -16,12 +16,12 @@ setParam(name: keyof QueryParams, value?: unknown): void;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  name | <code>keyof QueryParams</code> | Name of the parameter to set. |
-|  value | <code>unknown</code> | The value of the parameter. |
+|  name | keyof [QueryParams](./doofinder.queryparams.md) | Name of the parameter to set. |
+|  value | unknown | The value of the parameter. |
 
 <b>Returns:</b>
 
-`void`
+void
 
 ## Remarks
 

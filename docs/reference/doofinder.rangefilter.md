@@ -16,8 +16,8 @@ export interface RangeFilter
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [gt](./doofinder.rangefilter.gt.md) | <code>number</code> | Optional. Results will have a value greater than the provided value. |
-|  [gte](./doofinder.rangefilter.gte.md) | <code>number</code> | Optional. Results will have a value greater or equal than the provided value. |
-|  [lt](./doofinder.rangefilter.lt.md) | <code>number</code> | Optional. Results will have a value smaller than the provided value. |
-|  [lte](./doofinder.rangefilter.lte.md) | <code>number</code> | Optional. Results will have a value smaller or equal than the provided value. |
+|  [gt](./doofinder.rangefilter.gt.md) | number | Optional. Results will have a value greater than the provided value. |
+|  [gte](./doofinder.rangefilter.gte.md) | number | Optional. Results will have a value greater or equal than the provided value. |
+|  [lt](./doofinder.rangefilter.lt.md) | number | Optional. Results will have a value smaller than the provided value. |
+|  [lte](./doofinder.rangefilter.lte.md) | number | Optional. Results will have a value smaller or equal than the provided value. |
 

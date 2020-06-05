@@ -16,11 +16,11 @@ getParam(name: keyof QueryParams): unknown;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  name | <code>keyof QueryParams</code> | Name of the parameter to retrieve |
+|  name | keyof [QueryParams](./doofinder.queryparams.md) | Name of the parameter to retrieve |
 
 <b>Returns:</b>
 
-`unknown`
+unknown
 
 the value of the parameter, if any
 

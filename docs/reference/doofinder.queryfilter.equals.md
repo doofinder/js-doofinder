@@ -16,12 +16,12 @@ equals(name: string, value: unknown): boolean;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  name | <code>string</code> | Name of the field. |
-|  value | <code>unknown</code> | The value for the filter. |
+|  name | string | Name of the field. |
+|  value | unknown | The value for the filter. |
 
 <b>Returns:</b>
 
-`boolean`
+boolean
 
 A boolean value.
 

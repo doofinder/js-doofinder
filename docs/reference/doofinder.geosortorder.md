@@ -16,5 +16,5 @@ export interface GeoSortOrder
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [order](./doofinder.geosortorder.order.md) | <code>SortOrder</code> | How to sort relative to the provided geo point (asc or desc) |
+|  [order](./doofinder.geosortorder.order.md) | [SortOrder](./doofinder.sortorder.md) | How to sort relative to the provided geo point (asc or desc) |
 

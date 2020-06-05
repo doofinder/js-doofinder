@@ -30,5 +30,5 @@ If the name of the field is `position`<!-- -->:
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [distance](./doofinder.geodistancefilter.distance.md) | <code>string</code> | The distance to the origin of the filter. |
+|  [distance](./doofinder.geodistancefilter.distance.md) | string | The distance to the origin of the filter. |
 

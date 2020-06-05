@@ -22,6 +22,6 @@ export declare class ClientResponseError extends Error
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [response](./doofinder.clientresponseerror.response.md) |  | <code>Response</code> | The Response received by the client. |
-|  [statusCode](./doofinder.clientresponseerror.statuscode.md) |  | <code>number</code> | Status code of the HTTP response. |
+|  [response](./doofinder.clientresponseerror.response.md) |  | Response | The Response received by the client. |
+|  [statusCode](./doofinder.clientresponseerror.statuscode.md) |  | number | Status code of the HTTP response. |
 

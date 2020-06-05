@@ -16,11 +16,11 @@ registerClick(params: ClickStatsParamsWithDfid | ClickStatsParamsWithId): Promis
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | <code>ClickStatsParamsWithDfid &#124; ClickStatsParamsWithId</code> | An options object. See [ClickStatsParamsWithDfid](./doofinder.clickstatsparamswithdfid.md) and [ClickStatsParamsWithId](./doofinder.clickstatsparamswithid.md)<!-- -->. |
+|  params | [ClickStatsParamsWithDfid](./doofinder.clickstatsparamswithdfid.md) \| [ClickStatsParamsWithId](./doofinder.clickstatsparamswithid.md) | An options object. See [ClickStatsParamsWithDfid](./doofinder.clickstatsparamswithdfid.md) and [ClickStatsParamsWithId](./doofinder.clickstatsparamswithid.md)<!-- -->. |
 
 <b>Returns:</b>
 
-`Promise<Response>`
+Promise&lt;Response&gt;
 
 A promise to be fullfilled with the response or rejected with a `ClientResponseError`<!-- -->.
 

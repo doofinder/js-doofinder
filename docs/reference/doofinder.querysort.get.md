@@ -13,7 +13,7 @@ get(): Sorting[];
 ```
 <b>Returns:</b>
 
-`Sorting[]`
+[Sorting](./doofinder.sorting.md)<!-- -->\[\]
 
 An array of sort values.
 

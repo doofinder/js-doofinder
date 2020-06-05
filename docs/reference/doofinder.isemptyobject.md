@@ -16,11 +16,11 @@ export declare function isEmptyObject(obj: unknown): boolean;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  obj | <code>unknown</code> |  |
+|  obj | unknown |  |
 
 <b>Returns:</b>
 
-`boolean`
+boolean
 
 `true` if the value is an empty object, `false` otherwise.
 

@@ -16,5 +16,5 @@ constructor(params?: QueryParams);
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | <code>QueryParams</code> | Initial parameters to load for this query. |
+|  params | [QueryParams](./doofinder.queryparams.md) | Initial parameters to load for this query. |
 

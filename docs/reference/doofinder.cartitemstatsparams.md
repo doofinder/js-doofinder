@@ -16,8 +16,8 @@ export interface CartItemStatsParams extends StatsParams
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [amount](./doofinder.cartitemstatsparams.amount.md) | <code>string &#124; number</code> | Amount of the given item \* |
-|  [custom\_results\_id](./doofinder.cartitemstatsparams.custom_results_id.md) | <code>string &#124; number</code> | Optional ID of the custom results that produced the current set of results. |
-|  [datatype](./doofinder.cartitemstatsparams.datatype.md) | <code>string</code> | Datatype where the item can be found \* |
-|  [item\_id](./doofinder.cartitemstatsparams.item_id.md) | <code>string &#124; number</code> | Unique ID of the clicked result. |
+|  [amount](./doofinder.cartitemstatsparams.amount.md) | string \| number | Amount of the given item \* |
+|  [custom\_results\_id](./doofinder.cartitemstatsparams.custom_results_id.md) | string \| number | Optional ID of the custom results that produced the current set of results. |
+|  [datatype](./doofinder.cartitemstatsparams.datatype.md) | string | Datatype where the item can be found \* |
+|  [item\_id](./doofinder.cartitemstatsparams.item_id.md) | string \| number | Unique ID of the clicked result. |
 

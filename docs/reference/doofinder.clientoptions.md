@@ -16,7 +16,7 @@ export interface ClientOptions
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [headers](./doofinder.clientoptions.headers.md) | <code>Record&lt;string, string&gt;</code> | Additional HTTP headers to send, if any. |
-|  [secret](./doofinder.clientoptions.secret.md) | <code>string</code> | Secret token. May include or not the search server. |
-|  [server](./doofinder.clientoptions.server.md) | <code>string</code> | Search server: eu1-search.doofinder.com, us1-search.doofinder.com |
+|  [headers](./doofinder.clientoptions.headers.md) | Record&lt;string, string&gt; | Additional HTTP headers to send, if any. |
+|  [secret](./doofinder.clientoptions.secret.md) | string | Secret token. May include or not the search server. |
+|  [server](./doofinder.clientoptions.server.md) | string | Search server: eu1-search.doofinder.com, us1-search.doofinder.com |
 

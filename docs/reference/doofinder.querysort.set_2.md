@@ -16,11 +16,11 @@ set(value: SortingInput[]): number;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  value | <code>SortingInput[]</code> | Array of objects describing the sorting. |
+|  value | [SortingInput](./doofinder.sortinginput.md)<!-- -->\[\] | Array of objects describing the sorting. |
 
 <b>Returns:</b>
 
-`number`
+number
 
 the new length of the list of sortings.
 

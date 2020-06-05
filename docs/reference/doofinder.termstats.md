@@ -16,5 +16,5 @@ export interface TermStats extends RawTermStats
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [selected](./doofinder.termstats.selected.md) | <code>boolean</code> | If the term was selected or not when filtering. |
+|  [selected](./doofinder.termstats.selected.md) | boolean | If the term was selected or not when filtering. |
 

@@ -16,12 +16,12 @@ remove(name: string, value?: unknown): void;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  name | <code>string</code> | Name of the filter. |
-|  value | <code>unknown</code> | Optional. Value to remove from the filter. |
+|  name | string | Name of the filter. |
+|  value | unknown | Optional. Value to remove from the filter. |
 
 <b>Returns:</b>
 
-`void`
+void
 
 ## Remarks
 

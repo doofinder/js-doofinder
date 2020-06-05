@@ -16,11 +16,11 @@ static getStatsClient(server: string): StatsClient;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  server | <code>string</code> | A valid search server. |
+|  server | string | A valid search server. |
 
 <b>Returns:</b>
 
-`StatsClient`
+[StatsClient](./doofinder.statsclient.md)
 
 An instance of `StatsClient`<!-- -->.
 

@@ -2,12 +2,25 @@
 
 [Home](./index.md) &gt; [doofinder](./doofinder.md) &gt; [isNumber](./doofinder.isnumber.md)
 
-## isNumber variable
+## isNumber() function
 
 Check if the provided value is a number.
 
 <b>Signature:</b>
 
 ```typescript
-isNumber: (value: unknown) => boolean
+export declare function isNumber(value: unknown): boolean;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  value | unknown | The value to check. |
+
+<b>Returns:</b>
+
+boolean
+
+`true` if the value is a number, `false` otherwise.
+

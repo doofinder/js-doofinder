@@ -16,12 +16,12 @@ registerEvent(eventName: string, params: Record<string, any>): Promise<Response>
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  eventName | <code>string</code> | The event name to register. |
-|  params | <code>Record&lt;string, any&gt;</code> | The params object associated to the event call. It should have at least a session\_id and a hashid. |
+|  eventName | string | The event name to register. |
+|  params | Record&lt;string, any&gt; | The params object associated to the event call. It should have at least a session\_id and a hashid. |
 
 <b>Returns:</b>
 
-`Promise<Response>`
+Promise&lt;Response&gt;
 
 A promise to be fullfilled with the response or rejected with a `ClientResponseError`<!-- -->.
 

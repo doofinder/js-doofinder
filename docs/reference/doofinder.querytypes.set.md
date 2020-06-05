@@ -16,9 +16,9 @@ set(value: string | string[]): void;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  value | <code>string &#124; string[]</code> | A string or an array of strings representing types. |
+|  value | string \| string\[\] | A string or an array of strings representing types. |
 
 <b>Returns:</b>
 
-`void`
+void
 

@@ -16,9 +16,9 @@ load(params?: QueryParams): void;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | <code>QueryParams</code> | Params to load. |
+|  params | [QueryParams](./doofinder.queryparams.md) | Params to load. |
 
 <b>Returns:</b>
 
-`void`
+void
 

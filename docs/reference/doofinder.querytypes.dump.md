@@ -13,7 +13,7 @@ dump(): string[];
 ```
 <b>Returns:</b>
 
-`string[]`
+string\[\]
 
 An array of strings.
 

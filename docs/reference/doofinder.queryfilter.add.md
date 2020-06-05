@@ -16,12 +16,12 @@ add(name: string, value: unknown): void;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  name | <code>string</code> | Name of the filter. |
-|  value | <code>unknown</code> | Value to add to the filter. |
+|  name | string | Name of the filter. |
+|  value | unknown | Value to add to the filter. |
 
 <b>Returns:</b>
 
-`void`
+void
 
 ## Remarks
 

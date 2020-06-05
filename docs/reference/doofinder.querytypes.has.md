@@ -16,11 +16,11 @@ has(value: string): boolean;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  value | <code>string</code> | A type name. |
+|  value | string | A type name. |
 
 <b>Returns:</b>
 
-`boolean`
+boolean
 
 A boolean value.
 

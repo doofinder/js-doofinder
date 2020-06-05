@@ -16,12 +16,12 @@ set(value: string, order?: SortOrder): number;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  value | <code>string</code> | Field name to sort the query. |
-|  order | <code>SortOrder</code> | Order of the sorting. |
+|  value | string | Field name to sort the query. |
+|  order | [SortOrder](./doofinder.sortorder.md) | Order of the sorting. |
 
 <b>Returns:</b>
 
-`number`
+number
 
 the new length of the list of sortings.
 

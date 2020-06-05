@@ -16,8 +16,8 @@ export interface ClickStatsParamsWithId extends StatsParams
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [custom\_results\_id](./doofinder.clickstatsparamswithid.custom_results_id.md) | <code>string &#124; number</code> | Optional ID of the custom results that produced the current set of results. |
-|  [datatype](./doofinder.clickstatsparamswithid.datatype.md) | <code>string</code> | Data type of the clicked result. |
-|  [id](./doofinder.clickstatsparamswithid.id.md) | <code>string &#124; number</code> | Unique ID of the clicked result as provided in the data source. |
-|  [query](./doofinder.clickstatsparamswithid.query.md) | <code>string</code> | Optional search terms. |
+|  [custom\_results\_id](./doofinder.clickstatsparamswithid.custom_results_id.md) | string \| number | Optional ID of the custom results that produced the current set of results. |
+|  [datatype](./doofinder.clickstatsparamswithid.datatype.md) | string | Data type of the clicked result. |
+|  [id](./doofinder.clickstatsparamswithid.id.md) | string \| number | Unique ID of the clicked result as provided in the data source. |
+|  [query](./doofinder.clickstatsparamswithid.query.md) | string | Optional search terms. |
 

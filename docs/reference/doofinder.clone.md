@@ -16,11 +16,11 @@ export declare function clone(src: any): any;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  src | <code>any</code> | The data to clone. |
+|  src | any | The data to clone. |
 
 <b>Returns:</b>
 
-`any`
+any
 
 A copy of the data.
 

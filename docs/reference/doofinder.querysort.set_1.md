@@ -16,11 +16,11 @@ set(value: Sorting): number;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  value | <code>Sorting</code> | Object describing the sorting. |
+|  value | [Sorting](./doofinder.sorting.md) | Object describing the sorting. |
 
 <b>Returns:</b>
 
-`number`
+number
 
 the new length of the list of sortings.
 

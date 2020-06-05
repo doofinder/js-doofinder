@@ -13,7 +13,7 @@ copy(): Query;
 ```
 <b>Returns:</b>
 
-`Query`
+[Query](./doofinder.query.md)
 
 A new instance of Query.
 

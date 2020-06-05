@@ -16,6 +16,6 @@ export interface SearchParams extends QueryParamsBase
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [sort](./doofinder.searchparams.sort.md) | <code>Sorting[]</code> |  |
-|  [type](./doofinder.searchparams.type.md) | <code>string[]</code> |  |
+|  [sort](./doofinder.searchparams.sort.md) | [Sorting](./doofinder.sorting.md)<!-- -->\[\] |  |
+|  [type](./doofinder.searchparams.type.md) | string\[\] |  |
 

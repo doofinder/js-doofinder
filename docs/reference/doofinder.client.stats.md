@@ -16,12 +16,12 @@ stats(eventName: string, params: Record<string, string>): Promise<Response>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  eventName | <code>string</code> | Type of stats to send. |
-|  params | <code>Record&lt;string, string&gt;</code> | Parameters for the query string. |
+|  eventName | string | Type of stats to send. |
+|  params | Record&lt;string, string&gt; | Parameters for the query string. |
 
 <b>Returns:</b>
 
-`Promise<Response>`
+Promise&lt;Response&gt;
 
 A promise to be fullfilled with the response or rejected with a `ClientResponseError`<!-- -->.
 
