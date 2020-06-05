@@ -278,8 +278,12 @@ export class QueryValueError extends Error {
 
 // @public
 export interface RangeFacet {
+    // (undocumented)
+    label: string;
     range: RangeStats;
     type: 'range';
+    // (undocumented)
+    visible: boolean;
 }
 
 // @public
@@ -305,6 +309,8 @@ export type RawFacet = RawRangeFacet | RawTermsFacet;
 // @public
 export interface RawRangeFacet {
     doc_count: number;
+    // (undocumented)
+    label: string;
     range: {
         buckets: {
             doc_count: number;
@@ -313,6 +319,8 @@ export interface RawRangeFacet {
             stats: RangeStats;
         }[];
     };
+    // (undocumented)
+    visible: boolean;
 }
 
 // @public
@@ -324,6 +332,7 @@ export interface RawSearchResponse extends Omit<SearchResponse, 'facets' | '_raw
 // @public
 export interface RawTermsFacet {
     doc_count: number;
+    label: string;
     // @beta
     score?: number;
     selected: RawTermsInfo;
@@ -333,6 +342,8 @@ export interface RawTermsFacet {
     total: {
         value: number;
     };
+    // (undocumented)
+    visible: boolean;
 }
 
 // @public
@@ -431,9 +442,13 @@ export interface StatsParams {
 // @public
 export interface TermsFacet {
     // (undocumented)
+    label: string;
+    // (undocumented)
     terms: TermStats[];
     // (undocumented)
     type: 'terms';
+    // (undocumented)
+    visible: boolean;
 }
 
 // @public

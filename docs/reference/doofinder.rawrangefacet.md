@@ -17,5 +17,7 @@ export interface RawRangeFacet
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [doc\_count](./doofinder.rawrangefacet.doc_count.md) | number | Number of matching documents. |
+|  [label](./doofinder.rawrangefacet.label.md) | string |  |
 |  [range](./doofinder.rawrangefacet.range.md) | { buckets: { doc\_count: number; from: number; key: string; stats: [RangeStats](./doofinder.rangestats.md)<!-- -->; }\[\]; } | Range information. |
+|  [visible](./doofinder.rawrangefacet.visible.md) | boolean |  |
 
