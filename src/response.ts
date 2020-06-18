@@ -275,6 +275,7 @@ export interface RangeFacet {
   type: 'range';
   label: string;
   visible: boolean;
+  score?: number;
   /** Stats for this facet. */
   range: RangeStats;
 }
@@ -298,6 +299,7 @@ export interface TermsFacet {
   type: 'terms';
   label: string;
   visible: boolean;
+  score?: number;
   terms: TermStats[];
 }
 
@@ -362,6 +364,7 @@ function processTermsFacet(facet: RawTermsFacet): TermsFacet {
     type: 'terms',
     label: facet.label,
     visible: facet.visible,
+    score: facet.score,
     terms,
   };
 }
