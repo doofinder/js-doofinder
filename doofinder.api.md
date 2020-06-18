@@ -281,6 +281,8 @@ export interface RangeFacet {
     // (undocumented)
     label: string;
     range: RangeStats;
+    // (undocumented)
+    score?: number;
     type: 'range';
     // (undocumented)
     visible: boolean;
@@ -443,6 +445,8 @@ export interface StatsParams {
 export interface TermsFacet {
     // (undocumented)
     label: string;
+    // (undocumented)
+    score?: number;
     // (undocumented)
     terms: TermStats[];
     // (undocumented)

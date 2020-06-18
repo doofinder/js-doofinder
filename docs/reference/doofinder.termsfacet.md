@@ -17,6 +17,7 @@ export interface TermsFacet
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [label](./doofinder.termsfacet.label.md) | string |  |
+|  [score](./doofinder.termsfacet.score.md) | number |  |
 |  [terms](./doofinder.termsfacet.terms.md) | [TermStats](./doofinder.termstats.md)<!-- -->\[\] |  |
 |  [type](./doofinder.termsfacet.type.md) | 'terms' |  |
 |  [visible](./doofinder.termsfacet.visible.md) | boolean |  |
