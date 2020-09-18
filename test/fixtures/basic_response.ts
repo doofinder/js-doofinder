@@ -181,7 +181,7 @@ export const basicResponse: RawSearchResponse = {
     },
   },
   hashid: '6a96504dc173514cab1e0198af92e6e9',
-  max_order: 0.6194168,
+  max_score: 0.6194168,
   page: 1,
   phrase_suggest: null,
   query: 'silla',
