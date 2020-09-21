@@ -26,10 +26,10 @@ export default [
   {
     input: 'src/index.ts',
     output: {
-      file: 'lib/doofinder.mjs',
+      file: 'lib/index.js',
       format: 'esm',
     },
-    plugins: defaultPlugins('lib/doofinder.mjs'),
+    plugins: defaultPlugins('lib/index.js'),
   },
   // for browsers, all included
   {
@@ -55,11 +55,11 @@ export default [
   {
     input: 'src/index.ts',
     output: {
-      file: 'lib/doofinder.common.js',
+      file: 'lib/cjs/index.js',
       format: 'cjs',
     },
     external: ['node-fetch'],
-    plugins: defaultPlugins('lib/doofinder.common.js').concat([
+    plugins: defaultPlugins('lib/cjs/index.js').concat([
       inject({
         exclude: 'node_modules/**',
         modules: {
