@@ -14,4 +14,4 @@ export * from './response';
  * Current version of the library.
  * @public
  */
-export const __VERSION__ = '6.0.2';
+export const __VERSION__ = '6.0.3';
