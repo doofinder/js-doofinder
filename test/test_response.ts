@@ -38,7 +38,7 @@ describe('Search Response', () => {
       type: 'terms',
       label: '',
       visible: true,
-      score: 1,
+      order: 1,
       terms: [
         { doc_count: 426, key: 'JANE', selected: true },
         { doc_count: 275, key: 'BE COOL' },
@@ -70,7 +70,7 @@ describe('Search Response', () => {
       type: 'terms',
       label: '',
       visible: true,
-      score: 99,
+      order: 99,
       terms: [
         { doc_count: null, key: "0 - 20", from: 0, to: 20 },
         { doc_count: null, key: "20 - 50", from: 20, to: 50 },
@@ -88,7 +88,7 @@ describe('Search Response', () => {
       type: 'terms',
       label: '',
       visible: true,
-      score: 2,
+      order: 2,
       terms: [
         { doc_count: 915, key: 'Ofertas - Outlet', selected: true },
         { doc_count: 881, key: 'Cochecitos de bebé' },

@@ -31,7 +31,7 @@ export const basicResponse: RawSearchResponse = {
       doc_count: null,
       label: '',
       visible: true,
-      score: 99,
+      order: 99,
       selected: {
         buckets: [],
         doc_count_error_upper_bound: 0,
@@ -88,7 +88,7 @@ export const basicResponse: RawSearchResponse = {
       label: '',
       visible: true,
       selected: { buckets: [{ doc_count: 426, key: 'JANE' }], doc_count_error_upper_bound: 0, sum_other_doc_count: 0 },
-      score: 1,
+      order: 1,
       terms: {
         buckets: [
           { doc_count: 426, key: 'JANE' },
@@ -121,7 +121,7 @@ export const basicResponse: RawSearchResponse = {
       doc_count: 2295,
       label: '',
       visible: true,
-      score: 2,
+      order: 2,
       selected: {
         buckets: [
           { doc_count: 915, key: 'Ofertas - Outlet' },
@@ -165,7 +165,7 @@ export const basicResponse: RawSearchResponse = {
       doc_count: 2295,
       label: '',
       visible: true,
-      score: 99,
+      order: 99,
       selected: { buckets: [], doc_count_error_upper_bound: 0, sum_other_doc_count: 0 },
       terms: { buckets: [], doc_count_error_upper_bound: 0, sum_other_doc_count: 0 },
       total: { value: 0 },
@@ -174,7 +174,7 @@ export const basicResponse: RawSearchResponse = {
       doc_count: 2295,
       label: '',
       visible: true,
-      score: 99,
+      order: 99,
       selected: { buckets: [], doc_count_error_upper_bound: 0, sum_other_doc_count: 0 },
       terms: { buckets: [], doc_count_error_upper_bound: 0, sum_other_doc_count: 0 },
       total: { value: 0 },

@@ -259,10 +259,10 @@ export interface RawTermsFacet {
   /**
    * How pertinent is the facet compared to the other facets in the
    * response. If only one facet could be displayed, it should be the
-   * one with the hightst score.
+   * one with the highest order.
    * @beta
    */
-  score?: number;
+  order?: number;
 }
 
 /**
@@ -275,7 +275,7 @@ export interface RangeFacet {
   type: 'range';
   label: string;
   visible: boolean;
-  score?: number;
+  order?: number;
   /** Stats for this facet. */
   range: RangeStats;
 }
@@ -299,7 +299,7 @@ export interface TermsFacet {
   type: 'terms';
   label: string;
   visible: boolean;
-  score?: number;
+  order?: number;
   terms: TermStats[];
 }
 
@@ -364,7 +364,7 @@ function processTermsFacet(facet: RawTermsFacet): TermsFacet {
     type: 'terms',
     label: facet.label,
     visible: facet.visible,
-    score: facet.score,
+    order: facet.order,
     terms,
   };
 }
