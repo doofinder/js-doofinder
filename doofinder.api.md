@@ -280,9 +280,9 @@ export class QueryValueError extends Error {
 export interface RangeFacet {
     // (undocumented)
     label: string;
-    range: RangeStats;
     // (undocumented)
-    score?: number;
+    order?: number;
+    range: RangeStats;
     type: 'range';
     // (undocumented)
     visible: boolean;
@@ -336,7 +336,7 @@ export interface RawTermsFacet {
     doc_count: number;
     label: string;
     // @beta
-    score?: number;
+    order?: number;
     selected: RawTermsInfo;
     // @beta
     slots?: boolean;
@@ -446,7 +446,7 @@ export interface TermsFacet {
     // (undocumented)
     label: string;
     // (undocumented)
-    score?: number;
+    order?: number;
     // (undocumented)
     terms: TermStats[];
     // (undocumented)

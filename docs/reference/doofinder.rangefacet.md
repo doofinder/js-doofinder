@@ -17,8 +17,8 @@ export interface RangeFacet
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [label](./doofinder.rangefacet.label.md) | string |  |
+|  [order](./doofinder.rangefacet.order.md) | number |  |
 |  [range](./doofinder.rangefacet.range.md) | [RangeStats](./doofinder.rangestats.md) | Stats for this facet. |
-|  [score](./doofinder.rangefacet.score.md) | number |  |
 |  [type](./doofinder.rangefacet.type.md) | 'range' | Indicates this facet is of type range. |
 |  [visible](./doofinder.rangefacet.visible.md) | boolean |  |
 
