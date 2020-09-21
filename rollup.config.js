@@ -35,31 +35,31 @@ export default [
   {
     input: 'src/index.ts',
     output: {
-      file: 'lib/doofinder.js',
+      file: 'browser/doofinder.js',
       format: 'iife',
       name: 'doofinder',
     },
-    plugins: defaultPlugins('lib/doofinder.js', { browser: true }),
+    plugins: defaultPlugins('browser/doofinder.js', { browser: true }),
   },
   // for browsers, all included and minified
   {
     input: 'src/index.ts',
     output: {
-      file: 'lib/doofinder.min.js',
+      file: 'browser/doofinder.min.js',
       format: 'iife',
       name: 'doofinder',
     },
-    plugins: defaultPlugins('lib/doofinder.min.js', { browser: true, terser: true }),
+    plugins: defaultPlugins('browser/doofinder.min.js', { browser: true, terser: true }),
   },
   // Commonjs module for old node (not ES modules)
   {
     input: 'src/index.ts',
     output: {
-      file: 'lib/cjs/index.js',
+      file: 'commonjs/index.js',
       format: 'cjs',
     },
     external: ['node-fetch'],
-    plugins: defaultPlugins('lib/cjs/index.js').concat([
+    plugins: defaultPlugins('commonjs/index.js').concat([
       inject({
         exclude: 'node_modules/**',
         modules: {

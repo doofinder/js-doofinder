@@ -2,6 +2,8 @@
 *~
 
 docs/html
+browser/
+commonjs/
 lib/
 node_modules/
 types/

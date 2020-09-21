@@ -1,11 +1,11 @@
 {
   "name": "doofinder",
-  "version": "6.0.1",
+  "version": "6.0.2",
   "description": "Javascript Library for Doofinder Search API",
   "type": "module",
   "main": "lib/index.js",
   "module": "lib/index.js",
-  "browser": "lib/doofinder.js",
+  "browser": "browser/doofinder.js",
   "types": "lib/doofinder.d.ts",
   "engines": {
     "node": ">=10.15.0"
@@ -22,7 +22,7 @@
     "dev": "es-dev-server --node-resolve --open /playground/",
     "dev:compat": "es-dev-server --node-resolve --compatibility esm --open /playground/",
     "lint": "eslint --env browser --fix src/**/*.ts",
-    "compile": "rimraf lib && rollup -c && cp package.cjs.json lib/cjs/package.json",
+    "compile": "rimraf lib && rollup -c && cp package.cjs.json commonjs/package.json",
     "typings": "rimraf types && tsc --declaration --declarationMap --emitDeclarationOnly --outDir types && api-extractor run --local",
     "build": "yarn lint && yarn compile && yarn typings",
     "docs": "api-documenter markdown -i ./temp -o ./docs/reference",

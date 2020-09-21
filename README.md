@@ -33,6 +33,18 @@ $ yarn add doofinder
 $ npm install doofinder
 ```
 
+#### ESM
+
+```js
+import { Client } from 'doofinder';
+```
+
+#### CommonJS
+
+```js
+const { Client } = require('doofinder/commonjs');
+```
+
 ### CDN
 
 You can include the library directly in your website:
