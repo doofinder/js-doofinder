@@ -153,6 +153,14 @@ export class QuerySort {
     this._sortings.length = 0;
   }
 
+  /**
+   * Get if certain FieldSorting is being used to sort.
+   * @public
+   */
+  public has(value: FieldSorting): Boolean {
+    return this._sortings.includes(value);
+  }
+
   private _isLikeSorting(value: Sorting): boolean {
     return isPlainObject(value) && Object.keys(value).length === 1;
   }
