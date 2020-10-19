@@ -73,6 +73,7 @@ The project includes a demo you can use as inspiration. To take a look and see t
 2. Make sure you've got Node 10.x running in your system.
 3. From the root of the project:
     1. install dependencies with `$ yarn install` or `$ npm install`.
+4. To run the tests, execute: `$ yarn test`.
 
 The demo markup is inside `index.html` and the related Javascript code can be found at `demo/demo.js`.
 

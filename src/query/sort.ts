@@ -153,12 +153,26 @@ export class QuerySort {
     this._sortings.length = 0;
   }
 
+  /**
+   * Get if certain FieldSorting is being used to sort.
+   *
+   * @privateRemarks
+   *
+   * TODO: Add support for GeoSorting
+   *
+   * @public
+   */
+  public has(value: FieldSorting): boolean {
+    const field: string = Object.keys(value)[0];
+    return !!this._sortings.find((sorting: FieldSorting) => sorting[field] === value[field]);
+  }
+
   private _isLikeSorting(value: Sorting): boolean {
     return isPlainObject(value) && Object.keys(value).length === 1;
   }
 
   private _addFieldSorting(field: string, order: SortOrder = 'asc'): number {
-    if (['asc', 'desc'].includes(order)) {
+    if (order === 'asc' || order === 'desc') {
       return this._sortings.push({ [field]: order });
     }
 
