@@ -12,7 +12,7 @@ import { ParsedQs } from 'qs';
 export const __API_VERSION__ = 5;
 
 // @public
-export const __VERSION__ = "6.0.3";
+export const __VERSION__ = "6.1.0";
 
 // @public
 export interface BannerInfo {

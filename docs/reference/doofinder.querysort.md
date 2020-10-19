@@ -20,6 +20,7 @@ export declare class QuerySort
 |  [add(value)](./doofinder.querysort.add_1.md) |  | Add a sorting to the end of the list of sortings. |
 |  [clear()](./doofinder.querysort.clear.md) |  | Clear the current list of sortings. |
 |  [get()](./doofinder.querysort.get.md) |  | Get the current list of sortings. |
+|  [has(value)](./doofinder.querysort.has.md) |  | Get if certain FieldSorting is being used to sort. |
 |  [set(value, order)](./doofinder.querysort.set.md) |  | Set one or more values to sort the query. |
 |  [set(value)](./doofinder.querysort.set_1.md) |  | Set one or more values to sort the query. |
 |  [set(value)](./doofinder.querysort.set_2.md) |  | Set one or more values to sort the query. |
