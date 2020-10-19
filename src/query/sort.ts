@@ -157,8 +157,13 @@ export class QuerySort {
    * Get if certain FieldSorting is being used to sort.
    * @public
    */
-  public has(value: FieldSorting): Boolean {
-    return this._sortings.includes(value);
+  public has(value: FieldSorting): boolean {
+    const found =
+      this._sortings.find(
+        (sorting: FieldSorting) => sorting[Object.keys(value)[0]] === value[Object.keys(sorting)[0]]
+      ) != null;
+
+    return found;
   }
 
   private _isLikeSorting(value: Sorting): boolean {

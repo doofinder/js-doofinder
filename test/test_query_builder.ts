@@ -583,6 +583,11 @@ describe('Query', () => {
         expect(query.dump().sort).to.be.undefined;
         done();
       });
+      it('can check sorting', done => {
+        query.sort.add('price', 'asc');
+        query.sort.has({'price': 'asc'}).should.eql(true);
+        done();
+      });
     });
 
     context('items', () => {
