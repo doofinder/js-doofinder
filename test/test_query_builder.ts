@@ -588,6 +588,11 @@ describe('Query', () => {
         query.sort.has({'price': 'asc'}).should.eql(true);
         done();
       });
+      it('can check sorting, false case', done => {
+        query.sort.add('score', 'asc');
+        query.sort.has({'price': 'asc'}).should.eql(false);
+        done();
+      });
     });
 
     context('items', () => {

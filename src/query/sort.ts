@@ -159,9 +159,8 @@ export class QuerySort {
    */
   public has(value: FieldSorting): boolean {
     const found =
-      this._sortings.find(
-        (sorting: FieldSorting) => sorting[Object.keys(value)[0]] === value[Object.keys(sorting)[0]]
-      ) != null;
+      this._sortings.find((sorting: FieldSorting) => sorting[Object.keys(value)[0]] === value[Object.keys(value)[0]]) !=
+      null;
 
     return found;
   }
