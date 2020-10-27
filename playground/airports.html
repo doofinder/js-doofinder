@@ -13,7 +13,10 @@
       width: 100px;
     }
   </style>
-  <script src="../lib/doofinder.js"></script>
+  <script>
+    var jsDoofinderProtocol = 'https';
+  </script>
+  <script src="../browser/doofinder.js"></script>
   <script src="./demo.js"></script>
 </head>
 <body>
@@ -23,7 +26,7 @@
 
   <div>
     <input type="search" id="search" placeholder="Gathering your position…">
-    <input type="text" id="distance" value="50km">
+    <input type="text" id="distance" value="500km">
     <button type="button" id="submit" disabled>Search</button>
   </div>
 
@@ -39,7 +42,7 @@
     const { Client, Query } = doofinder;
 
     const hashid = '313b6895df43c68a7979df720619c166';
-    const client = new Client({ server: 'eu1-search.doofinder.com' });
+    const client = new Client({ server: '//eu1-search.doofinder.com' });
     let coords;
 
     const input = document.getElementById('search');

@@ -4,6 +4,8 @@ import { _processSearchResponse, SearchResponse, RawSearchResponse } from './res
 import { encode } from './util/encode-params';
 import { validateHashId, validateRequired, ValidationError } from './util/validators';
 
+const absoluteUrlRX = new RegExp('^([a-z]+:)//', 'i');
+
 /**
  * Version of the search API being used.
  * @public
@@ -135,9 +137,12 @@ export class Client {
       throw new ValidationError(`search server is required`);
     }
 
-    this._server = server;
-    const httpHeaders: Record<string, string> = { ...(headers || {}) };
     let protocol = '';
+    const httpHeaders: Record<string, string> = { ...(headers || {}) };
+
+    if (absoluteUrlRX.test(server)) {
+      protocol = absoluteUrlRX.exec(server)[1]; // "http(s):"
+    }
 
     if (secret != null) {
       this._secret = secret.trim();
@@ -146,12 +151,13 @@ export class Client {
       protocol = 'https:';
     }
 
-    this._endpoint = `${protocol}//${server}`;
-
     this._headers = {
       Accept: 'application/json',
       ...httpHeaders,
     };
+
+    this._server = server;
+    this._endpoint = `${protocol}//${server.replace(`${protocol}//`, '')}`;
   }
 
   /**

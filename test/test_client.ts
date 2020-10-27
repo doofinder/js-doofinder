@@ -51,6 +51,29 @@ describe('Client', () => {
       });
     });
 
+    context('with protocol variations', () => {
+      it("accepts http protocol", done => {
+        const client = new Client({ server: 'http://us1-search.doofinder.com' });
+        client.server.should.equal('http://us1-search.doofinder.com');
+        client.endpoint.should.equal('http://us1-search.doofinder.com');
+        done();
+      });
+
+      it("accepts https protocol", done => {
+        const client = new Client({ server: 'https://us1-search.doofinder.com' });
+        client.server.should.equal('https://us1-search.doofinder.com');
+        client.endpoint.should.equal('https://us1-search.doofinder.com');
+        done();
+      });
+
+      it("accepts protocol-relative url", done => {
+        const client = new Client({ server: '//us1-search.doofinder.com' });
+        client.server.should.equal('//us1-search.doofinder.com');
+        client.endpoint.should.equal('//us1-search.doofinder.com');
+        done();
+      });
+    })
+
     context('HTTP Headers', () => {
       it('should add passed headers to the request', done => {
         const client = new Client({ server: cfg.server, headers: { 'X-Name': 'John Smith' } });
