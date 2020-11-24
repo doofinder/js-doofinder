@@ -176,7 +176,7 @@ export class Client {
     params: Record<string, any> = {},
     payload?: Record<string, any>
   ): Promise<Response> {
-    const qs: string = encode({ random: new Date().getTime(), ...params });
+    const qs: string = encode({ random: new Date().getTime(), ...params }, {indices: false});
     const url: string = this._buildUrl(resource, qs);
 
     const method: string = payload ? 'POST' : 'GET';
