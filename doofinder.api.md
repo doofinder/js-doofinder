@@ -46,6 +46,8 @@ export interface CartItemStatsParams extends StatsParams {
     custom_results_id?: string | number;
     datatype?: string;
     item_id: string | number;
+    price?: number;
+    title?: string;
 }
 
 // @public

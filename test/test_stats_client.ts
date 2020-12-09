@@ -157,6 +157,8 @@ describe('StatsClient', () => {
     const itemParams: CartItemStatsParams = {
       item_id: '1',
       amount: '1',
+      title: "cart item title",
+      price: 55,
       ...baseParams
     };
 

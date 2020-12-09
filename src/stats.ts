@@ -74,6 +74,10 @@ export interface CartItemStatsParams extends StatsParams {
   amount: string | number;
   /** Datatype where the item can be found **/
   datatype?: string;
+  /** Title of the given item **/
+  title?: string;
+  /** Price of the given item **/
+  price?: number;
   /** Optional ID of the custom results that produced the current set of results. */
   custom_results_id?: string | number;
 }
