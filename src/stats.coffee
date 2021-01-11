@@ -117,18 +117,18 @@ class Stats
 
   ###*
    * Adds an amount of item in the current session cart
-   * @param  {String}  	sessionId Session id.
-   * @param  {String}  	itemId    The item ID to add to the cart.
-   * @param  {String}  	amount    The amount of the item to be added.
-   * @param  {String}  	datatype  (Default: product) The datatype of the
-   *                              item we are adding
-   * @param  {Function} callback  Optional callback to be called when the
-   *                              response is received. First param is the
-   *                              error, if any, and the second one is the
-   *                              response, if any.
+   * @param  {String}  	sessionId   Session id.
+   * @param  {String}  	itemId      The item ID to add to the cart.
+   * @param  {String}   amount      The amount of the item to be added.
+   * @param  {Dict}     extra_data  Optional arguments we want to provide of ["datatype", "title", "price"]
+                                    "datatype" defaults to "product"
+   * @param  {Function} callback    Optional callback to be called when the
+   *                                response is received. First param is the
+   *                                error, if any, and the second one is the
+   *                                response, if any.
    * @public
   ###
-  addToCart: (sessionId, itemId, amount, datatype = "product", callback) ->
+  addToCart: (sessionId, itemId, amount, extra_data, callback) ->
     errors.requireVal sessionId, "sessionId"
     errors.requireVal itemId, "itemId"
     errors.requireVal amount, "amount"
@@ -137,7 +137,9 @@ class Stats
       session_id: sessionId
       item_id: itemId
       amount: amount
-      datatype: datatype
+      datatype: extra_data['datatype'] or "product"
+      title: extra_data['title']
+      price: extra_data['price']
 
     @client.stats "add-to-cart", params, (err, res) ->
       callback? err, res # Client requires a callback, we don't
