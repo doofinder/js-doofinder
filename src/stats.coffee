@@ -121,7 +121,7 @@ class Stats
    * @param  {String}  	itemId      The item ID to add to the cart.
    * @param  {String}   amount      The amount of the item to be added.
    * @param  {Dict}     extra_data  Optional arguments we want to provide of ["datatype", "title", "price"]
-                                    "datatype" defaults to "product"
+   *                                "datatype" defaults to "product"
    * @param  {Function} callback    Optional callback to be called when the
    *                                response is received. First param is the
    *                                error, if any, and the second one is the
