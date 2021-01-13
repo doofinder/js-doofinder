@@ -1417,7 +1417,7 @@
      *          That's why this is usually called when the user has stopped
      *          typing in the search box.
      *
-     * @param  {String}  	sessionId Session id.
+     * @param  {String}   sessionId Session id.
      * @param  {Function} callback  Optional callback to be called when the
      *                              response is received. First param is the
      *                              error, if any, and the second one is the
@@ -1441,7 +1441,7 @@
      * stats.registerClick(sessionId, id, datatype, query, callback);
      * stats.registerClick(sessionId, dfid, query, callback);
      *
-     * @param  {String}  	sessionId Session id.
+     * @param  {String}   sessionId Session id.
      * @param  {String}   id        Id of the result or Doofinder's internal ID
      *                              for the result.
      * @param  {String}   datatype  Optional. If the id is not a Doofinder id
@@ -1497,7 +1497,7 @@
     /**
      * Registers a checkout.
      *
-     * @param  {String}  	sessionId Session id.
+     * @param  {String}   sessionId Session id.
      * @param  {Function} callback  Optional callback to be called when the
      *                              response is received. First param is the
      *                              error, if any, and the second one is the
@@ -1542,23 +1542,20 @@
 
     /**
      * Adds an amount of item in the current session cart
-     * @param  {String}  	sessionId Session id.
-     * @param  {String}  	itemId    The item ID to add to the cart.
-     * @param  {String}  	amount    The amount of the item to be added.
-     * @param  {String}  	datatype  (Default: product) The datatype of the
-     *                              item we are adding
-     * @param  {Function} callback  Optional callback to be called when the
-     *                              response is received. First param is the
-     *                              error, if any, and the second one is the
-     *                              response, if any.
+     * @param  {String}   sessionId   Session id.
+     * @param  {String}   itemId      The item ID to add to the cart.
+     * @param  {String}   amount      The amount of the item to be added.
+     * @param  {Dict}     extraData   Optional arguments we want to provide of ["datatype", "title", "price"]
+     *                                "datatype" defaults to "product"
+     * @param  {Function} callback    Optional callback to be called when the
+     *                                response is received. First param is the
+     *                                error, if any, and the second one is the
+     *                                response, if any.
      * @public
      */
 
-    Stats.prototype.addToCart = function(sessionId, itemId, amount, datatype, callback) {
+    Stats.prototype.addToCart = function(sessionId, itemId, amount, extraData, callback) {
       var params;
-      if (datatype == null) {
-        datatype = "product";
-      }
       errors.requireVal(sessionId, "sessionId");
       errors.requireVal(itemId, "itemId");
       errors.requireVal(amount, "amount");
@@ -1566,7 +1563,9 @@
         session_id: sessionId,
         item_id: itemId,
         amount: amount,
-        datatype: datatype
+        datatype: extraData["datatype"] || "product",
+        title: extraData["title"],
+        price: extraData["price"]
       };
       return this.client.stats("add-to-cart", params, function(err, res) {
         return typeof callback === "function" ? callback(err, res) : void 0;
@@ -1576,10 +1575,10 @@
 
     /**
      * Removes an amount of item in the current session cart
-     * @param  {String}  	sessionId Session id.
-     * @param  {String}  	itemId    The item ID to add to the cart.
-     * @param  {String}  	amount    The amount of the item to be removed.
-     * @param  {String}  	datatype  (Default: product) The datatype of the
+     * @param  {String}   sessionId Session id.
+     * @param  {String}   itemId    The item ID to add to the cart.
+     * @param  {String}   amount    The amount of the item to be removed.
+     * @param  {String}   datatype  (Default: product) The datatype of the
      *                              item we are adding
      * @param  {Function} callback  Optional callback to be called when the
      *                              response is received. First param is the
@@ -1610,7 +1609,7 @@
 
     /**
      * Clears a cart from the current session, removing it all
-     * @param  {String}  	sessionId Session id.
+     * @param  {String}   sessionId Session id.
      * @param  {Function} callback  Optional callback to be called when the
      *                              response is received. First param is the
      *                              error, if any, and the second one is the
