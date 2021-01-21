@@ -1,4 +1,4 @@
-function demo({ Client, Query, StatsClient, Session }) {
+function demo({ Client, Query, StatsClient }) {
   const hashid = '7a6100c782c09126479e9270ecc619b3';
   const sessionId = '123456'
   const client = new Client({ server: 'eu1-search.doofinder.com' });
