@@ -151,7 +151,6 @@ class Controller extends EventEnabled
   ###
   __doSearch: ->
     @prePreprocessParams @params
-    console.log(@params)
     @requestDone = true
     params = merge query_counter: ++@queryCounter, @params
 

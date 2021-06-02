@@ -501,7 +501,6 @@
     Controller.prototype.__doSearch = function() {
       var __getResults, params, request;
       this.prePreprocessParams(this.params);
-      console.log(this.params);
       this.requestDone = true;
       params = merge({
         query_counter: ++this.queryCounter
