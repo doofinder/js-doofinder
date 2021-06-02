@@ -53,6 +53,17 @@ jQuery(function($){
     });
     return response;
   });
+
+  // use paramsPreprocessors
+  // changes query_name to match_and if query is numeric
+  basicController.paramsPreprocessors.push(function(params){
+    if (!isNaN(basicController.query)){
+      params.query_name = "match_and"
+    }
+    return params
+  });
+
+  // console.log(basicController.paramsProcessors);
   // create an input widget
   var basicInputWidget = new doofinder.widgets.QueryInput("#basicInput", {
     delayedEvents: {
