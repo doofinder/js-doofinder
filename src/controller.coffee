@@ -33,7 +33,8 @@ class Controller extends EventEnabled
 
     @widgets = []
     @processors = []
-
+    @paramsPreprocessors = []
+  
     Object.defineProperty @, 'hashid', get: ->
       @client.hashid
 
@@ -149,6 +150,8 @@ class Controller extends EventEnabled
    * @protected
   ###
   __doSearch: ->
+    @prePreprocessParams @params
+    console.log(@params)
     @requestDone = true
     params = merge query_counter: ++@queryCounter, @params
 
@@ -183,6 +186,15 @@ class Controller extends EventEnabled
   ###
   processResponse: (response) ->
     @processors.reduce ((data, fn) -> fn data), response
+
+  ###*
+   * Transform the params by passing it through a set of data  paramsProcessors,
+   * if any.
+   *
+   * @param  {Object} The params passed to the query.
+  ###
+  prePreprocessParams: (params) ->
+    @paramsPreprocessors.reduce ((data, fn) -> fn data), params
 
   #
   # Widgets

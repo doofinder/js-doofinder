@@ -344,6 +344,7 @@
       this.queryCounter = 0;
       this.widgets = [];
       this.processors = [];
+      this.paramsPreprocessors = [];
       Object.defineProperty(this, 'hashid', {
         get: function() {
           return this.client.hashid;
@@ -499,6 +500,8 @@
 
     Controller.prototype.__doSearch = function() {
       var __getResults, params, request;
+      this.prePreprocessParams(this.params);
+      console.log(this.params);
       this.requestDone = true;
       params = merge({
         query_counter: ++this.queryCounter
@@ -541,6 +544,20 @@
       return this.processors.reduce((function(data, fn) {
         return fn(data);
       }), response);
+    };
+
+
+    /**
+     * Transform the params by passing it through a set of data  paramsProcessors,
+     * if any.
+     *
+     * @param  {Object} The params passed to the query.
+     */
+
+    Controller.prototype.prePreprocessParams = function(params) {
+      return this.paramsPreprocessors.reduce((function(data, fn) {
+        return fn(data);
+      }), params);
     };
 
 
