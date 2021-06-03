@@ -446,6 +446,32 @@ describe "Controller", ->
         done()
 
       controller.search ""
+    
+    it "can use paramsPreprocessors to modify the params", (done) ->
+      params =
+        query: ""
+        hashid: cfg.hashid
+        page: 1
+        rpp: 10
+        query_counter: 1
+        query_name: "match_and"
+
+      response =
+        page: 1
+        query_counter: 1
+        query_name: "match_and"
+
+      scope = serve.search params, response
+      controller = cfg.getController()
+      controller.paramsPreprocessors.push (pars) ->
+        pars.query_name = "match_and"
+        pars
+      controller.search "", controller.params
+
+      controller.one "df:results:success", (res) ->
+          scope.isDone().should.be.true
+          done()
+
 
   context "Widgets", ->
     it "can register widgets after initialization", (done) ->
