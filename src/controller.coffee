@@ -150,7 +150,7 @@ class Controller extends EventEnabled
    * @protected
   ###
   __doSearch: ->
-    @prePreprocessParams @params
+    @transformObject @params, @paramsPreprocessors
     @requestDone = true
     params = merge query_counter: ++@queryCounter, @params
 
@@ -162,7 +162,7 @@ class Controller extends EventEnabled
         @lastPage = Math.ceil (response.total / response.results_per_page)
         @params.query_name = response.query_name
 
-        @processResponse response
+        @transformObject response, @processors
         @renderWidgets response
 
         @trigger "df:results:success", [response]
@@ -177,23 +177,12 @@ class Controller extends EventEnabled
       request = @client.search @query, params, __getResults
 
   ###*
-   * Transform the response by passing it through a set of data processors,
-   * if any.
+   * Transform the object passed through transformationArray functions, if any.
    *
-   * @param  {Object} response Search response.
-   * @return {Object}          The resulting search response.
+   * @object  {Object} The object to transform.
   ###
-  processResponse: (response) ->
-    @processors.reduce ((data, fn) -> fn data), response
-
-  ###*
-   * Transform the params by passing it through a set of data  paramsProcessors,
-   * if any.
-   *
-   * @param  {Object} The params passed to the query.
-  ###
-  prePreprocessParams: (params) ->
-    @paramsPreprocessors.reduce ((data, fn) -> fn data), params
+  transformObject: (object, transformationArray) ->
+    transformationArray.reduce ((data, fn) -> fn data), object
 
   #
   # Widgets
