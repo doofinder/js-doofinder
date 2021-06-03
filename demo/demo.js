@@ -63,7 +63,6 @@ jQuery(function($){
     return params
   });
 
-  // console.log(basicController.paramsProcessors);
   // create an input widget
   var basicInputWidget = new doofinder.widgets.QueryInput("#basicInput", {
     delayedEvents: {
