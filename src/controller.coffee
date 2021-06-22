@@ -476,6 +476,7 @@ Refresh your browser's cache and try again. If the error persists contact suppor
 
     if (Object.keys params).length > 0
       requestParams = merge {}, params
+      requestParams.page = parseInt(requestParams.page, 10) or 1
       query = requestParams.query or ""
       delete requestParams.query
 

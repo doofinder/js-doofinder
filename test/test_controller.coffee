@@ -571,6 +571,6 @@ describe "Controller", ->
 
       controller.query.should.equal "hola"
       controller.params.query_name.should.equal "match_and"
-      controller.params.page.should.equal '2'
+      controller.params.page.should.equal 2
       controller.params.rpp.should.equal 20
       controller.requestDone.should.be.true
