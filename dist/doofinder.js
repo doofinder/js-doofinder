@@ -904,6 +904,7 @@
       params = (qs.parse(status)) || {};
       if ((Object.keys(params)).length > 0) {
         requestParams = merge({}, params);
+        requestParams.page = parseInt(requestParams.page, 10) || 1;
         query = requestParams.query || "";
         delete requestParams.query;
         this.reset(query, requestParams);
@@ -926,7 +927,7 @@
 },{"./client":1,"./util/errors":7,"./util/eventEnabled":8,"./util/freezer":9,"./util/merge":12,"./util/thing":15,"./widgets/widget":23,"qs":48}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.13.0",
+    version: "5.13.1",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
