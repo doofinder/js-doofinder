@@ -24,6 +24,12 @@ class WidgetMock extends Widget
     @rendered = true
   trigger: (eventName, args = []) ->
 
+global.DOMParser = class DomParserMock
+  parseFromString: (text, type) ->
+    result =
+      body:
+        textContent: text
+
 ###*
  * Configures nock to serve a search mock for a specific status.
  *
@@ -446,7 +452,7 @@ describe "Controller", ->
         done()
 
       controller.search ""
-    
+
     it "can use paramsPreprocessors to modify the params", (done) ->
       params =
         query: ""
