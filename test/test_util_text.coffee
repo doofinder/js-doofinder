@@ -41,3 +41,7 @@ describe "Text Tools", ->
     (Text.translate "hello world", translations).should.equal "hola mundo"
     (Text.translate "hello world!", translations).should.equal "hello world!"
     done()
+
+  it "unescapes text encoded multiple times", (done) ->
+    (Text.unescape "http://victim/cgi/%252E%252E%252F%252E%252E%252Fwinnt/system32/cmd.exe?/c+dir+c:\\").should.equal "http://victim/cgi/../../winnt/system32/cmd.exe?/c+dir+c:\\"
+    done()

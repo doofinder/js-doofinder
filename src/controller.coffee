@@ -7,6 +7,7 @@ Freezer = require "./util/freezer"
 merge = require "./util/merge"
 Thing = require "./util/thing"
 Widget = require "./widgets/widget"
+Text = require "./util/text"
 
 ###
 Controller
@@ -34,7 +35,7 @@ class Controller extends EventEnabled
     @widgets = []
     @processors = []
     @paramsPreprocessors = []
-  
+
     Object.defineProperty @, 'hashid', get: ->
       @client.hashid
 
@@ -472,6 +473,7 @@ Refresh your browser's cache and try again. If the error persists contact suppor
    *                          status could not be recovered.
   ###
   loadStatus: (status) ->
+    status = Text.cleanXSS status
     params = (qs.parse status) or {}
 
     if (Object.keys params).length > 0
