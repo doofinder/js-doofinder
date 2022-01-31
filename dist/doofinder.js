@@ -292,7 +292,7 @@
 
 },{"./util/errors":7,"./util/http":11,"./util/merge":12,"./util/thing":15,"md5":41,"qs":48}],2:[function(require,module,exports){
 (function() {
-  var Client, Controller, EventEnabled, Freezer, Thing, Widget, errors, merge, qs,
+  var Client, Controller, EventEnabled, Freezer, Text, Thing, Widget, errors, merge, qs,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -311,6 +311,8 @@
   Thing = require("./util/thing");
 
   Widget = require("./widgets/widget");
+
+  Text = require("./util/text");
 
 
   /*
@@ -924,10 +926,10 @@
 
 }).call(this);
 
-},{"./client":1,"./util/errors":7,"./util/eventEnabled":8,"./util/freezer":9,"./util/merge":12,"./util/thing":15,"./widgets/widget":23,"qs":48}],3:[function(require,module,exports){
+},{"./client":1,"./util/errors":7,"./util/eventEnabled":8,"./util/freezer":9,"./util/merge":12,"./util/text":14,"./util/thing":15,"./widgets/widget":23,"qs":48}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.13.1",
+    version: "5.13.2",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
@@ -3598,7 +3600,7 @@
  */
 
 (function() {
-  var camel2dash, dash2camel, dash2class, toSnake, translate, ucfirst, ucwords;
+  var camel2dash, cleanXSS, dash2camel, dash2class, myUnescape, toSnake, translate, ucfirst, ucwords;
 
   camel2dash = function(text) {
     return text.replace(/[A-Z]/g, (function(m) {
@@ -3646,6 +3648,23 @@
     return translations[text] || text;
   };
 
+  myUnescape = function(text) {
+    var unescaped_text;
+    unescaped_text = decodeURIComponent(text);
+    while (unescaped_text !== text) {
+      text = unescaped_text;
+      unescaped_text = decodeURIComponent(text);
+    }
+    return unescaped_text;
+  };
+
+  cleanXSS = function(text) {
+    var doc;
+    text = myUnescape(text);
+    doc = (new DOMParser()).parseFromString(text, "text/html");
+    return doc.body.textContent || "";
+  };
+
   module.exports = {
     camel2dash: camel2dash,
     dash2camel: dash2camel,
@@ -3653,7 +3672,9 @@
     ucwords: ucwords,
     ucfirst: ucfirst,
     toSnake: toSnake,
-    translate: translate
+    translate: translate,
+    unescape: myUnescape,
+    cleanXSS: cleanXSS
   };
 
 }).call(this);

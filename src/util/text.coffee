@@ -30,6 +30,18 @@ toSnake = (text) ->
 translate = (text, translations) ->
   translations[text] or text
 
+myUnescape = (text) ->
+  unescaped_text = decodeURIComponent text
+  while unescaped_text != text
+    text = unescaped_text
+    unescaped_text = decodeURIComponent text
+  unescaped_text
+
+cleanXSS = (text) ->
+  text = myUnescape text
+  doc = (new DOMParser()).parseFromString text, "text/html"
+  doc.body.textContent || ""
+
 module.exports =
   camel2dash: camel2dash
   dash2camel: dash2camel
@@ -38,3 +50,5 @@ module.exports =
   ucfirst: ucfirst
   toSnake: toSnake
   translate: translate
+  unescape: myUnescape
+  cleanXSS: cleanXSS
