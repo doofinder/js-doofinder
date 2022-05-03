@@ -11,6 +11,8 @@ ZONE = "eu1"
 
 APIKEY = "#{ZONE}-#{AUTH}"
 
+TOKEN = "Token #{AUTH}"
+
 getClient = ->
   new Client HASHID, apiKey: APIKEY
 
@@ -27,6 +29,7 @@ module.exports =
   auth: AUTH
   hashid: HASHID
   host: HOST
+  token: TOKEN
   version: 5
   zone: ZONE
 

@@ -22,20 +22,12 @@ describe "Client", ->
   afterEach: ->
     serve.clean()
 
-  context "Instantiation", ->
-    context "without API key", ->
-      it "should use regular HTTP library", (done) ->
-        client = new Client cfg.hashid, zone: cfg.zone
-        client.httpClient.secure.should.be.false
-        client.httpClient.http.should.equal http
-        done()
-
     context "with API key", ->
       it "should use HTTPS", (done) ->
         client = cfg.getClient()
         client.httpClient.secure.should.be.true
         client.httpClient.http.should.equal https
-        client.requestOptions.headers["Authorization"].should.equal cfg.auth
+        client.requestOptions.headers["Authorization"].should.equal cfg.token
         done()
 
     context "with invalid API key", ->
@@ -79,7 +71,7 @@ describe "Client", ->
           "X-Name": "John Smith"
           "Authorization": "abc"
         client.requestOptions.headers["X-Name"].should.equal "John Smith"
-        client.requestOptions.headers["Authorization"].should.equal "aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd"
+        client.requestOptions.headers["Authorization"].should.equal cfg.token
         done()
 
     context "Custom Address", ->
