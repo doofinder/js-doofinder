@@ -72,14 +72,13 @@ class Client
 
     forceSSL = false
 
-    if protocol?
-      @requestOptions.protocol = "#{protocol}:"
-
     if secret?
       @requestOptions.headers["Authorization"] = secret
 
-    if address.search(/doofinder.com/) != -1
-      @requestOptions.protocol = "https:"
+    if protocol?
+      @requestOptions.protocol = "#{protocol}:"
+
+    if @requestOptions.protocol == "https:"
       forceSSL = true
 
     @httpClient = new HttpClient forceSSL
