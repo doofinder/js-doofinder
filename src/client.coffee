@@ -48,6 +48,7 @@ class Client
   ###
   constructor: (@hashid, options = {}) ->
     [zone, secret] = (options.apiKey or options.zone or "").split "-"
+    secret = if secret then "Token #{secret}" else null
 
     if not zone
       if secret
@@ -77,8 +78,7 @@ class Client
     if secret?
       @requestOptions.headers["Authorization"] = secret
 
-    # This works even if no apiKey passed but passed an "Authorization" header
-    if "Authorization" of @requestOptions.headers
+    if address.search(/doofinder.com/) != -1
       @requestOptions.protocol = "https:"
       forceSSL = true
 

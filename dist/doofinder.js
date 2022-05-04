@@ -65,6 +65,7 @@
         options = {};
       }
       ref = (options.apiKey || options.zone || "").split("-"), zone = ref[0], secret = ref[1];
+      secret = secret ? "Token " + secret : null;
       if (!zone) {
         if (secret) {
           message = "invalid `apiKey`";
@@ -91,7 +92,7 @@
       if (secret != null) {
         this.requestOptions.headers["Authorization"] = secret;
       }
-      if ("Authorization" in this.requestOptions.headers) {
+      if (address.search(/doofinder.com/) !== -1) {
         this.requestOptions.protocol = "https:";
         forceSSL = true;
       }
@@ -930,7 +931,7 @@
 },{"./client":1,"./util/errors":7,"./util/eventEnabled":8,"./util/freezer":9,"./util/merge":12,"./util/text":14,"./util/thing":15,"./widgets/widget":23,"qs":48}],3:[function(require,module,exports){
 (function() {
   module.exports = {
-    version: "5.13.4",
+    version: "5.13.3",
     Client: require("./client"),
     Controller: require("./controller"),
     Stats: require("./stats"),
