@@ -92,7 +92,7 @@
       if (protocol != null) {
         this.requestOptions.protocol = protocol + ":";
       }
-      if (this.requestOptions.protocol === "https:") {
+      if (protocol === "https") {
         forceSSL = true;
       }
       this.httpClient = new HttpClient(forceSSL);

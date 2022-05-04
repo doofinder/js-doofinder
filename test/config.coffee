@@ -9,12 +9,14 @@ HASHID = "ffffffffffffffffffffffffffffffff"
 HOST = "eu1-search.doofinder.com"
 ZONE = "eu1"
 
+ADDRESS = "https://#{HOST}"
+
 APIKEY = "#{ZONE}-#{AUTH}"
 
 TOKEN = "Token #{AUTH}"
 
 getClient = ->
-  new Client HASHID, apiKey: APIKEY
+  new Client HASHID, apiKey: APIKEY, address: ADDRESS
 
 getController = (params = {}) ->
   new Controller getClient(), params
@@ -24,7 +26,7 @@ getSession = (data) ->
   new Session store
 
 module.exports =
-  address: "https://#{HOST}"
+  address: ADDRESS
   apiKey: APIKEY
   auth: AUTH
   hashid: HASHID

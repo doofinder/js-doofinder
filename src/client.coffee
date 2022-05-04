@@ -78,7 +78,7 @@ class Client
     if protocol?
       @requestOptions.protocol = "#{protocol}:"
 
-    if @requestOptions.protocol == "https:"
+    if protocol == "https"
       forceSSL = true
 
     @httpClient = new HttpClient forceSSL
