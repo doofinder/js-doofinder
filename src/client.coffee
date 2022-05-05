@@ -48,6 +48,7 @@ class Client
   ###
   constructor: (@hashid, options = {}) ->
     [zone, secret] = (options.apiKey or options.zone or "").split "-"
+    secret = if secret then "Token #{secret}" else null
 
     if not zone
       if secret
@@ -71,15 +72,13 @@ class Client
 
     forceSSL = false
 
-    if protocol?
-      @requestOptions.protocol = "#{protocol}:"
-
     if secret?
       @requestOptions.headers["Authorization"] = secret
 
-    # This works even if no apiKey passed but passed an "Authorization" header
-    if "Authorization" of @requestOptions.headers
-      @requestOptions.protocol = "https:"
+    if protocol?
+      @requestOptions.protocol = "#{protocol}:"
+
+    if protocol == "https"
       forceSSL = true
 
     @httpClient = new HttpClient forceSSL
