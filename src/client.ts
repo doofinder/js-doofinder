@@ -225,7 +225,7 @@ export class Client {
       delete params.items;
     }
 
-    const response: Response = await this.request('/search', params, payload);
+    const response: Response = await this.request('/_search', params, payload);
     return _processSearchResponse((await response.json()) as RawSearchResponse);
   }
 
@@ -241,7 +241,7 @@ export class Client {
    */
   public async suggest(query: Query | SearchParams): Promise<SearchResponse> {
     const params: Record<string, any> = this._buildSearchQueryObject(query).dump(true);
-    const response: Response = await this.request('/suggest', params);
+    const response: Response = await this.request('/_suggest', params);
     return _processSearchResponse((await response.json()) as RawSearchResponse);
   }
 
