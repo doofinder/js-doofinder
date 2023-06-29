@@ -10,7 +10,7 @@ const absoluteUrlRX = new RegExp('^([a-z]+:)//', 'i');
  * Version of the search API being used.
  * @public
  */
-export const __API_VERSION__ = 5;
+export const __API_VERSION__ = 6;
 
 /**
  * Options that can be used to create a Client instance.
@@ -171,7 +171,8 @@ export class Client {
    * @param resource - The resource to request.
    * @param params - An object with the parameters to serialize in the
    * URL querystring. Optional.
-   * @param payload - An object to send via POST. Optional.
+   * @param payload - An object to send. Optional.
+   * @param method - The method, by default will be GET. Optional.
    * @returns A promise to be fullfilled with the response or rejected
    * with a `ClientResponseError`.
    *
@@ -180,12 +181,11 @@ export class Client {
   public async request(
     resource: string,
     params: Record<string, any> = {},
-    payload?: Record<string, any>
+    payload?: Record<string, any>,
+    method = 'GET'
   ): Promise<Response> {
     const qs: string = encode({ random: new Date().getTime(), ...params });
-    const url: string = this._buildUrl(resource, qs);
-
-    const method: string = payload ? 'POST' : 'GET';
+    const url: string = this._buildUrl(resource, qs, params.hashid);
     const headers: Record<string, string> = payload ? { 'Content-Type': 'application/json' } : {};
     const body: string = payload ? JSON.stringify(payload) : undefined;
     const response = await fetch(url, {
@@ -255,10 +255,10 @@ export class Client {
    *
    * @public
    */
-  public async stats(eventName: string, params: Record<string, string>): Promise<Response> {
+  public async stats(eventName: string, params: Record<string, string>, method = 'GET'): Promise<Response> {
     validateRequired(params.session_id, 'session_id is required');
     validateHashId(params.hashid);
-    return await this.request(`/stats/${eventName}`, params);
+    return await this.request(`/stats/${eventName}`, params, null, method);
   }
 
   public async topStats(type: TopStatsType, params: TopStatsParams): Promise<Response> {
@@ -275,7 +275,7 @@ export class Client {
    * Must not start by '?' nor '&'.
    * @returns A valid URL.
    */
-  private _buildUrl(resource: string, querystring: string): string {
+  private _buildUrl(resource: string, querystring: string, hashid: string): string {
     const [prefix, qs]: string[] = resource.split('?');
     let suffix: string;
 
@@ -285,7 +285,7 @@ export class Client {
       suffix = querystring ? `?${querystring}` : '';
     }
 
-    return `${this.endpoint}/${__API_VERSION__}${prefix}${suffix}`;
+    return `${this.endpoint}/${__API_VERSION__}/${hashid}${prefix}${suffix}`;
   }
 
   /**
