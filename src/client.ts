@@ -1,3 +1,4 @@
+import { Method } from './enum/method';
 import { Query, SearchParams } from './query';
 import { _processSearchResponse, SearchResponse, RawSearchResponse } from './response';
 
@@ -182,7 +183,7 @@ export class Client {
     resource: string,
     params: Record<string, any> = {},
     payload?: Record<string, any>,
-    method = 'GET'
+    method = Method.GET
   ): Promise<Response> {
     const qs: string = encode({ random: new Date().getTime(), ...params });
     const url: string = this._buildUrl(resource, qs, params.hashid);
@@ -255,7 +256,7 @@ export class Client {
    *
    * @public
    */
-  public async stats(eventName: string, params: Record<string, string>, method = 'GET'): Promise<Response> {
+  public async stats(eventName: string, params: Record<string, string>, method = Method.GET): Promise<Response> {
     validateRequired(params.session_id, 'session_id is required');
     validateHashId(params.hashid);
     return await this.request(`/stats/${eventName}`, params, null, method);
