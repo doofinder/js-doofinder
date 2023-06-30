@@ -68,8 +68,16 @@ export type QueryParams = Partial<QueryParamsBase>;
  * @public
  */
 export interface SearchParams extends QueryParamsBase {
-  type?: string[];
+  indices?: string[];
   sort?: Sorting[];
+}
+
+/**
+ * Set of params that are dump from a {@link Query}.
+ * @public
+ */
+export interface SearchImageParams extends SearchParams {
+  image: string;
 }
 
 /**

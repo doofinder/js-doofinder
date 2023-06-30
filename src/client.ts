@@ -1,5 +1,5 @@
 import { Method } from './enum/method';
-import { Query, SearchParams } from './query';
+import { Query, SearchParams, SearchImageParams } from './query';
 import { _processSearchResponse, SearchResponse, RawSearchResponse } from './response';
 
 import { encode } from './util/encode-params';
@@ -227,6 +227,25 @@ export class Client {
     }
 
     const response: Response = await this.request('/_search', params, payload);
+    return _processSearchResponse((await response.json()) as RawSearchResponse);
+  }
+
+  /**
+   * Perform a search in Doofinder based on the provided parameters.
+   *
+   * @param query - An instance of `Query` or an object with valid
+   * search parameters.
+   * @param image - string image in base 64.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
+   *
+   * @public
+   */
+  public async searchImage(query: Query | SearchImageParams, image: string): Promise<SearchResponse> {
+    const params: Record<string, any> = this._buildSearchQueryObject(query).dump(true);
+    const payload: Record<string, any> = { image };
+
+    const response: Response = await this.request('/_image_search', params, payload, Method.POST);
     return _processSearchResponse((await response.json()) as RawSearchResponse);
   }
 
