@@ -155,9 +155,8 @@ describe('StatsClient', () => {
       hashid: cfg.hashid
     };
     const itemParams: CartItemStatsParams = {
-      id: '1',
-      amount: 1,
-      index: 'test_index',
+      item_id: '1',
+      amount: '1',
       title: "cart item title",
       price: 55,
       ...baseParams
