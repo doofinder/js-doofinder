@@ -12,10 +12,8 @@
     request.text = 'shoes';
     request.page = 1;
     request.rpp = 100;
-    request.transformer = 'basic';
     request.queryName = 'match_and';
-    request.queryCounter++;
-    request.noStats = false;
+    request.stats = false;
 
     request.types.set(['product', 'product']); // product
     request.types.add('recipe');
