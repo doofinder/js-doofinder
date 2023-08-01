@@ -63,25 +63,6 @@ export class ClientResponseError extends Error {
 }
 
 /**
- * Types of top stats.
- * @public
- */
-export type TopStatsType = 'searches' | 'clicks';
-
-/**
- * Parameters for a top stats request.
- * @public
- */
-export interface TopStatsParams {
-  /** Unique Id of the search engine. */
-  hashid: string;
-  /** Optional. Number of days to retrieve. */
-  days?: number | string;
-  /** Optional. */
-  withresult?: boolean | string;
-}
-
-/**
  * Class that allows interacting with the Doofinder service.
  * @public
  */
@@ -281,11 +262,6 @@ export class Client {
     return await this.request(`/stats/${eventName}`, params, null, method);
   }
 
-  public async topStats(type: TopStatsType, params: TopStatsParams): Promise<Response> {
-    validateHashId(params.hashid);
-    return await this.request(`/topstats/${type}`, params);
-  }
-
   /**
    * Build a URL for the provided resource.
    *
@@ -305,7 +281,7 @@ export class Client {
       suffix = querystring ? `?${querystring}` : '';
     }
 
-    return `${this.endpoint}/${__API_VERSION__}/${hashid}${prefix}${suffix}`;
+    return `${this.endpoint}/${__API_VERSION__}${hashid ? `/${hashid}` : ''}${prefix}${suffix}`;
   }
 
   /**

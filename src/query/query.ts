@@ -1,5 +1,5 @@
 import { QueryFilter } from './filter';
-import { QuerySort, Sorting } from './sort';
+import { QuerySort, SortingInput } from './sort';
 import { QueryIndices } from './indices';
 
 import { clone } from '../util/clone';
@@ -47,7 +47,7 @@ export interface QueryParamsBase {
   // sort parameters
 
   /** Parameters to sort the results */
-  sort?: Sorting[];
+  sort?: SortingInput[];
 
   // custom parameters
   /** Other custom parameters */

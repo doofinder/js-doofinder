@@ -5,7 +5,7 @@ import { should, expect } from 'chai';
 // chai
 should();
 
-import { ValidationError, validateHashId, validateDoofinderId, validatePage, validateRpp, validateRequired, validateItems } from '../src/util/validators';
+import { ValidationError, validateHashId, validateDoofinderId, validatePage, validateRpp, validateRequired } from '../src/util/validators';
 
 const DFID: string = `6a96504dc173514cab1e0198af92e6e9@product@a1d0c6e83f027327d8461063f4ac58a6`;
 
@@ -40,12 +40,6 @@ describe('Validators', () => {
     (() => validateRpp(null)).should.throw(ValidationError);
     (() => validateRpp(-1)).should.throw(ValidationError);
     (() => validateRpp(101)).should.throw(ValidationError);
-    done();
-  });
-  it('validates items param for searches', done => {
-    validateItems([DFID]).should.eql([DFID]);
-    (() => validateItems([DFID, `hello world`])).should.throw(ValidationError);
-    (() => validateItems([42])).should.throw(ValidationError);
     done();
   });
   it('validates required values', done => {
