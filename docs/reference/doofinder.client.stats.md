@@ -9,7 +9,7 @@ Perform a request to submit stats events to Doofinder.
 <b>Signature:</b>
 
 ```typescript
-stats(eventName: string, params: Record<string, string>): Promise<Response>;
+stats(eventName: string, params: Record<string, string>, method?: Method): Promise<Response>;
 ```
 
 ## Parameters
@@ -18,6 +18,7 @@ stats(eventName: string, params: Record<string, string>): Promise<Response>;
 |  --- | --- | --- |
 |  eventName | string | Type of stats to send. |
 |  params | Record&lt;string, string&gt; | Parameters for the query string. |
+|  method | Method |  |
 
 <b>Returns:</b>
 

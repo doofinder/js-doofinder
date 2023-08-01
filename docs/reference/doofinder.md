@@ -13,8 +13,8 @@
 |  [ClientResponseError](./doofinder.clientresponseerror.md) | Represents an error response for a failed HTTP response from Doofinder. |
 |  [Query](./doofinder.query.md) | Allows creating a search query programmatically instead of creating the JSON and parameters by hand. |
 |  [QueryFilter](./doofinder.queryfilter.md) | Manage filters applied to a query. |
+|  [QueryIndices](./doofinder.queryindices.md) | Class to easily manage Indices filtering in a query. |
 |  [QuerySort](./doofinder.querysort.md) | Class to manage sorting information for a search query. |
-|  [QueryTypes](./doofinder.querytypes.md) | Class to easily manage types filtering in a query. |
 |  [QueryValueError](./doofinder.queryvalueerror.md) | Represents an error thrown for a wrong value in a Query. |
 |  [StatsClient](./doofinder.statsclient.md) | Wrapper class to simplify stats calls. |
 
@@ -47,6 +47,7 @@
 |  [ClickStatsParamsWithDfid](./doofinder.clickstatsparamswithdfid.md) | Parameters for click stats with dfid. |
 |  [ClickStatsParamsWithId](./doofinder.clickstatsparamswithid.md) | Parameters for click stats without dfid. |
 |  [ClientOptions](./doofinder.clientoptions.md) | Options that can be used to create a Client instance. |
+|  [FacetQuery](./doofinder.facetquery.md) | Set of params that are dump from a [Query](./doofinder.query.md)<!-- -->. |
 |  [FieldSorting](./doofinder.fieldsorting.md) | Specification to sort by a field. |
 |  [GeoDistanceFilter](./doofinder.geodistancefilter.md) | Represents a filter by geographical distance. |
 |  [GeoSorting](./doofinder.geosorting.md) | Interface to specify a sorting by geo distance. |
@@ -62,12 +63,12 @@
 |  [RawTermsInfo](./doofinder.rawtermsinfo.md) | RAW information for a set of terms belonging to a terms facet. |
 |  [RawTermStats](./doofinder.rawtermstats.md) | RAW information for a term belonging to a terms facet. |
 |  [RedirectionStatsParams](./doofinder.redirectionstatsparams.md) | Parameters for redirection stats. |
+|  [SearchImageParams](./doofinder.searchimageparams.md) | Set of params that are dump from a [Query](./doofinder.query.md)<!-- -->. |
 |  [SearchParams](./doofinder.searchparams.md) | Set of params that are dump from a [Query](./doofinder.query.md)<!-- -->. |
 |  [SearchResponse](./doofinder.searchresponse.md) | Represents the basic search response from Doofinder. |
 |  [StatsParams](./doofinder.statsparams.md) | Basic parameters for stats requests. |
 |  [TermsFacet](./doofinder.termsfacet.md) | Simplified version of the terms facet info. |
 |  [TermStats](./doofinder.termstats.md) | Simplified stats for a term in a terms facet. |
-|  [TopStatsParams](./doofinder.topstatsparams.md) | Parameters for a top stats request. |
 
 ## Variables
 
@@ -87,5 +88,4 @@
 |  [Sorting](./doofinder.sorting.md) | A field or geo distance sorting. |
 |  [SortingInput](./doofinder.sortinginput.md) | Valid input for a field or geo distance sorting. |
 |  [SortOrder](./doofinder.sortorder.md) | Valid sort order values. |
-|  [TopStatsType](./doofinder.topstatstype.md) | Types of top stats. |
 

@@ -9,7 +9,7 @@ import { IStringifyOptions } from 'qs';
 import { ParsedQs } from 'qs';
 
 // @public
-export const __API_VERSION__ = 5;
+export const __API_VERSION__ = 6;
 
 // @public
 export const __VERSION__ = "6.1.2";
@@ -70,14 +70,14 @@ export class Client {
     constructor({ server, secret, headers }?: Partial<ClientOptions>);
     get endpoint(): string;
     get headers(): Record<string, string>;
-    request(resource: string, params?: Record<string, any>, payload?: Record<string, any>): Promise<Response>;
+    // Warning: (ae-forgotten-export) The symbol "Method" needs to be exported by the entry point index.d.ts
+    request(resource: string, params?: Record<string, any>, payload?: Record<string, any>, method?: Method): Promise<Response>;
     search(query: Query | SearchParams): Promise<SearchResponse>;
+    searchImage(query: Query | SearchImageParams, image: string): Promise<SearchResponse>;
     get secret(): string;
     get server(): string;
-    stats(eventName: string, params: Record<string, string>): Promise<Response>;
+    stats(eventName: string, params: Record<string, string>, method?: Method): Promise<Response>;
     suggest(query: Query | SearchParams): Promise<SearchResponse>;
-    // (undocumented)
-    topStats(type: TopStatsType, params: TopStatsParams): Promise<Response>;
     toString(): string;
 }
 
@@ -119,6 +119,13 @@ export function extend(...args: unknown[]): Record<string, any> | Array<any>;
 
 // @public
 export type Facet = RangeFacet | TermsFacet;
+
+// @public
+export interface FacetQuery {
+    field?: string;
+    size?: string;
+    term?: string;
+}
 
 // @public
 export interface FieldSorting {
@@ -195,15 +202,10 @@ export class Query {
     getParam(name: keyof QueryParams): unknown;
     get hashid(): string;
     set hashid(value: string);
-    get items(): string[];
-    set items(value: string[]);
+    get indices(): QueryIndices;
     load(params?: QueryParams): void;
-    get noStats(): boolean;
-    set noStats(value: boolean);
     get page(): number;
     set page(value: number);
-    get queryCounter(): number;
-    set queryCounter(value: number);
     get queryName(): string;
     set queryName(value: string);
     reset(): void;
@@ -211,12 +213,11 @@ export class Query {
     set rpp(value: number);
     setParam(name: keyof QueryParams, value?: unknown): void;
     get sort(): QuerySort;
+    get stats(): boolean;
+    set stats(value: boolean);
     get text(): string;
     set text(value: string);
-    get transformer(): string;
-    set transformer(value: string);
-    get types(): QueryTypes;
-    }
+}
 
 // @public
 export class QueryFilter {
@@ -233,24 +234,35 @@ export class QueryFilter {
 }
 
 // @public
+export class QueryIndices {
+    add(value: string): void;
+    clear(): void;
+    dump(): string[];
+    has(value: string): boolean;
+    remove(value: string): void;
+    set(value: string | string[]): void;
+}
+
+// @public
 export type QueryParams = Partial<QueryParamsBase>;
 
 // @public
 export interface QueryParamsBase {
     [key: string]: unknown;
     exclude?: Record<string, any>;
+    excluded_results?: boolean;
+    facets?: FacetQuery[];
     filter?: Record<string, any>;
+    // Warning: (ae-forgotten-export) The symbol "filterExecution" needs to be exported by the entry point index.d.ts
+    filter_execution?: filterExecution;
     hashid: string;
-    items?: string[];
-    nostats?: boolean;
+    indices?: string[];
     page?: string | number;
     query?: string;
-    query_counter?: string | number;
     query_name?: string;
     rpp?: string | number;
     sort?: SortingInput[];
-    transformer?: string;
-    type?: string | string[];
+    stats?: boolean;
 }
 
 // @public
@@ -263,16 +275,6 @@ export class QuerySort {
     set(value: string, order?: SortOrder): number;
     set(value: Sorting): number;
     set(value: SortingInput[]): number;
-    }
-
-// @public
-export class QueryTypes {
-    add(value: string): void;
-    clear(): void;
-    dump(): string[];
-    has(value: string): boolean;
-    remove(value: string): void;
-    set(value: string | string[]): void;
     }
 
 // @public
@@ -376,11 +378,20 @@ export interface RedirectionStatsParams extends StatsParams {
 }
 
 // @public
+export interface SearchImageParams extends QueryParamsBase {
+    // (undocumented)
+    image: string;
+}
+
+// @public
 export interface SearchParams extends QueryParamsBase {
-    // (undocumented)
-    sort?: Sorting[];
-    // (undocumented)
-    type?: string[];
+    auto_filters?: boolean;
+    custom_results?: boolean;
+    grouping?: boolean;
+    skip_auto_filters?: string[];
+    skip_top_facet?: string[];
+    title_facet?: boolean;
+    top_facet?: boolean;
 }
 
 // @public
@@ -462,16 +473,6 @@ export interface TermsFacet {
 export interface TermStats extends RawTermStats {
     selected?: boolean;
 }
-
-// @public
-export interface TopStatsParams {
-    days?: number | string;
-    hashid: string;
-    withresult?: boolean | string;
-}
-
-// @public
-export type TopStatsType = 'searches' | 'clicks';
 
 
 // (No @packageDocumentation comment for this package)
