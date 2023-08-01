@@ -18,7 +18,7 @@ stats(eventName: string, params: Record<string, string>, method?: Method): Promi
 |  --- | --- | --- |
 |  eventName | string | Type of stats to send. |
 |  params | Record&lt;string, string&gt; | Parameters for the query string. |
-|  method | Method |  |
+|  method | Method | HTTP method for the request.Default GET. |
 
 <b>Returns:</b>
 

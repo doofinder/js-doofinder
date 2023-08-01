@@ -61,7 +61,7 @@ export interface QueryParamsBase {
 export type QueryParams = Partial<QueryParamsBase>;
 
 /**
- * Set of params that are dump from a {@link Query}.
+ * Set of params that are dumped from a {@link Query}.
  * @public
  */
 export interface SearchParams extends QueryParamsBase {
@@ -88,7 +88,7 @@ export interface SearchParams extends QueryParamsBase {
 }
 
 /**
- * Set of params that are dump from a {@link Query}.
+ * Set of params that are dumped from a {@link Query}.
  * @public
  */
 export interface SearchImageParams extends QueryParamsBase {
@@ -96,17 +96,17 @@ export interface SearchImageParams extends QueryParamsBase {
 }
 
 /**
- * Set of params that are dump from a {@link Query}.
+ * Set of params that are dumped from a {@link Query}.
  * @public
  */
 export interface FacetQuery {
   /** That is the field name that you want to aggregate results. */
   field?: string;
 
-  /** The number of results to return in each field. Only applicable to facet terms. Maximum: 50 by default to help maintain the speed of the search function */
+  /** The number of results to return in each field. Only applicable to facet terms. Maximum: 50 by default to help maintaining the speed of the search function */
   size?: string;
 
-  /** The facet type. Indicates the type of the facet, one of term or range. will return an error if the facet type is not correct. */
+  /** The facet type. Indicates the type of the facet, one of term or range.It will return an error if the facet type is not correct. */
   term?: string;
 }
 
@@ -175,9 +175,7 @@ export class Query {
    */
   public load(params: QueryParams = {}): void {
     Object.keys(params).forEach(key => {
-      if (key === 'stats') {
-        this.stats = !!params.stats;
-      } else if (key === 'filter') {
+      if (key === 'filter') {
         this._filters.setMany(params.filter);
       } else if (key === 'exclude') {
         this._excludes.setMany(params.exclude);
@@ -338,18 +336,6 @@ export class Query {
   }
   public set queryName(value: string) {
     this.setParam('query_name', value);
-  }
-
-  /**
-   * Get / set the `stats` parameter.
-   * @param value - The stats as boolean.
-   * @public
-   */
-  public get stats(): boolean {
-    return !!this.getParam('stats');
-  }
-  public set stats(value: boolean) {
-    this.setParam('stats', !!value);
   }
 
   // indices

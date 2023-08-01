@@ -4,7 +4,7 @@
 
 ## FacetQuery interface
 
-Set of params that are dump from a [Query](./doofinder.query.md)<!-- -->.
+Set of params that are dumped from a [Query](./doofinder.query.md)<!-- -->.
 
 <b>Signature:</b>
 
@@ -17,6 +17,6 @@ export interface FacetQuery
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [field](./doofinder.facetquery.field.md) | string | That is the field name that you want to aggregate results. |
-|  [size](./doofinder.facetquery.size.md) | string | The number of results to return in each field. Only applicable to facet terms. Maximum: 50 by default to help maintain the speed of the search function |
-|  [term](./doofinder.facetquery.term.md) | string | The facet type. Indicates the type of the facet, one of term or range. will return an error if the facet type is not correct. |
+|  [size](./doofinder.facetquery.size.md) | string | The number of results to return in each field. Only applicable to facet terms. Maximum: 50 by default to help maintaining the speed of the search function |
+|  [term](./doofinder.facetquery.term.md) | string | The facet type. Indicates the type of the facet, one of term or range.It will return an error if the facet type is not correct. |
 

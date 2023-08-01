@@ -213,8 +213,6 @@ export class Query {
     set rpp(value: number);
     setParam(name: keyof QueryParams, value?: unknown): void;
     get sort(): QuerySort;
-    get stats(): boolean;
-    set stats(value: boolean);
     get text(): string;
     set text(value: string);
 }

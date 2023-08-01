@@ -251,6 +251,7 @@ export class Client {
    *
    * @param eventName - Type of stats to send.
    * @param params - Parameters for the query string.
+   * @param method - HTTP method for the request.Default GET.
    * @returns A promise to be fullfilled with the response or rejected
    * with a `ClientResponseError`.
    *

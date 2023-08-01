@@ -4,7 +4,7 @@
 
 ## FacetQuery.term property
 
-The facet type. Indicates the type of the facet, one of term or range. will return an error if the facet type is not correct.
+The facet type. Indicates the type of the facet, one of term or range.It will return an error if the facet type is not correct.
 
 <b>Signature:</b>
 

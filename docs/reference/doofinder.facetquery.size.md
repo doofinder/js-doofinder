@@ -4,7 +4,7 @@
 
 ## FacetQuery.size property
 
-The number of results to return in each field. Only applicable to facet terms. Maximum: 50 by default to help maintain the speed of the search function
+The number of results to return in each field. Only applicable to facet terms. Maximum: 50 by default to help maintaining the speed of the search function
 
 <b>Signature:</b>
 

@@ -4,7 +4,7 @@
 
 ## SearchImageParams interface
 
-Set of params that are dump from a [Query](./doofinder.query.md)<!-- -->.
+Set of params that are dumped from a [Query](./doofinder.query.md)<!-- -->.
 
 <b>Signature:</b>
 

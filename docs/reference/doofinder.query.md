@@ -31,7 +31,6 @@ export declare class Query
 |  [queryName](./doofinder.query.queryname.md) |  | string | Get / set the <code>query_name</code> parameter. |
 |  [rpp](./doofinder.query.rpp.md) |  | number | Get / set the <code>rpp</code> parameter. |
 |  [sort](./doofinder.query.sort.md) |  | [QuerySort](./doofinder.querysort.md) | Return the instance of the sort manager for the current query. |
-|  [stats](./doofinder.query.stats.md) |  | boolean | Get / set the <code>stats</code> parameter. |
 |  [text](./doofinder.query.text.md) |  | string | Get / set the <code>query</code> parameter. |
 
 ## Methods
