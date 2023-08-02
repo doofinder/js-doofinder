@@ -4,10 +4,10 @@
 
 ## CartItemStatsParams.amount property
 
-Amount of the given item \*
+How many instances of the item are to be added/removed \*
 
 <b>Signature:</b>
 
 ```typescript
-amount: string | number;
+amount: number | string;
 ```

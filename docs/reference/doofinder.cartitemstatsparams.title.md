@@ -4,10 +4,10 @@
 
 ## CartItemStatsParams.title property
 
-Title of the given item \*
+The title that describe the item. Usually, the title of item's page \*
 
 <b>Signature:</b>
 
 ```typescript
-title?: string;
+title: string;
 ```

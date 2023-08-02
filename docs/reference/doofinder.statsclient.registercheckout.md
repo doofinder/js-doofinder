@@ -9,14 +9,14 @@ Register a checkout within the session.
 <b>Signature:</b>
 
 ```typescript
-registerCheckout(params: StatsParams): Promise<Response>;
+registerCheckout(params: CheckoutParams): Promise<Response>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | [StatsParams](./doofinder.statsparams.md) | An options object. See [StatsParams](./doofinder.statsparams.md)<!-- -->. |
+|  params | [CheckoutParams](./doofinder.checkoutparams.md) | An options object. See [StatsParams](./doofinder.statsparams.md)<!-- -->. |
 
 <b>Returns:</b>
 

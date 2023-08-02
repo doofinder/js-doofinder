@@ -42,12 +42,16 @@ export interface BasicResult {
 
 // @public
 export interface CartItemStatsParams extends StatsParams {
-    amount: string | number;
-    custom_results_id?: string | number;
-    datatype?: string;
-    item_id: string | number;
-    price?: number;
-    title?: string;
+    amount: number | string;
+    id: string;
+    index: string;
+    price: number;
+    title: string;
+}
+
+// @public
+export interface CheckoutParams extends StatsParams {
+    user_id?: string;
 }
 
 // @public
@@ -55,14 +59,7 @@ export interface ClickStatsParamsWithDfid extends StatsParams {
     custom_results_id?: string | number;
     dfid: string;
     query?: string;
-}
-
-// @public
-export interface ClickStatsParamsWithId extends StatsParams {
-    custom_results_id?: string | number;
-    datatype: string;
-    id: string | number;
-    query?: string;
+    user_id?: string;
 }
 
 // @public
@@ -151,7 +148,13 @@ export interface GeoSortOrder {
 
 // @public
 export interface ImageStatsParams extends StatsParams {
-    img_id: string | number;
+    id: string | number;
+    query?: string;
+}
+
+// @public
+export interface InitParams extends StatsParams {
+    user_id?: string;
 }
 
 // @public
@@ -370,9 +373,8 @@ export interface RawTermStats {
 
 // @public
 export interface RedirectionStatsParams extends StatsParams {
-    link: string;
+    id: string | number;
     query?: string;
-    redirection_id: string | number;
 }
 
 // @public
@@ -437,12 +439,12 @@ export class StatsClient {
     clearCart(params: StatsParams): Promise<Response>;
     // (undocumented)
     get client(): Client;
-    registerCheckout(params: StatsParams): Promise<Response>;
-    registerClick(params: ClickStatsParamsWithDfid | ClickStatsParamsWithId): Promise<Response>;
-    registerEvent(eventName: string, params: Record<string, any>): Promise<Response>;
+    registerCheckout(params: CheckoutParams): Promise<Response>;
+    registerClick(params: ClickStatsParamsWithDfid): Promise<Response>;
+    registerEvent(eventName: string, params: Record<string, any>, method?: Method): Promise<Response>;
     registerImageClick(params: ImageStatsParams): Promise<Response>;
     registerRedirection(params: RedirectionStatsParams): Promise<Response>;
-    registerSession(params: StatsParams): Promise<Response>;
+    registerSession(params: InitParams): Promise<Response>;
     // @beta
     removeFromCart(params: CartItemStatsParams): Promise<Response>;
 }

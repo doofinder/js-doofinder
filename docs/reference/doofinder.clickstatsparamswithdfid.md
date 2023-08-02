@@ -19,4 +19,5 @@ export interface ClickStatsParamsWithDfid extends StatsParams
 |  [custom\_results\_id](./doofinder.clickstatsparamswithdfid.custom_results_id.md) | string \| number | Optional ID of the custom results that produced the current set of results. |
 |  [dfid](./doofinder.clickstatsparamswithdfid.dfid.md) | string | Unique ID of the clicked result. |
 |  [query](./doofinder.clickstatsparamswithdfid.query.md) | string | Optional search terms. |
+|  [user\_id](./doofinder.clickstatsparamswithdfid.user_id.md) | string | Unique ID of the user. |
 

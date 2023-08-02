@@ -16,5 +16,6 @@ export interface ImageStatsParams extends StatsParams
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [img\_id](./doofinder.imagestatsparams.img_id.md) | string \| number | Unique ID of the image in Doofinder. |
+|  [id](./doofinder.imagestatsparams.id.md) | string \| number | Unique ID of the banner clicked. |
+|  [query](./doofinder.imagestatsparams.query.md) | string | Optional search terms. |
 
