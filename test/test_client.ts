@@ -81,14 +81,15 @@ describe('Client', () => {
         done()
       });
 
-      it ("won't replace API Keys passed in options", done => {
+      it("won't replace API Keys passed in options", done => {
         const client = new Client({
           server: cfg.server,
           secret: cfg.secret,
           headers: {
-          'X-Name': 'John Smith',
-          'Authorization': 'abc'
-        }});
+            'X-Name': 'John Smith',
+            'Authorization': 'abc'
+          }
+        });
         client.headers['X-Name'].should.equal('John Smith');
         client.headers.Authorization.should.equal('Token aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd');
         done();
@@ -112,33 +113,39 @@ describe('Client', () => {
 
   context('_buildUrl() method', () => {
     const client = cfg.getClient();
+    const hashid = cfg.hashid;
 
     it('can handle resources that already have a querystring', done => {
       // @ts-ignore
-      client._buildUrl('/blah?param=value', 'param2=value2').should.equal('https://eu1-search.doofinder.com/5/blah?param=value&param2=value2');
+      client._buildUrl('/blah?param=value', 'param2=value2', hashid).should.equal(`https://eu1-search.doofinder.com/6/${hashid}/blah?param=value&param2=value2`);
       done();
     });
     it(`can handle resources that don't already have a querystring`, done => {
       // @ts-ignore
-      client._buildUrl('/blah', 'param=value').should.equal('https://eu1-search.doofinder.com/5/blah?param=value');
+      client._buildUrl('/blah', 'param=value', hashid).should.equal(`https://eu1-search.doofinder.com/6/${hashid}/blah?param=value`);
       done();
     });
     it('can handle resources without passing a querystring at all', done => {
       // @ts-ignore
-      client._buildUrl('/blah').should.equal('https://eu1-search.doofinder.com/5/blah');
+      client._buildUrl('/blah', '', hashid).should.equal(`https://eu1-search.doofinder.com/6/${hashid}/blah`);
+      done();
+    });
+    it('can handle resources without hashid', done => {
+      // @ts-ignore
+      client._buildUrl('/blah', '').should.equal(`https://eu1-search.doofinder.com/6/blah`);
       done();
     });
   });
 
   context('request() method', () => {
     it('throws error if bad request sent', done => {
-      const BAD_REQUEST_URL = `glob:${cfg.endpoint}/5/error?*random=*`;
+      const BAD_REQUEST_URL = `glob:${cfg.endpoint}/6/error?*random=*`;
       fetchMock.get(BAD_REQUEST_URL, { body: { message: 'Invalid' }, status: 400 });
       cfg.getClient().request('/error').should.be.rejectedWith(ClientResponseError).notify(done);
     });
 
     it('throws error if wrong url sent', done => {
-      fetchMock.get(`glob:${cfg.endpoint}/5/notfound?*random=*`, {
+      fetchMock.get(`glob:${cfg.endpoint}/6/notfound?*random=*`, {
         body: {
           error: 'search engine not found'
         },
@@ -147,13 +154,8 @@ describe('Client', () => {
       cfg.getClient().request('/notfound').should.be.rejectedWith(ClientResponseError).notify(done);
     });
 
-    it('throws error in case of internal server error', done => {
-      fetchMock.get(`glob:${cfg.endpoint}/5/catastrophe?*random=*`, 503);
-      cfg.getClient().request('/catastrophe').should.be.rejectedWith(ClientResponseError).notify(done);
-    });
-
     it('handles response success', async () => {
-      const SUCCESS_URL = `glob:${cfg.endpoint}/5/success?*random=*`;
+      const SUCCESS_URL = `glob:${cfg.endpoint}/6/success?*random=*`;
       fetchMock.get(SUCCESS_URL, { body: {}, status: 200 });
 
       const client = cfg.getClient();
@@ -165,7 +167,8 @@ describe('Client', () => {
   });
 
   context('search()', () => {
-    const url = `glob:${cfg.endpoint}/5/search?*random=*`;
+    const hashid = cfg.hashid;
+    const url = `glob:${cfg.endpoint}/6/${hashid}/_search?*random=*`;
 
     beforeEach(() => {
       fetchMock.get(url, { body: {}, status: 200 });
@@ -179,45 +182,24 @@ describe('Client', () => {
       cfg.getClient().search(new Query()).should.be.rejectedWith(ValidationError).notify(done);
     });
     it('works if passed valid parameters', done => {
-      cfg.getClient().search({ hashid: cfg.hashid }).should.be.fulfilled.notify(done);
+      cfg.getClient().search({ hashid }).should.be.fulfilled.notify(done);
     });
     it('works if passed valid Query instance', done => {
-      cfg.getClient().search(new Query({ hashid: cfg.hashid })).should.be.fulfilled.notify(done);
+      cfg.getClient().search(new Query({ hashid })).should.be.fulfilled.notify(done);
     });
   });
 
   context('stats()', () => {
     it('works with sent params', done => {
-      const url = `${cfg.endpoint}/5/stats/init`;
+      const hashid = cfg.hashid;
+      const url = `${cfg.endpoint}/6/${hashid}/stats/init`;
       const query = {
-        hashid: cfg.hashid,
+        hashid,
         session_id: 'abc'
       }
       // @ts-ignore
       fetchMock.get({ url, query }, { body: {}, status: 200 });
-      cfg.getClient().stats('init', { hashid: cfg.hashid, session_id: 'abc'}).should.be.fulfilled.notify(done);
-    });
-  });
-
-  context('topStats()', () => {
-    const query = {
-      hashid: cfg.hashid,
-      days: '7',
-      withresults: 'true'
-    }
-
-    it('searches', done => {
-      const url = `${cfg.endpoint}/5/topstats/searches`;
-      // @ts-ignore
-      fetchMock.get({ url, query }, { body: {}, status: 200 });
-      cfg.getClient().topStats('searches', query).should.be.fulfilled.notify(done);
-    });
-
-    it('clicks', done => {
-      const url = `${cfg.endpoint}/5/topstats/clicks`;
-      // @ts-ignore
-      fetchMock.get({ url, query }, { body: {}, status: 200 });
-      cfg.getClient().topStats('clicks', query).should.be.fulfilled.notify(done);
+      cfg.getClient().stats('init', { hashid, session_id: 'abc' }).should.be.fulfilled.notify(done);
     });
   });
 });

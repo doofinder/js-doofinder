@@ -308,7 +308,7 @@ describe('Query', () => {
       query.defaults = defaults;
       query.reset();
       query.page = 2;
-      query.types.add('product');
+      query.indices.add('product');
       query.filters.add('brand', 'adidas');
       const copy = query.copy();
       copy.dump().should.eql(query.dump());
@@ -359,31 +359,11 @@ describe('Query', () => {
       done();
     });
 
-    it('validates items in setter', done => {
-      const query = new Query();
-
-      query.items = [DFID];
-      query.items.should.eql([DFID]);
-
-      query.items = [];
-      query.items.should.eql([]);
-
-      // @ts-ignore
-      query.items = undefined;
-      expect(query.items).to.be.undefined;
-
-      (() => query.items = ['hello world']).should.throw;
-      // @ts-ignore
-      (() => query.items = null).should.throw;
-      done();
-    })
-
     it ('validates even via setParam', done => {
       const query = new Query();
       (() => query.setParam('hashid', 'hello world!')).should.throw;
       (() => query.setParam('page', -1)).should.throw;
       (() => query.setParam('rpp', 101)).should.throw;
-      (() => query.setParam('items', 101)).should.throw;
       done();
     });
   });
@@ -405,12 +385,10 @@ describe('Query', () => {
       it('properly sets defaults parameters', done => {
         query.hashid = cfg.hashid;
         query.text = 'blah';
-        query.transformer = 'basic';
         query.queryName = 'match_and';
 
         query.hashid.should.equal(cfg.hashid);
         query.text.should.equal('blah');
-        query.transformer.should.equal('basic');
         query.queryName.should.equal('match_and');
 
         query.dump().should.eql({
@@ -418,7 +396,6 @@ describe('Query', () => {
           query: 'blah',
           page: 1,
           rpp: 20,
-          transformer: 'basic',
           query_name: 'match_and'
         });
         done();
@@ -449,35 +426,14 @@ describe('Query', () => {
         (() => query.rpp = 'wrong').should.throw;
         done();
       });
-      it('properly sets query counter', done => {
-        query.queryCounter++;
-        expect(query.queryCounter).to.be.undefined;
-        query.queryCounter = 1;
-        query.queryCounter.should.equal(1);
-        query.queryCounter++;
-        query.queryCounter.should.equal(2);
-        query.queryCounter = undefined;
-        expect(query.queryCounter).to.be.undefined;
-        done();
-      });
-      it('properly sets nostats flag', done => {
-        query.noStats.should.be.false;
-        query.noStats = true;
-        query.noStats.should.be.true;
-        query.dump().nostats.should.be.true;
-        query.noStats = false;
-        query.noStats.should.be.false;
-        expect(query.dump().nostats).to.be.undefined;
-        done();
-      });
       it('properly sets types', done => {
         expect(query.dump().type).to.be.undefined;
 
-        query.types.add('product');
-        query.dump().type.should.eql(['product']);
+        query.indices.add('product');
+        query.dump().indices.should.eql(['product']);
 
-        query.types.add('article');
-        query.dump().type.should.eql(['product', 'article']);
+        query.indices.add('article');
+        query.dump().indices.should.eql(['product', 'article']);
         done();
       });
     });
@@ -591,63 +547,6 @@ describe('Query', () => {
       it('can check sorting, false case', done => {
         query.sort.add('score', 'asc');
         query.sort.has({'price': 'asc'}).should.eql(false);
-        done();
-      });
-    });
-
-    context('items', () => {
-      const items: string[] = [
-        "26dd2b091492541881b8a69f06dc437c@product@3a16b4a101d2f4d2663f470962242c9e",
-        "26dd2b091492541881b8a69f06dc437c@product@35eeeb2c0aef5c3a11f7a8fd818c2110",
-        "26dd2b091492541881b8a69f06dc437c@product@d63610229b23a0a44f4bde16a2b8273f",
-        "26dd2b091492541881b8a69f06dc437c@product@623cf32ae709b367548f3c8a248d12e6",
-        "26dd2b091492541881b8a69f06dc437c@product@6b51db752a6af33f6ae30078117a7615",
-        "26dd2b091492541881b8a69f06dc437c@product@727e184f122ea6801826e033c1ae131d",
-        "26dd2b091492541881b8a69f06dc437c@product@b12267820596c13426004db45cb39fdc",
-        "26dd2b091492541881b8a69f06dc437c@product@52b5bac14b5f339afb8fc8cc1d0134e4",
-        "26dd2b091492541881b8a69f06dc437c@product@5a5550f66dfe8eae6ad06482018e74f9",
-        "26dd2b091492541881b8a69f06dc437c@product@062cccad0f84693d88dd30f3e6d7a3be",
-
-        "26dd2b091492541881b8a69f06dc437c@product@700976a95b1c951ea4c10d253bf7f513",
-        "26dd2b091492541881b8a69f06dc437c@product@8e80f48fa23c70edd73623eb4dd7e53c",
-        "26dd2b091492541881b8a69f06dc437c@product@bb6877a15575e725afe751de5507f8ea",
-        "26dd2b091492541881b8a69f06dc437c@product@0b211ae82a3a5377439dcecb917e7b49",
-        "26dd2b091492541881b8a69f06dc437c@product@4011925b70c67ebf382315eb902d9dc9",
-        "26dd2b091492541881b8a69f06dc437c@product@a7465e96c202e315a73835e03f039431",
-        "26dd2b091492541881b8a69f06dc437c@product@daa38ac433babd45a446e2cc709930b6",
-        "26dd2b091492541881b8a69f06dc437c@product@1acc7014704795ee380463159d6f17af",
-        "26dd2b091492541881b8a69f06dc437c@product@829ce447d8dd86ab84c065178e4454a6",
-        "26dd2b091492541881b8a69f06dc437c@product@721a981a275d3d1cc1ef4bca9911d449",
-
-        "26dd2b091492541881b8a69f06dc437c@product@c197dd8cc32138d356a50e6ebce6b3b4",
-        "26dd2b091492541881b8a69f06dc437c@product@0bc8a14eb51bbe5ac136fb33b9bc2d93",
-        "26dd2b091492541881b8a69f06dc437c@product@74e7593149a95c600abc99cbd80f19d8",
-        "26dd2b091492541881b8a69f06dc437c@product@15e78f2f18d93665d928a6257542a111",
-        "26dd2b091492541881b8a69f06dc437c@product@4126140ccfb6330902fe4c4026d27e07",
-        "26dd2b091492541881b8a69f06dc437c@product@6a3cf09bd255d94ea656b02614035483",
-        "26dd2b091492541881b8a69f06dc437c@product@94e44274067e311f518b0d943d590e87",
-        "26dd2b091492541881b8a69f06dc437c@product@3f3b21f2fcd95d14ab2f3271d83dc8e1"
-      ];
-
-      it('removes query in dump if there are items', done => {
-        const query = new Query({ query: 'blah'});
-        query.items = [DFID];
-        query.text.should.equal('blah');
-        const data = query.dump();
-        data.items.should.eql([DFID]);
-        expect(data.query).to.be.undefined;
-        done();
-      });
-
-      it('removes items in dump if there are no items', done => {
-        const query = new Query({ items: [] });
-        query.dump().should.not.contain({ items: [] });
-        done();
-      });
-
-      it('returns all items in dump', done => {
-        const query = new Query({ items: clone(items) });
-        query.dump().items.should.eql(items);
         done();
       });
     });

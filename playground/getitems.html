@@ -11,10 +11,7 @@
     const client = ClientPool.getClient('eu1-search.doofinder.com');
     const hashid = '7a6100c782c09126479e9270ecc619b3';
 
-    client.search({ hashid, query: 'silla', transformer: 'onlyid' }).then(console.log);
-    client.search({ hashid, transformer: 'basic', items: [
-      `${hashid}@product@f7e47cabc89aa734c3c9aec9aa9692c0`
-    ]}).then(console.log);
+    client.search({ hashid, query: 'silla' }).then(console.log);
   </script>
 </head>
 <body>

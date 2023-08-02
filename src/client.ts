@@ -1,4 +1,5 @@
-import { Query, SearchParams } from './query';
+import { Method } from './enum/method';
+import { Query, SearchParams, SearchImageParams } from './query';
 import { _processSearchResponse, SearchResponse, RawSearchResponse } from './response';
 
 import { encode } from './util/encode-params';
@@ -10,7 +11,7 @@ const absoluteUrlRX = new RegExp('^([a-z]+:)//', 'i');
  * Version of the search API being used.
  * @public
  */
-export const __API_VERSION__ = 5;
+export const __API_VERSION__ = 6;
 
 /**
  * Options that can be used to create a Client instance.
@@ -59,25 +60,6 @@ export class ClientResponseError extends Error {
     this.statusCode = response.status;
     this.response = response;
   }
-}
-
-/**
- * Types of top stats.
- * @public
- */
-export type TopStatsType = 'searches' | 'clicks';
-
-/**
- * Parameters for a top stats request.
- * @public
- */
-export interface TopStatsParams {
-  /** Unique Id of the search engine. */
-  hashid: string;
-  /** Optional. Number of days to retrieve. */
-  days?: number | string;
-  /** Optional. */
-  withresult?: boolean | string;
 }
 
 /**
@@ -171,7 +153,8 @@ export class Client {
    * @param resource - The resource to request.
    * @param params - An object with the parameters to serialize in the
    * URL querystring. Optional.
-   * @param payload - An object to send via POST. Optional.
+   * @param payload - Optional.
+   * @param method - The method, by default will be GET. Optional.
    * @returns A promise to be fullfilled with the response or rejected
    * with a `ClientResponseError`.
    *
@@ -180,12 +163,11 @@ export class Client {
   public async request(
     resource: string,
     params: Record<string, any> = {},
-    payload?: Record<string, any>
+    payload?: Record<string, any>,
+    method = Method.GET
   ): Promise<Response> {
     const qs: string = encode({ random: new Date().getTime(), ...params });
-    const url: string = this._buildUrl(resource, qs);
-
-    const method: string = payload ? 'POST' : 'GET';
+    const url: string = this._buildUrl(resource, qs, params.hashid);
     const headers: Record<string, string> = payload ? { 'Content-Type': 'application/json' } : {};
     const body: string = payload ? JSON.stringify(payload) : undefined;
     const response = await fetch(url, {
@@ -225,7 +207,26 @@ export class Client {
       delete params.items;
     }
 
-    const response: Response = await this.request('/search', params, payload);
+    const response: Response = await this.request('/_search', params, payload);
+    return _processSearchResponse((await response.json()) as RawSearchResponse);
+  }
+
+  /**
+   * Perform a search through indexed images of a search engine.
+   *
+   * @param query - An instance of `Query` or an object with valid
+   * search parameters.
+   * @param image - string image in base 64.
+   * @returns A promise to be fullfilled with the response or rejected
+   * with a `ClientResponseError`.
+   *
+   * @public
+   */
+  public async searchImage(query: Query | SearchImageParams, image: string): Promise<SearchResponse> {
+    const params: Record<string, any> = this._buildSearchQueryObject(query).dump(true);
+    const payload: Record<string, any> = { image };
+
+    const response: Response = await this.request('/_image_search', params, payload, Method.POST);
     return _processSearchResponse((await response.json()) as RawSearchResponse);
   }
 
@@ -241,7 +242,7 @@ export class Client {
    */
   public async suggest(query: Query | SearchParams): Promise<SearchResponse> {
     const params: Record<string, any> = this._buildSearchQueryObject(query).dump(true);
-    const response: Response = await this.request('/suggest', params);
+    const response: Response = await this.request('/_suggest', params);
     return _processSearchResponse((await response.json()) as RawSearchResponse);
   }
 
@@ -250,20 +251,16 @@ export class Client {
    *
    * @param eventName - Type of stats to send.
    * @param params - Parameters for the query string.
+   * @param method - HTTP method for the request.Default GET.
    * @returns A promise to be fullfilled with the response or rejected
    * with a `ClientResponseError`.
    *
    * @public
    */
-  public async stats(eventName: string, params: Record<string, string>): Promise<Response> {
+  public async stats(eventName: string, params: Record<string, string>, method = Method.PUT): Promise<Response> {
     validateRequired(params.session_id, 'session_id is required');
     validateHashId(params.hashid);
-    return await this.request(`/stats/${eventName}`, params);
-  }
-
-  public async topStats(type: TopStatsType, params: TopStatsParams): Promise<Response> {
-    validateHashId(params.hashid);
-    return await this.request(`/topstats/${type}`, params);
+    return await this.request(`/stats/${eventName}`, params, null, method);
   }
 
   /**
@@ -275,7 +272,7 @@ export class Client {
    * Must not start by '?' nor '&'.
    * @returns A valid URL.
    */
-  private _buildUrl(resource: string, querystring: string): string {
+  private _buildUrl(resource: string, querystring: string, hashid: string): string {
     const [prefix, qs]: string[] = resource.split('?');
     let suffix: string;
 
@@ -285,7 +282,7 @@ export class Client {
       suffix = querystring ? `?${querystring}` : '';
     }
 
-    return `${this.endpoint}/${__API_VERSION__}${prefix}${suffix}`;
+    return `${this.endpoint}/${__API_VERSION__}${hashid ? `/${hashid}` : ''}${prefix}${suffix}`;
   }
 
   /**

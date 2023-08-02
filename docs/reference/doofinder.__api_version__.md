@@ -9,5 +9,5 @@ Version of the search API being used.
 <b>Signature:</b>
 
 ```typescript
-__API_VERSION__ = 5
+__API_VERSION__ = 6
 ```

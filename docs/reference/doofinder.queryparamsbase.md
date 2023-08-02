@@ -17,16 +17,16 @@ export interface QueryParamsBase
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [exclude](./doofinder.queryparamsbase.exclude.md) | Record&lt;string, any&gt; | Filters to exclude results from the response. |
+|  [excluded\_results](./doofinder.queryparamsbase.excluded_results.md) | boolean | Enable/Disable excluded items feature in the search. Default: true |
+|  [facets](./doofinder.queryparamsbase.facets.md) | [FacetQuery](./doofinder.facetquery.md)<!-- -->\[\] | Aggregates fields values in a facet, you could use a term facet or range facet. |
+|  [filter\_execution](./doofinder.queryparamsbase.filter_execution.md) | filterExecution | Filters are applied with "and" boolean logic than means that all filters conditions should be met. If you want to apply any of the filters conditions, you can change it to "or". |
 |  [filter](./doofinder.queryparamsbase.filter.md) | Record&lt;string, any&gt; | Filters to include results in the response. |
 |  [hashid](./doofinder.queryparamsbase.hashid.md) | string | Unique id of the search engine. |
-|  [items](./doofinder.queryparamsbase.items.md) | string\[\] | List of dfids to be retrieved from the server. |
-|  [nostats](./doofinder.queryparamsbase.nostats.md) | boolean | Whether to count the request in the search stats or not. |
+|  [indices](./doofinder.queryparamsbase.indices.md) | string\[\] | Your search engine is composed by one or many Indices. With the indices parameter you can specify to search within one specific Index. If this parameter is not provided, the search will work with all Indices. |
 |  [page](./doofinder.queryparamsbase.page.md) | string \| number | Results page to retrieve. |
-|  [query\_counter](./doofinder.queryparamsbase.query_counter.md) | string \| number | Internal counter to manage request/response flow. |
 |  [query\_name](./doofinder.queryparamsbase.query_name.md) | string | Name of the query to use to get the results. |
 |  [query](./doofinder.queryparamsbase.query.md) | string | Search terms. |
 |  [rpp](./doofinder.queryparamsbase.rpp.md) | string \| number | Number of results to retrieve for each page. |
 |  [sort](./doofinder.queryparamsbase.sort.md) | [SortingInput](./doofinder.sortinginput.md)<!-- -->\[\] | Parameters to sort the results |
-|  [transformer](./doofinder.queryparamsbase.transformer.md) | string | Name of the transformer to use to normalize the results. |
-|  [type](./doofinder.queryparamsbase.type.md) | string \| string\[\] | Restrict the types of data to retrieve results. |
+|  [stats](./doofinder.queryparamsbase.stats.md) | boolean | Whether to count the request in the search stats or not. |
 

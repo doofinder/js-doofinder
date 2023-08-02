@@ -1,11 +1,10 @@
-import { QueryTypes } from './datatype';
 import { QueryFilter } from './filter';
-import { QuerySort, SortingInput, Sorting } from './sort';
+import { QuerySort, SortingInput } from './sort';
+import { QueryIndices } from './indices';
 
 import { clone } from '../util/clone';
-import { validateHashId, validatePage, validateRpp, validateItems } from '../util/validators';
-
-// exceptions
+import { validateHashId, validatePage, validateRpp } from '../util/validators';
+import { filterExecution } from '../enum/filterExecution';
 
 /**
  * Base parameters for a query.
@@ -22,19 +21,17 @@ export interface QueryParamsBase {
   page?: string | number;
   /** Number of results to retrieve for each page. */
   rpp?: string | number;
-  /** Name of the transformer to use to normalize the results. */
-  transformer?: string;
 
   // dark magic parameters
 
   /** Name of the query to use to get the results. */
   query_name?: string;
-  /** Internal counter to manage request/response flow. */
-  query_counter?: string | number;
   /** Whether to count the request in the search stats or not. */
-  nostats?: boolean;
-  /** Restrict the types of data to retrieve results. */
-  type?: string | string[];
+  stats?: boolean;
+  /** Your search engine is composed by one or many Indices. With the indices parameter you can specify to search within one specific Index. If this parameter is not provided, the search will work with all Indices. */
+  indices?: string[];
+  /** Aggregates fields values in a facet, you could use a term facet or range facet. */
+  facets?: FacetQuery[];
 
   // filter parameters
 
@@ -42,15 +39,15 @@ export interface QueryParamsBase {
   filter?: Record<string, any>;
   /** Filters to exclude results from the response. */
   exclude?: Record<string, any>;
+  /** Enable/Disable excluded items feature in the search. Default: true */
+  excluded_results?: boolean;
+  /** Filters are applied with "and" boolean logic than means that all filters conditions should be met. If you want to apply any of the filters conditions, you can change it to "or". */
+  filter_execution?: filterExecution;
 
   // sort parameters
 
   /** Parameters to sort the results */
   sort?: SortingInput[];
-
-  // items
-  /** List of dfids to be retrieved from the server. */
-  items?: string[];
 
   // custom parameters
   /** Other custom parameters */
@@ -64,12 +61,53 @@ export interface QueryParamsBase {
 export type QueryParams = Partial<QueryParamsBase>;
 
 /**
- * Set of params that are dump from a {@link Query}.
+ * Set of params that are dumped from a {@link Query}.
  * @public
  */
 export interface SearchParams extends QueryParamsBase {
-  type?: string[];
-  sort?: Sorting[];
+  /** Enable/Disable auto filters feature in search. Default: false */
+  auto_filters?: boolean;
+
+  /** Enable/Disable custom_results feature in search. Default: true */
+  custom_results?: boolean;
+
+  /** Enable/Disable the grouping of variants as single items. If not given, it's taken from the configuration set in the admin. */
+  grouping?: boolean;
+
+  /** A list of fields to be skipped from auto_filters feature. */
+  skip_auto_filters?: string[];
+
+  /** A list of fields to be skipped from top_facet feature. */
+  skip_top_facet?: string[];
+
+  /** Enable/Disable title_facet feature. Default: false */
+  title_facet?: boolean;
+
+  /** Enable/Disable top_facet feature. Default: false */
+  top_facet?: boolean;
+}
+
+/**
+ * Set of params that are dumped from a {@link Query}.
+ * @public
+ */
+export interface SearchImageParams extends QueryParamsBase {
+  image: string;
+}
+
+/**
+ * Set of params that are dumped from a {@link Query}.
+ * @public
+ */
+export interface FacetQuery {
+  /** That is the field name that you want to aggregate results. */
+  field?: string;
+
+  /** The number of results to return in each field. Only applicable to facet terms. Maximum: 50 by default to help maintaining the speed of the search function */
+  size?: string;
+
+  /** The facet type. Indicates the type of the facet, one of term or range.It will return an error if the facet type is not correct. */
+  term?: string;
 }
 
 /**
@@ -79,8 +117,8 @@ export interface SearchParams extends QueryParamsBase {
  */
 export class Query {
   private _defaults: QueryParams;
-  private _params: Omit<QueryParams, 'exclude' | 'filter' | 'sort' | 'type'>;
-  private _types: QueryTypes;
+  private _params: Omit<QueryParams, 'exclude' | 'filter' | 'sort' | 'indices'>;
+  private _indices: QueryIndices;
   private _filters: QueryFilter;
   private _excludes: QueryFilter;
   private _sort: QuerySort;
@@ -109,7 +147,7 @@ export class Query {
       page: 1,
       rpp: 20,
     };
-    this._types = new QueryTypes();
+    this._indices = new QueryIndices();
     this._filters = new QueryFilter();
     this._excludes = new QueryFilter();
     this._sort = new QuerySort();
@@ -122,7 +160,7 @@ export class Query {
    * @public
    */
   public reset(): void {
-    this._types.clear();
+    this._indices.clear();
     this._filters.clear();
     this._excludes.clear();
     this._sort.clear();
@@ -137,14 +175,12 @@ export class Query {
    */
   public load(params: QueryParams = {}): void {
     Object.keys(params).forEach(key => {
-      if (key === 'nostats') {
-        this.noStats = !!params.nostats;
-      } else if (key === 'filter') {
+      if (key === 'filter') {
         this._filters.setMany(params.filter);
       } else if (key === 'exclude') {
         this._excludes.setMany(params.exclude);
-      } else if (key === 'type') {
-        this._types.set(params.type);
+      } else if (key === 'indices') {
+        this._indices.set(params.indices);
       } else if (key === 'sort') {
         this._sort.set(params.sort);
       } else {
@@ -170,27 +206,19 @@ export class Query {
 
     const data: SearchParams = {
       ...clone(this._params),
-      type: this.types.dump(),
+      indices: this.indices.dump(),
       filter: this.filters.dump(),
       exclude: this.excludes.dump(),
       sort: this.sort.get(),
     };
 
-    ['nostats', 'filter', 'exclude'].forEach(key => {
+    ['filter', 'exclude'].forEach(key => {
       if (!data[key]) delete data[key];
     });
 
-    ['type', 'sort'].forEach(key => {
+    ['indices', 'sort'].forEach(key => {
       if ((data[key] as unknown[]).length === 0) delete data[key];
     });
-
-    if ('items' in data) {
-      if (data.items.length > 0) {
-        delete data.query;
-      } else {
-        delete data.items;
-      }
-    }
 
     return data;
   }
@@ -238,8 +266,6 @@ export class Query {
         this._params.page = validatePage(value);
       } else if (name === 'rpp') {
         this._params.rpp = validateRpp(value);
-      } else if (name === 'items') {
-        this._params.items = validateItems(value);
       } else {
         this._params[name] = value;
       }
@@ -275,18 +301,6 @@ export class Query {
   }
 
   /**
-   * Get / set the `items` parameter.
-   * @param value - The items as an array of strings.
-   * @public
-   */
-  public get items(): string[] {
-    return this.getParam('items') as string[];
-  }
-  public set items(value: string[]) {
-    this.setParam('items', value);
-  }
-
-  /**
    * Get / set the `page` parameter.
    * @param value - The page as a number.
    * @public
@@ -310,18 +324,6 @@ export class Query {
     this.setParam('rpp', value);
   }
 
-  /**
-   * Get / set the `transformer` parameter.
-   * @param value - The transformer as string.
-   * @public
-   */
-  public get transformer(): string {
-    return this.getParam('transformer') as string;
-  }
-  public set transformer(value: string) {
-    this.setParam('transformer', value);
-  }
-
   // dark magic parameters
 
   /**
@@ -336,43 +338,14 @@ export class Query {
     this.setParam('query_name', value);
   }
 
-  /**
-   * Get / set the `query_counter` parameter.
-   * @param value - The query counter as a number.
-   * @public
-   */
-  public get queryCounter(): number {
-    // TODO: should this have a default value?
-    return this.getParam('query_counter') as number;
-  }
-  public set queryCounter(value: number) {
-    if (isNaN(value)) {
-      this.setParam('query_counter', undefined);
-    } else {
-      this.setParam('query_counter', value);
-    }
-  }
+  // indices
 
   /**
-   * Get / set the `nostats` parameter.
-   * @param value - The nostats as boolean.
+   * Return the instance of the query indices manager for the current query.
    * @public
    */
-  public get noStats(): boolean {
-    return !!this.getParam('nostats');
-  }
-  public set noStats(value: boolean) {
-    this.setParam('nostats', !!value);
-  }
-
-  // types
-
-  /**
-   * Return the instance of the query types manager for the current query.
-   * @public
-   */
-  public get types(): QueryTypes {
-    return this._types;
+  public get indices(): QueryIndices {
+    return this._indices;
   }
 
   // filter parameters

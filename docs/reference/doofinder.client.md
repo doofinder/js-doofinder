@@ -31,10 +31,10 @@ export declare class Client
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [request(resource, params, payload)](./doofinder.client.request.md) |  | Perform a request to a HTTP resource. |
+|  [request(resource, params, payload, method)](./doofinder.client.request.md) |  | Perform a request to a HTTP resource. |
 |  [search(query)](./doofinder.client.search.md) |  | Perform a search in Doofinder based on the provided parameters. |
-|  [stats(eventName, params)](./doofinder.client.stats.md) |  | Perform a request to submit stats events to Doofinder. |
+|  [searchImage(query, image)](./doofinder.client.searchimage.md) |  | Perform a search through indexed images of a search engine. |
+|  [stats(eventName, params, method)](./doofinder.client.stats.md) |  | Perform a request to submit stats events to Doofinder. |
 |  [suggest(query)](./doofinder.client.suggest.md) |  | Perform a suggestion query in Doofinder based on the provided parameters. |
-|  [topStats(type, params)](./doofinder.client.topstats.md) |  |  |
 |  [toString()](./doofinder.client.tostring.md) |  | Return a string representation of this class. |
 

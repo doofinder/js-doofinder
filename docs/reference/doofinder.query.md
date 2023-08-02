@@ -26,16 +26,12 @@ export declare class Query
 |  [excludes](./doofinder.query.excludes.md) |  | [QueryFilter](./doofinder.queryfilter.md) | Return the instance of the query excludes manager for the current query. |
 |  [filters](./doofinder.query.filters.md) |  | [QueryFilter](./doofinder.queryfilter.md) | Return the instance of the query filters manager for the current query. |
 |  [hashid](./doofinder.query.hashid.md) |  | string | Get / set the <code>hashid</code> parameter. |
-|  [items](./doofinder.query.items.md) |  | string\[\] | Get / set the <code>items</code> parameter. |
-|  [noStats](./doofinder.query.nostats.md) |  | boolean | Get / set the <code>nostats</code> parameter. |
+|  [indices](./doofinder.query.indices.md) |  | [QueryIndices](./doofinder.queryindices.md) | Return the instance of the query indices manager for the current query. |
 |  [page](./doofinder.query.page.md) |  | number | Get / set the <code>page</code> parameter. |
-|  [queryCounter](./doofinder.query.querycounter.md) |  | number | Get / set the <code>query_counter</code> parameter. |
 |  [queryName](./doofinder.query.queryname.md) |  | string | Get / set the <code>query_name</code> parameter. |
 |  [rpp](./doofinder.query.rpp.md) |  | number | Get / set the <code>rpp</code> parameter. |
 |  [sort](./doofinder.query.sort.md) |  | [QuerySort](./doofinder.querysort.md) | Return the instance of the sort manager for the current query. |
 |  [text](./doofinder.query.text.md) |  | string | Get / set the <code>query</code> parameter. |
-|  [transformer](./doofinder.query.transformer.md) |  | string | Get / set the <code>transformer</code> parameter. |
-|  [types](./doofinder.query.types.md) |  | [QueryTypes](./doofinder.querytypes.md) | Return the instance of the query types manager for the current query. |
 
 ## Methods
 
