@@ -9,5 +9,5 @@ Current version of the library.
 <b>Signature:</b>
 
 ```typescript
-__VERSION__ = "6.1.2"
+__VERSION__ = "7.0.2"
 ```
