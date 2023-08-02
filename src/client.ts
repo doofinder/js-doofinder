@@ -153,7 +153,7 @@ export class Client {
    * @param resource - The resource to request.
    * @param params - An object with the parameters to serialize in the
    * URL querystring. Optional.
-   * @param payload - An object to send. Optional.
+   * @param payload - Optional.
    * @param method - The method, by default will be GET. Optional.
    * @returns A promise to be fullfilled with the response or rejected
    * with a `ClientResponseError`.
@@ -212,7 +212,7 @@ export class Client {
   }
 
   /**
-   * Perform a search in Doofinder based on the provided parameters.
+   * Perform a search through indexed images of a search engine.
    *
    * @param query - An instance of `Query` or an object with valid
    * search parameters.
@@ -257,7 +257,7 @@ export class Client {
    *
    * @public
    */
-  public async stats(eventName: string, params: Record<string, string>, method = Method.GET): Promise<Response> {
+  public async stats(eventName: string, params: Record<string, string>, method = Method.PUT): Promise<Response> {
     validateRequired(params.session_id, 'session_id is required');
     validateHashId(params.hashid);
     return await this.request(`/stats/${eventName}`, params, null, method);

@@ -4,7 +4,7 @@
 
 ## Client.searchImage() method
 
-Perform a search in Doofinder based on the provided parameters.
+Perform a search through indexed images of a search engine.
 
 <b>Signature:</b>
 

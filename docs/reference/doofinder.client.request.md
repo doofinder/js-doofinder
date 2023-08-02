@@ -18,7 +18,7 @@ request(resource: string, params?: Record<string, any>, payload?: Record<string,
 |  --- | --- | --- |
 |  resource | string | The resource to request. |
 |  params | Record&lt;string, any&gt; | An object with the parameters to serialize in the URL querystring. Optional. |
-|  payload | Record&lt;string, any&gt; | An object to send. Optional. |
+|  payload | Record&lt;string, any&gt; | Optional. |
 |  method | Method | The method, by default will be GET. Optional. |
 
 <b>Returns:</b>
