@@ -198,7 +198,7 @@ describe('Client', () => {
         session_id: 'abc'
       }
       // @ts-ignore
-      fetchMock.get({ url, query }, { body: {}, status: 200 });
+      fetchMock.put({ url, query }, { body: {}, status: 200 });
       cfg.getClient().stats('init', { hashid, session_id: 'abc' }).should.be.fulfilled.notify(done);
     });
   });
