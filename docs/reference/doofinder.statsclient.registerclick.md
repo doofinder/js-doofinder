@@ -9,14 +9,14 @@ Register a click on a result.
 <b>Signature:</b>
 
 ```typescript
-registerClick(params: ClickStatsParamsWithDfid | ClickStatsParamsWithId): Promise<Response>;
+registerClick(params: ClickStatsParamsWithDfid): Promise<Response>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | [ClickStatsParamsWithDfid](./doofinder.clickstatsparamswithdfid.md) \| [ClickStatsParamsWithId](./doofinder.clickstatsparamswithid.md) | An options object. See [ClickStatsParamsWithDfid](./doofinder.clickstatsparamswithdfid.md) and [ClickStatsParamsWithId](./doofinder.clickstatsparamswithid.md)<!-- -->. |
+|  params | [ClickStatsParamsWithDfid](./doofinder.clickstatsparamswithdfid.md) | An options object. See [ClickStatsParamsWithDfid](./doofinder.clickstatsparamswithdfid.md)<!-- -->. |
 
 <b>Returns:</b>
 

@@ -9,5 +9,5 @@ Price of the given item \*
 <b>Signature:</b>
 
 ```typescript
-price?: number;
+price: number;
 ```

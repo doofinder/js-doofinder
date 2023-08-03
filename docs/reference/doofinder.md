@@ -44,8 +44,8 @@
 |  [BannerInfo](./doofinder.bannerinfo.md) | Represents the information received for a banner for certain search. |
 |  [BasicResult](./doofinder.basicresult.md) | Represents a single search result when the <code>basic</code> transformer is used. |
 |  [CartItemStatsParams](./doofinder.cartitemstatsparams.md) | Parameters for the cart stats. |
+|  [CheckoutParams](./doofinder.checkoutparams.md) | Basic parameters for checkout requests. |
 |  [ClickStatsParamsWithDfid](./doofinder.clickstatsparamswithdfid.md) | Parameters for click stats with dfid. |
-|  [ClickStatsParamsWithId](./doofinder.clickstatsparamswithid.md) | Parameters for click stats without dfid. |
 |  [ClientOptions](./doofinder.clientoptions.md) | Options that can be used to create a Client instance. |
 |  [FacetQuery](./doofinder.facetquery.md) | Set of params that are dumped from a [Query](./doofinder.query.md)<!-- -->. |
 |  [FieldSorting](./doofinder.fieldsorting.md) | Specification to sort by a field. |
@@ -53,6 +53,7 @@
 |  [GeoSorting](./doofinder.geosorting.md) | Interface to specify a sorting by geo distance. |
 |  [GeoSortOrder](./doofinder.geosortorder.md) | Specification to sort by geo distance. |
 |  [ImageStatsParams](./doofinder.imagestatsparams.md) | Parameters for image stats. |
+|  [InitParams](./doofinder.initparams.md) | Basic parameters for init session requests. |
 |  [QueryParamsBase](./doofinder.queryparamsbase.md) | Base parameters for a query. |
 |  [RangeFacet](./doofinder.rangefacet.md) | Simplified version of a range facet info. |
 |  [RangeFilter](./doofinder.rangefilter.md) | Represents a filter by numeric range. |

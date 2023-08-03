@@ -9,14 +9,14 @@ Registers a session ID in Doofinder.
 <b>Signature:</b>
 
 ```typescript
-registerSession(params: StatsParams): Promise<Response>;
+registerSession(params: InitParams): Promise<Response>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | [StatsParams](./doofinder.statsparams.md) | An options object. See [StatsParams](./doofinder.statsparams.md)<!-- -->. |
+|  params | [InitParams](./doofinder.initparams.md) | An options object. See [StatsParams](./doofinder.statsparams.md)<!-- -->. |
 
 <b>Returns:</b>
 
