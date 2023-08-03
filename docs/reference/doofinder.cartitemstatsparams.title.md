@@ -4,7 +4,7 @@
 
 ## CartItemStatsParams.title property
 
-The title that describe the item. Usually, the title of item's page \*
+The title that describes the item. Usually, the title of item's page \*
 
 <b>Signature:</b>
 

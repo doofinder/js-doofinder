@@ -4,7 +4,7 @@
 
 ## CartItemStatsParams.index property
 
-Name of the indice the item belongs to. i.e. "product" \*
+Name of the index the item belongs to. i.e. "product" \*
 
 <b>Signature:</b>
 
