@@ -16,10 +16,9 @@ export interface CartItemStatsParams extends StatsParams
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [amount](./doofinder.cartitemstatsparams.amount.md) | string \| number | Amount of the given item \* |
-|  [custom\_results\_id](./doofinder.cartitemstatsparams.custom_results_id.md) | string \| number | Optional ID of the custom results that produced the current set of results. |
-|  [datatype](./doofinder.cartitemstatsparams.datatype.md) | string | Datatype where the item can be found \* |
-|  [item\_id](./doofinder.cartitemstatsparams.item_id.md) | string \| number | Unique ID of the clicked result. |
+|  [amount](./doofinder.cartitemstatsparams.amount.md) | number \| string | How many instances of the item are to be added/removed \* |
+|  [id](./doofinder.cartitemstatsparams.id.md) | string | Unique ID of the item to be added/removed |
+|  [index](./doofinder.cartitemstatsparams.index.md) | string | Name of the index the item belongs to. i.e. "product" \* |
 |  [price](./doofinder.cartitemstatsparams.price.md) | number | Price of the given item \* |
-|  [title](./doofinder.cartitemstatsparams.title.md) | string | Title of the given item \* |
+|  [title](./doofinder.cartitemstatsparams.title.md) | string | The title that describes the item. Usually, the title of item's page \* |
 

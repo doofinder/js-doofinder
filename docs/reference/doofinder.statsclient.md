@@ -32,7 +32,7 @@ export declare class StatsClient
 |  [clearCart(params)](./doofinder.statsclient.clearcart.md) |  | <b><i>(BETA)</i></b> Clears the cart in the current session. |
 |  [registerCheckout(params)](./doofinder.statsclient.registercheckout.md) |  | Register a checkout within the session. |
 |  [registerClick(params)](./doofinder.statsclient.registerclick.md) |  | Register a click on a result. |
-|  [registerEvent(eventName, params)](./doofinder.statsclient.registerevent.md) |  | Pass-through to register any custom event. |
+|  [registerEvent(eventName, params, method)](./doofinder.statsclient.registerevent.md) |  | Pass-through to register any custom event. |
 |  [registerImageClick(params)](./doofinder.statsclient.registerimageclick.md) |  | Register an image click during the current session. |
 |  [registerRedirection(params)](./doofinder.statsclient.registerredirection.md) |  | Register a redirection occurred during the current session. |
 |  [registerSession(params)](./doofinder.statsclient.registersession.md) |  | Registers a session ID in Doofinder. |
