@@ -1,9 +1,15 @@
 function demo({ Client, Query, StatsClient }) {
-  const hashid = '';
-  const dfid =''
-  const secret = ''
+  /** All requests should be done with https protocol in our api location. https://{search_zone}-search.doofinder.com where {search_zone} depends on your location, is the geographic zone your search engine is located at. i.e.: eu1.  (https://docs.doofinder.com/api/search/v6/#section/Basics/Endpoint) */
+  const server = 'eu1-search.doofinder.com'
+  /** Your personal authentication token obtained in the control panel. (https://docs.doofinder.com/api/search/v6/#section/Basics/Authentication) */
+  const secret = '';
+  /** The search engine's unique id. i.e.: d8fdeab7fce96a19d3fc7b0ca7a1e98b (https://docs.doofinder.com/api/search/v6/#section/Basics/Conventions) */
+  const hashid = ''
+  /** The current session ID, must be unique for each user. */
   const sessionId = '';
-  const server =  'eu1-search.doofinder.com'
+  /** Unique ID of the clicked result. */
+  const dfid = ''
+
   const client = new Client({ server, secret });
   const request = new Query({
     hashid
@@ -26,16 +32,16 @@ function demo({ Client, Query, StatsClient }) {
     '';
 
   client.searchImage(request, image).then(result => {
-    console.log('SEARCH IMAGE: ',result);
+    console.log('SEARCH IMAGE: ', result);
   });
 
   let params = {
     hashid,
     session_id: sessionId,
-    user_id:"dd"
+    user_id: "dd"
   }
 
- stats.registerSession(params).then((result) => {
+  stats.registerSession(params).then((result) => {
     console.log('INIT SESSION: ', result);
   });
 
@@ -59,11 +65,11 @@ function demo({ Client, Query, StatsClient }) {
     console.log('CLICK: ', result);
   });
 
-   params = {
+  params = {
     hashid,
     session_id: sessionId,
     id: `1`,
-    query:'',
+    query: '',
   }
 
   stats.registerImageClick(params).then((result) => {
@@ -94,7 +100,7 @@ function demo({ Client, Query, StatsClient }) {
     stats.removeFromCart(params).then((result) => {
       console.log('REMOVE: ', result);
 
-      stats.clearCart({hashid, session_id: sessionId}).then((resultDelete) => {
+      stats.clearCart({ hashid, session_id: sessionId }).then((resultDelete) => {
         console.log('CLEAR: ', resultDelete);
       });
     });
@@ -108,4 +114,5 @@ function demo({ Client, Query, StatsClient }) {
   stats.registerCheckout(params).then((result) => {
     console.log('CHECKOUT: ', result);
   });
+  
 }

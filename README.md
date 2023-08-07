@@ -75,12 +75,21 @@ The project includes a demo you can use as inspiration. To take a look and see t
     1. install dependencies with `$ yarn install` or `$ npm install`.
 4. To run the tests, execute: `$ yarn test`.
 
-The demo markup is inside `index.html` and the related Javascript code can be found at `demo/demo.js`.
+The demo markup is inside `index.html` and the related Javascript code can be found at `playground/demo.js`.
 
 **NOTICE:** The demo uses a test search engine but you can use a different one, just change the value of the `HASHID` variable you will find inside `index.html`.
 
 **IMPORTANT:** [Doofinder] protects API calls with [CORS]. If you change the `HASHID` variable defined in `index.html` you will have to allow `localhost` for your search engine in [Doofinder Admin].
 
+## How to Use the Library 
+
+To familiarize yourself with using this project, you can follow the examples provided in the playground.
+
+The key component is the demo.js file, but in order to effectively utilize it, you'll need to understand the following parameters:
+1.  server: https://docs.doofinder.com/api/search/v6/#section/Basics/Endpoint
+2.  secret: https://docs.doofinder.com/api/search/v6/#section/Basics/Authentication
+3.  hashid: https://docs.doofinder.com/api/search/v6/#section/Basics/Conventions
+4.  sessionId: https://docs.doofinder.com/api/search/v6/#section/Basics/Conventions
 ## Documentation
 
 **IMPORTANT:** This is a work in progress.
