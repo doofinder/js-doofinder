@@ -114,5 +114,5 @@ function demo({ Client, Query, StatsClient }) {
   stats.registerCheckout(params).then((result) => {
     console.log('CHECKOUT: ', result);
   });
-  
+
 }
