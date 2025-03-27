@@ -97,7 +97,7 @@ The key component is the demo.js file, but in order to effectively utilize it, y
 <https://doofinder.github.io/js-doofinder/>
 
 [cors]: https://en.wikipedia.org/wiki/Cross-origin_resource_sharing
-[doofinder admin]: https://app.doofinder.com/admin
+[doofinder admin]: https://admin.doofinder.com/admin
 [doofinder]: https://www.doofinder.com
 
 ## Browser Support
