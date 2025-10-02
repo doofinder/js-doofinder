@@ -12,7 +12,7 @@ jobs:
     
     strategy:
       matrix:
-        node-version: [12.x, 14.x]
+        node-version: [14.x, 16.x, 18.x, 20.x]
     
     steps:
     - name: Checkout code
@@ -39,6 +39,10 @@ jobs:
     - name: Check build artifacts
       run: |
         test -d lib
-        test -d types
+        test -d browser
+        test -d commonjs
         test -f lib/index.js
-        test -f types/doofinder.d.ts
+        test -f lib/doofinder.d.ts
+        test -f browser/doofinder.js
+        test -f browser/doofinder.min.js
+        test -f commonjs/index.js
