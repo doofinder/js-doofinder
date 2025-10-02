@@ -435,8 +435,6 @@ export class StatsClient {
     constructor(client: Client);
     // @beta
     addToCart(params: CartItemStatsParams): Promise<Response>;
-    // @beta
-    clearCart(params: StatsParams): Promise<Response>;
     // (undocumented)
     get client(): Client;
     registerCheckout(params: CheckoutParams): Promise<Response>;
@@ -445,8 +443,6 @@ export class StatsClient {
     registerImageClick(params: ImageStatsParams): Promise<Response>;
     registerRedirection(params: RedirectionStatsParams): Promise<Response>;
     registerSession(params: InitParams): Promise<Response>;
-    // @beta
-    removeFromCart(params: CartItemStatsParams): Promise<Response>;
 }
 
 // @public

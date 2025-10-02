@@ -96,14 +96,6 @@ function demo({ Client, Query, StatsClient }) {
       amount: 1,
       index: '1',
     }
-
-    stats.removeFromCart(params).then((result) => {
-      console.log('REMOVE: ', result);
-
-      stats.clearCart({ hashid, session_id: sessionId }).then((resultDelete) => {
-        console.log('CLEAR: ', resultDelete);
-      });
-    });
   });
 
   params = {
