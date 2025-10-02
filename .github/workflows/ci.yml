@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [master]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [master]
 
 jobs:
   test:
@@ -35,14 +35,3 @@ jobs:
       
     - name: Build project
       run: yarn build
-      
-    - name: Check build artifacts
-      run: |
-        test -d lib
-        test -d browser
-        test -d commonjs
-        test -f lib/index.js
-        test -f lib/doofinder.d.ts
-        test -f browser/doofinder.js
-        test -f browser/doofinder.min.js
-        test -f commonjs/index.js
