@@ -35,3 +35,4 @@ jobs:
       
     - name: Build project
       run: yarn build
+      
