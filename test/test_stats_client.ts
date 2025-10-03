@@ -217,42 +217,5 @@ describe('StatsClient', () => {
         stats.addToCart(params).should.be.rejectedWith(ValidationError).notify(done);
       });
     })
-    context('remove items from cart', () => {
-      it('should properly remove an item from cart', done => {
-        // @ts-ignore
-        fetchMock.patch({ url: `${baseUrl}/cart/${baseParams.session_id}`, query: itemParams }, { body: {}, status: 200 });
-        stats.removeFromCart(itemParams).should.be.fulfilled.notify(done);
-      });
-
-      it('should fail if no id is provided', done => {
-        const params = { ...itemParams };
-        // @ts-ignore
-        delete params.id;
-
-        stats.removeFromCart(params).should.be.rejectedWith(ValidationError).notify(done);
-      });
-
-      it('should fail if no index is provided', done => {
-        const params = { ...itemParams };
-        // @ts-ignore
-        delete params.index;
-
-        stats.removeFromCart(params).should.be.rejectedWith(ValidationError).notify(done);
-      });
-
-      it('should fail if no amount is provided', done => {
-        const params = { ...itemParams };
-        // @ts-ignore
-        delete params.amount;
-
-        stats.removeFromCart(params).should.be.rejectedWith(ValidationError).notify(done);
-      });
-
-      it('should properly empty the cart', done => {
-        // @ts-ignore
-        fetchMock.delete({ url: `${baseUrl}/cart/${baseParams.session_id}`, query: baseParams }, { body: {}, status: 200 });
-        stats.clearCart(baseParams).should.be.fulfilled.notify(done);
-      });
-    })
   });
 });

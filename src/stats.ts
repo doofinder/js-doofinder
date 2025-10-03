@@ -195,40 +195,6 @@ export class StatsClient {
   }
 
   /**
-   * Removes an amount of item to the cart in the current session.
-   *
-   * @remarks
-   *
-   * The cart will be automatically
-   * stored in stats if there's any call to registerCheckout. If any of the items' amount drops
-   * to zero or below, it is automatically removed from the cart
-   *
-   * @param params - An options object. See {@link CartItemStatsParams}.
-   * @returns A promise to be fullfilled with the response or rejected
-   * with a `ClientResponseError`.
-   *
-   * @beta
-   */
-  public async removeFromCart(params: CartItemStatsParams): Promise<Response> {
-    const { id, amount, index } = params;
-    validateRequired([id, amount, index], 'id, amount and index are required');
-    return this.client.stats(`cart/${params.session_id}`, params as Record<string, any>, Method.PATCH);
-  }
-
-  /**
-   * Clears the cart in the current session.
-   *
-   * @param params - An options object. See {@link StatsParams}.
-   * @returns A promise to be fullfilled with the response or rejected
-   * with a `ClientResponseError`.
-   *
-   * @beta
-   */
-  public async clearCart(params: StatsParams): Promise<Response> {
-    return this.client.stats(`cart/${params.session_id}`, params as Record<string, any>, Method.DELETE);
-  }
-
-  /**
    * Pass-through to register any custom event.
    *
    * @param eventName - The event name to register.
